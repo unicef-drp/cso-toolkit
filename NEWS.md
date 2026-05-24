@@ -1,5 +1,58 @@
 # NEWS — cso-toolkit
 
+## Unreleased
+
+**R helpers (additions):**
+- `aggregate_data.R` — original `aggregate_data()` (mean / weighted_mean,
+  optional global aggregate, population + country coverage). Lifted from
+  `DW-Production/00_functions/`. Kept for back-compat.
+- `aggregate_data_v2.R` — `aggregate_data_v2()` with `weighted_mean`, `mean`,
+  `sum`, `proportion`; coverage threshold; metadata columns. Ships
+  `generate_agg_footnote()`, `apply_time_window()`, and a v1-compatible
+  wrapper that delegates the v1 signature to v2.
+- `generate_markdown_report.R` — `generate_markdown_report()` +
+  `process_all_csv_files()`. Descriptive-stats Markdown reports from CSV
+  files; handles missing country / year / indicator columns gracefully.
+- `create_sector_script.R` — `create_sector_script(sector_name, sector_code,
+  base_dir = ".", ...)` scaffolds a `<base_dir>/<code>/00_run_<code>.R`
+  template with profile verification, logging, runtime tracking, and
+  try-catch. **Generalized over the DW-Production original**: `base_dir`,
+  `profile_name`, `profile_file`, `input_subpath`, `output_subpath` are
+  parameters. DW-Production consumers get the original behaviour via the
+  convenience wrapper `create_dw_sector_script()`.
+- `profile_helpers.R` — `create_profile(repo_name, ...)` scaffolds a
+  `profile_<repo>.R` template with the standard CSO building blocks
+  (cross-platform user identification, YAML config load, optional
+  producer / reviewer `dw_mode` block, optional Z: drive advisory,
+  packages block, profile sentinel). `review_profile(path, ...)` audits an
+  existing profile for the same blocks and reports `pass` / `warn` /
+  `fail` per check.
+- `test_scripts.R` — `test_scripts(path, ...)` recursively scans a
+  directory of `.R` scripts and flags any direct call to a raw file-IO or
+  external-API command that `dw_io.R` / `dw_api.R` is meant to wrap.
+  Built-in rule registry covers `read_csv` / `write_csv`, `fread` /
+  `fwrite`, `saveRDS` / `readRDS`, `save` / `load`, `read_dta` /
+  `write_dta`, `read_xlsx` / `write_xlsx`, `read_parquet` /
+  `write_parquet`, `read_json` / `write_json`, `read_yaml` / `write_yaml`
+  (IO family), plus `httr::GET/POST`, `fromJSON(url)`, `readSDMX`,
+  `wbstats::wb_data`, `get_ilostat`, and `download.file` (API family).
+  Per-line escape hatch via `# cso-allow: <rule-id>` trailing comment;
+  CI mode via `error_on_violation = TRUE`.
+
+**Documentation (additions / changes):**
+- README — rebranded as the **UNICEF Chief Statistician Office (CSO)
+  toolkit** and added an **Objective and motivation** section spelling out
+  that the repo exists to facilitate the reproducibility and scalability
+  of analytics developed by the UNICEF Data and Analytics Section in the
+  Office of the Executive Director (OSE). Citation block updated to match.
+
+**Docs (additions):**
+- `docs/dw_io_reference.md` — per-function reference for `dw_io.R` lifted
+  out of the DW-Production `00_functions/README.md`.
+- `docs/dw_api_reference.md` — per-function reference for `dw_api.R` (same
+  lift; behaviour matrix, supported APIs, worked SDMX example, sector
+  migration checklist).
+
 ## v0.1.0-rc1 (2026-05-24)
 
 First release candidate. Extracted from `unicef-drp/DW-Production` PR #89.

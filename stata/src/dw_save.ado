@@ -1,0 +1,221 @@
+*! version 1.0 24MAY2026 cso-toolkit cso-toolkit@unicef.org
+*! Author: João Pedro Azevedo (port); original by Diana Goldemberg
+
+* dw_save — Stata sibling of the R dw_save() helper.
+*
+* Behaviour:
+*   1. Validate that the target directory exists.
+*   2. Enforce row uniqueness on `idvars()` via `isid`.
+*   3. `compress` the dataset.
+*   4. `save, replace` to <path>/<filename>(.dta).
+*   5. Write a sibling .provenance.json sidecar with the same shape the
+*      R helpers emit, so reviewer-mode integrity checks work across
+*      both languages.
+*
+* Mode contract: if `$dw_mode == "reviewer"` and the target path matches
+* the canonical roots ($teamsWrkDataCanonical / $teamsRawDataCanonical),
+* the save is BLOCKED unless `allow_canonical_write` is passed. This
+* mirrors dw_save() in r/R/dw_io.R.
+*
+* Ported from World Bank EduAnalyticsToolkit `edukit_save` /
+* `savemetadata` (v1.2 20MAR2020, Author: Diana Goldemberg), simplified
+* and adjusted to align with the cso-toolkit provenance-sidecar pattern
+* instead of edukit's `char _dta[]` metadata model.
+
+* JSON-string escape: backslashes first, then double-quotes, then control
+* characters. Order matters — escape `\` first so the `\"` we introduce next
+* is not double-escaped. Returns r(out).
+cap program drop _dwsave_jsonesc
+program define   _dwsave_jsonesc, rclass
+    syntax , string(string asis)
+    local bs = char(92)
+    local dq = char(34)
+    local tb = char(9)
+    local lf = char(10)
+    local cr = char(13)
+    local s  = `"`string'"'
+    local s  = subinstr(`"`s'"', "`bs'", "`bs'`bs'", .)
+    local s  = subinstr(`"`s'"', "`dq'", "`bs'`dq'", .)
+    local s  = subinstr(`"`s'"', "`tb'", "`bs'" + "t", .)
+    local s  = subinstr(`"`s'"', "`cr'", "`bs'" + "r", .)
+    local s  = subinstr(`"`s'"', "`lf'", "`bs'" + "n", .)
+    return local out `"`s'"'
+end
+
+cap program drop dw_save
+program define   dw_save, rclass
+
+    syntax , FILEname(string) Path(string) IDvars(string) ///
+        [ METAdata(string asis)              ///
+          TItle(string asis)                 ///
+          PROducer(string asis)              ///
+          SOurces(string asis)               ///
+          CONtact(string)                    ///
+          VIntage(string)                    ///
+          ALLOW_CANONICAL_write              ///
+          NOCompress                         ///
+          NOSidecar ]
+
+    *----------------------------------------------------------
+    * 1. Mode contract — block canonical writes in reviewer mode
+    *----------------------------------------------------------
+    if "$dw_mode" == "reviewer" & "`allow_canonical_write'" == "" {
+        local canonical_roots `"$teamsWrkDataCanonical $teamsRawDataCanonical"'
+        foreach root of local canonical_roots {
+            if "`root'" != "" & strpos("`path'", "`root'") == 1 {
+                noi di as error "{phang}dw_save: reviewer mode is forbidden to write under canonical root [`root']. Pass -allow_canonical_write- to override (DBM bootstraps only).{p_end}"
+                error 459
+            }
+        }
+    }
+
+    *----------------------------------------------------------
+    * 2. Validate path
+    *----------------------------------------------------------
+    mata : st_numscalar("r(dirExist)", direxists("`path'"))
+    if `r(dirExist)' == 0 {
+        noi di as error "{phang}dw_save: directory does not exist: `path'. Create it first (see dw_mkdir).{p_end}"
+        error 601
+    }
+
+    *----------------------------------------------------------
+    * 3. Normalise filename
+    *----------------------------------------------------------
+    if strrpos("`filename'", ".dta") == length("`filename'") - 3 {
+        local filename = substr("`filename'", 1, length("`filename'") - 4)
+    }
+    local fullpath `"`path'/`filename'.dta"'
+    local sidecarpath `"`fullpath'.provenance.json"'
+
+    *----------------------------------------------------------
+    * 4. isid contract
+    *----------------------------------------------------------
+    capture isid `idvars'
+    if _rc != 0 {
+        noi di as error "{phang}dw_save: idvars [`idvars'] do not uniquely identify the dataset (or contain missing). No file written.{p_end}"
+        error _rc
+    }
+
+    *----------------------------------------------------------
+    * 5. Compress (unless suppressed)
+    *----------------------------------------------------------
+    if "`nocompress'" == "" {
+        quietly compress
+    }
+
+    *----------------------------------------------------------
+    * 6. Capture schema for provenance sidecar (before save)
+    *----------------------------------------------------------
+    quietly count
+    local n_rows = r(N)
+    quietly describe, varlist
+    local n_cols = r(k)
+    local varnames `"`r(varlist)'"'
+
+    * datasignature gives a content hash (SHA-1 of variables/values).
+    * It is Stata-native, no external dep, and survives AppLocker.
+    quietly datasignature
+    local datasig `"`r(datasignature)'"'
+
+    *----------------------------------------------------------
+    * 7. Save
+    *----------------------------------------------------------
+    quietly save `"`fullpath'"', replace
+    noi di as txt `"{pstd}dw_save: wrote `n_rows' x `n_cols' to `fullpath'{p_end}"'
+
+    *----------------------------------------------------------
+    * 8. Provenance sidecar (unless suppressed)
+    *----------------------------------------------------------
+    if "`nosidecar'" == "" {
+        local now `"`c(current_date)' `c(current_time)'"'
+        local user `"`c(username)'"'
+        local dwm  `"$dw_mode"'
+
+        * Escape every value the user (or system) can influence before it
+        * lands in the JSON. Windows paths contain backslashes; metadata
+        * may contain quotes or newlines; downstream R dw_io readers will
+        * reject malformed JSON.
+        _dwsave_jsonesc, string(`"`fullpath'"')
+        local esc_fullpath `"`r(out)'"'
+        _dwsave_jsonesc, string(`"`now'"')
+        local esc_now `"`r(out)'"'
+        _dwsave_jsonesc, string(`"`user'"')
+        local esc_user `"`r(out)'"'
+        _dwsave_jsonesc, string(`"`dwm'"')
+        local esc_dwm `"`r(out)'"'
+        _dwsave_jsonesc, string(`"`datasig'"')
+        local esc_datasig `"`r(out)'"'
+        _dwsave_jsonesc, string(`"`idvars'"')
+        local esc_idvars `"`r(out)'"'
+
+        tempname fh
+        file open `fh' using `"`sidecarpath'"', write text replace
+
+        file write `fh' "{" _n
+        file write `fh' `"  "format": "dw_save.provenance/1","' _n
+        file write `fh' `"  "path": ""' _q `"`esc_fullpath'""' _q "," _n
+        file write `fh' `"  "written_at": ""' _q `"`esc_now'""' _q "," _n
+        file write `fh' `"  "user": ""' _q `"`esc_user'""' _q "," _n
+        file write `fh' `"  "dw_mode": ""' _q `"`esc_dwm'""' _q "," _n
+        file write `fh' `"  "datasignature": ""' _q `"`esc_datasig'""' _q "," _n
+        file write `fh' `"  "schema": { "rows": `n_rows', "cols": `n_cols' },"' _n
+        file write `fh' `"  "idvars": ""' _q `"`esc_idvars'""' _q "," _n
+
+        * Optional explicit metadata block
+        file write `fh' `"  "metadata": {"' _n
+        if `"`title'"' != "" {
+            _dwsave_jsonesc, string(`"`title'"')
+            file write `fh' `"    "title": ""' _q `"`r(out)'""' _q "," _n
+        }
+        if `"`producer'"' != "" {
+            _dwsave_jsonesc, string(`"`producer'"')
+            file write `fh' `"    "producer": ""' _q `"`r(out)'""' _q "," _n
+        }
+        if `"`sources'"' != "" {
+            _dwsave_jsonesc, string(`"`sources'"')
+            file write `fh' `"    "sources": ""' _q `"`r(out)'""' _q "," _n
+        }
+        if "`contact'" != "" {
+            _dwsave_jsonesc, string(`"`contact'"')
+            file write `fh' `"    "contact": ""' _q `"`r(out)'""' _q "," _n
+        }
+        if "`vintage'" != "" {
+            _dwsave_jsonesc, string(`"`vintage'"')
+            file write `fh' `"    "vintage": ""' _q `"`r(out)'""' _q "," _n
+        }
+        * Pass-through `metadata("key1 value1; key2 value2")` semicolon-separated
+        if `"`metadata'"' != "" {
+            local meta_remainder `"`metadata'"'
+            while `"`meta_remainder'"' != "" {
+                gettoken pair meta_remainder : meta_remainder, parse(";")
+                local pair = trim(`"`pair'"')
+                if `"`pair'"' != "" & `"`pair'"' != ";" {
+                    gettoken k v : pair
+                    local v = trim(`"`v'"')
+                    _dwsave_jsonesc, string(`"`k'"')
+                    local esc_k `"`r(out)'"'
+                    _dwsave_jsonesc, string(`"`v'"')
+                    local esc_v `"`r(out)'"'
+                    file write `fh' `"    ""' _q `"`esc_k'""' _q `"": ""' _q `"`esc_v'""' _q "," _n
+                }
+                local meta_remainder = subinstr(`"`meta_remainder'"', ";", "", 1)
+            }
+        }
+        file write `fh' `"    "_end": "true""' _n
+        file write `fh' "  }" _n
+        file write `fh' "}" _n
+        file close `fh'
+
+        noi di as txt `"{pstd}dw_save: wrote provenance sidecar -> `sidecarpath'{p_end}"'
+    }
+
+    *----------------------------------------------------------
+    * 9. Returns
+    *----------------------------------------------------------
+    return local path          `"`fullpath'"'
+    return local sidecar       `"`sidecarpath'"'
+    return scalar n_rows       = `n_rows'
+    return scalar n_cols       = `n_cols'
+    return local datasignature `"`datasig'"'
+
+end
