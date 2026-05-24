@@ -1,0 +1,35 @@
+Package: csotoolkit
+Type: Package
+Title: Shared Helpers for UNICEF DW-Production Database Managers
+Version: 0.1.0.9000
+Date: 2026-05-24
+Authors@R: c(
+    person("Joao Pedro", "Azevedo", email = "jazevedo@unicef.org",
+           role = c("aut", "cre"),
+           comment = "UNICEF Chief Statistician"),
+    person("UNICEF Data & Analytics", role = "cph")
+  )
+Description: Uniform IO, cached API access, mode-aware path routing, and
+    version-drift detection helpers for UNICEF Data & Analytics database
+    managers, reviewers, and ingestors working with the DW-Production
+    indicator data warehouse. Designed for vendoring (copy into 00_functions/)
+    rather than CRAN-style installation, to honour vintage permanence and
+    AppLocker constraints on UNICEF laptops.
+License: MIT + file LICENSE
+URL: https://github.com/unicef-drp/cso-toolkit
+BugReports: https://github.com/unicef-drp/cso-toolkit/issues
+Encoding: UTF-8
+Imports:
+    data.table,
+    readr,
+    digest,
+    jsonlite,
+    yaml
+Suggests:
+    openxlsx,
+    haven,
+    arrow,
+    httr,
+    rsdmx,
+    wbstats
+RoxygenNote: 7.3.0

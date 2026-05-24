@@ -1,0 +1,20 @@
+# Vendor this file into <consumer-repo>/00_functions/.toolkit_manifest.yml
+# and pin the version that matches the vendored helpers.
+#
+# `cso_toolkit_check()` reads this file, queries the GitHub API for the
+# latest tag on `source:`, and warns if the consumer is behind.
+
+source: "unicef-drp/cso-toolkit"
+pulled_version: "v0.1.0-rc1"
+pulled_date: "2026-05-24"
+pulled_by: "<your-name>"
+
+# Files vendored from cso-toolkit/r/R/ into consumer's 00_functions/
+vendored:
+  - dw_io.R
+  - dw_api.R
+  - cso_toolkit_sync.R
+
+# Local edits applied on top of vendored files. List paths here so that
+# `cso_toolkit_pull()` skips them on update. (Empty by default.)
+local_edits: []
