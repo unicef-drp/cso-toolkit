@@ -121,16 +121,45 @@ catches up — the hotfix does **not** automatically reach `main`.
 
 ### Recovering from a wrong-branch commit
 
-If you accidentally commit on `develop` (instead of a feature branch):
+There are two distinct cases. Pick the one that matches.
+
+**Case 1 — the bad commit is still local (you have not pushed yet).**
+You can rewind your local `develop` to match the remote because no one else
+has seen the commit. Save the work on a new branch first:
 
 ```bash
 git branch feat/recover-work      # save the work on a new branch
-git reset --hard origin/develop   # reset develop to the remote tip
+git reset --hard origin/develop   # rewind LOCAL develop to the remote tip
 git checkout feat/recover-work    # continue work on the new branch
 ```
 
-The protection settings will refuse a force push to `develop`, so even an
-admin cannot rewrite its history — the recovery above is local-only.
+**Case 2 — the bad commit has already been pushed to `origin/develop`.**
+You cannot rewrite history on the remote: the branch protection blocks
+force pushes (and even admin bypass on `develop` does not unlock
+`allow_force_pushes`). The commit is therefore *permanent* in the sha
+chain; the only correct remediation is to make a **new** commit that
+undoes it (`git revert`) or fixes it forward, then push normally:
+
+```bash
+git checkout develop
+git pull
+git revert <sha-of-bad-commit>   # creates a new commit that undoes <sha>
+git push origin develop
+```
+
+If the bad commit also contained work you want to keep on a feature
+branch, cherry-pick it onto a new branch *before* reverting:
+
+```bash
+git branch feat/recover-work <sha-of-bad-commit>
+git revert <sha-of-bad-commit>
+git push origin develop
+git checkout feat/recover-work    # continue work on the new branch
+```
+
+The `git reset --hard` recipe from Case 1 is local-only — running it on
+Case 2 just desyncs your working tree from the remote and the next
+`git pull` will bring the bad commit back.
 
 ## See also
 

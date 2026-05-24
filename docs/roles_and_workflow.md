@@ -16,9 +16,9 @@ The diagram below shows who reads, who writes, who pulls from external APIs, and
 ```mermaid
 flowchart LR
     APIs[External APIs<br/>UIS · SDMX · WB · ILO · UNSD]
-    Cache[(API cache<br/>060.DW-MASTER/_apis)]
+    Cache[(API cache<br/>060.DW-MASTER/01_dw_prep/<br/>011_rawdata/_apis)]
     Pipeline[Sector pipeline]
-    Canonical[(Canonical deposit<br/>060.DW-MASTER/013_wrkdata)]
+    Canonical[(Canonical deposit<br/>060.DW-MASTER/01_dw_prep/<br/>013_wrkdata)]
     Zmirror[(Z: mirror<br/>integrity check)]
 
     Sandbox[(Reviewer sandbox<br/>sandboxRoot)]
