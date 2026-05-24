@@ -1,5 +1,33 @@
 # NEWS — cso-toolkit
 
+## Unreleased
+
+**R helpers (additions):**
+- `aggregate_data.R` — original `aggregate_data()` (mean / weighted_mean,
+  optional global aggregate, population + country coverage). Lifted from
+  `DW-Production/00_functions/`. Kept for back-compat.
+- `aggregate_data_v2.R` — `aggregate_data_v2()` with `weighted_mean`, `mean`,
+  `sum`, `proportion`; coverage threshold; metadata columns. Ships
+  `generate_agg_footnote()`, `apply_time_window()`, and a v1-compatible
+  wrapper that delegates the v1 signature to v2.
+- `generate_markdown_report.R` — `generate_markdown_report()` +
+  `process_all_csv_files()`. Descriptive-stats Markdown reports from CSV
+  files; handles missing country / year / indicator columns gracefully.
+- `create_sector_script.R` — `create_sector_script(sector_name, sector_code,
+  base_dir = ".", ...)` scaffolds a `<base_dir>/<code>/00_run_<code>.R`
+  template with profile verification, logging, runtime tracking, and
+  try-catch. **Generalized over the DW-Production original**: `base_dir`,
+  `profile_name`, `profile_file`, `input_subpath`, `output_subpath` are
+  parameters. DW-Production consumers get the original behaviour via the
+  convenience wrapper `create_dw_sector_script()`.
+
+**Docs (additions):**
+- `docs/dw_io_reference.md` — per-function reference for `dw_io.R` lifted
+  out of the DW-Production `00_functions/README.md`.
+- `docs/dw_api_reference.md` — per-function reference for `dw_api.R` (same
+  lift; behaviour matrix, supported APIs, worked SDMX example, sector
+  migration checklist).
+
 ## v0.1.0-rc1 (2026-05-24)
 
 First release candidate. Extracted from `unicef-drp/DW-Production` PR #89.

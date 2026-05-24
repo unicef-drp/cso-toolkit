@@ -1,6 +1,8 @@
 # r/R/ — R helpers
 
-Three files. Vendored, not installed.
+Vendored, not installed.
+
+**Core helpers (shipped in v0.1.0-rc1):**
 
 - [`dw_io.R`](dw_io.R) — uniform read / write / compare / merge / isid helpers.
   Auto-dispatch by extension. Writes `.provenance.json` sidecars.
@@ -9,6 +11,25 @@ Three files. Vendored, not installed.
 - [`cso_toolkit_sync.R`](cso_toolkit_sync.R) — version-drift detection +
   pull / diff against the upstream tag pinned in your consumer's
   `.toolkit_manifest.yml`.
+
+**Aggregation + scaffolding helpers (added post-v0.1.0-rc1):**
+
+- [`aggregate_data.R`](aggregate_data.R) — original `aggregate_data()`
+  (mean / weighted_mean, optional global aggregate, population + country
+  coverage). Kept for back-compat.
+- [`aggregate_data_v2.R`](aggregate_data_v2.R) — `aggregate_data_v2()` with
+  `weighted_mean`, `mean`, `sum`, `proportion`; coverage threshold;
+  metadata columns. Also ships `generate_agg_footnote()` and
+  `apply_time_window()`, plus a back-compat wrapper that delegates the v1
+  signature to v2.
+- [`generate_markdown_report.R`](generate_markdown_report.R) — turn a CSV (or
+  a folder of CSVs) into a Markdown descriptive-statistics report with
+  variable details and optional country / year / indicator summaries.
+- [`create_sector_script.R`](create_sector_script.R) —
+  `create_sector_script(sector_name, sector_code, base_dir = ".", ...)`
+  scaffolds a `<base_dir>/<code>/00_run_<code>.R` template with profile
+  verification, logging, runtime tracking, and try-catch. Ships a
+  DW-Production convenience wrapper `create_dw_sector_script()`.
 
 ## How a consumer vendors these
 

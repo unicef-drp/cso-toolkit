@@ -14,14 +14,20 @@ via **vendoring** (see [Vendoring](#vendoring)), not `source()` over the network
 
 | Path | Purpose |
 |---|---|
-| [`r/R/dw_io.R`](r/R/dw_io.R) | Uniform IO helpers: `dw_save`, `dw_use`, `dw_compare`, `dw_merge`, `dw_isid`, `dw_verify_z`. Auto-dispatches by extension (CSV/TSV/XLSX/RDS/RData/DTA/Parquet/JSON/YAML). Writes a `.provenance.json` sidecar with `sha256`, schema, user, timestamp, metadata. |
-| [`r/R/dw_api.R`](r/R/dw_api.R) | Cached API fetcher: `dw_api_fetch(api, cache_key, ...)`. Supports `uis`, `sdmx`, `sdmx_codelist`, `wb`, `wb_indicators`, `ilo`, `unsd_sdg`, `github_raw`, `http`, `json_get`. Cache lives in `<rawdata>/_apis/<api>/<cache_key>.<ext>`. Enforces the **reviewer mode no-API** contract. |
+| [`r/R/dw_io.R`](r/R/dw_io.R) | Uniform IO helpers: `dw_save`, `dw_use`, `dw_compare`, `dw_merge`, `dw_isid`, `dw_verify_z`. Auto-dispatches by extension (CSV/TSV/XLSX/RDS/RData/DTA/Parquet/JSON/YAML). Writes a `.provenance.json` sidecar with `sha256`, schema, user, timestamp, metadata. Per-function reference: [`docs/dw_io_reference.md`](docs/dw_io_reference.md). |
+| [`r/R/dw_api.R`](r/R/dw_api.R) | Cached API fetcher: `dw_api_fetch(api, cache_key, ...)`. Supports `uis`, `sdmx`, `sdmx_codelist`, `wb`, `wb_indicators`, `ilo`, `unsd_sdg`, `github_raw`, `http`, `json_get`. Cache lives in `<rawdata>/_apis/<api>/<cache_key>.<ext>`. Enforces the **reviewer mode no-API** contract. Per-function reference: [`docs/dw_api_reference.md`](docs/dw_api_reference.md). |
 | [`r/R/cso_toolkit_sync.R`](r/R/cso_toolkit_sync.R) | `cso_toolkit_check()` / `cso_toolkit_diff()` / `cso_toolkit_pull()` — version-drift detection and update workflow for vendored consumers. |
+| [`r/R/aggregate_data.R`](r/R/aggregate_data.R) | Original `aggregate_data()`: mean / weighted_mean, optional global aggregate, population + country coverage. Kept for back-compat. |
+| [`r/R/aggregate_data_v2.R`](r/R/aggregate_data_v2.R) | `aggregate_data_v2()` with `weighted_mean`, `mean`, `sum`, `proportion`; coverage threshold; metadata columns. Ships `generate_agg_footnote()`, `apply_time_window()`, and a v1-compatible wrapper. |
+| [`r/R/generate_markdown_report.R`](r/R/generate_markdown_report.R) | `generate_markdown_report()` + `process_all_csv_files()` — descriptive-stats Markdown reports from CSV files. |
+| [`r/R/create_sector_script.R`](r/R/create_sector_script.R) | `create_sector_script(sector_name, sector_code, base_dir = ".", ...)` — scaffold a sector run-script template (profile check, logging, try-catch). DW-Production convenience wrapper: `create_dw_sector_script()`. |
 | [`stata/src/`](stata/src/) | Stata mirrors (placeholder for v0.1; Stata-side helpers ship in v0.2). |
 | [`python/src/`](python/src/) | Python mirrors (placeholder for v0.1; Python-side helpers ship in v0.2). |
 | [`docs/roles_and_workflow.md`](docs/roles_and_workflow.md) | Canonical PRODUCER / REVIEWER / INGESTOR role definitions + folder layout + per-role workflow + forbidden boundaries. |
 | [`docs/toolkit_strategy.md`](docs/toolkit_strategy.md) | Why this repo exists, the vendoring model, the version-drift detection workflow, the three-phase rollout. |
 | [`docs/mode_contract_integration.md`](docs/mode_contract_integration.md) | How to wire `dw_mode` (producer/reviewer) into a sector profile. |
+| [`docs/dw_io_reference.md`](docs/dw_io_reference.md) | Per-function reference for `dw_io.R` (call styles, isid contract, mode contract, Z: mirror, provenance sidecar). |
+| [`docs/dw_api_reference.md`](docs/dw_api_reference.md) | Per-function reference for `dw_api.R` (behaviour matrix, supported APIs, worked example, migration checklist). |
 | [`templates/dbm_submission_template.md`](templates/dbm_submission_template.md) | Eight-section pre-deposit checklist that DBMs complete before a deposit goes canonical. |
 
 ---
