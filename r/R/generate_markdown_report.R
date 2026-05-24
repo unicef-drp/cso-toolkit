@@ -36,8 +36,9 @@
 generate_markdown_report <- function(csv_file_path, country_column, year_column, indicator_column, value_column, output_path = NULL) {
 
   
-  # Read the CSV file
-  data <- read_csv(csv_file_path)
+  # Read the CSV file (generic helper accepting an arbitrary path; dw_use
+  # is not applicable because the file is not part of the warehouse layout).
+  data <- read_csv(csv_file_path)  # cso-allow: io-read-csv
   
   # Calculate general preamble information
   time_date <- Sys.time()
