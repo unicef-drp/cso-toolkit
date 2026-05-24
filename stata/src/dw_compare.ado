@@ -48,11 +48,12 @@ program define   dw_compare, rclass
     preserve
 
     quietly use "`reference_path'", clear
-    quietly isid `idvars'
+    capture isid `idvars'
     if _rc {
+        local saved_rc = _rc
         noi di as error "{phang}dw_compare: reference is not unique on idvars [`idvars'].{p_end}"
         restore
-        error _rc
+        error `saved_rc'
     }
     quietly count
     local n_ref = r(N)
@@ -82,11 +83,12 @@ program define   dw_compare, rclass
     * 3. Load current, merge against reference
     *----------------------------------------------------------
     quietly use "`current_path'", clear
-    quietly isid `idvars'
+    capture isid `idvars'
     if _rc {
+        local saved_rc = _rc
         noi di as error "{phang}dw_compare: current is not unique on idvars [`idvars'].{p_end}"
         restore
-        error _rc
+        error `saved_rc'
     }
     quietly count
     local n_cur = r(N)
@@ -103,6 +105,9 @@ program define   dw_compare, rclass
 
     *----------------------------------------------------------
     * 4. Per-column classification on _merge == 3
+    * (computed once here; stashed in `_dwcmp_<v>' locals and reused
+    * by the Markdown branch below so the comparison rules live in
+    * exactly one place).
     *----------------------------------------------------------
     local n_changed_total = 0
     local col_changed
@@ -122,6 +127,7 @@ program define   dw_compare, rclass
             quietly count if _merge == 3 & `v' != `v'_ref
             local n_diff = r(N)
         }
+        local _dwcmp_`v' = `n_diff'
         if `n_diff' > 0 {
             local col_changed `"`col_changed' `v'(`n_diff')"'
             local n_changed_total = `n_changed_total' + `n_diff'
@@ -179,19 +185,9 @@ program define   dw_compare, rclass
         file write `mh' "| column | n_diff |" _n
         file write `mh' "|---|---:|" _n
         foreach v of local valuevars {
-            local n_diff_v = 0
-            capture confirm numeric variable `v'
-            if !_rc {
-                quietly count if _merge == 3 & ///
-                    ( (missing(`v') != missing(`v'_ref)) ///
-                      | (!missing(`v') & !missing(`v'_ref) & abs(`v' - `v'_ref) > `tol') )
-                local n_diff_v = r(N)
-            }
-            else {
-                quietly count if _merge == 3 & `v' != `v'_ref
-                local n_diff_v = r(N)
-            }
-            file write `mh' "| `v' | `n_diff_v' |" _n
+            * Reuse the n_diff computed in step 4 — single source of truth
+            * for the per-column comparison rule.
+            file write `mh' "| `v' | `_dwcmp_`v'' |" _n
         }
         file close `mh'
         noi di as txt "  report written -> `report'"

@@ -22,6 +22,26 @@
 * and adjusted to align with the cso-toolkit provenance-sidecar pattern
 * instead of edukit's `char _dta[]` metadata model.
 
+* JSON-string escape: backslashes first, then double-quotes, then control
+* characters. Order matters — escape `\` first so the `\"` we introduce next
+* is not double-escaped. Returns r(out).
+cap program drop _dwsave_jsonesc
+program define   _dwsave_jsonesc, rclass
+    syntax , string(string asis)
+    local bs = char(92)
+    local dq = char(34)
+    local tb = char(9)
+    local lf = char(10)
+    local cr = char(13)
+    local s  = `"`string'"'
+    local s  = subinstr(`"`s'"', "`bs'", "`bs'`bs'", .)
+    local s  = subinstr(`"`s'"', "`dq'", "`bs'`dq'", .)
+    local s  = subinstr(`"`s'"', "`tb'", "`bs'" + "t", .)
+    local s  = subinstr(`"`s'"', "`cr'", "`bs'" + "r", .)
+    local s  = subinstr(`"`s'"', "`lf'", "`bs'" + "n", .)
+    return local out `"`s'"'
+end
+
 cap program drop dw_save
 program define   dw_save, rclass
 
@@ -111,57 +131,57 @@ program define   dw_save, rclass
         local user `"`c(username)'"'
         local dwm  `"$dw_mode"'
 
+        * Escape every value the user (or system) can influence before it
+        * lands in the JSON. Windows paths contain backslashes; metadata
+        * may contain quotes or newlines; downstream R dw_io readers will
+        * reject malformed JSON.
+        _dwsave_jsonesc, string(`"`fullpath'"')
+        local esc_fullpath `"`r(out)'"'
+        _dwsave_jsonesc, string(`"`now'"')
+        local esc_now `"`r(out)'"'
+        _dwsave_jsonesc, string(`"`user'"')
+        local esc_user `"`r(out)'"'
+        _dwsave_jsonesc, string(`"`dwm'"')
+        local esc_dwm `"`r(out)'"'
+        _dwsave_jsonesc, string(`"`datasig'"')
+        local esc_datasig `"`r(out)'"'
+        _dwsave_jsonesc, string(`"`idvars'"')
+        local esc_idvars `"`r(out)'"'
+
         tempname fh
         file open `fh' using `"`sidecarpath'"', write text replace
 
         file write `fh' "{" _n
         file write `fh' `"  "format": "dw_save.provenance/1","' _n
-        file write `fh' `"  "path": ""' _q
-        file write `fh' `"`fullpath'""' _q
-        file write `fh' "," _n
-        file write `fh' `"  "written_at": ""' _q
-        file write `fh' `"`now'""' _q
-        file write `fh' "," _n
-        file write `fh' `"  "user": ""' _q
-        file write `fh' `"`user'""' _q
-        file write `fh' "," _n
-        file write `fh' `"  "dw_mode": ""' _q
-        file write `fh' `"`dwm'""' _q
-        file write `fh' "," _n
-        file write `fh' `"  "datasignature": ""' _q
-        file write `fh' `"`datasig'""' _q
-        file write `fh' "," _n
+        file write `fh' `"  "path": ""' _q `"`esc_fullpath'""' _q "," _n
+        file write `fh' `"  "written_at": ""' _q `"`esc_now'""' _q "," _n
+        file write `fh' `"  "user": ""' _q `"`esc_user'""' _q "," _n
+        file write `fh' `"  "dw_mode": ""' _q `"`esc_dwm'""' _q "," _n
+        file write `fh' `"  "datasignature": ""' _q `"`esc_datasig'""' _q "," _n
         file write `fh' `"  "schema": { "rows": `n_rows', "cols": `n_cols' },"' _n
-        file write `fh' `"  "idvars": ""' _q
-        file write `fh' `"`idvars'""' _q
-        file write `fh' "," _n
+        file write `fh' `"  "idvars": ""' _q `"`esc_idvars'""' _q "," _n
 
         * Optional explicit metadata block
         file write `fh' `"  "metadata": {"' _n
         if `"`title'"' != "" {
-            file write `fh' `"    "title": ""' _q
-            file write `fh' `"`title'""' _q
-            file write `fh' "," _n
+            _dwsave_jsonesc, string(`"`title'"')
+            file write `fh' `"    "title": ""' _q `"`r(out)'""' _q "," _n
         }
         if `"`producer'"' != "" {
-            file write `fh' `"    "producer": ""' _q
-            file write `fh' `"`producer'""' _q
-            file write `fh' "," _n
+            _dwsave_jsonesc, string(`"`producer'"')
+            file write `fh' `"    "producer": ""' _q `"`r(out)'""' _q "," _n
         }
         if `"`sources'"' != "" {
-            file write `fh' `"    "sources": ""' _q
-            file write `fh' `"`sources'""' _q
-            file write `fh' "," _n
+            _dwsave_jsonesc, string(`"`sources'"')
+            file write `fh' `"    "sources": ""' _q `"`r(out)'""' _q "," _n
         }
         if "`contact'" != "" {
-            file write `fh' `"    "contact": ""' _q
-            file write `fh' `"`contact'""' _q
-            file write `fh' "," _n
+            _dwsave_jsonesc, string(`"`contact'"')
+            file write `fh' `"    "contact": ""' _q `"`r(out)'""' _q "," _n
         }
         if "`vintage'" != "" {
-            file write `fh' `"    "vintage": ""' _q
-            file write `fh' `"`vintage'""' _q
-            file write `fh' "," _n
+            _dwsave_jsonesc, string(`"`vintage'"')
+            file write `fh' `"    "vintage": ""' _q `"`r(out)'""' _q "," _n
         }
         * Pass-through `metadata("key1 value1; key2 value2")` semicolon-separated
         if `"`metadata'"' != "" {
@@ -172,11 +192,11 @@ program define   dw_save, rclass
                 if `"`pair'"' != "" & `"`pair'"' != ";" {
                     gettoken k v : pair
                     local v = trim(`"`v'"')
-                    file write `fh' `"    ""' _q
-                    file write `fh' `"`k'""' _q
-                    file write `fh' `"": ""' _q
-                    file write `fh' `"`v'""' _q
-                    file write `fh' "," _n
+                    _dwsave_jsonesc, string(`"`k'"')
+                    local esc_k `"`r(out)'"'
+                    _dwsave_jsonesc, string(`"`v'"')
+                    local esc_v `"`r(out)'"'
+                    file write `fh' `"    ""' _q `"`esc_k'""' _q `"": ""' _q `"`esc_v'""' _q "," _n
                 }
                 local meta_remainder = subinstr(`"`meta_remainder'"', ";", "", 1)
             }
