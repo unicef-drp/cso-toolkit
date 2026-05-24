@@ -163,7 +163,7 @@ test_scripts <- function(path,
     path
   }
 
-  rules <- c(.cso_test_rules, custom_rules %||% list())
+  rules <- c(.cso_test_rules, if (is.null(custom_rules)) list() else custom_rules)
 
   violations <- vector("list", 0)
 
@@ -238,5 +238,3 @@ test_scripts <- function(path,
 
   invisible(out)
 }
-
-`%||%` <- function(a, b) if (!is.null(a)) a else b

@@ -10,9 +10,21 @@
 #' Status: STABLE
 #' =============================================================================
 
-library(dplyr)
-library(tidyr)
-library(rlang)
+## Packages used: dplyr, tidyr, rlang, stats. All calls below are
+## namespace-qualified (`dplyr::`, `tidyr::`, `rlang::`, `stats::`); this
+## file does NOT attach packages at source-time and does NOT mutate the
+## caller's search path. Matches the dw_io.R / dw_api.R vendored-helper
+## pattern.
+.cso_require <- function(pkgs) {
+  for (p in pkgs) {
+    if (!requireNamespace(p, quietly = TRUE)) {
+      stop("aggregate_data_v2 requires the '", p,
+           "' package; install it with install.packages('", p, "').",
+           call. = FALSE)
+    }
+  }
+}
+.cso_require(c("dplyr", "tidyr", "rlang"))
 
 #' Aggregate Data v2.0 - Enhanced for Cross-Sector Use
 #'
@@ -101,8 +113,8 @@ aggregate_data_v2 <- function(data,
       ),
       Pop_Covered = dplyr::if_else(sum(as.numeric(!!weight_sym), na.rm = TRUE) > 0,
                                    sum(.weight_non_na, na.rm = TRUE) / sum(as.numeric(!!weight_sym), na.rm = TRUE), 0),
-      Country_Coverage = if (country_id %in% names(dplyr::pick(dplyr::everything()))) dplyr::n_distinct(dplyr::if_else(!is.na(!!value_sym), as.character(!!rlang::sym(country_id)), NA_character_)) else dplyr::n(),
-      Total_Countries = if (country_id %in% names(dplyr::pick(dplyr::everything()))) dplyr::n_distinct(!!rlang::sym(country_id)) else dplyr::n(),
+      Country_Coverage = if (country_id %in% names(dplyr::pick(dplyr::everything()))) dplyr::n_distinct(dplyr::if_else(!is.na(!!value_sym), as.character(!!rlang::sym(country_id)), NA_character_), na.rm = TRUE) else dplyr::n(),
+      Total_Countries = if (country_id %in% names(dplyr::pick(dplyr::everything()))) dplyr::n_distinct(!!rlang::sym(country_id), na.rm = TRUE) else dplyr::n(),
       Total_Population = sum(as.numeric(!!weight_sym), na.rm = TRUE),
       Data_Population = sum(.weight_non_na, na.rm = TRUE),
       Number_Affected = sum(.num_affected, na.rm = TRUE),
@@ -130,8 +142,8 @@ aggregate_data_v2 <- function(data,
           }
         ),
         Pop_Covered = if (sum(as.numeric(!!weight_sym), na.rm = TRUE) > 0) sum(.weight_non_na, na.rm = TRUE) / sum(as.numeric(!!weight_sym), na.rm = TRUE) else 0,
-        Country_Coverage = if (country_id %in% names(dplyr::pick(dplyr::everything()))) dplyr::n_distinct(dplyr::if_else(!is.na(!!value_sym), as.character(!!rlang::sym(country_id)), NA_character_)) else dplyr::n(),
-        Total_Countries = if (country_id %in% names(dplyr::pick(dplyr::everything()))) dplyr::n_distinct(!!rlang::sym(country_id)) else dplyr::n(),
+        Country_Coverage = if (country_id %in% names(dplyr::pick(dplyr::everything()))) dplyr::n_distinct(dplyr::if_else(!is.na(!!value_sym), as.character(!!rlang::sym(country_id)), NA_character_), na.rm = TRUE) else dplyr::n(),
+        Total_Countries = if (country_id %in% names(dplyr::pick(dplyr::everything()))) dplyr::n_distinct(!!rlang::sym(country_id), na.rm = TRUE) else dplyr::n(),
         Total_Population = sum(as.numeric(!!weight_sym), na.rm = TRUE),
         Data_Population = sum(.weight_non_na, na.rm = TRUE),
         Number_Affected = sum(.num_affected, na.rm = TRUE)
@@ -214,27 +226,9 @@ apply_time_window <- function(data,
     dplyr::ungroup()
 }
 
-#' Backward compatibility wrapper preserving original API
-#' @export
-aggregate_data <- function(data, value, weight, by, 
-                           global = TRUE, 
-                           method = c("mean", "weighted_mean"), 
-                           pop.coverage = FALSE, 
-                           country.coverage = FALSE) {
-  method <- match.arg(method)
-  aggregate_data_v2(
-    data = data,
-    value = value,
-    weight = weight,
-    by = by,
-    global = global,
-    method = method,
-    coverage_threshold = NULL,
-    pop.coverage = pop.coverage,
-    country.coverage = country.coverage,
-    total.population = FALSE,
-    number.affected = FALSE,
-    global_label = "World",
-    validate = FALSE
-  )
-}
+## Note on `aggregate_data()` (the v1 signature):
+## A legacy `aggregate_data()` is provided by `aggregate_data.R` (separate
+## file). Defining it here too would shadow the legacy definition based on
+## source order, which is fragile. If you want the v2 behaviour through the
+## v1 signature, call `aggregate_data_v2(..., global_label = "World",
+## validate = FALSE)` explicitly.

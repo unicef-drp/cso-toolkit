@@ -35,21 +35,20 @@ aggregate_data <- function(data, value, weight, by,
   # Convert character inputs to symbols for tidy evaluation
   value_sym   <- rlang::sym(value)
   weight_sym  <- rlang::sym(weight)
-  by_syms     <- rlang::syms(by)
-  
+
   # Calculate actual coverage as the ratio of sum of weights for non-NA values to total sum of weights
   data <- data %>%
     drop_na(all_of(by)) %>%
-    group_by(across(!!!by_syms)) %>%
+    group_by(across(all_of(by))) %>%
     mutate(total_weight = sum(!!weight_sym, na.rm = TRUE),  # Total weight per group
            weight_non_na = ifelse(!is.na(!!value_sym), !!weight_sym, 0),  # Weight for non-NA values
            coverage_actual = sum(weight_non_na, na.rm = TRUE) / total_weight, # Actual coverage
            non_na_count = ifelse(!is.na(!!value_sym), 1, 0)) %>%
     ungroup()
-  
+
   # Aggregation based on method
   aggregated_data <- data %>%
-    group_by(across(!!!by_syms)) %>%
+    group_by(across(all_of(by))) %>%
     summarise(
       Aggregate = dplyr::case_when(
         method == "mean" ~ mean(!!value_sym, na.rm = TRUE),
@@ -88,10 +87,14 @@ aggregate_data <- function(data, value, weight, by,
       global_aggregate <- global_aggregate %>% select(-Country_Coverage)
     }
     
-    # Prepare global aggregate for binding
-    global_aggregate <- global_aggregate %>%
-      mutate(!!by := "World")  
-    
+    # Prepare global aggregate for binding — set every by-column to "World"
+    # so multi-column grouping works (mutate(!!by := "World") would only set
+    # the first column and leave the rest NA).
+    for (by_var in by) {
+      global_aggregate[[by_var]] <- "World"
+      aggregated_data[[by_var]]  <- as.character(aggregated_data[[by_var]])
+    }
+
     aggregated_data <- bind_rows(aggregated_data, global_aggregate)
   }
   
