@@ -30,6 +30,19 @@ Vendored, not installed.
   scaffolds a `<base_dir>/<code>/00_run_<code>.R` template with profile
   verification, logging, runtime tracking, and try-catch. Ships a
   DW-Production convenience wrapper `create_dw_sector_script()`.
+- [`profile_helpers.R`](profile_helpers.R) —
+  `create_profile(repo_name, ...)` scaffolds a `profile_<repo>.R` template
+  with the standard CSO building blocks (cross-platform user identification,
+  YAML config load, optional producer / reviewer `dw_mode` block, optional
+  Z: drive advisory, packages block, profile sentinel).
+  `review_profile(path, ...)` audits an existing profile for the same
+  blocks and reports `pass` / `warn` / `fail` per check.
+- [`test_scripts.R`](test_scripts.R) — `test_scripts(path, ...)` recursively
+  scans a directory of `.R` scripts and flags any direct call to a raw
+  file-IO or external-API command that `dw_io.R` / `dw_api.R` is meant to
+  wrap (e.g. `read_csv`, `saveRDS`, `httr::GET`, `rsdmx::readSDMX`,
+  `wbstats::wb_data`). Per-line escape hatch via `# cso-allow: <rule-id>`;
+  CI mode via `error_on_violation = TRUE`.
 
 ## How a consumer vendors these
 

@@ -1,8 +1,33 @@
-# cso-toolkit
+# cso-toolkit — UNICEF Chief Statistician Office toolkit
 
-Shared helpers, templates, and operating-model documentation for UNICEF Data &
-Analytics Database Managers (DBMs), reviewers, and ingestors working with the
-DW-Production indicator data warehouse.
+Shared helpers, templates, and operating-model documentation for the **UNICEF
+Chief Statistician Office (CSO)** — used by Database Managers (DBMs),
+reviewers, and ingestors working with the DW-Production indicator data
+warehouse and adjacent CSO-led pipelines.
+
+## Objective and motivation
+
+`cso-toolkit` exists to **facilitate the reproducibility and scalability of
+analytics developed by the UNICEF Data and Analytics Section in the Office of
+the Executive Director (OSE)**.
+
+Concretely it does three things:
+
+1. **Encodes a single IO + API contract.** One way to read, write, compare,
+   and merge data; one way to hit external APIs (UIS, SDMX, World Bank, ILO,
+   UNSD-SDG, GitHub-raw). Every call routes through wrappers that enforce
+   provenance sidecars, uniqueness checks, and the producer / reviewer mode
+   contract — so any analytics product can be rerun by someone other than
+   its original author and yield the same numbers.
+2. **Separates producer and reviewer mode at the session level.** The
+   Database Manager (producer) pulls live APIs and deposits canonical
+   artefacts; the reviewer reruns from those frozen artefacts and is
+   physically prevented from touching the network. The contract is enforced
+   by the toolkit at every wrapped call site, not by convention.
+3. **Scales across sectors and projects.** The same helpers, the same
+   templates, and the same audit functions are vendored into every sector
+   codebase under the CSO, which means new sectors and new projects inherit
+   the reproducibility floor for free instead of re-inventing it.
 
 **Status.** Pre-release. First tag is `v0.1.0-rc1`. Public so reviewers and
 external collaborators can read and cite the contract; production adoption is
@@ -21,6 +46,8 @@ via **vendoring** (see [Vendoring](#vendoring)), not `source()` over the network
 | [`r/R/aggregate_data_v2.R`](r/R/aggregate_data_v2.R) | `aggregate_data_v2()` with `weighted_mean`, `mean`, `sum`, `proportion`; coverage threshold; metadata columns. Ships `generate_agg_footnote()`, `apply_time_window()`, and a v1-compatible wrapper. |
 | [`r/R/generate_markdown_report.R`](r/R/generate_markdown_report.R) | `generate_markdown_report()` + `process_all_csv_files()` — descriptive-stats Markdown reports from CSV files. |
 | [`r/R/create_sector_script.R`](r/R/create_sector_script.R) | `create_sector_script(sector_name, sector_code, base_dir = ".", ...)` — scaffold a sector run-script template (profile check, logging, try-catch). DW-Production convenience wrapper: `create_dw_sector_script()`. |
+| [`r/R/profile_helpers.R`](r/R/profile_helpers.R) | `create_profile(repo_name, ...)` — scaffold a `profile_<repo>.R` with the standard CSO building blocks (user identification, YAML config, optional `dw_mode`, packages, profile sentinel). `review_profile(path, ...)` — audit an existing profile for the blocks the toolkit's contract relies on. |
+| [`r/R/test_scripts.R`](r/R/test_scripts.R) | `test_scripts(path, ...)` — recursively scan `.R` scripts and flag any direct calls to file-IO or external-API commands wrapped by `dw_io.R` / `dw_api.R` (e.g. `read_csv`, `httr::GET`, `rsdmx::readSDMX`). Per-line escape hatch via `# cso-allow: <rule-id>`; CI mode via `error_on_violation = TRUE`. |
 | [`stata/src/`](stata/src/) | Stata mirrors (placeholder for v0.1; Stata-side helpers ship in v0.2). |
 | [`python/src/`](python/src/) | Python mirrors (placeholder for v0.1; Python-side helpers ship in v0.2). |
 | [`docs/roles_and_workflow.md`](docs/roles_and_workflow.md) | Canonical PRODUCER / REVIEWER / INGESTOR role definitions + folder layout + per-role workflow + forbidden boundaries. |
@@ -88,5 +115,6 @@ CC BY 4.0 (docs) + MIT (code). See [LICENSE](LICENSE).
 
 ## How to cite
 
-> UNICEF Data & Analytics, *cso-toolkit: Shared helpers and operating model for
-> child-indicator data warehousing*, v0.1.0-rc1 (2026), https://github.com/unicef-drp/cso-toolkit
+> UNICEF Chief Statistician Office, *cso-toolkit: Shared helpers and operating
+> model for child-indicator data warehousing*, v0.1.0-rc1 (2026),
+> <https://github.com/unicef-drp/cso-toolkit>
