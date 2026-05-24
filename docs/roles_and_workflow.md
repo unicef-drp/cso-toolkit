@@ -9,6 +9,85 @@
 
 The pipeline has three distinct roles. They share the helpers in `00_functions/` (`dw_io.R`, `dw_api.R`), they share the same path globals from `profile_DW-Production.R`, but **they read and write different parts of the filesystem and they have different obligations.**
 
+### Data flow at a glance
+
+The diagram below shows who reads, who writes, who pulls from external APIs, and where the mode contract draws hard lines. Solid arrows are normal flow; dashed arrows are read-only paths.
+
+```mermaid
+flowchart LR
+    APIs[External APIs<br/>UIS · SDMX · WB · ILO · UNSD]
+    Cache[(API cache<br/>060.DW-MASTER/_apis)]
+    Pipeline[Sector pipeline]
+    Canonical[(Canonical deposit<br/>060.DW-MASTER/013_wrkdata)]
+    Zmirror[(Z: mirror<br/>integrity check)]
+
+    Sandbox[(Reviewer sandbox<br/>sandboxRoot)]
+    CompareReport[Compare report]
+    Issues[Issues filed to<br/>PRODUCER / sector lead]
+
+    Helix[Helix]
+    SDMXout[SDMX endpoints]
+    Portal[data.unicef.org]
+    SoWC[SoWC / SI tables]
+
+    APIs -->|PRODUCER<br/>dw_api_fetch refresh=TRUE| Cache
+    Cache --> Pipeline
+    Pipeline -->|PRODUCER<br/>dw_save isid=...| Canonical
+    Canonical -->|carbon copy| Zmirror
+
+    Canonical -.->|REVIEWER<br/>dw_use| Pipeline
+    Pipeline -.->|reviewer-mode<br/>writes routed here| Sandbox
+    Sandbox --> CompareReport
+    CompareReport --> Issues
+    Issues -.-> Pipeline
+
+    Canonical ==>|INGESTOR| Helix
+    Canonical ==> SDMXout
+    Canonical ==> Portal
+    Canonical ==> SoWC
+
+    classDef external fill:#fff3cd,stroke:#856404
+    classDef canonical fill:#cce5ff,stroke:#0066cc,stroke-width:2px
+    classDef sandbox fill:#f8d7da,stroke:#721c24
+    classDef downstream fill:#d4edda,stroke:#155724
+
+    class APIs external
+    class Cache,Canonical,Zmirror canonical
+    class Sandbox sandbox
+    class Helix,SDMXout,Portal,SoWC downstream
+```
+
+Read the diagram by colour:
+
+- **Yellow** — external upstream APIs. Only the **PRODUCER** session can touch them; reviewer-mode sessions are physically prevented by `dw_require_no_api()`.
+- **Blue** — canonical artefacts. **PRODUCER** writes; **REVIEWER** reads (with Z: integrity check); **INGESTOR** publishes from `013_wrkdata`.
+- **Pink** — the per-user sandbox. Reviewer-mode `dw_save` calls route here; canonical writes hard-fail.
+- **Green** — downstream consumers. Reached only via the INGESTOR role.
+
+### Role-vs-action matrix
+
+```mermaid
+flowchart LR
+    subgraph Allowed
+        PR_API[PRODUCER<br/>can call APIs]
+        PR_CAN[PRODUCER<br/>can write canonical]
+        RV_READ[REVIEWER<br/>can read canonical]
+        RV_SAND[REVIEWER<br/>can write sandbox]
+        IN_PUB[INGESTOR<br/>can publish 013_wrkdata]
+    end
+    subgraph Forbidden
+        RV_API[REVIEWER<br/>MUST NOT call APIs]
+        RV_CAN[REVIEWER<br/>MUST NOT write canonical]
+        IN_RAW[INGESTOR<br/>MUST NOT publish<br/>unblessed deposits]
+        PR_SKIP[PRODUCER<br/>MUST NOT skip<br/>pre-deposit checklist]
+    end
+
+    classDef ok fill:#d4edda,stroke:#155724
+    classDef no fill:#f8d7da,stroke:#721c24
+    class PR_API,PR_CAN,RV_READ,RV_SAND,IN_PUB ok
+    class RV_API,RV_CAN,IN_RAW,PR_SKIP no
+```
+
 | Role | Reads from | Writes to | API calls | Owns |
 |---|---|---|---|---|
 | **PRODUCER** (Database Manager) | upstream APIs + `060.DW-MASTER` | `060.DW-MASTER` (Teams + Z: mirror) | YES | refreshing cached upstream data; producing the deposited indicator outputs |
