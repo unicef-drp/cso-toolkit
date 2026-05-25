@@ -21,12 +21,33 @@
 # downstream repo creation.
 #-------------------------------------------------------------------
 
+#' Locate the toolkit manifest next to vendored helpers
+#'
+#' Internal. Looks for `.toolkit_manifest.yml` in the same directory as the
+#' vendored helpers — typically `<repo>/00_functions/`. Resolves the
+#' directory via the `dwFunct` global when set by the profile, otherwise
+#' falls back to `<getwd()>/00_functions`.
+#'
+#' @return Character. Absolute or relative path to
+#'   `.toolkit_manifest.yml` (may not exist).
+#'
+#' @keywords internal
+#' @noRd
 .cso_manifest_path <- function() {
 	# Manifest lives next to the helpers it tracks.
 	root <- if (exists("dwFunct")) dwFunct else file.path(getwd(), "00_functions")
 	file.path(root, ".toolkit_manifest.yml")
 }
 
+#' Read the toolkit manifest into a named list
+#'
+#' Internal. Returns `NULL` (with a message) when the `yaml` package is
+#' missing or the manifest file does not exist.
+#'
+#' @return Named list (from `yaml::read_yaml`) or `NULL`.
+#'
+#' @keywords internal
+#' @noRd
 .cso_load_manifest <- function() {
 	if (!requireNamespace("yaml", quietly = TRUE)) {
 		warning("cso_toolkit_sync: yaml package not installed; skipping checks")
@@ -41,16 +62,34 @@
 	yaml::read_yaml(mpath)
 }
 
-#' Check if a newer cso-toolkit version is available upstream.
+#' Check if a newer cso-toolkit version is available upstream
 #'
-#' Quiet by default: returns a list describing the state, prints nothing.
+#' Quiet by default: returns a list describing the state and prints nothing.
 #' Pass `quiet = FALSE` to log the result.
 #'
-#' Returns NULL when:
-#'   - manifest missing
-#'   - upstream repo doesn't exist (e.g., cso-toolkit hasn't been created yet)
-#'   - network not available
-#'   - we're in reviewer mode (the mode contract forbids API calls)
+#' Returns `NULL` (invisibly) when any of the following apply:
+#' \itemize{
+#'   \item Manifest is missing.
+#'   \item Upstream repo does not exist (e.g., the toolkit has not been
+#'         created yet).
+#'   \item Network is unavailable.
+#'   \item We're in reviewer mode (the mode contract forbids API calls).
+#' }
+#'
+#' @param quiet Logical. If `TRUE` (default), suppress all `message()`
+#'   output and just return the result list invisibly.
+#'
+#' @return Invisibly, a named list with `source`, `pinned_version`,
+#'   `upstream_version`, `updates_available`, `updated_files`, or `NULL`.
+#'
+#' @examples
+#' \dontrun{
+#' res <- cso_toolkit_check(quiet = FALSE)
+#' if (!is.null(res) && isTRUE(res$updates_available)) {
+#'   cso_toolkit_diff()
+#' }
+#' }
+#' @export
 cso_toolkit_check <- function(quiet = TRUE) {
 	# Mode contract: reviewers don't poll GitHub
 	if (!isTRUE(.try_get("dw_apis_allowed"))) {
@@ -105,9 +144,18 @@ cso_toolkit_check <- function(quiet = TRUE) {
 	invisible(res)
 }
 
-#' Show per-file diff between vendored copy and upstream version.
-#' Stub for v0.0.0; the implementation will fetch upstream files and
-#' compare via digest::digest + a textual diff if requested.
+#' Show per-file diff between vendored copy and upstream version
+#'
+#' Stub for v0.0.0. The implementation will fetch upstream files at the
+#' target tag and compare via `digest::digest` + a textual diff if
+#' requested.
+#'
+#' @param target_version Character. Optional explicit tag to diff against.
+#'   Defaults to the latest upstream tag.
+#'
+#' @return Invisibly, `NULL` for the stub.
+#'
+#' @export
 cso_toolkit_diff <- function(target_version = NULL) {
 	m <- .cso_load_manifest()
 	if (is.null(m)) return(invisible(NULL))
@@ -119,15 +167,27 @@ cso_toolkit_diff <- function(target_version = NULL) {
 	invisible(NULL)
 }
 
-#' Refresh the vendored copies to a specific cso-toolkit tag.
-#' Stub for v0.0.0. Behaviour (when implemented):
-#'   1. Read .toolkit_manifest.yml
-#'   2. For each file in `m$files`:
-#'      a. Fetch the file from `m$source` at `target_version`
-#'      b. Compute sha256 of new vs current vendored copy
-#'      c. If different, prompt user (overwrite | skip | show-diff)
-#'   3. Update manifest with new version + hashes
-#'   4. Log a summary
+#' Refresh the vendored copies to a specific cso-toolkit tag
+#'
+#' Stub for v0.0.0. Planned behaviour:
+#' \enumerate{
+#'   \item Read `.toolkit_manifest.yml`.
+#'   \item For each file in `m$files`: fetch it from `m$source` at
+#'         `target_version`; compute sha256 against the current vendored
+#'         copy; if different, prompt the user (overwrite / skip / show
+#'         diff).
+#'   \item Update the manifest with the new version + hashes.
+#'   \item Log a summary.
+#' }
+#'
+#' @param target_version Character. Tag to pull (e.g. `"v0.2.0"`).
+#' @param confirm Logical. Prompt per file. Default `TRUE`.
+#' @param dry_run Logical. Show what would change without writing. Default
+#'   `FALSE`.
+#'
+#' @return Invisibly, `NULL` for the stub.
+#'
+#' @export
 cso_toolkit_pull <- function(target_version,
                              confirm = TRUE,
                              dry_run = FALSE) {
@@ -154,8 +214,19 @@ cso_toolkit_pull <- function(target_version,
 	invisible(NULL)
 }
 
-#' Internal: look up the latest tag at the upstream repo via gh CLI.
-#' Returns the tag string (e.g., "v0.1.0") or NULL if unreachable.
+#' Look up the latest tag at the upstream repo
+#'
+#' Internal. Tries `gh api repos/<source>/releases/latest --jq .tag_name`
+#' first (no auth flicker when `gh auth status` is good); falls back to
+#' `httr::GET` on `api.github.com` when `gh` is missing. Returns `NULL`
+#' when both paths fail (unreachable network, repo absent, no releases).
+#'
+#' @param source_repo Character. `"owner/repo"` slug.
+#'
+#' @return Character tag (e.g. `"v0.2.0"`), or `NULL`.
+#'
+#' @keywords internal
+#' @noRd
 .cso_upstream_latest_tag <- function(source_repo) {
 	# Use gh CLI when available; otherwise raw GitHub API via httr
 	if (Sys.which("gh") != "") {

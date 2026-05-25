@@ -31,6 +31,17 @@
 #
 ################################################################################
 
+#' Ensure optional packages are installed
+#'
+#' Internal helper used by the Markdown reporter. Stops with an install
+#' hint when any of the requested packages is missing.
+#'
+#' @param pkgs Character vector. Package names to check.
+#'
+#' @return Invisibly, `NULL`. Stops on missing package.
+#'
+#' @keywords internal
+#' @noRd
 .cso_require <- function(pkgs) {
   for (p in pkgs) {
     if (!requireNamespace(p, quietly = TRUE)) {
@@ -42,8 +53,46 @@
 }
 .cso_require(c("dplyr", "readr", "rlang"))
 
-# Function to generate Markdown report for a single CSV file
-
+#' Generate a descriptive-statistics Markdown report from a single CSV file
+#'
+#' Reads the CSV at `csv_file_path` and writes a Markdown report that
+#' includes:
+#' \itemize{
+#'   \item A general preamble (filename, timestamp, user, number of
+#'         observations, number of unique countries / years / indicators,
+#'         number of variables).
+#'   \item A variable-details table (type, unique cases, mean / SD / min /
+#'         max for numerics).
+#'   \item Optional summary tables by country, year, and indicator (only
+#'         when those columns are present in the input).
+#' }
+#'
+#' Columns that are not present are skipped silently — the preamble still
+#' renders.
+#'
+#' @param csv_file_path Character. Path to the input CSV.
+#' @param country_column Character. Column name holding country identifiers.
+#' @param year_column Character. Column name holding year values.
+#' @param indicator_column Character. Column name holding indicator codes.
+#' @param value_column Character. Column name holding the numeric value to
+#'   summarise.
+#' @param output_path Character. Directory to write `<basename>.md` into.
+#'   Default `NULL` writes the file in the current working directory.
+#'
+#' @return Invisibly, `NULL`. Side effect: writes a `.md` file.
+#'
+#' @examples
+#' \dontrun{
+#' generate_markdown_report(
+#'   "input.csv",
+#'   country_column   = "countrycode",
+#'   year_column      = "year",
+#'   indicator_column = "indicator",
+#'   value_column     = "value",
+#'   output_path      = "reports/"
+#' )
+#' }
+#' @export
 generate_markdown_report <- function(csv_file_path, country_column, year_column, indicator_column, value_column, output_path = NULL) {
 
   # Read the CSV file (generic helper accepting an arbitrary path; dw_use
@@ -209,7 +258,32 @@ generate_markdown_report <- function(csv_file_path, country_column, year_column,
   message("Markdown report saved to ", output_file)
 }
 
-# Function to process all CSV files in a folder
+#' Generate descriptive-statistics Markdown reports for every CSV in a folder
+#'
+#' Lists every `.csv` file in `folder_path` and calls
+#' [generate_markdown_report()] on each. A thin convenience wrapper.
+#'
+#' @param folder_path Character. Directory containing input CSVs (not
+#'   recursed).
+#' @param country_column,year_column,indicator_column,value_column
+#'   Column names — see [generate_markdown_report()].
+#' @param output_path Character. Output directory for `.md` files. Default
+#'   `NULL` writes into the current working directory.
+#'
+#' @return Invisibly, `NULL`.
+#'
+#' @examples
+#' \dontrun{
+#' process_all_csv_files(
+#'   folder_path     = "data/raw/",
+#'   country_column   = "countrycode",
+#'   year_column      = "year",
+#'   indicator_column = "indicator",
+#'   value_column     = "value",
+#'   output_path      = "reports/"
+#' )
+#' }
+#' @export
 process_all_csv_files <- function(folder_path, country_column, year_column, indicator_column, value_column, output_path = NULL) {
   # List all CSV files in the folder
   csv_files <- list.files(path = folder_path, pattern = "\\.csv$", full.names = TRUE)

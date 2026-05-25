@@ -29,8 +29,31 @@
 # Helpers
 # ============================================================================
 
+#' Null/NA coalescing operator
+#'
+#' Returns `b` when `a` is `NULL` or a length-1 `NA`; otherwise returns `a`.
+#'
+#' @param a Value to test.
+#' @param b Fallback returned when `a` is `NULL` or scalar `NA`.
+#'
+#' @return Either `a` or `b`.
+#'
+#' @keywords internal
+#' @noRd
 `%||%` <- function(a, b) if (is.null(a) || (length(a) == 1 && is.na(a))) b else a
 
+#' Ensure an optional package is installed
+#'
+#' Wrapper around `requireNamespace()` that emits a uniform install hint when
+#' the package is missing. Internal helper used by every format-specific
+#' branch of [dw_save()] / [dw_use()].
+#'
+#' @param pkg Character. Package name.
+#'
+#' @return Invisibly, `TRUE`. Stops if the package is not installed.
+#'
+#' @keywords internal
+#' @noRd
 .require <- function(pkg) {
 	if (!requireNamespace(pkg, quietly = TRUE)) {
 		stop(sprintf("Package '%s' is required for this file format. ", pkg),
@@ -39,11 +62,35 @@
 	invisible(TRUE)
 }
 
+#' Look up a global variable, falling back to `NA_character_`
+#'
+#' Safe accessor for session-level globals set by `profile_DW-Production.R`
+#' (e.g. `teamsWrkData`, `dw_mode`, `dwZDrive`). Returns `NA_character_`
+#' when the global is not defined, so downstream code can branch on
+#' `is.na(...)` without wrapping every read in `tryCatch`.
+#'
+#' @param name Character. Name of the global to read from `.GlobalEnv`.
+#'
+#' @return The value bound to `name` in `.GlobalEnv`, or `NA_character_`
+#'   if it is not bound.
+#'
+#' @keywords internal
+#' @noRd
 .try_get <- function(name) tryCatch(get(name, envir = .GlobalEnv),
                                     error = function(e) NA_character_)
 
-#' Filesystem root for a given `kind`. Reads session-level globals (which
-#' are already mode-aware in profile_DW-Production.R).
+#' Filesystem root for a given data kind
+#'
+#' Reads the session-level globals that `profile_DW-Production.R` exports
+#' (already mode-aware). Internal — callers should use [dw_resolve_path()].
+#'
+#' @param kind Character. One of `"wrk"`, `"raw"`, or `"meta"`.
+#'
+#' @return Character path to the root directory, or `NA_character_` if the
+#'   relevant global is not defined.
+#'
+#' @keywords internal
+#' @noRd
 .dw_root_for <- function(kind = c("wrk", "raw", "meta")) {
 	kind <- match.arg(kind)
 	switch(kind,
@@ -59,13 +106,31 @@
 
 #' Resolve a logical DW path to a filesystem path
 #'
-#' Two call styles:
-#'   - Path-string:  dw_resolve_path(path = "ed/dw_ed_edu.csv", kind = "wrk")
-#'   - Structured:   dw_resolve_path(name = "dw_ed_edu.csv", sector = "ed",
-#'                                   kind = "wrk")
+#' Two call styles are supported:
+#' \itemize{
+#'   \item Path-string: `dw_resolve_path(path = "ed/dw_ed_edu.csv", kind = "wrk")`
+#'   \item Structured: `dw_resolve_path(name = "dw_ed_edu.csv", sector = "ed", kind = "wrk")`
+#' }
 #'
-#' kind: "wrk" | "raw" | "meta"
-#' vintage: optional subfolder (YYYY-MM, YYYY-MM-DD, etc.)
+#' @param path Character. Literal subpath to append to the kind's root.
+#'   Mutually exclusive with `name` / `sector` / `vintage`.
+#' @param name Character. File basename. Used together with `sector` and
+#'   optionally `vintage` to build the subpath.
+#' @param sector Character. Sector folder name (e.g. `"ed"`, `"nt"`). Only
+#'   used when `name` is supplied.
+#' @param kind Character. One of `"wrk"`, `"raw"`, `"meta"`. Selects which
+#'   profile-defined root to resolve against.
+#' @param vintage Character. Optional subfolder (e.g. `"2026-05"` or
+#'   `"2026-05-23"`) inserted between `sector` and `name`.
+#'
+#' @return Character. Absolute filesystem path.
+#'
+#' @examples
+#' \dontrun{
+#' dw_resolve_path(name = "dw_ed_edu.csv", sector = "ed", kind = "wrk")
+#' dw_resolve_path(path = "ed/dw_ed_edu.csv", kind = "wrk")
+#' }
+#' @export
 dw_resolve_path <- function(path = NULL, name = NULL, sector = NULL,
                             kind = c("wrk", "raw", "meta"),
                             vintage = NULL) {
@@ -87,7 +152,19 @@ dw_resolve_path <- function(path = NULL, name = NULL, sector = NULL,
 	file.path(root, subpath)
 }
 
-#' Is `path` under one of the canonical deposit roots?
+#' Test whether a path lives under a canonical deposit root
+#'
+#' Checks whether `path` is a descendant of any of the profile-defined
+#' canonical roots (`teamsWrkDataCanonical`, `teamsRawDataCanonical`,
+#' `teamsFolderCanonical`). Used by [dw_save()] to gate reviewer-mode writes
+#' and by [dw_use()] to decide whether to run a Z: integrity check.
+#'
+#' @param path Character. Filesystem path to test (need not exist).
+#'
+#' @return Logical. `TRUE` if `path` lies under a canonical root, otherwise
+#'   `FALSE`.
+#'
+#' @export
 dw_is_canonical <- function(path) {
 	path_n <- normalizePath(path, winslash = "/", mustWork = FALSE)
 	canon_roots <- c(
@@ -106,8 +183,17 @@ dw_is_canonical <- function(path) {
 # Z: drive mirror (carbon-copy writes; integrity check on reads)
 # ============================================================================
 
-#' Map a Teams-canonical path to the equivalent Z: drive path.
-#' Returns NA_character_ if Z: not available or `path` is not under canonical.
+#' Translate a Teams-canonical path to its Z: drive equivalent
+#'
+#' Internal helper. Returns `NA_character_` when Z: is not available or
+#' `path` does not lie under canonical.
+#'
+#' @param path Character. Filesystem path under `teamsFolderCanonical`.
+#'
+#' @return Character path on Z:, or `NA_character_`.
+#'
+#' @keywords internal
+#' @noRd
 .dw_z_mirror_path <- function(path) {
 	if (!isTRUE(.try_get("dw_z_available"))) return(NA_character_)
 	teams_canon <- .try_get("teamsFolderCanonical")
@@ -122,7 +208,19 @@ dw_is_canonical <- function(path) {
 	file.path(zn, rel)
 }
 
-#' Carbon-copy a canonical write to Z: (silent on absence; warn on copy fail).
+#' Carbon-copy a canonical write to the Z: drive
+#'
+#' Internal helper called by [dw_save()] after a successful primary write.
+#' Silent when Z: is not mapped; warns when the copy itself fails.
+#'
+#' @param primary_path Character. Path that was just written under canonical.
+#' @param verbose Logical. Whether to emit a `[dw_save] Z: mirror ->` message
+#'   on success. Default `TRUE`.
+#'
+#' @return Invisibly, the Z: path on success, or `NA_character_` otherwise.
+#'
+#' @keywords internal
+#' @noRd
 .dw_mirror_to_z <- function(primary_path, verbose = TRUE) {
 	z_path <- .dw_z_mirror_path(primary_path)
 	if (is.na(z_path)) return(invisible(NA_character_))
@@ -137,9 +235,22 @@ dw_is_canonical <- function(path) {
 	invisible(NA_character_)
 }
 
-#' Verify that the file at `path` (canonical Teams) matches its Z: mirror.
-#' Returns a list with `status` and supporting fields. `compare = "size"`
-#' (fast) or `"sha256"` (deep). Returns NULL if Z: not available.
+#' Verify a canonical Teams file matches its Z: drive mirror
+#'
+#' Compares the file at `path` against the corresponding Z: mirror via
+#' either a fast file-size check or a deep sha256 hash. Non-blocking by
+#' design: callers act on the returned `status` rather than seeing an
+#' immediate `stop()`.
+#'
+#' @param path Character. Path to a file under `teamsFolderCanonical`.
+#' @param compare Character. `"size"` (default, fast) or `"sha256"` (deep,
+#'   requires the `digest` package).
+#'
+#' @return A list with `status` and supporting fields. `status` is one of:
+#'   `"no_z_mirror"`, `"z_missing"`, `"match_size"`, `"size_mismatch"`,
+#'   `"match_sha256"`, `"sha256_mismatch"`, or `"verify_unavailable"`.
+#'
+#' @export
 dw_verify_z <- function(path, compare = c("size", "sha256")) {
 	compare <- match.arg(compare)
 	z_path <- .dw_z_mirror_path(path)
@@ -172,6 +283,22 @@ dw_verify_z <- function(path, compare = c("size", "sha256")) {
 # isid uniqueness check (Stata-style; inspired by edukit_save)
 # ============================================================================
 
+#' Stata-style uniqueness check on a key tuple
+#'
+#' Raises an informative error if `df` has duplicate rows on the supplied
+#' key columns. Inspired by Stata's `isid` (and World Bank's `edukit_save`).
+#' Used by [dw_save()] when an `isid =` argument is supplied.
+#'
+#' @param df Data frame to check.
+#' @param keys Character vector of column names that should uniquely
+#'   identify rows.
+#' @param where Character. Context label included in the error message
+#'   (typically the resolved output path).
+#'
+#' @return Invisibly, `TRUE` when the check passes. Stops with a sample
+#'   of duplicates when it fails.
+#'
+#' @export
 dw_isid <- function(df, keys, where = "<unknown>") {
 	missing_keys <- setdiff(keys, names(df))
 	if (length(missing_keys) > 0) {
@@ -201,41 +328,91 @@ dw_isid <- function(df, keys, where = "<unknown>") {
 
 #' Save an object to disk, dispatching on the file extension
 #'
-#' Supported extensions:
-#'   .csv, .tsv, .txt    -> data.table::fwrite (defaults na="", row.names=FALSE)
-#'   .csv.gz / .tsv.gz   -> fwrite with compress="gzip"
-#'   .xlsx               -> writexl (DF or named list of DFs) /
-#'                           openxlsx::saveWorkbook (Workbook objects)
-#'   .rds                -> saveRDS
-#'   .RData/.Rdata/.rda  -> save() with named-list expansion
-#'   .dta                -> haven::write_dta
-#'   .parquet            -> arrow::write_parquet
-#'   .json               -> jsonlite::write_json
-#'   .yml, .yaml         -> yaml::write_yaml
+#' Uniform writer for the DW-Production warehouse. Supported extensions:
+#' \tabular{ll}{
+#'   `.csv`, `.tsv`, `.txt`     \tab `data.table::fwrite` (default `na=""`,
+#'                                    `row.names=FALSE`) \cr
+#'   `.csv.gz` / `.tsv.gz`      \tab `fwrite` with `compress = "gzip"` \cr
+#'   `.xlsx`                    \tab `writexl::write_xlsx` (data frame or
+#'                                    named list); `openxlsx::saveWorkbook`
+#'                                    for `Workbook` objects \cr
+#'   `.rds`                     \tab `saveRDS` \cr
+#'   `.RData` / `.Rdata` / `.rda` \tab `save()` with named-list expansion \cr
+#'   `.dta`                     \tab `haven::write_dta` \cr
+#'   `.parquet`                 \tab `arrow::write_parquet` \cr
+#'   `.json`                    \tab `jsonlite::write_json` \cr
+#'   `.yml` / `.yaml`           \tab `yaml::write_yaml`
+#' }
 #'
-#' Path resolution (pick one):
-#'   - `path = "..."` — used as-is (absolute or relative)
-#'   - `name = "..."` + optional `sector`/`kind`/`vintage` — resolved via
-#'     `dw_resolve_path()` using session-default mode (teamsWrkData /
-#'     teamsRawData / dwMetaData; these are mode-aware in the profile).
+#' **Path resolution** — pick one:
+#' \itemize{
+#'   \item `path = "..."` — used as-is (absolute or relative).
+#'   \item `name = "..."` + optional `sector` / `kind` / `vintage` — resolved
+#'         via [dw_resolve_path()] using session-default mode
+#'         (`teamsWrkData` / `teamsRawData` / `dwMetaData`; these are
+#'         mode-aware in the profile).
+#' }
 #'
-#' Mode contract: enforced at call site.
-#'   Writes resolving to canonical paths in reviewer-session STOP unless
-#'   `allow_canonical_write = TRUE` (Database Manager bootstrap).
+#' **Mode contract** — enforced at call site: writes resolving to canonical
+#' paths in a reviewer session stop unless `allow_canonical_write = TRUE`
+#' (Database Manager bootstrap).
 #'
-#' Z: mirror: AUTOMATIC.
-#'   When `path` resolves under canonical AND `dw_z_available == TRUE`, the
-#'   primary write is carbon-copied to the Z: equivalent. Z: absence is
-#'   non-blocking (Teams write still succeeds; Z: copy is skipped with a
-#'   single advisory at profile-load time).
+#' **Z: mirror** — automatic. When `path` resolves under canonical AND
+#' `dw_z_available == TRUE`, the primary write is carbon-copied to the Z:
+#' equivalent. Z: absence is non-blocking (Teams write still succeeds; Z:
+#' copy is skipped with a single advisory at profile-load time).
 #'
-#' Quality contract:
-#'   `isid = c("col1","col2",...)` runs `dw_isid()` before writing.
+#' **Quality contract** — `isid = c("col1","col2",...)` runs [dw_isid()]
+#' before writing.
 #'
-#' Provenance sidecar:
-#'   `provenance = TRUE` writes `<path>.provenance.json` with timestamp,
-#'   user, dw_mode, sha256, schema, and the user-supplied `metadata = list(...)`
+#' **Provenance sidecar** — `provenance = TRUE` writes
+#' `<path>.provenance.json` with timestamp, user, dw_mode, sha256, schema,
+#' and the user-supplied `metadata = list(...)` (title, abstract, producer,
+#' sources, contact, vintage, ...).
+#'
+#' @param x Object to write (data frame for tabular formats; `Workbook` or
+#'   named list of data frames for `.xlsx`; any R object for `.rds`).
+#' @param path Character. Literal output path. Mutually exclusive with
+#'   `name`.
+#' @param name Character. File basename, resolved via [dw_resolve_path()]
+#'   together with `sector` / `kind` / `vintage`.
+#' @param sector Character. Sector folder (e.g. `"ed"`, `"nt"`).
+#' @param kind Character. One of `"wrk"`, `"raw"`, `"meta"`. Default
+#'   `"wrk"`.
+#' @param isid Character vector of key columns. If supplied, [dw_isid()] is
+#'   run before the write.
+#' @param metadata Named list merged into the `.provenance.json` sidecar
 #'   (title, abstract, producer, sources, contact, vintage, ...).
+#' @param compress Logical. For `.csv` / `.tsv` / `.txt`, when `TRUE` the
+#'   path is suffixed with `.gz` and `fwrite(compress = "gzip")` is used.
+#' @param overwrite Logical. If `FALSE`, stops when the target already
+#'   exists. Default `TRUE`.
+#' @param provenance Logical. Whether to write the `.provenance.json`
+#'   sidecar. Default `TRUE` (skipped for `.RData` / `.rda`).
+#' @param vintage Character. Optional vintage tag (e.g. `"2026-05"`)
+#'   recorded in the sidecar and used by [dw_resolve_path()].
+#' @param allow_canonical_write Logical. Bypass the reviewer-mode guard
+#'   that forbids writes to canonical roots. Default `FALSE`.
+#' @param mirror_to_z Logical. When the write lands under canonical,
+#'   carbon-copy it to Z:. Default `TRUE`.
+#' @param ... Format-specific arguments passed through to the underlying
+#'   writer (`fwrite`, `write_xlsx`, `saveRDS`, ...).
+#'
+#' @return Invisibly, the resolved output `path`.
+#'
+#' @examples
+#' \dontrun{
+#' dw_save(edu_sdg_uis,
+#'         name = "dw_ed_edu.csv", sector = "ed", kind = "wrk",
+#'         isid = c("DATAFLOW", "REF_AREA", "INDICATOR", "TIME_PERIOD"),
+#'         metadata = list(
+#'           title = "Education indicators — UNICEF DW format",
+#'           producer = "01_dw_prep/012_codes/ed/02_aggregate_uis_sdg.R",
+#'           sources  = c("UIS bulk SDG_092025", "WPP 2024"),
+#'           vintage  = "2026-05"
+#'         ))
+#' }
+#' @export
 dw_save <- function(x,
                     path = NULL,
                     name = NULL, sector = NULL,
@@ -328,6 +505,24 @@ dw_save <- function(x,
 
 # ---- internal writers ------------------------------------------------------
 
+#' CSV/TSV/TXT writer (data.table::fwrite wrapper)
+#'
+#' Internal. Defaults match the warehouse convention (`na = ""`,
+#' `row.names = FALSE`).
+#'
+#' @param x Data frame.
+#' @param path Character. Output path.
+#' @param sep Character. Field separator. Default `","`.
+#' @param na Character. NA representation. Default `""`.
+#' @param row.names Logical. Include row names. Default `FALSE`.
+#' @param compress Logical. If `TRUE`, gzip output (passes
+#'   `compress = "gzip"` to `fwrite`).
+#' @param ... Passed to `data.table::fwrite`.
+#'
+#' @return Invisibly, the result of `fwrite`.
+#'
+#' @keywords internal
+#' @noRd
 .write_csv <- function(x, path, sep = ",", na = "", row.names = FALSE,
                        compress = FALSE, ...) {
 	.require("data.table")
@@ -336,6 +531,22 @@ dw_save <- function(x,
 	do.call(data.table::fwrite, args)
 }
 
+#' XLSX writer (writexl or openxlsx)
+#'
+#' Internal. Dispatches on the class of `x`: `Workbook` objects go through
+#' `openxlsx::saveWorkbook`; data frames and named lists of data frames go
+#' through `writexl::write_xlsx`.
+#'
+#' @param x Data frame, named list of data frames, or `openxlsx::Workbook`.
+#' @param path Character. Output path.
+#' @param sheet Character. Sheet name when `x` is a bare data frame.
+#'   Default `"Sheet1"`.
+#' @param ... Passed to the underlying writer.
+#'
+#' @return Invisibly, the result of the underlying writer.
+#'
+#' @keywords internal
+#' @noRd
 .write_xlsx <- function(x, path, sheet = "Sheet1", ...) {
 	if (inherits(x, "Workbook")) {
 		.require("openxlsx")
@@ -355,6 +566,25 @@ dw_save <- function(x,
 	}
 }
 
+#' .RData / .rda writer
+#'
+#' Internal. Handles two shapes:
+#' \itemize{
+#'   \item Named list — each element saved under its own name.
+#'   \item Single object — saved under the file's basename
+#'         (`tools::file_path_sans_ext`).
+#' }
+#'
+#' @param x Object to save.
+#' @param path Character. Output path.
+#' @param name Character. Optional override for the in-file object name
+#'   when `x` is a single object.
+#' @param ... Passed to `base::save`.
+#'
+#' @return Invisibly, `NULL`.
+#'
+#' @keywords internal
+#' @noRd
 .write_rdata <- function(x, path, name = NULL, ...) {
 	env <- new.env(parent = emptyenv())
 	if (is.list(x) && !is.null(names(x)) && length(x) > 0) {
@@ -367,6 +597,24 @@ dw_save <- function(x,
 	}
 }
 
+#' Emit a `.provenance.json` sidecar alongside a saved file
+#'
+#' Internal. Writes a JSON sidecar at `<path>.provenance.json` containing
+#' format, timestamp, user, `dw_mode`, sha256 (when `digest` is available),
+#' schema (rows, cols, columns) for data frames, and any caller-supplied
+#' metadata.
+#'
+#' @param path Character. Path of the file just written.
+#' @param x The object that was written.
+#' @param fmt Character. Format key (`"csv"`, `"rds"`, `"parquet"`, ...).
+#' @param vintage Character. Optional vintage tag.
+#' @param metadata Named list of user-supplied metadata.
+#' @param isid Character vector of key columns used (if any).
+#'
+#' @return Invisibly, `NULL`.
+#'
+#' @keywords internal
+#' @noRd
 .write_provenance <- function(path, x, fmt, vintage = NULL,
                               metadata = NULL, isid = NULL) {
 	if (!requireNamespace("jsonlite", quietly = TRUE)) return(invisible(NULL))
@@ -398,19 +646,42 @@ dw_save <- function(x,
 # dw_use — uniform read with auto-dispatch + Z: integrity check
 # ============================================================================
 
-#' Read a file from disk, dispatching on the file extension. Same path
-#' resolution as dw_save.
+#' Read a file from disk, dispatching on the file extension
 #'
-#' Z: integrity: AUTOMATIC.
-#'   When the resolved path is under canonical AND `dw_z_available == TRUE`,
-#'   a size-check (default; cheap) compares Teams vs Z:. Mismatch emits a
-#'   warning; the read still proceeds (with the Teams data). Skip via
-#'   `verify_z = FALSE`. Use `verify_z = "sha256"` for a deep check.
+#' Companion to [dw_save()] with the same extension matrix and path
+#' resolution. Adds a non-blocking Z: integrity check for canonical reads.
 #'
-#' `as`: "tibble" | "data.frame" | "data.table" (default tibble)
-#' `cols`: optional character vector restricting columns to read
-#' `fallback_canonical`: retry under canonical root if the literal path
-#'   doesn't exist (default TRUE — lets reviewer-mode reads find the deposit)
+#' **Z: integrity** — automatic. When the resolved path is under canonical
+#' AND `dw_z_available == TRUE`, a size-check (default; cheap) compares
+#' Teams vs Z:. Mismatch emits a warning; the read still proceeds (with
+#' the Teams data). Skip via `verify_z = FALSE`. Use
+#' `verify_z = "sha256"` for a deep check.
+#'
+#' @param path Character. Literal input path. Mutually exclusive with `name`.
+#' @param name Character. File basename, resolved via [dw_resolve_path()].
+#' @param sector Character. Sector folder (e.g. `"ed"`, `"nt"`).
+#' @param kind Character. One of `"wrk"`, `"raw"`, `"meta"`. Default `"wrk"`.
+#' @param cols Character vector. Optional column subset (for `.csv`, `.tsv`,
+#'   `.xlsx`, `.dta`, `.parquet`).
+#' @param as Character. Return type: `"tibble"` (default), `"data.frame"`,
+#'   or `"data.table"`.
+#' @param fallback_canonical Logical. If the literal path is missing, retry
+#'   under the canonical root by substituting `teamsRawData ->
+#'   teamsRawDataCanonical`, `teamsWrkData -> teamsWrkDataCanonical`, etc.
+#'   Default `TRUE` (lets reviewer-mode reads find the deposit).
+#' @param verify_z `TRUE`, `FALSE`, or `"sha256"`. Controls the Z: integrity
+#'   check for canonical reads. Default `TRUE` (size compare).
+#' @param ... Format-specific arguments passed through to the underlying
+#'   reader.
+#'
+#' @return The loaded object. Tabular formats are coerced to the requested
+#'   `as` shape.
+#'
+#' @examples
+#' \dontrun{
+#' warehouse <- dw_use(name = "dw_ed_edu.csv", sector = "ed", kind = "wrk")
+#' }
+#' @export
 dw_use <- function(path = NULL,
                    name = NULL, sector = NULL,
                    kind = c("wrk", "raw", "meta"),
@@ -468,12 +739,34 @@ dw_use <- function(path = NULL,
 	x
 }
 
+#' CSV/TSV/TXT reader (data.table::fread wrapper)
+#'
+#' @param path Character. Input path.
+#' @param sep Character. Field separator.
+#' @param cols Character vector. Optional column subset.
+#' @param ... Passed to `data.table::fread`.
+#'
+#' @return A `data.table`.
+#'
+#' @keywords internal
+#' @noRd
 .read_csv <- function(path, sep, cols = NULL, ...) {
 	.require("data.table")
 	data.table::fread(input = path, sep = sep,
 	                  select = cols, showProgress = FALSE, ...)
 }
 
+#' XLSX reader (readxl::read_xlsx wrapper)
+#'
+#' @param path Character. Input path.
+#' @param sheet Sheet name or index. Default `1`.
+#' @param cols Character vector. Optional column subset (applied post-read).
+#' @param ... Passed to `readxl::read_xlsx`.
+#'
+#' @return A tibble.
+#'
+#' @keywords internal
+#' @noRd
 .read_xlsx <- function(path, sheet = 1, cols = NULL, ...) {
 	.require("readxl")
 	x <- readxl::read_xlsx(path, sheet = sheet, ...)
@@ -481,12 +774,36 @@ dw_use <- function(path = NULL,
 	x
 }
 
+#' .RData / .rda reader (load() into a fresh env, returned as a list)
+#'
+#' @param path Character. Input path.
+#' @param ... Passed to `base::load`.
+#'
+#' @return Named list of the loaded objects.
+#'
+#' @keywords internal
+#' @noRd
 .read_rdata <- function(path, ...) {
 	env <- new.env(parent = emptyenv())
 	load(path, envir = env)
 	as.list(env)
 }
 
+#' Resolve a read path, falling back to canonical roots when missing
+#'
+#' Internal. If the literal `path` does not exist, attempts to substitute
+#' the sandbox roots (`teamsRawData`, `teamsWrkData`, `teamsFolder`) with
+#' their `*Canonical` counterparts so reviewer-mode reads can still find
+#' the deposit.
+#'
+#' @param path Character. Literal path that may not exist.
+#' @param fallback_canonical Logical. When `FALSE`, stop immediately on a
+#'   missing literal path instead of trying canonical.
+#'
+#' @return Character. A path that exists.
+#'
+#' @keywords internal
+#' @noRd
 .resolve_for_read <- function(path, fallback_canonical) {
 	if (file.exists(path)) return(path)
 	if (!isTRUE(fallback_canonical)) {
@@ -513,6 +830,34 @@ dw_use <- function(path = NULL,
 # dw_compare — generalised compare-vs-canonical (lifted from nt/5b)
 # ============================================================================
 
+#' Compare a current dataset against a reference (added / removed / changed)
+#'
+#' Three-way comparison of two data frames keyed on `by`, returning the
+#' rows added on the current side, removed on the reference side, and
+#' value-changed rows on the intersection. Numeric value columns can use a
+#' tolerance-based equality; string columns normalise to trimmed lowercase
+#' empty-equivalents (`""`, `"NA"`, `"N/A"`, `"NULL"`, `"."`).
+#'
+#' @param current Data frame or character path to a file. The "new" side.
+#' @param reference Data frame or character path to a file. The "old" side.
+#' @param by Character vector of key columns.
+#' @param value_cols Character vector of columns to value-compare. Default
+#'   `NULL` (= all non-key columns present on both sides).
+#' @param numeric_value_cols Subset of `value_cols` to treat as numeric
+#'   (uses `tol`). Others are string-compared.
+#' @param tol Numeric tolerance for numeric value comparisons. Default
+#'   `1e-5`.
+#' @param label Character. Label used in the summary row and report
+#'   filenames. Default `"compare"`.
+#' @param write_report_to Character. Directory to write
+#'   `<label>_summary.csv`, `<label>_added_rows.csv`,
+#'   `<label>_removed_rows.csv`, `<label>_changed_rows.csv`. Default
+#'   `NULL` (don't write).
+#'
+#' @return A list with `summary` (one-row tibble) and `added`, `removed`,
+#'   `changed` data frames.
+#'
+#' @export
 dw_compare <- function(current, reference,
                        by,
                        value_cols = NULL,
@@ -599,6 +944,23 @@ dw_compare <- function(current, reference,
 # dw_merge — Stata-style merge with cardinality assert
 # ============================================================================
 
+#' Stata-style merge with cardinality assertion
+#'
+#' Thin wrapper around `dplyr::left_join` that warns when the actual
+#' cardinality of `by` on the left or right side disagrees with the
+#' declared `how`. Inspired by Stata's `merge m:1 / 1:1 / 1:m / m:m`.
+#'
+#' @param x Left-hand data frame.
+#' @param using Right-hand data frame, OR a character path passed through
+#'   [dw_use()].
+#' @param by Character vector of join keys.
+#' @param how Character. One of `"m:1"`, `"1:1"`, `"1:m"`, `"m:m"`.
+#'   Default `"m:1"`.
+#' @param ... Passed to `dplyr::left_join`.
+#'
+#' @return The joined data frame.
+#'
+#' @export
 dw_merge <- function(x, using, by, how = c("m:1", "1:1", "1:m", "m:m"), ...) {
 	how <- match.arg(how)
 	.require("dplyr")

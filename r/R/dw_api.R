@@ -43,15 +43,39 @@
 # Cache path resolution
 # ============================================================================
 
+#' Sandbox cache path for an API fetch
+#'
+#' Internal. Builds the cache path under `teamsRawData/_apis/<api>/`.
+#'
+#' @param api Character. API identifier (see file header for supported
+#'   values).
+#' @param cache_key Character. Short snake_case identifier; becomes the
+#'   cache filename basename.
+#' @param ext Character. File extension. Default `"csv"`.
+#'
+#' @return Character path under the sandbox raw-data root.
+#'
+#' @keywords internal
+#' @noRd
 .dw_api_cache_path <- function(api, cache_key, ext = "csv") {
 	root <- .try_get("teamsRawData")
 	if (is.na(root)) stop("dw_api: teamsRawData global not defined (profile not loaded?)")
 	file.path(root, "_apis", api, paste0(cache_key, ".", ext))
 }
 
-#' Per-api default cache extension. Some APIs return data shapes that don't
-#' serialize cleanly to CSV (wbstats::wb_indicators has list columns); they
-#' default to RDS. Callers can still override by passing `ext =` explicitly.
+#' Per-API default cache extension
+#'
+#' Internal. Some APIs return data shapes that don't serialise cleanly to
+#' CSV (e.g. `wbstats::wb_indicators` has list-columns), so they default to
+#' RDS. Callers can still override via the `ext =` argument to
+#' [dw_api_fetch()].
+#'
+#' @param api Character. API identifier.
+#'
+#' @return Character. Default extension (`"csv"`, `"rds"`, ...).
+#'
+#' @keywords internal
+#' @noRd
 .dw_api_default_ext <- function(api) {
 	switch(api,
 		"wb_indicators" = "rds",
@@ -61,6 +85,19 @@
 	)
 }
 
+#' Canonical cache path for an API fetch
+#'
+#' Internal. Mirrors [.dw_api_cache_path()] but resolves against
+#' `teamsRawDataCanonical` (the read-side fallback for reviewers).
+#'
+#' @param api Character. API identifier.
+#' @param cache_key Character. Cache filename basename.
+#' @param ext Character. File extension. Default `"csv"`.
+#'
+#' @return Character path under the canonical raw-data root.
+#'
+#' @keywords internal
+#' @noRd
 .dw_api_canonical_cache_path <- function(api, cache_key, ext = "csv") {
 	root <- .try_get("teamsRawDataCanonical")
 	if (is.na(root)) stop("dw_api: teamsRawDataCanonical not defined (profile not loaded?)")
@@ -71,22 +108,50 @@
 # dw_api_fetch — main entry point
 # ============================================================================
 
-#' Fetch from an external API, mode-aware, with deposit cache.
+#' Fetch from an external API, mode-aware, with deposit cache
 #'
-#' Producer session, cache present, refresh = FALSE -> reads cache.
-#' Producer session, refresh = TRUE OR cache missing -> hits live API,
-#'   writes cache via dw_save (mirrors to Z: when mapped), returns result.
-#' Reviewer session                                  -> reads cache from
-#'   canonical deposit; if missing, stops via dw_require_no_api().
+#' Behaviour by session mode:
+#' \itemize{
+#'   \item **Producer**, cache present, `refresh = FALSE` — reads the cache.
+#'   \item **Producer**, `refresh = TRUE` OR cache missing — hits the live
+#'         API, writes the cache via [dw_save()] (which mirrors to Z: when
+#'         mapped and emits a `.provenance.json` sidecar), and returns the
+#'         result.
+#'   \item **Reviewer** — reads the cache from the canonical deposit; if
+#'         missing, stops via `dw_require_no_api()`.
+#' }
 #'
-#' Arguments:
-#'   api         API id; see header for supported values.
-#'   cache_key   short identifier; becomes the cache filename. snake_case.
-#'   refresh     if TRUE, hit the API even if cache exists (producer only).
-#'   ext         cache file extension (default "csv"; "rds" for nested,
-#'                "json" for raw, "parquet" for big tables).
-#'   metadata    optional named list merged into the provenance sidecar.
-#'   ...         API-specific arguments (see per-api helpers below).
+#' Cache layout: `teamsRawData/_apis/<api>/<cache_key>.<ext>` with a
+#' sibling `.provenance.json` recording endpoint, params, `fetched_at`,
+#' user, mode, and sha256.
+#'
+#' @param api Character. API identifier. One of `"uis"`, `"sdmx"`,
+#'   `"sdmx_codelist"`, `"wb"`, `"wb_indicators"`, `"ilo"`, `"unsd_sdg"`,
+#'   `"github_raw"`, `"http"`, `"json_get"`. See file header for details.
+#' @param cache_key Character. Short snake_case identifier used as the
+#'   cache filename basename.
+#' @param refresh Logical. If `TRUE`, hit the API even when a cache exists
+#'   (producer only). Default `FALSE`.
+#' @param ext Character. Cache file extension. Default `NULL` (= per-API
+#'   default via `.dw_api_default_ext`).
+#' @param metadata Named list merged into the cache's
+#'   `.provenance.json` sidecar.
+#' @param ... API-specific arguments — see the per-API helpers
+#'   (`.api_fetch_uis`, `.api_fetch_sdmx`, etc.).
+#'
+#' @return The fetched (or cached) object, typed per the API's shape
+#'   (tibble / data frame / list).
+#'
+#' @examples
+#' \dontrun{
+#' entrance_age_primary <- dw_api_fetch(
+#'   api      = "uis",
+#'   endpoint = "indicators",
+#'   params   = list(indicator = "299905"),
+#'   cache_key = "uis_entrance_age_primary"
+#' )
+#' }
+#' @export
 dw_api_fetch <- function(api,
                          cache_key,
                          refresh = FALSE,
@@ -162,6 +227,19 @@ dw_api_fetch <- function(api,
 # dw_api_cached — explicit cache-only read
 # ============================================================================
 
+#' Read an API cache without fetching
+#'
+#' Cache-only counterpart to [dw_api_fetch()]. Always reads from the
+#' canonical cache root and stops if no cache exists — useful in analysis
+#' scripts that must remain reproducible without network access.
+#'
+#' @param api Character. API identifier.
+#' @param cache_key Character. Cache filename basename.
+#' @param ext Character. File extension. Default `"csv"`.
+#'
+#' @return The cached object.
+#'
+#' @export
 dw_api_cached <- function(api, cache_key, ext = "csv") {
 	cache_path <- .dw_api_canonical_cache_path(api, cache_key, ext)
 	if (!file.exists(cache_path)) {
@@ -175,6 +253,18 @@ dw_api_cached <- function(api, cache_key, ext = "csv") {
 # dw_api_inventory — list cached fetches
 # ============================================================================
 
+#' List all cached API fetches under the canonical root
+#'
+#' Walks `teamsRawDataCanonical/_apis/<api>/` and returns a row per cache
+#' file (excluding `.provenance.json` sidecars). When a sidecar is present,
+#' its `metadata$fetched_at` is pulled into the result for auditability.
+#'
+#' @param api Character. Optional API filter; default `NULL` lists all.
+#'
+#' @return A data frame with columns `api`, `cache_key`, `ext`, `size_bytes`,
+#'   `mtime`, `fetched_at`. Empty data frame when no caches exist.
+#'
+#' @export
 dw_api_inventory <- function(api = NULL) {
 	root <- file.path(.try_get("teamsRawDataCanonical"), "_apis")
 	if (!dir.exists(root)) return(data.frame())
@@ -215,8 +305,19 @@ dw_api_inventory <- function(api = NULL) {
 # Per-API fetchers (internal)
 # ============================================================================
 
-#' UNESCO UIS API
-#' Args: endpoint = "indicators", params = list(indicator = "299905")
+#' UNESCO UIS API fetcher
+#'
+#' Internal. Builds the URL as `<base>/<endpoint>?key1=val1&...` and parses
+#' the JSON response; unwraps `$records` when present.
+#'
+#' @param endpoint Character. UIS endpoint (e.g. `"indicators"`).
+#' @param params Named list. Query parameters.
+#' @param ... Reserved for forward compatibility.
+#'
+#' @return Data frame (`$records`) or parsed JSON list.
+#'
+#' @keywords internal
+#' @noRd
 .api_fetch_uis <- function(endpoint = "indicators", params = list(), ...) {
 	.require("jsonlite")
 	base <- "https://api.uis.unesco.org/api/public/data/"
@@ -229,8 +330,23 @@ dw_api_inventory <- function(api = NULL) {
 	if (!is.null(raw$records)) raw$records else raw
 }
 
-#' SDMX data fetch via rsdmx (any provider)
-#' Args: providerId, flowRef, key, version, start, end
+#' SDMX data fetcher (rsdmx)
+#'
+#' Internal. Generic SDMX data fetch via `rsdmx::readSDMX`. Returns a flat
+#' data frame.
+#'
+#' @param providerId Character. SDMX provider id (e.g. `"UNICEF"`,
+#'   `"OECD"`).
+#' @param flowRef Character. Dataflow reference.
+#' @param key Character. SDMX key (slash-separated dimension values).
+#' @param version Character. SDMX version. Default `"1.0"`.
+#' @param start,end Character. Optional time bounds.
+#' @param ... Passed to `rsdmx::readSDMX`.
+#'
+#' @return Data frame.
+#'
+#' @keywords internal
+#' @noRd
 .api_fetch_sdmx <- function(providerId, flowRef, key,
                             version = "1.0", start = NULL, end = NULL, ...) {
 	.require("rsdmx")
@@ -240,9 +356,21 @@ dw_api_inventory <- function(api = NULL) {
 	                              verbose = FALSE, ...))
 }
 
-#' SDMX codelist GET + JSON parse to (code, name, description) tibble.
-#' Args: agency = "UNICEF", codelist = "CL_RESIDENCE", version = "1.0"
-#' Replaces the 14 hand-coded GETs in nt/00_fetch_codebook.R.
+#' SDMX codelist fetcher (httr GET + JSON parse)
+#'
+#' Internal. Fetches an SDMX codelist and reshapes it to a
+#' `(code, name, description)` tibble. Replaces the 14 hand-coded GETs in
+#' `nt/00_fetch_codebook.R`.
+#'
+#' @param agency Character. SDMX agency (e.g. `"UNICEF"`).
+#' @param codelist Character. Codelist id (e.g. `"CL_RESIDENCE"`).
+#' @param version Character. Codelist version. Default `"1.0"`.
+#' @param ... Passed to `httr::GET`.
+#'
+#' @return Tibble with `code`, `name`, `description`.
+#'
+#' @keywords internal
+#' @noRd
 .api_fetch_sdmx_codelist <- function(agency, codelist, version = "1.0", ...) {
 	.require("httr")
 	.require("tibble")
@@ -267,7 +395,19 @@ dw_api_inventory <- function(api = NULL) {
 	)
 }
 
-#' World Bank data via wbstats::wb_data
+#' World Bank data fetcher (wbstats::wb_data)
+#'
+#' Internal.
+#'
+#' @param indicator Character. WDI indicator code(s).
+#' @param start_date Numeric. Start year. Default `2000`.
+#' @param end_date Numeric. End year. Default current year.
+#' @param ... Passed to `wbstats::wb_data`.
+#'
+#' @return Tibble of WB indicator data.
+#'
+#' @keywords internal
+#' @noRd
 .api_fetch_wb <- function(indicator, start_date = 2000,
                           end_date = as.numeric(format(Sys.Date(), "%Y")), ...) {
 	.require("wbstats")
@@ -275,13 +415,34 @@ dw_api_inventory <- function(api = NULL) {
 	                 start_date = start_date, end_date = end_date, ...)
 }
 
-#' World Bank indicator catalogue via wbstats::wb_indicators
+#' World Bank indicator catalogue fetcher (wbstats::wb_indicators)
+#'
+#' Internal.
+#'
+#' @param ... Passed to `wbstats::wb_indicators`.
+#'
+#' @return Tibble of indicator metadata.
+#'
+#' @keywords internal
+#' @noRd
 .api_fetch_wb_indicators <- function(...) {
 	.require("wbstats")
 	wbstats::wb_indicators(...)
 }
 
-#' ILO SDMX
+#' ILO SDMX fetcher
+#'
+#' Internal. Thin wrapper around `rsdmx::readSDMX(providerId = "ILO")`.
+#'
+#' @param flowRef Character. ILO dataflow reference.
+#' @param key Character. SDMX key.
+#' @param start,end Character. Optional time bounds.
+#' @param ... Passed to `rsdmx::readSDMX`.
+#'
+#' @return Data frame.
+#'
+#' @keywords internal
+#' @noRd
 .api_fetch_ilo <- function(flowRef, key, start = NULL, end = NULL, ...) {
 	.require("rsdmx")
 	as.data.frame(rsdmx::readSDMX(providerId = "ILO", resource = "data",
@@ -290,8 +451,21 @@ dw_api_inventory <- function(api = NULL) {
 	                              verbose = FALSE, ...))
 }
 
-#' UNSD SDG API: httr::POST with form-encoded seriesCodes
-#' Args: series_codes = c("SL_DOM_TSPD", "SG_LGL_GENEQEMP")
+#' UNSD SDG API fetcher (httr POST with form-encoded seriesCodes)
+#'
+#' Internal. Posts an `application/x-www-form-urlencoded` body of
+#' `seriesCodes=...` to the UNSD SDG API and parses the CSV response.
+#'
+#' @param series_codes Character vector. SDG series codes
+#'   (e.g. `c("SL_DOM_TSPD", "SG_LGL_GENEQEMP")`).
+#' @param endpoint Character. API endpoint. Default
+#'   `"https://unstats.un.org/SDGAPI/v1/sdg/Series/DataCSV"`.
+#' @param ... Passed to `httr::POST`.
+#'
+#' @return Tibble parsed from the CSV response.
+#'
+#' @keywords internal
+#' @noRd
 .api_fetch_unsd_sdg <- function(series_codes,
                                 endpoint = "https://unstats.un.org/SDGAPI/v1/sdg/Series/DataCSV",
                                 ...) {
@@ -310,12 +484,21 @@ dw_api_inventory <- function(api = NULL) {
 	readr::read_csv(I(txt), show_col_types = FALSE)
 }
 
-#' Pinned-commit raw.githubusercontent.com fetch.
-#' Args: owner_repo = "unicef-drp/Country-and-Region-Metadata",
-#'       ref = "main" or "abc1234" (sha or tag),
-#'       path = "AU.csv"
-#' Default behaviour is to record the resolved commit sha in metadata so
-#' even `ref = "main"` runs are reproducible after the fact.
+#' Pinned-commit GitHub raw fetcher
+#'
+#' Internal. Fetches `https://raw.githubusercontent.com/<owner>/<repo>/<ref>/<path>`
+#' and parses based on the file extension (`.csv` -> `read_csv`, `.tsv` ->
+#' `read_tsv`, `.json` -> `fromJSON`, otherwise `read_lines`).
+#'
+#' @param owner_repo Character. `"owner/repo"` slug.
+#' @param ref Character. Branch name, tag, or commit sha. Default `"main"`.
+#' @param path Character. File path within the repo.
+#' @param ... Passed to the underlying reader.
+#'
+#' @return Tibble / list / character vector depending on file extension.
+#'
+#' @keywords internal
+#' @noRd
 .api_fetch_github_raw <- function(owner_repo, ref = "main", path, ...) {
 	.require("readr")
 	url <- sprintf("https://raw.githubusercontent.com/%s/%s/%s",
@@ -331,6 +514,17 @@ dw_api_inventory <- function(api = NULL) {
 }
 
 #' Generic HTTP GET returning text
+#'
+#' Internal.
+#'
+#' @param url Character. URL to GET.
+#' @param headers Named list. HTTP headers.
+#' @param ... Passed to `httr::GET`.
+#'
+#' @return Character. Response body decoded as UTF-8 text.
+#'
+#' @keywords internal
+#' @noRd
 .api_fetch_http <- function(url, headers = list(), ...) {
 	.require("httr")
 	resp <- httr::GET(url, do.call(httr::add_headers, headers), ...)
@@ -338,7 +532,17 @@ dw_api_inventory <- function(api = NULL) {
 	httr::content(resp, as = "text", encoding = "UTF-8")
 }
 
-#' Generic JSON GET -> parsed object
+#' Generic JSON GET returning a parsed object
+#'
+#' Internal.
+#'
+#' @param url Character. URL to GET.
+#' @param ... Passed to `jsonlite::fromJSON`.
+#'
+#' @return Parsed JSON (list, data frame, ...).
+#'
+#' @keywords internal
+#' @noRd
 .api_fetch_json_get <- function(url, ...) {
 	.require("jsonlite")
 	jsonlite::fromJSON(url, ...)
