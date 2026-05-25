@@ -2,6 +2,28 @@
 
 ## Unreleased
 
+**R helpers (documentation):**
+
+- Roxygen pass across `dw_io.R`, `dw_api.R`, `cso_toolkit_sync.R`,
+  `generate_markdown_report.R`, and `aggregate_data.R`. Every exported
+  function now has `@param` / `@return` / `@export`; every internal
+  helper carries `@keywords internal` + `@noRd`. The package now ships
+  a generated `NAMESPACE` exporting 26 functions and a `man/` directory
+  with one `.Rd` per export. No behaviour change.
+- `r/DESCRIPTION` — version bumped to `0.2.1.9000` (dev) ahead of the
+  next release.
+
+**Sync / vendoring infrastructure:**
+
+- `templates/.toolkit_manifest.yml` — header expanded with a field-by-field
+  reference; `pulled_version` bumped to `v0.2.0`; sample `vendored:` list
+  now mentions the seven optional helpers as commented-out entries so
+  consumers can opt in without re-deriving the file list.
+- `r/tests/manual/check_consumer_side.R` — manual smoke test that
+  simulates a consumer repo, drops a manifest into it, sources the
+  vendored helpers, and calls `cso_toolkit_check()` end-to-end against
+  the live GitHub API. Use as a release-eve verification.
+
 **R helpers (additions):**
 - `aggregate_data.R` — original `aggregate_data()` (mean / weighted_mean,
   optional global aggregate, population + country coverage). Lifted from
