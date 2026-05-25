@@ -76,13 +76,37 @@ def dw_nestweight(
         Input ``data`` with one new column (``new_weight``) appended.
     """
     if not isinstance(data, pd.DataFrame):
-        raise TypeError("`data` must be a DataFrame.")
+        raise TypeError(
+            "[cso_toolkit.dw_nestweight] `data` must be a pandas DataFrame; "
+            f"got {type(data).__name__!r}.\n"
+            "  Fix: convert your input (e.g. `pd.DataFrame(data)`) before "
+            "calling."
+        )
+    present = ", ".join(list(data.columns)[:10]) + (
+        "..." if len(data.columns) > 10 else ""
+    )
     if value not in data.columns:
-        raise ValueError(f"Column not found: {value}")
+        raise KeyError(
+            f"[cso_toolkit.dw_nestweight] Column {value!r} (passed as "
+            f"`value=`) not found in data.\n"
+            f"  Data columns: {present}\n"
+            "  Fix: check spelling / casing on the value column."
+        )
     if by not in data.columns:
-        raise ValueError(f"Column not found: {by}")
+        raise KeyError(
+            f"[cso_toolkit.dw_nestweight] Column {by!r} (passed as `by=`) "
+            "not found in data.\n"
+            f"  Data columns: {present}\n"
+            "  Fix: check spelling / casing on the stratum column."
+        )
     if weight is not None and weight not in data.columns:
-        raise ValueError(f"Column not found: {weight}")
+        raise KeyError(
+            f"[cso_toolkit.dw_nestweight] Column {weight!r} (passed as "
+            "`weight=`) not found in data.\n"
+            f"  Data columns: {present}\n"
+            "  Fix: check spelling / casing, or pass weight=None to use "
+            "implicit unit weights."
+        )
 
     df = data.copy()
     v_obs = df[value].notna()
@@ -91,7 +115,12 @@ def dw_nestweight(
     else:
         w_orig = pd.to_numeric(df[weight], errors="coerce")
         if not np.issubdtype(w_orig.dtype, np.number):
-            raise TypeError(f"Weight column {weight!r} must be numeric.")
+            raise TypeError(
+                f"[cso_toolkit.dw_nestweight] Weight column {weight!r} "
+                "could not be coerced to numeric.\n"
+                "  Fix: clean the weight column upstream (drop non-numeric "
+                "rows or cast to numeric) before calling."
+            )
 
     stratum = df[by]
     if stratum.isna().any():
@@ -104,7 +133,13 @@ def dw_nestweight(
     eligible = v_obs & w_orig.notna() & stratum.notna()
     if only is not None:
         if len(only) != len(df) or only.dtype != bool:
-            raise ValueError("`only` must be a boolean Series of length len(data).")
+            raise ValueError(
+                "[cso_toolkit.dw_nestweight] `only` must be a boolean "
+                f"Series of length len(data) ({len(df)}); got "
+                f"length {len(only)} with dtype {only.dtype!r}.\n"
+                "  Fix: build the mask from the same DataFrame, e.g. "
+                "`only = df['answered_q']` (a boolean column)."
+            )
         eligible &= only.values
 
     total_w_by = w_orig.groupby(stratum, dropna=False).sum()

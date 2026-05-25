@@ -2,6 +2,37 @@
 
 ## Unreleased
 
+**Python helpers (new):**
+
+- `python/src/` — full Python port of every R helper.  Same behaviour
+  contract; mode-aware path routing, Z: drive mirror, provenance
+  sidecars, version-drift detection.  Imports via
+  `from cso_toolkit import dw_save, dw_use, dw_api_fetch, ...`.  10
+  modules + foundation (`_state.py`, `__init__.py`); 26 public entries.
+- `python/pyproject.toml` — optional `pip install -e python/` for
+  local development; vendoring remains the production model.
+- `python/src/py.typed` — PEP 561 marker so type-checkers see the
+  type hints when consumers vendor the package.
+- `python/tests/manual/smoke_test.py` — bootstraps `python/src/` under
+  the name `cso_toolkit`, then exercises 12 invariants end-to-end
+  (`dw_save` → `dw_use` roundtrip + provenance sidecar; `dw_isid`
+  duplicate detection; `aggregate_data_v2` with coverage threshold;
+  `dw_nestweight` preserves stratum totals; `create_profile` +
+  `review_profile` pass all required checks; `test_scripts` catches a
+  raw `pd.read_csv`; `cso_toolkit_check` returns `None` on missing
+  manifest).
+- `docs/dw_io_python_reference.md` + `docs/dw_api_python_reference.md`
+  — per-function references mirroring the existing R-side docs.
+- Every public Python function carries a `Raises:` section enumerating
+  the typed exceptions it can raise.  Every raise site emits a
+  three-part **WHAT / WHY / HOW** message prefixed
+  `[cso_toolkit.<func>]` so callers can grep and so library messages
+  stand out from upstream traceback noise.
+- HTTP, JSON-parse, CSV-parse, and YAML failures in `dw_api.py` and
+  `generate_markdown_report.py` are wrapped with the same envelope —
+  no bare `requests.HTTPError` / `KeyError` / `pd.errors.ParserError`
+  bubbles up uncaught.
+
 **R helpers (additions):**
 - `aggregate_data.R` — original `aggregate_data()` (mean / weighted_mean,
   optional global aggregate, population + country coverage). Lifted from

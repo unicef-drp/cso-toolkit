@@ -73,11 +73,21 @@ def create_profile(
     sentinel = _sentinel_name(repo_name)
     filename = f"profile_{repo_name}.py"
     out_dir = Path(output_path)
-    out_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        out_dir.mkdir(parents=True, exist_ok=True)
+    except PermissionError as exc:
+        raise PermissionError(
+            f"[cso_toolkit.create_profile] Cannot create {out_dir}.\n"
+            f"  Underlying error: {exc.strerror or exc}\n"
+            "  Fix: check filesystem permissions, or pass a writable "
+            "output_path."
+        ) from exc
     path = out_dir / filename
     if path.exists() and not overwrite:
         raise FileExistsError(
-            f"File already exists: {path}\nPass overwrite=True to replace it."
+            f"[cso_toolkit.create_profile] File already exists: {path}\n"
+            "  Fix: pass overwrite=True to replace it, or delete the "
+            "existing profile first."
         )
 
     timestamp = _dt.datetime.now().strftime("%Y-%m-%d %H:%M")
@@ -261,8 +271,19 @@ def review_profile(
     """
     path = Path(path)
     if not path.exists():
-        raise FileNotFoundError(f"Profile file not found: {path}")
-    src = path.read_text(encoding="utf-8")
+        raise FileNotFoundError(
+            f"[cso_toolkit.review_profile] Profile file not found: {path}\n"
+            "  Fix: pass the correct path; relative paths are resolved "
+            f"against {os.getcwd()}."
+        )
+    try:
+        src = path.read_text(encoding="utf-8")
+    except UnicodeDecodeError as exc:
+        raise RuntimeError(
+            f"[cso_toolkit.review_profile] {path} is not UTF-8.\n"
+            f"  Underlying error: {exc}\n"
+            "  Fix: re-save the profile as UTF-8."
+        ) from exc
 
     def has(pattern: str) -> bool:
         return re.search(pattern, src, re.MULTILINE) is not None

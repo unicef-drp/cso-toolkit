@@ -83,7 +83,12 @@ def _dw_root_for(kind: str) -> Optional[str]:
         return _state._get("teamsRawData")
     if kind == "meta":
         return _state._get("dwMetaData")
-    raise ValueError(f"unknown kind: {kind!r}; expected one of {_KINDS}")
+    raise ValueError(
+        f"[cso_toolkit.dw_io] Unknown kind: {kind!r}.\n"
+        f"  Expected one of {_KINDS}.\n"
+        f"  Fix: pass kind=\"wrk\" (working data), \"raw\" (raw inputs), "
+        "or \"meta\" (metadata)."
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -129,17 +134,37 @@ def dw_resolve_path(
     Raises
     ------
     ValueError
-        If neither ``path`` nor ``name`` is supplied, or if the kind's
-        root is not configured.
+        If ``kind`` is not one of ``"wrk"`` / ``"raw"`` / ``"meta"``,
+        if the kind's root is not configured (profile not loaded), or
+        if neither ``path`` nor ``name`` is supplied.
+
+    Examples
+    --------
+    >>> from cso_toolkit import _state, dw_resolve_path
+    >>> _state.configure(teamsWrkData="/tmp/wrk")
+    >>> dw_resolve_path(name="ind.csv", sector="ed", kind="wrk")
+    '/tmp/wrk/ed/ind.csv'
     """
     if kind not in _KINDS:
-        raise ValueError(f"kind must be one of {_KINDS}, got {kind!r}")
+        raise ValueError(
+            f"[cso_toolkit.dw_resolve_path] kind must be one of {_KINDS}, "
+            f"got {kind!r}.\n"
+            f"  Fix: pass kind=\"wrk\" | \"raw\" | \"meta\"."
+        )
 
     root = _dw_root_for(kind)
     if not root:
+        global_name = {"wrk": "teamsWrkData",
+                       "raw": "teamsRawData",
+                       "meta": "dwMetaData"}[kind]
         raise ValueError(
-            f"dw_resolve_path: root for kind={kind!r} is not defined. "
-            "Is the profile loaded?"
+            f"[cso_toolkit.dw_resolve_path] _state.{global_name} is not set.\n"
+            f"  This usually means the profile script "
+            f"(profile_<repo>.py) has not been imported yet, "
+            f"or it didn't call cso_toolkit._state.configure({global_name}=...).\n"
+            f"  Fix: import the profile first, or set the global directly:\n"
+            f"    from cso_toolkit import _state\n"
+            f"    _state.configure({global_name}=\"/path/to/{kind}\")"
         )
 
     if name is not None:
@@ -149,8 +174,9 @@ def dw_resolve_path(
         subpath = str(path).replace("\\", "/")
     else:
         raise ValueError(
-            "dw_resolve_path: provide either `path` or `name` "
-            "(with optional sector / vintage)."
+            "[cso_toolkit.dw_resolve_path] Neither `path` nor `name` supplied.\n"
+            "  At least one is required to build a filesystem path.\n"
+            "  Fix: pass path=\"sector/file.csv\" OR name=\"file.csv\" + sector=\"...\"."
         )
 
     # Collapse repeated slashes and strip leading slash
@@ -252,10 +278,21 @@ def dw_verify_z(path: Union[str, Path], compare: str = "size") -> dict:
     dict
         Keys ``status`` plus supporting fields.  ``status`` is one of:
         ``"no_z_mirror"``, ``"z_missing"``, ``"match_size"``,
-        ``"size_mismatch"``, ``"match_sha256"``, ``"sha256_mismatch"``.
+        ``"size_mismatch"``, ``"match_sha256"``, ``"sha256_mismatch"``,
+        ``"verify_unavailable"``.
+
+    Raises
+    ------
+    ValueError
+        If ``compare`` is not ``"size"`` or ``"sha256"``.
     """
     if compare not in ("size", "sha256"):
-        raise ValueError(f"compare must be 'size' or 'sha256', got {compare!r}")
+        raise ValueError(
+            f"[cso_toolkit.dw_verify_z] compare must be 'size' or 'sha256', "
+            f"got {compare!r}.\n"
+            "  Fix: pass compare=\"size\" (fast, default) or "
+            "compare=\"sha256\" (deep, requires the file to be read)."
+        )
 
     z_path = _dw_z_mirror_path(path)
     if z_path is None:
@@ -310,20 +347,44 @@ def dw_isid(
     -------
     bool
         ``True`` when the check passes.  Raises on duplicates.
+
+    Raises
+    ------
+    ValueError
+        When one or more ``keys`` are missing from ``df.columns``, or when
+        any ``(keys)`` tuple appears more than once.  The error message
+        includes a sample of up to five duplicate rows.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> from cso_toolkit import dw_isid
+    >>> df = pd.DataFrame({"REF_AREA": ["AGO", "BFA"], "value": [1, 2]})
+    >>> dw_isid(df, keys=["REF_AREA"])
+    True
     """
     missing = [k for k in keys if k not in df.columns]
     if missing:
+        present = ", ".join(df.columns[:10]) + ("..." if len(df.columns) > 10 else "")
         raise ValueError(
-            f"dw_isid ({where}): keys not in data: {', '.join(missing)}"
+            f"[cso_toolkit.dw_isid] ({where}) keys not in data: "
+            f"{', '.join(missing)}.\n"
+            f"  Data columns are: {present}\n"
+            "  Fix: check spelling / casing on the key columns, or drop "
+            "non-existent keys from your isid= argument."
         )
     if len(df) == 0:
         return True
     dups = df[df.duplicated(subset=list(keys), keep=False)]
     if len(dups) > 0:
-        sample = dups.head(5).to_string()
+        sample = dups.sort_values(list(keys)).head(5).to_string()
         raise ValueError(
-            f"dw_isid ({where}): {len(dups)} duplicate row(s) on key "
-            f"({', '.join(keys)}).\nFirst duplicates:\n{sample}"
+            f"[cso_toolkit.dw_isid] ({where}) {len(dups)} duplicate row(s) "
+            f"on key ({', '.join(keys)}).\n"
+            f"  First duplicates:\n{sample}\n"
+            "  Fix: deduplicate before saving "
+            "(`df = df.drop_duplicates(subset=keys)`) "
+            "or extend the key set so the rows become unique."
         )
     return True
 
@@ -346,8 +407,9 @@ def _write_xlsx(x: Any, path: str, sheet: str = "Sheet1", **kwargs: Any) -> None
         from openpyxl import Workbook as _OpenpyxlWorkbook
     except ImportError as exc:  # pragma: no cover
         raise ImportError(
-            "dw_save (xlsx): the 'openpyxl' package is required. "
-            "Install via `pip install openpyxl`."
+            "[cso_toolkit.dw_save] Writing .xlsx requires the 'openpyxl' "
+            "package, which is not installed.\n"
+            "  Fix: `pip install openpyxl`."
         ) from exc
 
     if isinstance(x, _OpenpyxlWorkbook):
@@ -363,8 +425,12 @@ def _write_xlsx(x: Any, path: str, sheet: str = "Sheet1", **kwargs: Any) -> None
             x.to_excel(writer, sheet_name=sheet, index=False, **kwargs)
         return
     raise TypeError(
-        "dw_save (xlsx): `x` must be a DataFrame, dict[str, DataFrame], "
-        "or openpyxl.Workbook."
+        f"[cso_toolkit.dw_save] (.xlsx) Got `x` of type {type(x).__name__!r}, "
+        "but .xlsx accepts only:\n"
+        "  - a pandas.DataFrame (single sheet)\n"
+        "  - a dict mapping sheet name -> DataFrame (multi sheet)\n"
+        "  - an openpyxl.Workbook (pre-built workbook)\n"
+        "  Fix: convert `x` to one of the above before calling dw_save."
     )
 
 
@@ -393,7 +459,9 @@ def _write_yaml(x: Any, path: str, **kwargs: Any) -> None:
         import yaml
     except ImportError as exc:  # pragma: no cover
         raise ImportError(
-            "dw_save (yaml): the 'PyYAML' package is required."
+            "[cso_toolkit.dw_save] Writing .yaml requires the 'PyYAML' "
+            "package, which is not installed.\n"
+            "  Fix: `pip install PyYAML`."
         ) from exc
     with open(path, "w", encoding="utf-8") as f:
         yaml.safe_dump(x, f, sort_keys=False, **kwargs)
@@ -521,6 +589,34 @@ def dw_save(
     -------
     str
         The resolved output path.
+
+    Raises
+    ------
+    PermissionError
+        When the resolved path lands under a canonical root and the
+        session is in reviewer mode without ``allow_canonical_write=True``.
+        Also raised when the output directory cannot be created
+        (filesystem permissions / Teams sync lock).
+    ValueError
+        When neither ``path`` nor ``name`` is supplied, or the file
+        extension is not in the supported set.
+    FileExistsError
+        When the target file exists and ``overwrite=False``.
+    OSError
+        When the atomic rename of the tmp file to the final path fails
+        (commonly because the destination is open in another process —
+        e.g. Excel locking an .xlsx).
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> from cso_toolkit import _state, dw_save
+    >>> _state.configure(teamsWrkData="/tmp/wrk")
+    >>> df = pd.DataFrame({"a": [1, 2], "b": ["x", "y"]})
+    >>> out = dw_save(df, name="example.csv", sector="t", kind="wrk",
+    ...               isid=["a"], metadata={"vintage": "2026-05"})
+    >>> out.endswith("/wrk/t/example.csv")
+    True
     """
     if path is None:
         path = dw_resolve_path(name=name, sector=sector, kind=kind, vintage=vintage)
@@ -531,10 +627,15 @@ def dw_save(
     if is_canon and not allow_canonical_write:
         if _state._get("dw_mode") == "reviewer":
             raise PermissionError(
-                f"[dw_save] Reviewer mode forbids writes under canonical: {path}\n"
-                "  Writes must land in the sandbox or repo-local path.\n"
-                "  If this is a deliberate Database Manager bootstrap, "
-                "pass `allow_canonical_write=True`."
+                f"[cso_toolkit.dw_save] Reviewer mode forbids writes "
+                f"under canonical: {path}\n"
+                "  Reviewer sessions must keep canonical deposits read-only "
+                "to preserve vintage permanence; writes go to the sandbox.\n"
+                "  Fix:\n"
+                "    1. Resolve a sandbox path instead (the profile's "
+                "teamsWrkData usually points there in reviewer mode), OR\n"
+                "    2. If this is a deliberate Database Manager bootstrap, "
+                "pass `allow_canonical_write=True` to bypass the guard."
             )
 
     if isid is not None and isinstance(x, pd.DataFrame):
@@ -544,7 +645,18 @@ def dw_save(
     if compress and fmt in ("csv", "tsv", "txt") and not path.lower().endswith(".gz"):
         path = path + ".gz"
 
-    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    try:
+        Path(path).parent.mkdir(parents=True, exist_ok=True)
+    except PermissionError as exc:
+        raise PermissionError(
+            f"[cso_toolkit.dw_save] Cannot create output directory "
+            f"{Path(path).parent}.\n"
+            f"  Underlying error: {exc.strerror or exc}\n"
+            "  Fix: check filesystem permissions; on Windows, the Teams "
+            "sync client sometimes locks folders during sync — wait or "
+            "pause sync before retrying."
+        ) from exc
+
     tmp_path = path + ".tmp"
     if Path(tmp_path).exists():
         Path(tmp_path).unlink()
@@ -572,14 +684,32 @@ def dw_save(
         _write_yaml(x, tmp_path, **kwargs)
     else:
         Path(tmp_path).unlink(missing_ok=True)
+        supported = "csv, tsv, txt, xlsx, pkl, dta, parquet, json, yml, yaml"
         raise ValueError(
-            f"dw_save: unsupported file extension {fmt_dispatch!r} for path: {path}"
+            f"[cso_toolkit.dw_save] Unsupported file extension "
+            f"{fmt_dispatch!r} (path: {path}).\n"
+            f"  Supported extensions: {supported}\n"
+            "  Fix: rename the output so it has one of the supported "
+            "extensions, or extend dw_save's dispatch table."
         )
 
     if not overwrite and Path(path).exists():
         Path(tmp_path).unlink()
-        raise FileExistsError(f"dw_save: file exists and overwrite=False: {path}")
-    Path(tmp_path).replace(path)
+        raise FileExistsError(
+            f"[cso_toolkit.dw_save] File exists and overwrite=False: {path}\n"
+            "  Fix: pass overwrite=True to replace the existing file, "
+            "or write to a different path."
+        )
+    try:
+        Path(tmp_path).replace(path)
+    except OSError as exc:
+        Path(tmp_path).unlink(missing_ok=True)
+        raise OSError(
+            f"[cso_toolkit.dw_save] Atomic rename {tmp_path} -> {path} failed.\n"
+            f"  Underlying error: {exc.strerror or exc}\n"
+            "  Fix: make sure the destination is not open in another "
+            "process (Excel locks .xlsx files), then retry."
+        ) from exc
 
     if provenance and fmt_dispatch not in ("",):
         _write_provenance(path, x, fmt=fmt_dispatch,
@@ -640,21 +770,31 @@ def _resolve_for_read(path: str, fallback_canonical: bool) -> str:
         return path
     if not fallback_canonical:
         raise FileNotFoundError(
-            f"dw_use: file not found and fallback_canonical=False: {path}"
+            f"[cso_toolkit.dw_use] File not found and fallback_canonical=False:\n"
+            f"  {path}\n"
+            "  Fix: drop the fallback_canonical=False argument, "
+            "or verify the path exists."
         )
     swaps = [
         (_state._get("teamsRawData"), _state._get("teamsRawDataCanonical")),
         (_state._get("teamsWrkData"), _state._get("teamsWrkDataCanonical")),
         (_state._get("teamsFolder"),  _state._get("teamsFolderCanonical")),
     ]
+    attempted = [path]
     for src, dst in swaps:
         if src and dst and src != dst and path.startswith(src):
             alt = dst + path[len(src):]
+            attempted.append(alt)
             if Path(alt).exists():
                 _log.info("[dw_use] Falling back to canonical: %s", alt)
                 return alt
+    attempted_str = "\n    ".join(attempted)
     raise FileNotFoundError(
-        f"dw_use: file not found at literal path or canonical fallback: {path}"
+        f"[cso_toolkit.dw_use] File not found at literal path or under "
+        f"any configured canonical root.\n"
+        f"  Attempted:\n    {attempted_str}\n"
+        "  Fix: confirm the file was produced by the upstream pipeline, "
+        "or that _state.team*Canonical globals are set to the right roots."
     )
 
 
@@ -709,6 +849,17 @@ def dw_use(
     FileNotFoundError
         When the file is missing both at the literal path and (if
         ``fallback_canonical=True``) under canonical.
+    ValueError
+        When the file extension is not in the supported set.
+    ImportError
+        Lazy-raised when the format-specific reader's package
+        (``openpyxl`` for .xlsx, ``PyYAML`` for .yaml) is not installed.
+
+    Examples
+    --------
+    >>> from cso_toolkit import _state, dw_use  # doctest: +SKIP
+    >>> _state.configure(teamsWrkData="/tmp/wrk")  # doctest: +SKIP
+    >>> df = dw_use(name="example.csv", sector="t", kind="wrk")  # doctest: +SKIP
     """
     if path is None:
         path = dw_resolve_path(name=name, sector=sector, kind=kind)
@@ -747,7 +898,13 @@ def dw_use(
     elif fmt in ("yml", "yaml"):
         x = _read_yaml(resolved, **kwargs)
     else:
-        raise ValueError(f"dw_use: unsupported file extension {fmt!r} for: {resolved}")
+        supported = "csv, tsv, txt, xlsx, pkl, dta, parquet, json, yml, yaml"
+        raise ValueError(
+            f"[cso_toolkit.dw_use] Unsupported file extension {fmt!r} "
+            f"(path: {resolved}).\n"
+            f"  Supported extensions: {supported}\n"
+            "  Fix: ensure the file has one of the supported extensions."
+        )
 
     return x
 
@@ -809,6 +966,12 @@ def dw_compare(
     -------
     dict
         Keys ``"summary"``, ``"added"``, ``"removed"``, ``"changed"``.
+
+    Raises
+    ------
+    ValueError
+        When none of the supplied ``by`` columns are present in both
+        ``current`` and ``reference``.
     """
     if not isinstance(current, pd.DataFrame):
         current = dw_use(current)
@@ -818,7 +981,16 @@ def dw_compare(
     common = [c for c in current.columns if c in reference.columns]
     by = [k for k in by if k in common]
     if not by:
-        raise ValueError("dw_compare: no `by` columns are present in both sides.")
+        cur_cols = ", ".join(current.columns[:8]) + ("..." if len(current.columns) > 8 else "")
+        ref_cols = ", ".join(reference.columns[:8]) + ("..." if len(reference.columns) > 8 else "")
+        raise ValueError(
+            "[cso_toolkit.dw_compare] No `by` columns are present in both "
+            "sides.\n"
+            f"  Current columns:   {cur_cols}\n"
+            f"  Reference columns: {ref_cols}\n"
+            "  Fix: pass at least one column name that appears in BOTH "
+            "DataFrames as a join key."
+        )
 
     if value_cols is None:
         value_cols = [c for c in common if c not in by]
@@ -924,9 +1096,28 @@ def dw_merge(
     Returns
     -------
     pd.DataFrame
+
+    Warns
+    -----
+    UserWarning
+        When the observed cardinality of ``by`` on either side disagrees
+        with the declared ``how``.
+
+    Raises
+    ------
+    ValueError
+        When ``how`` is not one of ``"m:1"`` / ``"1:1"`` / ``"1:m"`` /
+        ``"m:m"``.
     """
     if how not in ("m:1", "1:1", "1:m", "m:m"):
-        raise ValueError(f"how must be one of m:1, 1:1, 1:m, m:m; got {how!r}")
+        raise ValueError(
+            f"[cso_toolkit.dw_merge] `how` must be one of "
+            "'m:1', '1:1', '1:m', 'm:m'; "
+            f"got {how!r}.\n"
+            "  Fix: pass the Stata-style cardinality string matching your "
+            "data — most commonly 'm:1' (left has many rows, right has one "
+            "per key, e.g. attaching country metadata)."
+        )
     y = dw_use(using) if not isinstance(using, pd.DataFrame) else using
 
     x_dup = x[list(by)].duplicated().any()

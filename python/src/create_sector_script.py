@@ -68,11 +68,22 @@ def create_sector_script(
 
     script_dir = Path(base_dir) / sector_code
     script_path = script_dir / f"00_run_{sector_code}.py"
-    script_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        script_dir.mkdir(parents=True, exist_ok=True)
+    except PermissionError as exc:
+        raise PermissionError(
+            f"[cso_toolkit.create_sector_script] Cannot create "
+            f"{script_dir}.\n"
+            f"  Underlying error: {exc.strerror or exc}\n"
+            "  Fix: check filesystem permissions, or pass a writable "
+            "base_dir."
+        ) from exc
     if script_path.exists() and not overwrite:
         raise FileExistsError(
-            f"File already exists: {script_path}\n"
-            "Pass overwrite=True to replace it."
+            f"[cso_toolkit.create_sector_script] File already exists: "
+            f"{script_path}\n"
+            "  Fix: pass overwrite=True to replace it, or delete the "
+            "existing script first."
         )
 
     input_components = ", ".join(repr(c) for c in (*input_subpath, sector_code))
