@@ -44,12 +44,17 @@
 #'
 #' @examples
 #' \dontrun{
-#' # Generic usage — writes ./ws/00_run_ws.R relative to cwd:
+#' # Generic usage -- writes ./ws/00_run_ws.R relative to cwd:
 #' create_sector_script("WASH", "ws")
 #'
 #' # Targeting a specific subtree of your project:
 #' create_sector_script("Nutrition", "nt", base_dir = "pipelines/sectors")
 #' }
+#' @seealso [create_dw_sector_script()] for the DW-Production-conventions
+#'   wrapper; [create_profile()] for the profile-script scaffold; the
+#'   generated script's logging and try-catch are designed to work with
+#'   the profile sentinel set by [create_profile()].
+#' @family scaffolding
 #' @export
 create_sector_script <- function(sector_name,
                                  sector_code,
@@ -70,8 +75,10 @@ create_sector_script <- function(sector_name,
   }
 
   if (file.exists(script_path) && !overwrite) {
-    stop("File already exists: ", script_path,
-         "\nPass overwrite = TRUE to replace it.")
+    stop(sprintf(
+      "[cso_toolkit.create_sector_script] File already exists: %s\n  Fix: pass overwrite = TRUE to replace it, or delete the existing script first.",
+      script_path
+    ), call. = FALSE)
   }
 
   input_path_call  <- paste0(
@@ -102,7 +109,7 @@ create_sector_script <- function(sector_name,
     "# 0. Profile Verification",
     "#=======================#",
     paste0("if (!exists(\"", profile_name, "\") || !isTRUE(", profile_name, ")) {"),
-    paste0("  stop(\"❌ Project profile not loaded. Please source('", profile_file, "') before running this script.\")"),
+    paste0("  stop(\"[X] Project profile not loaded. Please source('", profile_file, "') before running this script.\")"),
     "}",
     "",
     "# Fallback for log_message() if the project profile did not define one.",
@@ -159,16 +166,16 @@ create_sector_script <- function(sector_name,
     "  # 2.4 Wrap up",
     "  #-------------------------------------------------------------",
     "  duration <- round(difftime(Sys.time(), start_time, units = \"secs\"), 1)",
-    paste0("  log_message(paste(\"✅ ", sector_name, " module completed | Duration:\", duration, \"seconds\"))"),
+    paste0("  log_message(paste(\"[OK] ", sector_name, " module completed | Duration:\", duration, \"seconds\"))"),
     "",
     "}, error = function(e) {",
     "  errorOccurred <<- TRUE",
-    paste0("  log_message(paste(\"❌ Error in ", sector_name, " module:\", e$message))"),
+    paste0("  log_message(paste(\"[X] Error in ", sector_name, " module:\", e$message))"),
     "})"
   )
 
   writeLines(template, con = script_path)
-  message("✅ Sector script created: ", script_path)
+  message("[OK] Sector script created: ", script_path)
   invisible(script_path)
 }
 
@@ -193,6 +200,8 @@ create_sector_script <- function(sector_name,
 #' # From the DW-Production repo root, scaffold the WASH sector:
 #' create_dw_sector_script("WASH", "ws")
 #' }
+#' @seealso [create_sector_script()] (the generic underlying helper).
+#' @family scaffolding
 #' @export
 create_dw_sector_script <- function(sector_name,
                                     sector_code,
