@@ -1,0 +1,67 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cso-toolkit"
+version = "0.3.0"
+description = "Shared Python helpers for UNICEF DW-Production Database Managers"
+readme = "src/README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "Joao Pedro Azevedo", email = "jazevedo@unicef.org"}
+]
+maintainers = [
+    {name = "UNICEF Data & Analytics"}
+]
+keywords = ["unicef", "data-warehouse", "indicator-data", "sdmx", "etl"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+]
+
+# Core dependencies (always required)
+dependencies = [
+    "pandas>=2.0",
+    "numpy>=1.24",
+]
+
+[project.optional-dependencies]
+# Lazy-loaded format-specific deps; install only what you need
+excel = ["openpyxl>=3.1"]
+parquet = ["pyarrow>=14"]
+yaml = ["PyYAML>=6"]
+# Lazy-loaded API-specific deps
+http = ["requests>=2.31"]
+sdmx = ["sdmx1>=2.13"]
+worldbank = ["wbgapi>=1.0"]
+# Everything
+all = [
+    "openpyxl>=3.1",
+    "pyarrow>=14",
+    "PyYAML>=6",
+    "requests>=2.31",
+    "sdmx1>=2.13",
+    "wbgapi>=1.0",
+]
+# Test deps
+test = ["pytest>=7"]
+
+[project.urls]
+Homepage = "https://github.com/unicef-drp/cso-toolkit"
+Issues = "https://github.com/unicef-drp/cso-toolkit/issues"
+Source = "https://github.com/unicef-drp/cso-toolkit"
+
+[tool.setuptools]
+package-dir = {"cso_toolkit" = "src"}
+
+[tool.setuptools.package-data]
+cso_toolkit = ["py.typed"]

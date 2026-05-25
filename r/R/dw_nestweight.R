@@ -70,6 +70,9 @@
 #'   summarise(sum_orig = sum(hh_weight),
 #'             sum_adj  = sum(hh_weight_adj))
 #' }
+#' @seealso [aggregate_data_v2()] for the downstream weighted aggregation
+#'   that typically consumes `new_weight`.
+#' @family survey-weights
 #' @export
 dw_nestweight <- function(data,
                        value,
@@ -78,20 +81,45 @@ dw_nestweight <- function(data,
                        new_weight = "weight_adj",
                        only = NULL,
                        verbose = TRUE) {
-  if (!is.data.frame(data)) stop("`data` must be a data frame.")
+  if (!is.data.frame(data)) {
+    stop(sprintf(
+      "[cso_toolkit.dw_nestweight] `data` must be a data frame; got %s.\n  Fix: convert your input (e.g. as.data.frame(x)) before calling.",
+      class(data)[1L]
+    ), call. = FALSE)
+  }
   if (!is.character(value) || length(value) != 1L) {
-    stop("`value` must be a single column name.")
+    stop("[cso_toolkit.dw_nestweight] `value` must be a single column name (character of length 1).\n  Fix: pass one column name as a string, e.g. value = 'stunting'.",
+         call. = FALSE)
   }
   if (!is.character(by) || length(by) != 1L) {
-    stop("`by` must be a single column name (the stratum).")
+    stop("[cso_toolkit.dw_nestweight] `by` must be a single column name (the stratum).\n  Fix: pass one column name as a string, e.g. by = 'stratum_id'.",
+         call. = FALSE)
   }
-  if (!value %in% names(data)) stop("Column not found: ", value)
-  if (!by    %in% names(data)) stop("Column not found: ", by)
+  present <- paste(utils::head(names(data), 10), collapse = ", ")
+  if (length(names(data)) > 10) present <- paste0(present, "...")
+  if (!value %in% names(data)) {
+    stop(sprintf(
+      "[cso_toolkit.dw_nestweight] Column '%s' (passed as `value =`) not found in data.\n  Data columns: %s\n  Fix: check spelling / casing on the value column.",
+      value, present
+    ), call. = FALSE)
+  }
+  if (!by %in% names(data)) {
+    stop(sprintf(
+      "[cso_toolkit.dw_nestweight] Column '%s' (passed as `by =`) not found in data.\n  Data columns: %s\n  Fix: check spelling / casing on the stratum column.",
+      by, present
+    ), call. = FALSE)
+  }
   if (!is.null(weight)) {
     if (!is.character(weight) || length(weight) != 1L) {
-      stop("`weight` must be a single column name or NULL.")
+      stop("[cso_toolkit.dw_nestweight] `weight` must be a single column name or NULL.\n  Fix: pass weight = 'colname' or omit (defaults to unit weights).",
+           call. = FALSE)
     }
-    if (!weight %in% names(data)) stop("Column not found: ", weight)
+    if (!weight %in% names(data)) {
+      stop(sprintf(
+        "[cso_toolkit.dw_nestweight] Column '%s' (passed as `weight =`) not found in data.\n  Data columns: %s\n  Fix: check spelling / casing, or pass weight = NULL to use implicit unit weights.",
+        weight, present
+      ), call. = FALSE)
+    }
   }
 
   v_obs <- !is.na(data[[value]])
@@ -99,19 +127,29 @@ dw_nestweight <- function(data,
     rep(1, nrow(data))
   } else {
     w <- data[[weight]]
-    if (!is.numeric(w)) stop("Weight column '", weight, "' must be numeric.")
+    if (!is.numeric(w)) {
+      stop(sprintf(
+        "[cso_toolkit.dw_nestweight] Weight column '%s' is not numeric.\n  Fix: clean the weight column upstream (drop non-numeric rows or cast to numeric) before calling.",
+        weight
+      ), call. = FALSE)
+    }
     w
   }
   stratum <- data[[by]]
   if (any(is.na(stratum))) {
-    warning("`", by, "` has ", sum(is.na(stratum)),
-            " NA stratum value(s); those rows get weight 0.")
+    warning(sprintf(
+      "[cso_toolkit.dw_nestweight] `%s` has %d NA stratum value(s); those rows get weight 0.",
+      by, sum(is.na(stratum))
+    ), call. = FALSE)
   }
 
   eligible <- v_obs & !is.na(w_orig) & !is.na(stratum)
   if (!is.null(only)) {
     if (!is.logical(only) || length(only) != nrow(data)) {
-      stop("`only` must be a logical vector of length nrow(data) (or NULL).")
+      stop(sprintf(
+        "[cso_toolkit.dw_nestweight] `only` must be a logical vector of length nrow(data) (%d); got length %d with type %s.\n  Fix: build the mask from the same data frame, e.g. only = !is.na(data$answered_q).",
+        nrow(data), length(only), class(only)[1L]
+      ), call. = FALSE)
     }
     eligible <- eligible & only
   }

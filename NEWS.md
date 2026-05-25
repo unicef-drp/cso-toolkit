@@ -1,8 +1,126 @@
 # NEWS — cso-toolkit
 
-## Unreleased
+## v0.3.0 (2026-05-25)
+
+First release with full **Python parity** for every R helper, plus the
+**R Roxygen-complete reference** (NAMESPACE + 26 Rd files + pkgdown
+config), and a **three-part error envelope** (`[cso_toolkit.<func>]
+WHAT / Why / Fix`) standardised across R and Python.
+
+**Python helpers (new):**
+
+- `python/src/` — full Python port of every R helper.  Same behaviour
+  contract; mode-aware path routing, Z: drive mirror, provenance
+  sidecars, version-drift detection.  Imports via
+  `from cso_toolkit import dw_save, dw_use, dw_api_fetch, ...`.  10
+  modules + foundation (`_state.py`, `__init__.py`); 26 public entries.
+- `python/pyproject.toml` — optional `pip install -e python/` for
+  local development; vendoring remains the production model.
+- `python/src/py.typed` — PEP 561 marker so type-checkers see the
+  type hints when consumers vendor the package.
+- `python/tests/manual/smoke_test.py` — bootstraps `python/src/` under
+  the name `cso_toolkit`, then exercises 15 invariants end-to-end
+  (`dw_save` → `dw_use` roundtrip + provenance sidecar; `dw_isid`
+  duplicate detection; `aggregate_data_v2` with coverage threshold;
+  `dw_nestweight` preserves stratum totals; `create_profile` +
+  `review_profile` pass all required checks; `test_scripts` catches a
+  raw `pd.read_csv`; `cso_toolkit_check` returns `None` on missing
+  manifest; plus 3 regression checks for path-prefix matching,
+  secrets-redaction, and `_get` falsy-value handling).
+- `python/tests/manual/error_envelope_test.py` — 30-path contract test
+  asserting every public Python raise emits the
+  `[cso_toolkit.<func>]` prefix + `Fix:` guidance.
+- `docs/dw_io_python_reference.md` + `docs/dw_api_python_reference.md`
+  — per-function references mirroring the existing R-side docs.
+- Every public Python function carries a `Raises:` section enumerating
+  the typed exceptions it can raise.  Every raise site emits a
+  three-part **WHAT / WHY / HOW** message prefixed
+  `[cso_toolkit.<func>]` so callers can grep and so library messages
+  stand out from upstream traceback noise.
+- HTTP, JSON-parse, CSV-parse, and YAML failures in `dw_api.py` and
+  `generate_markdown_report.py` are wrapped with the same envelope —
+  no bare `requests.HTTPError` / `KeyError` / `pd.errors.ParserError`
+  bubbles up uncaught.
+- Sensitive keys (`token`, `headers`, `api_key`, `password`, …) in
+  `dw_api_fetch` kwargs are redacted before they reach the
+  `.provenance.json` sidecar (`_redact_sensitive` walker in
+  `dw_api.py`).
+- `dw_is_canonical` now uses a path-aware descendant check so
+  `/data/wrk-canary/...` no longer false-matches a root of
+  `/data/wrk-can`.
+
+**R helpers (documentation):**
+
+- Roxygen pass across `dw_io.R`, `dw_api.R`, `cso_toolkit_sync.R`,
+  `generate_markdown_report.R`, and `aggregate_data.R`. Every exported
+  function now has `@param` / `@return` / `@export`; every internal
+  helper carries `@keywords internal` + `@noRd`. The package now ships
+  a generated `NAMESPACE` exporting 26 functions and a `man/` directory
+  with one `.Rd` per export. No behaviour change.
+- `@seealso` + `@family` Roxygen tags added on every export, grouped
+  into eight families (`io`, `api`, `sync`, `aggregate`,
+  `survey-weights`, `reporting`, `scaffolding`, `audit`).
+- `r/_pkgdown.yml` — pkgdown reference site config with the eight
+  grouped sections; UNICEF cyan/navy bootstrap theme.
+- `r/LICENSE` — CRAN-style 2-line MIT pointer so `License: MIT + file
+  LICENSE` resolves under `R CMD check`.
+- `r/R/zzz.R` — single shared `.cso_require()` helper plus
+  `utils::globalVariables()` declarations for dplyr / tidyr NSE
+  references. Previous duplicate `.cso_require()` definitions in
+  `aggregate_data_v2.R` and `generate_markdown_report.R` removed; calls
+  moved into public function bodies to avoid source-time side effects.
+- Every R `stop()` / `warning()` now follows the same three-part
+  envelope as Python: `[cso_toolkit.<func>] WHAT.\n  Why: ...\n  Fix:
+  ...` with `call. = FALSE`.
+- `r/DESCRIPTION` — version bumped to `0.2.1.9000` (dev) ahead of the
+  next release. `Imports:` now lists `dplyr`, `tidyr`, `tibble`,
+  `rlang` (previously only `data.table` / `digest` / `jsonlite` /
+  `yaml` / `readr`). `Suggests:` adds `readxl` and `writexl`.
+- `R CMD check` now passes 0 errors / 0 warnings / 1 environmental
+  note (was 1 error / 4 warnings / 3 notes).
+
+**Sync / vendoring infrastructure:**
+
+- `templates/.toolkit_manifest.yml` — header expanded with a field-by-field
+  reference; `pulled_version` bumped to `v0.2.0`; sample `vendored:` list
+  now mentions the seven optional helpers as commented-out entries so
+  consumers can opt in without re-deriving the file list.
+- `r/tests/manual/check_consumer_side.R` — manual smoke test that
+  simulates a consumer repo, drops a manifest into it, sources the
+  vendored helpers, and calls `cso_toolkit_check()` end-to-end against
+  the live GitHub API. Use as a release-eve verification.
+
+**Documentation:**
+
+- `r/README.md`, `python/README.md`, `stata/README.md` — new
+  per-language top-level READMEs with install paths, layout, quick
+  start, mode contract, error envelope, testing.
+- Top-level `README.md` Status + Versioning bullets refreshed to
+  reflect the v0.2.0 / v0.3.0 release window (previously frozen on
+  v0.1.0-rc1).
+- `r/R/README.md` — added link to Python siblings; manifest example
+  bumped `v0.1.0-rc1 → v0.2.0`.
+
+## v0.2.0 (2026-05-24)
+
+Stata helpers shipped; R analytical helpers expanded; rebrand as the
+UNICEF Chief Statistician Office (CSO) toolkit.
+
+**Stata helpers (new):**
+
+- `stata/src/dw_save.ado` — uniform Stata `save` wrapper with `isid` +
+  `compress` + sibling `.provenance.json` sidecar matching the R-side
+  shape. Honours producer / reviewer mode via `$dw_mode`; canonical
+  writes blocked in reviewer mode unless `allow_canonical_write` is
+  passed. Lineage: `edukit_save` (Diana Goldemberg).
+- `stata/src/dw_compare.ado` — merges two `.dta` files on `idvars` and
+  classifies each value column as identical / numerically-equivalent /
+  different. Lineage: `comparefiles` (Kristoffer Bjärkefur).
+- `stata/src/dw_mkdir.ado` — recursive `mkdir` for Stata. Lineage:
+  `rmkdir` (Kristoffer Bjärkefur).
 
 **R helpers (additions):**
+
 - `aggregate_data.R` — original `aggregate_data()` (mean / weighted_mean,
   optional global aggregate, population + country coverage). Lifted from
   `DW-Production/00_functions/`. Kept for back-compat.
@@ -10,6 +128,10 @@
   `sum`, `proportion`; coverage threshold; metadata columns. Ships
   `generate_agg_footnote()`, `apply_time_window()`, and a v1-compatible
   wrapper that delegates the v1 signature to v2.
+- `dw_nestweight.R` — port of World Bank EduAnalyticsToolkit
+  `edukit_nestweight` (Diana Goldemberg). Redistributes survey weights
+  from missing nested observations so per-stratum totals are
+  preserved.
 - `generate_markdown_report.R` — `generate_markdown_report()` +
   `process_all_csv_files()`. Descriptive-stats Markdown reports from CSV
   files; handles missing country / year / indicator columns gracefully.
@@ -40,18 +162,18 @@
   CI mode via `error_on_violation = TRUE`.
 
 **Documentation (additions / changes):**
+
 - README — rebranded as the **UNICEF Chief Statistician Office (CSO)
   toolkit** and added an **Objective and motivation** section spelling out
   that the repo exists to facilitate the reproducibility and scalability
   of analytics developed by the UNICEF Data and Analytics Section in the
   Office of the Executive Director (OSE). Citation block updated to match.
-
-**Docs (additions):**
 - `docs/dw_io_reference.md` — per-function reference for `dw_io.R` lifted
   out of the DW-Production `00_functions/README.md`.
 - `docs/dw_api_reference.md` — per-function reference for `dw_api.R` (same
   lift; behaviour matrix, supported APIs, worked SDMX example, sector
   migration checklist).
+- Workflow diagrams (`docs/workflow_*.svg`) added.
 
 ## v0.1.0-rc1 (2026-05-24)
 

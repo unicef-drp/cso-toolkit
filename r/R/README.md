@@ -1,6 +1,9 @@
 # r/R/ — R helpers
 
-Vendored, not installed.
+Vendored, not installed. Python siblings of every helper below live at
+[`python/src/`](../../python/src/) — same behaviour contract, same path
+routing, same provenance sidecars; pick the language that fits the
+sector pipeline you are vendoring into.
 
 **Core helpers (shipped in v0.1.0-rc1):**
 
@@ -58,9 +61,11 @@ The consumer pins a version in `00_functions/.toolkit_manifest.yml`:
 
 ```yaml
 source: "unicef-drp/cso-toolkit"
-pulled_version: "v0.1.0-rc1"
-pulled_date: "2026-05-24"
+pulled_version: "v0.2.0"
+pulled_date: "2026-05-25"
 ```
 
 `cso_toolkit_check()` reads the manifest, asks the GitHub API for the latest
-tag, and warns if the consumer is behind.
+tag, and warns if the consumer is behind. See
+[`templates/.toolkit_manifest.yml`](../../templates/.toolkit_manifest.yml)
+for the full schema (fields, optional helpers, `local_edits` opt-out).
