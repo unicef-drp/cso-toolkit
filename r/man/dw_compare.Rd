@@ -50,3 +50,18 @@ value-changed rows on the intersection. Numeric value columns can use a
 tolerance-based equality; string columns normalise to trimmed lowercase
 empty-equivalents (`""`, `"NA"`, `"N/A"`, `"NULL"`, `"."`).
 }
+\seealso{
+[dw_use()] (used to materialise the inputs when paths are
+  supplied); [dw_merge()] for a Stata-style join with cardinality
+  assertion.
+
+Other io: 
+\code{\link{dw_is_canonical}()},
+\code{\link{dw_isid}()},
+\code{\link{dw_merge}()},
+\code{\link{dw_resolve_path}()},
+\code{\link{dw_save}()},
+\code{\link{dw_use}()},
+\code{\link{dw_verify_z}()}
+}
+\concept{io}

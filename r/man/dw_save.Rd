@@ -123,3 +123,18 @@ dw_save(edu_sdg_uis,
         ))
 }
 }
+\seealso{
+[dw_use()] for the read counterpart; [dw_isid()] for the
+  uniqueness check; [dw_verify_z()] for the Z: mirror integrity check;
+  [dw_resolve_path()] for the path-resolution rules.
+
+Other io: 
+\code{\link{dw_compare}()},
+\code{\link{dw_is_canonical}()},
+\code{\link{dw_isid}()},
+\code{\link{dw_merge}()},
+\code{\link{dw_resolve_path}()},
+\code{\link{dw_use}()},
+\code{\link{dw_verify_z}()}
+}
+\concept{io}

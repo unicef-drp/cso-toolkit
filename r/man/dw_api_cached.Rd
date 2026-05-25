@@ -21,3 +21,12 @@ Cache-only counterpart to [dw_api_fetch()]. Always reads from the
 canonical cache root and stops if no cache exists — useful in analysis
 scripts that must remain reproducible without network access.
 }
+\seealso{
+[dw_api_fetch()] (populates the cache); [dw_api_inventory()]
+  (lists all caches).
+
+Other api: 
+\code{\link{dw_api_fetch}()},
+\code{\link{dw_api_inventory}()}
+}
+\concept{api}

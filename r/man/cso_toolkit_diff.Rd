@@ -18,3 +18,12 @@ Stub for v0.0.0. The implementation will fetch upstream files at the
 target tag and compare via `digest::digest` + a textual diff if
 requested.
 }
+\seealso{
+[cso_toolkit_check()] (which surfaces when a diff is worth
+  inspecting); [cso_toolkit_pull()] (executes the upgrade).
+
+Other sync: 
+\code{\link{cso_toolkit_check}()},
+\code{\link{cso_toolkit_pull}()}
+}
+\concept{sync}

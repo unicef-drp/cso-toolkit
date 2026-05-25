@@ -82,3 +82,8 @@ dhs |>
             sum_adj  = sum(hh_weight_adj))
 }
 }
+\seealso{
+[aggregate_data_v2()] for the downstream weighted aggregation
+  that typically consumes `new_weight`.
+}
+\concept{survey-weights}

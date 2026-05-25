@@ -59,7 +59,10 @@
 #' @noRd
 .dw_api_cache_path <- function(api, cache_key, ext = "csv") {
 	root <- .try_get("teamsRawData")
-	if (is.na(root)) stop("dw_api: teamsRawData global not defined (profile not loaded?)")
+	if (is.na(root)) {
+		stop("[cso_toolkit.dw_api] teamsRawData global is not set.\n  This usually means profile_<repo>.R has not been sourced yet.\n  Fix: source('profile_<repo>.R') first, or set teamsRawData <- '/path/to/raw' explicitly.",
+		     call. = FALSE)
+	}
 	file.path(root, "_apis", api, paste0(cache_key, ".", ext))
 }
 
@@ -100,7 +103,10 @@
 #' @noRd
 .dw_api_canonical_cache_path <- function(api, cache_key, ext = "csv") {
 	root <- .try_get("teamsRawDataCanonical")
-	if (is.na(root)) stop("dw_api: teamsRawDataCanonical not defined (profile not loaded?)")
+	if (is.na(root)) {
+		stop("[cso_toolkit.dw_api] teamsRawDataCanonical global is not set.\n  Reviewer-mode reads fall back to this canonical root when the sandbox cache is missing.\n  Fix: set teamsRawDataCanonical to the read-only Teams root that holds the deposit's _apis/ folder.",
+		     call. = FALSE)
+	}
 	file.path(root, "_apis", api, paste0(cache_key, ".", ext))
 }
 
@@ -151,6 +157,10 @@
 #'   cache_key = "uis_entrance_age_primary"
 #' )
 #' }
+#' @seealso [dw_api_cached()] for cache-only reads; [dw_api_inventory()]
+#'   to list existing caches; [dw_save()] (used to write the cache);
+#'   [dw_use()] (used to read it back).
+#' @family api
 #' @export
 dw_api_fetch <- function(api,
                          cache_key,
@@ -200,8 +210,10 @@ dw_api_fetch <- function(api,
 		"github_raw"     = do.call(.api_fetch_github_raw,     args),
 		"http"           = do.call(.api_fetch_http,           args),
 		"json_get"       = do.call(.api_fetch_json_get,       args),
-		stop("dw_api_fetch: unsupported api '", api, "'. Supported: ",
-		     "uis, sdmx, sdmx_codelist, wb, ilo, unsd_sdg, github_raw, http, json_get")
+		stop(sprintf(
+			"[cso_toolkit.dw_api_fetch] Unsupported api '%s'.\n  Supported: uis, sdmx, sdmx_codelist, wb, wb_indicators, ilo, unsd_sdg, github_raw, http, json_get\n  Fix: pass one of the supported strings as `api =`, or add a new branch to the switch() in dw_api.R.",
+			api
+		), call. = FALSE)
 	)
 	elapsed <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
 
@@ -239,12 +251,17 @@ dw_api_fetch <- function(api,
 #'
 #' @return The cached object.
 #'
+#' @seealso [dw_api_fetch()] (populates the cache); [dw_api_inventory()]
+#'   (lists all caches).
+#' @family api
 #' @export
 dw_api_cached <- function(api, cache_key, ext = "csv") {
 	cache_path <- .dw_api_canonical_cache_path(api, cache_key, ext)
 	if (!file.exists(cache_path)) {
-		stop("dw_api_cached: no cache at ", cache_path,
-		     "\n  Use dw_api_fetch() (producer mode) to populate.")
+		stop(sprintf(
+			"[cso_toolkit.dw_api_cached] No cache at %s\n  Reason: the cached fetch has not been produced yet (or the wrong api / cache_key / ext was passed).\n  Fix:\n    1. Ask the Database Manager to run dw_api_fetch('%s', cache_key = '%s', ...) in producer mode, OR\n    2. Verify api/cache_key/ext spelling: an `ext` mismatch is a common cause.",
+			cache_path, api, cache_key
+		), call. = FALSE)
 	}
 	dw_use(cache_path)
 }
@@ -264,6 +281,9 @@ dw_api_cached <- function(api, cache_key, ext = "csv") {
 #' @return A data frame with columns `api`, `cache_key`, `ext`, `size_bytes`,
 #'   `mtime`, `fetched_at`. Empty data frame when no caches exist.
 #'
+#' @seealso [dw_api_fetch()] (populates caches); [dw_api_cached()] (reads
+#'   a single cache).
+#' @family api
 #' @export
 dw_api_inventory <- function(api = NULL) {
 	root <- file.path(.try_get("teamsRawDataCanonical"), "_apis")

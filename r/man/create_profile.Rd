@@ -58,3 +58,14 @@ create_profile("DW-Production",
                overwrite = TRUE)
 }
 }
+\seealso{
+[review_profile()] to audit the generated profile against the
+  toolkit contract; [create_sector_script()] for sector-level
+  scaffolding that depends on the profile sentinel.
+
+Other scaffolding: 
+\code{\link{create_dw_sector_script}()},
+\code{\link{create_sector_script}()},
+\code{\link{review_profile}()}
+}
+\concept{scaffolding}

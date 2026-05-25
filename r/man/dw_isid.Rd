@@ -24,3 +24,25 @@ Raises an informative error if `df` has duplicate rows on the supplied
 key columns. Inspired by Stata's `isid` (and World Bank's `edukit_save`).
 Used by [dw_save()] when an `isid =` argument is supplied.
 }
+\examples{
+\dontrun{
+library(dplyr)
+df <- data.frame(REF_AREA = c("AGO", "BFA"), value = c(1, 2))
+dw_isid(df, keys = "REF_AREA")
+}
+
+}
+\seealso{
+[dw_save()] (auto-invokes `dw_isid` when an `isid =` argument
+  is passed).
+
+Other io: 
+\code{\link{dw_compare}()},
+\code{\link{dw_is_canonical}()},
+\code{\link{dw_merge}()},
+\code{\link{dw_resolve_path}()},
+\code{\link{dw_save}()},
+\code{\link{dw_use}()},
+\code{\link{dw_verify_z}()}
+}
+\concept{io}

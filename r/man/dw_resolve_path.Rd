@@ -44,3 +44,18 @@ dw_resolve_path(name = "dw_ed_edu.csv", sector = "ed", kind = "wrk")
 dw_resolve_path(path = "ed/dw_ed_edu.csv", kind = "wrk")
 }
 }
+\seealso{
+[dw_is_canonical()] to test whether a resolved path lies under
+  a canonical root; [dw_save()] and [dw_use()] which call this helper
+  internally.
+
+Other io: 
+\code{\link{dw_compare}()},
+\code{\link{dw_is_canonical}()},
+\code{\link{dw_isid}()},
+\code{\link{dw_merge}()},
+\code{\link{dw_save}()},
+\code{\link{dw_use}()},
+\code{\link{dw_verify_z}()}
+}
+\concept{io}

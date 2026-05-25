@@ -23,3 +23,17 @@ either a fast file-size check or a deep sha256 hash. Non-blocking by
 design: callers act on the returned `status` rather than seeing an
 immediate `stop()`.
 }
+\seealso{
+[dw_save()] (carbon-copies on canonical writes) and [dw_use()]
+  (runs an automatic size check on canonical reads).
+
+Other io: 
+\code{\link{dw_compare}()},
+\code{\link{dw_is_canonical}()},
+\code{\link{dw_isid}()},
+\code{\link{dw_merge}()},
+\code{\link{dw_resolve_path}()},
+\code{\link{dw_save}()},
+\code{\link{dw_use}()}
+}
+\concept{io}

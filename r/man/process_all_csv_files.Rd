@@ -41,3 +41,10 @@ process_all_csv_files(
 )
 }
 }
+\seealso{
+[generate_markdown_report()] (single-file engine).
+
+Other reporting: 
+\code{\link{generate_markdown_report}()}
+}
+\concept{reporting}

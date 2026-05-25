@@ -14,6 +14,43 @@ generate_agg_footnote(
   exclusions = NULL
 )
 }
-\description{
-Generate standardized footnotes for aggregated estimates
+\arguments{
+\item{country_coverage}{Integer. Number of countries contributing
+non-missing observations.}
+
+\item{total_countries}{Integer. Denominator for the country-coverage
+fraction.}
+
+\item{pop_coverage}{Numeric in [0, 1]. Fraction of total population
+represented by the contributing countries; rendered as an integer
+percent.}
+
+\item{start_year, end_year}{Optional integers. Inclusive bounds of the
+year window from which the latest estimate per country was drawn.}
+
+\item{exemptions}{Optional character vector of country codes that
+were retained outside the window (e.g. fragile-state exceptions);
+appended as `"Exemptions: ..."`.}
+
+\item{exclusions}{Optional character vector of country codes that
+were dropped before aggregation; appended as `"Exclusions: ..."`.}
 }
+\value{
+Character. A single-line footnote.
+}
+\description{
+Builds the canonical footnote string used under aggregated tables
+and charts: `"N/M countries (P % population coverage)"` with an
+optional `"Based on latest estimates from YYYY to YYYY."` prefix and
+optional exemption / exclusion suffixes.
+}
+\seealso{
+[aggregate_data_v2()] (typically the producer of the
+  coverage numbers fed into this footnote).
+
+Other aggregate: 
+\code{\link{aggregate_data}()},
+\code{\link{aggregate_data_v2}()},
+\code{\link{apply_time_window}()}
+}
+\concept{aggregate}

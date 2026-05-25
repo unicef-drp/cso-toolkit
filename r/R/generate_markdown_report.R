@@ -45,9 +45,10 @@
 .cso_require <- function(pkgs) {
   for (p in pkgs) {
     if (!requireNamespace(p, quietly = TRUE)) {
-      stop("generate_markdown_report requires the '", p,
-           "' package; install it with install.packages('", p, "').",
-           call. = FALSE)
+      stop(sprintf(
+        "[cso_toolkit.generate_markdown_report] Requires the '%s' package but it is not installed.\n  Fix: install.packages('%s')",
+        p, p
+      ), call. = FALSE)
     }
   }
 }
@@ -92,6 +93,8 @@
 #'   output_path      = "reports/"
 #' )
 #' }
+#' @seealso [process_all_csv_files()] to loop over a folder of CSVs.
+#' @family reporting
 #' @export
 generate_markdown_report <- function(csv_file_path, country_column, year_column, indicator_column, value_column, output_path = NULL) {
 
@@ -157,7 +160,10 @@ generate_markdown_report <- function(csv_file_path, country_column, year_column,
         ) |>
         dplyr::mutate(dplyr::across(dplyr::where(is.numeric), ~ format(.x, scientific = FALSE, big.mark = ",", digits = 2)))
     } else {
-      warning("Column '", value_var, "' not found in data. Skipping summary statistics for ", group_var)
+      warning(sprintf(
+        "[cso_toolkit.generate_markdown_report] Column '%s' not found in data. Skipping summary statistics for '%s'.",
+        value_var, group_var
+      ), call. = FALSE)
       return(NULL)
     }
   }
@@ -283,6 +289,8 @@ generate_markdown_report <- function(csv_file_path, country_column, year_column,
 #'   output_path      = "reports/"
 #' )
 #' }
+#' @seealso [generate_markdown_report()] (single-file engine).
+#' @family reporting
 #' @export
 process_all_csv_files <- function(folder_path, country_column, year_column, indicator_column, value_column, output_path = NULL) {
   # List all CSV files in the folder

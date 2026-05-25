@@ -60,3 +60,10 @@ generate_markdown_report(
 )
 }
 }
+\seealso{
+[process_all_csv_files()] to loop over a folder of CSVs.
+
+Other reporting: 
+\code{\link{process_all_csv_files}()}
+}
+\concept{reporting}

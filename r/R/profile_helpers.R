@@ -50,6 +50,10 @@
 #'                include_z_drive_check = TRUE,
 #'                overwrite = TRUE)
 #' }
+#' @seealso [review_profile()] to audit the generated profile against the
+#'   toolkit contract; [create_sector_script()] for sector-level
+#'   scaffolding that depends on the profile sentinel.
+#' @family scaffolding
 #' @export
 create_profile <- function(repo_name,
                            project_title = repo_name,
@@ -63,8 +67,10 @@ create_profile <- function(repo_name,
   if (!dir.exists(output_path)) dir.create(output_path, recursive = TRUE)
   path <- file.path(output_path, filename)
   if (file.exists(path) && !overwrite) {
-    stop("File already exists: ", path,
-         "\nPass overwrite = TRUE to replace it.")
+    stop(sprintf(
+      "[cso_toolkit.create_profile] File already exists: %s\n  Fix: pass overwrite = TRUE to replace it, or delete the existing profile first.",
+      path
+    ), call. = FALSE)
   }
 
   timestamp <- format(Sys.time(), "%Y-%m-%d %H:%M")
@@ -107,16 +113,16 @@ create_profile <- function(repo_name,
 
   z_block <- if (include_z_drive_check) c(
     "#----------------------------------------",
-    "# 4. Z: drive — non-blocking advisory",
+    "# 4. Z: drive -- non-blocking advisory",
     "#----------------------------------------",
     "# The Z: drive is the legacy Azure file-share mirror of canonical",
-    "# deposits. Absence does NOT stop execution — only an advisory.",
+    "# deposits. Absence does NOT stop execution -- only an advisory.",
     "network_root <- \"Z:/\"",
     "dw_z_available <- dir.exists(network_root)",
     "if (!dw_z_available) {",
     "  red  <- function(s) paste0(\"\\033[31m\", s, \"\\033[0m\")",
     "  bold <- function(s) paste0(\"\\033[1m\", s, \"\\033[0m\")",
-    "  cat(red(bold(\"\\n[!] Network drive (Z:) not mounted — NON-BLOCKING\\n\")))",
+    "  cat(red(bold(\"\\n[!] Network drive (Z:) not mounted -- NON-BLOCKING\\n\")))",
     "}",
     ""
   ) else character(0)
@@ -130,8 +136,8 @@ create_profile <- function(repo_name,
     "library(yaml)",
     "if (!file.exists(config_path)) {",
     "  stop(paste0(",
-    "    \"❌ Configuration file not found at: \", config_path, \"\\n\",",
-    "    \"👉 Create or move your 'user_config.yml' to this location.\"",
+    "    \"[X] Configuration file not found at: \", config_path, \"\\n\",",
+    "    \"=> Create or move your 'user_config.yml' to this location.\"",
     "  ))",
     "}",
     "user_config <- yaml::read_yaml(config_path)",
@@ -147,13 +153,13 @@ create_profile <- function(repo_name,
     "# external API calls based on this single setting.",
     "dw_mode <- user_config$dw_mode",
     "if (is.null(dw_mode) || !dw_mode %in% c(\"producer\", \"reviewer\")) {",
-    "  stop(\"❌ user_config.yml must set dw_mode to 'producer' or 'reviewer'.\")",
+    "  stop(\"[X] user_config.yml must set dw_mode to 'producer' or 'reviewer'.\")",
     "}",
     "",
     "# Guard used by dw_api_fetch and analysis scripts in reviewer mode.",
     "dw_require_no_api <- function(context = NULL) {",
     "  if (identical(dw_mode, \"reviewer\")) {",
-    "    msg <- \"❌ External API access is forbidden in reviewer mode.\"",
+    "    msg <- \"[X] External API access is forbidden in reviewer mode.\"",
     "    if (!is.null(context)) msg <- paste0(msg, \" Context: \", context)",
     "    stop(msg, call. = FALSE)",
     "  }",
@@ -181,13 +187,13 @@ create_profile <- function(repo_name,
     "# Downstream sector scripts assert against this object so they can",
     "# refuse to run if the profile was not sourced.",
     paste0(sentinel, " <- TRUE"),
-    paste0("message(\"✅ ", filename, " loaded\")")
+    paste0("message(\"[OK] ", filename, " loaded\")")
   )
 
   lines <- c(header, z_block, config_block, mode_block,
              packages_block, sentinel_block)
   writeLines(lines, con = path)
-  message("✅ Profile written: ", path)
+  message("[OK] Profile written: ", path)
   invisible(normalizePath(path, mustWork = FALSE))
 }
 
@@ -208,7 +214,7 @@ create_profile <- function(repo_name,
 #' @param require_dw_mode Logical. Treat absence of the `dw_mode` block as a
 #'   `"fail"` (default `TRUE`) or as a `"warn"` (set `FALSE` for profiles
 #'   that do not interact with `dw_io.R` / `dw_api.R`).
-#' @param require_z_drive_check Logical. Default `FALSE` — most CSO projects
+#' @param require_z_drive_check Logical. Default `FALSE` -- most CSO projects
 #'   do not need the Z: advisory; flag as a warning only when missing.
 #' @param verbose Logical. Print a formatted summary to the console (default
 #'   `TRUE`).
@@ -221,13 +227,19 @@ create_profile <- function(repo_name,
 #' review_profile("profile_DW-Production.R")
 #' review_profile("profile_my-project.R", require_dw_mode = FALSE)
 #' }
+#' @seealso [create_profile()] (generates a profile that passes every
+#'   check by construction); [test_scripts()] for the script-level audit.
+#' @family scaffolding
 #' @export
 review_profile <- function(path,
                            require_dw_mode = TRUE,
                            require_z_drive_check = FALSE,
                            verbose = TRUE) {
   if (!file.exists(path)) {
-    stop("Profile file not found: ", path)
+    stop(sprintf(
+      "[cso_toolkit.review_profile] Profile file not found: %s\n  Fix: pass the correct path; relative paths resolve against %s.",
+      path, getwd()
+    ), call. = FALSE)
   }
   src <- readLines(path, warn = FALSE)
   joined <- paste(src, collapse = "\n")
@@ -250,15 +262,15 @@ review_profile <- function(path,
     "Profile sentinel object",
     length(sentinel_hit) > 0 && nchar(sentinel_hit) > 0,
     paste0("Found: ", trimws(sentinel_hit)),
-    "Missing `profile_<repo> <- TRUE` sentinel — sector scripts cannot verify the profile was sourced."
+    "Missing `profile_<repo> <- TRUE` sentinel -- sector scripts cannot verify the profile was sourced."
   )
 
-  # 2. User identification — at least USERNAME or USER env read
+  # 2. User identification -- at least USERNAME or USER env read
   checks[[length(checks) + 1]] <- result(
     "Cross-platform user identification",
     has("Sys\\.getenv\\(\\s*\"USERNAME\"") || has("Sys\\.getenv\\(\\s*\"USER\""),
     "Reads USERNAME / USER via Sys.getenv().",
-    "Profile never reads USERNAME / USER — Mac/Linux/Windows paths may break."
+    "Profile never reads USERNAME / USER -- Mac/Linux/Windows paths may break."
   )
 
   # 3. Reproducibility seed
@@ -266,7 +278,7 @@ review_profile <- function(path,
     "Reproducibility seed",
     has("set\\.seed\\("),
     "set.seed() is called.",
-    "No set.seed() call — reruns are not bit-reproducible.",
+    "No set.seed() call -- reruns are not bit-reproducible.",
     level = "warn"
   )
 
@@ -277,7 +289,7 @@ review_profile <- function(path,
     "user_config.yml load",
     loads_yaml,
     "Loads user_config.yml via yaml::read_yaml().",
-    "Profile never reads user_config.yml — per-user paths and dw_mode cannot resolve."
+    "Profile never reads user_config.yml -- per-user paths and dw_mode cannot resolve."
   )
 
   # 5. dw_mode block
@@ -286,7 +298,7 @@ review_profile <- function(path,
     "dw_mode (producer/reviewer) resolution",
     dw_mode_present,
     "dw_mode resolved against producer / reviewer.",
-    "dw_mode block missing — dw_io.R / dw_api.R route-by-mode contract will not engage.",
+    "dw_mode block missing -- dw_io.R / dw_api.R route-by-mode contract will not engage.",
     level = if (require_dw_mode) "fail" else "warn"
   )
 
@@ -295,7 +307,7 @@ review_profile <- function(path,
     "dw_require_no_api guard",
     has("dw_require_no_api"),
     "dw_require_no_api() is defined or invoked.",
-    "dw_require_no_api() not defined — reviewer mode cannot enforce the no-API rule.",
+    "dw_require_no_api() not defined -- reviewer mode cannot enforce the no-API rule.",
     level = if (require_dw_mode) "fail" else "warn"
   )
 
@@ -304,7 +316,7 @@ review_profile <- function(path,
     "Z: drive availability advisory",
     has("dw_z_available") || has("network_root\\s*<-\\s*\"Z:"),
     "Z: drive availability is checked.",
-    "Z: drive advisory not present — runs without the legacy mirror will be silent.",
+    "Z: drive advisory not present -- runs without the legacy mirror will be silent.",
     level = if (require_z_drive_check) "fail" else "warn"
   )
 
@@ -313,7 +325,7 @@ review_profile <- function(path,
     "Packages block",
     has("requireNamespace\\(") || has("install\\.packages\\(") || has("library\\("),
     "A packages block is present.",
-    "No requireNamespace / install.packages / library() calls — pipeline likely fails on first run.",
+    "No requireNamespace / install.packages / library() calls -- pipeline likely fails on first run.",
     level = "warn"
   )
 
@@ -323,7 +335,7 @@ review_profile <- function(path,
   }))
 
   if (isTRUE(verbose)) {
-    icon <- function(s) switch(s, pass = "✅", warn = "⚠️ ", fail = "❌", " ")
+    icon <- function(s) switch(s, pass = "[OK]", warn = "[!] ", fail = "[X]", " ")
     cat("\nProfile review:", normalizePath(path, mustWork = FALSE), "\n")
     cat(strrep("-", 72), "\n", sep = "")
     for (i in seq_len(nrow(out))) {

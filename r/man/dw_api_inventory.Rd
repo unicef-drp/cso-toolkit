@@ -18,3 +18,12 @@ Walks `teamsRawDataCanonical/_apis/<api>/` and returns a row per cache
 file (excluding `.provenance.json` sidecars). When a sidecar is present,
 its `metadata$fetched_at` is pulled into the result for auditability.
 }
+\seealso{
+[dw_api_fetch()] (populates caches); [dw_api_cached()] (reads
+  a single cache).
+
+Other api: 
+\code{\link{dw_api_cached}()},
+\code{\link{dw_api_fetch}()}
+}
+\concept{api}

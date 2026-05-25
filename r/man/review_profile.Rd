@@ -18,7 +18,7 @@ review_profile(
 `"fail"` (default `TRUE`) or as a `"warn"` (set `FALSE` for profiles
 that do not interact with `dw_io.R` / `dw_api.R`).}
 
-\item{require_z_drive_check}{Logical. Default `FALSE` — most CSO projects
+\item{require_z_drive_check}{Logical. Default `FALSE` -- most CSO projects
 do not need the Z: advisory; flag as a warning only when missing.}
 
 \item{verbose}{Logical. Print a formatted summary to the console (default
@@ -47,3 +47,13 @@ review_profile("profile_DW-Production.R")
 review_profile("profile_my-project.R", require_dw_mode = FALSE)
 }
 }
+\seealso{
+[create_profile()] (generates a profile that passes every
+  check by construction); [test_scripts()] for the script-level audit.
+
+Other scaffolding: 
+\code{\link{create_dw_sector_script}()},
+\code{\link{create_profile}()},
+\code{\link{create_sector_script}()}
+}
+\concept{scaffolding}
