@@ -29,9 +29,11 @@ Concretely it does three things:
    codebase under the CSO, which means new sectors and new projects inherit
    the reproducibility floor for free instead of re-inventing it.
 
-**Status.** Pre-release. First tag is `v0.1.0-rc1`. Public so reviewers and
-external collaborators can read and cite the contract; production adoption is
-via **vendoring** (see [Vendoring](#vendoring)), not `source()` over the network.
+**Status.** Pre-release. Current tag is `v0.2.0` (R + Stata helpers
+feature-complete, Python port shipping in `v0.3.0`). Public so reviewers
+and external collaborators can read and cite the contract; production
+adoption is via **vendoring** (see [Vendoring](#vendoring)), not
+`source()` over the network.
 
 ---
 
@@ -53,7 +55,13 @@ via **vendoring** (see [Vendoring](#vendoring)), not `source()` over the network
 | [`stata/src/dw_compare.ado`](stata/src/dw_compare.ado) | Stata sibling of R `dw_compare()`. Merges two `.dta` files on `idvars` and classifies each value column as identical / numerically-equivalent (within `tol()`) / different; optional Markdown report. Lineage: `comparefiles` / `edukit_comparefiles` (Kristoffer Bjärkefur). |
 | [`stata/src/dw_mkdir.ado`](stata/src/dw_mkdir.ado) | Recursive `mkdir` for Stata (the built-in is non-recursive). Idempotent. Lineage: `rmkdir` / `edukit_rmkdir` (Kristoffer Bjärkefur). |
 | [`stata/src/`](stata/src/) | See [`stata/src/README.md`](stata/src/README.md) for the full Stata-side helper docs (lineage table, install via adopath, mode-contract wiring, known limitations). |
-| [`python/src/`](python/src/) | Python mirrors (placeholder for v0.1; Python-side helpers ship in v0.2). |
+| [`python/src/`](python/src/) | Python siblings of every R helper above. `dw_save`, `dw_use`, `dw_api_fetch`, `aggregate_data_v2`, `dw_nestweight`, `create_sector_script`, `create_profile`, `review_profile`, `test_scripts`, and the rest — same behaviour contract, same mode-aware path routing, same provenance sidecars, same Z: drive mirror. Imports via `from cso_toolkit import dw_save, dw_use, ...`. Per-function reference: [`docs/dw_io_python_reference.md`](docs/dw_io_python_reference.md) and [`docs/dw_api_python_reference.md`](docs/dw_api_python_reference.md). Vendoring layout in [`python/src/README.md`](python/src/README.md). |
+| [`python/pyproject.toml`](python/pyproject.toml) | Optional `pip install -e python/` for local development. Vendoring (copy into `00_functions/`) is still the production model. |
+| [`r/README.md`](r/README.md) | R-side package overview: metadata, install (vendoring + `devtools::install_local`), layout, quick start, error envelope, testing. |
+| [`python/README.md`](python/README.md) | Python-side package overview: metadata, install (vendoring + `pip install -e`), layout, quick start, error envelope, testing. |
+| [`stata/README.md`](stata/README.md) | Stata-side package overview: install (adopath + vendoring), mode contract, lineage table, known limitations. |
+| [`docs/dw_io_python_reference.md`](docs/dw_io_python_reference.md) | Per-function reference for the Python `dw_io.py` (parity matrix with R, extension dispatch, mode contract, error envelope, migration checklist). |
+| [`docs/dw_api_python_reference.md`](docs/dw_api_python_reference.md) | Per-function reference for the Python `dw_api.py` (behaviour matrix, supported APIs, cache layout, reviewer-mode lockout, worked example). |
 | [`docs/roles_and_workflow.md`](docs/roles_and_workflow.md) | Canonical PRODUCER / REVIEWER / INGESTOR role definitions + folder layout + per-role workflow + forbidden boundaries. |
 | [`docs/toolkit_strategy.md`](docs/toolkit_strategy.md) | Why this repo exists, the vendoring model, the version-drift detection workflow, the three-phase rollout. |
 | [`docs/mode_contract_integration.md`](docs/mode_contract_integration.md) | How to wire `dw_mode` (producer/reviewer) into a sector profile. |
@@ -102,10 +110,18 @@ rationale and the upgrade flow.
 Semantic versioning (MAJOR.MINOR.PATCH).
 
 - `v0.x` — pre-release; API may still change.
-- `v0.1.0-rc1` — first tagged release candidate (this tag). R helpers feature-
-  complete; Stata / Python directories scaffolded but empty.
-- `v1.0.0` — committed API; will be cut after the ed sector pilot lands and a
-  second sector vendors the helpers without modification.
+- `v0.1.0-rc1` (2026-05-24) — first tagged release candidate. R helpers
+  feature-complete; Stata / Python directories scaffolded but empty.
+- `v0.2.0` (2026-05-24) — Stata helpers shipped (`dw_save.ado`,
+  `dw_compare.ado`, `dw_mkdir.ado`); R `dw_nestweight.R` ported from
+  EduAnalyticsToolkit; workflow diagrams added.
+- `v0.3.0` (planned) — full Python port at [`python/src/`](python/src/)
+  with parity to every R helper; Roxygen-complete R reference (26 Rd
+  files + pkgdown site); graceful three-part error envelopes
+  (`[cso_toolkit.<func>] WHAT / Why / Fix`) across R + Python; consumer-
+  side smoke tests; secrets-redaction in `.provenance.json`.
+- `v1.0.0` — committed API; will be cut after the ed sector pilot lands
+  and a second sector vendors the helpers without modification.
 
 See [NEWS.md](NEWS.md) for per-release notes.
 
