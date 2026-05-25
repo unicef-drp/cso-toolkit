@@ -1,20 +1,26 @@
-#' =============================================================================
-#' Aggregate Data Function v2.0 - PROPOSED IMPROVEMENTS
-#' =============================================================================
-#' 
-#' This file contains the proposed improved version of aggregate_data()
-#' designed to be relevant for ALL sectors in DW-Production.
-#' 
-#' Author: D&A Team
-#' Date: December 2025
-#' Status: STABLE
-#' =============================================================================
+# =============================================================================
+# Aggregate Data Function v2.0 - PROPOSED IMPROVEMENTS
+# =============================================================================
+#
+# This file contains the proposed improved version of aggregate_data()
+# designed to be relevant for ALL sectors in DW-Production.
+#
+# Author: D&A Team
+# Date: December 2025
+# Status: STABLE
+# =============================================================================
 
-## Packages used: dplyr, tidyr, rlang, stats. All calls below are
-## namespace-qualified (`dplyr::`, `tidyr::`, `rlang::`, `stats::`); this
-## file does NOT attach packages at source-time and does NOT mutate the
-## caller's search path. Matches the dw_io.R / dw_api.R vendored-helper
-## pattern.
+#' Ensure optional packages are installed
+#'
+#' Internal helper used by the v2 aggregation pipeline. Stops with an
+#' install hint when any of the requested packages is missing.
+#'
+#' @param pkgs Character vector. Package names to check.
+#'
+#' @return Invisibly, `NULL`. Stops on missing package.
+#'
+#' @keywords internal
+#' @noRd
 .cso_require <- function(pkgs) {
   for (p in pkgs) {
     if (!requireNamespace(p, quietly = TRUE)) {
