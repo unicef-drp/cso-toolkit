@@ -212,7 +212,15 @@ def dw_is_canonical(path: Union[str, Path]) -> bool:
     roots = [r for r in roots if r]
     if not roots:
         return False
-    return any(path_n.startswith(_normalize(r)) for r in roots)
+    # Path-aware descendant check: a plain `startswith` would match
+    # `/data/wrk-canary/...` against root `/data/wrk-can` (Copilot
+    # finding on PR #7).  Compare equality OR root-plus-separator
+    # prefix so siblings of the root cannot spoof a match.
+    for r in roots:
+        root_n = _normalize(r).rstrip("/")
+        if path_n == root_n or path_n.startswith(root_n + "/"):
+            return True
+    return False
 
 
 # ---------------------------------------------------------------------------
@@ -775,6 +783,11 @@ def _resolve_for_read(path: str, fallback_canonical: bool) -> str:
             "  Fix: drop the fallback_canonical=False argument, "
             "or verify the path exists."
         )
+    # Normalise both sides (Copilot finding on PR #7): the profile may
+    # supply Windows-style roots with backslashes while `path` from
+    # dw_resolve_path() has been forward-slashed.  Without
+    # normalisation the prefix check would never trigger.
+    path_n = _normalize(path)
     swaps = [
         (_state._get("teamsRawData"), _state._get("teamsRawDataCanonical")),
         (_state._get("teamsWrkData"), _state._get("teamsWrkDataCanonical")),
@@ -782,8 +795,12 @@ def _resolve_for_read(path: str, fallback_canonical: bool) -> str:
     ]
     attempted = [path]
     for src, dst in swaps:
-        if src and dst and src != dst and path.startswith(src):
-            alt = dst + path[len(src):]
+        if not (src and dst and src != dst):
+            continue
+        src_n = _normalize(src).rstrip("/")
+        dst_n = _normalize(dst).rstrip("/")
+        if path_n == src_n or path_n.startswith(src_n + "/"):
+            alt = dst_n + path_n[len(src_n):]
             attempted.append(alt)
             if Path(alt).exists():
                 _log.info("[dw_use] Falling back to canonical: %s", alt)

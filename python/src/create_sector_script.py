@@ -104,23 +104,45 @@ Required modules must be loaded by {profile_file}.
 from __future__ import annotations
 
 import datetime as _dt
+import importlib.util
 import sys
 from pathlib import Path
 
 # =======================
 # 0. Profile Verification
 # =======================
-try:
-    from {Path(profile_file).stem} import {profile_name}, log_message, projectFolder
-except ImportError as exc:
+# Load via importlib.util because the profile filename may contain a hyphen
+# (e.g. profile_DW-Production.py), which is not a legal Python module name
+# and so would not work with a plain `from <stem> import ...`.
+_profile_path = Path(__file__).resolve().parent
+_profile_candidates = list(_profile_path.parents) + [Path.cwd()]
+_profile_file_path = None
+for _root in _profile_candidates:
+    _cand = _root / "{profile_file}"
+    if _cand.is_file():
+        _profile_file_path = _cand
+        break
+if _profile_file_path is None:
     raise RuntimeError(
-        f"[X] Project profile not loaded. Please import {{exc.name}} "
-        f"before running this script."
-    ) from exc
+        "[X] Could not locate {profile_file} on any ancestor path. "
+        "Place the profile next to this script or in a parent folder."
+    )
+_spec = importlib.util.spec_from_file_location("_cso_profile_module", _profile_file_path)
+_profile_module = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_profile_module)
+{profile_name} = getattr(_profile_module, "{profile_name}", False)
+log_message = getattr(_profile_module, "log_message", None)
+projectFolder = getattr(_profile_module, "projectFolder", None)
 
 if not {profile_name}:
     raise RuntimeError(
-        "[X] Project profile not initialised. Import {profile_file} first."
+        "[X] Project profile not initialised. Verify {profile_file} sets "
+        "{profile_name} = True."
+    )
+if log_message is None or projectFolder is None:
+    raise RuntimeError(
+        "[X] Project profile missing required exports (log_message, "
+        "projectFolder). Re-generate the profile via create_profile()."
     )
 
 # Sector-error flag consumed by the top-level runner.

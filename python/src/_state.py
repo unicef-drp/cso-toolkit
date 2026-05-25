@@ -167,15 +167,18 @@ def configure(**kwargs: Any) -> None:
 def _get(name: str, default: Any = None) -> Any:
     """Safe accessor.  Equivalent to R's ``.try_get`` helper.
 
-    Returns ``default`` (default ``None``) when ``name`` is not set or
-    is bound to a falsy value.
+    Returns ``default`` (default ``None``) ONLY when ``name`` is not
+    bound or is bound to ``None``.  Falsy-but-not-None values
+    (``False``, ``0``, ``""``) are returned as-is — important so that
+    e.g. ``dw_apis_allowed = False`` is observable as ``False``, not
+    silently coerced to the default.
 
     Parameters
     ----------
     name
         Name of a state global.
     default
-        Value returned when ``name`` is unset.
+        Value returned when ``name`` is unset or bound to ``None``.
     """
     value = globals().get(name)
     return value if value is not None else default
