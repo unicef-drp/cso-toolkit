@@ -1,5 +1,11 @@
 # NEWS — cso-toolkit
 
+## Unreleased
+
+_Entries land here as PRs merge into `develop`.  When the next release
+is cut, this header is renamed `## v0.4.0 (YYYY-MM-DD)` and a fresh
+`## Unreleased` section is added back._
+
 ## v0.3.0 (2026-05-25)
 
 First release with full **Python parity** for every R helper, plus the
