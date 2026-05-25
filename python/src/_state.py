@@ -97,19 +97,69 @@ _PUBLIC_KEYS = (
 def configure(**kwargs: Any) -> None:
     """Batch-assign multiple session globals.
 
-    Raises ``AttributeError`` for unknown keys so typos surface immediately
-    rather than silently creating new attributes.
+    The following keys are accepted (mirror the R-side
+    ``profile_DW-Production.R`` globals one-for-one):
 
-    Parameters
-    ----------
-    **kwargs
-        Any of the module's public state keys (see source for the list).
+    ===========================  ===================  =====================
+    Key                          Type                 Purpose
+    ===========================  ===================  =====================
+    ``teamsWrkData``             ``str``              Mode-aware working
+                                                      data root.
+    ``teamsRawData``             ``str``              Mode-aware raw data
+                                                      root.
+    ``dwMetaData``               ``str``              Metadata root.
+    ``teamsFolder``              ``str``              Canonical Teams root
+                                                      (sandbox base).
+    ``teamsFolderCanonical``     ``str``              Canonical Teams root
+                                                      used by
+                                                      ``dw_is_canonical``.
+    ``teamsWrkDataCanonical``    ``str``              Canonical working
+                                                      root (reviewer-mode
+                                                      read fallback).
+    ``teamsRawDataCanonical``    ``str``              Canonical raw root
+                                                      (reviewer-mode read
+                                                      fallback).
+    ``dw_mode``                  ``"producer"`` |     Session mode.
+                                 ``"reviewer"``
+    ``dw_apis_allowed``          ``bool``             Whether helpers may
+                                                      hit external APIs.
+    ``dwZDrive``                 ``str``              Z: drive mount point
+                                                      (``"Z:/"`` on
+                                                      Windows).
+    ``dw_z_available``           ``bool``             Whether Z: is
+                                                      reachable.
+    ``dwFunct``                  ``str``              Path to the
+                                                      consumer's
+                                                      ``00_functions/``
+                                                      folder.
+    ===========================  ===================  =====================
+
+    Raises
+    ------
+    AttributeError
+        For unknown keys, so typos surface immediately rather than
+        silently creating new attributes.
+
+    Examples
+    --------
+    Configure a producer-mode session:
+
+    >>> from cso_toolkit import _state
+    >>> _state.configure(
+    ...     teamsWrkData="/path/to/wrk",
+    ...     teamsRawData="/path/to/raw",
+    ...     teamsRawDataCanonical="/path/to/raw-canonical",
+    ...     dw_mode="producer",
+    ...     dw_apis_allowed=True,
+    ... )
     """
     for key, value in kwargs.items():
         if key not in _PUBLIC_KEYS:
             raise AttributeError(
-                f"_state.configure: unknown key {key!r}. "
-                f"Allowed keys: {', '.join(_PUBLIC_KEYS)}"
+                f"[cso_toolkit._state.configure] Unknown key {key!r}.\n"
+                f"  Allowed keys: {', '.join(_PUBLIC_KEYS)}\n"
+                "  Fix: check spelling; the most common typos are "
+                "lowercase variants of the camelCase Teams* keys."
             )
         globals()[key] = value
 

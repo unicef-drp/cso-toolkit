@@ -58,7 +58,15 @@ def _dw_api_cache_path(api: str, cache_key: str, ext: str = "csv") -> str:
     """Sandbox cache path for an API fetch."""
     root = _state._get("teamsRawData")
     if not root:
-        raise ValueError("dw_api: teamsRawData state not defined (profile not loaded?)")
+        raise ValueError(
+            "[cso_toolkit.dw_api] _state.teamsRawData is not set.\n"
+            "  This means the profile script (profile_<repo>.py) has not "
+            "been imported, or it didn't call cso_toolkit._state.configure("
+            "teamsRawData=...).\n"
+            "  Fix: import the profile first, OR set the global directly:\n"
+            "    from cso_toolkit import _state\n"
+            "    _state.configure(teamsRawData=\"/path/to/raw\")"
+        )
     return str(Path(root) / "_apis" / api / f"{cache_key}.{ext}").replace("\\", "/")
 
 
@@ -74,7 +82,13 @@ def _dw_api_canonical_cache_path(api: str, cache_key: str, ext: str = "csv") -> 
     """Canonical (read-fallback) cache path for an API fetch."""
     root = _state._get("teamsRawDataCanonical")
     if not root:
-        raise ValueError("dw_api: teamsRawDataCanonical not defined (profile not loaded?)")
+        raise ValueError(
+            "[cso_toolkit.dw_api] _state.teamsRawDataCanonical is not set.\n"
+            "  Reviewer-mode reads fall back to this canonical root when "
+            "the sandbox cache is missing.\n"
+            "  Fix: set _state.teamsRawDataCanonical to the read-only "
+            "Teams root that holds the deposit's _apis/ folder."
+        )
     return str(Path(root) / "_apis" / api / f"{cache_key}.{ext}").replace("\\", "/")
 
 
@@ -86,10 +100,16 @@ def _dw_require_no_api(api_name: str, reason: str) -> None:
     """Raise the reviewer-mode lockout error.  Python analogue of R's
     ``dw_require_no_api()``."""
     raise PermissionError(
-        f"[dw_api] Reviewer mode forbids live API calls.\n"
-        f"  Call: {api_name}\n"
+        "[cso_toolkit.dw_api] Reviewer mode forbids live API calls.\n"
+        f"  Call:   {api_name}\n"
         f"  Reason: {reason}\n"
-        "  Switch to producer mode (`_state.dw_apis_allowed = True`) to fetch."
+        "  Fix:\n"
+        "    1. The expected workflow is that a Database Manager has "
+        "already populated the cache under teamsRawDataCanonical/_apis/. "
+        "Verify the cache file exists at the path above.\n"
+        "    2. If you ARE the producer, switch modes:\n"
+        "       from cso_toolkit import _state\n"
+        "       _state.configure(dw_mode=\"producer\", dw_apis_allowed=True)"
     )
 
 
@@ -137,6 +157,39 @@ def dw_api_fetch(
     -------
     object
         Fetched (or cached) object, typed per the API's shape.
+
+    Raises
+    ------
+    PermissionError
+        When ``dw_apis_allowed`` is ``False`` (reviewer mode) and no
+        cache exists for the requested ``api`` / ``cache_key`` / ``ext``.
+    ValueError
+        When ``api`` is not in the dispatch table, or when one of the
+        underlying state globals (``teamsRawData``,
+        ``teamsRawDataCanonical``) is unset.
+    ImportError
+        Lazy-raised when the per-API helper needs a package
+        (``requests``, ``sdmx1``, ``wbgapi``) that is not installed.
+    TimeoutError, ConnectionError
+        When the live HTTP call fails to reach the upstream API.
+    RuntimeError
+        When the upstream returns a non-success HTTP status, an
+        unexpected body shape, or a body that the per-API parser
+        cannot handle.
+
+    Examples
+    --------
+    >>> from cso_toolkit import _state, dw_api_fetch  # doctest: +SKIP
+    >>> _state.configure(  # doctest: +SKIP
+    ...     teamsRawData="/data/raw",
+    ...     teamsRawDataCanonical="/data/raw-canonical",
+    ...     dw_apis_allowed=True,
+    ... )
+    >>> codebook = dw_api_fetch(  # doctest: +SKIP
+    ...     api="sdmx_codelist",
+    ...     agency="UNICEF", codelist="CL_RESIDENCE", version="1.0",
+    ...     cache_key="sdmx_codelist_UNICEF_CL_RESIDENCE_1_0",
+    ... )
     """
     if ext is None:
         ext = _dw_api_default_ext(api)
@@ -166,9 +219,24 @@ def dw_api_fetch(
     fetcher = _DISPATCH.get(api)
     if fetcher is None:
         raise ValueError(
-            f"dw_api_fetch: unsupported api {api!r}.  Supported: {', '.join(_DISPATCH)}"
+            f"[cso_toolkit.dw_api_fetch] Unsupported api {api!r}.\n"
+            f"  Supported: {', '.join(sorted(_DISPATCH))}\n"
+            "  Fix: pass one of the supported strings as `api=`, or add a "
+            "new entry to the _DISPATCH table in dw_api.py."
         )
-    result = fetcher(**kwargs)
+    try:
+        result = fetcher(**kwargs)
+    except (TypeError, KeyError) as exc:
+        raise RuntimeError(
+            f"[cso_toolkit.dw_api_fetch] Fetcher for api={api!r} raised "
+            f"{type(exc).__name__}: {exc}\n"
+            f"  Cache key: {cache_key}\n"
+            f"  Fetch args: {kwargs}\n"
+            "  Fix: this usually means the upstream API changed its "
+            "response shape, or the kwargs passed to dw_api_fetch don't "
+            "match the per-API helper signature. Check the underlying "
+            "fetcher in dw_api.py (_fetch_*) and update if needed."
+        ) from exc
     elapsed = time.time() - t0
 
     api_metadata = {
@@ -213,12 +281,27 @@ def dw_api_cached(api: str, cache_key: str, ext: str = "csv") -> Any:
     -------
     object
         The cached object.
+
+    Raises
+    ------
+    FileNotFoundError
+        When no cache exists at the canonical path for the requested
+        ``api`` / ``cache_key`` / ``ext``.
+    ValueError
+        When ``_state.teamsRawDataCanonical`` is not set.
     """
     cache_path = _dw_api_canonical_cache_path(api, cache_key, ext)
     if not Path(cache_path).exists():
         raise FileNotFoundError(
-            f"dw_api_cached: no cache at {cache_path}\n"
-            "  Use dw_api_fetch() (producer mode) to populate."
+            f"[cso_toolkit.dw_api_cached] No cache at {cache_path}\n"
+            "  Reason: the cached fetch has not been produced yet (or the "
+            "wrong api / cache_key / ext was passed).\n"
+            "  Fix:\n"
+            "    1. Ask the Database Manager to run dw_api_fetch("
+            f"api={api!r}, cache_key={cache_key!r}, ...) in producer mode, "
+            "or\n"
+            "    2. Verify api/cache_key/ext spelling: an `ext` mismatch "
+            "is a common cause."
         )
     return dw_use(cache_path)
 
@@ -302,19 +385,72 @@ def _require(pkg: str, install_name: Optional[str] = None) -> Any:
     except ImportError as exc:
         name = install_name or pkg
         raise ImportError(
-            f"dw_api: package {pkg!r} is required for this API. "
-            f"Install via `pip install {name}`."
+            f"[cso_toolkit.dw_api] This API needs the {pkg!r} package, "
+            "which is not installed.\n"
+            f"  Fix: `pip install {name}`."
+        ) from exc
+
+
+def _http_call(method: str, url: str, **kwargs: Any) -> Any:
+    """Wrap requests.{get,post} with a uniform error envelope.
+
+    Translates ``requests.RequestException`` subclasses into the same
+    "what / why / how" message format used everywhere else in the
+    toolkit.  Returns the ``Response`` object on success.
+    """
+    requests = _require("requests")
+    try:
+        resp = getattr(requests, method)(url, **kwargs)
+        resp.raise_for_status()
+        return resp
+    except requests.Timeout as exc:
+        raise TimeoutError(
+            f"[cso_toolkit.dw_api] HTTP {method.upper()} timed out: {url}\n"
+            f"  Underlying error: {exc}\n"
+            "  Fix: extend the timeout (`timeout=...` kwarg) or retry "
+            "later. If this is a UNICEF-laptop corporate-network issue, "
+            "try a different network — corporate proxies sometimes block "
+            "long-lived API calls invisibly."
+        ) from exc
+    except requests.ConnectionError as exc:
+        raise ConnectionError(
+            f"[cso_toolkit.dw_api] HTTP {method.upper()} could not reach: {url}\n"
+            f"  Underlying error: {exc}\n"
+            "  Fix: verify network reachability; if on the UNICEF "
+            "corporate network, try a personal hotspot or VPN. The "
+            "corporate proxy may silently block this host."
+        ) from exc
+    except requests.HTTPError as exc:
+        status = getattr(exc.response, "status_code", "?")
+        body_snippet = ""
+        if getattr(exc, "response", None) is not None:
+            body_snippet = (exc.response.text or "")[:300]
+        raise RuntimeError(
+            f"[cso_toolkit.dw_api] HTTP {method.upper()} {url} returned "
+            f"status {status}.\n"
+            f"  Body (truncated): {body_snippet!r}\n"
+            "  Fix: check the API's docs for that status code; common "
+            "causes are bad query parameters (400), missing auth (401/403), "
+            "missing cache_key (404), or rate limiting (429)."
         ) from exc
 
 
 def _fetch_uis(endpoint: str = "indicators",
                params: Optional[Mapping[str, Any]] = None, **_: Any) -> pd.DataFrame:
     """UNESCO UIS API fetcher.  Parses JSON; unwraps ``records`` when present."""
-    requests = _require("requests")
     base = "https://api.uis.unesco.org/api/public/data/"
-    resp = requests.get(base + endpoint, params=dict(params or {}), timeout=120)
-    resp.raise_for_status()
-    body = resp.json()
+    url = base + endpoint
+    resp = _http_call("get", url, params=dict(params or {}), timeout=120)
+    try:
+        body = resp.json()
+    except ValueError as exc:
+        raise RuntimeError(
+            f"[cso_toolkit.dw_api/_fetch_uis] UIS API returned non-JSON "
+            f"body (URL: {url}).\n"
+            f"  First 300 chars: {(resp.text or '')[:300]!r}\n"
+            "  Fix: verify the endpoint name; the UIS API redirects bad "
+            "endpoints to an HTML error page."
+        ) from exc
     records = body.get("records") if isinstance(body, dict) else None
     if records is not None:
         return pd.DataFrame(records)
@@ -339,16 +475,26 @@ def _fetch_sdmx(providerId: str, flowRef: str, key: str,
 def _fetch_sdmx_codelist(agency: str, codelist: str, version: str = "1.0",
                          **_: Any) -> pd.DataFrame:
     """SDMX codelist fetcher (UNICEF SDMX REST + JSON parse)."""
-    requests = _require("requests")
     url = (
         "https://sdmx.data.unicef.org/ws/public/sdmxapi/rest/codelist/"
         f"{agency}/{codelist}/{version}"
         "?format=sdmx-json&detail=full&references=none"
     )
-    resp = requests.get(url, timeout=60)
-    resp.raise_for_status()
-    body = resp.json()
-    codes = body["data"]["codelists"][0]["codes"]
+    resp = _http_call("get", url, timeout=60)
+    try:
+        body = resp.json()
+        codes = body["data"]["codelists"][0]["codes"]
+    except (ValueError, KeyError, IndexError) as exc:
+        raise RuntimeError(
+            f"[cso_toolkit.dw_api/_fetch_sdmx_codelist] Unexpected response "
+            f"shape (agency={agency!r}, codelist={codelist!r}, "
+            f"version={version!r}).\n"
+            f"  Underlying error: {type(exc).__name__}: {exc}\n"
+            f"  First 300 chars of body: {(resp.text or '')[:300]!r}\n"
+            "  Fix: verify agency / codelist / version spelling against "
+            "https://sdmx.data.unicef.org/ — a 200 OK with no codelists "
+            "usually means the codelist doesn't exist at that version."
+        ) from exc
 
     def _desc(c: dict) -> Optional[str]:
         d = c.get("description")
@@ -360,11 +506,20 @@ def _fetch_sdmx_codelist(agency: str, codelist: str, version: str = "1.0",
             return d
         return None
 
-    return pd.DataFrame({
-        "code": [c["id"] for c in codes],
-        "name": [c["names"]["en"] for c in codes],
-        "description": [_desc(c) for c in codes],
-    })
+    try:
+        return pd.DataFrame({
+            "code": [c["id"] for c in codes],
+            "name": [c["names"]["en"] for c in codes],
+            "description": [_desc(c) for c in codes],
+        })
+    except KeyError as exc:
+        raise RuntimeError(
+            "[cso_toolkit.dw_api/_fetch_sdmx_codelist] Code entry missing "
+            f"required field: {exc}\n"
+            "  Fix: this is an upstream-shape issue; the SDMX response no "
+            "longer carries `id` / `names.en` on every code. File a bug "
+            "and consider widening the fetcher."
+        ) from exc
 
 
 def _fetch_wb(indicator: Union[str, Sequence[str]],
@@ -399,10 +554,15 @@ def _fetch_unsd_sdg(series_codes: Sequence[str],
                     **_: Any) -> pd.DataFrame:
     """UNSD SDG API fetcher.  POSTs form-encoded ``seriesCodes`` and parses CSV."""
     import io
-    requests = _require("requests")
+    if not series_codes:
+        raise ValueError(
+            "[cso_toolkit.dw_api/_fetch_unsd_sdg] `series_codes` is empty.\n"
+            "  Fix: pass at least one SDG series code, e.g. "
+            "series_codes=[\"SL_DOM_TSPD\"]."
+        )
     body = "&".join(f"seriesCodes={s}" for s in series_codes)
-    resp = requests.post(
-        endpoint,
+    resp = _http_call(
+        "post", endpoint,
         data=body,
         headers={
             "Content-Type": "application/x-www-form-urlencoded",
@@ -410,46 +570,72 @@ def _fetch_unsd_sdg(series_codes: Sequence[str],
         },
         timeout=300,
     )
-    resp.raise_for_status()
-    return pd.read_csv(io.StringIO(resp.text))
+    try:
+        return pd.read_csv(io.StringIO(resp.text))
+    except pd.errors.ParserError as exc:
+        raise RuntimeError(
+            "[cso_toolkit.dw_api/_fetch_unsd_sdg] UNSD SDG API returned "
+            "a body that pandas could not parse as CSV.\n"
+            f"  Underlying error: {exc}\n"
+            f"  First 300 chars: {(resp.text or '')[:300]!r}\n"
+            "  Fix: verify the series codes — bad codes sometimes yield "
+            "an HTML error page instead of CSV."
+        ) from exc
 
 
 def _fetch_github_raw(owner_repo: str, ref: str = "main",
                       path: Optional[str] = None, **_: Any) -> Any:
     """Pinned-commit ``raw.githubusercontent.com`` fetcher."""
     if path is None:
-        raise ValueError("github_raw: `path` is required")
-    requests = _require("requests")
+        raise ValueError(
+            "[cso_toolkit.dw_api/_fetch_github_raw] `path` is required.\n"
+            "  Fix: pass path=\"AU.csv\" (or similar) — the file path "
+            "within the repo at the pinned ref."
+        )
     url = f"https://raw.githubusercontent.com/{owner_repo}/{ref}/{path}"
-    resp = requests.get(url, timeout=60)
-    resp.raise_for_status()
+    resp = _http_call("get", url, timeout=60)
     ext = Path(path).suffix.lower().lstrip(".")
-    if ext == "csv":
-        import io as _io
-        return pd.read_csv(_io.StringIO(resp.text))
-    if ext == "tsv":
-        import io as _io
-        return pd.read_csv(_io.StringIO(resp.text), sep="\t")
-    if ext == "json":
-        return resp.json()
-    return resp.text.splitlines()
+    try:
+        if ext == "csv":
+            import io as _io
+            return pd.read_csv(_io.StringIO(resp.text))
+        if ext == "tsv":
+            import io as _io
+            return pd.read_csv(_io.StringIO(resp.text), sep="\t")
+        if ext == "json":
+            return resp.json()
+        return resp.text.splitlines()
+    except (pd.errors.ParserError, ValueError) as exc:
+        raise RuntimeError(
+            "[cso_toolkit.dw_api/_fetch_github_raw] Could not parse the "
+            f"response from {url} as {ext or 'text'}.\n"
+            f"  Underlying error: {type(exc).__name__}: {exc}\n"
+            "  Fix: verify owner_repo / ref / path; a 404 sometimes "
+            "returns an HTML error page instead of a clean body."
+        ) from exc
 
 
 def _fetch_http(url: str, headers: Optional[Mapping[str, str]] = None,
                 **_: Any) -> str:
     """Generic HTTP GET returning text."""
-    requests = _require("requests")
-    resp = requests.get(url, headers=dict(headers or {}), timeout=120)
-    resp.raise_for_status()
+    resp = _http_call("get", url, headers=dict(headers or {}), timeout=120)
     return resp.text
 
 
 def _fetch_json_get(url: str, **_: Any) -> Any:
     """Generic JSON GET → parsed object."""
-    requests = _require("requests")
-    resp = requests.get(url, timeout=120)
-    resp.raise_for_status()
-    return resp.json()
+    resp = _http_call("get", url, timeout=120)
+    try:
+        return resp.json()
+    except ValueError as exc:
+        raise RuntimeError(
+            f"[cso_toolkit.dw_api/_fetch_json_get] Body at {url} is not "
+            "valid JSON.\n"
+            f"  Underlying error: {exc}\n"
+            f"  First 300 chars: {(resp.text or '')[:300]!r}\n"
+            "  Fix: verify the URL and content-type; some endpoints "
+            "redirect to HTML when bad parameters are sent."
+        ) from exc
 
 
 #: Dispatch table mapping ``api`` argument to internal fetcher.

@@ -248,7 +248,12 @@ def test_scripts(
     """
     p = Path(path)
     if not p.exists():
-        raise FileNotFoundError(f"Path not found: {path}")
+        import os as _os
+        raise FileNotFoundError(
+            f"[cso_toolkit.test_scripts] Path not found: {path}\n"
+            "  Fix: pass an existing file or directory. Relative paths "
+            f"resolve against {_os.getcwd()}."
+        )
 
     file_re = re.compile(pattern, re.IGNORECASE)
 
@@ -320,9 +325,18 @@ def test_scripts(
 
     if error_on_violation and ((out["family"].isin(["io", "api"])).any()
                                 if len(out) > 0 else False):
+        offenders = sorted(out["file"].unique())[:5]
+        more = f" (and {len(set(out['file'])) - 5} more)" if len(set(out["file"])) > 5 else ""
+        offending_list = "\n    ".join(offenders)
         raise RuntimeError(
-            f"cso-toolkit contract: {len(out)} violation(s) found across "
-            f"{out['file'].nunique()} file(s)."
+            f"[cso_toolkit.test_scripts] Contract audit failed: "
+            f"{len(out)} violation(s) across "
+            f"{out['file'].nunique()} file(s).\n"
+            f"  Offending files{more}:\n    {offending_list}\n"
+            "  Fix: replace raw IO / HTTP calls with their cso-toolkit "
+            "equivalents (`dw_save` / `dw_use` / `dw_api_fetch`). For "
+            "the rare legitimate exceptions, append "
+            "`# cso-allow: <rule-id>` to the offending line."
         )
 
     return out

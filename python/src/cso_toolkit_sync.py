@@ -216,20 +216,41 @@ def cso_toolkit_pull(target_version: str, confirm: bool = True,
     """
     if not _state._get("dw_apis_allowed"):
         raise PermissionError(
-            "cso_toolkit_pull: forbidden in reviewer mode. "
-            "Switch to producer mode."
+            "[cso_toolkit.cso_toolkit_pull] Forbidden in reviewer mode.\n"
+            "  Reason: pulling a new toolkit version requires hitting "
+            "GitHub, which the reviewer-mode contract forbids.\n"
+            "  Fix: switch the profile to producer mode:\n"
+            "    from cso_toolkit import _state\n"
+            "    _state.configure(dw_mode=\"producer\", dw_apis_allowed=True)"
         )
     m = _cso_load_manifest()
     if m is None:
-        raise FileNotFoundError("cso_toolkit_pull: no manifest; cannot refresh")
+        raise FileNotFoundError(
+            "[cso_toolkit.cso_toolkit_pull] No manifest; cannot refresh.\n"
+            f"  Looked under: {_cso_manifest_path()}\n"
+            "  Fix: create a .toolkit_manifest.yml next to the vendored "
+            "helpers. See templates/.toolkit_manifest.yml in the toolkit "
+            "repo for the schema."
+        )
     source = m.get("source")
     if not source:
-        raise ValueError("cso_toolkit_pull: manifest has no upstream source")
+        raise ValueError(
+            "[cso_toolkit.cso_toolkit_pull] Manifest has no `source:` key.\n"
+            f"  Manifest path: {_cso_manifest_path()}\n"
+            "  Fix: add `source: \"owner/repo\"` to the manifest."
+        )
 
     if _cso_upstream_latest_tag(source) is None:
         raise ConnectionError(
-            f"cso_toolkit_pull: upstream {source!r} not reachable or has no tags.\n"
-            "  Likely cause: cso-toolkit repo doesn't exist yet."
+            f"[cso_toolkit.cso_toolkit_pull] Upstream {source!r} not "
+            "reachable or has no tags.\n"
+            "  Possible causes:\n"
+            "    - The repo doesn't exist yet.\n"
+            "    - The network is blocked (UNICEF corporate proxies "
+            "sometimes block api.github.com).\n"
+            "    - Neither `gh` CLI nor `requests` is installed.\n"
+            "  Fix: verify the repo exists, then `gh auth status` or "
+            "`pip install requests`."
         )
 
     _log.info(

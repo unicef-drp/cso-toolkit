@@ -78,7 +78,25 @@ def aggregate_data(
         Aggregated data.
     """
     if method not in ("mean", "weighted_mean"):
-        raise ValueError(f"method must be 'mean' or 'weighted_mean'; got {method!r}")
+        raise ValueError(
+            "[cso_toolkit.aggregate_data] `method` must be 'mean' or "
+            f"'weighted_mean'; got {method!r}.\n"
+            "  Fix: pass method='weighted_mean' (population-weighted, the "
+            "common UNICEF default) or method='mean' (unweighted)."
+        )
+
+    missing = [c for c in (value, weight, *by) if c not in data.columns]
+    if missing:
+        present = ", ".join(list(data.columns)[:10]) + (
+            "..." if len(data.columns) > 10 else ""
+        )
+        raise KeyError(
+            "[cso_toolkit.aggregate_data] Missing required column(s): "
+            f"{', '.join(missing)}.\n"
+            f"  Data columns: {present}\n"
+            "  Fix: check column spelling / casing; pass the correct names "
+            "for `value=`, `weight=`, and each entry of `by=`."
+        )
 
     df = data.dropna(subset=list(by)).copy()
     grp = df.groupby(list(by), dropna=False)
@@ -196,22 +214,44 @@ def aggregate_data_v2(
     """
     valid_methods = ("weighted_mean", "mean", "sum", "proportion")
     if method not in valid_methods:
-        raise ValueError(f"method must be one of {valid_methods}; got {method!r}")
+        raise ValueError(
+            "[cso_toolkit.aggregate_data_v2] `method` must be one of "
+            f"{valid_methods}; got {method!r}.\n"
+            "  Fix: pick the aggregation method that matches the "
+            "indicator semantics — weighted_mean for rates, sum for "
+            "totals, proportion for indicators expressed as percentages."
+        )
 
     if validate:
         required = list(dict.fromkeys([value, weight, *by]))
         missing = [c for c in required if c not in data.columns]
         if missing:
-            raise ValueError(f"Missing required columns: {', '.join(missing)}")
+            present = ", ".join(list(data.columns)[:10]) + (
+                "..." if len(data.columns) > 10 else ""
+            )
+            raise KeyError(
+                "[cso_toolkit.aggregate_data_v2] Missing required "
+                f"column(s): {', '.join(missing)}.\n"
+                f"  Data columns: {present}\n"
+                "  Fix: check column spelling / casing for `value=`, "
+                "`weight=`, and each entry of `by=`."
+            )
         if country_coverage and country_id not in data.columns:
             import warnings as _warn
             _warn.warn(
-                f"country_id column {country_id!r} not found. "
-                "Country coverage will use row count.",
+                f"[cso_toolkit.aggregate_data_v2] `country_id` column "
+                f"{country_id!r} not found. Country coverage will use row "
+                "count instead, which may overcount when a country has "
+                "multiple rows.",
                 stacklevel=2,
             )
         if coverage_threshold is not None and not (0 <= coverage_threshold <= 1):
-            raise ValueError("coverage_threshold must be between 0 and 1")
+            raise ValueError(
+                "[cso_toolkit.aggregate_data_v2] `coverage_threshold` must "
+                f"be between 0 and 1; got {coverage_threshold!r}.\n"
+                "  Fix: pass a fraction in [0, 1]; common UNICEF default "
+                "is 0.5 (50% population coverage required)."
+            )
 
     df = data.dropna(subset=list(by)).copy()
     val_num = pd.to_numeric(df[value], errors="coerce")

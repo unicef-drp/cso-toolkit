@@ -112,7 +112,31 @@ def generate_markdown_report(
         the current working directory.
     """
     csv_file_path = Path(csv_file_path)
-    data = pd.read_csv(csv_file_path)  # cso-allow: io-read-csv
+    if not csv_file_path.exists():
+        raise FileNotFoundError(
+            f"[cso_toolkit.generate_markdown_report] Input CSV not found: "
+            f"{csv_file_path}\n"
+            "  Fix: confirm the path; relative paths are resolved against "
+            f"the current working directory ({os.getcwd()})."
+        )
+    try:
+        data = pd.read_csv(csv_file_path)  # cso-allow: io-read-csv
+    except pd.errors.ParserError as exc:
+        raise RuntimeError(
+            f"[cso_toolkit.generate_markdown_report] Could not parse "
+            f"{csv_file_path} as CSV.\n"
+            f"  Underlying error: {exc}\n"
+            "  Fix: open the file and check for stray quotes / "
+            "inconsistent delimiters; for TSV use a separate reader."
+        ) from exc
+    except UnicodeDecodeError as exc:
+        raise RuntimeError(
+            f"[cso_toolkit.generate_markdown_report] {csv_file_path} is "
+            "not UTF-8.\n"
+            f"  Underlying error: {exc}\n"
+            "  Fix: re-export the CSV as UTF-8 or call pd.read_csv with an "
+            "explicit `encoding=` before passing to this helper."
+        ) from exc
 
     time_date = _dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     user = os.environ.get("USERNAME") or getpass.getuser()
