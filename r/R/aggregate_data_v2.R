@@ -1,30 +1,20 @@
-#' =============================================================================
-#' Aggregate Data Function v2.0 - PROPOSED IMPROVEMENTS
-#' =============================================================================
-#' 
-#' This file contains the proposed improved version of aggregate_data()
-#' designed to be relevant for ALL sectors in DW-Production.
-#' 
-#' Author: D&A Team
-#' Date: December 2025
-#' Status: STABLE
-#' =============================================================================
+# =============================================================================
+# Aggregate Data Function v2.0 - PROPOSED IMPROVEMENTS
+# =============================================================================
+#
+# This file contains the proposed improved version of aggregate_data()
+# designed to be relevant for ALL sectors in DW-Production.
+#
+# Author: D&A Team
+# Date: December 2025
+# Status: STABLE
+# =============================================================================
 
-## Packages used: dplyr, tidyr, rlang, stats. All calls below are
-## namespace-qualified (`dplyr::`, `tidyr::`, `rlang::`, `stats::`); this
-## file does NOT attach packages at source-time and does NOT mutate the
-## caller's search path. Matches the dw_io.R / dw_api.R vendored-helper
-## pattern.
-.cso_require <- function(pkgs) {
-  for (p in pkgs) {
-    if (!requireNamespace(p, quietly = TRUE)) {
-      stop("aggregate_data_v2 requires the '", p,
-           "' package; install it with install.packages('", p, "').",
-           call. = FALSE)
-    }
-  }
-}
-.cso_require(c("dplyr", "tidyr", "rlang"))
+# NOTE: `.cso_require()` lives in zzz.R as a single shared helper.
+# Dependency checks happen INSIDE the public function bodies (see
+# aggregate_data_v2() below), not at file source-time, so vendoring
+# this file into a consumer's 00_functions/ without dplyr installed
+# only fails on first call -- not at source().
 
 #' Aggregate Data v2.0 - Enhanced for Cross-Sector Use
 #'
@@ -47,8 +37,12 @@
 #' @param validate Logical. Perform input validation? Default TRUE.
 #'
 #' @return A data frame with aggregated data including requested metadata columns.
+#' @seealso [aggregate_data()] for the v1 signature kept for back-compat;
+#'   [generate_agg_footnote()] for the standard footnote string;
+#'   [apply_time_window()] to filter to the latest observation in a window.
+#' @family aggregate
 #' @export
-aggregate_data_v2 <- function(data, 
+aggregate_data_v2 <- function(data,
                               value, 
                               weight, 
                               by, 
@@ -63,18 +57,31 @@ aggregate_data_v2 <- function(data,
                               global_label = "WORLD",
                               validate = TRUE) {
 
+  .cso_require(c("dplyr", "tidyr", "rlang"), where = "aggregate_data_v2")
+
   if (validate) {
     required_cols <- unique(c(value, weight, by))
     missing_cols <- setdiff(required_cols, names(data))
     if (length(missing_cols) > 0) {
-      stop(paste("Missing required columns:", paste(missing_cols, collapse = ", ")))
+      present <- paste(utils::head(names(data), 10), collapse = ", ")
+      if (length(names(data)) > 10) present <- paste0(present, "...")
+      stop(sprintf(
+        "[cso_toolkit.aggregate_data_v2] Missing required column(s): %s\n  Data columns: %s\n  Fix: check column spelling / casing for `value =`, `weight =`, and each entry of `by =`.",
+        paste(missing_cols, collapse = ", "), present
+      ), call. = FALSE)
     }
     if (country.coverage && !country_id %in% names(data)) {
-      warning(paste("country_id column", country_id, "not found. Country coverage will use row count."))
+      warning(sprintf(
+        "[cso_toolkit.aggregate_data_v2] `country_id` column '%s' not found. Country coverage will use row count instead, which may overcount when a country has multiple rows.",
+        country_id
+      ), call. = FALSE)
     }
     if (!is.null(coverage_threshold)) {
       if (coverage_threshold < 0 || coverage_threshold > 1) {
-        stop("coverage_threshold must be between 0 and 1")
+        stop(sprintf(
+          "[cso_toolkit.aggregate_data_v2] `coverage_threshold` must be between 0 and 1; got %s.\n  Fix: pass a fraction in [0, 1]; common UNICEF default is 0.5 (50%% population coverage required).",
+          format(coverage_threshold)
+        ), call. = FALSE)
       }
     }
   }
@@ -174,8 +181,34 @@ aggregate_data_v2 <- function(data,
 }
 
 #' Generate standardized footnotes for aggregated estimates
+#'
+#' Builds the canonical footnote string used under aggregated tables
+#' and charts: `"N/M countries (P % population coverage)"` with an
+#' optional `"Based on latest estimates from YYYY to YYYY."` prefix and
+#' optional exemption / exclusion suffixes.
+#'
+#' @param country_coverage Integer. Number of countries contributing
+#'   non-missing observations.
+#' @param total_countries Integer. Denominator for the country-coverage
+#'   fraction.
+#' @param pop_coverage Numeric in [0, 1]. Fraction of total population
+#'   represented by the contributing countries; rendered as an integer
+#'   percent.
+#' @param start_year,end_year Optional integers. Inclusive bounds of the
+#'   year window from which the latest estimate per country was drawn.
+#' @param exemptions Optional character vector of country codes that
+#'   were retained outside the window (e.g. fragile-state exceptions);
+#'   appended as `"Exemptions: ..."`.
+#' @param exclusions Optional character vector of country codes that
+#'   were dropped before aggregation; appended as `"Exclusions: ..."`.
+#'
+#' @return Character. A single-line footnote.
+#'
+#' @seealso [aggregate_data_v2()] (typically the producer of the
+#'   coverage numbers fed into this footnote).
+#' @family aggregate
 #' @export
-generate_agg_footnote <- function(country_coverage, 
+generate_agg_footnote <- function(country_coverage,
                                   total_countries,
                                   pop_coverage,
                                   start_year = NULL,
@@ -202,6 +235,29 @@ generate_agg_footnote <- function(country_coverage,
 }
 
 #' Filter data to latest observation within a time window, with exemptions
+#'
+#' Within each country, keeps the row with the latest `time_col` value
+#' provided that latest year falls within `[start_year, end_year]`.
+#' Countries in `exemptions` keep their latest value regardless of the
+#' window; countries in `exclusions` are dropped before ranking.
+#'
+#' @param data Data frame.
+#' @param country_col Character. Column identifying country.
+#'   Defaults to `"REF_AREA"`.
+#' @param time_col Character. Column holding year values.  Defaults to
+#'   `"TIME_PERIOD"`.
+#' @param start_year,end_year Integer. Inclusive window bounds.
+#' @param exemptions Optional character vector of country codes whose
+#'   latest observation is kept even when outside the window.
+#' @param exclusions Optional character vector of country codes to drop
+#'   before ranking.
+#'
+#' @return A data frame with one row per country (or none for countries
+#'   that failed both window and exemption tests).
+#'
+#' @seealso [aggregate_data_v2()] (typical downstream consumer of the
+#'   windowed slice).
+#' @family aggregate
 #' @export
 apply_time_window <- function(data,
                               country_col = "REF_AREA",
@@ -210,6 +266,7 @@ apply_time_window <- function(data,
                               end_year,
                               exemptions = NULL,
                               exclusions = NULL) {
+  .cso_require(c("dplyr", "rlang"), where = "apply_time_window")
   country_sym <- rlang::sym(country_col)
   time_sym <- rlang::sym(time_col)
   data %>%

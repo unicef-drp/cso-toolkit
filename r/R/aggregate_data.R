@@ -10,17 +10,25 @@
 #' @param by A character vector of column names in `data` to group by for aggregation.
 #' @param global Logical; if TRUE, includes a global aggregation ignoring the `by` groups.
 #' @param pop.coverage Logical; if TRUE, shows share of child population in the reference group covered with data
+#' @param country.coverage Logical; if TRUE, adds a column counting the number of non-NA observations contributing to each group.
 #' @param method The method of aggregation; either "mean" for unweighted mean or "weighted_mean" for weighted mean.
 #' @return A data frame with aggregated data.
-#' @export 
+#' @seealso [aggregate_data_v2()] for the enhanced cross-sector variant;
+#'   [generate_agg_footnote()] for the standard footnote string.
+#' @family aggregate
+#' @export
 #' @examples
+#' \dontrun{
+#' library(dplyr)
+#' library(tidyr)
 #' data <- data.frame(
 #'   region = rep(c("North", "South"), each = 5),
-#'   value = c(1:10),
+#'   value  = c(1:10),
 #'   weight = c(5:14)
 #' )
-#' 
-#' aggregate_data(data, "value", "weight", "region", TRUE, TRUE, "mean")
+#' aggregate_data(data, value = "value", weight = "weight", by = "region",
+#'                global = TRUE, method = "mean")
+#' }
 
 
 

@@ -4,6 +4,8 @@
 .RData
 .Ruserdata
 *.Rproj
+# pkgdown output (regenerated on CI; locally built site requires pandoc)
+r/docs/
 
 # Python
 __pycache__/
