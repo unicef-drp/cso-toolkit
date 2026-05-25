@@ -1,5 +1,42 @@
 #-------------------------------------------------------------------
-# zzz.R — globalVariables declarations
+# zzz.R -- package-load housekeeping
+#-------------------------------------------------------------------
+# Holds the single canonical `.cso_require()` helper (previously
+# duplicated and top-level-invoked in aggregate_data_v2.R and
+# generate_markdown_report.R, where namespace collision could overwrite
+# whichever was sourced last) and the globalVariables declarations
+# for dplyr / tidyr NSE column-name references.
+#-------------------------------------------------------------------
+
+#' Ensure optional packages are installed (single shared helper)
+#'
+#' Internal. Used by helpers that depend on dplyr / tidyr / rlang etc.
+#' Called from inside the public function bodies (NOT at file-top level)
+#' so that vendoring the helper into a 00_functions/ folder does not
+#' force the dependency at source-time.
+#'
+#' @param pkgs Character vector of package names.
+#' @param where Character. Caller name for the error message envelope.
+#'
+#' @return Invisibly, `TRUE`. Stops with the standard envelope if any
+#'   package is missing.
+#'
+#' @keywords internal
+#' @noRd
+.cso_require <- function(pkgs, where = "<unknown>") {
+	for (p in pkgs) {
+		if (!requireNamespace(p, quietly = TRUE)) {
+			stop(sprintf(
+				"[cso_toolkit.%s] Requires the '%s' package but it is not installed.\n  Fix: install.packages('%s')",
+				where, p, p
+			), call. = FALSE)
+		}
+	}
+	invisible(TRUE)
+}
+
+#-------------------------------------------------------------------
+# globalVariables declarations
 #-------------------------------------------------------------------
 # Suppress R CMD check NOTEs of the form
 #   "no visible binding for global variable 'XXX'"

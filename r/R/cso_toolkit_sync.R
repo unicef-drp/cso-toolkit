@@ -35,7 +35,14 @@
 #' @noRd
 .cso_manifest_path <- function() {
 	# Manifest lives next to the helpers it tracks.
-	root <- if (exists("dwFunct")) dwFunct else file.path(getwd(), "00_functions")
+	# Resolve `dwFunct` from .GlobalEnv ONLY (not the caller's frame) so a
+	# local variable named `dwFunct` in some sector script can never hijack
+	# the lookup.
+	root <- if (exists("dwFunct", envir = .GlobalEnv, inherits = FALSE)) {
+		get("dwFunct", envir = .GlobalEnv, inherits = FALSE)
+	} else {
+		file.path(getwd(), "00_functions")
+	}
 	file.path(root, ".toolkit_manifest.yml")
 }
 
