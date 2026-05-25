@@ -29,9 +29,11 @@ Concretely it does three things:
    codebase under the CSO, which means new sectors and new projects inherit
    the reproducibility floor for free instead of re-inventing it.
 
-**Status.** Pre-release. First tag is `v0.1.0-rc1`. Public so reviewers and
-external collaborators can read and cite the contract; production adoption is
-via **vendoring** (see [Vendoring](#vendoring)), not `source()` over the network.
+**Status.** Pre-release. Current tag is `v0.2.0` (R + Stata helpers
+feature-complete, Python port shipping in `v0.3.0`). Public so reviewers
+and external collaborators can read and cite the contract; production
+adoption is via **vendoring** (see [Vendoring](#vendoring)), not
+`source()` over the network.
 
 ---
 
@@ -105,10 +107,18 @@ rationale and the upgrade flow.
 Semantic versioning (MAJOR.MINOR.PATCH).
 
 - `v0.x` — pre-release; API may still change.
-- `v0.1.0-rc1` — first tagged release candidate (this tag). R helpers feature-
-  complete; Stata / Python directories scaffolded but empty.
-- `v1.0.0` — committed API; will be cut after the ed sector pilot lands and a
-  second sector vendors the helpers without modification.
+- `v0.1.0-rc1` (2026-05-24) — first tagged release candidate. R helpers
+  feature-complete; Stata / Python directories scaffolded but empty.
+- `v0.2.0` (2026-05-24) — Stata helpers shipped (`dw_save.ado`,
+  `dw_compare.ado`, `dw_mkdir.ado`); R `dw_nestweight.R` ported from
+  EduAnalyticsToolkit; workflow diagrams added.
+- `v0.3.0` (planned) — full Python port at [`python/src/`](python/src/)
+  with parity to every R helper; Roxygen-complete R reference (26 Rd
+  files + pkgdown site); graceful three-part error envelopes
+  (`[cso_toolkit.<func>] WHAT / Why / Fix`) across R + Python; consumer-
+  side smoke tests; secrets-redaction in `.provenance.json`.
+- `v1.0.0` — committed API; will be cut after the ed sector pilot lands
+  and a second sector vendors the helpers without modification.
 
 See [NEWS.md](NEWS.md) for per-release notes.
 
