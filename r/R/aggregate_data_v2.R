@@ -10,28 +10,11 @@
 # Status: STABLE
 # =============================================================================
 
-#' Ensure optional packages are installed
-#'
-#' Internal helper used by the v2 aggregation pipeline. Stops with an
-#' install hint when any of the requested packages is missing.
-#'
-#' @param pkgs Character vector. Package names to check.
-#'
-#' @return Invisibly, `NULL`. Stops on missing package.
-#'
-#' @keywords internal
-#' @noRd
-.cso_require <- function(pkgs) {
-  for (p in pkgs) {
-    if (!requireNamespace(p, quietly = TRUE)) {
-      stop(sprintf(
-        "[cso_toolkit.aggregate_data_v2] Requires the '%s' package but it is not installed.\n  Fix: install.packages('%s')",
-        p, p
-      ), call. = FALSE)
-    }
-  }
-}
-.cso_require(c("dplyr", "tidyr", "rlang"))
+# NOTE: `.cso_require()` lives in zzz.R as a single shared helper.
+# Dependency checks happen INSIDE the public function bodies (see
+# aggregate_data_v2() below), not at file source-time, so vendoring
+# this file into a consumer's 00_functions/ without dplyr installed
+# only fails on first call -- not at source().
 
 #' Aggregate Data v2.0 - Enhanced for Cross-Sector Use
 #'
@@ -73,6 +56,8 @@ aggregate_data_v2 <- function(data,
                               number.affected = FALSE,
                               global_label = "WORLD",
                               validate = TRUE) {
+
+  .cso_require(c("dplyr", "tidyr", "rlang"), where = "aggregate_data_v2")
 
   if (validate) {
     required_cols <- unique(c(value, weight, by))
@@ -281,6 +266,7 @@ apply_time_window <- function(data,
                               end_year,
                               exemptions = NULL,
                               exclusions = NULL) {
+  .cso_require(c("dplyr", "rlang"), where = "apply_time_window")
   country_sym <- rlang::sym(country_col)
   time_sym <- rlang::sym(time_col)
   data %>%

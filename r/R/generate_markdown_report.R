@@ -31,28 +31,10 @@
 #
 ################################################################################
 
-#' Ensure optional packages are installed
-#'
-#' Internal helper used by the Markdown reporter. Stops with an install
-#' hint when any of the requested packages is missing.
-#'
-#' @param pkgs Character vector. Package names to check.
-#'
-#' @return Invisibly, `NULL`. Stops on missing package.
-#'
-#' @keywords internal
-#' @noRd
-.cso_require <- function(pkgs) {
-  for (p in pkgs) {
-    if (!requireNamespace(p, quietly = TRUE)) {
-      stop(sprintf(
-        "[cso_toolkit.generate_markdown_report] Requires the '%s' package but it is not installed.\n  Fix: install.packages('%s')",
-        p, p
-      ), call. = FALSE)
-    }
-  }
-}
-.cso_require(c("dplyr", "readr", "rlang"))
+# NOTE: `.cso_require()` lives in zzz.R as a single shared helper.
+# Dependency checks happen INSIDE the public function body
+# (generate_markdown_report) below, not at file source-time, so
+# vendoring this file does not force the dependency at source().
 
 #' Generate a descriptive-statistics Markdown report from a single CSV file
 #'
@@ -97,6 +79,8 @@
 #' @family reporting
 #' @export
 generate_markdown_report <- function(csv_file_path, country_column, year_column, indicator_column, value_column, output_path = NULL) {
+
+  .cso_require(c("dplyr", "readr", "rlang"), where = "generate_markdown_report")
 
   # Read the CSV file (generic helper accepting an arbitrary path; dw_use
   # is not applicable because the file is not part of the warehouse layout).
