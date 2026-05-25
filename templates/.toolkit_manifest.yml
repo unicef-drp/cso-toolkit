@@ -28,7 +28,7 @@
 # ---------------------------------------------------------------------------
 
 source: "unicef-drp/cso-toolkit"
-pulled_version: "v0.2.0"
+pulled_version: "v0.3.0"
 pulled_date: "2026-05-25"
 pulled_by: "<your-name>"
 

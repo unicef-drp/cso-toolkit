@@ -1,6 +1,11 @@
 # NEWS — cso-toolkit
 
-## Unreleased
+## v0.3.0 (2026-05-25)
+
+First release with full **Python parity** for every R helper, plus the
+**R Roxygen-complete reference** (NAMESPACE + 26 Rd files + pkgdown
+config), and a **three-part error envelope** (`[cso_toolkit.<func>]
+WHAT / Why / Fix`) standardised across R and Python.
 
 **Python helpers (new):**
 
@@ -96,7 +101,26 @@
 - `r/R/README.md` — added link to Python siblings; manifest example
   bumped `v0.1.0-rc1 → v0.2.0`.
 
+## v0.2.0 (2026-05-24)
+
+Stata helpers shipped; R analytical helpers expanded; rebrand as the
+UNICEF Chief Statistician Office (CSO) toolkit.
+
+**Stata helpers (new):**
+
+- `stata/src/dw_save.ado` — uniform Stata `save` wrapper with `isid` +
+  `compress` + sibling `.provenance.json` sidecar matching the R-side
+  shape. Honours producer / reviewer mode via `$dw_mode`; canonical
+  writes blocked in reviewer mode unless `allow_canonical_write` is
+  passed. Lineage: `edukit_save` (Diana Goldemberg).
+- `stata/src/dw_compare.ado` — merges two `.dta` files on `idvars` and
+  classifies each value column as identical / numerically-equivalent /
+  different. Lineage: `comparefiles` (Kristoffer Bjärkefur).
+- `stata/src/dw_mkdir.ado` — recursive `mkdir` for Stata. Lineage:
+  `rmkdir` (Kristoffer Bjärkefur).
+
 **R helpers (additions):**
+
 - `aggregate_data.R` — original `aggregate_data()` (mean / weighted_mean,
   optional global aggregate, population + country coverage). Lifted from
   `DW-Production/00_functions/`. Kept for back-compat.
@@ -104,6 +128,10 @@
   `sum`, `proportion`; coverage threshold; metadata columns. Ships
   `generate_agg_footnote()`, `apply_time_window()`, and a v1-compatible
   wrapper that delegates the v1 signature to v2.
+- `dw_nestweight.R` — port of World Bank EduAnalyticsToolkit
+  `edukit_nestweight` (Diana Goldemberg). Redistributes survey weights
+  from missing nested observations so per-stratum totals are
+  preserved.
 - `generate_markdown_report.R` — `generate_markdown_report()` +
   `process_all_csv_files()`. Descriptive-stats Markdown reports from CSV
   files; handles missing country / year / indicator columns gracefully.
@@ -134,18 +162,18 @@
   CI mode via `error_on_violation = TRUE`.
 
 **Documentation (additions / changes):**
+
 - README — rebranded as the **UNICEF Chief Statistician Office (CSO)
   toolkit** and added an **Objective and motivation** section spelling out
   that the repo exists to facilitate the reproducibility and scalability
   of analytics developed by the UNICEF Data and Analytics Section in the
   Office of the Executive Director (OSE). Citation block updated to match.
-
-**Docs (additions):**
 - `docs/dw_io_reference.md` — per-function reference for `dw_io.R` lifted
   out of the DW-Production `00_functions/README.md`.
 - `docs/dw_api_reference.md` — per-function reference for `dw_api.R` (same
   lift; behaviour matrix, supported APIs, worked SDMX example, sector
   migration checklist).
+- Workflow diagrams (`docs/workflow_*.svg`) added.
 
 ## v0.1.0-rc1 (2026-05-24)
 
