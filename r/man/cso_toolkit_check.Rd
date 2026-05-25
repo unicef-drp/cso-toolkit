@@ -36,3 +36,12 @@ if (!is.null(res) && isTRUE(res$updates_available)) {
 }
 }
 }
+\seealso{
+[cso_toolkit_diff()] for per-file diffs;
+  [cso_toolkit_pull()] for the refresh workflow.
+
+Other sync: 
+\code{\link{cso_toolkit_diff}()},
+\code{\link{cso_toolkit_pull}()}
+}
+\concept{sync}

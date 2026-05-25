@@ -1,0 +1,78 @@
+url: https://unicef-drp.github.io/cso-toolkit
+
+template:
+  bootstrap: 5
+  bslib:
+    primary: "#1cabe2"   # UNICEF cyan
+    secondary: "#374ea2" # UNICEF navy
+
+navbar:
+  title: cso-toolkit
+  type: light
+  structure:
+    left:  [intro, reference, news]
+    right: [github]
+  components:
+    github:
+      icon: fab fa-github
+      href: https://github.com/unicef-drp/cso-toolkit
+      aria-label: GitHub
+
+reference:
+- title: IO contract
+  desc: >
+    Uniform read / write helpers with mode-aware path routing, Z: drive
+    mirror, and `.provenance.json` sidecar emission.
+  contents:
+  - has_concept("io")
+
+- title: Cached API access
+  desc: >
+    Mode-aware wrappers around external APIs.  Producer fetches live and
+    caches; reviewer reads from canonical cache only.
+  contents:
+  - has_concept("api")
+
+- title: Toolkit version sync
+  desc: >
+    Vintage-management helpers for the vendored copies of cso-toolkit
+    code in a consumer repo's `00_functions/`.
+  contents:
+  - has_concept("sync")
+
+- title: Aggregation
+  desc: >
+    Stratified aggregation helpers (mean / weighted mean / sum /
+    proportion) with population and country coverage, plus
+    standardised footnote formatting.
+  contents:
+  - has_concept("aggregate")
+
+- title: Survey-weight redistribution
+  desc: >
+    Redistribute weights across non-missing observations so per-stratum
+    totals are preserved.
+  contents:
+  - has_concept("survey-weights")
+
+- title: Descriptive-stats reporting
+  desc: >
+    Generate Markdown reports from CSV files with optional summary
+    tables by country / year / indicator.
+  contents:
+  - has_concept("reporting")
+
+- title: Project scaffolding
+  desc: >
+    Generate the standard CSO building blocks — sector run scripts
+    and profile scripts — and audit existing profiles for the blocks
+    the toolkit contract relies on.
+  contents:
+  - has_concept("scaffolding")
+
+- title: Contract audit
+  desc: >
+    Audit consumer scripts for raw IO / external-API calls that
+    `dw_io.R` / `dw_api.R` are meant to wrap.
+  contents:
+  - has_concept("audit")

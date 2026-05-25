@@ -29,3 +29,13 @@ Stub for v0.0.0. Planned behaviour:
   \item Log a summary.
 }
 }
+\seealso{
+[cso_toolkit_check()] to first determine whether a pull is
+  needed; [cso_toolkit_diff()] to inspect per-file changes before
+  overwriting.
+
+Other sync: 
+\code{\link{cso_toolkit_check}()},
+\code{\link{cso_toolkit_diff}()}
+}
+\concept{sync}

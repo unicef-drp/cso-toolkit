@@ -30,7 +30,7 @@ must call the wrapped commands).}
 \item{ignore_dirs}{Character vector. Directory basenames to skip (e.g.
 `"renv"`, `"packrat"`, `".git"`).}
 
-\item{custom_rules}{Optional list of additional rules — each element a
+\item{custom_rules}{Optional list of additional rules -- each element a
 list with `id`, `pattern`, `family`, `message`, `suggest`. Merged with
 the built-in registry.}
 
@@ -51,8 +51,8 @@ calls a raw file-IO or external-API function that `dw_io.R` or
 }
 \details{
 - File IO must go through `dw_save()` / `dw_use()` / `dw_compare()` /
-  `dw_merge()` — never `read_csv()`, `write_xlsx()`, `saveRDS()`, etc.
-- External APIs must go through `dw_api_fetch()` / `dw_api_cached()` —
+  `dw_merge()` -- never `read_csv()`, `write_xlsx()`, `saveRDS()`, etc.
+- External APIs must go through `dw_api_fetch()` / `dw_api_cached()` --
   never `httr::GET()`, `rsdmx::readSDMX()`, `wbstats::wb_data()`, etc.
 
 Per-line escape hatch: add a trailing `# cso-allow: <rule-id>` comment
@@ -71,3 +71,9 @@ test_scripts("01_dw_prep/012_codes", error_on_violation = TRUE)
 # config <- yaml::read_yaml(config_path)  # cso-allow: io-yaml
 }
 }
+\seealso{
+[review_profile()] for the profile-level audit; [dw_save()] /
+  [dw_use()] and [dw_api_fetch()] (the toolkit functions whose direct
+  bypasses this auditor catches).
+}
+\concept{audit}

@@ -14,6 +14,40 @@ apply_time_window(
   exclusions = NULL
 )
 }
-\description{
-Filter data to latest observation within a time window, with exemptions
+\arguments{
+\item{data}{Data frame.}
+
+\item{country_col}{Character. Column identifying country.
+Defaults to `"REF_AREA"`.}
+
+\item{time_col}{Character. Column holding year values.  Defaults to
+`"TIME_PERIOD"`.}
+
+\item{start_year, end_year}{Integer. Inclusive window bounds.}
+
+\item{exemptions}{Optional character vector of country codes whose
+latest observation is kept even when outside the window.}
+
+\item{exclusions}{Optional character vector of country codes to drop
+before ranking.}
 }
+\value{
+A data frame with one row per country (or none for countries
+  that failed both window and exemption tests).
+}
+\description{
+Within each country, keeps the row with the latest `time_col` value
+provided that latest year falls within `[start_year, end_year]`.
+Countries in `exemptions` keep their latest value regardless of the
+window; countries in `exclusions` are dropped before ranking.
+}
+\seealso{
+[aggregate_data_v2()] (typical downstream consumer of the
+  windowed slice).
+
+Other aggregate: 
+\code{\link{aggregate_data}()},
+\code{\link{aggregate_data_v2}()},
+\code{\link{generate_agg_footnote}()}
+}
+\concept{aggregate}

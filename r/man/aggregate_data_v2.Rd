@@ -57,3 +57,14 @@ A data frame with aggregated data including requested metadata columns.
 This function aggregates data by specified grouping variables with support for
 multiple aggregation methods, coverage thresholds, and automatic metadata generation.
 }
+\seealso{
+[aggregate_data()] for the v1 signature kept for back-compat;
+  [generate_agg_footnote()] for the standard footnote string;
+  [apply_time_window()] to filter to the latest observation in a window.
+
+Other aggregate: 
+\code{\link{aggregate_data}()},
+\code{\link{apply_time_window}()},
+\code{\link{generate_agg_footnote}()}
+}
+\concept{aggregate}

@@ -27,3 +27,17 @@ Thin wrapper around `dplyr::left_join` that warns when the actual
 cardinality of `by` on the left or right side disagrees with the
 declared `how`. Inspired by Stata's `merge m:1 / 1:1 / 1:m / m:m`.
 }
+\seealso{
+[dw_use()] (used to materialise `using` when a path is
+  supplied); [dw_compare()] for a row-level diff.
+
+Other io: 
+\code{\link{dw_compare}()},
+\code{\link{dw_is_canonical}()},
+\code{\link{dw_isid}()},
+\code{\link{dw_resolve_path}()},
+\code{\link{dw_save}()},
+\code{\link{dw_use}()},
+\code{\link{dw_verify_z}()}
+}
+\concept{io}

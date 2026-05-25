@@ -62,3 +62,17 @@ the Teams data). Skip via `verify_z = FALSE`. Use
 warehouse <- dw_use(name = "dw_ed_edu.csv", sector = "ed", kind = "wrk")
 }
 }
+\seealso{
+[dw_save()] for the write counterpart; [dw_verify_z()] for
+  the underlying integrity check.
+
+Other io: 
+\code{\link{dw_compare}()},
+\code{\link{dw_is_canonical}()},
+\code{\link{dw_isid}()},
+\code{\link{dw_merge}()},
+\code{\link{dw_resolve_path}()},
+\code{\link{dw_save}()},
+\code{\link{dw_verify_z}()}
+}
+\concept{io}

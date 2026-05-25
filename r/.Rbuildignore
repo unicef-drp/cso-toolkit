@@ -1,0 +1,7 @@
+^_pkgdown\.yml$
+^docs$
+^tests/manual$
+^cran-comments\.md$
+^check_rd\.R$
+^check_pkgdown_topics\.R$
+^\.github$

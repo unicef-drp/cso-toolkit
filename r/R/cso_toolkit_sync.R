@@ -8,10 +8,10 @@
 #     not sourced live. This pins the vintage per consuming repo.
 #   - .toolkit_manifest.yml records the upstream version + per-file
 #     hashes at pull time.
-#   - cso_toolkit_check()  — quietly checks if upstream has a newer tag
+#   - cso_toolkit_check()  -- quietly checks if upstream has a newer tag
 #                            (producer mode only; respects dw_apis_allowed)
-#   - cso_toolkit_diff()   — shows what changed in upstream vs vendored copy
-#   - cso_toolkit_pull()   — refreshes the vendored files to a target tag,
+#   - cso_toolkit_diff()   -- shows what changed in upstream vs vendored copy
+#   - cso_toolkit_pull()   -- refreshes the vendored files to a target tag,
 #                            updates the manifest, prints the diff
 #
 # Until cso-toolkit is created, these helpers gracefully no-op:
@@ -24,7 +24,7 @@
 #' Locate the toolkit manifest next to vendored helpers
 #'
 #' Internal. Looks for `.toolkit_manifest.yml` in the same directory as the
-#' vendored helpers — typically `<repo>/00_functions/`. Resolves the
+#' vendored helpers -- typically `<repo>/00_functions/`. Resolves the
 #' directory via the `dwFunct` global when set by the profile, otherwise
 #' falls back to `<getwd()>/00_functions`.
 #'
@@ -56,7 +56,7 @@
 	mpath <- .cso_manifest_path()
 	if (!file.exists(mpath)) {
 		message("cso_toolkit_sync: no manifest at ", mpath,
-		        " — helpers are not vendored from any upstream.")
+		        " -- helpers are not vendored from any upstream.")
 		return(NULL)
 	}
 	yaml::read_yaml(mpath)
@@ -89,6 +89,9 @@
 #'   cso_toolkit_diff()
 #' }
 #' }
+#' @seealso [cso_toolkit_diff()] for per-file diffs;
+#'   [cso_toolkit_pull()] for the refresh workflow.
+#' @family sync
 #' @export
 cso_toolkit_check <- function(quiet = TRUE) {
 	# Mode contract: reviewers don't poll GitHub
@@ -155,6 +158,9 @@ cso_toolkit_check <- function(quiet = TRUE) {
 #'
 #' @return Invisibly, `NULL` for the stub.
 #'
+#' @seealso [cso_toolkit_check()] (which surfaces when a diff is worth
+#'   inspecting); [cso_toolkit_pull()] (executes the upgrade).
+#' @family sync
 #' @export
 cso_toolkit_diff <- function(target_version = NULL) {
 	m <- .cso_load_manifest()
@@ -187,24 +193,40 @@ cso_toolkit_diff <- function(target_version = NULL) {
 #'
 #' @return Invisibly, `NULL` for the stub.
 #'
+#' @seealso [cso_toolkit_check()] to first determine whether a pull is
+#'   needed; [cso_toolkit_diff()] to inspect per-file changes before
+#'   overwriting.
+#' @family sync
 #' @export
 cso_toolkit_pull <- function(target_version,
                              confirm = TRUE,
                              dry_run = FALSE) {
 	if (!isTRUE(.try_get("dw_apis_allowed"))) {
-		stop("cso_toolkit_pull: forbidden in reviewer mode. Switch to producer mode.")
+		stop("[cso_toolkit.cso_toolkit_pull] Forbidden in reviewer mode.\n  Reason: pulling a new toolkit version requires hitting GitHub, which the reviewer-mode contract forbids.\n  Fix: switch the profile to producer mode (set dw_mode: producer in user_config.yml) before re-running.",
+		     call. = FALSE)
 	}
 	m <- .cso_load_manifest()
-	if (is.null(m)) stop("cso_toolkit_pull: no manifest; cannot refresh")
-	if (is.null(m$source)) stop("cso_toolkit_pull: manifest has no upstream source")
+	if (is.null(m)) {
+		stop(sprintf(
+			"[cso_toolkit.cso_toolkit_pull] No manifest; cannot refresh.\n  Looked under: %s\n  Fix: create a .toolkit_manifest.yml next to the vendored helpers. See templates/.toolkit_manifest.yml for the schema.",
+			.cso_manifest_path()
+		), call. = FALSE)
+	}
+	if (is.null(m$source)) {
+		stop(sprintf(
+			"[cso_toolkit.cso_toolkit_pull] Manifest has no `source:` key.\n  Manifest path: %s\n  Fix: add `source: \"owner/repo\"` to the manifest.",
+			.cso_manifest_path()
+		), call. = FALSE)
+	}
 
 	# Stub: refuse if the upstream isn't real yet
 	upstream_check <- tryCatch(.cso_upstream_latest_tag(m$source),
 	                           error = function(e) NULL)
 	if (is.null(upstream_check)) {
-		stop("cso_toolkit_pull: upstream '", m$source, "' not reachable or has no tags.\n",
-		     "  Likely cause: cso-toolkit repo doesn't exist yet.\n",
-		     "  Phase-2 work: create the repo + tag v0.1.0, then re-run.")
+		stop("[cso_toolkit.cso_toolkit_pull] Upstream '", m$source, "' not reachable or has no tags.\n",
+		     "  Possible causes:\n    - The repo doesn't exist yet.\n    - The network is blocked (UNICEF corporate proxies sometimes block api.github.com).\n    - Neither `gh` CLI nor `httr` is available.\n",
+		     "  Fix: verify the repo exists, then `gh auth status` or install.packages('httr').",
+		     call. = FALSE)
 	}
 
 	message("cso_toolkit_pull: implementation TBD when cso-toolkit exists.\n",

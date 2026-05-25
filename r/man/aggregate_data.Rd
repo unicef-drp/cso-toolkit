@@ -41,11 +41,25 @@ weighted aggregation and global aggregation. It calculates coverage of non-NA
 values and allows for mean or weighted mean aggregation methods.
 }
 \examples{
+\dontrun{
+library(dplyr)
+library(tidyr)
 data <- data.frame(
   region = rep(c("North", "South"), each = 5),
-  value = c(1:10),
+  value  = c(1:10),
   weight = c(5:14)
 )
-
-aggregate_data(data, "value", "weight", "region", TRUE, TRUE, "mean")
+aggregate_data(data, value = "value", weight = "weight", by = "region",
+               global = TRUE, method = "mean")
 }
+}
+\seealso{
+[aggregate_data_v2()] for the enhanced cross-sector variant;
+  [generate_agg_footnote()] for the standard footnote string.
+
+Other aggregate: 
+\code{\link{aggregate_data_v2}()},
+\code{\link{apply_time_window}()},
+\code{\link{generate_agg_footnote}()}
+}
+\concept{aggregate}

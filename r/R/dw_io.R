@@ -56,8 +56,10 @@
 #' @noRd
 .require <- function(pkg) {
 	if (!requireNamespace(pkg, quietly = TRUE)) {
-		stop(sprintf("Package '%s' is required for this file format. ", pkg),
-		     "Install via `install.packages('", pkg, "')`.")
+		stop(sprintf(
+			"[cso_toolkit.dw_io] Package '%s' is required for this file format but is not installed.\n  Fix: install.packages('%s')",
+			pkg, pkg
+		), call. = FALSE)
 	}
 	invisible(TRUE)
 }
@@ -130,6 +132,10 @@
 #' dw_resolve_path(name = "dw_ed_edu.csv", sector = "ed", kind = "wrk")
 #' dw_resolve_path(path = "ed/dw_ed_edu.csv", kind = "wrk")
 #' }
+#' @seealso [dw_is_canonical()] to test whether a resolved path lies under
+#'   a canonical root; [dw_save()] and [dw_use()] which call this helper
+#'   internally.
+#' @family io
 #' @export
 dw_resolve_path <- function(path = NULL, name = NULL, sector = NULL,
                             kind = c("wrk", "raw", "meta"),
@@ -137,15 +143,21 @@ dw_resolve_path <- function(path = NULL, name = NULL, sector = NULL,
 	kind <- match.arg(kind)
 	root <- .dw_root_for(kind = kind)
 	if (is.na(root) || !nzchar(root)) {
-		stop("dw_resolve_path: root for kind='", kind,
-		     "' is not defined. Is the profile loaded?")
+		global_name <- switch(kind, wrk = "teamsWrkData",
+		                            raw = "teamsRawData",
+		                            meta = "dwMetaData")
+		stop(sprintf(
+			"[cso_toolkit.dw_resolve_path] %s global is not set.\n  This usually means profile_<repo>.R has not been sourced yet.\n  Fix: source('profile_<repo>.R') before calling dw_resolve_path(), or set %s <- '/path/to/%s' explicitly.",
+			global_name, global_name, kind
+		), call. = FALSE)
 	}
 	subpath <- if (!is.null(name)) {
 		file.path(sector %||% "", if (!is.null(vintage)) vintage else "", name)
 	} else if (!is.null(path)) {
 		path
 	} else {
-		stop("dw_resolve_path: provide either `path` or `name` (with optional sector / vintage).")
+		stop("[cso_toolkit.dw_resolve_path] Neither `path` nor `name` supplied.\n  At least one is required to build a filesystem path.\n  Fix: pass path = 'sector/file.csv' OR name = 'file.csv' + sector = '...'.",
+		     call. = FALSE)
 	}
 	subpath <- gsub("/+", "/", subpath)
 	subpath <- sub("^/", "", subpath)
@@ -164,6 +176,8 @@ dw_resolve_path <- function(path = NULL, name = NULL, sector = NULL,
 #' @return Logical. `TRUE` if `path` lies under a canonical root, otherwise
 #'   `FALSE`.
 #'
+#' @seealso [dw_resolve_path()], [dw_verify_z()].
+#' @family io
 #' @export
 dw_is_canonical <- function(path) {
 	path_n <- normalizePath(path, winslash = "/", mustWork = FALSE)
@@ -250,6 +264,9 @@ dw_is_canonical <- function(path) {
 #'   `"no_z_mirror"`, `"z_missing"`, `"match_size"`, `"size_mismatch"`,
 #'   `"match_sha256"`, `"sha256_mismatch"`, or `"verify_unavailable"`.
 #'
+#' @seealso [dw_save()] (carbon-copies on canonical writes) and [dw_use()]
+#'   (runs an automatic size check on canonical reads).
+#' @family io
 #' @export
 dw_verify_z <- function(path, compare = c("size", "sha256")) {
 	compare <- match.arg(compare)
@@ -298,12 +315,26 @@ dw_verify_z <- function(path, compare = c("size", "sha256")) {
 #' @return Invisibly, `TRUE` when the check passes. Stops with a sample
 #'   of duplicates when it fails.
 #'
+#' @examples
+#' \dontrun{
+#' library(dplyr)
+#' df <- data.frame(REF_AREA = c("AGO", "BFA"), value = c(1, 2))
+#' dw_isid(df, keys = "REF_AREA")
+#' }
+#'
+#' @seealso [dw_save()] (auto-invokes `dw_isid` when an `isid =` argument
+#'   is passed).
+#' @family io
 #' @export
 dw_isid <- function(df, keys, where = "<unknown>") {
 	missing_keys <- setdiff(keys, names(df))
 	if (length(missing_keys) > 0) {
-		stop("dw_isid (", where, "): keys not in data: ",
-		     paste(missing_keys, collapse = ", "))
+		present <- paste(utils::head(names(df), 10), collapse = ", ")
+		if (length(names(df)) > 10) present <- paste0(present, "...")
+		stop(sprintf(
+			"[cso_toolkit.dw_isid] (%s) keys not in data: %s\n  Data columns are: %s\n  Fix: check spelling / casing on the key columns, or drop non-existent keys from your isid= argument.",
+			where, paste(missing_keys, collapse = ", "), present
+		), call. = FALSE)
 	}
 	if (nrow(df) == 0) return(invisible(TRUE))
 	.require("dplyr")
@@ -314,10 +345,12 @@ dw_isid <- function(df, keys, where = "<unknown>") {
 	n_dup <- nrow(dup)
 	if (n_dup > 0) {
 		sample_show <- utils::head(dup, 5)
-		stop("dw_isid (", where, "): ", n_dup,
-		     " duplicate row(s) on key (", paste(keys, collapse = ", "), ").\n",
-		     "First duplicates:\n",
-		     paste(utils::capture.output(print(sample_show)), collapse = "\n"))
+		stop(sprintf(
+			"[cso_toolkit.dw_isid] (%s) %d duplicate row(s) on key (%s).\n  First duplicates:\n%s\n  Fix: deduplicate before saving (`df <- dplyr::distinct(df, %s, .keep_all = TRUE)`) or extend the key set so the rows become unique.",
+			where, n_dup, paste(keys, collapse = ", "),
+			paste(utils::capture.output(print(sample_show)), collapse = "\n"),
+			paste(keys, collapse = ", ")
+		), call. = FALSE)
 	}
 	invisible(TRUE)
 }
@@ -412,6 +445,10 @@ dw_isid <- function(df, keys, where = "<unknown>") {
 #'           vintage  = "2026-05"
 #'         ))
 #' }
+#' @seealso [dw_use()] for the read counterpart; [dw_isid()] for the
+#'   uniqueness check; [dw_verify_z()] for the Z: mirror integrity check;
+#'   [dw_resolve_path()] for the path-resolution rules.
+#' @family io
 #' @export
 dw_save <- function(x,
                     path = NULL,
@@ -439,10 +476,10 @@ dw_save <- function(x,
 	if (is_canon && !isTRUE(allow_canonical_write)) {
 		is_reviewer <- isTRUE(.try_get("dw_mode") == "reviewer")
 		if (is_reviewer) {
-			stop("[dw_save] Reviewer mode forbids writes under canonical: ",
-			     path, "\n  Writes must land in the sandbox or repo-local path.\n",
-			     "  If this is a deliberate Database Manager bootstrap, ",
-			     "pass `allow_canonical_write = TRUE`.")
+			stop(sprintf(
+				"[cso_toolkit.dw_save] Reviewer mode forbids writes under canonical: %s\n  Reviewer sessions must keep canonical deposits read-only to preserve vintage permanence; writes go to the sandbox.\n  Fix:\n    1. Resolve a sandbox path instead (the profile's teamsWrkData usually points there in reviewer mode), OR\n    2. If this is a deliberate Database Manager bootstrap, pass `allow_canonical_write = TRUE` to bypass the guard.",
+				path
+			), call. = FALSE)
 		}
 	}
 
@@ -479,15 +516,29 @@ dw_save <- function(x,
 		                                                    pretty = TRUE, ...) },
 		yml  = { .require("yaml");     yaml::write_yaml(x, file = tmp_path, ...) },
 		yaml = { .require("yaml");     yaml::write_yaml(x, file = tmp_path, ...) },
-		stop("dw_save: unsupported file extension '", fmt_for_dispatch,
-		     "' for path: ", path)
+		stop(sprintf(
+			"[cso_toolkit.dw_save] Unsupported file extension '%s' (path: %s).\n  Supported extensions: csv, tsv, txt, xlsx, rds, RData, rda, dta, parquet, json, yml, yaml\n  Fix: rename the output so it has one of the supported extensions.",
+			fmt_for_dispatch, path
+		), call. = FALSE)
 	)
 
 	if (!overwrite && file.exists(path)) {
 		file.remove(tmp_path)
-		stop("dw_save: file exists and overwrite = FALSE: ", path)
+		stop(sprintf(
+			"[cso_toolkit.dw_save] File exists and overwrite = FALSE: %s\n  Fix: pass overwrite = TRUE to replace the existing file, or write to a different path.",
+			path
+		), call. = FALSE)
 	}
-	file.rename(tmp_path, path)
+	ok_rename <- tryCatch(file.rename(tmp_path, path),
+	                     warning = function(w) FALSE,
+	                     error = function(e) FALSE)
+	if (!isTRUE(ok_rename)) {
+		file.remove(tmp_path)
+		stop(sprintf(
+			"[cso_toolkit.dw_save] Atomic rename %s -> %s failed.\n  Fix: make sure the destination is not open in another process (Excel locks .xlsx files), then retry.",
+			tmp_path, path
+		), call. = FALSE)
+	}
 
 	# Provenance sidecar
 	if (isTRUE(provenance) && !fmt_for_dispatch %in% c("rdata", "rda")) {
@@ -681,6 +732,9 @@ dw_save <- function(x,
 #' \dontrun{
 #' warehouse <- dw_use(name = "dw_ed_edu.csv", sector = "ed", kind = "wrk")
 #' }
+#' @seealso [dw_save()] for the write counterpart; [dw_verify_z()] for
+#'   the underlying integrity check.
+#' @family io
 #' @export
 dw_use <- function(path = NULL,
                    name = NULL, sector = NULL,
@@ -726,7 +780,10 @@ dw_use <- function(path = NULL,
 		json = { .require("jsonlite"); jsonlite::read_json(resolved, ...) },
 		yml  = { .require("yaml");     yaml::read_yaml(resolved, ...) },
 		yaml = { .require("yaml");     yaml::read_yaml(resolved, ...) },
-		stop("dw_use: unsupported file extension '", fmt, "' for: ", resolved)
+		stop(sprintf(
+			"[cso_toolkit.dw_use] Unsupported file extension '%s' (path: %s).\n  Supported extensions: csv, tsv, txt, xlsx, rds, RData, rda, dta, parquet, json, yml, yaml\n  Fix: ensure the file has one of the supported extensions.",
+			fmt, resolved
+		), call. = FALSE)
 	)
 
 	if (fmt %in% c("csv", "tsv", "txt", "xlsx", "dta", "parquet")) {
@@ -807,23 +864,32 @@ dw_use <- function(path = NULL,
 .resolve_for_read <- function(path, fallback_canonical) {
 	if (file.exists(path)) return(path)
 	if (!isTRUE(fallback_canonical)) {
-		stop("dw_use: file not found and fallback_canonical = FALSE: ", path)
+		stop(sprintf(
+			"[cso_toolkit.dw_use] File not found and fallback_canonical = FALSE: %s\n  Fix: drop the fallback_canonical = FALSE argument, or verify the path exists.",
+			path
+		), call. = FALSE)
 	}
 	swaps <- list(
 		c(.try_get("teamsRawData"), .try_get("teamsRawDataCanonical")),
 		c(.try_get("teamsWrkData"), .try_get("teamsWrkDataCanonical")),
 		c(.try_get("teamsFolder"),  .try_get("teamsFolderCanonical"))
 	)
+	attempted <- character(0)
+	attempted <- c(attempted, path)
 	for (sw in swaps) {
 		if (!any(is.na(sw)) && sw[1] != sw[2] && startsWith(path, sw[1])) {
 			alt <- sub(paste0("^", sw[1]), sw[2], path, fixed = FALSE)
+			attempted <- c(attempted, alt)
 			if (file.exists(alt)) {
 				message("[dw_use] Falling back to canonical: ", alt)
 				return(alt)
 			}
 		}
 	}
-	stop("dw_use: file not found at literal path or canonical fallback: ", path)
+	stop(sprintf(
+		"[cso_toolkit.dw_use] File not found at literal path or under any configured canonical root.\n  Attempted:\n    %s\n  Fix: confirm the file was produced by the upstream pipeline, or that team*Canonical globals are set to the right roots.",
+		paste(attempted, collapse = "\n    ")
+	), call. = FALSE)
 }
 
 # ============================================================================
@@ -857,6 +923,10 @@ dw_use <- function(path = NULL,
 #' @return A list with `summary` (one-row tibble) and `added`, `removed`,
 #'   `changed` data frames.
 #'
+#' @seealso [dw_use()] (used to materialise the inputs when paths are
+#'   supplied); [dw_merge()] for a Stata-style join with cardinality
+#'   assertion.
+#' @family io
 #' @export
 dw_compare <- function(current, reference,
                        by,
@@ -872,7 +942,16 @@ dw_compare <- function(current, reference,
 
 	common <- intersect(names(current), names(reference))
 	by <- by[by %in% common]
-	if (length(by) == 0) stop("dw_compare: no `by` columns are present in both sides.")
+	if (length(by) == 0) {
+		cur_cols <- paste(utils::head(names(current), 8), collapse = ", ")
+		if (length(names(current)) > 8) cur_cols <- paste0(cur_cols, "...")
+		ref_cols <- paste(utils::head(names(reference), 8), collapse = ", ")
+		if (length(names(reference)) > 8) ref_cols <- paste0(ref_cols, "...")
+		stop(sprintf(
+			"[cso_toolkit.dw_compare] No `by` columns are present in both sides.\n  Current columns:   %s\n  Reference columns: %s\n  Fix: pass at least one column name that appears in BOTH data frames as a join key.",
+			cur_cols, ref_cols
+		), call. = FALSE)
+	}
 	value_cols <- if (is.null(value_cols)) setdiff(common, by) else value_cols[value_cols %in% common]
 	numeric_value_cols <- intersect(numeric_value_cols, value_cols)
 
@@ -960,6 +1039,9 @@ dw_compare <- function(current, reference,
 #'
 #' @return The joined data frame.
 #'
+#' @seealso [dw_use()] (used to materialise `using` when a path is
+#'   supplied); [dw_compare()] for a row-level diff.
+#' @family io
 #' @export
 dw_merge <- function(x, using, by, how = c("m:1", "1:1", "1:m", "m:m"), ...) {
 	how <- match.arg(how)

@@ -57,3 +57,13 @@ entrance_age_primary <- dw_api_fetch(
 )
 }
 }
+\seealso{
+[dw_api_cached()] for cache-only reads; [dw_api_inventory()]
+  to list existing caches; [dw_save()] (used to write the cache);
+  [dw_use()] (used to read it back).
+
+Other api: 
+\code{\link{dw_api_cached}()},
+\code{\link{dw_api_inventory}()}
+}
+\concept{api}

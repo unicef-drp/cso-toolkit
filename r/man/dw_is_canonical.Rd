@@ -19,3 +19,16 @@ canonical roots (`teamsWrkDataCanonical`, `teamsRawDataCanonical`,
 `teamsFolderCanonical`). Used by [dw_save()] to gate reviewer-mode writes
 and by [dw_use()] to decide whether to run a Z: integrity check.
 }
+\seealso{
+[dw_resolve_path()], [dw_verify_z()].
+
+Other io: 
+\code{\link{dw_compare}()},
+\code{\link{dw_isid}()},
+\code{\link{dw_merge}()},
+\code{\link{dw_resolve_path}()},
+\code{\link{dw_save}()},
+\code{\link{dw_use}()},
+\code{\link{dw_verify_z}()}
+}
+\concept{io}

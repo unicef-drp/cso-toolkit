@@ -59,10 +59,22 @@ tracking, try-catch error handling, and placeholder input/output paths.
 }
 \examples{
 \dontrun{
-# Generic usage — writes ./ws/00_run_ws.R relative to cwd:
+# Generic usage -- writes ./ws/00_run_ws.R relative to cwd:
 create_sector_script("WASH", "ws")
 
 # Targeting a specific subtree of your project:
 create_sector_script("Nutrition", "nt", base_dir = "pipelines/sectors")
 }
 }
+\seealso{
+[create_dw_sector_script()] for the DW-Production-conventions
+  wrapper; [create_profile()] for the profile-script scaffold; the
+  generated script's logging and try-catch are designed to work with
+  the profile sentinel set by [create_profile()].
+
+Other scaffolding: 
+\code{\link{create_dw_sector_script}()},
+\code{\link{create_profile}()},
+\code{\link{review_profile}()}
+}
+\concept{scaffolding}
