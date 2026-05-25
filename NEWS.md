@@ -14,13 +14,17 @@
 - `python/src/py.typed` — PEP 561 marker so type-checkers see the
   type hints when consumers vendor the package.
 - `python/tests/manual/smoke_test.py` — bootstraps `python/src/` under
-  the name `cso_toolkit`, then exercises 12 invariants end-to-end
+  the name `cso_toolkit`, then exercises 15 invariants end-to-end
   (`dw_save` → `dw_use` roundtrip + provenance sidecar; `dw_isid`
   duplicate detection; `aggregate_data_v2` with coverage threshold;
   `dw_nestweight` preserves stratum totals; `create_profile` +
   `review_profile` pass all required checks; `test_scripts` catches a
   raw `pd.read_csv`; `cso_toolkit_check` returns `None` on missing
-  manifest).
+  manifest; plus 3 regression checks for path-prefix matching,
+  secrets-redaction, and `_get` falsy-value handling).
+- `python/tests/manual/error_envelope_test.py` — 30-path contract test
+  asserting every public Python raise emits the
+  `[cso_toolkit.<func>]` prefix + `Fix:` guidance.
 - `docs/dw_io_python_reference.md` + `docs/dw_api_python_reference.md`
   — per-function references mirroring the existing R-side docs.
 - Every public Python function carries a `Raises:` section enumerating
@@ -32,6 +36,65 @@
   `generate_markdown_report.py` are wrapped with the same envelope —
   no bare `requests.HTTPError` / `KeyError` / `pd.errors.ParserError`
   bubbles up uncaught.
+- Sensitive keys (`token`, `headers`, `api_key`, `password`, …) in
+  `dw_api_fetch` kwargs are redacted before they reach the
+  `.provenance.json` sidecar (`_redact_sensitive` walker in
+  `dw_api.py`).
+- `dw_is_canonical` now uses a path-aware descendant check so
+  `/data/wrk-canary/...` no longer false-matches a root of
+  `/data/wrk-can`.
+
+**R helpers (documentation):**
+
+- Roxygen pass across `dw_io.R`, `dw_api.R`, `cso_toolkit_sync.R`,
+  `generate_markdown_report.R`, and `aggregate_data.R`. Every exported
+  function now has `@param` / `@return` / `@export`; every internal
+  helper carries `@keywords internal` + `@noRd`. The package now ships
+  a generated `NAMESPACE` exporting 26 functions and a `man/` directory
+  with one `.Rd` per export. No behaviour change.
+- `@seealso` + `@family` Roxygen tags added on every export, grouped
+  into eight families (`io`, `api`, `sync`, `aggregate`,
+  `survey-weights`, `reporting`, `scaffolding`, `audit`).
+- `r/_pkgdown.yml` — pkgdown reference site config with the eight
+  grouped sections; UNICEF cyan/navy bootstrap theme.
+- `r/LICENSE` — CRAN-style 2-line MIT pointer so `License: MIT + file
+  LICENSE` resolves under `R CMD check`.
+- `r/R/zzz.R` — single shared `.cso_require()` helper plus
+  `utils::globalVariables()` declarations for dplyr / tidyr NSE
+  references. Previous duplicate `.cso_require()` definitions in
+  `aggregate_data_v2.R` and `generate_markdown_report.R` removed; calls
+  moved into public function bodies to avoid source-time side effects.
+- Every R `stop()` / `warning()` now follows the same three-part
+  envelope as Python: `[cso_toolkit.<func>] WHAT.\n  Why: ...\n  Fix:
+  ...` with `call. = FALSE`.
+- `r/DESCRIPTION` — version bumped to `0.2.1.9000` (dev) ahead of the
+  next release. `Imports:` now lists `dplyr`, `tidyr`, `tibble`,
+  `rlang` (previously only `data.table` / `digest` / `jsonlite` /
+  `yaml` / `readr`). `Suggests:` adds `readxl` and `writexl`.
+- `R CMD check` now passes 0 errors / 0 warnings / 1 environmental
+  note (was 1 error / 4 warnings / 3 notes).
+
+**Sync / vendoring infrastructure:**
+
+- `templates/.toolkit_manifest.yml` — header expanded with a field-by-field
+  reference; `pulled_version` bumped to `v0.2.0`; sample `vendored:` list
+  now mentions the seven optional helpers as commented-out entries so
+  consumers can opt in without re-deriving the file list.
+- `r/tests/manual/check_consumer_side.R` — manual smoke test that
+  simulates a consumer repo, drops a manifest into it, sources the
+  vendored helpers, and calls `cso_toolkit_check()` end-to-end against
+  the live GitHub API. Use as a release-eve verification.
+
+**Documentation:**
+
+- `r/README.md`, `python/README.md`, `stata/README.md` — new
+  per-language top-level READMEs with install paths, layout, quick
+  start, mode contract, error envelope, testing.
+- Top-level `README.md` Status + Versioning bullets refreshed to
+  reflect the v0.2.0 / v0.3.0 release window (previously frozen on
+  v0.1.0-rc1).
+- `r/R/README.md` — added link to Python siblings; manifest example
+  bumped `v0.1.0-rc1 → v0.2.0`.
 
 **R helpers (additions):**
 - `aggregate_data.R` — original `aggregate_data()` (mean / weighted_mean,

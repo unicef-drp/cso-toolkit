@@ -6,7 +6,7 @@
 #           (dw_io.R wraps file IO; dw_api.R wraps external API
 #           access). The contract is: scripts should call dw_save /
 #           dw_use / dw_compare / dw_merge for file IO and
-#           dw_api_fetch / dw_api_cached for external access — never
+#           dw_api_fetch / dw_api_cached for external access -- never
 #           the raw underlying calls. test_scripts() reports
 #           violations so reviewers can enforce the contract in CI.
 #---------------------------------------------------------------------
@@ -38,7 +38,7 @@
   list(id = "io-rds",          family = "io",
        pattern = "(?<![a-zA-Z0-9_.])(?:saveRDS|readRDS)\\s*\\(",
        message = "Direct RDS read / write.",
-       suggest = "dw_use(...) / dw_save(...) — auto-dispatches on .rds."),
+       suggest = "dw_use(...) / dw_save(...) -- auto-dispatches on .rds."),
   list(id = "io-load-save",    family = "io",
        pattern = "(?<![a-zA-Z0-9_.])(?:save|load)\\s*\\(",
        message = "Direct save() / load() for .RData.",
@@ -46,23 +46,23 @@
   list(id = "io-dta",          family = "io",
        pattern = "(?<![a-zA-Z0-9_.])(?:haven::)?(?:read_dta|write_dta|read_stata|write_stata)\\s*\\(",
        message = "Direct Stata .dta read / write.",
-       suggest = "dw_use(...) / dw_save(...) — auto-dispatches on .dta."),
+       suggest = "dw_use(...) / dw_save(...) -- auto-dispatches on .dta."),
   list(id = "io-xlsx",         family = "io",
        pattern = "(?<![a-zA-Z0-9_.])(?:readxl::|openxlsx::|writexl::)?(?:read_xlsx|read_excel|write_xlsx|write\\.xlsx|read\\.xlsx)\\s*\\(",
        message = "Direct Excel read / write.",
-       suggest = "dw_use(...) / dw_save(...) — auto-dispatches on .xlsx (single + multi-sheet)."),
+       suggest = "dw_use(...) / dw_save(...) -- auto-dispatches on .xlsx (single + multi-sheet)."),
   list(id = "io-parquet",      family = "io",
        pattern = "(?<![a-zA-Z0-9_.])(?:arrow::)?(?:read_parquet|write_parquet)\\s*\\(",
        message = "Direct Parquet read / write.",
-       suggest = "dw_use(...) / dw_save(...) — auto-dispatches on .parquet."),
+       suggest = "dw_use(...) / dw_save(...) -- auto-dispatches on .parquet."),
   list(id = "io-json-file",    family = "io",
        pattern = "(?<![a-zA-Z0-9_.])(?:jsonlite::)?(?:read_json|write_json)\\s*\\(",
        message = "Direct JSON file read / write.",
-       suggest = "dw_use(...) / dw_save(...) — auto-dispatches on .json."),
+       suggest = "dw_use(...) / dw_save(...) -- auto-dispatches on .json."),
   list(id = "io-yaml",         family = "io",
        pattern = "(?<![a-zA-Z0-9_.])(?:yaml::)?(?:read_yaml|write_yaml|yaml\\.load_file)\\s*\\(",
        message = "Direct YAML read / write.",
-       suggest = "dw_use(...) / dw_save(...) — auto-dispatches on .yaml / .yml. (Profile YAML config load is exempt — add `# cso-allow: io-yaml`.)"),
+       suggest = "dw_use(...) / dw_save(...) -- auto-dispatches on .yaml / .yml. (Profile YAML config load is exempt -- add `# cso-allow: io-yaml`.)"),
 
   # ---- API commands wrapped by dw_api.R (use dw_api_fetch / dw_api_cached) ----
   list(id = "api-httr",        family = "api",
@@ -98,8 +98,8 @@
 #' `dw_api.R` is meant to wrap. The contract this enforces is:
 #'
 #' - File IO must go through `dw_save()` / `dw_use()` / `dw_compare()` /
-#'   `dw_merge()` — never `read_csv()`, `write_xlsx()`, `saveRDS()`, etc.
-#' - External APIs must go through `dw_api_fetch()` / `dw_api_cached()` —
+#'   `dw_merge()` -- never `read_csv()`, `write_xlsx()`, `saveRDS()`, etc.
+#' - External APIs must go through `dw_api_fetch()` / `dw_api_cached()` --
 #'   never `httr::GET()`, `rsdmx::readSDMX()`, `wbstats::wb_data()`, etc.
 #'
 #' Per-line escape hatch: add a trailing `# cso-allow: <rule-id>` comment
@@ -114,7 +114,7 @@
 #'   must call the wrapped commands).
 #' @param ignore_dirs Character vector. Directory basenames to skip (e.g.
 #'   `"renv"`, `"packrat"`, `".git"`).
-#' @param custom_rules Optional list of additional rules — each element a
+#' @param custom_rules Optional list of additional rules -- each element a
 #'   list with `id`, `pattern`, `family`, `message`, `suggest`. Merged with
 #'   the built-in registry.
 #' @param error_on_violation Logical. If `TRUE`, `stop()` after reporting
@@ -136,6 +136,10 @@
 #' # Allow a specific line:
 #' # config <- yaml::read_yaml(config_path)  # cso-allow: io-yaml
 #' }
+#' @seealso [review_profile()] for the profile-level audit; [dw_save()] /
+#'   [dw_use()] and [dw_api_fetch()] (the toolkit functions whose direct
+#'   bypasses this auditor catches).
+#' @family audit
 #' @export
 test_scripts <- function(path,
                          pattern = "\\.R$",
@@ -149,7 +153,12 @@ test_scripts <- function(path,
                          custom_rules = NULL,
                          error_on_violation = FALSE,
                          verbose = TRUE) {
-  if (!file.exists(path)) stop("Path not found: ", path)
+  if (!file.exists(path)) {
+    stop(sprintf(
+      "[cso_toolkit.test_scripts] Path not found: %s\n  Fix: pass an existing file or directory. Relative paths resolve against %s.",
+      path, getwd()
+    ), call. = FALSE)
+  }
 
   files <- if (dir.exists(path)) {
     all <- list.files(path, pattern = pattern, recursive = recursive,
@@ -224,16 +233,20 @@ test_scripts <- function(path,
                     out$message[i], out$snippet[i], out$suggest[i]))
       }
     } else {
-      cat("✅ Clean.\n")
+      cat("[OK] Clean.\n")
     }
     cat(strrep("-", 72), "\n", sep = "")
   }
 
   if (isTRUE(error_on_violation) &&
       any(out$family %in% c("io", "api"))) {
-    stop(sprintf("cso-toolkit contract: %d violation(s) found across %d file(s).",
-                 nrow(out), length(unique(out$file))),
-         call. = FALSE)
+    offenders <- utils::head(unique(out$file), 5)
+    more <- if (length(unique(out$file)) > 5) sprintf(" (and %d more)", length(unique(out$file)) - 5) else ""
+    stop(sprintf(
+      "[cso_toolkit.test_scripts] Contract audit failed: %d violation(s) across %d file(s).\n  Offending files%s:\n    %s\n  Fix: replace raw IO / HTTP calls with their cso-toolkit equivalents (`dw_save` / `dw_use` / `dw_api_fetch`). For the rare legitimate exceptions, append `# cso-allow: <rule-id>` to the offending line.",
+      nrow(out), length(unique(out$file)), more,
+      paste(offenders, collapse = "\n    ")
+    ), call. = FALSE)
   }
 
   invisible(out)

@@ -1,12 +1,35 @@
+# ---------------------------------------------------------------------------
+# .toolkit_manifest.yml — consumer-repo vendoring manifest
+# ---------------------------------------------------------------------------
+#
 # Vendor this file into <consumer-repo>/00_functions/.toolkit_manifest.yml
 # and pin the version that matches the vendored helpers.
 #
-# `cso_toolkit_check()` reads this file, queries the GitHub API for the
+# cso_toolkit_check() reads this file, queries the GitHub API for the
 # latest tag on `source:`, and warns if the consumer is behind.
+# cso_toolkit_pull() (planned) will refresh `vendored:` files to a target
+# tag and update `pulled_version` / `pulled_date`.
+#
+# Fields:
+#   source         — GitHub owner/repo of the upstream toolkit.
+#   pulled_version — the tag at the time of the most recent pull
+#                    (e.g. "v0.2.0"). Use "inrepo" if the helpers were
+#                    edited locally and you do not want sync warnings.
+#   pulled_date    — ISO-8601 date of the pull. Free-form; the helper
+#                    does not parse it.
+#   pulled_by      — human breadcrumb for who ran the pull.
+#   vendored       — list of files copied from cso-toolkit/r/R/ into the
+#                    consumer's 00_functions/.
+#   local_edits    — files in `vendored:` that have local divergence;
+#                    `cso_toolkit_pull()` skips these on update.
+#
+# Keep this file in version control alongside the vendored helpers.
+# Update it every time you re-pull the toolkit.
+# ---------------------------------------------------------------------------
 
 source: "unicef-drp/cso-toolkit"
-pulled_version: "v0.1.0-rc1"
-pulled_date: "2026-05-24"
+pulled_version: "v0.2.0"
+pulled_date: "2026-05-25"
 pulled_by: "<your-name>"
 
 # Files vendored from cso-toolkit/r/R/ into consumer's 00_functions/
@@ -14,6 +37,14 @@ vendored:
   - dw_io.R
   - dw_api.R
   - cso_toolkit_sync.R
+  # Optional — copy only the ones your pipeline uses:
+  # - aggregate_data.R
+  # - aggregate_data_v2.R
+  # - dw_nestweight.R
+  # - generate_markdown_report.R
+  # - create_sector_script.R
+  # - profile_helpers.R
+  # - test_scripts.R
 
 # Local edits applied on top of vendored files. List paths here so that
 # `cso_toolkit_pull()` skips them on update. (Empty by default.)
