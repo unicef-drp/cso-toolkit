@@ -51,6 +51,42 @@ from .dw_io import dw_save, dw_use
 _log = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
+# Secret redaction for provenance sidecars (Copilot finding on PR #7)
+# ---------------------------------------------------------------------------
+
+#: Sensitive key substrings.  When a fetch_arg key (case-insensitive)
+#: contains any of these, the corresponding value is replaced with
+#: ``"<redacted>"`` in the persisted ``.provenance.json`` so credentials
+#: passed by the caller never reach disk.
+_REDACT_SUBSTRINGS = (
+    "token", "auth", "password", "passwd", "secret",
+    "api_key", "apikey", "client_secret", "headers", "cookie",
+    "bearer", "private",
+)
+
+
+def _redact_sensitive(d: Any) -> Any:
+    """Return a copy of ``d`` with sensitive values replaced by ``"<redacted>"``.
+
+    Walks dicts recursively.  Keys whose lowercased form contains any
+    entry in :data:`_REDACT_SUBSTRINGS` get their value replaced.
+    Lists / tuples / scalars are walked but only dict-keys drive
+    redaction decisions.
+    """
+    if isinstance(d, dict):
+        out: dict = {}
+        for k, v in d.items():
+            if any(s in str(k).lower() for s in _REDACT_SUBSTRINGS):
+                out[k] = "<redacted>"
+            else:
+                out[k] = _redact_sensitive(v)
+        return out
+    if isinstance(d, (list, tuple)):
+        return type(d)(_redact_sensitive(x) for x in d)
+    return d
+
+
+# ---------------------------------------------------------------------------
 # Cache path resolution
 # ---------------------------------------------------------------------------
 
@@ -247,7 +283,9 @@ def dw_api_fetch(
         ),
         "elapsed_secs": round(elapsed, 3),
         "refresh_flag": bool(refresh),
-        "fetch_args": dict(kwargs),
+        # Redact known sensitive keys so credentials passed via kwargs
+        # (token=..., headers={"Authorization": ...}) never land on disk.
+        "fetch_args": _redact_sensitive(dict(kwargs)),
     }
     if metadata is not None:
         api_metadata.update(metadata)
@@ -454,7 +492,23 @@ def _fetch_uis(endpoint: str = "indicators",
     records = body.get("records") if isinstance(body, dict) else None
     if records is not None:
         return pd.DataFrame(records)
-    return body  # type: ignore[return-value]
+    # Some UIS endpoints return a top-level array; coerce.
+    if isinstance(body, list):
+        return pd.DataFrame(body)
+    # Last resort: dict-of-scalars can be one-row.  Anything else
+    # (deeply nested) doesn't fit the default CSV cache and would
+    # crash later inside dw_save.  Raise here with a useful hint.
+    if isinstance(body, dict) and all(
+        not isinstance(v, (list, dict)) for v in body.values()
+    ):
+        return pd.DataFrame([body])
+    raise RuntimeError(
+        f"[cso_toolkit.dw_api/_fetch_uis] UIS endpoint {endpoint!r} returned "
+        f"a non-tabular response (top-level type {type(body).__name__}). "
+        "Fix: either (a) pass ext=\"pkl\" / ext=\"json\" to dw_api_fetch() "
+        "so the cache uses a non-tabular serialisation, or (b) reshape "
+        "the response upstream of dw_api_fetch."
+    )
 
 
 def _fetch_sdmx(providerId: str, flowRef: str, key: str,

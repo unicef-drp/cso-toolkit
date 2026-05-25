@@ -180,6 +180,39 @@ def main() -> int:
     assert res is None  # no manifest -> None
     print("[cso_toolkit_sync] check with missing manifest -> None OK")
 
+    # --- Regression: dw_is_canonical no longer matches sibling prefixes.
+    #     Copilot finding on PR #7: a root of "/data/wrk-can" must NOT
+    #     match a path under "/data/wrk-canary/...".
+    state.configure(teamsWrkDataCanonical="/data/wrk-can")
+    assert cso_toolkit.dw_is_canonical("/data/wrk-can/ed/x.csv")
+    assert cso_toolkit.dw_is_canonical("/data/wrk-can")
+    assert not cso_toolkit.dw_is_canonical("/data/wrk-canary/ed/x.csv")
+    assert not cso_toolkit.dw_is_canonical("/data/wrk-canopen")
+    print("[dw_io] dw_is_canonical no longer matches sibling prefixes OK")
+
+    # --- Regression: dw_api fetch_args secrets are redacted in provenance.
+    #     Copilot finding on PR #7.
+    from cso_toolkit import dw_api as _dwapi
+    redacted = _dwapi._redact_sensitive({
+        "indicator": "SE.LPV.PRIM",
+        "token": "abc123",
+        "headers": {"Authorization": "Bearer XYZ"},
+        "nested": {"api_key": "leaky"},
+    })
+    assert redacted["indicator"] == "SE.LPV.PRIM"
+    assert redacted["token"] == "<redacted>"
+    assert redacted["headers"] == "<redacted>"
+    assert redacted["nested"]["api_key"] == "<redacted>"
+    print("[dw_api] _redact_sensitive scrubs token/headers/api_key OK")
+
+    # --- Regression: _get returns falsy values as-is (only None falls
+    #     back to the default).  Copilot finding on PR #7.
+    state.configure(dw_apis_allowed=False)
+    assert state._get("dw_apis_allowed", True) is False
+    state.configure(dw_apis_allowed=True)
+    assert state._get("dw_apis_allowed", False) is True
+    print("[_state] _get treats None (not falsy) as the default trigger OK")
+
     print("\nAll smoke checks passed.")
     return 0
 

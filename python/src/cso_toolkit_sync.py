@@ -153,9 +153,12 @@ def cso_toolkit_check(quiet: bool = True) -> Optional[dict]:
 
     if not quiet:
         if updates_available:
+            # Use pinned_norm so the log doesn't render "vv0.2.0" when
+            # the manifest already includes the leading 'v' (Copilot
+            # finding on PR #7).
             _log.info(
                 "[cso-toolkit] %s: pinned v%s -> upstream %s (newer tag available)",
-                source, pinned, upstream,
+                source, pinned_norm, upstream,
             )
             _log.info("              Run cso_toolkit_diff() to see what changed.")
             _log.info("              Run cso_toolkit_pull(%r) to refresh.", upstream)

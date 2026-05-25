@@ -119,13 +119,26 @@ def aggregate_data(
             "Country_Coverage": int(g["_non_na_count"].sum()),
         })
 
-    out = df.groupby(list(by), dropna=False, as_index=False).apply(
-        _agg, include_groups=False,
-    ).reset_index(drop=True)
+    # `include_groups=` was added in pandas 2.2; fall back gracefully on
+    # older 2.x (Copilot finding on PR #7).  Mirrors the same try/except
+    # in aggregate_data_v2().
+    try:
+        out = df.groupby(list(by), dropna=False, as_index=False).apply(
+            _agg, include_groups=False,
+        ).reset_index(drop=True)
+    except TypeError:
+        out = df.groupby(list(by), dropna=False, as_index=False).apply(
+            _agg,
+        ).reset_index(drop=True)
 
     # Re-attach by columns (apply drops them with as_index=False in some pandas versions)
     if not all(b in out.columns for b in by):
-        out = df.groupby(list(by), dropna=False).apply(_agg).reset_index()
+        try:
+            out = df.groupby(list(by), dropna=False).apply(
+                _agg, include_groups=False
+            ).reset_index()
+        except TypeError:
+            out = df.groupby(list(by), dropna=False).apply(_agg).reset_index()
 
     if not pop_coverage:
         out = out.drop(columns=["Pop_Covered"], errors="ignore")
