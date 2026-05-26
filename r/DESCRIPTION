@@ -36,6 +36,9 @@ Suggests:
     openxlsx,
     readxl,
     rsdmx,
+    testthat (>= 3.0.0),
     wbstats,
+    withr,
     writexl
+Config/testthat/edition: 3
 RoxygenNote: 7.3.3
