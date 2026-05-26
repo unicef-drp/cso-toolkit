@@ -79,6 +79,30 @@ dw_z_available: bool = False
 #: ``.toolkit_manifest.yml``.
 dwFunct: Optional[str] = None
 
+# ---------------------------------------------------------------------------
+# Remote-URL freeze (B1 from DW-Production alignment audit)
+# ---------------------------------------------------------------------------
+
+#: Sequence of regex patterns.  When :func:`cso_toolkit.dw_use` is
+#: called with an ``http://`` or ``https://`` path, the URL must match
+#: at least one entry here or the call refuses with the standard
+#: error envelope.  Empty by default — consumers extend in their
+#: profile, e.g.::
+#:
+#:     _state.configure(dw_url_allowlist=[
+#:         r"^https://raw\.githubusercontent\.com/your-org/",
+#:     ])
+dw_url_allowlist: tuple = ()
+
+#: Filesystem root for the frozen-cache that the remote-URL freeze
+#: writes into.  Defaults to ``<githubFolder>/_frozen`` when
+#: ``githubFolder`` is set, otherwise ``<cwd>/_frozen``.
+dw_frozen_root: Optional[str] = None
+
+#: Parent folder for the consumer's GitHub-cloned repos.  Used as a
+#: fallback for ``dw_frozen_root`` resolution.
+githubFolder: Optional[str] = None
+
 
 # ---------------------------------------------------------------------------
 # Configure helper
@@ -91,6 +115,7 @@ _PUBLIC_KEYS = (
     "dw_mode", "dw_apis_allowed",
     "dwZDrive", "dw_z_available",
     "dwFunct",
+    "dw_url_allowlist", "dw_frozen_root", "githubFolder",
 )
 
 

@@ -107,9 +107,15 @@ def _dw_api_cache_path(api: str, cache_key: str, ext: str = "csv") -> str:
 
 
 def _dw_api_default_ext(api: str) -> str:
-    """Per-API default cache extension."""
-    # Shapes that don't serialise cleanly to CSV go to pickle.
-    if api in ("wb_indicators", "json_get"):
+    """Per-API default cache extension.
+
+    Shapes that don't serialise cleanly to CSV go to pickle.  Note
+    that ``http`` returns plain text and ``github_raw`` returns
+    arbitrary text / binary content; CSV would mis-shape both
+    (Copilot-flagged + DW-Production B4 backport — see
+    docs/dw-production-alignment-2026-05-25.md).
+    """
+    if api in ("wb_indicators", "json_get", "http", "github_raw"):
         return "pkl"
     return "csv"
 
