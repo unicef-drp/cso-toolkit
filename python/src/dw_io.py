@@ -1,9 +1,25 @@
 """Uniform read/write helpers for DW-Production Python pipelines.
 
+Toolkit version: 0.4.0
+
 Python port of ``r/R/dw_io.R``.  Auto-dispatch by file extension; same
 mode contract (reviewer sessions cannot write to canonical without an
-explicit override); same Z: drive mirror semantics; same
+explicit override); same Z: drive + Teams mirror semantics; same
 ``.provenance.json`` sidecar emission.
+
+v0.4.0 mode-contract tightening (issue #14):
+
+* **Producer writes are redundant**: every primary write is mirrored
+  to BOTH the Z: drive AND the Teams canonical deposit.  At least one
+  must be available or :func:`dw_save` hard-stops.
+* **Reviewer writes are forbidden** under canonical OR Z: drive paths
+  (was canonical-only).
+* **Reviewer reads are network-first**: Teams → Z: → repo-local
+  fallback (emits ``provenance`` warning) → hard-stop.  Producer reads
+  remain local-first (v0.3.0 preserved).
+* **`overwrite` default flipped** ``True → False`` for :func:`dw_save`
+  — protects against silent re-write of frozen deposits.  Breaking
+  change; see ``NEWS.md`` migration notes.
 
 Mode is a SESSION property only — set by ``dw_mode`` in
 ``~/.config/user_config.yml`` and read by ``profile_DW-Production.py``
@@ -14,7 +30,7 @@ mode-aware in the profile; helpers below resolve through them.
 
 Public entry points:
 
-* :func:`dw_save` — uniform write with auto-dispatch + Z: mirror
+* :func:`dw_save` — uniform write with auto-dispatch + Teams + Z: mirror
 * :func:`dw_use` — uniform read with auto-dispatch + Z: integrity check
 * :func:`dw_compare` — added / removed / changed comparison
 * :func:`dw_merge` — Stata-style merge with cardinality assert
@@ -22,6 +38,7 @@ Public entry points:
 * :func:`dw_is_canonical` — canonical-root test
 * :func:`dw_verify_z` — Teams vs Z: integrity check
 * :func:`dw_isid` — Stata-style uniqueness check
+* :func:`dw_toolkit_version` — return the version stamp ("0.4.0")
 """
 
 from __future__ import annotations
@@ -89,6 +106,35 @@ def _dw_root_for(kind: str) -> Optional[str]:
         f"  Fix: pass kind=\"wrk\" (working data), \"raw\" (raw inputs), "
         "or \"meta\" (metadata)."
     )
+
+
+#: IO-contract version string — names the *behaviour-contract release*
+#: that this `dw_io` exposes.  This is the version vendored consumers
+#: should pin against; it is set independently of the package-build
+#: versions (``r/DESCRIPTION`` Version + ``python/pyproject.toml``
+#: version), which roll along the development line (e.g. R
+#: ``0.3.0.9000`` and Python ``0.4.0.dev0`` until the release PR bumps
+#: both to ``0.4.0``).  Exposed publicly via :func:`dw_toolkit_version`
+#: so callers can stamp logs / provenance and assert minimum-contract
+#: requirements in profile scripts.
+_TOOLKIT_VERSION = "0.4.0"
+
+
+def dw_toolkit_version() -> str:
+    """Return the cso-toolkit semver in sync with R and Python sides.
+
+    Returns
+    -------
+    str
+        Semver string (``"0.4.0"``).
+
+    Examples
+    --------
+    >>> from cso_toolkit import dw_toolkit_version
+    >>> dw_toolkit_version()
+    '0.4.0'
+    """
+    return _TOOLKIT_VERSION
 
 
 # ---------------------------------------------------------------------------
@@ -263,6 +309,110 @@ def _dw_mirror_to_z(primary_path: Union[str, Path], verbose: bool = True) -> Opt
         warnings.warn(
             f"[dw_save] Z: mirror FAILED for: {z_path} ({exc!s}) "
             "(write to Teams primary succeeded; Z: is now out of sync)",
+            stacklevel=2,
+        )
+        return None
+
+
+# ---------------------------------------------------------------------------
+# v0.4.0 mirror helpers (Teams + Z: redundant writes; reviewer-mode guards)
+# ---------------------------------------------------------------------------
+
+def _dw_path_is_under_z(path: Union[str, Path]) -> bool:
+    """Test whether ``path`` lies under the configured Z: drive root.
+
+    Used by the v0.4.0 reviewer-mode write guard, which forbids reviewer
+    sessions from writing under the canonical Teams deposit OR the Z:
+    drive mirror (was canonical-only in v0.3.0).
+    """
+    z_root = _state._get("dwZDrive")
+    if not z_root:
+        return False
+    pn = _normalize(path)
+    zn = _normalize(z_root).rstrip("/")
+    return pn == zn or pn.startswith(zn + "/")
+
+
+def _dw_teams_mirror_path(primary_path: Union[str, Path]) -> Optional[str]:
+    """Translate a repo-local primary path to its Teams-canonical equivalent.
+
+    Walks the ``teamsWrkData -> teamsWrkDataCanonical`` and
+    ``teamsRawData -> teamsRawDataCanonical`` prefix maps.  Returns
+    ``None`` when none of the configured roots match (e.g. the primary
+    path already lies under canonical, or it lies entirely outside any
+    configured Teams root — typical of an ad-hoc / sandbox write).
+
+    The R sibling helper is ``.dw_teams_mirror_path`` in ``dw_io.R``.
+    """
+    pn = _normalize(primary_path)
+    pairs = [
+        (_state._get("teamsWrkData"), _state._get("teamsWrkDataCanonical")),
+        (_state._get("teamsRawData"), _state._get("teamsRawDataCanonical")),
+    ]
+    for src, dst in pairs:
+        if not (src and dst):
+            continue
+        src_n = _normalize(src).rstrip("/")
+        dst_n = _normalize(dst).rstrip("/")
+        if src_n == dst_n:
+            continue
+        if pn == src_n or pn.startswith(src_n + "/"):
+            rel = pn[len(src_n):].lstrip("/")
+            return f"{dst_n}/{rel}".replace("//", "/")
+    return None
+
+
+def _dw_remote_mirrors(primary_path: Union[str, Path]) -> dict:
+    """Derive the Teams-canonical and Z: drive paths for a primary write.
+
+    Returns
+    -------
+    dict
+        Keys ``"teams"`` and ``"z"``.  Each is a ``str`` filesystem path
+        or ``None`` when the corresponding mirror is not available /
+        configured.  In the canonical case (``primary_path`` is already
+        under canonical), ``"teams"`` is the primary itself so the
+        producer logic still writes Z: from it.
+    """
+    pn = _normalize(primary_path)
+    if dw_is_canonical(pn):
+        # primary IS canonical — Z: derived from primary, Teams = primary
+        z = _dw_z_mirror_path(pn) if _state._get("dw_z_available") else None
+        return {"teams": pn, "z": z}
+    teams = _dw_teams_mirror_path(pn)
+    z = None
+    if teams is not None and _state._get("dw_z_available"):
+        z = _dw_z_mirror_path(teams)
+    return {"teams": teams, "z": z}
+
+
+def _dw_mirror_to_teams(primary_path: Union[str, Path],
+                        teams_path: str,
+                        verbose: bool = True) -> Optional[str]:
+    """Carbon-copy a producer write from its primary path to Teams canonical.
+
+    Non-blocking: emits an envelope-shaped warning on failure but does
+    NOT abort the calling :func:`dw_save`.  Mirrors the R helper
+    ``.dw_mirror_to_teams``.
+    """
+    if teams_path == _normalize(primary_path):
+        # primary already IS the Teams write — nothing to mirror
+        return teams_path
+    try:
+        Path(teams_path).parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(primary_path, teams_path)
+        if verbose:
+            _log.info("[dw_save] Teams mirror -> %s", teams_path)
+        return teams_path
+    except OSError as exc:
+        warnings.warn(
+            f"[cso_toolkit.dw_save] Teams mirror FAILED for: "
+            f"{teams_path} ({exc!s})\n"
+            "  Reason: Teams sync may be paused, the folder may be "
+            "locked, or the network share is unreachable.\n"
+            "  Fix: confirm the Teams folder is reachable / synced and "
+            "retry; the local primary write succeeded so no data is "
+            "lost — only the canonical deposit is out of sync.",
             stacklevel=2,
         )
         return None
@@ -535,11 +685,10 @@ def dw_save(
     isid: Optional[Sequence[str]] = None,
     metadata: Optional[Mapping[str, Any]] = None,
     compress: bool = False,
-    overwrite: bool = True,
+    overwrite: bool = False,
     provenance: bool = True,
     vintage: Optional[str] = None,
     allow_canonical_write: bool = False,
-    mirror_to_z: bool = True,
     **kwargs: Any,
 ) -> str:
     """Save an object to disk, dispatching on the file extension.
@@ -565,20 +714,29 @@ def dw_save(
     * ``name=...`` + ``sector`` / ``kind`` / ``vintage`` — resolved via
       :func:`dw_resolve_path`.
 
-    Mode contract: enforced at call site.  Writes resolving to canonical
-    paths in a reviewer session raise ``PermissionError`` unless
-    ``allow_canonical_write=True`` (Database Manager bootstrap).
+    Mode contract (v0.4.0): enforced at call site.
 
-    Z: mirror: automatic.  When ``path`` resolves under canonical AND
-    ``_state.dw_z_available`` is ``True``, the primary write is
-    carbon-copied to the Z: equivalent.
+    * **Reviewer mode** — writes resolving to canonical Teams paths OR
+      Z: drive paths raise ``PermissionError`` unless
+      ``allow_canonical_write=True`` (Database Manager bootstrap).
+    * **Producer mode** — at least one of Teams (preferred) or Z: drive
+      must be available; otherwise :func:`dw_save` hard-stops.  Every
+      successful write fans out to BOTH mirrors when both are available.
+
+    Overwrite gate (v0.4.0, breaking): ``overwrite=False`` is the new
+    default.  The check examines ALL three destinations (primary, Teams
+    mirror, Z: mirror) — :func:`dw_save` raises ``FileExistsError`` if
+    ANY of them exists.  Pass ``overwrite=True`` for the v0.3.0
+    behavior.
 
     Quality contract: ``isid=("col1", "col2", ...)`` runs :func:`dw_isid`
     before writing.
 
     Provenance sidecar: ``provenance=True`` writes
     ``<path>.provenance.json`` with timestamp, user, dw_mode, sha256,
-    schema, and the user-supplied ``metadata``.
+    schema, and the user-supplied ``metadata``.  The sidecar is also
+    carbon-copied to each remote mirror so reviewer sessions can verify
+    provenance without round-tripping through the producer.
 
     Parameters
     ----------
@@ -597,17 +755,22 @@ def dw_save(
     compress
         Gzip CSV/TSV/TXT writes; appends ``.gz``.
     overwrite
-        If ``False``, raise when the target already exists.
+        If ``False`` (the v0.4.0 default), raise when ANY of the three
+        destinations already exists.  Set ``True`` to replace.
     provenance
         Whether to write the ``.provenance.json`` sidecar.
     vintage
         Optional vintage tag recorded in the sidecar.
     allow_canonical_write
         Bypass the reviewer-mode guard.
-    mirror_to_z
-        When the write lands under canonical, carbon-copy to Z:.
     **kwargs
         Format-specific arguments passed through to the underlying writer.
+
+        .. note::
+           The legacy ``mirror_to_z`` keyword (v0.3.0 and earlier) is no
+           longer accepted — Z: mirror is now automatic and paired with
+           the Teams mirror.  Passing it emits a deprecation warning and
+           is otherwise ignored.
 
     Returns
     -------
@@ -646,20 +809,61 @@ def dw_save(
         path = dw_resolve_path(name=name, sector=sector, kind=kind, vintage=vintage)
     path = str(path)
 
-    # Mode contract — reviewer-session must not write canonical
+    # v0.3.0 -> v0.4.0 deprecation: mirror_to_z used to be a kwarg, now
+    # automatic.  Silently swallow + warn if a caller still passes it
+    # so old client code does not break hard.
+    if "mirror_to_z" in kwargs:
+        kwargs.pop("mirror_to_z")
+        warnings.warn(
+            "[cso_toolkit.dw_save] The `mirror_to_z` keyword is deprecated "
+            "as of v0.4.0 (Z: mirror is now automatic and paired with the "
+            "Teams mirror).  Ignoring.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
+    # --- Mode contract (v0.4.0: broadened reviewer guard) ---
     is_canon = dw_is_canonical(path)
-    if is_canon and not allow_canonical_write:
-        if _state._get("dw_mode") == "reviewer":
+    is_under_z = _dw_path_is_under_z(path)
+    dw_mode = _state._get("dw_mode")
+    is_reviewer = dw_mode == "reviewer"
+    is_producer = dw_mode == "producer"
+
+    if is_reviewer and not allow_canonical_write and (is_canon or is_under_z):
+        where = "Z: drive" if is_under_z else "canonical (Teams) deposit"
+        raise PermissionError(
+            f"[cso_toolkit.dw_save] Reviewer mode forbids writes to "
+            f"{where}: {path}\n"
+            "  Reviewer sessions must keep canonical + Z: deposits "
+            "read-only to preserve vintage permanence; writes go to "
+            "the sandbox.\n"
+            "  Fix:\n"
+            "    1. Resolve a sandbox path instead (the profile's "
+            "teamsWrkData usually points there in reviewer mode), OR\n"
+            "    2. If this is a deliberate Database Manager bootstrap, "
+            "pass `allow_canonical_write=True` to bypass the guard."
+        )
+
+    # --- Producer pre-flight (v0.4.0: at least one mirror required) ---
+    mirrors = _dw_remote_mirrors(path)
+    teams_mirror = mirrors["teams"]
+    z_mirror = mirrors["z"]
+    if is_producer and not allow_canonical_write and not is_canon:
+        if teams_mirror is None and z_mirror is None:
             raise PermissionError(
-                f"[cso_toolkit.dw_save] Reviewer mode forbids writes "
-                f"under canonical: {path}\n"
-                "  Reviewer sessions must keep canonical deposits read-only "
-                "to preserve vintage permanence; writes go to the sandbox.\n"
+                f"[cso_toolkit.dw_save] Producer-mode write requires at "
+                f"least one of Teams (preferred) or Z: drive to be "
+                f"available, but neither is configured / reachable "
+                f"for: {path}\n"
+                "  Producer outputs are redundant by design: every "
+                "deposit fans out to BOTH mirrors when possible, and "
+                "we refuse to ship a write that lives only on the "
+                "producer's laptop.\n"
                 "  Fix:\n"
-                "    1. Resolve a sandbox path instead (the profile's "
-                "teamsWrkData usually points there in reviewer mode), OR\n"
-                "    2. If this is a deliberate Database Manager bootstrap, "
-                "pass `allow_canonical_write=True` to bypass the guard."
+                "    1. Configure _state.teamsWrkDataCanonical / "
+                "teamsRawDataCanonical and ensure Teams is synced, AND/OR\n"
+                "    2. Mount the Z: drive and set _state.dwZDrive + "
+                "_state.dw_z_available=True, THEN re-run."
             )
 
     if isid is not None and isinstance(x, pd.DataFrame):
@@ -724,13 +928,32 @@ def dw_save(
             "extensions, or extend dw_save's dispatch table."
         )
 
-    if not overwrite and Path(path).exists():
-        Path(tmp_path).unlink()
-        raise FileExistsError(
-            f"[cso_toolkit.dw_save] File exists and overwrite=False: {path}\n"
-            "  Fix: pass overwrite=True to replace the existing file, "
-            "or write to a different path."
-        )
+    # v0.4.0 overwrite gate: refuse if ANY of primary / Teams / Z: exists.
+    # The mirror destinations only count when this write will actually fan
+    # out to them (producer mode + canonical / DBM bootstrap).  Reviewer
+    # writes are sandbox-only, so we should not block them on the
+    # existence of an unrelated Teams/Z: file at the derived path.
+    will_fan_out = is_producer or (is_canon and allow_canonical_write)
+    if not overwrite:
+        existing = []
+        if Path(path).exists():
+            existing.append(("primary", path))
+        if will_fan_out:
+            if (teams_mirror is not None and teams_mirror != path
+                    and Path(teams_mirror).exists()):
+                existing.append(("Teams mirror", teams_mirror))
+            if (z_mirror is not None and z_mirror != path
+                    and Path(z_mirror).exists()):
+                existing.append(("Z: mirror", z_mirror))
+        if existing:
+            Path(tmp_path).unlink(missing_ok=True)
+            where = "\n    ".join(f"{label}: {p}" for label, p in existing)
+            raise FileExistsError(
+                f"[cso_toolkit.dw_save] Refusing to overwrite existing "
+                f"deposit (overwrite=False):\n    {where}\n"
+                "  Fix: pass overwrite=True to replace the deposit, or "
+                "write to a different path / vintage."
+            )
     try:
         Path(tmp_path).replace(path)
     except OSError as exc:
@@ -746,8 +969,59 @@ def dw_save(
         _write_provenance(path, x, fmt=fmt_dispatch,
                           vintage=vintage, metadata=metadata, isid=isid)
 
-    if is_canon and mirror_to_z:
-        _dw_mirror_to_z(path)
+    # --- v0.4.0 redundant mirror fan-out ---
+    # Only producer-mode writes (and DBM-bootstrap canonical writes) fan
+    # out to Teams + Z:.  Reviewer-mode writes land only in the sandbox.
+    if not will_fan_out:
+        return path
+
+    sidecar = f"{path}.provenance.json"
+    if is_canon:
+        # DBM bootstrap path: primary IS canonical, mirror to Z: only.
+        if _state._get("dw_z_available"):
+            mirrored = _dw_mirror_to_z(path)
+            if mirrored and provenance and Path(sidecar).exists():
+                try:
+                    shutil.copy2(sidecar, f"{mirrored}.provenance.json")
+                except OSError as exc:
+                    warnings.warn(
+                        f"[cso_toolkit.dw_save] Z: sidecar mirror FAILED "
+                        f"for: {mirrored}.provenance.json ({exc!s})",
+                        stacklevel=2,
+                    )
+    else:
+        # Standard producer write: fan out to BOTH mirrors.
+        if teams_mirror is not None:
+            teams_done = _dw_mirror_to_teams(path, teams_mirror)
+            if teams_done and provenance and Path(sidecar).exists():
+                try:
+                    shutil.copy2(sidecar, f"{teams_done}.provenance.json")
+                except OSError as exc:
+                    warnings.warn(
+                        f"[cso_toolkit.dw_save] Teams sidecar mirror "
+                        f"FAILED for: {teams_done}.provenance.json "
+                        f"({exc!s})",
+                        stacklevel=2,
+                    )
+        if z_mirror is not None:
+            # Carbon-copy directly from primary (Z: structure is derived
+            # from Teams canonical; we DO NOT want a stale teams_mirror
+            # to seed the Z: copy).
+            try:
+                Path(z_mirror).parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(path, z_mirror)
+                _log.info("[dw_save] Z: mirror -> %s", z_mirror)
+                if provenance and Path(sidecar).exists():
+                    shutil.copy2(sidecar, f"{z_mirror}.provenance.json")
+            except OSError as exc:
+                warnings.warn(
+                    f"[cso_toolkit.dw_save] Z: mirror FAILED for: "
+                    f"{z_mirror} ({exc!s})\n"
+                    "  Reason: Z: drive may be unmounted or unreachable.\n"
+                    "  Fix: confirm the Z: drive is mounted and writable; "
+                    "the Teams + local writes succeeded so no data is lost.",
+                    stacklevel=2,
+                )
 
     return path
 
@@ -907,11 +1181,13 @@ def _resolve_remote_url(url: str) -> str:
     return frozen_path
 
 
-def _resolve_for_read(path: str, fallback_canonical: bool) -> str:
-    """Resolve a read path, falling back to canonical roots when missing."""
-    # Remote URL?  Hand off to the freeze resolver.
-    if path.startswith("http://") or path.startswith("https://"):
-        return _resolve_remote_url(path)
+def _resolve_for_read_producer(path: str, fallback_canonical: bool) -> str:
+    """Producer / unknown-mode read resolution.
+
+    Local-first: try ``path`` as-is; if missing and ``fallback_canonical``
+    is ``True``, walk the ``teamsWrkData -> teamsWrkDataCanonical``
+    (etc.) prefix map.  Preserves v0.3.0 behaviour exactly.
+    """
     if Path(path).exists():
         return path
     if not fallback_canonical:
@@ -951,6 +1227,86 @@ def _resolve_for_read(path: str, fallback_canonical: bool) -> str:
         "  Fix: confirm the file was produced by the upstream pipeline, "
         "or that _state.team*Canonical globals are set to the right roots."
     )
+
+
+def _resolve_for_read_reviewer(path: str, fallback_canonical: bool) -> str:
+    """Reviewer-mode read resolution — network-first.
+
+    Order (v0.4.0): Teams canonical → Z: drive mirror → repo-local
+    fallback (with provenance warning) → hard-stop with envelope-shaped
+    ``FileNotFoundError``.  Reviewers should never silently pick up a
+    local artefact that diverged from the canonical deposit; the
+    warning makes the fallback auditable.
+    """
+    # If the literal path IS canonical AND it exists, use it directly.
+    # Otherwise derive Teams + Z: mirrors and try those first.
+    pn = _normalize(path)
+    if dw_is_canonical(pn) and Path(pn).exists():
+        return pn
+
+    mirrors = _dw_remote_mirrors(pn)
+    teams_path = mirrors["teams"]
+    z_path = mirrors["z"]
+
+    attempted: list[str] = []
+
+    # 1. Teams canonical
+    if teams_path is not None:
+        attempted.append(teams_path)
+        if Path(teams_path).exists():
+            _log.info("[dw_use:reviewer] Reading from Teams canonical: %s",
+                      teams_path)
+            return teams_path
+
+    # 2. Z: drive mirror
+    if z_path is not None:
+        attempted.append(z_path)
+        if Path(z_path).exists():
+            _log.info("[dw_use:reviewer] Reading from Z: drive mirror: %s",
+                      z_path)
+            return z_path
+
+    # 3. Repo-local fallback (with warning)
+    if fallback_canonical and Path(path).exists():
+        warnings.warn(
+            f"[cso_toolkit.dw_use] Reviewer mode: falling back to local "
+            f"copy because Teams + Z: mirrors are unavailable.\n"
+            f"  Local:  {path}\n"
+            f"  Teams:  {teams_path or '<not configured>'}\n"
+            f"  Z:     {z_path or '<not configured>'}\n"
+            "  WARNING: this local file's provenance is unverified — "
+            "it may diverge from the canonical deposit.  Reconnect to "
+            "Teams / Z: before publishing reviewer output.",
+            stacklevel=3,
+        )
+        return path
+
+    # 4. Hard stop
+    attempted.append(path)
+    attempted_str = "\n    ".join(attempted)
+    raise FileNotFoundError(
+        f"[cso_toolkit.dw_use] Reviewer mode could not resolve a read "
+        f"path: file is missing in Teams, Z:, and locally.\n"
+        f"  Attempted:\n    {attempted_str}\n"
+        "  Fix: confirm the file exists on Teams / Z:, OR contact the "
+        "sector producer to publish the missing artefact."
+    )
+
+
+def _resolve_for_read(path: str, fallback_canonical: bool) -> str:
+    """Resolve a read path, dispatching on session mode.
+
+    v0.4.0: reviewer sessions are network-first; producer / unknown
+    sessions are local-first (v0.3.0 preserved).  Remote URLs continue
+    to route through the freeze resolver regardless of mode.
+    """
+    # Remote URL?  Hand off to the freeze resolver.
+    if path.startswith("http://") or path.startswith("https://"):
+        return _resolve_remote_url(path)
+
+    if _state._get("dw_mode") == "reviewer":
+        return _resolve_for_read_reviewer(path, fallback_canonical)
+    return _resolve_for_read_producer(path, fallback_canonical)
 
 
 def dw_use(

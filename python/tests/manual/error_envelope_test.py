@@ -144,8 +144,17 @@ expect(
 )
 
 # --- dw_save: overwrite=False on existing file ---
-state.configure(dw_mode="producer")
+# v0.4.0 producer pre-flight requires at least one mirror — configure
+# a sibling canonical root under the tempdir so the pre-flight passes
+# and the test reaches the overwrite-gate assertion it targets.
 with tempfile.TemporaryDirectory() as tdir:
+    state.configure(
+        dw_mode="producer",
+        teamsWrkData=tdir,
+        teamsWrkDataCanonical=str(Path(tdir) / ".canon"),
+        teamsFolderCanonical=str(Path(tdir) / ".canon"),
+        dw_z_available=False,
+    )
     p = Path(tdir) / "existing.csv"
     p.write_text("a\n1\n", encoding="utf-8")
     expect(
@@ -160,6 +169,13 @@ with tempfile.TemporaryDirectory() as tdir:
 
 # --- dw_save: unsupported extension ---
 with tempfile.TemporaryDirectory() as tdir:
+    state.configure(
+        dw_mode="producer",
+        teamsWrkData=tdir,
+        teamsWrkDataCanonical=str(Path(tdir) / ".canon"),
+        teamsFolderCanonical=str(Path(tdir) / ".canon"),
+        dw_z_available=False,
+    )
     expect(
         "dw_save unsupported extension",
         ValueError,

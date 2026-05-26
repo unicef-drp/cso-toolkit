@@ -13,11 +13,10 @@ dw_save(
   isid = NULL,
   metadata = NULL,
   compress = FALSE,
-  overwrite = TRUE,
+  overwrite = FALSE,
   provenance = TRUE,
   vintage = NULL,
   allow_canonical_write = FALSE,
-  mirror_to_z = TRUE,
   ...
 )
 }
@@ -45,8 +44,11 @@ run before the write.}
 \item{compress}{Logical. For `.csv` / `.tsv` / `.txt`, when `TRUE` the
 path is suffixed with `.gz` and `fwrite(compress = "gzip")` is used.}
 
-\item{overwrite}{Logical. If `FALSE`, stops when the target already
-exists. Default `TRUE`.}
+\item{overwrite}{Logical. When `FALSE` (the v0.4.0 default; was
+`TRUE` in v0.3.0 -- this is the only source-incompatible change),
+`dw_save()` stops if ANY of the three destinations (primary, Teams
+mirror, Z: mirror) already exists. Pass `TRUE` to replace existing
+deposits.}
 
 \item{provenance}{Logical. Whether to write the `.provenance.json`
 sidecar. Default `TRUE` (skipped for `.RData` / `.rda`).}
@@ -55,13 +57,13 @@ sidecar. Default `TRUE` (skipped for `.RData` / `.rda`).}
 recorded in the sidecar and used by [dw_resolve_path()].}
 
 \item{allow_canonical_write}{Logical. Bypass the reviewer-mode guard
-that forbids writes to canonical roots. Default `FALSE`.}
-
-\item{mirror_to_z}{Logical. When the write lands under canonical,
-carbon-copy it to Z:. Default `TRUE`.}
+that forbids writes to canonical / Z: roots. Default `FALSE`.}
 
 \item{...}{Format-specific arguments passed through to the underlying
-writer (`fwrite`, `write_xlsx`, `saveRDS`, ...).}
+writer (`fwrite`, `write_xlsx`, `saveRDS`, ...). The legacy
+`mirror_to_z` keyword (v0.3.0) is silently dropped with a
+deprecation warning -- Z: mirror is now automatic and paired with
+the Teams mirror.}
 }
 \value{
 Invisibly, the resolved output `path`.
@@ -69,43 +71,61 @@ Invisibly, the resolved output `path`.
 \description{
 Uniform writer for the DW-Production warehouse. Supported extensions:
 \tabular{ll}{
-  `.csv`, `.tsv`, `.txt`     \tab `data.table::fwrite` (default `na=""`,
-                                   `row.names=FALSE`) \cr
-  `.csv.gz` / `.tsv.gz`      \tab `fwrite` with `compress = "gzip"` \cr
-  `.xlsx`                    \tab `writexl::write_xlsx` (data frame or
-                                   named list); `openxlsx::saveWorkbook`
-                                   for `Workbook` objects \cr
-  `.rds`                     \tab `saveRDS` \cr
-  `.RData` / `.Rdata` / `.rda` \tab `save()` with named-list expansion \cr
-  `.dta`                     \tab `haven::write_dta` \cr
-  `.parquet`                 \tab `arrow::write_parquet` \cr
-  `.json`                    \tab `jsonlite::write_json` \cr
-  `.yml` / `.yaml`           \tab `yaml::write_yaml`
+`.csv`, `.tsv`, `.txt` \tab `data.table::fwrite` (default `na=""`,
+`row.names=FALSE`) \cr
+`.csv.gz` / `.tsv.gz` \tab `fwrite` with `compress = "gzip"` \cr
+`.xlsx` \tab `writexl::write_xlsx` (data frame or
+named list); `openxlsx::saveWorkbook`
+for `Workbook` objects \cr
+`.rds` \tab `saveRDS` \cr
+`.RData` / `.Rdata` / `.rda` \tab `save()` with named-list expansion \cr
+`.dta` \tab `haven::write_dta` \cr
+`.parquet` \tab `arrow::write_parquet` \cr
+`.json` \tab `jsonlite::write_json` \cr
+`.yml` / `.yaml` \tab `yaml::write_yaml`
 }
 }
 \details{
-**Path resolution** — pick one:
+**Path resolution** -- pick one:
 \itemize{
-  \item `path = "..."` — used as-is (absolute or relative).
-  \item `name = "..."` + optional `sector` / `kind` / `vintage` — resolved
-        via [dw_resolve_path()] using session-default mode
-        (`teamsWrkData` / `teamsRawData` / `dwMetaData`; these are
-        mode-aware in the profile).
+\item `path = "..."` -- used as-is (absolute or relative).
+\item `name = "..."` + optional `sector` / `kind` / `vintage` -- resolved
+via [dw_resolve_path()] using session-default mode
+(`teamsWrkData` / `teamsRawData` / `dwMetaData`; these are
+mode-aware in the profile).
 }
 
-**Mode contract** — enforced at call site: writes resolving to canonical
-paths in a reviewer session stop unless `allow_canonical_write = TRUE`
-(Database Manager bootstrap).
+**Mode contract (v0.4.0)** -- enforced at call site.
+\itemize{
+\item **Reviewer mode** -- writes resolving under the canonical Teams
+deposit OR under the configured Z: drive root stop unless
+`allow_canonical_write = TRUE` (Database Manager bootstrap).
+The Z: branch is new in v0.4.0; v0.3.0 only refused canonical writes.
+\item **Producer mode** -- at least one of Teams (preferred) or Z:
+drive must be available, otherwise `dw_save()` stops. Every
+successful producer write fans out redundantly to BOTH mirrors when
+both are configured.
+}
 
-**Z: mirror** — automatic. When `path` resolves under canonical AND
-`dw_z_available == TRUE`, the primary write is carbon-copied to the Z:
-equivalent. Z: absence is non-blocking (Teams write still succeeds; Z:
-copy is skipped with a single advisory at profile-load time).
+**Overwrite gate (v0.4.0; breaking)** -- `overwrite = FALSE` is the new
+default. The check examines ALL destinations that will actually be
+written (primary, Teams mirror, Z: mirror); `dw_save()` stops if any of
+them already exists. Pass `overwrite = TRUE` to restore v0.3.0
+behaviour.
 
-**Quality contract** — `isid = c("col1","col2",...)` runs [dw_isid()]
+**Mirror behaviour (v0.4.0)** -- automatic and paired. In producer
+mode, each successful primary write is carbon-copied to its derived
+Teams canonical equivalent AND its Z: drive equivalent (whichever are
+available), along with the `.provenance.json` sidecar. Each mirror is
+non-blocking: failures emit envelope-shaped `warning()` lines tagged
+"Teams mirror" or "Z: mirror" but do NOT roll back the primary
+write. (The DBM bootstrap path, where the primary IS canonical, keeps
+the v0.3.0 Z:-only mirror semantics.)
+
+**Quality contract** -- `isid = c("col1","col2",...)` runs [dw_isid()]
 before writing.
 
-**Provenance sidecar** — `provenance = TRUE` writes
+**Provenance sidecar** -- `provenance = TRUE` writes
 `<path>.provenance.json` with timestamp, user, dw_mode, sha256, schema,
 and the user-supplied `metadata = list(...)` (title, abstract, producer,
 sources, contact, vintage, ...).
@@ -113,20 +133,20 @@ sources, contact, vintage, ...).
 \examples{
 \dontrun{
 dw_save(edu_sdg_uis,
-        name = "dw_ed_edu.csv", sector = "ed", kind = "wrk",
-        isid = c("DATAFLOW", "REF_AREA", "INDICATOR", "TIME_PERIOD"),
-        metadata = list(
-          title = "Education indicators — UNICEF DW format",
-          producer = "01_dw_prep/012_codes/ed/02_aggregate_uis_sdg.R",
-          sources  = c("UIS bulk SDG_092025", "WPP 2024"),
-          vintage  = "2026-05"
-        ))
+name = "dw_ed_edu.csv", sector = "ed", kind = "wrk",
+isid = c("DATAFLOW", "REF_AREA", "INDICATOR", "TIME_PERIOD"),
+metadata = list(
+title = "Education indicators -- UNICEF DW format",
+producer = "01_dw_prep/012_codes/ed/02_aggregate_uis_sdg.R",
+sources = c("UIS bulk SDG_092025", "WPP 2024"),
+vintage = "2026-05"
+))
 }
 }
 \seealso{
 [dw_use()] for the read counterpart; [dw_isid()] for the
-  uniqueness check; [dw_verify_z()] for the Z: mirror integrity check;
-  [dw_resolve_path()] for the path-resolution rules.
+uniqueness check; [dw_verify_z()] for the Z: mirror integrity check;
+[dw_resolve_path()] for the path-resolution rules.
 
 Other io: 
 \code{\link{dw_compare}()},
@@ -134,6 +154,7 @@ Other io:
 \code{\link{dw_isid}()},
 \code{\link{dw_merge}()},
 \code{\link{dw_resolve_path}()},
+\code{\link{dw_toolkit_version}()},
 \code{\link{dw_use}()},
 \code{\link{dw_verify_z}()}
 }

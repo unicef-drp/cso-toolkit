@@ -60,9 +60,18 @@ def main() -> int:
     print("[dw_io] dw_resolve_path / dw_is_canonical OK")
 
     # --- dw_io: roundtrip CSV via dw_save / dw_use ---
+    # Clear lingering canonical state from the dw_is_canonical test
+    # above so the v0.4.0 mirror logic doesn't try to fan out to a
+    # synthetic path that persists across smoke-test runs.
     import pandas as pd
     with tempfile.TemporaryDirectory() as tdir:
-        state.configure(teamsWrkData=tdir)
+        state.configure(
+            teamsWrkData=tdir,
+            teamsWrkDataCanonical=None,
+            teamsRawDataCanonical=None,
+            teamsFolderCanonical=None,
+            dw_z_available=False,
+        )
         df = pd.DataFrame({"a": [1, 2, 3], "b": ["x", "y", "z"]})
         out_path = cso_toolkit.dw_save(
             df, name="roundtrip.csv", sector="t", kind="wrk",
@@ -290,6 +299,243 @@ def main() -> int:
     print("[dw_io] B1: reviewer mode refuses unfrozen URL OK")
 
     # Reset mode for any subsequent checks
+    state.configure(dw_mode="producer", dw_apis_allowed=True)
+
+    # ===================================================================
+    # v0.4.0 issue #14 — producer / reviewer mode contract regressions
+    # ===================================================================
+
+    # --- #14.0 dw_toolkit_version() stamp matches the package __version__
+    assert cso_toolkit.dw_toolkit_version() == "0.4.0", (
+        f"dw_toolkit_version() != 0.4.0 (got {cso_toolkit.dw_toolkit_version()!r})"
+    )
+    print("[#14] dw_toolkit_version() returns '0.4.0' OK")
+
+    # --- #14.1 reviewer mode forbids canonical writes (v0.3.0 preserved)
+    with tempfile.TemporaryDirectory() as tdir:
+        canon = Path(tdir) / "canon"
+        canon.mkdir(parents=True)
+        state.configure(
+            dw_mode="reviewer",
+            teamsWrkDataCanonical=str(canon),
+            teamsRawDataCanonical=str(canon),
+            teamsFolderCanonical=str(canon),
+            dwZDrive=None,
+            dw_z_available=False,
+        )
+        df14 = pd.DataFrame({"a": [1, 2]})
+        try:
+            cso_toolkit.dw_save(df14, path=str(canon / "x.csv"))
+        except PermissionError as exc:
+            assert "cso_toolkit.dw_save" in str(exc)
+            assert "Fix:" in str(exc)
+        else:
+            raise AssertionError(
+                "expected PermissionError for reviewer canonical write"
+            )
+        print("[#14.1] reviewer canonical write -> PermissionError OK")
+
+    # --- #14.2 reviewer mode forbids Z: drive writes (v0.4.0 broadened)
+    with tempfile.TemporaryDirectory() as tdir:
+        z_root = Path(tdir) / "z_drive"
+        z_root.mkdir(parents=True)
+        state.configure(
+            dw_mode="reviewer",
+            dwZDrive=str(z_root),
+            dw_z_available=True,
+        )
+        try:
+            cso_toolkit.dw_save(df14, path=str(z_root / "x.csv"))
+        except PermissionError as exc:
+            assert "Z:" in str(exc) or "cso_toolkit.dw_save" in str(exc)
+        else:
+            raise AssertionError(
+                "expected PermissionError for reviewer Z: write"
+            )
+        print("[#14.2] reviewer Z: drive write -> PermissionError OK")
+
+    # --- #14.3 producer mode hard-stops if neither Teams nor Z: configured
+    with tempfile.TemporaryDirectory() as tdir:
+        state.configure(
+            dw_mode="producer",
+            teamsWrkData=None,
+            teamsRawData=None,
+            teamsWrkDataCanonical=None,
+            teamsRawDataCanonical=None,
+            teamsFolderCanonical=None,
+            dwZDrive=None,
+            dw_z_available=False,
+        )
+        try:
+            cso_toolkit.dw_save(df14, path=str(Path(tdir) / "isolated.csv"))
+        except PermissionError as exc:
+            assert "at least one of Teams" in str(exc)
+            assert "Fix:" in str(exc)
+        else:
+            raise AssertionError(
+                "expected PermissionError for producer with no mirrors"
+            )
+        print("[#14.3] producer hard-stop with no mirrors OK")
+
+    # --- #14.4 producer mode writes to BOTH Teams + Z: when available
+    with tempfile.TemporaryDirectory() as tdir:
+        primary_root = Path(tdir) / "wrk-local"
+        canon_root   = Path(tdir) / "wrk-canon"
+        z_root       = Path(tdir) / "z_drive"
+        for p in (primary_root, canon_root, z_root):
+            p.mkdir(parents=True)
+        state.configure(
+            dw_mode="producer",
+            teamsWrkData=str(primary_root),
+            teamsWrkDataCanonical=str(canon_root),
+            teamsFolderCanonical=str(canon_root),
+            teamsRawData=None,
+            teamsRawDataCanonical=None,
+            dwZDrive=str(z_root),
+            dw_z_available=True,
+        )
+        out = cso_toolkit.dw_save(
+            pd.DataFrame({"REF_AREA": ["AGO", "BFA"], "v": [1, 2]}),
+            path=str(primary_root / "sec/x.csv"),
+            isid=["REF_AREA"],
+        )
+        assert Path(out).exists()
+        teams_mirror = canon_root / "sec" / "x.csv"
+        z_mirror = z_root / "sec" / "x.csv"
+        assert teams_mirror.exists(), f"missing Teams mirror at {teams_mirror}"
+        assert z_mirror.exists(), f"missing Z: mirror at {z_mirror}"
+        # Each mirror got its own sidecar
+        assert Path(str(teams_mirror) + ".provenance.json").exists()
+        assert Path(str(z_mirror) + ".provenance.json").exists()
+        print("[#14.4] producer fans out to Teams + Z: with sidecars OK")
+
+    # --- #14.5 overwrite gate refuses if any destination exists
+    with tempfile.TemporaryDirectory() as tdir:
+        primary_root = Path(tdir) / "wrk-local"
+        canon_root   = Path(tdir) / "wrk-canon"
+        z_root       = Path(tdir) / "z_drive"
+        for p in (primary_root, canon_root, z_root):
+            p.mkdir(parents=True)
+        state.configure(
+            dw_mode="producer",
+            teamsWrkData=str(primary_root),
+            teamsWrkDataCanonical=str(canon_root),
+            teamsFolderCanonical=str(canon_root),
+            dwZDrive=str(z_root),
+            dw_z_available=True,
+        )
+        primary = str(primary_root / "sec/x.csv")
+        cso_toolkit.dw_save(
+            pd.DataFrame({"REF_AREA": ["AGO"], "v": [1]}),
+            path=primary, isid=["REF_AREA"],
+        )
+        try:
+            cso_toolkit.dw_save(
+                pd.DataFrame({"REF_AREA": ["AGO"], "v": [2]}),
+                path=primary, isid=["REF_AREA"],
+            )
+        except FileExistsError as exc:
+            assert "overwrite=False" in str(exc) or "overwrite" in str(exc)
+        else:
+            raise AssertionError("expected FileExistsError on second write")
+        # overwrite=True succeeds
+        out2 = cso_toolkit.dw_save(
+            pd.DataFrame({"REF_AREA": ["AGO"], "v": [2]}),
+            path=primary, isid=["REF_AREA"], overwrite=True,
+        )
+        assert Path(out2).exists()
+        print("[#14.5] overwrite gate refuses + overwrite=True succeeds OK")
+
+    # --- #14.6 reviewer-mode read is network-first: prefers Teams
+    with tempfile.TemporaryDirectory() as tdir:
+        primary_root = Path(tdir) / "wrk-local"
+        canon_root   = Path(tdir) / "wrk-canon"
+        (primary_root / "sec").mkdir(parents=True)
+        (canon_root / "sec").mkdir(parents=True)
+        (canon_root / "sec" / "x.csv").write_text(
+            "REF_AREA,value\nAGO,42\n", encoding="utf-8"
+        )
+        (primary_root / "sec" / "x.csv").write_text(
+            "REF_AREA,value\nAGO,99\n", encoding="utf-8"
+        )
+        state.configure(
+            dw_mode="reviewer",
+            teamsWrkData=str(primary_root),
+            teamsWrkDataCanonical=str(canon_root),
+            teamsFolderCanonical=str(canon_root),
+            dwZDrive=None,
+            dw_z_available=False,
+        )
+        df_read = cso_toolkit.dw_use(
+            path=str(primary_root / "sec/x.csv"), verify_z=False
+        )
+        assert int(df_read["value"].iloc[0]) == 42, (
+            f"reviewer read returned local copy (99) not Teams (42); "
+            f"got {df_read.to_dict()}"
+        )
+        print("[#14.6] reviewer read prefers Teams canonical OK")
+
+    # --- #14.7 reviewer-mode local fallback emits a provenance warning
+    with tempfile.TemporaryDirectory() as tdir:
+        primary_root = Path(tdir) / "wrk-local"
+        canon_root   = Path(tdir) / "wrk-canon"
+        (primary_root / "sec").mkdir(parents=True)
+        canon_root.mkdir(parents=True)  # exists but EMPTY
+        (primary_root / "sec" / "x.csv").write_text(
+            "REF_AREA,value\nAGO,99\n", encoding="utf-8"
+        )
+        state.configure(
+            dw_mode="reviewer",
+            teamsWrkData=str(primary_root),
+            teamsWrkDataCanonical=str(canon_root),
+            teamsFolderCanonical=str(canon_root),
+            dwZDrive=None,
+            dw_z_available=False,
+        )
+        import warnings as _warn
+        with _warn.catch_warnings(record=True) as w:
+            _warn.simplefilter("always")
+            df_fb = cso_toolkit.dw_use(
+                path=str(primary_root / "sec/x.csv"), verify_z=False
+            )
+        assert int(df_fb["value"].iloc[0]) == 99
+        assert any("cso_toolkit.dw_use" in str(m.message)
+                   and ("provenance" in str(m.message)
+                        or "local" in str(m.message))
+                   for m in w), (
+            f"expected reviewer local-fallback warning, got "
+            f"{[str(m.message) for m in w]}"
+        )
+        print("[#14.7] reviewer local fallback warns about provenance OK")
+
+    # --- #14.8 reviewer-mode hard-stop when file is missing everywhere
+    with tempfile.TemporaryDirectory() as tdir:
+        primary_root = Path(tdir) / "wrk-local"
+        canon_root   = Path(tdir) / "wrk-canon"
+        primary_root.mkdir(parents=True)
+        canon_root.mkdir(parents=True)
+        state.configure(
+            dw_mode="reviewer",
+            teamsWrkData=str(primary_root),
+            teamsWrkDataCanonical=str(canon_root),
+            teamsFolderCanonical=str(canon_root),
+            dwZDrive=None,
+            dw_z_available=False,
+        )
+        try:
+            cso_toolkit.dw_use(
+                path=str(primary_root / "missing.csv"), verify_z=False
+            )
+        except FileNotFoundError as exc:
+            assert "cso_toolkit.dw_use" in str(exc)
+            assert "Fix:" in str(exc)
+        else:
+            raise AssertionError(
+                "expected FileNotFoundError when file missing everywhere"
+            )
+        print("[#14.8] reviewer file-missing-everywhere -> hard-stop OK")
+
+    # Reset for any downstream checks (caller convention)
     state.configure(dw_mode="producer", dw_apis_allowed=True)
 
     print("\nAll smoke checks passed.")
