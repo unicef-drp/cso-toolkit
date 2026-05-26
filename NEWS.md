@@ -6,6 +6,43 @@ _Entries land here as PRs merge into `develop`.  When the next release
 is cut, this header is renamed `## v0.4.0 (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
+**DW-Production backports — landed via PR adopting the four undeclared
+local edits found by `docs/dw-production-alignment-2026-05-25.md`:**
+
+- **B1 (new feature):** `dw_use("https://...")` is now a first-class
+  call site.  R: new `.is_allowlisted_url()`, `.dw_frozen_root()`,
+  `.url_to_frozen_path()`, `.write_remote_provenance()`,
+  `.download_and_freeze()`, `.resolve_remote_url()` in `r/R/dw_io.R`,
+  with `dw_use()`'s read resolver dispatching on
+  `^https?://`.  Python: same shape in `python/src/dw_io.py`.
+  Allowlist is **empty by default** so the toolkit ships
+  consumer-neutral; the consumer's profile populates
+  `dw_url_allowlist` (R global) / `_state.dw_url_allowlist` (Python).
+  Reviewer mode refuses to fetch new URLs; producer mode downloads
+  once and writes a `.provenance.json` with `sha256` + `bytes` +
+  `fetched_at` + `fetched_by` + `dw_mode`.  Three new `_state` keys:
+  `dw_url_allowlist`, `dw_frozen_root`, `githubFolder`.
+
+- **B2 (QoL fix):** `dw_save` auto-detects gzip when the path already
+  ends in `.gz` (was previously a foot-gun: passing
+  `compress = FALSE` and a `.gz` path would write the file
+  uncompressed under the misleading name).
+
+- **B3 (robustness fix):** `.provenance.json` sidecar write is now
+  wrapped in `tryCatch` (R) / `try/except` (Python) so a
+  non-serialisable metadata value warns rather than rolling back the
+  primary file.  Sidecars are metadata; the asset is what matters.
+
+- **B4 (bug fix):** `dw_api.R` UIS-fetcher URL-encodes query keys +
+  values via `utils::URLencode(reserved = TRUE)`; previously param
+  values containing `&` / `=` / spaces / non-ASCII would corrupt the
+  query.  Default cache extension for `http` and `github_raw` APIs
+  bumped from `csv` to `rds` (R) / `pkl` (Python) so text and binary
+  payloads round-trip correctly.
+
+**Regression tests:** `python/tests/manual/smoke_test.py` now exercises
+5 new B1–B4 invariants (20 total).  `R CMD check` remains 0/0/0.
+
 ## v0.3.0 (2026-05-25)
 
 First release with full **Python parity** for every R helper, plus the
