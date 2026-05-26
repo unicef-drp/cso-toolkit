@@ -6,8 +6,65 @@ _Entries land here as PRs merge into `develop`.  When the next release
 is cut, this header is renamed `## v0.4.0 (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
-**DW-Production backports — landed via PR adopting the four undeclared
-local edits found by `docs/dw-production-alignment-2026-05-25.md`:**
+### Issue #14 — Producer / reviewer mode contract tightening (**BREAKING**)
+
+Refines the producer / reviewer split so that producer outputs are
+provably redundant and reviewer reads are provably canonical.  R +
+Python siblings ship in lock-step.
+
+- **Producer-mode writes are now redundant.**  Every primary write
+  fans out to BOTH the Teams canonical mirror AND the Z: drive mirror
+  (whichever are available).  `dw_save` hard-stops with the standard
+  envelope when neither mirror is configured / reachable — producer
+  outputs cannot live only on the producer's laptop.
+- **Reviewer-mode writes broadened.**  In addition to refusing writes
+  under canonical (v0.3.0), `dw_save` now also refuses writes under
+  the configured Z: drive root.  Bypass with `allow_canonical_write =
+  TRUE` for deliberate DBM bootstraps as before.
+- **Reviewer-mode reads are network-first.**  `dw_use` now tries
+  Teams → Z: → repo-local in reviewer sessions.  When the network
+  mirrors are unavailable and a local copy exists, the read still
+  succeeds but emits an envelope-shaped warning flagging the
+  provenance gap.  Hard-stops when the file is missing everywhere.
+  Producer-mode read order is unchanged (local-first; v0.3.0
+  preserved).
+- **`overwrite` default flipped TRUE → FALSE.**  This is the only
+  source-incompatible change in v0.4.0.  The overwrite check now
+  examines ALL three destinations (primary, Teams, Z:); the helper
+  refuses if any of them already exists.  Pass `overwrite = TRUE`
+  explicitly to restore v0.3.0 behaviour.  (Python: same flip on the
+  `overwrite: bool` argument; the legacy `mirror_to_z` keyword is
+  silently dropped with a `DeprecationWarning`.)
+- **New `dw_toolkit_version()`** (R + Python).  Returns the toolkit
+  semver as a single string (`"0.4.0"`).  Useful for stamping logs
+  and asserting minimum-version requirements in consumer profiles.
+
+**Migration guide.**  Existing producer-mode callers that relied on
+the v0.3.0 silent re-write semantics must either:
+
+1. Set `overwrite = TRUE` explicitly when overwriting an existing
+   deposit.  This is the common path for daily re-runs of the same
+   vintage.
+2. Or sequence the write under a fresh vintage subfolder so no prior
+   deposit collides.  This is the recommended pattern for archival
+   work.
+
+Reviewer-mode callers do not need changes — the new network-first
+read order is transparent when Teams/Z: are reachable; the new
+warning surfaces when they are not (which used to be a silent
+provenance gap).
+
+**Regression coverage.**  9 new testthat assertions in
+`r/tests/testthat/test-dw_io-mode-contract.R` (161 total R asserts;
+0/0/0 from `devtools::check`) and 9 new smoke checks in
+`python/tests/manual/smoke_test.py` (34 total).  Error-envelope test
+file extended to keep `[cso_toolkit.<func>] WHAT / Why / Fix` shape
+on every new raise.
+
+### DW-Production backports (v0.3.0.9000 development line)
+
+**Landed via PR adopting the four undeclared local edits found by
+`docs/dw-production-alignment-2026-05-25.md`:**
 
 - **B1 (new feature):** `dw_use("https://...")` is now a first-class
   call site.  R: new `.is_allowlisted_url()`, `.dw_frozen_root()`,
