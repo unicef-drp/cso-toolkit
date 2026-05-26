@@ -68,6 +68,17 @@ the v0.4.0 mode contract for the redundant-write + network-first-read
 behaviour.{p_end}
 
 {phang}
+{bf:teamsFolderCanonical} -- top-level canonical Teams folder.
+{bf:dw_use} uses this together with {bf:dwZDrive} to derive Z: drive
+mirror paths during reviewer-mode resolution and the integrity check.{p_end}
+
+{phang}
+{bf:dwZDrive} -- mount point for the Z: drive carbon-copy mirror
+(e.g. {bf:Z:/}). When set together with {bf:teamsFolderCanonical},
+{bf:dw_use} extends the reviewer-mode lookup chain past Teams to the
+Z: mirror and runs the size / hash integrity check.{p_end}
+
+{phang}
 {bf:sandboxRoot}  -- sandbox root for reviewer-mode writes; surfaced
 to scripts that need an explicit per-user scratch area.{p_end}
 
@@ -104,6 +115,8 @@ matching global). Missing keys mean missing r() entries.{p_end}
 {cmd:r(teamsRawData)},
 {cmd:r(teamsWrkDataCanonical)},
 {cmd:r(teamsRawDataCanonical)},
+{cmd:r(teamsFolderCanonical)},
+{cmd:r(dwZDrive)},
 {cmd:r(sandboxRoot)},
 {cmd:r(filepath)}.{p_end}
 

@@ -14,6 +14,8 @@
 *     teamsRawData: "C:/Users/<you>/Teams/.../011_rawdata"
 *     teamsWrkDataCanonical: "C:/Users/<you>/.../DW-MASTER/.../013_wrkdata"
 *     teamsRawDataCanonical: "C:/Users/<you>/.../DW-MASTER/.../011_rawdata"
+*     teamsFolderCanonical: "C:/Users/<you>/.../DW-MASTER"
+*     dwZDrive: "Z:/"
 *     sandboxRoot: "C:/Users/<you>/sandbox"
 *
 * Behaviour:
@@ -29,10 +31,13 @@
 *     missing or is anything other than {"producer", "reviewer"} --
 *     this mirrors the R `profile_helpers` validation.
 *
-* Returns the parsed values in r(). The caller can choose either the
-* sandbox or canonical path globals (the R sibling `create_profile`
-* convention wires the mode-aware names into globals like
-* $teamsWrkData; the same is done here automatically).
+* Returns the parsed values in r() and sets each one as a matching
+* global ($dw_mode, $teamsWrkData, ...).  Note: this helper does NOT
+* derive mode-aware globals from the canonical keys -- it sets exactly
+* what the YAML provides.  Profile scripts that want to flip
+* `$teamsWrkData` to the canonical root in producer mode (and the
+* sandbox root in reviewer mode) should do that swap themselves after
+* `dw_load_config` returns.
 
 cap program drop dw_load_config
 program define   dw_load_config, rclass
@@ -157,6 +162,14 @@ program define   dw_load_config, rclass
         else if "`key'" == "teamsRawDataCanonical" {
             global teamsRawDataCanonical `"`value'"'
             return local teamsRawDataCanonical `"`value'"'
+        }
+        else if "`key'" == "teamsFolderCanonical" {
+            global teamsFolderCanonical `"`value'"'
+            return local teamsFolderCanonical `"`value'"'
+        }
+        else if "`key'" == "dwZDrive" {
+            global dwZDrive `"`value'"'
+            return local dwZDrive `"`value'"'
         }
         else if "`key'" == "sandboxRoot" {
             global sandboxRoot `"`value'"'
