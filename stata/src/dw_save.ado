@@ -1,5 +1,6 @@
-*! version 1.0 24MAY2026 cso-toolkit cso-toolkit@unicef.org
+*! version 1.1 26MAY2026 cso-toolkit cso-toolkit@unicef.org
 *! Author: João Pedro Azevedo (port); original by Diana Goldemberg
+*! v1.1 (v0.4.0): reviewer-mode guard broadened to canonical OR Z: drive
 
 * dw_save — Stata sibling of the R dw_save() helper.
 *
@@ -13,9 +14,10 @@
 *      both languages.
 *
 * Mode contract: if `$dw_mode == "reviewer"` and the target path matches
-* the canonical roots ($teamsWrkDataCanonical / $teamsRawDataCanonical),
-* the save is BLOCKED unless `allow_canonical_write` is passed. This
-* mirrors dw_save() in r/R/dw_io.R.
+* the canonical roots ($teamsWrkDataCanonical / $teamsRawDataCanonical)
+* OR the Z: drive root ($dwZDrive; v0.4.0 broadening), the save is
+* BLOCKED unless `allow_canonical_write` is passed. This mirrors
+* dw_save() in r/R/dw_io.R and dw_save() in python/src/dw_io.py.
 *
 * Ported from World Bank EduAnalyticsToolkit `edukit_save` /
 * `savemetadata` (v1.2 20MAR2020, Author: Diana Goldemberg), simplified
@@ -57,13 +59,19 @@ program define   dw_save, rclass
           NOSidecar ]
 
     *----------------------------------------------------------
-    * 1. Mode contract — block canonical writes in reviewer mode
+    * 1. Mode contract -- block canonical OR Z: writes in reviewer mode
+    *
+    * v0.4.0 (issue #14) broadens the v0.3.0 canonical-only guard to
+    * also cover the Z: drive root, matching the R + Python siblings.
+    * Reviewer sessions must keep canonical + Z: deposits read-only.
     *----------------------------------------------------------
     if "$dw_mode" == "reviewer" & "`allow_canonical_write'" == "" {
-        local canonical_roots `"$teamsWrkDataCanonical $teamsRawDataCanonical"'
-        foreach root of local canonical_roots {
+        local guarded_roots `"$teamsWrkDataCanonical $teamsRawDataCanonical $dwZDrive"'
+        foreach root of local guarded_roots {
             if "`root'" != "" & strpos("`path'", "`root'") == 1 {
-                noi di as error "{phang}dw_save: reviewer mode is forbidden to write under canonical root [`root']. Pass -allow_canonical_write- to override (DBM bootstraps only).{p_end}"
+                local where "canonical (Teams) deposit"
+                if "`root'" == "$dwZDrive" local where "Z: drive"
+                noi di as error "{phang}[cso_toolkit.dw_save] Reviewer mode forbids writes to `where' [`root']. Pass -allow_canonical_write- to override (DBM bootstraps only).{p_end}"
                 error 459
             }
         }
