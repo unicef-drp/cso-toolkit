@@ -164,6 +164,33 @@ dw_resolve_path <- function(path = NULL, name = NULL, sector = NULL,
 	file.path(root, subpath)
 }
 
+#' Normalise a path for descendant comparison
+#'
+#' Internal.  Resolves short 8.3 names to long names by normalising the
+#' nearest *existing* parent directory and reattaching the missing
+#' suffix.  Without this, on Windows `normalizePath("/tmp/JPAZEV~1/file.csv")`
+#' returns the SHORT name when `file.csv` doesn't exist but the LONG
+#' name (e.g. `jpazevedo`) when it does — making prefix comparisons
+#' silently wrong.
+#'
+#' @keywords internal
+#' @noRd
+.normalize_for_comparison <- function(p) {
+	if (length(p) == 0 || is.na(p) || !nzchar(p)) return(NA_character_)
+	if (file.exists(p)) {
+		return(normalizePath(p, winslash = "/", mustWork = FALSE))
+	}
+	# Walk up to the first existing ancestor.
+	parent <- dirname(p)
+	tail   <- basename(p)
+	while (!file.exists(parent) && parent != dirname(parent)) {
+		tail   <- file.path(basename(parent), tail)
+		parent <- dirname(parent)
+	}
+	parent_n <- normalizePath(parent, winslash = "/", mustWork = FALSE)
+	file.path(parent_n, tail)
+}
+
 #' Test whether a path lives under a canonical deposit root
 #'
 #' Checks whether `path` is a descendant of any of the profile-defined
@@ -180,7 +207,7 @@ dw_resolve_path <- function(path = NULL, name = NULL, sector = NULL,
 #' @family io
 #' @export
 dw_is_canonical <- function(path) {
-	path_n <- normalizePath(path, winslash = "/", mustWork = FALSE)
+	path_n <- .normalize_for_comparison(path)
 	canon_roots <- c(
 		.try_get("teamsWrkDataCanonical"),
 		.try_get("teamsRawDataCanonical"),
@@ -188,9 +215,19 @@ dw_is_canonical <- function(path) {
 	)
 	canon_roots <- canon_roots[!is.na(canon_roots) & nzchar(canon_roots)]
 	if (length(canon_roots) == 0) return(FALSE)
-	canon_n <- vapply(canon_roots, normalizePath, character(1),
-	                  winslash = "/", mustWork = FALSE)
-	any(startsWith(path_n, canon_n))
+	canon_n <- vapply(canon_roots, .normalize_for_comparison, character(1))
+	# Path-aware descendant check: a plain `startsWith` would match
+	# `/data/wrk-canary/...` against root `/data/wrk-can` (Copilot
+	# finding on Python PR #7; same bug existed here).  Strip any
+	# trailing slash from each root and require equality OR
+	# `root + "/"` prefix so siblings cannot spoof a match.
+	canon_n <- sub("/+$", "", canon_n)
+	for (root in canon_n) {
+		if (identical(path_n, root) || startsWith(path_n, paste0(root, "/"))) {
+			return(TRUE)
+		}
+	}
+	FALSE
 }
 
 # ============================================================================
@@ -899,7 +936,11 @@ dw_use <- function(path = NULL,
 #' @noRd
 .is_allowlisted_url <- function(url) {
 	allow <- .try_get("dw_url_allowlist")
-	if (is.na(allow[[1]]) || length(allow) == 0) return(FALSE)
+	# Check length FIRST so a zero-length allowlist doesn't trip
+	# `allow[[1]]` with a subscript-out-of-bounds error.
+	if (length(allow) == 0 || (is.atomic(allow) && all(is.na(allow)))) {
+		return(FALSE)
+	}
 	any(vapply(allow, function(p) grepl(p, url), logical(1)))
 }
 
@@ -980,7 +1021,12 @@ dw_use <- function(path = NULL,
 .resolve_remote_url <- function(url) {
 	if (!.is_allowlisted_url(url)) {
 		allow <- .try_get("dw_url_allowlist")
-		allow_str <- if (is.na(allow[[1]])) "<unset>" else paste(allow, collapse = ", ")
+		allow_str <- if (length(allow) == 0 ||
+		                 (is.atomic(allow) && all(is.na(allow)))) {
+			"<empty>"
+		} else {
+			paste(allow, collapse = ", ")
+		}
 		stop(sprintf(
 			"[cso_toolkit.dw_use] URL not in `dw_url_allowlist`: %s\n  Configured allowlist: %s\n  Fix: extend dw_url_allowlist in the consumer's profile, e.g.\n    dw_url_allowlist <- c(dw_url_allowlist, '^https://raw\\\\.githubusercontent\\\\.com/your-org/')",
 			url, allow_str
