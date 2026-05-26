@@ -1,28 +1,37 @@
 #-------------------------------------------------------------------
 # 00_functions/dw_io.R
+# Toolkit version: 0.4.0
 # Purpose: Uniform read/write helpers for DW-Production R scripts.
-#          Auto-dispatch by file extension; supports every IO form the
-#          sector scripts currently use; enforces the reviewer/producer
-#          contract for writes; mirrors canonical writes to Z: and
-#          verifies canonical reads against Z: when the drive is mounted.
+# Auto-dispatch by file extension; supports every IO form the
+# sector scripts currently use; enforces the reviewer/producer
+# contract for writes; mirrors canonical writes to Z: AND
+# Teams ( >= 1 required in producer mode); reviewer reads are
+# network-first to prevent stale-local-cache provenance gaps.
 #
-# Mode is a SESSION property only — set by `dw_mode` in
+# Mode is a SESSION property only -- set by `dw_mode` in
 # ~/.config/user_config.yml and read by profile_DW-Production.R. It is
 # NOT a per-call argument on dw_save/dw_use. Path globals (teamsWrkData,
 # teamsRawData, dwWrkData, etc.) are already mode-aware in the profile;
 # the helpers below resolve through them.
 #
 # Public entry points:
-#   dw_save(x, path|name, ..., isid = NULL, metadata = NULL)
-#   dw_use(path|name, ..., as = "tibble")
-#   dw_compare(current, reference, by, value_cols, ...)
-#   dw_resolve_path(name, sector, kind, vintage)
-#   dw_is_canonical(path)
-#   dw_verify_z(path, compare = "size" | "sha256")
-#   dw_merge(x, using, by, how)
+# dw_save(x, path|name, ..., isid = NULL, metadata = NULL,
+# overwrite = FALSE) # <- default flipped in v0.4.0
+# dw_use(path|name, ..., as = "tibble")
+# dw_compare(current, reference, by, value_cols, ...)
+# dw_resolve_path(name, sector, kind, vintage)
+# dw_is_canonical(path)
+# dw_verify_z(path, compare = "size" | "sha256")
+# dw_merge(x, using, by, how)
+# dw_toolkit_version() # <- new in v0.4.0
 #
-# Added: 2026-05-23 (reviewer-mode audit). Auto-sourced by the profile
-#        via `dwFunct`; no per-script source() needed.
+# Added: 2026-05-23 (reviewer-mode audit).
+# v0.4.0 (2026-05-26): mode-contract tightening per issue #14 -- 
+# producer dw_save writes to Z: + Teams ( >= 1 required); reviewer
+# dw_use reads network-first; overwrite default flipped to FALSE.
+#
+# Auto-sourced by the profile via `dwFunct`; no per-script source()
+# needed.
 #-------------------------------------------------------------------
 
 # ============================================================================
@@ -57,7 +66,7 @@
 .require <- function(pkg) {
 	if (!requireNamespace(pkg, quietly = TRUE)) {
 		stop(sprintf(
-			"[cso_toolkit.dw_io] Package '%s' is required for this file format but is not installed.\n  Fix: install.packages('%s')",
+			"[cso_toolkit.dw_io] Package '%s' is required for this file format but is not installed.\n Fix: install.packages('%s')",
 			pkg, pkg
 		), call. = FALSE)
 	}
@@ -74,30 +83,30 @@
 #' @param name Character. Name of the global to read from `.GlobalEnv`.
 #'
 #' @return The value bound to `name` in `.GlobalEnv`, or `NA_character_`
-#'   if it is not bound.
+#' if it is not bound.
 #'
 #' @keywords internal
 #' @noRd
 .try_get <- function(name) tryCatch(get(name, envir = .GlobalEnv),
-                                    error = function(e) NA_character_)
+ error = function(e) NA_character_)
 
 #' Filesystem root for a given data kind
 #'
 #' Reads the session-level globals that `profile_DW-Production.R` exports
-#' (already mode-aware). Internal — callers should use [dw_resolve_path()].
+#' (already mode-aware). Internal -- callers should use [dw_resolve_path()].
 #'
 #' @param kind Character. One of `"wrk"`, `"raw"`, or `"meta"`.
 #'
 #' @return Character path to the root directory, or `NA_character_` if the
-#'   relevant global is not defined.
+#' relevant global is not defined.
 #'
 #' @keywords internal
 #' @noRd
 .dw_root_for <- function(kind = c("wrk", "raw", "meta")) {
 	kind <- match.arg(kind)
 	switch(kind,
-		wrk  = .try_get("teamsWrkData"),
-		raw  = .try_get("teamsRawData"),
+		wrk = .try_get("teamsWrkData"),
+		raw = .try_get("teamsRawData"),
 		meta = .try_get("dwMetaData")
 	)
 }
@@ -110,20 +119,20 @@
 #'
 #' Two call styles are supported:
 #' \itemize{
-#'   \item Path-string: `dw_resolve_path(path = "ed/dw_ed_edu.csv", kind = "wrk")`
-#'   \item Structured: `dw_resolve_path(name = "dw_ed_edu.csv", sector = "ed", kind = "wrk")`
+#' \item Path-string: `dw_resolve_path(path = "ed/dw_ed_edu.csv", kind = "wrk")`
+#' \item Structured: `dw_resolve_path(name = "dw_ed_edu.csv", sector = "ed", kind = "wrk")`
 #' }
 #'
 #' @param path Character. Literal subpath to append to the kind's root.
-#'   Mutually exclusive with `name` / `sector` / `vintage`.
+#' Mutually exclusive with `name` / `sector` / `vintage`.
 #' @param name Character. File basename. Used together with `sector` and
-#'   optionally `vintage` to build the subpath.
+#' optionally `vintage` to build the subpath.
 #' @param sector Character. Sector folder name (e.g. `"ed"`, `"nt"`). Only
-#'   used when `name` is supplied.
+#' used when `name` is supplied.
 #' @param kind Character. One of `"wrk"`, `"raw"`, `"meta"`. Selects which
-#'   profile-defined root to resolve against.
+#' profile-defined root to resolve against.
 #' @param vintage Character. Optional subfolder (e.g. `"2026-05"` or
-#'   `"2026-05-23"`) inserted between `sector` and `name`.
+#' `"2026-05-23"`) inserted between `sector` and `name`.
 #'
 #' @return Character. Absolute filesystem path.
 #'
@@ -133,21 +142,21 @@
 #' dw_resolve_path(path = "ed/dw_ed_edu.csv", kind = "wrk")
 #' }
 #' @seealso [dw_is_canonical()] to test whether a resolved path lies under
-#'   a canonical root; [dw_save()] and [dw_use()] which call this helper
-#'   internally.
+#' a canonical root; [dw_save()] and [dw_use()] which call this helper
+#' internally.
 #' @family io
 #' @export
 dw_resolve_path <- function(path = NULL, name = NULL, sector = NULL,
-                            kind = c("wrk", "raw", "meta"),
-                            vintage = NULL) {
+ kind = c("wrk", "raw", "meta"),
+ vintage = NULL) {
 	kind <- match.arg(kind)
 	root <- .dw_root_for(kind = kind)
 	if (is.na(root) || !nzchar(root)) {
 		global_name <- switch(kind, wrk = "teamsWrkData",
-		                            raw = "teamsRawData",
-		                            meta = "dwMetaData")
+		 raw = "teamsRawData",
+		 meta = "dwMetaData")
 		stop(sprintf(
-			"[cso_toolkit.dw_resolve_path] %s global is not set.\n  This usually means profile_<repo>.R has not been sourced yet.\n  Fix: source('profile_<repo>.R') before calling dw_resolve_path(), or set %s <- '/path/to/%s' explicitly.",
+			"[cso_toolkit.dw_resolve_path] %s global is not set.\n This usually means profile_<repo>.R has not been sourced yet.\n Fix: source('profile_<repo>.R') before calling dw_resolve_path(), or set %s <- '/path/to/%s' explicitly.",
 			global_name, global_name, kind
 		), call. = FALSE)
 	}
@@ -156,8 +165,8 @@ dw_resolve_path <- function(path = NULL, name = NULL, sector = NULL,
 	} else if (!is.null(path)) {
 		path
 	} else {
-		stop("[cso_toolkit.dw_resolve_path] Neither `path` nor `name` supplied.\n  At least one is required to build a filesystem path.\n  Fix: pass path = 'sector/file.csv' OR name = 'file.csv' + sector = '...'.",
-		     call. = FALSE)
+		stop("[cso_toolkit.dw_resolve_path] Neither `path` nor `name` supplied.\n At least one is required to build a filesystem path.\n Fix: pass path = 'sector/file.csv' OR name = 'file.csv' + sector = '...'.",
+		 call. = FALSE)
 	}
 	subpath <- gsub("/+", "/", subpath)
 	subpath <- sub("^/", "", subpath)
@@ -166,11 +175,11 @@ dw_resolve_path <- function(path = NULL, name = NULL, sector = NULL,
 
 #' Normalise a path for descendant comparison
 #'
-#' Internal.  Resolves short 8.3 names to long names by normalising the
+#' Internal. Resolves short 8.3 names to long names by normalising the
 #' nearest *existing* parent directory and reattaching the missing
-#' suffix.  Without this, on Windows `normalizePath("/tmp/JPAZEV~1/file.csv")`
+#' suffix. Without this, on Windows `normalizePath("/tmp/JPAZEV~1/file.csv")`
 #' returns the SHORT name when `file.csv` doesn't exist but the LONG
-#' name (e.g. `jpazevedo`) when it does — making prefix comparisons
+#' name (e.g. `jpazevedo`) when it does -- making prefix comparisons
 #' silently wrong.
 #'
 #' @keywords internal
@@ -182,9 +191,9 @@ dw_resolve_path <- function(path = NULL, name = NULL, sector = NULL,
 	}
 	# Walk up to the first existing ancestor.
 	parent <- dirname(p)
-	tail   <- basename(p)
+	tail <- basename(p)
 	while (!file.exists(parent) && parent != dirname(parent)) {
-		tail   <- file.path(basename(parent), tail)
+		tail <- file.path(basename(parent), tail)
 		parent <- dirname(parent)
 	}
 	parent_n <- normalizePath(parent, winslash = "/", mustWork = FALSE)
@@ -201,7 +210,7 @@ dw_resolve_path <- function(path = NULL, name = NULL, sector = NULL,
 #' @param path Character. Filesystem path to test (need not exist).
 #'
 #' @return Logical. `TRUE` if `path` lies under a canonical root, otherwise
-#'   `FALSE`.
+#' `FALSE`.
 #'
 #' @seealso [dw_resolve_path()], [dw_verify_z()].
 #' @family io
@@ -218,7 +227,7 @@ dw_is_canonical <- function(path) {
 	canon_n <- vapply(canon_roots, .normalize_for_comparison, character(1))
 	# Path-aware descendant check: a plain `startsWith` would match
 	# `/data/wrk-canary/...` against root `/data/wrk-can` (Copilot
-	# finding on Python PR #7; same bug existed here).  Strip any
+	# finding on Python PR #7; same bug existed here). Strip any
 	# trailing slash from each root and require equality OR
 	# `root + "/"` prefix so siblings cannot spoof a match.
 	canon_n <- sub("/+$", "", canon_n)
@@ -231,8 +240,138 @@ dw_is_canonical <- function(path) {
 }
 
 # ============================================================================
-# Z: drive mirror (carbon-copy writes; integrity check on reads)
+# Toolkit version stamp
 # ============================================================================
+
+#' Toolkit version that this `dw_io.R` was vendored from
+#'
+#' Returns the upstream `cso-toolkit` tag the current `dw_io.R` /
+#' `dw_api.R` / `cso_toolkit_sync.R` triplet was lifted from. Sector
+#' scripts use this to assert a minimum vendored version before they
+#' rely on a v0.4.0+ contract (e.g. network-first reviewer reads,
+#' mirror-to-both producer writes).
+#'
+#' @return Character. Currently `"0.4.0"`.
+#'
+#' @examples
+#' if (utils::compareVersion(dw_toolkit_version(), "0.4.0") < 0) {
+#' stop("This script requires cso-toolkit >= 0.4.0; ",
+#' "found ", dw_toolkit_version(), ". Run cso_toolkit_pull('v0.4.0').")
+#' }
+#'
+#' @seealso [cso_toolkit_check()] for upstream drift detection.
+#' @family io
+#' @export
+dw_toolkit_version <- function() {
+	"0.4.0"
+}
+
+# ============================================================================
+# Z: drive + Teams remote mirrors (producer-mode redundant writes,
+# integrity check on reads)
+# ============================================================================
+
+#' Map a primary (repo-local sandbox) write path to its Teams + Z: equivalents
+#'
+#' Internal. Walks `teamsWrkData` / `teamsRawData` prefix matches to
+#' derive the Teams canonical equivalent. The Z: equivalent is
+#' derived from the Teams canonical via [.dw_z_mirror_path()] so the
+#' Z: drive layout mirrors the Teams canonical layout (as it does in
+#' DW-Production).
+#'
+#' Returns a named list with `teams` (Teams canonical path or
+#' `NA_character_`) and `z` (Z: drive path or `NA_character_`). Any
+#' destination not configured in the profile (or unavailable, in the
+#' Z: case) resolves to NA.
+#'
+#' @keywords internal
+#' @noRd
+.dw_remote_mirrors <- function(primary_path) {
+	pn <- .normalize_for_comparison(primary_path)
+
+	candidates <- list(
+		list(local = .try_get("teamsWrkData"),
+		 canonical = .try_get("teamsWrkDataCanonical")),
+		list(local = .try_get("teamsRawData"),
+		 canonical = .try_get("teamsRawDataCanonical"))
+	)
+
+	teams_mirror <- NA_character_
+	for (c in candidates) {
+		if (is.na(c$local) || !nzchar(c$local) ||
+		 is.na(c$canonical) || !nzchar(c$canonical)) next
+		ln <- .normalize_for_comparison(c$local)
+		cn <- .normalize_for_comparison(c$canonical)
+		if (identical(ln, cn)) next # already canonical; no separate mirror
+		ln <- sub("/+$", "", ln)
+		cn <- sub("/+$", "", cn)
+		if (identical(pn, ln) || startsWith(pn, paste0(ln, "/"))) {
+			rel <- substring(pn, nchar(ln) + 1L)
+			rel <- sub("^/", "", rel)
+			teams_mirror <- if (nzchar(rel)) file.path(cn, rel) else cn
+			break
+		}
+	}
+
+	# Z: mirror is derived from the Teams canonical equivalent (which is
+	# what the existing .dw_z_mirror_path expects as input).
+	z_mirror <- NA_character_
+	if (!is.na(teams_mirror)) {
+		z_mirror <- .dw_z_mirror_path(teams_mirror)
+		if (is.null(z_mirror)) z_mirror <- NA_character_
+	}
+
+	list(teams = teams_mirror, z = z_mirror)
+}
+
+#' Carbon-copy a primary write to the Teams canonical equivalent
+#'
+#' Internal. Companion to [.dw_mirror_to_z()]. Non-blocking: warns
+#' on copy failure, doesn't stop the primary write.
+#'
+#' @keywords internal
+#' @noRd
+.dw_mirror_to_teams <- function(primary_path, teams_path, verbose = TRUE) {
+	if (is.na(teams_path) || !nzchar(teams_path)) {
+		return(invisible(NA_character_))
+	}
+	tryCatch(
+		dir.create(dirname(teams_path), recursive = TRUE, showWarnings = FALSE),
+		error = function(e) NULL
+	)
+	ok <- tryCatch(
+		file.copy(primary_path, teams_path, overwrite = TRUE, copy.date = TRUE),
+		warning = function(w) FALSE,
+		error = function(e) FALSE
+	)
+	if (isTRUE(ok)) {
+		if (verbose) message("[dw_save] Teams mirror -> ", teams_path)
+		return(invisible(teams_path))
+	}
+	warning(sprintf(
+		"[cso_toolkit.dw_save] Teams mirror FAILED for: %s\n (primary write succeeded; Teams is now out of sync; investigate filesystem permissions or Teams sync state).",
+		teams_path
+	), call. = FALSE)
+	invisible(NA_character_)
+}
+
+
+#' Test whether a path lies under the configured Z: drive root
+#'
+#' Internal helper used by the v0.4.0 reviewer-mode guard in
+#' [dw_save()] to refuse writes that target Z: directly (in addition
+#' to the canonical Teams test in [dw_is_canonical()]).
+#'
+#' @keywords internal
+#' @noRd
+.dw_path_is_under_z <- function(path) {
+	z_root <- .try_get("dwZDrive")
+	if (is.na(z_root) || !nzchar(z_root)) return(FALSE)
+	pn <- .normalize_for_comparison(path)
+	zn <- .normalize_for_comparison(z_root)
+	zn <- sub("/+$", "", zn)
+	identical(pn, zn) || startsWith(pn, paste0(zn, "/"))
+}
 
 #' Translate a Teams-canonical path to its Z: drive equivalent
 #'
@@ -248,11 +387,11 @@ dw_is_canonical <- function(path) {
 .dw_z_mirror_path <- function(path) {
 	if (!isTRUE(.try_get("dw_z_available"))) return(NA_character_)
 	teams_canon <- .try_get("teamsFolderCanonical")
-	z_root      <- .try_get("dwZDrive")
+	z_root <- .try_get("dwZDrive")
 	if (is.na(teams_canon) || is.na(z_root)) return(NA_character_)
 	tn <- normalizePath(teams_canon, winslash = "/", mustWork = FALSE)
-	zn <- normalizePath(z_root,      winslash = "/", mustWork = FALSE)
-	pn <- normalizePath(path,        winslash = "/", mustWork = FALSE)
+	zn <- normalizePath(z_root, winslash = "/", mustWork = FALSE)
+	pn <- normalizePath(path, winslash = "/", mustWork = FALSE)
 	if (!startsWith(pn, tn)) return(NA_character_)
 	rel <- sub(paste0("^", tn), "", pn)
 	rel <- sub("^/", "", rel)
@@ -266,7 +405,7 @@ dw_is_canonical <- function(path) {
 #'
 #' @param primary_path Character. Path that was just written under canonical.
 #' @param verbose Logical. Whether to emit a `[dw_save] Z: mirror ->` message
-#'   on success. Default `TRUE`.
+#' on success. Default `TRUE`.
 #'
 #' @return Invisibly, the Z: path on success, or `NA_character_` otherwise.
 #'
@@ -282,7 +421,7 @@ dw_is_canonical <- function(path) {
 		return(invisible(z_path))
 	}
 	warning("[dw_save] Z: mirror FAILED for: ", z_path,
-	        " (write to Teams primary succeeded; Z: is now out of sync)")
+	 " (write to Teams primary succeeded; Z: is now out of sync)")
 	invisible(NA_character_)
 }
 
@@ -295,14 +434,14 @@ dw_is_canonical <- function(path) {
 #'
 #' @param path Character. Path to a file under `teamsFolderCanonical`.
 #' @param compare Character. `"size"` (default, fast) or `"sha256"` (deep,
-#'   requires the `digest` package).
+#' requires the `digest` package).
 #'
 #' @return A list with `status` and supporting fields. `status` is one of:
-#'   `"no_z_mirror"`, `"z_missing"`, `"match_size"`, `"size_mismatch"`,
-#'   `"match_sha256"`, `"sha256_mismatch"`, or `"verify_unavailable"`.
+#' `"no_z_mirror"`, `"z_missing"`, `"match_size"`, `"size_mismatch"`,
+#' `"match_sha256"`, `"sha256_mismatch"`, or `"verify_unavailable"`.
 #'
 #' @seealso [dw_save()] (carbon-copies on canonical writes) and [dw_use()]
-#'   (runs an automatic size check on canonical reads).
+#' (runs an automatic size check on canonical reads).
 #' @family io
 #' @export
 dw_verify_z <- function(path, compare = c("size", "sha256")) {
@@ -318,18 +457,18 @@ dw_verify_z <- function(path, compare = c("size", "sha256")) {
 		ps <- file.info(path)$size
 		zs <- file.info(z_path)$size
 		list(status = if (identical(ps, zs)) "match_size" else "size_mismatch",
-		     path = path, z_path = z_path,
-		     primary_size = ps, z_size = zs)
+		 path = path, z_path = z_path,
+		 primary_size = ps, z_size = zs)
 	} else if (compare == "sha256") {
 		if (!requireNamespace("digest", quietly = TRUE)) {
 			return(list(status = "verify_unavailable",
-			            reason = "digest package not installed"))
+			 reason = "digest package not installed"))
 		}
-		psha <- digest::digest(file = path,   algo = "sha256")
+		psha <- digest::digest(file = path, algo = "sha256")
 		zsha <- digest::digest(file = z_path, algo = "sha256")
 		list(status = if (identical(psha, zsha)) "match_sha256" else "sha256_mismatch",
-		     path = path, z_path = z_path,
-		     primary_sha = psha, z_sha = zsha)
+		 path = path, z_path = z_path,
+		 primary_sha = psha, z_sha = zsha)
 	}
 }
 
@@ -345,12 +484,12 @@ dw_verify_z <- function(path, compare = c("size", "sha256")) {
 #'
 #' @param df Data frame to check.
 #' @param keys Character vector of column names that should uniquely
-#'   identify rows.
+#' identify rows.
 #' @param where Character. Context label included in the error message
-#'   (typically the resolved output path).
+#' (typically the resolved output path).
 #'
 #' @return Invisibly, `TRUE` when the check passes. Stops with a sample
-#'   of duplicates when it fails.
+#' of duplicates when it fails.
 #'
 #' @examples
 #' \dontrun{
@@ -360,7 +499,7 @@ dw_verify_z <- function(path, compare = c("size", "sha256")) {
 #' }
 #'
 #' @seealso [dw_save()] (auto-invokes `dw_isid` when an `isid =` argument
-#'   is passed).
+#' is passed).
 #' @family io
 #' @export
 dw_isid <- function(df, keys, where = "<unknown>") {
@@ -369,7 +508,7 @@ dw_isid <- function(df, keys, where = "<unknown>") {
 		present <- paste(utils::head(names(df), 10), collapse = ", ")
 		if (length(names(df)) > 10) present <- paste0(present, "...")
 		stop(sprintf(
-			"[cso_toolkit.dw_isid] (%s) keys not in data: %s\n  Data columns are: %s\n  Fix: check spelling / casing on the key columns, or drop non-existent keys from your isid= argument.",
+			"[cso_toolkit.dw_isid] (%s) keys not in data: %s\n Data columns are: %s\n Fix: check spelling / casing on the key columns, or drop non-existent keys from your isid= argument.",
 			where, paste(missing_keys, collapse = ", "), present
 		), call. = FALSE)
 	}
@@ -383,7 +522,7 @@ dw_isid <- function(df, keys, where = "<unknown>") {
 	if (n_dup > 0) {
 		sample_show <- utils::head(dup, 5)
 		stop(sprintf(
-			"[cso_toolkit.dw_isid] (%s) %d duplicate row(s) on key (%s).\n  First duplicates:\n%s\n  Fix: deduplicate before saving (`df <- dplyr::distinct(df, %s, .keep_all = TRUE)`) or extend the key set so the rows become unique.",
+			"[cso_toolkit.dw_isid] (%s) %d duplicate row(s) on key (%s).\n First duplicates:\n%s\n Fix: deduplicate before saving (`df <- dplyr::distinct(df, %s, .keep_all = TRUE)`) or extend the key set so the rows become unique.",
 			where, n_dup, paste(keys, collapse = ", "),
 			paste(utils::capture.output(print(sample_show)), collapse = "\n"),
 			paste(keys, collapse = ", ")
@@ -393,134 +532,211 @@ dw_isid <- function(df, keys, where = "<unknown>") {
 }
 
 # ============================================================================
-# dw_save — uniform write with auto-dispatch + Z: mirror
+# dw_save -- uniform write with auto-dispatch + Z: mirror
 # ============================================================================
 
 #' Save an object to disk, dispatching on the file extension
 #'
 #' Uniform writer for the DW-Production warehouse. Supported extensions:
 #' \tabular{ll}{
-#'   `.csv`, `.tsv`, `.txt`     \tab `data.table::fwrite` (default `na=""`,
-#'                                    `row.names=FALSE`) \cr
-#'   `.csv.gz` / `.tsv.gz`      \tab `fwrite` with `compress = "gzip"` \cr
-#'   `.xlsx`                    \tab `writexl::write_xlsx` (data frame or
-#'                                    named list); `openxlsx::saveWorkbook`
-#'                                    for `Workbook` objects \cr
-#'   `.rds`                     \tab `saveRDS` \cr
-#'   `.RData` / `.Rdata` / `.rda` \tab `save()` with named-list expansion \cr
-#'   `.dta`                     \tab `haven::write_dta` \cr
-#'   `.parquet`                 \tab `arrow::write_parquet` \cr
-#'   `.json`                    \tab `jsonlite::write_json` \cr
-#'   `.yml` / `.yaml`           \tab `yaml::write_yaml`
+#' `.csv`, `.tsv`, `.txt` \tab `data.table::fwrite` (default `na=""`,
+#' `row.names=FALSE`) \cr
+#' `.csv.gz` / `.tsv.gz` \tab `fwrite` with `compress = "gzip"` \cr
+#' `.xlsx` \tab `writexl::write_xlsx` (data frame or
+#' named list); `openxlsx::saveWorkbook`
+#' for `Workbook` objects \cr
+#' `.rds` \tab `saveRDS` \cr
+#' `.RData` / `.Rdata` / `.rda` \tab `save()` with named-list expansion \cr
+#' `.dta` \tab `haven::write_dta` \cr
+#' `.parquet` \tab `arrow::write_parquet` \cr
+#' `.json` \tab `jsonlite::write_json` \cr
+#' `.yml` / `.yaml` \tab `yaml::write_yaml`
 #' }
 #'
-#' **Path resolution** — pick one:
+#' **Path resolution** -- pick one:
 #' \itemize{
-#'   \item `path = "..."` — used as-is (absolute or relative).
-#'   \item `name = "..."` + optional `sector` / `kind` / `vintage` — resolved
-#'         via [dw_resolve_path()] using session-default mode
-#'         (`teamsWrkData` / `teamsRawData` / `dwMetaData`; these are
-#'         mode-aware in the profile).
+#' \item `path = "..."` -- used as-is (absolute or relative).
+#' \item `name = "..."` + optional `sector` / `kind` / `vintage` -- resolved
+#' via [dw_resolve_path()] using session-default mode
+#' (`teamsWrkData` / `teamsRawData` / `dwMetaData`; these are
+#' mode-aware in the profile).
 #' }
 #'
-#' **Mode contract** — enforced at call site: writes resolving to canonical
+#' **Mode contract** -- enforced at call site: writes resolving to canonical
 #' paths in a reviewer session stop unless `allow_canonical_write = TRUE`
 #' (Database Manager bootstrap).
 #'
-#' **Z: mirror** — automatic. When `path` resolves under canonical AND
+#' **Z: mirror** -- automatic. When `path` resolves under canonical AND
 #' `dw_z_available == TRUE`, the primary write is carbon-copied to the Z:
 #' equivalent. Z: absence is non-blocking (Teams write still succeeds; Z:
 #' copy is skipped with a single advisory at profile-load time).
 #'
-#' **Quality contract** — `isid = c("col1","col2",...)` runs [dw_isid()]
+#' **Quality contract** -- `isid = c("col1","col2",...)` runs [dw_isid()]
 #' before writing.
 #'
-#' **Provenance sidecar** — `provenance = TRUE` writes
+#' **Provenance sidecar** -- `provenance = TRUE` writes
 #' `<path>.provenance.json` with timestamp, user, dw_mode, sha256, schema,
 #' and the user-supplied `metadata = list(...)` (title, abstract, producer,
 #' sources, contact, vintage, ...).
 #'
 #' @param x Object to write (data frame for tabular formats; `Workbook` or
-#'   named list of data frames for `.xlsx`; any R object for `.rds`).
+#' named list of data frames for `.xlsx`; any R object for `.rds`).
 #' @param path Character. Literal output path. Mutually exclusive with
-#'   `name`.
+#' `name`.
 #' @param name Character. File basename, resolved via [dw_resolve_path()]
-#'   together with `sector` / `kind` / `vintage`.
+#' together with `sector` / `kind` / `vintage`.
 #' @param sector Character. Sector folder (e.g. `"ed"`, `"nt"`).
 #' @param kind Character. One of `"wrk"`, `"raw"`, `"meta"`. Default
-#'   `"wrk"`.
+#' `"wrk"`.
 #' @param isid Character vector of key columns. If supplied, [dw_isid()] is
-#'   run before the write.
+#' run before the write.
 #' @param metadata Named list merged into the `.provenance.json` sidecar
-#'   (title, abstract, producer, sources, contact, vintage, ...).
+#' (title, abstract, producer, sources, contact, vintage, ...).
 #' @param compress Logical. For `.csv` / `.tsv` / `.txt`, when `TRUE` the
-#'   path is suffixed with `.gz` and `fwrite(compress = "gzip")` is used.
+#' path is suffixed with `.gz` and `fwrite(compress = "gzip")` is used.
 #' @param overwrite Logical. If `FALSE`, stops when the target already
-#'   exists. Default `TRUE`.
+#' exists. Default `TRUE`.
 #' @param provenance Logical. Whether to write the `.provenance.json`
-#'   sidecar. Default `TRUE` (skipped for `.RData` / `.rda`).
+#' sidecar. Default `TRUE` (skipped for `.RData` / `.rda`).
 #' @param vintage Character. Optional vintage tag (e.g. `"2026-05"`)
-#'   recorded in the sidecar and used by [dw_resolve_path()].
+#' recorded in the sidecar and used by [dw_resolve_path()].
 #' @param allow_canonical_write Logical. Bypass the reviewer-mode guard
-#'   that forbids writes to canonical roots. Default `FALSE`.
-#' @param mirror_to_z Logical. When the write lands under canonical,
-#'   carbon-copy it to Z:. Default `TRUE`.
+#' that forbids writes to canonical / Z: roots. Default `FALSE`.
 #' @param ... Format-specific arguments passed through to the underlying
-#'   writer (`fwrite`, `write_xlsx`, `saveRDS`, ...).
+#' writer (`fwrite`, `write_xlsx`, `saveRDS`, ...). The legacy
+#' `mirror_to_z` keyword (v0.3.0) is silently dropped with a
+#' deprecation warning -- Z: mirror is now automatic and paired with
+#' the Teams mirror.
 #'
 #' @return Invisibly, the resolved output `path`.
 #'
 #' @examples
 #' \dontrun{
 #' dw_save(edu_sdg_uis,
-#'         name = "dw_ed_edu.csv", sector = "ed", kind = "wrk",
-#'         isid = c("DATAFLOW", "REF_AREA", "INDICATOR", "TIME_PERIOD"),
-#'         metadata = list(
-#'           title = "Education indicators — UNICEF DW format",
-#'           producer = "01_dw_prep/012_codes/ed/02_aggregate_uis_sdg.R",
-#'           sources  = c("UIS bulk SDG_092025", "WPP 2024"),
-#'           vintage  = "2026-05"
-#'         ))
+#' name = "dw_ed_edu.csv", sector = "ed", kind = "wrk",
+#' isid = c("DATAFLOW", "REF_AREA", "INDICATOR", "TIME_PERIOD"),
+#' metadata = list(
+#' title = "Education indicators -- UNICEF DW format",
+#' producer = "01_dw_prep/012_codes/ed/02_aggregate_uis_sdg.R",
+#' sources = c("UIS bulk SDG_092025", "WPP 2024"),
+#' vintage = "2026-05"
+#' ))
 #' }
 #' @seealso [dw_use()] for the read counterpart; [dw_isid()] for the
-#'   uniqueness check; [dw_verify_z()] for the Z: mirror integrity check;
-#'   [dw_resolve_path()] for the path-resolution rules.
+#' uniqueness check; [dw_verify_z()] for the Z: mirror integrity check;
+#' [dw_resolve_path()] for the path-resolution rules.
 #' @family io
 #' @export
 dw_save <- function(x,
-                    path = NULL,
-                    name = NULL, sector = NULL,
-                    kind = c("wrk", "raw", "meta"),
-                    isid = NULL,
-                    metadata = NULL,
-                    compress = FALSE,
-                    overwrite = TRUE,
-                    provenance = TRUE,
-                    vintage = NULL,
-                    allow_canonical_write = FALSE,
-                    mirror_to_z = TRUE,
-                    ...) {
+ path = NULL,
+ name = NULL, sector = NULL,
+ kind = c("wrk", "raw", "meta"),
+ isid = NULL,
+ metadata = NULL,
+ compress = FALSE,
+ overwrite = FALSE,
+ provenance = TRUE,
+ vintage = NULL,
+ allow_canonical_write = FALSE,
+ ...) {
 
 	kind <- match.arg(kind)
+	dots <- list(...)
+
+	# v0.4.0 deprecation: `mirror_to_z` is no longer a per-call flag.
+	# Producer-mode mirroring to BOTH Z: and Teams is now automatic,
+	# controlled by which remote roots the profile makes available.
+	if ("mirror_to_z" %in% names(dots)) {
+		warning(
+			"[cso_toolkit.dw_save] `mirror_to_z` argument is deprecated in v0.4.0; ",
+			"producer-mode mirroring is now automatic (controlled by which ",
+			"remote roots the profile makes available). The argument is ",
+			"ignored; will be removed in v0.5.0.",
+			call. = FALSE
+		)
+		dots$mirror_to_z <- NULL
+	}
 
 	if (is.null(path)) {
 		path <- dw_resolve_path(name = name, sector = sector, kind = kind,
-		                        vintage = vintage)
+		 vintage = vintage)
 	}
 
-	# Mode contract — reviewer-session must not write canonical
+	# Compute remote mirror destinations once (NA if not applicable).
+	mirrors <- .dw_remote_mirrors(path)
+	teams_mirror <- mirrors$teams
+	z_mirror <- mirrors$z
+
 	is_canon <- dw_is_canonical(path)
-	if (is_canon && !isTRUE(allow_canonical_write)) {
-		is_reviewer <- isTRUE(.try_get("dw_mode") == "reviewer")
-		if (is_reviewer) {
+	is_reviewer <- isTRUE(.try_get("dw_mode") == "reviewer")
+	is_producer <- isTRUE(.try_get("dw_mode") == "producer")
+
+	# === Reviewer-mode write guard (v0.4.0: broadened) ===
+	# Refuse any write whose primary path lands under a canonical root OR
+	# under the Z: drive root. Local sandbox writes still allowed.
+	if (is_reviewer && !isTRUE(allow_canonical_write)) {
+		under_z <- .dw_path_is_under_z(path)
+		if (is_canon || under_z) {
+			where <- if (under_z) "Z: drive" else "canonical (Teams) deposit"
 			stop(sprintf(
-				"[cso_toolkit.dw_save] Reviewer mode forbids writes under canonical: %s\n  Reviewer sessions must keep canonical deposits read-only to preserve vintage permanence; writes go to the sandbox.\n  Fix:\n    1. Resolve a sandbox path instead (the profile's teamsWrkData usually points there in reviewer mode), OR\n    2. If this is a deliberate Database Manager bootstrap, pass `allow_canonical_write = TRUE` to bypass the guard.",
-				path
+				"[cso_toolkit.dw_save] Reviewer mode forbids writes to %s: %s\n Reviewer sessions must keep canonical / Z: deposits read-only to preserve vintage permanence; writes go to the local repo sandbox.\n Fix:\n 1. Resolve a sandbox path instead (the profile's `teamsWrkData` should point there in reviewer mode), OR\n 2. If this is a deliberate Database Manager bootstrap, pass `allow_canonical_write = TRUE`.",
+				where, path
 			), call. = FALSE)
 		}
 	}
 
-	# Quality contract — isid before write
+	# === Producer-mode pre-flight (v0.4.0: at least one remote required) ===
+	# When primary is a repo-local sandbox write (i.e. NOT itself the
+	# canonical artifact), at least one of Teams or Z: must be reachable
+	# so the deposit is recoverable. Skip when allow_canonical_write
+	# bypasses the contract (rare DBM bootstrap path).
+	if (is_producer && !isTRUE(allow_canonical_write) && !is_canon) {
+		if (is.na(teams_mirror) && is.na(z_mirror)) {
+			stop(
+				"[cso_toolkit.dw_save] Producer-mode write requires at least ",
+				"one of Teams (preferred) or Z: drive to be mounted and ",
+				"writable; currently neither is available on this machine.\n",
+				" Primary path: ", path, "\n",
+				" Fix: map at least one -- preferably both. See the profile's ",
+				"Z: mount + Teams sync instructions. Set `teamsWrkDataCanonical` ",
+				"/ `teamsRawDataCanonical` (Teams roots) and `dwZDrive` + ",
+				"`dw_z_available <- TRUE` (Z: drive) in the profile.",
+				call. = FALSE
+			)
+		}
+	}
+
+	# === Overwrite check (v0.4.0: destinations that will actually be written) ===
+	# Refuse if primary OR (when the write will fan out) Teams/Z: mirror
+	# already exists, unless caller passed `overwrite = TRUE`. Default
+	# flipped from TRUE to FALSE in v0.4.0 (breaking change).
+	will_fan_out <- is_producer || (is_canon && isTRUE(allow_canonical_write))
+	if (!isTRUE(overwrite)) {
+		existing <- character(0)
+		if (file.exists(path)) existing <- c(existing, path)
+		if (will_fan_out) {
+			if (!is.na(teams_mirror) && file.exists(teams_mirror)) {
+				existing <- c(existing, teams_mirror)
+			}
+			if (!is.na(z_mirror) && file.exists(z_mirror)) {
+				existing <- c(existing, z_mirror)
+			}
+		}
+		if (length(existing) > 0) {
+			stop(
+				"[cso_toolkit.dw_save] File exists at the following ",
+				"destination(s) and `overwrite = FALSE`:\n ",
+				paste(existing, collapse = "\n "),
+				"\n Fix: pass `overwrite = TRUE` to confirm intentional ",
+				"replacement, or write to a different path. ",
+				"(Default flipped from TRUE to FALSE in v0.4.0; see NEWS.md ",
+				"migration notes.)",
+				call. = FALSE
+			)
+		}
+	}
+
+	# Quality contract -- isid before write
 	if (!is.null(isid) && is.data.frame(x)) {
 		dw_isid(x, keys = isid, where = path)
 	}
@@ -542,42 +758,37 @@ dw_save <- function(x,
 	if (file.exists(tmp_path)) file.remove(tmp_path)
 
 	fmt_for_dispatch <- tolower(tools::file_ext(sub("\\.gz$", "", path,
-	                                                ignore.case = TRUE)))
+	 ignore.case = TRUE)))
 	switch(fmt_for_dispatch,
-		csv = .write_csv(x, tmp_path, sep = ",",  compress = compress, ...),
+		csv = .write_csv(x, tmp_path, sep = ",", compress = compress, ...),
 		tsv = .write_csv(x, tmp_path, sep = "\t", compress = compress, ...),
 		txt = .write_csv(x, tmp_path, sep = "\t", compress = compress, ...),
 		xlsx = .write_xlsx(x, tmp_path, ...),
-		rds  = saveRDS(x, file = tmp_path, ...),
+		rds = saveRDS(x, file = tmp_path, ...),
 		rdata = .write_rdata(x, tmp_path, ...),
 		"rda" = .write_rdata(x, tmp_path, ...),
-		dta  = { .require("haven");    haven::write_dta(x, path = tmp_path, ...) },
+		dta = { .require("haven"); haven::write_dta(x, path = tmp_path, ...) },
 		parquet = { .require("arrow"); arrow::write_parquet(x, sink = tmp_path, ...) },
 		json = { .require("jsonlite"); jsonlite::write_json(x, path = tmp_path,
-		                                                    auto_unbox = TRUE,
-		                                                    pretty = TRUE, ...) },
-		yml  = { .require("yaml");     yaml::write_yaml(x, file = tmp_path, ...) },
-		yaml = { .require("yaml");     yaml::write_yaml(x, file = tmp_path, ...) },
+		 auto_unbox = TRUE,
+		 pretty = TRUE, ...) },
+		yml = { .require("yaml"); yaml::write_yaml(x, file = tmp_path, ...) },
+		yaml = { .require("yaml"); yaml::write_yaml(x, file = tmp_path, ...) },
 		stop(sprintf(
-			"[cso_toolkit.dw_save] Unsupported file extension '%s' (path: %s).\n  Supported extensions: csv, tsv, txt, xlsx, rds, RData, rda, dta, parquet, json, yml, yaml\n  Fix: rename the output so it has one of the supported extensions.",
+			"[cso_toolkit.dw_save] Unsupported file extension '%s' (path: %s).\n Supported extensions: csv, tsv, txt, xlsx, rds, RData, rda, dta, parquet, json, yml, yaml\n Fix: rename the output so it has one of the supported extensions.",
 			fmt_for_dispatch, path
 		), call. = FALSE)
 	)
 
-	if (!overwrite && file.exists(path)) {
-		file.remove(tmp_path)
-		stop(sprintf(
-			"[cso_toolkit.dw_save] File exists and overwrite = FALSE: %s\n  Fix: pass overwrite = TRUE to replace the existing file, or write to a different path.",
-			path
-		), call. = FALSE)
-	}
+	# Primary atomic rename (overwrite gate already enforced above
+	# across primary + Teams + Z: destinations).
 	ok_rename <- tryCatch(file.rename(tmp_path, path),
-	                     warning = function(w) FALSE,
-	                     error = function(e) FALSE)
+	 warning = function(w) FALSE,
+	 error = function(e) FALSE)
 	if (!isTRUE(ok_rename)) {
 		file.remove(tmp_path)
 		stop(sprintf(
-			"[cso_toolkit.dw_save] Atomic rename %s -> %s failed.\n  Fix: make sure the destination is not open in another process (Excel locks .xlsx files), then retry.",
+			"[cso_toolkit.dw_save] Atomic rename %s -> %s failed.\n Fix: make sure the destination is not open in another process (Excel locks .xlsx files), then retry.",
 			tmp_path, path
 		), call. = FALSE)
 	}
@@ -585,11 +796,38 @@ dw_save <- function(x,
 	# Provenance sidecar
 	if (isTRUE(provenance) && !fmt_for_dispatch %in% c("rdata", "rda")) {
 		.write_provenance(path, x, fmt = fmt_for_dispatch,
-		                  vintage = vintage, metadata = metadata, isid = isid)
+		 vintage = vintage, metadata = metadata, isid = isid)
 	}
 
-	# Z: drive mirror (only for canonical writes; silent on Z: absence)
-	if (is_canon && isTRUE(mirror_to_z)) {
+	# === Producer-mode redundant mirror writes (v0.4.0) ===
+	# Mirror to Teams + Z: whenever the profile makes either available.
+	# Single-mount scenarios (only Teams OR only Z:) succeed for that
+	# one mirror; double-mount writes to both. Reviewer-mode never
+	# reaches here (guarded above).
+	if (is_producer) {
+		if (!is.na(teams_mirror)) {
+			.dw_mirror_to_teams(path, teams_mirror)
+			# Provenance sidecar is also mirrored (best-effort).
+			sidecar <- paste0(path, ".provenance.json")
+			if (file.exists(sidecar)) {
+				.dw_mirror_to_teams(sidecar, paste0(teams_mirror, ".provenance.json"),
+				 verbose = FALSE)
+			}
+		}
+		if (!is.na(z_mirror)) {
+			.dw_mirror_to_teams(path, z_mirror) # same copy-semantics
+			sidecar <- paste0(path, ".provenance.json")
+			if (file.exists(sidecar)) {
+				.dw_mirror_to_teams(sidecar, paste0(z_mirror, ".provenance.json"),
+				 verbose = FALSE)
+			}
+		}
+	}
+
+	# === DBM bootstrap path: primary IS canonical ===
+	# When `allow_canonical_write = TRUE` and `is_canon`, the primary
+	# IS the canonical artifact; only Z: needs a separate mirror.
+	if (is_canon && isTRUE(allow_canonical_write)) {
 		.dw_mirror_to_z(path)
 	}
 
@@ -609,7 +847,7 @@ dw_save <- function(x,
 #' @param na Character. NA representation. Default `""`.
 #' @param row.names Logical. Include row names. Default `FALSE`.
 #' @param compress Logical. If `TRUE`, gzip output (passes
-#'   `compress = "gzip"` to `fwrite`).
+#' `compress = "gzip"` to `fwrite`).
 #' @param ... Passed to `data.table::fwrite`.
 #'
 #' @return Invisibly, the result of `fwrite`.
@@ -617,7 +855,7 @@ dw_save <- function(x,
 #' @keywords internal
 #' @noRd
 .write_csv <- function(x, path, sep = ",", na = "", row.names = FALSE,
-                       compress = FALSE, ...) {
+ compress = FALSE, ...) {
 	.require("data.table")
 	args <- list(x = x, file = path, sep = sep, na = na, ...)
 	if (isTRUE(compress)) args$compress <- "gzip"
@@ -633,7 +871,7 @@ dw_save <- function(x,
 #' @param x Data frame, named list of data frames, or `openxlsx::Workbook`.
 #' @param path Character. Output path.
 #' @param sheet Character. Sheet name when `x` is a bare data frame.
-#'   Default `"Sheet1"`.
+#' Default `"Sheet1"`.
 #' @param ... Passed to the underlying writer.
 #'
 #' @return Invisibly, the result of the underlying writer.
@@ -645,7 +883,7 @@ dw_save <- function(x,
 		.require("openxlsx")
 		openxlsx::saveWorkbook(x, file = path, overwrite = TRUE)
 	} else if (is.list(x) && !is.data.frame(x) && length(x) > 0 &&
-	           all(vapply(x, is.data.frame, logical(1)))) {
+	 all(vapply(x, is.data.frame, logical(1)))) {
 		.require("writexl")
 		writexl::write_xlsx(x, path = path, ...)
 	} else {
@@ -654,7 +892,7 @@ dw_save <- function(x,
 			writexl::write_xlsx(setNames(list(x), sheet), path = path, ...)
 		} else {
 			stop("dw_save (xlsx): `x` must be a data.frame, named list of data.frames, ",
-			     "or an openxlsx Workbook object.")
+			 "or an openxlsx Workbook object.")
 		}
 	}
 }
@@ -663,15 +901,15 @@ dw_save <- function(x,
 #'
 #' Internal. Handles two shapes:
 #' \itemize{
-#'   \item Named list — each element saved under its own name.
-#'   \item Single object — saved under the file's basename
-#'         (`tools::file_path_sans_ext`).
+#' \item Named list -- each element saved under its own name.
+#' \item Single object -- saved under the file's basename
+#' (`tools::file_path_sans_ext`).
 #' }
 #'
 #' @param x Object to save.
 #' @param path Character. Output path.
 #' @param name Character. Optional override for the in-file object name
-#'   when `x` is a single object.
+#' when `x` is a single object.
 #' @param ... Passed to `base::save`.
 #'
 #' @return Invisibly, `NULL`.
@@ -709,7 +947,7 @@ dw_save <- function(x,
 #' @keywords internal
 #' @noRd
 .write_provenance <- function(path, x, fmt, vintage = NULL,
-                              metadata = NULL, isid = NULL) {
+ metadata = NULL, isid = NULL) {
 	if (!requireNamespace("jsonlite", quietly = TRUE)) return(invisible(NULL))
 	sha <- if (requireNamespace("digest", quietly = TRUE)) {
 		digest::digest(file = path, algo = "sha256")
@@ -719,29 +957,29 @@ dw_save <- function(x,
 	} else list()
 	prov <- c(
 		list(
-			path        = path,
-			format      = fmt,
-			written_at  = format(Sys.time(), "%Y-%m-%dT%H:%M:%S%z", tz = "UTC"),
-			user        = Sys.getenv("USERNAME"),
-			dw_mode     = .try_get("dw_mode"),
-			vintage     = vintage,
-			sha256      = sha,
-			isid        = isid,
-			schema      = schema
+			path = path,
+			format = fmt,
+			written_at = format(Sys.time(), "%Y-%m-%dT%H:%M:%S%z", tz = "UTC"),
+			user = Sys.getenv("USERNAME"),
+			dw_mode = .try_get("dw_mode"),
+			vintage = vintage,
+			sha256 = sha,
+			isid = isid,
+			schema = schema
 		),
 		if (!is.null(metadata)) list(metadata = metadata) else list()
 	)
 	# Wrap the sidecar write so a non-JSON-serialisable metadata value
-	# (rare but possible — e.g. a Date class) emits a warning rather
-	# than rolling back the primary file write.  Sidecar is metadata;
-	# the asset is what matters.  Backported from DW-Production; see B3
+	# (rare but possible -- e.g. a Date class) emits a warning rather
+	# than rolling back the primary file write. Sidecar is metadata;
+	# the asset is what matters. Backported from DW-Production; see B3
 	# in docs/dw-production-alignment-2026-05-25.md.
 	tryCatch(
 		jsonlite::write_json(prov, path = paste0(path, ".provenance.json"),
-		                     auto_unbox = TRUE, pretty = TRUE),
+		 auto_unbox = TRUE, pretty = TRUE),
 		error = function(e) {
 			warning(sprintf(
-				"[cso_toolkit.dw_save] Provenance sidecar write failed for %s: %s\n  Primary file unaffected; metadata may contain non-serialisable objects.\n  Fix: ensure all metadata values are JSON-serialisable (atomic types, lists of atomics, or named lists thereof).",
+				"[cso_toolkit.dw_save] Provenance sidecar write failed for %s: %s\n Primary file unaffected; metadata may contain non-serialisable objects.\n Fix: ensure all metadata values are JSON-serialisable (atomic types, lists of atomics, or named lists thereof).",
 				path, conditionMessage(e)
 			), call. = FALSE)
 		}
@@ -749,7 +987,7 @@ dw_save <- function(x,
 }
 
 # ============================================================================
-# dw_use — uniform read with auto-dispatch + Z: integrity check
+# dw_use -- uniform read with auto-dispatch + Z: integrity check
 # ============================================================================
 
 #' Read a file from disk, dispatching on the file extension
@@ -757,7 +995,7 @@ dw_save <- function(x,
 #' Companion to [dw_save()] with the same extension matrix and path
 #' resolution. Adds a non-blocking Z: integrity check for canonical reads.
 #'
-#' **Z: integrity** — automatic. When the resolved path is under canonical
+#' **Z: integrity** -- automatic. When the resolved path is under canonical
 #' AND `dw_z_available == TRUE`, a size-check (default; cheap) compares
 #' Teams vs Z:. Mismatch emits a warning; the read still proceeds (with
 #' the Teams data). Skip via `verify_z = FALSE`. Use
@@ -768,37 +1006,37 @@ dw_save <- function(x,
 #' @param sector Character. Sector folder (e.g. `"ed"`, `"nt"`).
 #' @param kind Character. One of `"wrk"`, `"raw"`, `"meta"`. Default `"wrk"`.
 #' @param cols Character vector. Optional column subset (for `.csv`, `.tsv`,
-#'   `.xlsx`, `.dta`, `.parquet`).
+#' `.xlsx`, `.dta`, `.parquet`).
 #' @param as Character. Return type: `"tibble"` (default), `"data.frame"`,
-#'   or `"data.table"`.
+#' or `"data.table"`.
 #' @param fallback_canonical Logical. If the literal path is missing, retry
-#'   under the canonical root by substituting `teamsRawData ->
-#'   teamsRawDataCanonical`, `teamsWrkData -> teamsWrkDataCanonical`, etc.
-#'   Default `TRUE` (lets reviewer-mode reads find the deposit).
+#' under the canonical root by substituting `teamsRawData ->
+#' teamsRawDataCanonical`, `teamsWrkData -> teamsWrkDataCanonical`, etc.
+#' Default `TRUE` (lets reviewer-mode reads find the deposit).
 #' @param verify_z `TRUE`, `FALSE`, or `"sha256"`. Controls the Z: integrity
-#'   check for canonical reads. Default `TRUE` (size compare).
+#' check for canonical reads. Default `TRUE` (size compare).
 #' @param ... Format-specific arguments passed through to the underlying
-#'   reader.
+#' reader.
 #'
 #' @return The loaded object. Tabular formats are coerced to the requested
-#'   `as` shape.
+#' `as` shape.
 #'
 #' @examples
 #' \dontrun{
 #' warehouse <- dw_use(name = "dw_ed_edu.csv", sector = "ed", kind = "wrk")
 #' }
 #' @seealso [dw_save()] for the write counterpart; [dw_verify_z()] for
-#'   the underlying integrity check.
+#' the underlying integrity check.
 #' @family io
 #' @export
 dw_use <- function(path = NULL,
-                   name = NULL, sector = NULL,
-                   kind = c("wrk", "raw", "meta"),
-                   cols = NULL,
-                   as = c("tibble", "data.frame", "data.table"),
-                   fallback_canonical = TRUE,
-                   verify_z = TRUE,
-                   ...) {
+ name = NULL, sector = NULL,
+ kind = c("wrk", "raw", "meta"),
+ cols = NULL,
+ as = c("tibble", "data.frame", "data.table"),
+ fallback_canonical = TRUE,
+ verify_z = TRUE,
+ ...) {
 	kind <- match.arg(kind)
 	as <- match.arg(as)
 
@@ -815,35 +1053,35 @@ dw_use <- function(path = NULL,
 			res <- dw_verify_z(resolved, compare = cmp)
 			if (!is.null(res) && !res$status %in% c("match_size", "match_sha256", "no_z_mirror")) {
 				warning("[dw_use] Z: integrity check failed: ", res$status,
-				        "\n  Teams: ", res$path,
-				        "\n  Z:    ", res$z_path %||% "<no z path>")
+				 "\n Teams: ", res$path,
+				 "\n Z: ", res$z_path %||% "<no z path>")
 			}
 		}
 	}
 
 	fmt <- tolower(tools::file_ext(sub("\\.gz$", "", resolved, ignore.case = TRUE)))
 	x <- switch(fmt,
-		csv = .read_csv(resolved, sep = ",",  cols = cols, ...),
+		csv = .read_csv(resolved, sep = ",", cols = cols, ...),
 		tsv = .read_csv(resolved, sep = "\t", cols = cols, ...),
 		txt = .read_csv(resolved, sep = "\t", cols = cols, ...),
 		xlsx = .read_xlsx(resolved, cols = cols, ...),
-		rds  = readRDS(resolved, ...),
+		rds = readRDS(resolved, ...),
 		rdata = .read_rdata(resolved, ...),
 		"rda" = .read_rdata(resolved, ...),
-		dta  = { .require("haven");    haven::read_dta(resolved, col_select = cols, ...) },
+		dta = { .require("haven"); haven::read_dta(resolved, col_select = cols, ...) },
 		parquet = { .require("arrow"); arrow::read_parquet(resolved, col_select = cols, ...) },
 		json = { .require("jsonlite"); jsonlite::read_json(resolved, ...) },
-		yml  = { .require("yaml");     yaml::read_yaml(resolved, ...) },
-		yaml = { .require("yaml");     yaml::read_yaml(resolved, ...) },
+		yml = { .require("yaml"); yaml::read_yaml(resolved, ...) },
+		yaml = { .require("yaml"); yaml::read_yaml(resolved, ...) },
 		stop(sprintf(
-			"[cso_toolkit.dw_use] Unsupported file extension '%s' (path: %s).\n  Supported extensions: csv, tsv, txt, xlsx, rds, RData, rda, dta, parquet, json, yml, yaml\n  Fix: ensure the file has one of the supported extensions.",
+			"[cso_toolkit.dw_use] Unsupported file extension '%s' (path: %s).\n Supported extensions: csv, tsv, txt, xlsx, rds, RData, rda, dta, parquet, json, yml, yaml\n Fix: ensure the file has one of the supported extensions.",
 			fmt, resolved
 		), call. = FALSE)
 	)
 
 	if (fmt %in% c("csv", "tsv", "txt", "xlsx", "dta", "parquet")) {
 		x <- switch(as,
-			"tibble"     = { .require("tibble"); tibble::as_tibble(x) },
+			"tibble" = { .require("tibble"); tibble::as_tibble(x) },
 			"data.frame" = as.data.frame(x),
 			"data.table" = { .require("data.table"); data.table::as.data.table(x) }
 		)
@@ -865,7 +1103,7 @@ dw_use <- function(path = NULL,
 .read_csv <- function(path, sep, cols = NULL, ...) {
 	.require("data.table")
 	data.table::fread(input = path, sep = sep,
-	                  select = cols, showProgress = FALSE, ...)
+	 select = cols, showProgress = FALSE, ...)
 }
 
 #' XLSX reader (readxl::read_xlsx wrapper)
@@ -910,27 +1148,27 @@ dw_use <- function(path = NULL,
 #'
 #' @param path Character. Literal path that may not exist.
 #' @param fallback_canonical Logical. When `FALSE`, stop immediately on a
-#'   missing literal path instead of trying canonical.
+#' missing literal path instead of trying canonical.
 #'
 #' @return Character. A path that exists.
 #'
 # ============================================================================
 # Remote-URL freeze (B1 from DW-Production alignment audit, 2026-05-25)
 #
-# `dw_use("https://...")` is a first-class call site.  The URL must be
+# `dw_use("https://...")` is a first-class call site. The URL must be
 # in `dw_url_allowlist` (set by the consumer's profile; empty by
 # default so the toolkit ships consumer-neutral); the response is
 # downloaded once into the frozen-cache root and read from that
-# frozen path on every subsequent call.  Reviewer mode rejects calls
+# frozen path on every subsequent call. Reviewer mode rejects calls
 # that haven't been frozen by a producer yet, mirroring the existing
 # no-API contract.
 # ============================================================================
 
 #' Is the URL allowlisted for remote-URL freeze?
 #'
-#' Internal.  Reads `dw_url_allowlist` from `.GlobalEnv` (set by the
-#' consumer's profile).  Each entry is a PCRE; the URL matches if any
-#' pattern matches.  Empty / unset allowlist => no remote URLs allowed.
+#' Internal. Reads `dw_url_allowlist` from `.GlobalEnv` (set by the
+#' consumer's profile). Each entry is a PCRE; the URL matches if any
+#' pattern matches. Empty / unset allowlist => no remote URLs allowed.
 #'
 #' @keywords internal
 #' @noRd
@@ -946,10 +1184,10 @@ dw_use <- function(path = NULL,
 
 #' Frozen-cache root for remote-URL freezes
 #'
-#' Internal.  Resolution order:
-#'   1. `dw_frozen_root` global if set;
-#'   2. `<githubFolder>/_frozen` if `githubFolder` is set;
-#'   3. `<getwd()>/_frozen`.
+#' Internal. Resolution order:
+#' 1. `dw_frozen_root` global if set;
+#' 2. `<githubFolder>/_frozen` if `githubFolder` is set;
+#' 3. `<getwd()>/_frozen`.
 #'
 #' @keywords internal
 #' @noRd
@@ -978,12 +1216,12 @@ dw_use <- function(path = NULL,
 	.require("digest")
 	.require("jsonlite")
 	prov <- list(
-		url        = url,
-		sha256     = digest::digest(file = frozen_path, algo = "sha256"),
-		bytes      = unname(file.size(frozen_path)),
+		url = url,
+		sha256 = digest::digest(file = frozen_path, algo = "sha256"),
+		bytes = unname(file.size(frozen_path)),
 		fetched_at = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"),
 		fetched_by = unname(Sys.info()[["user"]]),
-		dw_mode    = .try_get("dw_mode") %||% "unknown"
+		dw_mode = .try_get("dw_mode") %||% "unknown"
 	)
 	sidecar <- paste0(frozen_path, ".provenance.json")
 	tryCatch(
@@ -1009,11 +1247,11 @@ dw_use <- function(path = NULL,
 	sidecar <- .write_remote_provenance(url, frozen_path)
 	message("[dw_use:remote] Frozen to: ", frozen_path)
 	message("[dw_use:remote] COMMIT the frozen file + ", basename(sidecar),
-	        " so subsequent runs are deterministic.")
+	 " so subsequent runs are deterministic.")
 	invisible(frozen_path)
 }
 
-#' Resolve a remote URL — freeze on first download, error in reviewer
+#' Resolve a remote URL -- freeze on first download, error in reviewer
 #' mode if not yet frozen
 #'
 #' @keywords internal
@@ -1022,26 +1260,26 @@ dw_use <- function(path = NULL,
 	if (!.is_allowlisted_url(url)) {
 		allow <- .try_get("dw_url_allowlist")
 		allow_str <- if (length(allow) == 0 ||
-		                 (is.atomic(allow) && all(is.na(allow)))) {
+		 (is.atomic(allow) && all(is.na(allow)))) {
 			"<empty>"
 		} else {
 			paste(allow, collapse = ", ")
 		}
 		stop(sprintf(
-			"[cso_toolkit.dw_use] URL not in `dw_url_allowlist`: %s\n  Configured allowlist: %s\n  Fix: extend dw_url_allowlist in the consumer's profile, e.g.\n    dw_url_allowlist <- c(dw_url_allowlist, '^https://raw\\\\.githubusercontent\\\\.com/your-org/')",
+			"[cso_toolkit.dw_use] URL not in `dw_url_allowlist`: %s\n Configured allowlist: %s\n Fix: extend dw_url_allowlist in the consumer's profile, e.g.\n dw_url_allowlist <- c(dw_url_allowlist, '^https://raw\\\\.githubusercontent\\\\.com/your-org/')",
 			url, allow_str
 		), call. = FALSE)
 	}
 	frozen_path <- .url_to_frozen_path(url)
 	if (file.exists(frozen_path)) {
 		message("[dw_use:remote] Reading frozen: ",
-		        sub(.dw_frozen_root(), "<dw_frozen_root>", frozen_path, fixed = TRUE))
+		 sub(.dw_frozen_root(), "<dw_frozen_root>", frozen_path, fixed = TRUE))
 		return(frozen_path)
 	}
 	is_reviewer <- isTRUE(.try_get("dw_mode") == "reviewer")
 	if (is_reviewer) {
 		stop(sprintf(
-			"[cso_toolkit.dw_use:remote] Reviewer mode forbids fetching from the network.\n  Missing frozen copy: %s\n  URL:                 %s\n  Fix: a producer must call dw_use('%s') once and commit the frozen file + sidecar before the reviewer pipeline can read it.",
+			"[cso_toolkit.dw_use:remote] Reviewer mode forbids fetching from the network.\n Missing frozen copy: %s\n URL: %s\n Fix: a producer must call dw_use('%s') once and commit the frozen file + sidecar before the reviewer pipeline can read it.",
 			frozen_path, url, url
 		), call. = FALSE)
 	}
@@ -1054,26 +1292,107 @@ dw_use <- function(path = NULL,
 #' @keywords internal
 #' @noRd
 .resolve_for_read <- function(path, fallback_canonical) {
-	# Remote URL?  Hand off to the freeze resolver.
+	# Remote URL? Hand off to the freeze resolver.
 	if (grepl("^https?://", path)) {
 		return(.resolve_remote_url(path))
 	}
+
+	# v0.4.0: branch by mode.
+	is_reviewer <- isTRUE(.try_get("dw_mode") == "reviewer")
+	if (is_reviewer) {
+		return(.resolve_for_read_reviewer(path, fallback_canonical))
+	}
+	.resolve_for_read_producer(path, fallback_canonical)
+}
+
+#' Resolve a read path with NETWORK-FIRST order (reviewer mode)
+#'
+#' v0.4.0 (issue #14): for reviewer-mode reads we try canonical
+#' destinations (Teams, then Z:) BEFORE falling back to the repo-local
+#' copy. Rationale: reviewers must test against the producer-deposited
+#' artifact, not a stale local cache that has drifted.
+#'
+#' Order:
+#' 1. Canonical Teams path (substitute sandbox root -> canonical root).
+#' 2. Z: drive mirror of the canonical Teams path.
+#' 3. Repo-local literal path (with `warning()` flagging provenance gap).
+#' 4. `stop()` with "contact the sector producer" message.
+#'
+#' @keywords internal
+#' @noRd
+.resolve_for_read_reviewer <- function(path, fallback_canonical) {
+	# Normalise the literal path once so equality / startsWith below
+	# behave on Windows mixed-separator + 8.3 short-name inputs.
+	path_n <- .normalize_for_comparison(path)
+
+	# If the literal path IS canonical AND it exists, prefer it directly.
+	if (dw_is_canonical(path_n) && file.exists(path_n)) {
+		return(path_n)
+	}
+
+	mirrors <- .dw_remote_mirrors(path_n)
+	teams_alt <- mirrors$teams
+	z_alt <- mirrors$z
+	attempted <- character(0)
+
+	# 1. Teams canonical
+	if (!is.na(teams_alt) && nzchar(teams_alt)) {
+		attempted <- c(attempted, teams_alt)
+		if (file.exists(teams_alt)) {
+			message("[dw_use:reviewer] Reading canonical (Teams): ", teams_alt)
+			return(teams_alt)
+		}
+	}
+
+	# 2. Z: drive mirror (derived from Teams canonical)
+	if (!is.na(z_alt) && nzchar(z_alt)) {
+		attempted <- c(attempted, z_alt)
+		if (file.exists(z_alt)) {
+			message("[dw_use:reviewer] Reading Z: mirror: ", z_alt)
+			return(z_alt)
+		}
+	}
+
+	# 3. Repo-local fallback (with provenance warning)
+	attempted <- c(attempted, path)
+	if (isTRUE(fallback_canonical) && file.exists(path)) {
+		warning(sprintf(
+			"[cso_toolkit.dw_use] Reviewer-mode canonical paths unavailable; falling back to repo-local copy at %s. This breaks provenance -- re-mount Teams / Z: before relying on this output.",
+			path
+		), call. = FALSE)
+		return(path)
+	}
+
+	# 4. Hard-stop
+	stop(sprintf(
+		"[cso_toolkit.dw_use] Reviewer-mode read: file '%s' not found on Teams, Z:, or in the repo.\n Attempted:\n %s\n Fix: the producer has not deposited this artifact yet, or your network mount is missing. Contact the sector producer.",
+		basename(path),
+		paste(unique(attempted), collapse = "\n ")
+	), call. = FALSE)
+}
+
+#' Resolve a read path with LOCAL-FIRST order (producer mode; v0.3.0
+#' behaviour preserved)
+#'
+#' @keywords internal
+#' @noRd
+.resolve_for_read_producer <- function(path, fallback_canonical) {
 	if (file.exists(path)) return(path)
 	if (!isTRUE(fallback_canonical)) {
 		stop(sprintf(
-			"[cso_toolkit.dw_use] File not found and fallback_canonical = FALSE: %s\n  Fix: drop the fallback_canonical = FALSE argument, or verify the path exists.",
+			"[cso_toolkit.dw_use] File not found and fallback_canonical = FALSE: %s\n Fix: drop the fallback_canonical = FALSE argument, or verify the path exists.",
 			path
 		), call. = FALSE)
 	}
 	swaps <- list(
 		c(.try_get("teamsRawData"), .try_get("teamsRawDataCanonical")),
 		c(.try_get("teamsWrkData"), .try_get("teamsWrkDataCanonical")),
-		c(.try_get("teamsFolder"),  .try_get("teamsFolderCanonical"))
+		c(.try_get("teamsFolder"), .try_get("teamsFolderCanonical"))
 	)
-	attempted <- character(0)
-	attempted <- c(attempted, path)
+	attempted <- c(path)
 	for (sw in swaps) {
-		if (!any(is.na(sw)) && sw[1] != sw[2] && startsWith(path, sw[1])) {
+		if (!any(is.na(sw)) && nzchar(sw[1]) && nzchar(sw[2]) &&
+		 sw[1] != sw[2] && startsWith(path, sw[1])) {
 			alt <- sub(paste0("^", sw[1]), sw[2], path, fixed = FALSE)
 			attempted <- c(attempted, alt)
 			if (file.exists(alt)) {
@@ -1083,13 +1402,13 @@ dw_use <- function(path = NULL,
 		}
 	}
 	stop(sprintf(
-		"[cso_toolkit.dw_use] File not found at literal path or under any configured canonical root.\n  Attempted:\n    %s\n  Fix: confirm the file was produced by the upstream pipeline, or that team*Canonical globals are set to the right roots.",
-		paste(attempted, collapse = "\n    ")
+		"[cso_toolkit.dw_use] File not found at literal path or under any configured canonical root.\n Attempted:\n %s\n Fix: confirm the file was produced by the upstream pipeline, or that team*Canonical globals are set to the right roots.",
+		paste(attempted, collapse = "\n ")
 	), call. = FALSE)
 }
 
 # ============================================================================
-# dw_compare — generalised compare-vs-canonical (lifted from nt/5b)
+# dw_compare -- generalised compare-vs-canonical (lifted from nt/5b)
 # ============================================================================
 
 #' Compare a current dataset against a reference (added / removed / changed)
@@ -1104,36 +1423,36 @@ dw_use <- function(path = NULL,
 #' @param reference Data frame or character path to a file. The "old" side.
 #' @param by Character vector of key columns.
 #' @param value_cols Character vector of columns to value-compare. Default
-#'   `NULL` (= all non-key columns present on both sides).
+#' `NULL` (= all non-key columns present on both sides).
 #' @param numeric_value_cols Subset of `value_cols` to treat as numeric
-#'   (uses `tol`). Others are string-compared.
+#' (uses `tol`). Others are string-compared.
 #' @param tol Numeric tolerance for numeric value comparisons. Default
-#'   `1e-5`.
+#' `1e-5`.
 #' @param label Character. Label used in the summary row and report
-#'   filenames. Default `"compare"`.
+#' filenames. Default `"compare"`.
 #' @param write_report_to Character. Directory to write
-#'   `<label>_summary.csv`, `<label>_added_rows.csv`,
-#'   `<label>_removed_rows.csv`, `<label>_changed_rows.csv`. Default
-#'   `NULL` (don't write).
+#' `<label>_summary.csv`, `<label>_added_rows.csv`,
+#' `<label>_removed_rows.csv`, `<label>_changed_rows.csv`. Default
+#' `NULL` (don't write).
 #'
 #' @return A list with `summary` (one-row tibble) and `added`, `removed`,
-#'   `changed` data frames.
+#' `changed` data frames.
 #'
 #' @seealso [dw_use()] (used to materialise the inputs when paths are
-#'   supplied); [dw_merge()] for a Stata-style join with cardinality
-#'   assertion.
+#' supplied); [dw_merge()] for a Stata-style join with cardinality
+#' assertion.
 #' @family io
 #' @export
 dw_compare <- function(current, reference,
-                       by,
-                       value_cols = NULL,
-                       numeric_value_cols = NULL,
-                       tol = 1e-5,
-                       label = "compare",
-                       write_report_to = NULL) {
+ by,
+ value_cols = NULL,
+ numeric_value_cols = NULL,
+ tol = 1e-5,
+ label = "compare",
+ write_report_to = NULL) {
 
 	.require("dplyr")
-	if (is.character(current)   && length(current)   == 1) current   <- dw_use(current)
+	if (is.character(current) && length(current) == 1) current <- dw_use(current)
 	if (is.character(reference) && length(reference) == 1) reference <- dw_use(reference)
 
 	common <- intersect(names(current), names(reference))
@@ -1144,7 +1463,7 @@ dw_compare <- function(current, reference,
 		ref_cols <- paste(utils::head(names(reference), 8), collapse = ", ")
 		if (length(names(reference)) > 8) ref_cols <- paste0(ref_cols, "...")
 		stop(sprintf(
-			"[cso_toolkit.dw_compare] No `by` columns are present in both sides.\n  Current columns:   %s\n  Reference columns: %s\n  Fix: pass at least one column name that appears in BOTH data frames as a join key.",
+			"[cso_toolkit.dw_compare] No `by` columns are present in both sides.\n Current columns: %s\n Reference columns: %s\n Fix: pass at least one column name that appears in BOTH data frames as a join key.",
 			cur_cols, ref_cols
 		), call. = FALSE)
 	}
@@ -1156,26 +1475,26 @@ dw_compare <- function(current, reference,
 		v[is.na(v) | v %in% c("NA", "N/A", "NULL", ".")] <- ""
 		v
 	}
-	current   <- dplyr::mutate(current,   dplyr::across(dplyr::all_of(common), norm))
+	current <- dplyr::mutate(current, dplyr::across(dplyr::all_of(common), norm))
 	reference <- dplyr::mutate(reference, dplyr::across(dplyr::all_of(common), norm))
 
-	added   <- dplyr::anti_join(current,   reference, by = by)
-	removed <- dplyr::anti_join(reference, current,   by = by)
+	added <- dplyr::anti_join(current, reference, by = by)
+	removed <- dplyr::anti_join(reference, current, by = by)
 
-	cur_sub <- dplyr::select(current,   dplyr::all_of(c(by, value_cols)))
+	cur_sub <- dplyr::select(current, dplyr::all_of(c(by, value_cols)))
 	ref_sub <- dplyr::select(reference, dplyr::all_of(c(by, value_cols)))
-	joined  <- dplyr::inner_join(ref_sub, cur_sub, by = by,
-	                             suffix = c("_reference", "_current"))
+	joined <- dplyr::inner_join(ref_sub, cur_sub, by = by,
+	 suffix = c("_reference", "_current"))
 
 	values_equal <- function(a, b, numeric) {
 		both_missing <- (a == "") & (b == "")
 		if (numeric) {
 			an <- suppressWarnings(as.numeric(a))
 			bn <- suppressWarnings(as.numeric(b))
-			both_numeric  <- !is.na(an) & !is.na(bn)
+			both_numeric <- !is.na(an) & !is.na(bn)
 			numeric_equal <- both_numeric & abs(an - bn) <= tol
 			both_str <- is.na(an) & is.na(bn)
-			str_eq   <- both_str & a == b
+			str_eq <- both_str & a == b
 			both_missing | numeric_equal | str_eq
 		} else {
 			both_missing | a == b
@@ -1194,12 +1513,12 @@ dw_compare <- function(current, reference,
 	summary_tbl <- tibble::tibble(
 		label = label,
 		reference_rows = nrow(reference),
-		current_rows   = nrow(current),
-		row_delta      = nrow(current) - nrow(reference),
-		added          = nrow(added),
-		removed        = nrow(removed),
-		changed        = nrow(changed),
-		completed_at   = format(Sys.time(), "%Y-%m-%d %H:%M:%S")
+		current_rows = nrow(current),
+		row_delta = nrow(current) - nrow(reference),
+		added = nrow(added),
+		removed = nrow(removed),
+		changed = nrow(changed),
+		completed_at = format(Sys.time(), "%Y-%m-%d %H:%M:%S")
 	)
 
 	if (!is.null(write_report_to)) {
@@ -1207,16 +1526,16 @@ dw_compare <- function(current, reference,
 		prefix <- file.path(write_report_to, label)
 		.require("data.table")
 		data.table::fwrite(summary_tbl, paste0(prefix, "_summary.csv"))
-		data.table::fwrite(added,       paste0(prefix, "_added_rows.csv"))
-		data.table::fwrite(removed,     paste0(prefix, "_removed_rows.csv"))
-		data.table::fwrite(changed,     paste0(prefix, "_changed_rows.csv"))
+		data.table::fwrite(added, paste0(prefix, "_added_rows.csv"))
+		data.table::fwrite(removed, paste0(prefix, "_removed_rows.csv"))
+		data.table::fwrite(changed, paste0(prefix, "_changed_rows.csv"))
 	}
 
 	list(summary = summary_tbl, added = added, removed = removed, changed = changed)
 }
 
 # ============================================================================
-# dw_merge — Stata-style merge with cardinality assert
+# dw_merge -- Stata-style merge with cardinality assert
 # ============================================================================
 
 #' Stata-style merge with cardinality assertion
@@ -1227,16 +1546,16 @@ dw_compare <- function(current, reference,
 #'
 #' @param x Left-hand data frame.
 #' @param using Right-hand data frame, OR a character path passed through
-#'   [dw_use()].
+#' [dw_use()].
 #' @param by Character vector of join keys.
 #' @param how Character. One of `"m:1"`, `"1:1"`, `"1:m"`, `"m:m"`.
-#'   Default `"m:1"`.
+#' Default `"m:1"`.
 #' @param ... Passed to `dplyr::left_join`.
 #'
 #' @return The joined data frame.
 #'
 #' @seealso [dw_use()] (used to materialise `using` when a path is
-#'   supplied); [dw_compare()] for a row-level diff.
+#' supplied); [dw_compare()] for a row-level diff.
 #' @family io
 #' @export
 dw_merge <- function(x, using, by, how = c("m:1", "1:1", "1:m", "m:m"), ...) {
@@ -1249,11 +1568,11 @@ dw_merge <- function(x, using, by, how = c("m:1", "1:1", "1:m", "m:m"), ...) {
 	expected_y_dup <- how %in% c("1:m", "m:m")
 	if (x_dup != expected_x_dup) {
 		warning("dw_merge: left-side duplicates on `by` (",
-		        paste(by, collapse = ","), ") do not match how='", how, "'")
+		 paste(by, collapse = ","), ") do not match how='", how, "'")
 	}
 	if (y_dup != expected_y_dup) {
 		warning("dw_merge: right-side duplicates on `by` (",
-		        paste(by, collapse = ","), ") do not match how='", how, "'")
+		 paste(by, collapse = ","), ") do not match how='", how, "'")
 	}
 	dplyr::left_join(x, y, by = by, ...)
 }
@@ -1262,39 +1581,39 @@ dw_merge <- function(x, using, by, how = c("m:1", "1:1", "1:m", "m:m"), ...) {
 # Example usage
 # ============================================================================
 #
-# source("00_functions/dw_io.R")  # auto-sourced by profile
+# source("00_functions/dw_io.R") # auto-sourced by profile
 #
-# # WRITE — path resolution honours session mode (producer or reviewer)
+# # WRITE -- path resolution honours session mode (producer or reviewer)
 # dw_save(edu_sdg_uis,
-#         name = "dw_ed_edu.csv", sector = "ed", kind = "wrk",
-#         isid = c("DATAFLOW","REF_AREA","INDICATOR","SEX",
-#                  "WEALTH_QUINTILE","RESIDENCE","TIME_PERIOD"),
-#         metadata = list(
-#           title    = "Education indicators — UNICEF DW format",
-#           producer = "01_dw_prep/012_codes/ed/02_aggregate_uis_sdg.R",
-#           sources  = c("UIS bulk SDG_092025", "WPP 2024"),
-#           contact  = "@karavan88",
-#           vintage  = "2026-05"
-#         ))
+# name = "dw_ed_edu.csv", sector = "ed", kind = "wrk",
+# isid = c("DATAFLOW","REF_AREA","INDICATOR","SEX",
+# "WEALTH_QUINTILE","RESIDENCE","TIME_PERIOD"),
+# metadata = list(
+# title = "Education indicators -- UNICEF DW format",
+# producer = "01_dw_prep/012_codes/ed/02_aggregate_uis_sdg.R",
+# sources = c("UIS bulk SDG_092025", "WPP 2024"),
+# contact = "@karavan88",
+# vintage = "2026-05"
+# ))
 # # In producer session: writes to Teams + carbon copy to Z: + provenance sidecar.
 # # In reviewer session: writes to sandbox + provenance sidecar (no Z: mirror;
 # # sandbox is not under canonical).
 #
-# # READ — automatic Z: integrity check on canonical reads
+# # READ -- automatic Z: integrity check on canonical reads
 # warehouse <- dw_use(name = "dw_ed_edu.csv", sector = "ed", kind = "wrk")
 # # If Teams vs Z: differ, a warning is emitted; the read still completes.
 #
 # # Database-Manager bootstrap in reviewer session (rare; explicit):
 # dw_save(pop_school_age,
-#         name = "pop_school_age.csv", sector = "ed", kind = "raw",
-#         allow_canonical_write = TRUE)   # bypasses reviewer-mode guard
+# name = "pop_school_age.csv", sector = "ed", kind = "raw",
+# allow_canonical_write = TRUE) # bypasses reviewer-mode guard
 #
 # # Compare
 # report <- dw_compare(
-#   current   = dw_use(name = "dw_ed_edu.csv", sector = "ed", kind = "wrk"),
-#   reference = dw_use(path = file.path(teamsWrkDataCanonical, "ed/dw_ed_edu.csv")),
-#   by        = c("DATAFLOW","REF_AREA","INDICATOR","SEX","WEALTH_QUINTILE","TIME_PERIOD"),
-#   value_cols = c("OBS_VALUE", "DATA_SOURCE"),
-#   numeric_value_cols = "OBS_VALUE",
-#   tol = 1e-5
+# current = dw_use(name = "dw_ed_edu.csv", sector = "ed", kind = "wrk"),
+# reference = dw_use(path = file.path(teamsWrkDataCanonical, "ed/dw_ed_edu.csv")),
+# by = c("DATAFLOW","REF_AREA","INDICATOR","SEX","WEALTH_QUINTILE","TIME_PERIOD"),
+# value_cols = c("OBS_VALUE", "DATA_SOURCE"),
+# numeric_value_cols = "OBS_VALUE",
+# tol = 1e-5
 # )

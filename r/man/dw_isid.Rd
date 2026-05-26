@@ -17,7 +17,7 @@ identify rows.}
 }
 \value{
 Invisibly, `TRUE` when the check passes. Stops with a sample
-  of duplicates when it fails.
+of duplicates when it fails.
 }
 \description{
 Raises an informative error if `df` has duplicate rows on the supplied
@@ -34,7 +34,7 @@ dw_isid(df, keys = "REF_AREA")
 }
 \seealso{
 [dw_save()] (auto-invokes `dw_isid` when an `isid =` argument
-  is passed).
+is passed).
 
 Other io: 
 \code{\link{dw_compare}()},
@@ -42,6 +42,7 @@ Other io:
 \code{\link{dw_merge}()},
 \code{\link{dw_resolve_path}()},
 \code{\link{dw_save}()},
+\code{\link{dw_toolkit_version}()},
 \code{\link{dw_use}()},
 \code{\link{dw_verify_z}()}
 }
