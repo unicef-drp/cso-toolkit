@@ -62,6 +62,13 @@ program define   dw_use, rclass
         error 198
     }
 
+    * Default extension: if `filename()` has no dot, assume `.dta` so
+    * callers can write `dw_use, filename("dw_ed_edu")` mirroring the
+    * `dw_save, filename("dw_ed_edu")` convention.
+    if strpos(`"`filename'"', ".") == 0 {
+        local filename `"`filename'.dta"'
+    }
+
     * Path may be empty when the caller passes an absolute filename.
     if `"`path'"' != "" {
         local fullpath `"`path'/`filename'"'
@@ -77,19 +84,55 @@ program define   dw_use, rclass
     local resolution "literal"
 
     if "$dw_mode" == "reviewer" {
-        * Network-first: Teams canonical -> Z: drive -> repo-local
-        local teams_alt ""
-        if "$teamsWrkDataCanonical" != "" & strpos(`"`fullpath'"', "$teamsWrkData") == 1 {
-            local rel = substr(`"`fullpath'"', length("$teamsWrkData") + 1, .)
-            local teams_alt `"$teamsWrkDataCanonical`rel'"'
+        * Network-first: Teams canonical -> Z: drive -> repo-local.
+        * If the caller passed a path that is ALREADY canonical or Z:,
+        * skip the prefix-swap and accept the literal first so a
+        * caller doing `dw_use, filename("...", path("$teamsWrkDataCanonical/..."))`
+        * does not falsely hard-stop with `nofallback_canonical`.
+        local is_already_canon 0
+        if "$teamsWrkDataCanonical" != "" & strpos(`"`fullpath'"', "$teamsWrkDataCanonical") == 1 {
+            local is_already_canon 1
         }
-        else if "$teamsRawDataCanonical" != "" & strpos(`"`fullpath'"', "$teamsRawData") == 1 {
-            local rel = substr(`"`fullpath'"', length("$teamsRawData") + 1, .)
-            local teams_alt `"$teamsRawDataCanonical`rel'"'
+        else if "$teamsRawDataCanonical" != "" & strpos(`"`fullpath'"', "$teamsRawDataCanonical") == 1 {
+            local is_already_canon 1
+        }
+        else if "$teamsFolderCanonical" != "" & strpos(`"`fullpath'"', "$teamsFolderCanonical") == 1 {
+            local is_already_canon 1
+        }
+        local is_already_z 0
+        if "$dwZDrive" != "" & strpos(`"`fullpath'"', "$dwZDrive") == 1 {
+            local is_already_z 1
+        }
+
+        if `is_already_canon' {
+            capture confirm file `"`fullpath'"'
+            if _rc == 0 {
+                local resolved `"`fullpath'"'
+                local resolution "teams_canonical"
+            }
+        }
+        else if `is_already_z' {
+            capture confirm file `"`fullpath'"'
+            if _rc == 0 {
+                local resolved `"`fullpath'"'
+                local resolution "z_mirror"
+            }
+        }
+
+        local teams_alt ""
+        if "`resolved'" == "" {
+            if "$teamsWrkDataCanonical" != "" & strpos(`"`fullpath'"', "$teamsWrkData") == 1 {
+                local rel = substr(`"`fullpath'"', length("$teamsWrkData") + 1, .)
+                local teams_alt `"$teamsWrkDataCanonical`rel'"'
+            }
+            else if "$teamsRawDataCanonical" != "" & strpos(`"`fullpath'"', "$teamsRawData") == 1 {
+                local rel = substr(`"`fullpath'"', length("$teamsRawData") + 1, .)
+                local teams_alt `"$teamsRawDataCanonical`rel'"'
+            }
         }
 
         * 2a. Try Teams canonical
-        if `"`teams_alt'"' != "" {
+        if "`resolved'" == "" & `"`teams_alt'"' != "" {
             capture confirm file `"`teams_alt'"'
             if _rc == 0 {
                 local resolved `"`teams_alt'"'
@@ -225,9 +268,16 @@ program define   dw_use, rclass
     }
     else if "`ext'" == "csv" {
         quietly import delimited `"`resolved'"', clear varnames(1) bindquote(strict) stringcols(_all)
-        * Promote numeric-looking columns. Destring with force so
-        * non-numeric values stay strings (no data loss).
-        capture quietly destring _all, replace
+        * Promote each numeric-looking column independently. Wrapping
+        * `destring _all` in a single `capture` would let one
+        * non-convertible variable abort the whole pass, leaving every
+        * later column as a string -- so loop instead so each variable
+        * gets its own try.  Variables that can't be cleanly converted
+        * stay as strings (no data loss).
+        quietly describe, varlist
+        foreach v of varlist `r(varlist)' {
+            capture quietly destring `v', replace
+        }
     }
     else if "`ext'" == "xlsx" {
         quietly import excel `"`resolved'"', firstrow clear
@@ -263,7 +313,7 @@ program define   dw_use, rclass
             else {
                 local prov_status "mismatch"
                 noi di as text ///
-                    "{phang}[dw_use] Provenance datasignature mismatch: sidecar reports `prov_datasig', live `live_datasig'. Read still completed.{p_end}"
+                    "{phang}[cso_toolkit.dw_use] Provenance datasignature mismatch: sidecar reports `prov_datasig', live `live_datasig'. Read still completed.{p_end}"
             }
         }
         else if "`prov_datasig'" != "" {
@@ -283,7 +333,7 @@ program define   dw_use, rclass
             if _rc != 0 {
                 local z_status "z_missing"
                 noi di as text ///
-                    "{phang}[dw_use] Z: mirror missing for: `z_path'. Teams read OK; Z: deposit has not been mirrored yet.{p_end}"
+                    "{phang}[cso_toolkit.dw_use] Z: mirror missing for: `z_path'. Teams read OK; Z: deposit has not been mirrored yet.{p_end}"
             }
             else if "`verify_z'" == "size" {
                 local primary_size = filesize(`"`resolved'"')
@@ -294,7 +344,7 @@ program define   dw_use, rclass
                 else {
                     local z_status "size_mismatch"
                     noi di as text ///
-                        "{phang}[dw_use] Z: mirror size mismatch: Teams `primary_size' bytes vs Z: `z_size' bytes. Read still completed.{p_end}"
+                        "{phang}[cso_toolkit.dw_use] Z: mirror size mismatch: Teams `primary_size' bytes vs Z: `z_size' bytes. Read still completed.{p_end}"
                 }
             }
             else if "`verify_z'" == "sha256" {
@@ -317,7 +367,7 @@ program define   dw_use, rclass
                         else {
                             local z_status "sha256_mismatch"
                             noi di as text ///
-                                "{phang}[dw_use] Z: mirror content hash mismatch: Teams `live_datasig' vs Z: `z_sig'. Read still completed.{p_end}"
+                                "{phang}[cso_toolkit.dw_use] Z: mirror content hash mismatch: Teams `live_datasig' vs Z: `z_sig'. Read still completed.{p_end}"
                         }
                     }
                     else {
@@ -337,7 +387,7 @@ program define   dw_use, rclass
     *---------------------------------------------------------------
     if `"`as'"' != "" & "`as'" != "data.frame" {
         noi di as text ///
-            "{phang}[dw_use] Note: as(`as') is documented for R / Python parity; Stata returns the read dataset in memory regardless.{p_end}"
+            "{phang}[cso_toolkit.dw_use] Note: as(`as') is documented for R / Python parity; Stata returns the read dataset in memory regardless.{p_end}"
     }
 
     *---------------------------------------------------------------
