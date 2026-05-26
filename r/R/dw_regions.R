@@ -93,11 +93,16 @@ dw_regions <- function(data,
 		stop("[cso_toolkit.dw_regions] `data` must be a data frame.\n  Fix: pass the tibble returned by your sector pipeline (e.g. dw_use(...)).",
 		     call. = FALSE)
 	}
-	required_cols <- c("REF_AREA", value)
+	# Upfront validation: REF_AREA + `value` + every `by` column must be
+	# present in `data` before the aggregator runs.  `aggregate_data_v2`
+	# is called with `validate = FALSE` below for performance, so missing
+	# `by` columns would otherwise surface as a low-level tidyselect
+	# error instead of the toolkit envelope -- catch them here.
+	required_cols <- unique(c("REF_AREA", value, by))
 	missing <- setdiff(required_cols, names(data))
 	if (length(missing) > 0) {
 		stop(sprintf(
-			"[cso_toolkit.dw_regions] Missing required column(s): %s\n  Data columns: %s\n  Fix: ensure your tibble has REF_AREA (ISO3) and the column named in `value =`.",
+			"[cso_toolkit.dw_regions] Missing required column(s): %s\n  Data columns: %s\n  Fix: ensure your tibble has REF_AREA (ISO3), the column named in `value =`, and every column listed in `by =`.",
 			paste(missing, collapse = ", "),
 			paste(utils::head(names(data), 10), collapse = ", ")
 		), call. = FALSE)
@@ -138,16 +143,35 @@ dw_regions <- function(data,
 		# latest year per country from dw_pop()).
 		if ("TIME_PERIOD" %in% names(working)) {
 			years_needed <- unique(working$TIME_PERIOD)
-			pop <- dw_pop(year = years_needed)
-			# If WB has nothing for a requested year (e.g. very recent), fall
-			# back to the latest year per country so the merge still attaches
-			# *some* denominator.  Country-years with no pop data drop out of
-			# the weighted average naturally.
-			fallback_pop <- dw_pop()
-			pop <- dplyr::bind_rows(pop, fallback_pop)
+			pop_exact <- dw_pop(year = years_needed)
+			# For any (country, year) pair where WB has no published
+			# population yet (e.g. very recent sector vintage),
+			# paint that country's latest-year value onto each
+			# missing year so the merge on (REF_AREA, TIME_PERIOD)
+			# actually attaches a denominator.  Country-years still
+			# without any WB record at all drop out of the weighted
+			# average naturally (NA propagates).
+			latest_per_country <- dw_pop()
+			latest_per_country$TIME_PERIOD <- NULL
+			names(latest_per_country)[names(latest_per_country) == "OBS_VALUE"] <- "OBS_VALUE_LATEST"
+			missing_keys <- expand.grid(
+				REF_AREA    = unique(working$REF_AREA),
+				TIME_PERIOD = as.integer(years_needed),
+				stringsAsFactors = FALSE
+			)
+			# Drop pairs we already have an exact match for
+			have <- paste(pop_exact$REF_AREA, pop_exact$TIME_PERIOD, sep = "::")
+			want <- paste(missing_keys$REF_AREA, missing_keys$TIME_PERIOD, sep = "::")
+			missing_keys <- missing_keys[!(want %in% have), , drop = FALSE]
+			filled <- merge(missing_keys, latest_per_country,
+			                by = "REF_AREA", all.x = TRUE)
+			names(filled)[names(filled) == "OBS_VALUE_LATEST"] <- "OBS_VALUE"
+			pop <- dplyr::bind_rows(pop_exact, filled)
+			# Defensive de-dup; the merge above should already be unique.
 			pop <- pop[!duplicated(pop[, c("REF_AREA", "TIME_PERIOD")]), ,
 			           drop = FALSE]
-			working <- merge(working, pop[, c("REF_AREA", "TIME_PERIOD", "OBS_VALUE")],
+			working <- merge(working,
+			                 pop[, c("REF_AREA", "TIME_PERIOD", "OBS_VALUE")],
 			                 by = c("REF_AREA", "TIME_PERIOD"),
 			                 all.x = TRUE, suffixes = c("", ".pop"))
 			weight_col <- "OBS_VALUE.pop"
