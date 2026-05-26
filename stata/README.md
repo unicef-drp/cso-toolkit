@@ -128,7 +128,10 @@ the full divergence rationale (naming, metadata model, scope).
 
 - [Top-level README](../README.md) — overview, three-role contract,
   vendoring rationale, versioning.
+- [NEWS.md / Changelog](../NEWS.md) — per-release notes
+  (`v0.1.0-rc1` → `v0.2.0` → `v0.3.0` → `v0.4.0`).
 - [`stata/src/README.md`](src/README.md) — per-helper catalogue +
   lineage table.
-- [R sibling](../r/) — full IO + API + sync contract.
-- [Python sibling](../python/) — full IO + API + sync contract.
+- Sibling implementations of the same contract:
+  - [`r/README.md`](../r/README.md) — R (full IO + API + sync)
+  - [`python/README.md`](../python/README.md) — Python (full IO + API + sync)
