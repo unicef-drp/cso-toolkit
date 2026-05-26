@@ -29,7 +29,7 @@ declared `how`. Inspired by Stata's `merge m:1 / 1:1 / 1:m / m:m`.
 }
 \seealso{
 [dw_use()] (used to materialise `using` when a path is
-  supplied); [dw_compare()] for a row-level diff.
+supplied); [dw_compare()] for a row-level diff.
 
 Other io: 
 \code{\link{dw_compare}()},
@@ -37,6 +37,7 @@ Other io:
 \code{\link{dw_isid}()},
 \code{\link{dw_resolve_path}()},
 \code{\link{dw_save}()},
+\code{\link{dw_toolkit_version}()},
 \code{\link{dw_use}()},
 \code{\link{dw_verify_z}()}
 }

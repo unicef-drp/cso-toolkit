@@ -31,10 +31,14 @@ dw_use(
 \item{as}{Character. Return type: `"tibble"` (default), `"data.frame"`,
 or `"data.table"`.}
 
-\item{fallback_canonical}{Logical. If the literal path is missing, retry
-under the canonical root by substituting `teamsRawData ->
-teamsRawDataCanonical`, `teamsWrkData -> teamsWrkDataCanonical`, etc.
-Default `TRUE` (lets reviewer-mode reads find the deposit).}
+\item{fallback_canonical}{Logical. Default `TRUE`.
+In **producer / unknown mode**, when the literal path is missing
+the helper retries under the canonical root by substituting
+`teamsRawData -> teamsRawDataCanonical`,
+`teamsWrkData -> teamsWrkDataCanonical`, etc.
+In **reviewer mode** (v0.4.0), this flag controls whether the
+repo-local fallback is allowed when Teams + Z: are both missing
+(with a provenance warning); set `FALSE` to fail fast instead.}
 
 \item{verify_z}{`TRUE`, `FALSE`, or `"sha256"`. Controls the Z: integrity
 check for canonical reads. Default `TRUE` (size compare).}
@@ -44,18 +48,32 @@ reader.}
 }
 \value{
 The loaded object. Tabular formats are coerced to the requested
-  `as` shape.
+`as` shape.
 }
 \description{
 Companion to [dw_save()] with the same extension matrix and path
 resolution. Adds a non-blocking Z: integrity check for canonical reads.
 }
 \details{
-**Z: integrity** — automatic. When the resolved path is under canonical
+**Z: integrity** -- automatic. When the resolved path is under canonical
 AND `dw_z_available == TRUE`, a size-check (default; cheap) compares
 Teams vs Z:. Mismatch emits a warning; the read still proceeds (with
 the Teams data). Skip via `verify_z = FALSE`. Use
 `verify_z = "sha256"` for a deep check.
+
+**Resolution order (v0.4.0)** -- mode-branched.
+\itemize{
+\item **Producer / unknown mode** (v0.3.0 preserved). Local-first:
+try the literal path; if missing and `fallback_canonical = TRUE`,
+walk the `teams*Data -> teams*DataCanonical` prefix map.
+\item **Reviewer mode** (network-first; new in v0.4.0). Tries the
+Teams canonical equivalent first, then the Z: drive mirror, then
+falls back to the repo-local copy with an envelope-shaped
+`warning()` flagging the provenance gap. If the file is missing in
+all three locations, the helper raises an envelope-shaped `stop()`
+pointing the reviewer to the sector producer. Disable the local
+fallback with `fallback_canonical = FALSE`.
+}
 }
 \examples{
 \dontrun{
@@ -64,7 +82,7 @@ warehouse <- dw_use(name = "dw_ed_edu.csv", sector = "ed", kind = "wrk")
 }
 \seealso{
 [dw_save()] for the write counterpart; [dw_verify_z()] for
-  the underlying integrity check.
+the underlying integrity check.
 
 Other io: 
 \code{\link{dw_compare}()},
@@ -73,6 +91,7 @@ Other io:
 \code{\link{dw_merge}()},
 \code{\link{dw_resolve_path}()},
 \code{\link{dw_save}()},
+\code{\link{dw_toolkit_version}()},
 \code{\link{dw_verify_z}()}
 }
 \concept{io}

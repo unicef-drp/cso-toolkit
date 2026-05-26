@@ -14,8 +14,8 @@ requires the `digest` package).}
 }
 \value{
 A list with `status` and supporting fields. `status` is one of:
-  `"no_z_mirror"`, `"z_missing"`, `"match_size"`, `"size_mismatch"`,
-  `"match_sha256"`, `"sha256_mismatch"`, or `"verify_unavailable"`.
+`"no_z_mirror"`, `"z_missing"`, `"match_size"`, `"size_mismatch"`,
+`"match_sha256"`, `"sha256_mismatch"`, or `"verify_unavailable"`.
 }
 \description{
 Compares the file at `path` against the corresponding Z: mirror via
@@ -25,7 +25,7 @@ immediate `stop()`.
 }
 \seealso{
 [dw_save()] (carbon-copies on canonical writes) and [dw_use()]
-  (runs an automatic size check on canonical reads).
+(runs an automatic size check on canonical reads).
 
 Other io: 
 \code{\link{dw_compare}()},
@@ -34,6 +34,7 @@ Other io:
 \code{\link{dw_merge}()},
 \code{\link{dw_resolve_path}()},
 \code{\link{dw_save}()},
+\code{\link{dw_toolkit_version}()},
 \code{\link{dw_use}()}
 }
 \concept{io}

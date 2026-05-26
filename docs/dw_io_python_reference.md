@@ -9,16 +9,17 @@ counterpart.
 
 ## Behaviour matrix
 
-| Function              | Producer session                                | Reviewer session                                              |
-| --------------------- | ----------------------------------------------- | ------------------------------------------------------------- |
-| `dw_save`             | Writes to Teams sandbox + carbon-copies to Z:    | Raises `PermissionError` on canonical writes (unless `allow_canonical_write=True`) |
-| `dw_use`              | Reads from sandbox first; canonical fallback     | Reads from sandbox first; canonical fallback (same as producer) |
-| `dw_resolve_path`     | Resolves via mode-aware roots                    | Resolves via mode-aware roots                                  |
-| `dw_compare`          | Pure compute; no side effects                    | Pure compute; no side effects                                  |
-| `dw_merge`            | Pure compute; no side effects                    | Pure compute; no side effects                                  |
-| `dw_isid`             | Pure compute; no side effects                    | Pure compute; no side effects                                  |
-| `dw_verify_z`         | Returns dict; no side effects                    | Returns dict; no side effects                                  |
-| `dw_is_canonical`     | Returns bool; no side effects                    | Returns bool; no side effects                                  |
+| Function              | Producer session (v0.4.0)                                                                  | Reviewer session (v0.4.0)                                                                         |
+| --------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
+| `dw_save`             | Writes primary + fans out to BOTH Teams + Z: mirrors; hard-stops if neither is available    | Raises `PermissionError` on writes to canonical OR Z: paths (unless `allow_canonical_write=True`) |
+| `dw_use`              | Local-first; falls back to canonical when missing (v0.3.0 preserved)                       | Network-first: Teams → Z: → repo-local (with provenance `warning`) → hard-stop                    |
+| `dw_resolve_path`     | Resolves via mode-aware roots                                                              | Resolves via mode-aware roots                                                                     |
+| `dw_compare`          | Pure compute; no side effects                                                              | Pure compute; no side effects                                                                     |
+| `dw_merge`            | Pure compute; no side effects                                                              | Pure compute; no side effects                                                                     |
+| `dw_isid`             | Pure compute; no side effects                                                              | Pure compute; no side effects                                                                     |
+| `dw_verify_z`         | Returns dict; no side effects                                                              | Returns dict; no side effects                                                                     |
+| `dw_is_canonical`     | Returns bool; no side effects                                                              | Returns bool; no side effects                                                                     |
+| `dw_toolkit_version`  | Returns `"0.4.0"` (the toolkit semver)                                                     | Returns `"0.4.0"` (the toolkit semver)                                                            |
 
 ## Extension dispatch
 
@@ -33,30 +34,56 @@ counterpart.
 | `.json`                     | `json.dump` (DF: `to_json`)         | `json.load`                     | Pretty-printed; `default=str` fallback      |
 | `.yml` / `.yaml`            | `yaml.safe_dump`                    | `yaml.safe_load`                | Requires `PyYAML`                           |
 
-## Mode contract
+## Mode contract (v0.4.0 tightening)
 
 `dw_save` raises `PermissionError` when ALL of the following are true:
 
 1. The resolved write path lies under a canonical root (test via
-   `dw_is_canonical(path)`).
+   `dw_is_canonical(path)`) **OR** under the configured Z: drive root
+   (`_state.dwZDrive`).
 2. The session's `_state.dw_mode` is `"reviewer"`.
 3. The caller did not pass `allow_canonical_write=True`.
 
+The Z: branch is new in v0.4.0 — v0.3.0 only refused canonical writes.
+
+`dw_save` ALSO raises `PermissionError` in **producer** mode when neither
+the Teams canonical nor the Z: drive mirror is configured / reachable.
+Producer outputs are redundant by design; the helper refuses to ship a
+write that lives only on the producer's laptop.
+
+`dw_save` raises `FileExistsError` (v0.4.0 default `overwrite=False`) if
+ANY of primary / Teams mirror / Z: mirror already exists. Pass
+`overwrite=True` to restore v0.3.0 behaviour.
+
 The intent: reviewer sessions keep the canonical deposit read-only, so
-vintage permanence is preserved.  Reviewer writes go to the sandbox
+vintage permanence is preserved. Reviewer writes go to the sandbox
 (which the profile resolves the same path-globals to).
 
-## Z: drive integration
+## Z: drive + Teams integration (v0.4.0)
 
-When `_state.dw_z_available` is `True` AND the resolved path is under
-`teamsFolderCanonical`:
+Every successful producer `dw_save` fans out the primary file AND its
+`.provenance.json` sidecar to two redundant mirrors:
 
-* **On `dw_save`** — after the primary write succeeds, the file is
-  carbon-copied to the Z: equivalent path.  Z: copy failure emits a
-  `warnings.warn` but does not roll back the primary write.
-* **On `dw_use`** — a size or sha256 check compares Teams vs Z:.
-  Mismatch emits `warnings.warn`; the read still completes (with the
-  Teams data).  Skip via `verify_z=False`.
+* **Teams canonical** — derived from the `teams*Data -> teams*DataCanonical`
+  prefix map. Skipped silently when the primary already lies under
+  canonical (DBM bootstrap case).
+* **Z: drive** — derived from the Teams canonical equivalent and the
+  configured `_state.dwZDrive`. Skipped when `dw_z_available=False`.
+
+Each mirror is non-blocking — failures emit envelope-shaped
+`warnings.warn` and do not roll back the primary write.
+
+`dw_use` reads also use both mirrors, with order driven by mode:
+
+* **Producer / unknown mode** (v0.3.0 preserved) — local-first: try the
+  literal path; fall back to canonical equivalent when missing.
+* **Reviewer mode** — network-first: try Teams → Z: → repo-local
+  (with provenance warning) → hard-stop. The local fallback warning is
+  the auditable signal that the reviewer is reading a copy of unverified
+  provenance.
+
+The Z: integrity check (`dw_verify_z`) still runs on `dw_use` canonical
+reads as in v0.3.0.
 
 ## Provenance sidecar
 

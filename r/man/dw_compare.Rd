@@ -41,7 +41,7 @@ filenames. Default `"compare"`.}
 }
 \value{
 A list with `summary` (one-row tibble) and `added`, `removed`,
-  `changed` data frames.
+`changed` data frames.
 }
 \description{
 Three-way comparison of two data frames keyed on `by`, returning the
@@ -52,8 +52,8 @@ empty-equivalents (`""`, `"NA"`, `"N/A"`, `"NULL"`, `"."`).
 }
 \seealso{
 [dw_use()] (used to materialise the inputs when paths are
-  supplied); [dw_merge()] for a Stata-style join with cardinality
-  assertion.
+supplied); [dw_merge()] for a Stata-style join with cardinality
+assertion.
 
 Other io: 
 \code{\link{dw_is_canonical}()},
@@ -61,6 +61,7 @@ Other io:
 \code{\link{dw_merge}()},
 \code{\link{dw_resolve_path}()},
 \code{\link{dw_save}()},
+\code{\link{dw_toolkit_version}()},
 \code{\link{dw_use}()},
 \code{\link{dw_verify_z}()}
 }
