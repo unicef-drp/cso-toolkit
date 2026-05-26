@@ -63,6 +63,30 @@ test_that("dw_regions appends regional aggregate rows to country-level input", {
   expect_true(all(region_rows$Aggregate >= 0 & region_rows$Aggregate <= 1))
 })
 
+test_that("dw_regions errors when a `by` column is missing (Copilot #21.2)", {
+  d <- local_tempdir()
+  .dw_regions_seed_caches(d)
+  local_state(teamsRawData = d, teamsRawDataCanonical = d,
+              dw_apis_allowed = FALSE)
+
+  # `by` defaults to c("INDICATOR", "TIME_PERIOD") -- the input is
+  # missing TIME_PERIOD, so the validation should fire with the
+  # toolkit envelope rather than fall through to a tidyselect error.
+  no_tp <- data.frame(
+    REF_AREA  = c("BFA", "MLI"),
+    INDICATOR = c("A", "A"),
+    OBS_VALUE = c(0.5, 0.5),
+    stringsAsFactors = FALSE
+  )
+  err <- tryCatch(
+    dw_regions(no_tp, value = "OBS_VALUE"),
+    error = identity
+  )
+  expect_s3_class(err, "error")
+  expect_envelope(err, function_name = "dw_regions")
+  expect_match(conditionMessage(err), "TIME_PERIOD")
+})
+
 test_that("dw_regions errors when value column is missing", {
   d <- local_tempdir()
   .dw_regions_seed_caches(d)
