@@ -14,8 +14,9 @@
 ## TL;DR
 
 - One way to **read, write, compare, and merge** data — auto-dispatched
-  by file extension; every write emits a `.provenance.json` sidecar
-  (`sha256`, schema, user, timestamp, metadata).
+  by file extension; writes emit a `.provenance.json` sidecar by
+  default (`sha256`, schema, user, timestamp, metadata; opt out with
+  `provenance = FALSE`; `.RData` / `.rda` writes skip the sidecar).
 - One way to **hit external APIs** — UIS, SDMX, World Bank, ILO,
   UNSD-SDG, GitHub-raw — with a deposit cache and a reviewer-mode
   lockout that physically prevents network calls.
@@ -405,10 +406,10 @@ locally and on CI (`.github/workflows/r-check.yml`).
 |---|---|
 | **R `testthat` suite** (`r/tests/testthat/`, 125+ assertions) | Unit + regression coverage for every helper. `expect_envelope()` asserts the `[cso_toolkit.<func>] WHAT / Why / Fix` shape on every raise. |
 | **R `R CMD check`** | Rd syntax, NAMESPACE drift, undefined globals, `\examples{}` blocks. Target: 0 errors / 0 warnings / 0 notes. |
-| **Python smoke test** (`python/tests/manual/smoke_test.py`, 20 invariants) | Round-trip behaviour, provenance sidecar, mode contract, B1–B4 regressions. |
-| **Python error-envelope test** (`python/tests/manual/error_envelope_test.py`, 30 paths) | Every public raise carries the standard envelope. |
-| **R manual smoke** (`r/tests/manual/check_consumer_side.R`) | End-to-end vendoring scenario against `api.github.com`. |
-| **GitHub Actions** | Runs the above across `ubuntu-latest` (R release + devel), `macos-latest` (release), and `windows-latest` (release) on every push / PR. |
+| **Python smoke test** (`python/tests/manual/smoke_test.py`, 20 invariants) | Round-trip behaviour, provenance sidecar, mode contract, B1–B4 regressions. **Manual-only** — run via `python python/tests/manual/smoke_test.py`. |
+| **Python error-envelope test** (`python/tests/manual/error_envelope_test.py`, 30 paths) | Every public raise carries the standard envelope. **Manual-only.** |
+| **R manual smoke** (`r/tests/manual/check_consumer_side.R`) | End-to-end vendoring scenario against `api.github.com`. **Manual-only.** |
+| **GitHub Actions** (`.github/workflows/r-check.yml`) | Runs `R CMD check` (which invokes the R `testthat` suite) across `ubuntu-latest` (R release + devel), `macos-latest` (release), and `windows-latest` (release) on every push / PR. The Python and R-manual layers above are **not yet wired into CI** — tracked as a follow-up. |
 
 ---
 
