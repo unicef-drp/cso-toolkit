@@ -613,14 +613,32 @@ dw_isid <- function(df, keys, where = "<unknown>") {
 #' mode-aware in the profile).
 #' }
 #'
-#' **Mode contract** -- enforced at call site: writes resolving to canonical
-#' paths in a reviewer session stop unless `allow_canonical_write = TRUE`
-#' (Database Manager bootstrap).
+#' **Mode contract (v0.4.0)** -- enforced at call site.
+#' \itemize{
+#' \item **Reviewer mode** -- writes resolving under the canonical Teams
+#' deposit OR under the configured Z: drive root stop unless
+#' `allow_canonical_write = TRUE` (Database Manager bootstrap).
+#' The Z: branch is new in v0.4.0; v0.3.0 only refused canonical writes.
+#' \item **Producer mode** -- at least one of Teams (preferred) or Z:
+#' drive must be available, otherwise `dw_save()` stops. Every
+#' successful producer write fans out redundantly to BOTH mirrors when
+#' both are configured.
+#' }
 #'
-#' **Z: mirror** -- automatic. When `path` resolves under canonical AND
-#' `dw_z_available == TRUE`, the primary write is carbon-copied to the Z:
-#' equivalent. Z: absence is non-blocking (Teams write still succeeds; Z:
-#' copy is skipped with a single advisory at profile-load time).
+#' **Overwrite gate (v0.4.0; breaking)** -- `overwrite = FALSE` is the new
+#' default. The check examines ALL destinations that will actually be
+#' written (primary, Teams mirror, Z: mirror); `dw_save()` stops if any of
+#' them already exists. Pass `overwrite = TRUE` to restore v0.3.0
+#' behaviour.
+#'
+#' **Mirror behaviour (v0.4.0)** -- automatic and paired. In producer
+#' mode, each successful primary write is carbon-copied to its derived
+#' Teams canonical equivalent AND its Z: drive equivalent (whichever are
+#' available), along with the `.provenance.json` sidecar. Each mirror is
+#' non-blocking: failures emit envelope-shaped `warning()` lines tagged
+#' "Teams mirror" or "Z: mirror" but do NOT roll back the primary
+#' write. (The DBM bootstrap path, where the primary IS canonical, keeps
+#' the v0.3.0 Z:-only mirror semantics.)
 #'
 #' **Quality contract** -- `isid = c("col1","col2",...)` runs [dw_isid()]
 #' before writing.
@@ -645,8 +663,11 @@ dw_isid <- function(df, keys, where = "<unknown>") {
 #' (title, abstract, producer, sources, contact, vintage, ...).
 #' @param compress Logical. For `.csv` / `.tsv` / `.txt`, when `TRUE` the
 #' path is suffixed with `.gz` and `fwrite(compress = "gzip")` is used.
-#' @param overwrite Logical. If `FALSE`, stops when the target already
-#' exists. Default `TRUE`.
+#' @param overwrite Logical. When `FALSE` (the v0.4.0 default; was
+#' `TRUE` in v0.3.0 -- this is the only source-incompatible change),
+#' `dw_save()` stops if ANY of the three destinations (primary, Teams
+#' mirror, Z: mirror) already exists. Pass `TRUE` to replace existing
+#' deposits.
 #' @param provenance Logical. Whether to write the `.provenance.json`
 #' sidecar. Default `TRUE` (skipped for `.RData` / `.rda`).
 #' @param vintage Character. Optional vintage tag (e.g. `"2026-05"`)
@@ -1057,6 +1078,20 @@ dw_save <- function(x,
 #' the Teams data). Skip via `verify_z = FALSE`. Use
 #' `verify_z = "sha256"` for a deep check.
 #'
+#' **Resolution order (v0.4.0)** -- mode-branched.
+#' \itemize{
+#' \item **Producer / unknown mode** (v0.3.0 preserved). Local-first:
+#' try the literal path; if missing and `fallback_canonical = TRUE`,
+#' walk the `teams*Data -> teams*DataCanonical` prefix map.
+#' \item **Reviewer mode** (network-first; new in v0.4.0). Tries the
+#' Teams canonical equivalent first, then the Z: drive mirror, then
+#' falls back to the repo-local copy with an envelope-shaped
+#' `warning()` flagging the provenance gap. If the file is missing in
+#' all three locations, the helper raises an envelope-shaped `stop()`
+#' pointing the reviewer to the sector producer. Disable the local
+#' fallback with `fallback_canonical = FALSE`.
+#' }
+#'
 #' @param path Character. Literal input path. Mutually exclusive with `name`.
 #' @param name Character. File basename, resolved via [dw_resolve_path()].
 #' @param sector Character. Sector folder (e.g. `"ed"`, `"nt"`).
@@ -1065,10 +1100,14 @@ dw_save <- function(x,
 #' `.xlsx`, `.dta`, `.parquet`).
 #' @param as Character. Return type: `"tibble"` (default), `"data.frame"`,
 #' or `"data.table"`.
-#' @param fallback_canonical Logical. If the literal path is missing, retry
-#' under the canonical root by substituting `teamsRawData ->
-#' teamsRawDataCanonical`, `teamsWrkData -> teamsWrkDataCanonical`, etc.
-#' Default `TRUE` (lets reviewer-mode reads find the deposit).
+#' @param fallback_canonical Logical. Default `TRUE`.
+#' In **producer / unknown mode**, when the literal path is missing
+#' the helper retries under the canonical root by substituting
+#' `teamsRawData -> teamsRawDataCanonical`,
+#' `teamsWrkData -> teamsWrkDataCanonical`, etc.
+#' In **reviewer mode** (v0.4.0), this flag controls whether the
+#' repo-local fallback is allowed when Teams + Z: are both missing
+#' (with a provenance warning); set `FALSE` to fail fast instead.
 #' @param verify_z `TRUE`, `FALSE`, or `"sha256"`. Controls the Z: integrity
 #' check for canonical reads. Default `TRUE` (size compare).
 #' @param ... Format-specific arguments passed through to the underlying
