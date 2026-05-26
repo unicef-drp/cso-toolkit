@@ -289,6 +289,17 @@ dw_toolkit_version <- function() {
 .dw_remote_mirrors <- function(primary_path) {
 	pn <- .normalize_for_comparison(primary_path)
 
+	# Canonical primary -> treat the primary itself as the Teams write
+	# and derive Z: from it (matches Python `_dw_remote_mirrors`).  This
+	# is the DBM-bootstrap path: when a producer writes directly under
+	# `teamsFolderCanonical`, the v0.4.0 redundant-write contract still
+	# applies via the Z: mirror.
+	if (dw_is_canonical(pn)) {
+		z_mirror <- .dw_z_mirror_path(pn)
+		if (is.null(z_mirror)) z_mirror <- NA_character_
+		return(list(teams = pn, z = z_mirror))
+	}
+
 	candidates <- list(
 		list(local = .try_get("teamsWrkData"),
 		 canonical = .try_get("teamsWrkDataCanonical")),
@@ -351,6 +362,46 @@ dw_toolkit_version <- function() {
 	warning(sprintf(
 		"[cso_toolkit.dw_save] Teams mirror FAILED for: %s\n (primary write succeeded; Teams is now out of sync; investigate filesystem permissions or Teams sync state).",
 		teams_path
+	), call. = FALSE)
+	invisible(NA_character_)
+}
+
+#' Carbon-copy a primary write to a specific Z: drive path
+#'
+#' Internal.  Sibling of [.dw_mirror_to_teams()].  Used by `dw_save()`
+#' for the producer-mode Z: half of the v0.4.0 redundant-write
+#' contract, where the Z: destination has already been derived (via
+#' [.dw_remote_mirrors()]) -- this helper carbon-copies and emits "Z:
+#' mirror -> ..." log + warning lines, distinct from the Teams mirror
+#' label.
+#'
+#' Non-blocking: warns on copy failure, doesn't stop the primary
+#' write.  [.dw_mirror_to_z()] (no second argument) is the older
+#' helper used by the DBM-bootstrap canonical path; the two should
+#' converge once that path is reworked.
+#'
+#' @keywords internal
+#' @noRd
+.dw_copy_to_z <- function(primary_path, z_path, verbose = TRUE) {
+	if (is.na(z_path) || !nzchar(z_path)) {
+		return(invisible(NA_character_))
+	}
+	tryCatch(
+		dir.create(dirname(z_path), recursive = TRUE, showWarnings = FALSE),
+		error = function(e) NULL
+	)
+	ok <- tryCatch(
+		file.copy(primary_path, z_path, overwrite = TRUE, copy.date = TRUE),
+		warning = function(w) FALSE,
+		error = function(e) FALSE
+	)
+	if (isTRUE(ok)) {
+		if (verbose) message("[dw_save] Z: mirror -> ", z_path)
+		return(invisible(z_path))
+	}
+	warning(sprintf(
+		"[cso_toolkit.dw_save] Z: mirror FAILED for: %s\n (primary write succeeded; Z: is now out of sync; investigate Z: drive mount state or filesystem permissions).",
+		z_path
 	), call. = FALSE)
 	invisible(NA_character_)
 }
@@ -802,23 +853,28 @@ dw_save <- function(x,
 	# === Producer-mode redundant mirror writes (v0.4.0) ===
 	# Mirror to Teams + Z: whenever the profile makes either available.
 	# Single-mount scenarios (only Teams OR only Z:) succeed for that
-	# one mirror; double-mount writes to both. Reviewer-mode never
+	# one mirror; double-mount writes to both.  Reviewer-mode never
 	# reaches here (guarded above).
+	#
+	# Copy semantics: Teams uses `.dw_mirror_to_teams()` (envelope-shaped
+	# "Teams mirror -> ..." log + warning); Z: uses `.dw_copy_to_z()`
+	# so a Z: copy failure is labelled "Z: mirror -> ..." in logs and
+	# warnings.  Both helpers carbon-copy non-blocking.
 	if (is_producer) {
+		sidecar <- paste0(path, ".provenance.json")
 		if (!is.na(teams_mirror)) {
 			.dw_mirror_to_teams(path, teams_mirror)
-			# Provenance sidecar is also mirrored (best-effort).
-			sidecar <- paste0(path, ".provenance.json")
 			if (file.exists(sidecar)) {
-				.dw_mirror_to_teams(sidecar, paste0(teams_mirror, ".provenance.json"),
+				.dw_mirror_to_teams(sidecar,
+				 paste0(teams_mirror, ".provenance.json"),
 				 verbose = FALSE)
 			}
 		}
 		if (!is.na(z_mirror)) {
-			.dw_mirror_to_teams(path, z_mirror) # same copy-semantics
-			sidecar <- paste0(path, ".provenance.json")
+			.dw_copy_to_z(path, z_mirror)
 			if (file.exists(sidecar)) {
-				.dw_mirror_to_teams(sidecar, paste0(z_mirror, ".provenance.json"),
+				.dw_copy_to_z(sidecar,
+				 paste0(z_mirror, ".provenance.json"),
 				 verbose = FALSE)
 			}
 		}
