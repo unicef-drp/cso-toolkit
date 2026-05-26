@@ -6,6 +6,37 @@ _Entries land here as PRs merge into `develop`.  When the next release
 is cut, this header is renamed `## v0.4.0 (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
+### Issues #17 + #18 — `dw_pop()` and `dw_regions()` (R only)
+
+Two convenience wrappers that almost every sector pipeline needs but
+that v0.3.0 made users write themselves.  Both ship R-only in v0.4.0;
+Python and Stata parity are tracked at the same GitHub issues for a
+future minor.
+
+- **`r/R/dw_pop.R`** -- `dw_pop()` wraps `dw_api_fetch(api = "wb")`
+  for the World Bank total-population indicator (`SP.POP.TOTL`) and
+  returns a tidy `(REF_AREA, TIME_PERIOD, OBS_VALUE)` tibble.  When
+  `year` is `NULL` (default), only the latest available year per
+  country is returned; pass a year (or vector of years) to subset.
+  Optional `countries` filter, `refresh` to force a live fetch, and
+  `cache_key` override.
+- **`r/R/dw_regions.R`** -- `dw_regions()` fetches the UNICEF region
+  taxonomy from `unicef-drp/Country-and-Region-Metadata`
+  (default `UNICEF_REP_REG_GLOBAL.csv`) via
+  `dw_api_fetch(api = "github_raw")`, joins the country -> region map
+  into the caller's tibble, calls `aggregate_data_v2()` per region
+  with the supplied `value` + `by` + `method`, and appends the
+  regional rows to the original.  When `weight = "population"` (the
+  default), denominators come from `dw_pop()` and are merged in on
+  REF_AREA + TIME_PERIOD; otherwise the named column is used
+  directly.
+
+New pkgdown reference section: **Demographics**.  Both helpers are
+registered with `@family demographics` and exported.
+
+Tested: 11 new asserts for `dw_pop` + 19 for `dw_regions` (total R
+suite now 191 / 0); `devtools::check()` stays at 0 / 0 / 0.
+
 ### Issue #5 — Stata helpers reaching mode-contract parity
 
 Ships the three Stata helpers that completed the v0.4.0 producer /
