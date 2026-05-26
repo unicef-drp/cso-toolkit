@@ -44,14 +44,14 @@ reader.}
 }
 \value{
 The loaded object. Tabular formats are coerced to the requested
-  `as` shape.
+`as` shape.
 }
 \description{
 Companion to [dw_save()] with the same extension matrix and path
 resolution. Adds a non-blocking Z: integrity check for canonical reads.
 }
 \details{
-**Z: integrity** — automatic. When the resolved path is under canonical
+**Z: integrity** -- automatic. When the resolved path is under canonical
 AND `dw_z_available == TRUE`, a size-check (default; cheap) compares
 Teams vs Z:. Mismatch emits a warning; the read still proceeds (with
 the Teams data). Skip via `verify_z = FALSE`. Use
@@ -64,7 +64,7 @@ warehouse <- dw_use(name = "dw_ed_edu.csv", sector = "ed", kind = "wrk")
 }
 \seealso{
 [dw_save()] for the write counterpart; [dw_verify_z()] for
-  the underlying integrity check.
+the underlying integrity check.
 
 Other io: 
 \code{\link{dw_compare}()},
@@ -73,6 +73,7 @@ Other io:
 \code{\link{dw_merge}()},
 \code{\link{dw_resolve_path}()},
 \code{\link{dw_save}()},
+\code{\link{dw_toolkit_version}()},
 \code{\link{dw_verify_z}()}
 }
 \concept{io}
