@@ -83,6 +83,8 @@
 	switch(api,
 		"wb_indicators" = "rds",
 		"json_get"      = "rds",   # returns nested lists
+		"http"          = "rds",   # plain text; CSV would mis-shape
+		"github_raw"    = "rds",   # arbitrary text / binary by ref
 		# everything else flat-tabular -> csv
 		"csv"
 	)
@@ -343,7 +345,15 @@ dw_api_inventory <- function(api = NULL) {
 	base <- "https://api.uis.unesco.org/api/public/data/"
 	url <- paste0(base, endpoint)
 	if (length(params) > 0) {
-		qs <- paste(names(params), unlist(params), sep = "=", collapse = "&")
+		# URL-encode both keys and values so a param value containing
+		# `&` / `=` / space / non-ASCII doesn't corrupt the query.
+		# Backported from DW-Production; see B4 in
+		# docs/dw-production-alignment-2026-05-25.md.
+		qs <- paste(
+			utils::URLencode(names(params), reserved = TRUE),
+			vapply(unlist(params), utils::URLencode, character(1), reserved = TRUE),
+			sep = "=", collapse = "&"
+		)
 		url <- paste0(url, "?", qs)
 	}
 	raw <- jsonlite::fromJSON(url)

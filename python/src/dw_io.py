@@ -505,8 +505,24 @@ def _write_provenance(
     }
     if metadata is not None:
         prov["metadata"] = dict(metadata)
-    with open(f"{path}.provenance.json", "w", encoding="utf-8") as f:
-        json.dump(prov, f, indent=2, default=str)
+    # Wrap the sidecar write so a non-JSON-serialisable metadata value
+    # (rare but possible — e.g. a numpy scalar or custom class) emits a
+    # warning rather than rolling back the primary file write.  Sidecar
+    # is metadata; the asset is what matters.  Backported from
+    # DW-Production; see B3 in docs/dw-production-alignment-2026-05-25.md.
+    try:
+        with open(f"{path}.provenance.json", "w", encoding="utf-8") as f:
+            json.dump(prov, f, indent=2, default=str)
+    except (TypeError, OSError) as exc:
+        warnings.warn(
+            f"[cso_toolkit.dw_save] Provenance sidecar write failed for "
+            f"{path}: {exc}\n"
+            "  Primary file unaffected; metadata may contain "
+            "non-serialisable objects.\n"
+            "  Fix: ensure all metadata values are JSON-serialisable "
+            "(atomic types, lists of atomics, or dicts thereof).",
+            stacklevel=2,
+        )
 
 
 def dw_save(
@@ -649,9 +665,16 @@ def dw_save(
     if isid is not None and isinstance(x, pd.DataFrame):
         dw_isid(x, keys=isid, where=path)
 
+    # Compression: append .gz for CSV/TSV/TXT, and auto-enable
+    # compression when the path ALREADY ends in .gz (no caller foot-gun).
+    # Backported from DW-Production; see B2 in
+    # docs/dw-production-alignment-2026-05-25.md.
     fmt = Path(path).suffix.lower().lstrip(".")
-    if compress and fmt in ("csv", "tsv", "txt") and not path.lower().endswith(".gz"):
+    path_ends_in_gz = path.lower().endswith(".gz")
+    if compress and fmt in ("csv", "tsv", "txt") and not path_ends_in_gz:
         path = path + ".gz"
+    elif not compress and path_ends_in_gz:
+        compress = True
 
     try:
         Path(path).parent.mkdir(parents=True, exist_ok=True)
@@ -772,8 +795,123 @@ def _read_yaml(path: str, **kwargs: Any) -> Any:
         return yaml.safe_load(f, **kwargs)
 
 
+# ---------------------------------------------------------------------------
+# Remote-URL freeze (B1 from DW-Production alignment audit, 2026-05-25)
+# ---------------------------------------------------------------------------
+
+def _is_allowlisted_url(url: str) -> bool:
+    """Return ``True`` if ``url`` matches any pattern in
+    ``_state.dw_url_allowlist``.  Empty allowlist => never matches."""
+    import re
+    allow = _state._get("dw_url_allowlist", ())
+    if not allow:
+        return False
+    return any(re.search(p, url) for p in allow)
+
+
+def _dw_frozen_root() -> str:
+    """Resolve the frozen-cache root.
+
+    Order: ``_state.dw_frozen_root`` -> ``_state.githubFolder/_frozen``
+    -> ``<cwd>/_frozen``.
+    """
+    root = _state._get("dw_frozen_root")
+    if root:
+        return str(root)
+    gh = _state._get("githubFolder")
+    if gh:
+        return str(Path(gh) / "_frozen")
+    return str(Path.cwd() / "_frozen")
+
+
+def _url_to_frozen_path(url: str) -> str:
+    """Map a remote URL to its filesystem path under the frozen-cache root."""
+    import re
+    rel = re.sub(r"^https?://", "", url)
+    return str(Path(_dw_frozen_root()) / rel).replace("\\", "/")
+
+
+def _write_remote_provenance(url: str, frozen_path: str) -> str:
+    """Write a `.provenance.json` sidecar for a frozen remote file."""
+    prov = {
+        "url": url,
+        "sha256": _sha256_file(frozen_path),
+        "bytes": Path(frozen_path).stat().st_size,
+        "fetched_at": _utc_now_iso(),
+        "fetched_by": os.environ.get("USERNAME") or getpass.getuser(),
+        "dw_mode": _state._get("dw_mode") or "unknown",
+    }
+    sidecar = f"{frozen_path}.provenance.json"
+    try:
+        with open(sidecar, "w", encoding="utf-8") as f:
+            json.dump(prov, f, indent=2, default=str)
+    except (TypeError, OSError) as exc:
+        warnings.warn(
+            f"[cso_toolkit.dw_use] Remote-freeze sidecar write failed for "
+            f"{frozen_path}: {exc}",
+            stacklevel=2,
+        )
+    return sidecar
+
+
+def _download_and_freeze(url: str, frozen_path: str) -> str:
+    """Download a URL once and freeze it under the local cache root."""
+    import urllib.request
+    Path(frozen_path).parent.mkdir(parents=True, exist_ok=True)
+    _log.info("[dw_use:remote] Downloading: %s", url)
+    urllib.request.urlretrieve(url, frozen_path)  # noqa: S310 (allowlisted)
+    sidecar = _write_remote_provenance(url, frozen_path)
+    _log.info("[dw_use:remote] Frozen to: %s", frozen_path)
+    _log.info(
+        "[dw_use:remote] COMMIT the frozen file + %s so subsequent runs are deterministic.",
+        Path(sidecar).name,
+    )
+    return frozen_path
+
+
+def _resolve_remote_url(url: str) -> str:
+    """Resolve a remote URL to a frozen local path.
+
+    Producer mode: downloads once if not already frozen.  Reviewer
+    mode: refuses with the standard envelope when the frozen copy
+    isn't on disk yet.
+    """
+    if not _is_allowlisted_url(url):
+        allow = _state._get("dw_url_allowlist", ())
+        allow_str = ", ".join(allow) if allow else "<empty>"
+        raise PermissionError(
+            f"[cso_toolkit.dw_use] URL not in `dw_url_allowlist`: {url}\n"
+            f"  Configured allowlist: {allow_str}\n"
+            "  Fix: extend dw_url_allowlist in the consumer's profile, "
+            "e.g.\n"
+            "    _state.configure(dw_url_allowlist=[\n"
+            "        r'^https://raw\\.githubusercontent\\.com/your-org/',\n"
+            "    ])"
+        )
+    frozen_path = _url_to_frozen_path(url)
+    if Path(frozen_path).exists():
+        _log.info("[dw_use:remote] Reading frozen: %s",
+                  frozen_path.replace(_dw_frozen_root(), "<dw_frozen_root>"))
+        return frozen_path
+    if _state._get("dw_mode") == "reviewer":
+        raise PermissionError(
+            f"[cso_toolkit.dw_use:remote] Reviewer mode forbids fetching "
+            f"from the network.\n"
+            f"  Missing frozen copy: {frozen_path}\n"
+            f"  URL:                 {url}\n"
+            f"  Fix: a producer must call dw_use({url!r}) once and commit "
+            "the frozen file + sidecar before the reviewer pipeline can "
+            "read it."
+        )
+    _download_and_freeze(url, frozen_path)
+    return frozen_path
+
+
 def _resolve_for_read(path: str, fallback_canonical: bool) -> str:
     """Resolve a read path, falling back to canonical roots when missing."""
+    # Remote URL?  Hand off to the freeze resolver.
+    if path.startswith("http://") or path.startswith("https://"):
+        return _resolve_remote_url(path)
     if Path(path).exists():
         return path
     if not fallback_canonical:

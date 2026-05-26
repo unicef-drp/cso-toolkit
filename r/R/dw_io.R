@@ -488,11 +488,16 @@ dw_save <- function(x,
 		dw_isid(x, keys = isid, where = path)
 	}
 
-	# Optional compression: append .gz for CSV/TSV/TXT
+	# Optional compression: append .gz for CSV/TSV/TXT, and auto-enable
+	# compression when the path ALREADY ends in .gz (no caller foot-gun).
+	# (Backported from DW-Production 00_functions/dw_io.R; see B2 in
+	# docs/dw-production-alignment-2026-05-25.md.)
 	fmt <- tolower(tools::file_ext(path))
-	if (isTRUE(compress) && fmt %in% c("csv", "tsv", "txt") &&
-	    !grepl("\\.gz$", path, ignore.case = TRUE)) {
+	path_ends_in_gz <- grepl("\\.gz$", path, ignore.case = TRUE)
+	if (isTRUE(compress) && fmt %in% c("csv", "tsv", "txt") && !path_ends_in_gz) {
 		path <- paste0(path, ".gz")
+	} else if (!isTRUE(compress) && path_ends_in_gz) {
+		compress <- TRUE
 	}
 
 	dir.create(dirname(path), recursive = TRUE, showWarnings = FALSE)
@@ -689,8 +694,21 @@ dw_save <- function(x,
 		),
 		if (!is.null(metadata)) list(metadata = metadata) else list()
 	)
-	jsonlite::write_json(prov, path = paste0(path, ".provenance.json"),
-	                     auto_unbox = TRUE, pretty = TRUE)
+	# Wrap the sidecar write so a non-JSON-serialisable metadata value
+	# (rare but possible — e.g. a Date class) emits a warning rather
+	# than rolling back the primary file write.  Sidecar is metadata;
+	# the asset is what matters.  Backported from DW-Production; see B3
+	# in docs/dw-production-alignment-2026-05-25.md.
+	tryCatch(
+		jsonlite::write_json(prov, path = paste0(path, ".provenance.json"),
+		                     auto_unbox = TRUE, pretty = TRUE),
+		error = function(e) {
+			warning(sprintf(
+				"[cso_toolkit.dw_save] Provenance sidecar write failed for %s: %s\n  Primary file unaffected; metadata may contain non-serialisable objects.\n  Fix: ensure all metadata values are JSON-serialisable (atomic types, lists of atomics, or named lists thereof).",
+				path, conditionMessage(e)
+			), call. = FALSE)
+		}
+	)
 }
 
 # ============================================================================
@@ -859,9 +877,141 @@ dw_use <- function(path = NULL,
 #'
 #' @return Character. A path that exists.
 #'
+# ============================================================================
+# Remote-URL freeze (B1 from DW-Production alignment audit, 2026-05-25)
+#
+# `dw_use("https://...")` is a first-class call site.  The URL must be
+# in `dw_url_allowlist` (set by the consumer's profile; empty by
+# default so the toolkit ships consumer-neutral); the response is
+# downloaded once into the frozen-cache root and read from that
+# frozen path on every subsequent call.  Reviewer mode rejects calls
+# that haven't been frozen by a producer yet, mirroring the existing
+# no-API contract.
+# ============================================================================
+
+#' Is the URL allowlisted for remote-URL freeze?
+#'
+#' Internal.  Reads `dw_url_allowlist` from `.GlobalEnv` (set by the
+#' consumer's profile).  Each entry is a PCRE; the URL matches if any
+#' pattern matches.  Empty / unset allowlist => no remote URLs allowed.
+#'
+#' @keywords internal
+#' @noRd
+.is_allowlisted_url <- function(url) {
+	allow <- .try_get("dw_url_allowlist")
+	if (is.na(allow[[1]]) || length(allow) == 0) return(FALSE)
+	any(vapply(allow, function(p) grepl(p, url), logical(1)))
+}
+
+#' Frozen-cache root for remote-URL freezes
+#'
+#' Internal.  Resolution order:
+#'   1. `dw_frozen_root` global if set;
+#'   2. `<githubFolder>/_frozen` if `githubFolder` is set;
+#'   3. `<getwd()>/_frozen`.
+#'
+#' @keywords internal
+#' @noRd
+.dw_frozen_root <- function() {
+	root <- .try_get("dw_frozen_root")
+	if (!is.na(root) && nzchar(root)) return(root)
+	gh <- .try_get("githubFolder")
+	if (!is.na(gh) && nzchar(gh)) return(file.path(gh, "_frozen"))
+	file.path(getwd(), "_frozen")
+}
+
+#' Map a remote URL to its frozen-cache filesystem path
+#'
+#' @keywords internal
+#' @noRd
+.url_to_frozen_path <- function(url) {
+	rel <- sub("^https?://", "", url)
+	file.path(.dw_frozen_root(), rel)
+}
+
+#' Write a `.provenance.json` sidecar for a frozen remote file
+#'
+#' @keywords internal
+#' @noRd
+.write_remote_provenance <- function(url, frozen_path) {
+	.require("digest")
+	.require("jsonlite")
+	prov <- list(
+		url        = url,
+		sha256     = digest::digest(file = frozen_path, algo = "sha256"),
+		bytes      = unname(file.size(frozen_path)),
+		fetched_at = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"),
+		fetched_by = unname(Sys.info()[["user"]]),
+		dw_mode    = .try_get("dw_mode") %||% "unknown"
+	)
+	sidecar <- paste0(frozen_path, ".provenance.json")
+	tryCatch(
+		jsonlite::write_json(prov, sidecar, auto_unbox = TRUE, pretty = TRUE),
+		error = function(e) {
+			warning(sprintf(
+				"[cso_toolkit.dw_use] Remote-freeze sidecar write failed for %s: %s",
+				frozen_path, conditionMessage(e)
+			), call. = FALSE)
+		}
+	)
+	invisible(sidecar)
+}
+
+#' Download a URL once and freeze it to the local cache
+#'
+#' @keywords internal
+#' @noRd
+.download_and_freeze <- function(url, frozen_path) {
+	dir.create(dirname(frozen_path), recursive = TRUE, showWarnings = FALSE)
+	message("[dw_use:remote] Downloading: ", url)
+	utils::download.file(url, destfile = frozen_path, mode = "wb", quiet = TRUE)
+	sidecar <- .write_remote_provenance(url, frozen_path)
+	message("[dw_use:remote] Frozen to: ", frozen_path)
+	message("[dw_use:remote] COMMIT the frozen file + ", basename(sidecar),
+	        " so subsequent runs are deterministic.")
+	invisible(frozen_path)
+}
+
+#' Resolve a remote URL — freeze on first download, error in reviewer
+#' mode if not yet frozen
+#'
+#' @keywords internal
+#' @noRd
+.resolve_remote_url <- function(url) {
+	if (!.is_allowlisted_url(url)) {
+		allow <- .try_get("dw_url_allowlist")
+		allow_str <- if (is.na(allow[[1]])) "<unset>" else paste(allow, collapse = ", ")
+		stop(sprintf(
+			"[cso_toolkit.dw_use] URL not in `dw_url_allowlist`: %s\n  Configured allowlist: %s\n  Fix: extend dw_url_allowlist in the consumer's profile, e.g.\n    dw_url_allowlist <- c(dw_url_allowlist, '^https://raw\\\\.githubusercontent\\\\.com/your-org/')",
+			url, allow_str
+		), call. = FALSE)
+	}
+	frozen_path <- .url_to_frozen_path(url)
+	if (file.exists(frozen_path)) {
+		message("[dw_use:remote] Reading frozen: ",
+		        sub(.dw_frozen_root(), "<dw_frozen_root>", frozen_path, fixed = TRUE))
+		return(frozen_path)
+	}
+	is_reviewer <- isTRUE(.try_get("dw_mode") == "reviewer")
+	if (is_reviewer) {
+		stop(sprintf(
+			"[cso_toolkit.dw_use:remote] Reviewer mode forbids fetching from the network.\n  Missing frozen copy: %s\n  URL:                 %s\n  Fix: a producer must call dw_use('%s') once and commit the frozen file + sidecar before the reviewer pipeline can read it.",
+			frozen_path, url, url
+		), call. = FALSE)
+	}
+	.download_and_freeze(url, frozen_path)
+	frozen_path
+}
+
+# ============================================================================
+
 #' @keywords internal
 #' @noRd
 .resolve_for_read <- function(path, fallback_canonical) {
+	# Remote URL?  Hand off to the freeze resolver.
+	if (grepl("^https?://", path)) {
+		return(.resolve_remote_url(path))
+	}
 	if (file.exists(path)) return(path)
 	if (!isTRUE(fallback_canonical)) {
 		stop(sprintf(

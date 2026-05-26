@@ -213,6 +213,85 @@ def main() -> int:
     assert state._get("dw_apis_allowed", False) is True
     print("[_state] _get treats None (not falsy) as the default trigger OK")
 
+    # --- B2 regression: gzip auto-detect when path already ends in .gz
+    with tempfile.TemporaryDirectory() as tdir:
+        state.configure(teamsWrkData=tdir)
+        df_gz = pd.DataFrame({"a": [1, 2, 3]})
+        out = cso_toolkit.dw_save(
+            df_gz, path=str(Path(tdir) / "auto_gz.csv.gz"),
+        )
+        assert Path(out).exists()
+        # Read it back via gzip
+        import gzip
+        with gzip.open(out, "rt", encoding="utf-8") as fh:
+            content = fh.read()
+        assert "1\n2\n3" in content
+        print("[dw_io] B2: gzip auto-detect when path ends .gz OK")
+
+    # --- B3 regression: provenance sidecar failure warns, doesn't roll back
+    with tempfile.TemporaryDirectory() as tdir:
+        state.configure(teamsWrkData=tdir)
+        # Pass a metadata value json.dump can't serialise even with
+        # default=str only after str() — we use an explicitly-failing
+        # object to make sure the warning path triggers.
+        class _Unserialisable:
+            def __str__(self_):
+                raise TypeError("cannot stringify")
+        bad_meta = {"weird": _Unserialisable()}
+        import warnings as _warn
+        with _warn.catch_warnings(record=True) as w:
+            _warn.simplefilter("always")
+            p = cso_toolkit.dw_save(
+                pd.DataFrame({"a": [1, 2]}),
+                path=str(Path(tdir) / "primary_survives.csv"),
+                metadata=bad_meta,
+            )
+        # Primary file must exist regardless
+        assert Path(p).exists()
+        # The warning must be from cso_toolkit.dw_save
+        assert any("cso_toolkit.dw_save" in str(m.message)
+                   and "Provenance sidecar write failed" in str(m.message)
+                   for m in w), f"expected sidecar-failure warning, got {[str(m.message) for m in w]}"
+        print("[dw_io] B3: provenance failure warns; primary file preserved OK")
+
+    # --- B4 regression: dw_api default extension for http/github_raw is pkl
+    from cso_toolkit.dw_api import _dw_api_default_ext as _ext
+    assert _ext("http") == "pkl"
+    assert _ext("github_raw") == "pkl"
+    assert _ext("wb_indicators") == "pkl"
+    assert _ext("uis") == "csv"
+    print("[dw_api] B4: http/github_raw default to pkl, others stay csv OK")
+
+    # --- B1 regression: remote-URL freeze guards
+    # No allowlist set => any URL refused
+    state.configure(dw_url_allowlist=())
+    try:
+        cso_toolkit.dw_use("https://example.com/data.csv")
+    except PermissionError as exc:
+        assert "not in `dw_url_allowlist`" in str(exc)
+        assert "Fix:" in str(exc)
+    else:
+        raise AssertionError("expected PermissionError on empty allowlist")
+    print("[dw_io] B1: empty allowlist refuses any URL OK")
+
+    # Allowlist set + reviewer mode + URL not yet frozen => refuse
+    state.configure(
+        dw_url_allowlist=(r"^https://example\.com/",),
+        dw_mode="reviewer",
+        dw_frozen_root=tempfile.mkdtemp(prefix="cso_frozen_"),
+    )
+    try:
+        cso_toolkit.dw_use("https://example.com/data-not-yet-frozen.csv")
+    except PermissionError as exc:
+        assert "Reviewer mode forbids fetching" in str(exc)
+        assert "Fix:" in str(exc)
+    else:
+        raise AssertionError("expected PermissionError in reviewer + unfrozen")
+    print("[dw_io] B1: reviewer mode refuses unfrozen URL OK")
+
+    # Reset mode for any subsequent checks
+    state.configure(dw_mode="producer", dw_apis_allowed=True)
+
     print("\nAll smoke checks passed.")
     return 0
 
