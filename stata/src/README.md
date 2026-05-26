@@ -96,3 +96,17 @@ the caller passes `allow_canonical_write` (DBM bootstraps only).
 - The YAML-config loader for `$dw_mode` is documented but not shipped
   — projects wire it up themselves until a `dw_load_config.do` helper
   lands.
+
+These three gaps are tracked in
+[issue #5](https://github.com/unicef-drp/cso-toolkit/issues/5) for
+the v0.4.0 release window.
+
+## See also
+
+- [Top-level README](../../README.md) — toolkit overview + architecture
+  diagram.
+- [`stata/README.md`](../README.md) — Stata package overview (install,
+  layout, mode contract, known limitations).
+- [NEWS.md / Changelog](../../NEWS.md) — per-release notes.
+- Sibling implementations: [`r/R/README.md`](../../r/R/README.md)
+  · [`python/src/README.md`](../../python/src/README.md).

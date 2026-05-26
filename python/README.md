@@ -165,11 +165,14 @@ exercise pure-function invariants.
 
 - [Top-level README](../README.md) — overview, three-role contract,
   vendoring rationale, versioning.
+- [NEWS.md / Changelog](../NEWS.md) — per-release notes
+  (`v0.1.0-rc1` → `v0.2.0` → `v0.3.0` → `v0.4.0`).
 - [`python/src/README.md`](src/README.md) — per-module catalogue (the
   vendoring view).
 - [`docs/dw_io_python_reference.md`](../docs/dw_io_python_reference.md)
   — IO function reference.
 - [`docs/dw_api_python_reference.md`](../docs/dw_api_python_reference.md)
   — API function reference.
-- [R sibling](../r/) — same contract in R.
-- [Stata sibling](../stata/) — same contract in Stata.
+- Sibling implementations of the same contract:
+  - [`r/README.md`](../r/README.md) — R
+  - [`stata/README.md`](../stata/README.md) — Stata

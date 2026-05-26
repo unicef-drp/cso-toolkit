@@ -191,11 +191,14 @@ WHAT.\n  Why: ...\n  Fix: ...` shape.
 
 - [Top-level README](../README.md) — overview, three-role contract,
   vendoring rationale, versioning.
+- [NEWS.md / Changelog](../NEWS.md) — per-release notes
+  (`v0.1.0-rc1` → `v0.2.0` → `v0.3.0` → `v0.4.0`).
 - [`r/R/README.md`](R/README.md) — per-helper catalogue (the vendoring
   view).
 - [`docs/dw_io_reference.md`](../docs/dw_io_reference.md) — IO function
   reference.
 - [`docs/dw_api_reference.md`](../docs/dw_api_reference.md) — API
   function reference.
-- [Python sibling](../python/) — same contract in Python.
-- [Stata sibling](../stata/) — same contract in Stata.
+- Sibling implementations of the same contract:
+  - [`python/README.md`](../python/README.md) — Python
+  - [`stata/README.md`](../stata/README.md) — Stata
