@@ -1,7 +1,7 @@
 # DW-Production ↔ cso-toolkit alignment audit (2026-05-25)
 
 Comparison of `C:\GitHub\mytasks\DW-Production\00_functions\` against
-`c:\GitHub\myados\cso-toolkit\r\R\` at toolkit head **v0.3.0**.
+`C:\GitHub\myados\cso-toolkit\r\R\` at toolkit head **v0.3.0**.
 
 ## TL;DR
 
@@ -172,7 +172,7 @@ DW-Production needs to pull v0.3.0 to gain:
 | What | Why it matters |
 |------|----------------|
 | Roxygen-complete reference (NAMESPACE + 26 Rd files + pkgdown config) | `?dw_save` etc. now resolves to a man page; pkgdown site builds |
-| Graceful three-part error envelope `[cso_toolkit.<func>] WHAT/Why/Fix` | Every `stop()` / `warning()` is grep-friendly and actionable |
+| Graceful three-part error envelope `[cso_toolkit.{func}] WHAT/Why/Fix` | Every `stop()` / `warning()` is grep-friendly and actionable |
 | `dw_nestweight.R` | Survey-weight redistribution (ported from EduAnalyticsToolkit), unblocks MAR-within-strata workflows |
 | `profile_helpers.R` (`create_profile`, `review_profile`) | Auto-scaffold a `profile_<repo>.R` and audit it against the toolkit contract |
 | `test_scripts.R` | CI-mode auditor that flags raw `read_csv` / `httr::GET` / `rsdmx::readSDMX` etc. in sector code |
