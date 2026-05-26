@@ -108,9 +108,15 @@ def _dw_root_for(kind: str) -> Optional[str]:
     )
 
 
-#: Toolkit version string — kept in sync with ``r/DESCRIPTION`` Version
-#: and ``python/pyproject.toml`` version.  Exposed publicly via
-#: :func:`dw_toolkit_version` so callers can stamp logs / provenance.
+#: IO-contract version string — names the *behaviour-contract release*
+#: that this `dw_io` exposes.  This is the version vendored consumers
+#: should pin against; it is set independently of the package-build
+#: versions (``r/DESCRIPTION`` Version + ``python/pyproject.toml``
+#: version), which roll along the development line (e.g. R
+#: ``0.3.0.9000`` and Python ``0.4.0.dev0`` until the release PR bumps
+#: both to ``0.4.0``).  Exposed publicly via :func:`dw_toolkit_version`
+#: so callers can stamp logs / provenance and assert minimum-contract
+#: requirements in profile scripts.
 _TOOLKIT_VERSION = "0.4.0"
 
 
