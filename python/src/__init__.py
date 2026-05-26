@@ -25,6 +25,7 @@ from .dw_io import (
     dw_merge,
     dw_resolve_path,
     dw_save,
+    dw_toolkit_version,
     dw_use,
     dw_verify_z,
 )
@@ -78,6 +79,7 @@ __all__ = [
     # IO
     "dw_save", "dw_use", "dw_compare", "dw_merge", "dw_isid",
     "dw_verify_z", "dw_resolve_path", "dw_is_canonical",
+    "dw_toolkit_version",
     # API
     "dw_api_fetch", "dw_api_cached", "dw_api_inventory",
     # Sync
