@@ -7,10 +7,10 @@ siblings, scoped to the subset of helpers that fit Stata's idioms.
 ## Status
 
 - **First Stata release** — `v0.2.0` (2026-05-24).
-- Subset coverage: writes, comparisons, and recursive mkdir. The full
-  IO + API contract is implemented on the R and Python sides; the
-  Stata side currently covers the producer-write half. See **Known
-  limitations** below.
+- **v0.4.0** (in flight) — adds `dw_use`, `dw_require_no_api`, and
+  `dw_load_config`. The Stata side now covers the full producer /
+  reviewer mode contract for `.dta` / `.csv` / `.xlsx` reads + writes;
+  Parquet / RDS remain R+Python-only by design.
 
 ## Installation
 
@@ -41,36 +41,49 @@ pulled_date: "2026-05-25"
 
 ```text
 stata/
-├── README.md           # this file
+├── README.md                   # this file
 └── src/
-    ├── README.md       # per-helper catalogue + lineage table
-    ├── dw_save.ado     # uniform save() wrapper + .provenance.json sidecar
+    ├── README.md               # per-helper catalogue + lineage table
+    ├── dw_save.ado             # uniform save() wrapper + .provenance.json sidecar
     ├── dw_save.sthlp
-    ├── dw_compare.ado  # compare two .dta files on idvars + valuevars
+    ├── dw_use.ado              # uniform read() with v0.4.0 mode-branched resolver
+    ├── dw_use.sthlp
+    ├── dw_compare.ado          # compare two .dta files on idvars + valuevars
     ├── dw_compare.sthlp
-    ├── dw_mkdir.ado    # recursive mkdir (Stata's built-in is not)
-    └── dw_mkdir.sthlp
+    ├── dw_mkdir.ado            # recursive mkdir (Stata's built-in is not)
+    ├── dw_mkdir.sthlp
+    ├── dw_require_no_api.ado   # reviewer-mode no-API gate
+    ├── dw_require_no_api.sthlp
+    ├── dw_load_config.ado      # YAML config loader (AppLocker-safe)
+    └── dw_load_config.sthlp
 ```
 
 ## Quick start
 
 ```stata
-* 1. Wire the mode contract in your profile (.do sourced at session start)
-global dw_mode "producer"
-global teamsWrkDataCanonical "C:/Users/<you>/Teams/.../013_wrkdata"
-global teamsRawDataCanonical "C:/Users/<you>/Teams/.../011_rawdata"
+* 1. Bootstrap the session (v0.4.0)
+adopath ++ "C:/Github/myados/cso-toolkit/stata/src"
+dw_load_config                                          // reads ~/.config/user_config.yml
+                                                        // -> sets $dw_mode + team* globals
 
-* 2. Use the contract
-use "input.dta", clear
-* ... data prep ...
+* 2. (optional) Refuse live API calls in reviewer mode
+dw_require_no_api , context("ed/06_pull_uis")
 
-dw_save using "dw_ed_edu.dta",      ///
-    idvars(REF_AREA INDICATOR)      ///
-    title("Education indicators")   ///
-    producer("01_dw_prep/012_codes/ed/example.do") ///
-    sources("UIS bulk SDG_092025")  ///
+* 3. Read with the v0.4.0 mode-branched resolver
+dw_use , filename("dw_ed_edu.dta") path("$teamsWrkData/ed")
+* reviewer mode: tries Teams canonical -> Z: mirror -> repo-local + warning -> stop
+* producer mode: local-first; canonical fallback when the literal is missing
+
+* 4. ... data prep ...
+
+* 5. Write with the producer / reviewer guard + .provenance.json sidecar
+dw_save , filename("dw_ed_edu") path("$teamsWrkData/ed") ///
+    idvars(REF_AREA INDICATOR)                          ///
+    title("Education indicators")                       ///
+    producer("01_dw_prep/012_codes/ed/example.do")      ///
+    sources("UIS bulk SDG_092025")                      ///
     vintage("2026-05")
-* Writes dw_ed_edu.dta + dw_ed_edu.dta.provenance.json
+* writes dw_ed_edu.dta + dw_ed_edu.dta.provenance.json
 ```
 
 ## Mode contract (Stata side)
@@ -110,19 +123,25 @@ Each port keeps the upstream's algorithmic core and credits the
 original author in its header. See [`src/README.md`](src/README.md) for
 the full divergence rationale (naming, metadata model, scope).
 
-## Known limitations (v0.2)
+Also new in the lineage table: `dw_use.ado`, `dw_require_no_api.ado`,
+and `dw_load_config.ado` are cso-toolkit-native (no upstream port). The
+`dw_use` resolver mirrors the R `dw_io.R::dw_use` and the Python
+`dw_io.py::dw_use` contract.
 
-- **No Stata `dw_use`** yet. Reading is unconstrained on the Stata
-  side; the reviewer-mode no-API guard exists only in R + Python.
+## Known limitations (v0.4.0)
+
 - **No Stata `dw_api_fetch`** yet. External API access in Stata
   pipelines should still route through R or Python and write the cache
-  to a path Stata can `use`.
+  to a path Stata can `use`. `dw_require_no_api` enforces this for
+  reviewer sessions; producer pipelines wanting Stata-native HTTP
+  should call R / Python and hand back the cache via `dw_use`.
+- **Stata `.parquet` / `.rds` reads are out of scope.** Auto-dispatch
+  on the Stata side covers `.dta` / `.csv` / `.xlsx` only. Pipelines
+  needing the binary formats route through R or Python and
+  `dw_save()` to `.dta` for Stata consumption.
 - **Content hash via `datasignature`**, not file-level SHA-256.
   Cross-tool integrity checks should compare content hashes, not file
   hashes.
-- The YAML-config loader for `$dw_mode` is documented but not yet
-  shipped — projects wire it up themselves until a `dw_load_config.do`
-  helper lands (planned for v0.4).
 
 ## See also
 

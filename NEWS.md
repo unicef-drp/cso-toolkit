@@ -6,6 +6,33 @@ _Entries land here as PRs merge into `develop`.  When the next release
 is cut, this header is renamed `## v0.4.0 (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
+### Issue #5 — Stata helpers reaching mode-contract parity
+
+Ships the three Stata helpers that completed the v0.4.0 producer /
+reviewer contract on the Stata side, closing the gaps surfaced when
+v0.3.0 landed Stata-as-a-supported-target with read + API parity still
+deferred:
+
+- **`stata/src/dw_use.ado`** + `.sthlp` — uniform Stata read wrapper
+  with auto-dispatch on `.dta` / `.csv` / `.xlsx`. Implements the v0.4.0
+  mode-branched resolver (producer = local-first, reviewer =
+  network-first), parses sibling `.provenance.json` for the recorded
+  `datasignature`, and runs a non-blocking Z: drive integrity check
+  (size by default; `datasignature` deep check via
+  `verify_z(sha256)`).
+- **`stata/src/dw_require_no_api.ado`** + `.sthlp` — preflight gate
+  that aborts (Stata error 459) when `$dw_mode == "reviewer"`. Mirrors
+  the R `r/R/profile_helpers.R::dw_require_no_api` shape.
+- **`stata/src/dw_load_config.ado`** + `.sthlp` — hand-rolled YAML
+  reader for `~/.config/user_config.yml`. No external dependency
+  (AppLocker-safe). Populates `$dw_mode` + the `teams*` and
+  `sandboxRoot` globals; hard-stops with the envelope-shaped error
+  when `dw_mode` is missing or set to anything other than
+  `producer` | `reviewer`.
+
+Stata-side `dw_api_fetch` and Parquet / RDS read support remain out of
+scope by design (route through R or Python and `dw_save` to `.dta`).
+
 ### Issue #14 — Producer / reviewer mode contract tightening (**BREAKING**)
 
 Refines the producer / reviewer split so that producer outputs are
