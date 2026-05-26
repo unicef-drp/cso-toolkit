@@ -48,6 +48,15 @@ reference:
   contents:
   - has_concept("aggregate")
 
+- title: Demographics
+  desc: >
+    Convenience wrappers for the population denominators and the
+    UNICEF region taxonomy that almost every sector pipeline needs.
+    Pull World Bank `SP.POP.TOTL` via `dw_pop()` and append regional
+    aggregate rows to a country-level tibble via `dw_regions()`.
+  contents:
+  - has_concept("demographics")
+
 - title: Survey-weight redistribution
   desc: >
     Redistribute weights across non-missing observations so per-stratum
