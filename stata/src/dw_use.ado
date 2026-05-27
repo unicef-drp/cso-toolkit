@@ -56,9 +56,9 @@ program define   dw_use, rclass
     if "`verify_z'" == "" local verify_z "size"
     if !inlist("`verify_z'", "size", "sha256", "off") {
         noi di as error ///
-            "{phang}[cso_toolkit.dw_use] verify_z() must be one of `size', `sha256', or `off'; got `verify_z'.{p_end}"
+            `"{phang}[cso_toolkit.dw_use] verify_z() must be one of "size", "sha256", or "off"; got `verify_z'.{p_end}"'
         noi di as error ///
-            "{phang}  Fix: drop verify_z() to take the default (`size'), or pick a supported value.{p_end}"
+            `"{phang}  Fix: drop verify_z() to take the default ("size"), or pick a supported value.{p_end}"'
         error 198
     }
 
@@ -284,7 +284,7 @@ program define   dw_use, rclass
     }
     else {
         noi di as error ///
-            "{phang}[cso_toolkit.dw_use] Unsupported file extension `.`ext'' (path: `resolved').{p_end}"
+            "{phang}[cso_toolkit.dw_use] Unsupported file extension .`ext' (path: `resolved').{p_end}"
         noi di as error ///
             "{phang}  Supported on the Stata side: .dta, .csv, .xlsx. For .parquet / .rds route through R / Python and dw_save() to .dta.{p_end}"
         error 198
