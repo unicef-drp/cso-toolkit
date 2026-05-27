@@ -978,8 +978,16 @@ dw_save <- function(x,
 #'
 #' @keywords internal
 #' @noRd
-.write_csv <- function(x, path, sep = ",", na = "", row.names = FALSE,
+.write_csv <- function(x, path, sep = ",", na = "",
  compress = FALSE, dialect = "fwrite", ...) {
+	# Note: `row.names` is intentionally NOT a named parameter here, so
+	# that callers passing it via dw_save(..., row.names = TRUE) flow it
+	# through `...` to data.table::fwrite (which honours it). Prior to
+	# v0.4.2 row.names = FALSE was declared in the signature but never
+	# plumbed to either writer, so the argument was silently ignored
+	# (Copilot finding on PR #29). For the "base" dialect the call uses
+	# the underlying write.table default (row.names = TRUE) which
+	# preserves byte-parity with utils::write.csv().
 	# v0.4.1 restore + v0.4.2 separator fix.
 	#
 	# v0.4.1 restored the `dialect` parameter that v0.4.0 silently dropped,
