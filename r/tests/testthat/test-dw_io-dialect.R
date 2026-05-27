@@ -28,10 +28,13 @@ test_that("dialect='base' on .csv is byte-identical to utils::write.csv()", {
   dw_save(x, path = csv_via_dw_save, dialect = "base", provenance = FALSE)
   utils::write.csv(x, file = csv_via_write_csv)
 
-  expect_identical(
-    readLines(csv_via_dw_save),
-    readLines(csv_via_write_csv)
-  )
+  # True byte-parity check: compare raw bytes (readLines normalises
+  # line endings and could mask encoding/EOF differences across OSes).
+  bytes_dw_save  <- readBin(csv_via_dw_save,   what = "raw",
+                            n = file.info(csv_via_dw_save)$size)
+  bytes_write_csv <- readBin(csv_via_write_csv, what = "raw",
+                             n = file.info(csv_via_write_csv)$size)
+  expect_identical(bytes_dw_save, bytes_write_csv)
 })
 
 test_that("dialect='base' on .tsv produces tab-separated output (v0.4.2 fix)", {
@@ -71,7 +74,14 @@ test_that("dialect='base' rejects compress = TRUE with an explanatory error", {
   expect_match(conditionMessage(err), "dialect = 'base'.*compress")
 })
 
-test_that("dialect='unknown' raises an envelope-shaped error", {
+test_that("dialect='unknown' raises an error (match.arg gate before envelope)", {
+  # NOTE: dw_save() declares `dialect = c("fwrite", "base")` and calls
+  # match.arg() near the top of the body. match.arg() raises a base R
+  # error ("'arg' should be one of ...") BEFORE the toolkit envelope
+  # wrapping kicks in. So the error message is intentionally base R
+  # style, not the [cso_toolkit.dw_save] / Fix: envelope. This is the
+  # correct behaviour -- match.arg gives the cheap validation -- but
+  # the test must reflect that, not assert envelope shape.
   d <- local_tempdir()
   local_state(dw_mode = "reviewer")
   x <- data.frame(a = 1:3)
@@ -82,7 +92,6 @@ test_that("dialect='unknown' raises an envelope-shaped error", {
     error = function(e) e
   )
   expect_s3_class(err, "error")
-  # match.arg() raises before the envelope reaches; either way the
-  # message must mention the invalid dialect value.
-  expect_match(conditionMessage(err), "fwrite|base|unknown")
+  expect_match(conditionMessage(err),
+               "should be one of|fwrite|base|unknown")
 })

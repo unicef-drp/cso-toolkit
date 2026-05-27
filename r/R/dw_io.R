@@ -1002,8 +1002,13 @@ dw_save <- function(x,
 		if (isTRUE(compress)) {
 			stop(
 				"[cso_toolkit.dw_save] dialect = 'base' is incompatible ",
-				"with compress = TRUE; use dialect = 'fwrite' (default) ",
-				"for gzipped output.",
+				"with compress = TRUE: utils::write.table() cannot gzip its ",
+				"output, only data.table::fwrite() can.\n",
+				" Fix:\n",
+				"   1. Drop `compress = TRUE` to keep the base / write.csv ",
+				"byte-parity contract, OR\n",
+				"   2. Drop `dialect = \"base\"` (or set it to \"fwrite\") ",
+				"to use the data.table::fwrite path with gzip support.",
 				call. = FALSE
 			)
 		}
@@ -1015,8 +1020,9 @@ dw_save <- function(x,
 	if (!identical(dialect, "fwrite")) {
 		stop(
 			"[cso_toolkit.dw_save] dialect = '", dialect, "' is not ",
-			"recognised. Supported: 'fwrite' (default; data.table::fwrite) ",
-			"or 'base' (utils::write.table with col.names = NA + ",
+			"recognised.\n",
+			" Fix: pass `dialect = \"fwrite\"` (default; data.table::fwrite) ",
+			"or `dialect = \"base\"` (utils::write.table with col.names = NA + ",
 			"qmethod = \"double\"; byte-parity with utils::write.csv() for ",
 			".csv, correct tab-separated output for .tsv / .txt).",
 			call. = FALSE
