@@ -10,6 +10,83 @@ _v0.5.0 will land the live `dw_publish()` submission branch (issue
 [#15](https://github.com/unicef-drp/cso-toolkit/issues/15)) once
 sector leads finalise the Helix endpoint contract._
 
+## v0.4.1 (2026-05-27)
+
+Two regressions in v0.4.0 surfaced by Copilot review of the
+DW-Production pull ([DW-Production#127](https://github.com/unicef-drp/DW-Production/pull/127)).
+Patches validated on the NT branch in DW-Production before backport;
+see DW-Production `tests/test_v041_nt.R` for the focused harness
+(tests 1-4 all PASS against this v0.4.1 head).
+
+### `dw_save(..., dialect = ...)` parameter restored (BACKWARD COMPAT)
+
+v0.4.0 silently dropped the `dialect` parameter that v0.3.x exposed
+for byte-parity with `utils::write.csv()`. DW-Production NT scripts
+(`nt/2b_agg_iod.R`, `nt/2c_agg_vas_series.R`, `nt/2f_agg_bw.R`,
+`nt/2g_agg_iycf.R`) depend on `dialect = "base"` for legacy CSV byte
+parity. Under v0.4.0 those calls silently lost byte parity (the arg
+was forwarded via `...` into `data.table::fwrite` which doesn't
+accept it).
+
+v0.4.1 restores `dialect` as an explicit parameter on `dw_save()`:
+
+- `dialect = "fwrite"` (default) — `data.table::fwrite` path
+  (existing behaviour; row.names = FALSE, fast)
+- `dialect = "base"` — `utils::write.csv(x, file = path)` (preserves
+  row.names = TRUE + default-quoted strings; byte-parity with
+  legacy `write.csv()`)
+- `dialect = "base"` with `compress = TRUE` raises an explanatory
+  error (gzip is fwrite-only).
+
+Plumbed through CSV/TSV/TXT dispatch lines in `dw_save()` body.
+
+### `dw_save(..., overwrite = NULL)` -- mode-aware default (DESIGN ALIGNMENT)
+
+v0.4.0 shipped `overwrite = FALSE` uniformly across both modes
+(strict). The mode-contract design discussion in issue
+[#14](https://github.com/unicef-drp/cso-toolkit/issues/14) preferred
+**lenient** for reviewer mode: producer-mode keeps explicit-required;
+reviewer-mode keeps default-TRUE for scratch writes under
+`013_wrkdata/_local/` (already gitignored; safe to re-run).
+
+v0.4.1 changes `dw_save()` signature: `overwrite = FALSE` ->
+`overwrite = NULL` (sentinel). After mode detection, the sentinel
+resolves to:
+
+- reviewer mode -> `TRUE`  (scratch is safe to re-run)
+- producer mode -> `FALSE` (must be explicit)
+- mode unset    -> `FALSE` (safe default; matches v0.4.0 strict)
+
+Explicit `overwrite = TRUE` / `overwrite = FALSE` overrides the
+sentinel as before.
+
+### Migration
+
+- **Reviewer-mode pipelines**: no action required. Default behaviour
+  reverts to the pre-v0.4.0 lenient overwrite-on-re-run for scratch
+  paths.
+- **Producer-mode pipelines**: no change from v0.4.0 — still must
+  pass `overwrite = TRUE` explicitly to re-run against existing
+  artifacts.
+- **Sector scripts using `dialect = "base"`**: no action; the
+  argument now works again with the documented v0.3.x semantics.
+
+### Other Copilot findings (deferred to v0.4.2)
+
+Four canonical-side bugs surfaced by the same review but deferred
+because they have zero blast radius on current DW-Production
+pipelines (no sector currently calls `dw_regions()` / `dw_publish()`
+/ `dw_pop()`):
+
+- `dw_save` flow ordering: mirror destinations + `mirror_to_z` dots
+  leak (issues to be filed).
+- `dw_save` producer self-mirror when `teamsWrkData ==
+  teamsFolderCanonical`.
+- `dw_regions()` does not rename `Aggregate` -> `value` on regional
+  rows.
+- `create_sector_script` DW wrapper: wrong default paths + missing
+  profile sentinel.
+
 ## v0.4.0 (2026-05-26)
 
 ### Issue #15 — `dw_publish()` STUB (dry-run only)
