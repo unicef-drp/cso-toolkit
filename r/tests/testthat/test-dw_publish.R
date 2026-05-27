@@ -36,6 +36,40 @@ test_that("dw_publish raises envelope when required arguments are empty", {
   expect_match(conditionMessage(err), "indicator")
 })
 
+test_that("dw_publish raises envelope when a required argument is OMITTED (Copilot #22.1)", {
+  local_state(dw_mode = "producer")
+  d <- local_tempdir()
+  p <- file.path(d, "x.csv")
+  writeLines("a\n1\n", p)
+  # Omit `indicator` entirely.  Without the match.call() fix in #22.1
+  # base R raises "argument 'indicator' is missing" before the
+  # envelope, so this asserts we get the cso-toolkit envelope shape.
+  err <- tryCatch(
+    dw_publish(path = p, vintage = "2025", sector = "hva"),
+    error = identity
+  )
+  expect_s3_class(err, "error")
+  expect_envelope(err, function_name = "dw_publish")
+  expect_match(conditionMessage(err), "indicator")
+})
+
+test_that("dw_publish raises envelope on length-pathological arguments (Copilot #22.1)", {
+  local_state(dw_mode = "producer")
+  d <- local_tempdir()
+  p <- file.path(d, "x.csv")
+  writeLines("a\n1\n", p)
+  # Length-2 character vector
+  err <- tryCatch(
+    dw_publish(path = p,
+               indicator = c("U5MR", "NMR"),
+               vintage = "2025", sector = "hva"),
+    error = identity
+  )
+  expect_s3_class(err, "error")
+  expect_envelope(err, function_name = "dw_publish")
+  expect_match(conditionMessage(err), "single strings|length 1")
+})
+
 test_that("dw_publish raises envelope when path is missing on disk", {
   local_state(dw_mode = "producer")
   err <- tryCatch(

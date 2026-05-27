@@ -136,17 +136,54 @@ dw_publish <- function(path,
 	# Positional + named are all required; default values that would
 	# silently slip an empty submission past validation are NOT
 	# acceptable for an API-submission helper.
-	missing_args <- character(0)
-	for (nm in c("path", "indicator", "vintage", "sector")) {
-		v <- get(nm)
-		if (is.null(v) || (is.character(v) && !nzchar(v))) {
-			missing_args <- c(missing_args, nm)
-		}
-	}
+	#
+	# `missing()` lets us check whether the caller passed the argument
+	# at all WITHOUT forcing evaluation, so an omitted required arg
+	# does not trigger base-R's "argument 'x' is missing, with no
+	# default" message and bypass our envelope.  We also normalise
+	# length-pathological inputs (NULL, length 0, length > 1) so the
+	# existence + endpoint checks below don't blow up on a multi-length
+	# condition.
+	missing_args  <- character(0)
+	invalid_shape <- character(0)
+	if (missing(path))      missing_args <- c(missing_args, "path")
+	if (missing(indicator)) missing_args <- c(missing_args, "indicator")
+	if (missing(vintage))   missing_args <- c(missing_args, "vintage")
+	if (missing(sector))    missing_args <- c(missing_args, "sector")
+
 	if (length(missing_args) > 0) {
 		stop(sprintf(
-			"[cso_toolkit.dw_publish] Missing or empty required argument(s): %s\n  Fix: pass non-empty values for path, indicator, vintage, and sector.",
+			"[cso_toolkit.dw_publish] Missing required argument(s): %s\n  Fix: pass non-empty single-string values for path, indicator, vintage, and sector.",
 			paste(missing_args, collapse = ", ")
+		), call. = FALSE)
+	}
+
+	# Now that every arg is present, force evaluation and check shape.
+	check_shape <- function(nm, value) {
+		if (is.null(value) || length(value) == 0L) return("empty")
+		if (length(value) != 1L) return("invalid_shape")
+		if (is.character(value) && !nzchar(value)) return("empty")
+		"ok"
+	}
+	empty_args <- character(0)
+	for (pair in list(list("path", path),
+	                  list("indicator", indicator),
+	                  list("vintage", vintage),
+	                  list("sector", sector))) {
+		status <- check_shape(pair[[1]], pair[[2]])
+		if (status == "empty")          empty_args    <- c(empty_args,    pair[[1]])
+		if (status == "invalid_shape")  invalid_shape <- c(invalid_shape, pair[[1]])
+	}
+	if (length(empty_args) > 0) {
+		stop(sprintf(
+			"[cso_toolkit.dw_publish] Empty required argument(s): %s\n  Fix: pass non-empty single-string values for path, indicator, vintage, and sector.",
+			paste(empty_args, collapse = ", ")
+		), call. = FALSE)
+	}
+	if (length(invalid_shape) > 0) {
+		stop(sprintf(
+			"[cso_toolkit.dw_publish] Argument(s) must be single strings (length 1): %s\n  Fix: pass a scalar character for each of path, indicator, vintage, sector -- not a vector.",
+			paste(invalid_shape, collapse = ", ")
 		), call. = FALSE)
 	}
 
