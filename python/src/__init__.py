@@ -95,4 +95,4 @@ __all__ = [
     "test_scripts",
 ]
 
-__version__ = "0.4.0.dev0"
+__version__ = "0.4.0"
