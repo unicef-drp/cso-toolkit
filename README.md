@@ -387,7 +387,8 @@ Semantic versioning (MAJOR.MINOR.PATCH).
 | `v0.1.0-rc1` | 2026-05-24 | R helpers feature-complete; Stata / Python scaffolded. |
 | `v0.2.0` | 2026-05-24 | Stata helpers shipped (`dw_save`, `dw_compare`, `dw_mkdir`); `dw_nestweight` ported from EduAnalyticsToolkit; workflow diagrams. |
 | `v0.3.0` | 2026-05-25 | Full Python port (10 modules, 26 public entries); Roxygen-complete R reference (26 Rd files + pkgdown); graceful three-part error envelopes across R + Python; secrets-redaction in `.provenance.json`. |
-| `v0.4.0` | _in flight_ | DW-Production backports (B1 remote-URL freeze, B2 gzip auto-detect, B3 sidecar `tryCatch`, B4 URLencode + cache-ext fix); testthat regression suite (125 PASS); GitHub Actions CI; tightened producer / reviewer mode contract for `dw_save` + `dw_use` (issue #14); remaining Stata helpers — `dw_use`, `dw_require_no_api`, `dw_load_config` (issue #5). |
+| `v0.4.0` | 2026-05-26 | DW-Production backports (B1 remote-URL freeze, B2 gzip auto-detect, B3 sidecar `tryCatch`, B4 URLencode + cache-ext fix); testthat regression suite (237 PASS); GitHub Actions CI; tightened producer / reviewer mode contract for `dw_save` + `dw_use` — redundant Teams + Z: producer writes, network-first reviewer reads, `overwrite` default flipped TRUE → FALSE (issue #14, **BREAKING**); remaining Stata helpers — `dw_use`, `dw_require_no_api`, `dw_load_config` (issue #5); R demographics family — `dw_pop()` + `dw_regions()` (issues #17 + #18); `dw_publish()` STUB (issue #15; dry-run only, live submission deferred to v0.5.0). |
+| `v0.5.0` | _planned_ | Live `dw_publish()` submission branch (Helix endpoint + auth + idempotency); Python + Stata siblings of `dw_pop()` and `dw_regions()`. |
 | `v1.0.0` | _committed API_ | After the `ed` sector pilot lands and a second sector vendors the helpers without modification. |
 
 **Changelog.** Per-release notes — including breaking-change migration
