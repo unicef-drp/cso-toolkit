@@ -49,12 +49,18 @@ path is suffixed with `.gz` and `fwrite(compress = "gzip")` is used.}
 \itemize{
 \item `"fwrite"` (default) -- `data.table::fwrite` path: fast,
   `row.names = FALSE`, configurable separator/na.
-\item `"base"` -- `utils::write.csv(x, file = path)`: byte-parity
-  with legacy `write.csv()` output (preserves `row.names = TRUE` and
-  default-quoted strings). Restored in v0.4.1 for backward
-  compatibility with sector scripts that rely on legacy CSV byte
-  output. Incompatible with `compress = TRUE` (gzip is fwrite-only;
-  raises an explanatory error).
+\item `"base"` -- `utils::write.table(..., col.names = NA, qmethod =
+  "double")` with the dispatched separator. For `.csv` this is
+  byte-identical to `utils::write.csv(x, file = path)` (which is
+  itself a wrapper around `write.table` with the same args);
+  restored in v0.4.1 for backward compatibility with sector scripts
+  that rely on legacy CSV byte output. For `.tsv` / `.txt`, produces
+  correct tab-separated output with the same row.names /
+  quoted-string defaults (rather than silent CSV-formatted content
+  with a TSV extension; the v0.4.1 implementation called
+  `write.csv()` directly and so hardcoded comma -- fixed in v0.4.2).
+  Incompatible with `compress = TRUE` (gzip is fwrite-only; raises
+  an explanatory error).
 }}
 
 \item{overwrite}{Logical or `NULL` (sentinel). When `NULL` (the

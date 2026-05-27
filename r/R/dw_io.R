@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------
 # 00_functions/dw_io.R
-# Toolkit version: 0.4.1
+# Toolkit version: 0.4.2
 # Purpose: Uniform read/write helpers for DW-Production R scripts.
 # Auto-dispatch by file extension; supports every IO form the
 # sector scripts currently use; enforces the reviewer/producer
@@ -251,7 +251,7 @@ dw_is_canonical <- function(path) {
 #' rely on a v0.4.0+ contract (e.g. network-first reviewer reads,
 #' mirror-to-both producer writes).
 #'
-#' @return Character. Currently `"0.4.1"`.
+#' @return Character. Currently `"0.4.2"`.
 #'
 #' @examples
 #' if (utils::compareVersion(dw_toolkit_version(), "0.4.0") < 0) {
@@ -263,7 +263,7 @@ dw_is_canonical <- function(path) {
 #' @family io
 #' @export
 dw_toolkit_version <- function() {
-	"0.4.1"
+	"0.4.2"
 }
 
 # ============================================================================
@@ -671,12 +671,18 @@ dw_isid <- function(df, keys, where = "<unknown>") {
 #' @param dialect Character. Writer dialect for `.csv` / `.tsv` / `.txt`:
 #'   - `"fwrite"` (default) -- `data.table::fwrite` path: fast,
 #'     `row.names = FALSE`, configurable separator/na.
-#'   - `"base"` -- `utils::write.csv(x, file = path)`: byte-parity with
-#'     legacy `write.csv()` output (preserves `row.names = TRUE` and
-#'     default-quoted strings). Restored in v0.4.1 for backward
-#'     compatibility with sector scripts that rely on legacy CSV byte
-#'     output. Incompatible with `compress = TRUE` (gzip is fwrite-only;
-#'     raises an explanatory error).
+#'   - `"base"` -- `utils::write.table(..., col.names = NA, qmethod =
+#'     "double")` with the dispatched separator. For `.csv` this is
+#'     byte-identical to `utils::write.csv(x, file = path)` (which is
+#'     itself a wrapper around `write.table` with the same args);
+#'     restored in v0.4.1 for backward compatibility with sector
+#'     scripts that rely on legacy CSV byte output. For `.tsv` /
+#'     `.txt`, produces correct tab-separated output with the same
+#'     row.names / quoted-string defaults (rather than silent
+#'     CSV-formatted content with a TSV extension; the v0.4.1
+#'     implementation called `write.csv()` directly and so hardcoded
+#'     comma -- fixed in v0.4.2). Incompatible with `compress = TRUE`
+#'     (gzip is fwrite-only; raises an explanatory error).
 #' @param overwrite Logical or `NULL` (sentinel). When `NULL` (the
 #' v0.4.1 default), the value resolves to `TRUE` in reviewer mode
 #' (scratch writes under the local sandbox are safe to re-run) and
@@ -974,14 +980,24 @@ dw_save <- function(x,
 #' @noRd
 .write_csv <- function(x, path, sep = ",", na = "", row.names = FALSE,
  compress = FALSE, dialect = "fwrite", ...) {
-	# v0.4.1 restore: `dialect` parameter was dropped in v0.4.0 without a
-	# migration path, breaking byte-parity with legacy `utils::write.csv()`
-	# output for callers that depended on it. Restored here so consumers can
-	# preserve row.names = TRUE + default-quoted strings when they need it.
+	# v0.4.1 restore + v0.4.2 separator fix.
 	#
-	# dialect = "fwrite" (default): data.table::fwrite -- fast, row.names = FALSE
-	# dialect = "base":              utils::write.csv  -- byte-parity with
-	#                                                     legacy write.csv()
+	# v0.4.1 restored the `dialect` parameter that v0.4.0 silently dropped,
+	# so callers depending on byte-parity with legacy utils::write.csv()
+	# could keep that contract.
+	#
+	# v0.4.2 fixes a Copilot-flagged silent-CSV bug: v0.4.1's dialect="base"
+	# branch called `utils::write.csv(x, file = path)`, which hardcodes a
+	# comma separator. That meant `dw_save(x, "out.tsv", dialect = "base")`
+	# silently produced CSV-formatted content with a .tsv extension.
+	#
+	# Fix: dispatch dialect="base" through utils::write.table() with the
+	# caller's `sep`. write.csv is itself a wrapper around
+	# write.table(..., sep = ",", col.names = NA, qmethod = "double"), so:
+	#   - For .csv (sep = ",") the byte output is identical to write.csv()
+	#     -- byte-parity guarantee preserved for callers that rely on it.
+	#   - For .tsv / .txt (sep = "\t") the file contains correct tab
+	#     separators with the same row.names / quoted-string defaults.
 	if (identical(dialect, "base")) {
 		if (isTRUE(compress)) {
 			stop(
@@ -991,14 +1007,18 @@ dw_save <- function(x,
 				call. = FALSE
 			)
 		}
-		return(utils::write.csv(x, file = path))
+		return(utils::write.table(x, file = path,
+		                          sep = sep,
+		                          col.names = NA,
+		                          qmethod = "double"))
 	}
 	if (!identical(dialect, "fwrite")) {
 		stop(
 			"[cso_toolkit.dw_save] dialect = '", dialect, "' is not ",
 			"recognised. Supported: 'fwrite' (default; data.table::fwrite) ",
-			"or 'base' (utils::write.csv; preserves row.names + quoted ",
-			"strings for legacy byte parity).",
+			"or 'base' (utils::write.table with col.names = NA + ",
+			"qmethod = \"double\"; byte-parity with utils::write.csv() for ",
+			".csv, correct tab-separated output for .tsv / .txt).",
 			call. = FALSE
 		)
 	}
