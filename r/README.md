@@ -147,24 +147,58 @@ project for sites that hit a given error class.
 
 ## Testing
 
-```r
-# R CMD check
-devtools::check(".", args = c("--no-manual", "--no-build-vignettes"))
-# As of v0.2.1.9000: 0 errors, 0 warnings, 1 NOTE (environmental: clock skew)
+The package ships with a layered test surface — every layer runs
+locally and on CI (`.github/workflows/r-check.yml`).
 
-# Manual end-to-end consumer-side smoke test (hits api.github.com)
+```r
+# 1. testthat unit + regression suite (125+ assertions across 13 files)
+devtools::test(".")
+# Tests live at tests/testthat/test-*.R; shared fixtures in
+# tests/testthat/helper-state.R; the `expect_envelope()` helper
+# verifies every raise carries the three-part WHAT/Why/Fix shape.
+
+# 2. R CMD check (runs the testthat suite automatically because
+#    testthat is in Suggests + tests/testthat.R is the entry point)
+devtools::check(".", args = c("--no-manual", "--no-build-vignettes"))
+# Target: 0 errors / 0 warnings / 0 notes.
+
+# 3. Manual end-to-end consumer-side smoke test (hits api.github.com)
 Rscript tests/manual/check_consumer_side.R
 ```
+
+CI runs all three on every push + PR to `main` or `develop`, across
+Ubuntu (release + devel), macOS (release), and Windows (release).
+
+### Adding a regression test
+
+When fixing a bug or adding a feature, add a test that would have
+caught the regression. Pattern:
+
+```r
+test_that("dw_is_canonical rejects sibling-prefix paths (regression)", {
+  local_state(teamsWrkDataCanonical = "/data/wrk-can")
+  expect_false(dw_is_canonical("/data/wrk-canary/ed/x.csv"))
+})
+```
+
+The `local_state(...)` fixture in `tests/testthat/helper-state.R`
+sets `.GlobalEnv` bindings for the test's lifetime and restores them
+on test exit. Use `expect_envelope(err, function_name = "dw_save")`
+to assert error messages follow the toolkit's `[cso_toolkit.<func>]
+WHAT.\n  Why: ...\n  Fix: ...` shape.
 
 ## See also
 
 - [Top-level README](../README.md) — overview, three-role contract,
   vendoring rationale, versioning.
+- [NEWS.md / Changelog](../NEWS.md) — per-release notes
+  (`v0.1.0-rc1` → `v0.2.0` → `v0.3.0` → `v0.4.0`).
 - [`r/R/README.md`](R/README.md) — per-helper catalogue (the vendoring
   view).
 - [`docs/dw_io_reference.md`](../docs/dw_io_reference.md) — IO function
   reference.
 - [`docs/dw_api_reference.md`](../docs/dw_api_reference.md) — API
   function reference.
-- [Python sibling](../python/) — same contract in Python.
-- [Stata sibling](../stata/) — same contract in Stata.
+- Sibling implementations of the same contract:
+  - [`python/README.md`](../python/README.md) — Python
+  - [`stata/README.md`](../stata/README.md) — Stata

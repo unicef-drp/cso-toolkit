@@ -64,6 +64,7 @@ entrance_age_primary <- dw_api_fetch(
 
 Other api: 
 \code{\link{dw_api_cached}()},
-\code{\link{dw_api_inventory}()}
+\code{\link{dw_api_inventory}()},
+\code{\link{dw_publish}()}
 }
 \concept{api}

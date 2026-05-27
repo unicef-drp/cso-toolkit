@@ -69,3 +69,13 @@ pulled_date: "2026-05-25"
 tag, and warns if the consumer is behind. See
 [`templates/.toolkit_manifest.yml`](../../templates/.toolkit_manifest.yml)
 for the full schema (fields, optional helpers, `local_edits` opt-out).
+
+## See also
+
+- [Top-level README](../../README.md) — toolkit overview + architecture
+  diagram.
+- [`r/README.md`](../README.md) — R package overview (install, layout,
+  quick start, testing).
+- [NEWS.md / Changelog](../../NEWS.md) — per-release notes.
+- Sibling implementations: [`python/src/README.md`](../../python/src/README.md)
+  · [`stata/src/README.md`](../../stata/src/README.md).

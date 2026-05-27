@@ -90,3 +90,13 @@ API-specific (lazy-imported by `dw_api_fetch`):
 | `"uis"` / `"http"` / `"json_get"` / `"sdmx_codelist"` / `"unsd_sdg"` / `"github_raw"` | `requests` |
 | `"sdmx"` / `"ilo"`   | `sdmx1` (provides the `sdmx` import name) |
 | `"wb"` / `"wb_indicators"` | `wbgapi`  |
+
+## See also
+
+- [Top-level README](../../README.md) — toolkit overview + architecture
+  diagram.
+- [`python/README.md`](../README.md) — Python package overview (install,
+  layout, quick start, testing).
+- [NEWS.md / Changelog](../../NEWS.md) — per-release notes.
+- Sibling implementations: [`r/R/README.md`](../../r/R/README.md)
+  · [`stata/src/README.md`](../../stata/src/README.md).
