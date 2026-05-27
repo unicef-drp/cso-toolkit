@@ -3,8 +3,14 @@
 ## Unreleased
 
 _Entries land here as PRs merge into `develop`.  When the next release
-is cut, this header is renamed `## v0.4.0 (YYYY-MM-DD)` and a fresh
+is cut, this header is renamed `## v0.5.0 (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
+
+_v0.5.0 will land the live `dw_publish()` submission branch (issue
+[#15](https://github.com/unicef-drp/cso-toolkit/issues/15)) once
+sector leads finalise the Helix endpoint contract._
+
+## v0.4.0 (2026-05-26)
 
 ### Issue #15 — `dw_publish()` STUB (dry-run only)
 
