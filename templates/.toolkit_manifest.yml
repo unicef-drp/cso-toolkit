@@ -28,8 +28,8 @@
 # ---------------------------------------------------------------------------
 
 source: "unicef-drp/cso-toolkit"
-pulled_version: "v0.3.0"
-pulled_date: "2026-05-25"
+pulled_version: "v0.4.0"
+pulled_date: "2026-05-26"
 pulled_by: "<your-name>"
 
 # Files vendored from cso-toolkit/r/R/ into consumer's 00_functions/
