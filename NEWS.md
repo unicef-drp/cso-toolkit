@@ -10,6 +10,60 @@ _v0.5.0 will land the live `dw_publish()` submission branch (issue
 [#15](https://github.com/unicef-drp/cso-toolkit/issues/15)) once
 sector leads finalise the Helix endpoint contract._
 
+## v0.4.2 (2026-05-27)
+
+Patch release. Fixes a Copilot-flagged silent-CSV bug in v0.4.1's
+new `dialect = "base"` dispatch on `dw_save()`. Surfaced by Copilot
+review of DW-Production PR #128 (the v0.4.1 cleanup pull) before
+any sector pipeline could write a corrupted `.tsv`.
+
+### `dw_save(dialect = "base")` now honours the dispatched separator
+
+v0.4.1 dispatched `dialect = "base"` through `utils::write.csv(x,
+file = path)`, which hardcodes a comma separator. That meant
+`dw_save(x, "out.tsv", dialect = "base")` silently produced
+CSV-formatted content with a `.tsv` extension -- indistinguishable
+from a real TSV at the filename level, but with wrong delimiters
+inside.
+
+v0.4.2 switches the dispatch to the equivalent underlying call:
+`utils::write.table(x, file = path, sep = sep, col.names = NA,
+qmethod = "double")`. `write.csv` is itself a wrapper around
+`write.table` with those exact args plus an enforced `sep = ","`,
+so:
+
+- For `.csv` (sep = `,`) the byte output is **identical** to
+  `utils::write.csv(x, file = path)`. The byte-parity guarantee
+  v0.4.1 introduced for legacy callers (e.g. DW-Production NT
+  `2[bcfg]_agg_*` scripts) is preserved.
+- For `.tsv` / `.txt` (sep = `\t`) the file now contains actual
+  **tab** separators with the same `row.names` / quoted-string
+  defaults.
+
+### Test coverage
+
+New regression test file `r/tests/testthat/test-dw_io-dialect.R`
+exercises four cases:
+
+- `dialect = "base"` on `.csv` produces byte-identical output to
+  `utils::write.csv()`.
+- `dialect = "base"` on `.tsv` produces tab-separated output (the
+  v0.4.2 fix).
+- `dialect = "base"` with `compress = TRUE` raises the envelope-
+  shaped error explaining the gzip-is-fwrite-only constraint.
+- An unrecognised `dialect` value raises an envelope-shaped error
+  from `match.arg()`.
+
+Existing version-stamp assertions in `test-dw_io-mode-contract.R`
+and `test-dw_publish.R` updated from `"0.4.1"` to `"0.4.2"`.
+
+### No public-API change
+
+`dw_save()`'s signature is unchanged. Callers using `dialect =
+"base"` on `.csv` see no behavioural difference. Callers passing
+`.tsv` / `.txt` with `dialect = "base"` get correct tab output
+instead of silent comma output (which was the bug).
+
 ## v0.4.1 (2026-05-27)
 
 Two regressions in v0.4.0 surfaced by Copilot review of the
