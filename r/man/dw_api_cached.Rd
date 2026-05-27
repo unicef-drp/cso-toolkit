@@ -27,6 +27,7 @@ scripts that must remain reproducible without network access.
 
 Other api: 
 \code{\link{dw_api_fetch}()},
-\code{\link{dw_api_inventory}()}
+\code{\link{dw_api_inventory}()},
+\code{\link{dw_publish}()}
 }
 \concept{api}
