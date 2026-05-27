@@ -1,5 +1,211 @@
 # NEWS — cso-toolkit
 
+## Unreleased
+
+_Entries land here as PRs merge into `develop`.  When the next release
+is cut, this header is renamed `## v0.5.0 (YYYY-MM-DD)` and a fresh
+`## Unreleased` section is added back._
+
+_v0.5.0 will land the live `dw_publish()` submission branch (issue
+[#15](https://github.com/unicef-drp/cso-toolkit/issues/15)) once
+sector leads finalise the Helix endpoint contract._
+
+## v0.4.0 (2026-05-26)
+
+### Issue #15 — `dw_publish()` STUB (dry-run only)
+
+Ships `r/R/dw_publish.R` as a deliberate STUB so DW-Production sector
+scripts can wire the canonical call site today and have the live
+branch light up automatically when v0.5.0 lands.
+
+What's in:
+
+- Public signature matching the final v0.5.0 contract:
+  `dw_publish(path, indicator, vintage, sector, endpoint = "helix",
+   dry_run = TRUE, ...)`.
+- **Producer-only mode contract** -- reviewer-mode calls raise
+  BEFORE any I/O via the same envelope shape as `dw_api_fetch()`.
+- **Argument validation** -- empty / missing `path` / `indicator` /
+  `vintage` / `sector` raises the envelope; `path` must exist on
+  disk and not be a directory; `endpoint` must be `"helix"` (the
+  only recognised value in v0.4.0).
+- **`dry_run = TRUE` returns a validated payload** with `sha256`,
+  `bytes`, `built_at`, `built_by`, and the toolkit-version stamp.
+  Caller scripts can assert the payload shape today without ever
+  hitting the network.
+
+What's deliberately deferred:
+
+- **Live submission (`dry_run = FALSE`) raises** with the
+  envelope-shaped *"Live submission not yet implemented"* message
+  and a pointer to GitHub issue #15.  Real Helix endpoint
+  integration ships in **v0.5.0** once sector leads (@karavan88,
+  @sbrar29, @laurenfrancis1202) finalise the submission contract.
+
+Scope boundary -- folded into the helper's roxygen + docstring so
+the long-running DW-Production confusion is finally resolved:
+
+- `dw_save()` -- filesystem (Teams + Z: drive mirror).
+- `dw_publish()` -- API (Helix submission).
+
+Tested: 6 new asserts in
+`r/tests/testthat/test-dw_publish.R` (cover the mode lockout,
+argument validation, missing path, endpoint allowlist, dry-run
+payload shape, and the v0.5.0-not-yet envelope).  Total R test
+suite is now 235 / 0; `devtools::check()` remains 0 / 0 / 0.
+
+### Issues #17 + #18 — `dw_pop()` and `dw_regions()` (R only)
+
+Two convenience wrappers that almost every sector pipeline needs but
+that v0.3.0 made users write themselves.  Both ship R-only in v0.4.0;
+Python and Stata parity are tracked at the same GitHub issues for a
+future minor.
+
+- **`r/R/dw_pop.R`** -- `dw_pop()` wraps `dw_api_fetch(api = "wb")`
+  for the World Bank total-population indicator (`SP.POP.TOTL`) and
+  returns a tidy `(REF_AREA, TIME_PERIOD, OBS_VALUE)` tibble.  When
+  `year` is `NULL` (default), only the latest available year per
+  country is returned; pass a year (or vector of years) to subset.
+  Optional `countries` filter, `refresh` to force a live fetch, and
+  `cache_key` override.
+- **`r/R/dw_regions.R`** -- `dw_regions()` fetches the UNICEF region
+  taxonomy from `unicef-drp/Country-and-Region-Metadata`
+  (default `UNICEF_REP_REG_GLOBAL.csv`) via
+  `dw_api_fetch(api = "github_raw")`, joins the country -> region map
+  into the caller's tibble, calls `aggregate_data_v2()` per region
+  with the supplied `value` + `by` + `method`, and appends the
+  regional rows to the original.  When `weight = "population"` (the
+  default), denominators come from `dw_pop()` and are merged in on
+  REF_AREA + TIME_PERIOD; otherwise the named column is used
+  directly.
+
+New pkgdown reference section: **Demographics**.  Both helpers are
+registered with `@family demographics` and exported.
+
+Tested: 11 new asserts for `dw_pop` + 19 for `dw_regions` (total R
+suite now 191 / 0); `devtools::check()` stays at 0 / 0 / 0.
+
+### Issue #5 — Stata helpers reaching mode-contract parity
+
+Ships the three Stata helpers that completed the v0.4.0 producer /
+reviewer contract on the Stata side, closing the gaps surfaced when
+v0.3.0 landed Stata-as-a-supported-target with read + API parity still
+deferred:
+
+- **`stata/src/dw_use.ado`** + `.sthlp` — uniform Stata read wrapper
+  with auto-dispatch on `.dta` / `.csv` / `.xlsx`. Implements the v0.4.0
+  mode-branched resolver (producer = local-first, reviewer =
+  network-first), parses sibling `.provenance.json` for the recorded
+  `datasignature`, and runs a non-blocking Z: drive integrity check
+  (size by default; `datasignature` deep check via
+  `verify_z(sha256)`).
+- **`stata/src/dw_require_no_api.ado`** + `.sthlp` — preflight gate
+  that aborts (Stata error 459) when `$dw_mode == "reviewer"`. Mirrors
+  the R `r/R/profile_helpers.R::dw_require_no_api` shape.
+- **`stata/src/dw_load_config.ado`** + `.sthlp` — hand-rolled YAML
+  reader for `~/.config/user_config.yml`. No external dependency
+  (AppLocker-safe). Populates `$dw_mode` + the `teams*` and
+  `sandboxRoot` globals; hard-stops with the envelope-shaped error
+  when `dw_mode` is missing or set to anything other than
+  `producer` | `reviewer`.
+
+Stata-side `dw_api_fetch` and Parquet / RDS read support remain out of
+scope by design (route through R or Python and `dw_save` to `.dta`).
+
+### Issue #14 — Producer / reviewer mode contract tightening (**BREAKING**)
+
+Refines the producer / reviewer split so that producer outputs are
+provably redundant and reviewer reads are provably canonical.  R +
+Python siblings ship in lock-step.
+
+- **Producer-mode writes are now redundant.**  Every primary write
+  fans out to BOTH the Teams canonical mirror AND the Z: drive mirror
+  (whichever are available).  `dw_save` hard-stops with the standard
+  envelope when neither mirror is configured / reachable — producer
+  outputs cannot live only on the producer's laptop.
+- **Reviewer-mode writes broadened.**  In addition to refusing writes
+  under canonical (v0.3.0), `dw_save` now also refuses writes under
+  the configured Z: drive root.  Bypass with `allow_canonical_write =
+  TRUE` for deliberate DBM bootstraps as before.
+- **Reviewer-mode reads are network-first.**  `dw_use` now tries
+  Teams → Z: → repo-local in reviewer sessions.  When the network
+  mirrors are unavailable and a local copy exists, the read still
+  succeeds but emits an envelope-shaped warning flagging the
+  provenance gap.  Hard-stops when the file is missing everywhere.
+  Producer-mode read order is unchanged (local-first; v0.3.0
+  preserved).
+- **`overwrite` default flipped TRUE → FALSE.**  This is the only
+  source-incompatible change in v0.4.0.  The overwrite check now
+  examines ALL three destinations (primary, Teams, Z:); the helper
+  refuses if any of them already exists.  Pass `overwrite = TRUE`
+  explicitly to restore v0.3.0 behaviour.  (Python: same flip on the
+  `overwrite: bool` argument; the legacy `mirror_to_z` keyword is
+  silently dropped with a `DeprecationWarning`.)
+- **New `dw_toolkit_version()`** (R + Python).  Returns the toolkit
+  semver as a single string (`"0.4.0"`).  Useful for stamping logs
+  and asserting minimum-version requirements in consumer profiles.
+
+**Migration guide.**  Existing producer-mode callers that relied on
+the v0.3.0 silent re-write semantics must either:
+
+1. Set `overwrite = TRUE` explicitly when overwriting an existing
+   deposit.  This is the common path for daily re-runs of the same
+   vintage.
+2. Or sequence the write under a fresh vintage subfolder so no prior
+   deposit collides.  This is the recommended pattern for archival
+   work.
+
+Reviewer-mode callers do not need changes — the new network-first
+read order is transparent when Teams/Z: are reachable; the new
+warning surfaces when they are not (which used to be a silent
+provenance gap).
+
+**Regression coverage.**  9 new testthat assertions in
+`r/tests/testthat/test-dw_io-mode-contract.R` (161 total R asserts;
+0/0/0 from `devtools::check`) and 9 new smoke checks in
+`python/tests/manual/smoke_test.py` (34 total).  Error-envelope test
+file extended to keep `[cso_toolkit.<func>] WHAT / Why / Fix` shape
+on every new raise.
+
+### DW-Production backports (v0.3.0.9000 development line)
+
+**Landed via PR adopting the four undeclared local edits found by
+`docs/dw-production-alignment-2026-05-25.md`:**
+
+- **B1 (new feature):** `dw_use("https://...")` is now a first-class
+  call site.  R: new `.is_allowlisted_url()`, `.dw_frozen_root()`,
+  `.url_to_frozen_path()`, `.write_remote_provenance()`,
+  `.download_and_freeze()`, `.resolve_remote_url()` in `r/R/dw_io.R`,
+  with `dw_use()`'s read resolver dispatching on
+  `^https?://`.  Python: same shape in `python/src/dw_io.py`.
+  Allowlist is **empty by default** so the toolkit ships
+  consumer-neutral; the consumer's profile populates
+  `dw_url_allowlist` (R global) / `_state.dw_url_allowlist` (Python).
+  Reviewer mode refuses to fetch new URLs; producer mode downloads
+  once and writes a `.provenance.json` with `sha256` + `bytes` +
+  `fetched_at` + `fetched_by` + `dw_mode`.  Three new `_state` keys:
+  `dw_url_allowlist`, `dw_frozen_root`, `githubFolder`.
+
+- **B2 (QoL fix):** `dw_save` auto-detects gzip when the path already
+  ends in `.gz` (was previously a foot-gun: passing
+  `compress = FALSE` and a `.gz` path would write the file
+  uncompressed under the misleading name).
+
+- **B3 (robustness fix):** `.provenance.json` sidecar write is now
+  wrapped in `tryCatch` (R) / `try/except` (Python) so a
+  non-serialisable metadata value warns rather than rolling back the
+  primary file.  Sidecars are metadata; the asset is what matters.
+
+- **B4 (bug fix):** `dw_api.R` UIS-fetcher URL-encodes query keys +
+  values via `utils::URLencode(reserved = TRUE)`; previously param
+  values containing `&` / `=` / spaces / non-ASCII would corrupt the
+  query.  Default cache extension for `http` and `github_raw` APIs
+  bumped from `csv` to `rds` (R) / `pkl` (Python) so text and binary
+  payloads round-trip correctly.
+
+**Regression tests:** `python/tests/manual/smoke_test.py` now exercises
+5 new B1–B4 invariants (20 total).  `R CMD check` remains 0/0/0.
+
 ## v0.3.0 (2026-05-25)
 
 First release with full **Python parity** for every R helper, plus the

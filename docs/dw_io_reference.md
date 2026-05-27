@@ -33,15 +33,37 @@ dw_save(df, name = "dw_ed_edu.csv", sector = "ed", kind = "wrk",
                  "WEALTH_QUINTILE","RESIDENCE","TIME_PERIOD"))
 ```
 
-**Mode contract.** In reviewer mode, writes that resolve under canonical
-paths (`teamsWrkDataCanonical`, `teamsRawDataCanonical`) **stop** with a
-provenance-contract message. Pass `allow_canonical_write = TRUE` for
-deliberate Database Manager bootstraps (e.g., depositing a one-time cache
-into 060 from a reviewer-mode session).
+**Mode contract (v0.4.0 tightening).**
 
-**Z: mirror.** In producer mode, every canonical write is carbon-copied to
-the Z: equivalent path. Z: absence is non-blocking; the mirror is skipped
-silently with the single red banner at profile load.
+- **Reviewer mode.** Writes that resolve under canonical paths
+  (`teamsWrkDataCanonical`, `teamsRawDataCanonical`) OR under the
+  configured `dwZDrive` root **stop** with the provenance-contract
+  envelope. The Z: branch is new in v0.4.0; v0.3.0 only refused canonical
+  writes. Pass `allow_canonical_write = TRUE` for deliberate Database
+  Manager bootstraps (e.g., depositing a one-time cache into 060 from a
+  reviewer-mode session).
+- **Producer mode.** Every primary write fans out redundantly to BOTH the
+  Teams canonical equivalent AND the Z: drive equivalent (whichever are
+  available). The helper **hard-stops** if neither mirror is configured —
+  producer outputs cannot live only on the producer's laptop.
+- **Overwrite gate (breaking change).** `overwrite` now defaults to
+  `FALSE` (was `TRUE` in v0.3.0). The check examines all three
+  destinations (primary, Teams mirror, Z: mirror); the helper refuses if
+  any of them already exists. Pass `overwrite = TRUE` to restore v0.3.0
+  behaviour.
+
+**Mirror behaviour.** v0.4.0 replaces the v0.3.0 `mirror_to_z` argument
+with automatic, paired mirroring. Each successful primary write:
+
+1. Writes the primary file (atomic rename from `.tmp`).
+2. Emits the `.provenance.json` sidecar next to the primary.
+3. Copies primary + sidecar to the Teams canonical equivalent (skipped
+   when primary already lies under canonical).
+4. Copies primary + sidecar to the Z: drive equivalent (skipped when
+   `dw_z_available = FALSE`).
+
+Steps 3 and 4 are non-blocking — they emit envelope-shaped warnings on
+failure rather than rolling back the primary write.
 
 **Provenance sidecar.** Every write emits `<path>.provenance.json` with
 `written_at`, `user`, `dw_mode`, `sha256`, schema (rows/cols/columns), and
@@ -74,9 +96,29 @@ helper compares Teams ↔ Z: by file size by default. Mismatch emits a
 warning; the read still completes. Use `verify_z = "sha256"` for a deep
 check; `verify_z = FALSE` to skip.
 
-**Fallback to canonical.** If the resolved path doesn't exist (typical in
-reviewer mode if the sandbox hasn't been populated), the helper retries under
-the canonical equivalent. Disable with `fallback_canonical = FALSE`.
+**Resolution order (v0.4.0).** Reviewer and producer sessions resolve
+differently to enforce provenance:
+
+- **Producer / unknown mode** (v0.3.0 preserved). Local-first: try the
+  literal path; if missing and `fallback_canonical = TRUE`, walk the
+  `teams*Data -> teams*DataCanonical` prefix map and use canonical when
+  available.
+- **Reviewer mode** (network-first; new in v0.4.0). Tries the Teams
+  canonical equivalent first, then the Z: drive mirror, then falls back
+  to the repo-local copy with an envelope-shaped `warning()` flagging the
+  provenance gap. If the file is missing in all three locations, the
+  helper raises an envelope-shaped error pointing the reviewer to the
+  sector producer. Disable the local fallback with
+  `fallback_canonical = FALSE`.
+
+## `dw_toolkit_version()`
+
+Return the toolkit semver as a single string. Use it to stamp logs or
+to assert minimum-version requirements in consumer profiles:
+
+```r
+stopifnot(utils::compareVersion(dw_toolkit_version(), "0.4.0") >= 0)
+```
 
 ## `dw_compare(current, reference, by, value_cols, ...)`
 

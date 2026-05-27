@@ -24,6 +24,7 @@ its `metadata$fetched_at` is pulled into the result for auditability.
 
 Other api: 
 \code{\link{dw_api_cached}()},
-\code{\link{dw_api_fetch}()}
+\code{\link{dw_api_fetch}()},
+\code{\link{dw_publish}()}
 }
 \concept{api}

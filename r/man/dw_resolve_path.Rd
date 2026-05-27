@@ -34,8 +34,8 @@ Character. Absolute filesystem path.
 \description{
 Two call styles are supported:
 \itemize{
-  \item Path-string: `dw_resolve_path(path = "ed/dw_ed_edu.csv", kind = "wrk")`
-  \item Structured: `dw_resolve_path(name = "dw_ed_edu.csv", sector = "ed", kind = "wrk")`
+\item Path-string: `dw_resolve_path(path = "ed/dw_ed_edu.csv", kind = "wrk")`
+\item Structured: `dw_resolve_path(name = "dw_ed_edu.csv", sector = "ed", kind = "wrk")`
 }
 }
 \examples{
@@ -46,8 +46,8 @@ dw_resolve_path(path = "ed/dw_ed_edu.csv", kind = "wrk")
 }
 \seealso{
 [dw_is_canonical()] to test whether a resolved path lies under
-  a canonical root; [dw_save()] and [dw_use()] which call this helper
-  internally.
+a canonical root; [dw_save()] and [dw_use()] which call this helper
+internally.
 
 Other io: 
 \code{\link{dw_compare}()},
@@ -55,6 +55,7 @@ Other io:
 \code{\link{dw_isid}()},
 \code{\link{dw_merge}()},
 \code{\link{dw_save}()},
+\code{\link{dw_toolkit_version}()},
 \code{\link{dw_use}()},
 \code{\link{dw_verify_z}()}
 }

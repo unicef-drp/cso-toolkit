@@ -33,8 +33,9 @@ enforces a four-step quality contract before writing:{p_end}
 {phang}
 1. {bf:Mode contract}: if {bf:$dw_mode == "reviewer"} and {it:path}
    resolves under a canonical root ({bf:$teamsWrkDataCanonical} /
-   {bf:$teamsRawDataCanonical}), the call is BLOCKED (Stata error 459)
-   unless {bf:allow_canonical_write} is passed.{p_end}
+   {bf:$teamsRawDataCanonical}) OR under the Z: drive root
+   ({bf:$dwZDrive}; v0.4.0 broadening), the call is BLOCKED (Stata
+   error 459) unless {bf:allow_canonical_write} is passed.{p_end}
 
 {phang}
 2. {bf:Path validation}: {it:path} must already exist; create it first

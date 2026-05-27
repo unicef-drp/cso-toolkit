@@ -1,8 +1,8 @@
 Package: csotoolkit
 Type: Package
 Title: Shared Helpers for UNICEF DW-Production Database Managers
-Version: 0.3.0
-Date: 2026-05-25
+Version: 0.4.0
+Date: 2026-05-26
 Authors@R: c(
     person("Joao Pedro", "Azevedo", email = "jazevedo@unicef.org",
            role = c("aut", "cre"),
@@ -36,6 +36,9 @@ Suggests:
     openxlsx,
     readxl,
     rsdmx,
+    testthat (>= 3.0.0),
     wbstats,
+    withr,
     writexl
+Config/testthat/edition: 3
 RoxygenNote: 7.3.3
