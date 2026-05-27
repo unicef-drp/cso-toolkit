@@ -42,13 +42,19 @@
 #' [#15](https://github.com/unicef-drp/cso-toolkit/issues/15) where the
 #' Helix endpoint contract is being finalised with sector leads.
 #'
-#' The dry-run path validates the inputs against the v0.5.0-bound
-#' contract so callers can wire the call site today and have the live
-#' branch light up automatically when v0.5.0 lands.
+#' The dry-run path validates the call-site arguments (presence,
+#' shape, path exists, endpoint allowlist) and assembles the payload
+#' the v0.5.0 live branch will POST -- it does NOT check Helix
+#' network reachability or credentials.  Live reachability + auth
+#' checks land with the live-submission branch.
 #'
 #' @section Mode contract:
-#' Producer-only.  Reviewer-mode calls raise via [dw_require_no_api()]
-#' BEFORE any other validation.  Same shape as [dw_api_fetch()].
+#' Producer-only.  Reviewer-mode calls raise BEFORE any other
+#' validation with an envelope-shaped `[cso_toolkit.dw_publish]`
+#' message.  The shape mirrors the consumer-profile-generated
+#' `dw_require_no_api()` helper used elsewhere in the toolkit
+#' (which is profile-defined, not exported by the package, so this
+#' helper carries its own equivalent guard inline).
 #'
 #' @section Scope boundary:
 #' \itemize{
@@ -68,10 +74,13 @@
 #' @param endpoint Character.  Submission endpoint.  Currently only
 #'   `"helix"` is recognised.  Default `"helix"`.
 #' @param dry_run Logical.  When `TRUE` (the v0.4.0 default), validate
-#'   inputs + endpoint reachability without sending and return the
-#'   dry-run payload.  When `FALSE`, raise an envelope-shaped
-#'   `"Live submission not yet implemented"` stop until the v0.5.0
-#'   live-submission branch lands.
+#'   the call-site arguments (presence + shape + path exists +
+#'   endpoint allowlist), assemble the v0.5.0 submission payload, and
+#'   return it without contacting any network.  When `FALSE`, raise
+#'   an envelope-shaped `"Live submission not yet implemented"`
+#'   stop until the v0.5.0 live-submission branch lands.  Note:
+#'   neither branch performs an actual reachability or credential
+#'   check in v0.4.0 -- that ships with the live branch in v0.5.0.
 #' @param ... Forwarded to the underlying HTTP client (currently
 #'   unused; reserved for the v0.5.0 live-submission branch).
 #'
