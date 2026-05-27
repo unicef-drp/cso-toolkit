@@ -51,8 +51,10 @@ exercises four cases:
   v0.4.2 fix).
 - `dialect = "base"` with `compress = TRUE` raises the envelope-
   shaped error explaining the gzip-is-fwrite-only constraint.
-- An unrecognised `dialect` value raises an envelope-shaped error
-  from `match.arg()`.
+- An unrecognised `dialect` value raises a base R error from
+  `match.arg(dialect)` (which fires before the toolkit envelope
+  wrapping kicks in -- `match.arg` is the cheap validation gate
+  by design).
 
 Existing version-stamp assertions in `test-dw_io-mode-contract.R`
 and `test-dw_publish.R` updated from `"0.4.1"` to `"0.4.2"`.
