@@ -6,6 +6,48 @@ _Entries land here as PRs merge into `develop`.  When the next release
 is cut, this header is renamed `## v0.4.0 (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
+### Issue #15 — `dw_publish()` STUB (dry-run only)
+
+Ships `r/R/dw_publish.R` as a deliberate STUB so DW-Production sector
+scripts can wire the canonical call site today and have the live
+branch light up automatically when v0.5.0 lands.
+
+What's in:
+
+- Public signature matching the final v0.5.0 contract:
+  `dw_publish(path, indicator, vintage, sector, endpoint = "helix",
+   dry_run = TRUE, ...)`.
+- **Producer-only mode contract** -- reviewer-mode calls raise
+  BEFORE any I/O via the same envelope shape as `dw_api_fetch()`.
+- **Argument validation** -- empty / missing `path` / `indicator` /
+  `vintage` / `sector` raises the envelope; `path` must exist on
+  disk and not be a directory; `endpoint` must be `"helix"` (the
+  only recognised value in v0.4.0).
+- **`dry_run = TRUE` returns a validated payload** with `sha256`,
+  `bytes`, `built_at`, `built_by`, and the toolkit-version stamp.
+  Caller scripts can assert the payload shape today without ever
+  hitting the network.
+
+What's deliberately deferred:
+
+- **Live submission (`dry_run = FALSE`) raises** with the
+  envelope-shaped *"Live submission not yet implemented"* message
+  and a pointer to GitHub issue #15.  Real Helix endpoint
+  integration ships in **v0.5.0** once sector leads (@karavan88,
+  @sbrar29, @laurenfrancis1202) finalise the submission contract.
+
+Scope boundary -- folded into the helper's roxygen + docstring so
+the long-running DW-Production confusion is finally resolved:
+
+- `dw_save()` -- filesystem (Teams + Z: drive mirror).
+- `dw_publish()` -- API (Helix submission).
+
+Tested: 6 new asserts in
+`r/tests/testthat/test-dw_publish.R` (cover the mode lockout,
+argument validation, missing path, endpoint allowlist, dry-run
+payload shape, and the v0.5.0-not-yet envelope).  Total R test
+suite is now 235 / 0; `devtools::check()` remains 0 / 0 / 0.
+
 ### Issues #17 + #18 — `dw_pop()` and `dw_regions()` (R only)
 
 Two convenience wrappers that almost every sector pipeline needs but
