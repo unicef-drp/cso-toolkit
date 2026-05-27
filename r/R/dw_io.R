@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------
 # 00_functions/dw_io.R
-# Toolkit version: 0.4.0
+# Toolkit version: 0.4.1
 # Purpose: Uniform read/write helpers for DW-Production R scripts.
 # Auto-dispatch by file extension; supports every IO form the
 # sector scripts currently use; enforces the reviewer/producer
@@ -251,7 +251,7 @@ dw_is_canonical <- function(path) {
 #' rely on a v0.4.0+ contract (e.g. network-first reviewer reads,
 #' mirror-to-both producer writes).
 #'
-#' @return Character. Currently `"0.4.0"`.
+#' @return Character. Currently `"0.4.1"`.
 #'
 #' @examples
 #' if (utils::compareVersion(dw_toolkit_version(), "0.4.0") < 0) {
@@ -263,7 +263,7 @@ dw_is_canonical <- function(path) {
 #' @family io
 #' @export
 dw_toolkit_version <- function() {
-	"0.4.0"
+	"0.4.1"
 }
 
 # ============================================================================
@@ -706,13 +706,15 @@ dw_save <- function(x,
  isid = NULL,
  metadata = NULL,
  compress = FALSE,
- overwrite = FALSE,
+ dialect = c("fwrite", "base"),
+ overwrite = NULL,
  provenance = TRUE,
  vintage = NULL,
  allow_canonical_write = FALSE,
  ...) {
 
 	kind <- match.arg(kind)
+	dialect <- match.arg(dialect)
 	dots <- list(...)
 
 	# v0.4.0 deprecation: `mirror_to_z` is no longer a per-call flag.
@@ -742,6 +744,24 @@ dw_save <- function(x,
 	is_canon <- dw_is_canonical(path)
 	is_reviewer <- isTRUE(.try_get("dw_mode") == "reviewer")
 	is_producer <- isTRUE(.try_get("dw_mode") == "producer")
+
+	# === Lenient overwrite default (v0.4.1) ===
+	# Resolve the `overwrite = NULL` sentinel based on mode:
+	#   reviewer mode -> TRUE  (scratch writes are safe to re-run; the local
+	#                          repo sandbox under <wrk>/_local/ is gitignored
+	#                          and easy to nuke + re-run by design)
+	#   producer mode -> FALSE (must be explicit; re-runs against the canonical
+	#                          deposit require deliberate overwrite confirmation)
+	#   mode unset    -> FALSE (safe default; matches v0.4.0 strict for
+	#                          backward compat when dw_mode is not set)
+	#
+	# Background: v0.4.0 shipped with `overwrite = FALSE` uniform across both
+	# modes (strict). Reviewer-mode pipelines hit this on every re-run of
+	# scratch outputs, which is friction without safety benefit. v0.4.1
+	# relaxes only the reviewer side.
+	if (is.null(overwrite)) {
+		overwrite <- isTRUE(is_reviewer)
+	}
 
 	# === Reviewer-mode write guard (v0.4.0: broadened) ===
 	# Refuse any write whose primary path lands under a canonical root OR
@@ -832,9 +852,12 @@ dw_save <- function(x,
 	fmt_for_dispatch <- tolower(tools::file_ext(sub("\\.gz$", "", path,
 	 ignore.case = TRUE)))
 	switch(fmt_for_dispatch,
-		csv = .write_csv(x, tmp_path, sep = ",", compress = compress, ...),
-		tsv = .write_csv(x, tmp_path, sep = "\t", compress = compress, ...),
-		txt = .write_csv(x, tmp_path, sep = "\t", compress = compress, ...),
+		csv = .write_csv(x, tmp_path, sep = ",",  compress = compress,
+		                 dialect = dialect, ...),
+		tsv = .write_csv(x, tmp_path, sep = "\t", compress = compress,
+		                 dialect = dialect, ...),
+		txt = .write_csv(x, tmp_path, sep = "\t", compress = compress,
+		                 dialect = dialect, ...),
 		xlsx = .write_xlsx(x, tmp_path, ...),
 		rds = saveRDS(x, file = tmp_path, ...),
 		rdata = .write_rdata(x, tmp_path, ...),
@@ -932,7 +955,35 @@ dw_save <- function(x,
 #' @keywords internal
 #' @noRd
 .write_csv <- function(x, path, sep = ",", na = "", row.names = FALSE,
- compress = FALSE, ...) {
+ compress = FALSE, dialect = "fwrite", ...) {
+	# v0.4.1 restore: `dialect` parameter was dropped in v0.4.0 without a
+	# migration path, breaking byte-parity with legacy `utils::write.csv()`
+	# output for callers that depended on it. Restored here so consumers can
+	# preserve row.names = TRUE + default-quoted strings when they need it.
+	#
+	# dialect = "fwrite" (default): data.table::fwrite -- fast, row.names = FALSE
+	# dialect = "base":              utils::write.csv  -- byte-parity with
+	#                                                     legacy write.csv()
+	if (identical(dialect, "base")) {
+		if (isTRUE(compress)) {
+			stop(
+				"[cso_toolkit.dw_save] dialect = 'base' is incompatible ",
+				"with compress = TRUE; use dialect = 'fwrite' (default) ",
+				"for gzipped output.",
+				call. = FALSE
+			)
+		}
+		return(utils::write.csv(x, file = path))
+	}
+	if (!identical(dialect, "fwrite")) {
+		stop(
+			"[cso_toolkit.dw_save] dialect = '", dialect, "' is not ",
+			"recognised. Supported: 'fwrite' (default; data.table::fwrite) ",
+			"or 'base' (utils::write.csv; preserves row.names + quoted ",
+			"strings for legacy byte parity).",
+			call. = FALSE
+		)
+	}
 	.require("data.table")
 	args <- list(x = x, file = path, sep = sep, na = na, ...)
 	if (isTRUE(compress)) args$compress <- "gzip"
