@@ -1497,14 +1497,69 @@ dw_use <- function(path = NULL,
 #' 2. `<githubFolder>/_frozen` if `githubFolder` is set;
 #' 3. `<getwd()>/_frozen`.
 #'
+#' @return Character path to the frozen-cache root.
 #' @keywords internal
 #' @noRd
 .dw_frozen_root <- function() {
+	.dw_frozen_root_resolved()$path
+}
+
+#' Frozen-cache root with resolution-source tag (v0.4.4+)
+#'
+#' Same logic as `.dw_frozen_root()` but returns a 2-element list:
+#' \itemize{
+#'   \item `$path` - the resolved filesystem path
+#'   \item `$source` - which tier of the resolution chain fired:
+#'     `"dw_frozen_root"` (#1, opt-in), `"githubFolder"` (#2, fallback),
+#'     `"getwd"` (#3, last-resort fallback)
+#' }
+#' Used by `.resolve_remote_url()` to surface the chosen tier in the
+#' missing-frozen-copy error envelope, so consumers can diagnose
+#' resolution mismatches without grepping the toolkit source.
+#'
+#' @keywords internal
+#' @noRd
+.dw_frozen_root_resolved <- function() {
 	root <- .try_get("dw_frozen_root")
-	if (!is.na(root) && nzchar(root)) return(root)
+	if (!is.na(root) && nzchar(root)) {
+		return(list(path = root, source = "dw_frozen_root"))
+	}
 	gh <- .try_get("githubFolder")
-	if (!is.na(gh) && nzchar(gh)) return(file.path(gh, "_frozen"))
-	file.path(getwd(), "_frozen")
+	if (!is.na(gh) && nzchar(gh)) {
+		return(list(path = file.path(gh, "_frozen"),
+		            source = "githubFolder"))
+	}
+	list(path = file.path(getwd(), "_frozen"), source = "getwd")
+}
+
+#' Warn once per session when `.dw_frozen_root()` falls back beyond tier #1
+#'
+#' Emits a `message()` on the first remote-URL resolution when the
+#' `dw_frozen_root` global is unset and the helper falls back to
+#' `<githubFolder>/_frozen` (tier #2). Emits a `warning()` on fall-
+#' back to `<getwd()>/_frozen` (tier #3) since that path is much less
+#' stable across consumer configurations. The notice is gated by a
+#' session-local sentinel so it fires only once per R session.
+#'
+#' Consumers that explicitly set `dw_frozen_root` (tier #1) get no
+#' notice (they've opted in).
+#'
+#' @keywords internal
+#' @noRd
+.dw_frozen_root_notify_once <- function(resolved) {
+	if (identical(resolved$source, "dw_frozen_root")) return(invisible(NULL))
+	sentinel <- ".__cso_toolkit_frozen_root_notified__"
+	if (isTRUE(.try_get(sentinel))) return(invisible(NULL))
+	assign(sentinel, TRUE, envir = .GlobalEnv)
+	msg <- sprintf(
+		"[dw_use:remote] `dw_frozen_root` global not set; falling back to %s ('%s' tier). %s",
+		resolved$path,
+		resolved$source,
+		"Set `dw_frozen_root <- '<path>'` in your profile if this is not the canonical location."
+	)
+	if (identical(resolved$source, "getwd")) warning(msg, call. = FALSE)
+	else                                      message(msg)
+	invisible(NULL)
 }
 
 #' Map a remote URL to its frozen-cache filesystem path
@@ -1578,17 +1633,27 @@ dw_use <- function(path = NULL,
 			url, allow_str
 		), call. = FALSE)
 	}
-	frozen_path <- .url_to_frozen_path(url)
+	resolved <- .dw_frozen_root_resolved()
+	.dw_frozen_root_notify_once(resolved)
+	frozen_path <- file.path(resolved$path, sub("^https?://", "", url))
 	if (file.exists(frozen_path)) {
 		message("[dw_use:remote] Reading frozen: ",
-		 sub(.dw_frozen_root(), "<dw_frozen_root>", frozen_path, fixed = TRUE))
+		 sub(resolved$path, "<dw_frozen_root>", frozen_path, fixed = TRUE))
 		return(frozen_path)
 	}
 	is_reviewer <- isTRUE(.try_get("dw_mode") == "reviewer")
 	if (is_reviewer) {
+		# v0.4.4+: surface the frozen-root resolution tier in the error
+		# envelope so consumers can diagnose path mismatches without
+		# grepping the toolkit source.
+		root_hint <- switch(resolved$source,
+			dw_frozen_root = "explicit `dw_frozen_root` global",
+			githubFolder   = "fallback via `<githubFolder>/_frozen`",
+			getwd          = "fallback via `<getwd()>/_frozen` (least reliable)"
+		)
 		stop(sprintf(
-			"[cso_toolkit.dw_use:remote] Reviewer mode forbids fetching from the network.\n Missing frozen copy: %s\n URL: %s\n Fix: a producer must call dw_use('%s') once and commit the frozen file + sidecar before the reviewer pipeline can read it.",
-			frozen_path, url, url
+			"[cso_toolkit.dw_use:remote] Reviewer mode forbids fetching from the network.\n Missing frozen copy: %s\n URL: %s\n Frozen-root resolution: %s (%s)\n Fix:\n   1. If the path above is wrong, set `dw_frozen_root <- '<your-canonical-frozen-path>'` in your profile.\n   2. Otherwise, a producer must call dw_use('%s') once and commit the frozen file + sidecar before the reviewer pipeline can read it.",
+			frozen_path, url, resolved$path, root_hint, url
 		), call. = FALSE)
 	}
 	.download_and_freeze(url, frozen_path)
