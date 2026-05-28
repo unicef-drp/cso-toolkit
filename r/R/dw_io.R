@@ -1201,6 +1201,15 @@ dw_save <- function(x,
 #' @param kind Character. One of `"wrk"`, `"raw"`, `"meta"`. Default `"wrk"`.
 #' @param cols Character vector. Optional column subset (for `.csv`, `.tsv`,
 #' `.xlsx`, `.dta`, `.parquet`).
+#' @param cols_lenient Logical. Default `FALSE`. When `TRUE` and `cols` is a
+#' non-NULL character vector, dw_use introspects the file schema cheaply
+#' (parquet metadata, dta header, csv / tsv / xlsx zero-row read) and
+#' intersects `cols` with the file's actual columns before the data read.
+#' Use this to replicate the `dplyr::any_of()` "only-if-present" intent
+#' without calling `any_of()` outside a tidyselect context (which errors
+#' fatally in tidyselect >= 1.2.0). When the intersection is empty, dw_use
+#' falls back to reading all columns and emits a warning. Supported
+#' formats: `csv`, `tsv`, `txt`, `xlsx`, `dta`, `parquet`.
 #' @param as Character. Return type: `"tibble"` (default), `"data.frame"`,
 #' or `"data.table"`.
 #' @param fallback_canonical Logical. Default `TRUE`.
@@ -1231,6 +1240,7 @@ dw_use <- function(path = NULL,
  name = NULL, sector = NULL,
  kind = c("wrk", "raw", "meta"),
  cols = NULL,
+ cols_lenient = FALSE,
  as = c("tibble", "data.frame", "data.table"),
  fallback_canonical = TRUE,
  verify_z = TRUE,
@@ -1258,6 +1268,28 @@ dw_use <- function(path = NULL,
 	}
 
 	fmt <- tolower(tools::file_ext(sub("\\.gz$", "", resolved, ignore.case = TRUE)))
+
+	# v0.4.2+ lenient-cols: pre-intersect cols with the actual file schema so
+	# callers can replicate the `dplyr::any_of()` "only-if-present" intent
+	# without invoking tidyselect helpers outside a selecting context (which
+	# error fatally under tidyselect >= 1.2.0). Schema introspection is
+	# format-specific and reads metadata only -- not the data payload.
+	if (isTRUE(cols_lenient) && !is.null(cols) && length(cols) > 0) {
+		schema_names <- .dw_schema_cols(resolved, fmt)
+		if (!is.null(schema_names)) {
+			kept <- intersect(cols, schema_names)
+			if (length(kept) == 0) {
+				warning(sprintf(
+					"[cso_toolkit.dw_use] cols_lenient = TRUE: none of the requested cols matched the file schema for %s (requested %d; schema has %d). Reading all columns.",
+					basename(resolved), length(cols), length(schema_names)
+				), call. = FALSE)
+				cols <- NULL
+			} else {
+				cols <- kept
+			}
+		}
+	}
+
 	x <- switch(fmt,
 		csv = .read_csv(resolved, sep = ",", cols = cols, ...),
 		tsv = .read_csv(resolved, sep = "\t", cols = cols, ...),
@@ -1266,8 +1298,16 @@ dw_use <- function(path = NULL,
 		rds = readRDS(resolved, ...),
 		rdata = .read_rdata(resolved, ...),
 		"rda" = .read_rdata(resolved, ...),
-		dta = { .require("haven"); haven::read_dta(resolved, col_select = cols, ...) },
-		parquet = { .require("arrow"); arrow::read_parquet(resolved, col_select = cols, ...) },
+		dta = {
+			.require("haven")
+			if (is.null(cols)) haven::read_dta(resolved, ...)
+			else                haven::read_dta(resolved, col_select = cols, ...)
+		},
+		parquet = {
+			.require("arrow")
+			if (is.null(cols)) arrow::read_parquet(resolved, ...)
+			else                arrow::read_parquet(resolved, col_select = cols, ...)
+		},
 		json = { .require("jsonlite"); jsonlite::read_json(resolved, ...) },
 		yml = { .require("yaml"); yaml::read_yaml(resolved, ...) },
 		yaml = { .require("yaml"); yaml::read_yaml(resolved, ...) },
@@ -1302,6 +1342,61 @@ dw_use <- function(path = NULL,
 	.require("data.table")
 	data.table::fread(input = path, sep = sep,
 	 select = cols, showProgress = FALSE, ...)
+}
+
+#' Cheap schema-only introspection for the `cols_lenient` path in dw_use
+#'
+#' Returns a character vector of column names by reading only the file
+#' metadata / header -- never the data payload. Returns `NULL` when the
+#' format does not support cheap schema introspection (the caller then
+#' skips lenient intersection and passes cols through unchanged).
+#'
+#' Format dispatch:
+#' \itemize{
+#'   \item `parquet`: `arrow::read_parquet(path, as_data_frame = FALSE)$schema$names`
+#'   \item `csv` / `tsv` / `txt`: `data.table::fread(path, nrows = 0)` header read
+#'   \item `dta`: `haven::read_dta(path, n_max = 0)` header read
+#'   \item `xlsx`: `readxl::read_xlsx(path, n_max = 0)` header read
+#'   \item other: `NULL` (no introspection)
+#' }
+#'
+#' @keywords internal
+#' @noRd
+.dw_schema_cols <- function(path, fmt) {
+	tryCatch(
+		switch(fmt,
+			parquet = {
+				.require("arrow")
+				# Metadata-only read; avoids loading the data payload for
+				# large parquet files (594K-row CMRS series, etc.).
+				arrow::open_dataset(path)$schema$names
+			},
+			csv = ,
+			tsv = ,
+			txt = {
+				.require("data.table")
+				sep <- if (identical(fmt, "csv")) "," else "\t"
+				names(data.table::fread(input = path, sep = sep,
+				                        nrows = 0, showProgress = FALSE))
+			},
+			dta = {
+				.require("haven")
+				names(haven::read_dta(path, n_max = 0))
+			},
+			xlsx = {
+				.require("readxl")
+				names(readxl::read_xlsx(path, n_max = 0))
+			},
+			NULL
+		),
+		error = function(e) {
+			warning(sprintf(
+				"[cso_toolkit.dw_use] cols_lenient schema introspect failed for %s (%s): %s. Skipping lenient intersection.",
+				basename(path), fmt, conditionMessage(e)
+			), call. = FALSE)
+			NULL
+		}
+	)
 }
 
 #' XLSX reader (readxl::read_xlsx wrapper)
