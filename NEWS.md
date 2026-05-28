@@ -54,8 +54,8 @@ of DW-Production's convention of `<projectFolder>/01_dw_prep/011_rawdata/_frozen
 Three runs (75+ min of slow Teams network) were needed to diagnose
 what a single message could have surfaced at session start.
 
-No public-API changes. `dw_frozen_root()` (path-only) is preserved
-for backward compatibility with v0.4.3.1 callers.
+No public-API changes. The internal `.dw_frozen_root()` (path-only)
+is preserved for backward compatibility with v0.4.3.1 callers.
 
 ## v0.4.3.1 (2026-05-28)
 
