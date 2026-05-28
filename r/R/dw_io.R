@@ -1472,6 +1472,47 @@ dw_use <- function(path = NULL,
 # no-API contract.
 # ============================================================================
 
+#' Standard URL-allowlist patterns for UNICEF-owned reference data
+#'
+#' Returns a character vector of `^...`-anchored regex patterns covering
+#' UNICEF DRP GitHub-raw and repository URLs. Consumers seed
+#' `dw_url_allowlist` from this constant instead of re-deriving the
+#' patterns per project. Extend with project-specific patterns via
+#' `c(dw_default_unicef_allowlist(), ...)`.
+#'
+#' Surfaced empirically by the DW-Production reviewer-mode audit on
+#' 2026-05-28 (IM `01_immunization.R`): every URL-using sector script
+#' was hand-writing the same `^https://raw\\.githubusercontent\\.com/unicef-drp/`
+#' pattern. The helper consolidates the duplication and lets future
+#' UNICEF-DRP additions land in one place upstream rather than in each
+#' consumer's profile.
+#'
+#' The helper is purely additive: consumers must opt in by composing
+#' it into their `dw_url_allowlist` (the URL-freeze safety contract is
+#' unchanged — no URL is fetchable without explicit ratification).
+#'
+#' @return Character vector of regex patterns.
+#'
+#' @examples
+#' \dontrun{
+#' # In profile_<consumer>.R, seed the allowlist from the helper:
+#' dw_url_allowlist <- c(
+#'   dw_default_unicef_allowlist(),
+#'   # Project-specific extras (org-controlled raw / SDMX endpoints, ...):
+#'   "^https://yourorg\\.github\\.io/"
+#' )
+#' }
+#'
+#' @seealso [dw_use()] for the consumer that reads `dw_url_allowlist`.
+#' @family url-freeze
+#' @export
+dw_default_unicef_allowlist <- function() {
+	c(
+		"^https://raw\\.githubusercontent\\.com/unicef-drp/",
+		"^https://github\\.com/unicef-drp/"
+	)
+}
+
 #' Is the URL allowlisted for remote-URL freeze?
 #'
 #' Internal. Reads `dw_url_allowlist` from `.GlobalEnv` (set by the
