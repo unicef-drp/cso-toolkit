@@ -91,6 +91,69 @@ edu <- dw_use(name = "dw_ed_edu.csv", sector = "ed", kind = "wrk")
 edu <- dw_use(path = "C:/path/to/file.parquet", cols = c("REF_AREA","OBS_VALUE"))
 ```
 
+### Column subset — strict (default) and lenient (`v0.4.3+`)
+
+`dw_use()` accepts an optional `cols = c("a", "b", "c")` to restrict the read.
+Default behaviour is **strict**: each requested column must exist in the
+file's schema, otherwise the underlying reader errors. This matches the
+contract of `data.table::fread(select = ...)`,
+`arrow::read_parquet(col_select = ...)`, and
+`haven::read_dta(col_select = ...)`.
+
+`v0.4.3+` adds a `cols_lenient = FALSE` flag that flips the contract to
+the `dplyr::any_of()` "select if present" intent — but does it inside
+`dw_use()`, so the caller does NOT have to invoke tidyselect helpers at
+the top level (which errors fatally under tidyselect ≥ 1.2.0):
+
+```r
+# Strict (default): errors if "MAYBE_PRESENT_COL" is missing from the schema
+df <- dw_use(path = parquet_path, cols = c("REF_AREA", "OBS_VALUE", "MAYBE_PRESENT_COL"))
+
+# Lenient: intersect with the file's actual schema; missing cols are
+# silently dropped, empty intersection -> warning + read all columns
+df <- dw_use(path = parquet_path,
+             cols = c("REF_AREA", "OBS_VALUE", "MAYBE_PRESENT_COL"),
+             cols_lenient = TRUE)
+```
+
+When `cols_lenient = TRUE`, `dw_use` introspects the file schema cheaply
+(metadata-only) before the read:
+
+- **parquet** → `arrow::open_dataset(path)$schema$names`
+- **csv / tsv / txt** → `data.table::fread(path, nrows = 0)` header read
+- **dta** → `haven::read_dta(path, n_max = 0)` header read
+- **xlsx** → `readxl::read_xlsx(path, n_max = 0)` header read
+
+If schema introspection fails (corrupt header etc.) it emits a warning and
+passes `cols` through unchanged.
+
+**`col_select = NULL` discipline (`v0.4.3+` fix).** Pre-`v0.4.3`,
+`dw_use(parquet_path)` with no `cols` argument unconditionally passed
+`col_select = NULL` to `arrow::read_parquet()`. Arrow interpreted that as
+"select zero columns" rather than "select all", returning a zero-column
+tibble; the dta branch via haven exhibited the analogous behaviour.
+`v0.4.3` patches both branches with conditional dispatch — `col_select`
+is only passed when `cols` is non-NULL. The user-facing effect:
+`dw_use(path)` (without cols) now reliably returns all columns regardless
+of the file format.
+
+**Migration for sector scripts** (from the DW-Production NT audit
+2026-05-27):
+
+```r
+# Before (any_of at top level errors under tidyselect >= 1.2.0):
+df <- dw_use(parquet_path, cols = dplyr::any_of(c("a", "b", "c")))
+
+# After:
+df <- dw_use(parquet_path, cols = c("a", "b", "c"), cols_lenient = TRUE)
+
+# Before (all_of at top level is deprecated and warns):
+df <- dw_use(parquet_path, cols = dplyr::all_of(c("a", "b", "c")))
+
+# After (bare character vector keeps strict semantics):
+df <- dw_use(parquet_path, cols = c("a", "b", "c"))
+```
+
 **Z: integrity check.** When reading a canonical file in producer mode, the
 helper compares Teams ↔ Z: by file size by default. Mismatch emits a
 warning; the read still completes. Use `verify_z = "sha256"` for a deep

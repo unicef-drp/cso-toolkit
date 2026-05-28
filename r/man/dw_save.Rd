@@ -45,23 +45,21 @@ run before the write.}
 \item{compress}{Logical. For `.csv` / `.tsv` / `.txt`, when `TRUE` the
 path is suffixed with `.gz` and `fwrite(compress = "gzip")` is used.}
 
-\item{dialect}{Character. Writer dialect for `.csv` / `.tsv` / `.txt`.
-\itemize{
-\item `"fwrite"` (default) -- `data.table::fwrite` path: fast,
+\item{dialect}{Character. Writer dialect for `.csv` / `.tsv` / `.txt`:
+- `"fwrite"` (default) -- `data.table::fwrite` path: fast,
   `row.names = FALSE`, configurable separator/na.
-\item `"base"` -- `utils::write.table(..., col.names = NA, qmethod =
+- `"base"` -- `utils::write.table(..., col.names = NA, qmethod =
   "double")` with the dispatched separator. For `.csv` this is
   byte-identical to `utils::write.csv(x, file = path)` (which is
   itself a wrapper around `write.table` with the same args);
-  restored in v0.4.1 for backward compatibility with sector scripts
-  that rely on legacy CSV byte output. For `.tsv` / `.txt`, produces
-  correct tab-separated output with the same row.names /
-  quoted-string defaults (rather than silent CSV-formatted content
-  with a TSV extension; the v0.4.1 implementation called
-  `write.csv()` directly and so hardcoded comma -- fixed in v0.4.2).
-  Incompatible with `compress = TRUE` (gzip is fwrite-only; raises
-  an explanatory error).
-}}
+  restored in v0.4.1 for backward compatibility with sector
+  scripts that rely on legacy CSV byte output. For `.tsv` /
+  `.txt`, produces correct tab-separated output with the same
+  row.names / quoted-string defaults (rather than silent
+  CSV-formatted content with a TSV extension; the v0.4.1
+  implementation called `write.csv()` directly and so hardcoded
+  comma -- fixed in v0.4.2). Incompatible with `compress = TRUE`
+  (gzip is fwrite-only; raises an explanatory error).}
 
 \item{overwrite}{Logical or `NULL` (sentinel). When `NULL` (the
 v0.4.1 default), the value resolves to `TRUE` in reviewer mode
