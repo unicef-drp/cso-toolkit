@@ -1230,7 +1230,22 @@ dw_save <- function(x,
 #'
 #' @examples
 #' \dontrun{
+#' # Default: read everything
 #' warehouse <- dw_use(name = "dw_ed_edu.csv", sector = "ed", kind = "wrk")
+#'
+#' # Strict column subset (v0.4.3+: parquet / dta now correctly pass through
+#' # to all columns when `cols` is NULL; explicit `cols` still errors if a
+#' # requested name is missing from the file's schema).
+#' df <- dw_use(name = "dw_ed_edu.csv", sector = "ed", kind = "wrk",
+#'              cols = c("REF_AREA", "OBS_VALUE"))
+#'
+#' # Lenient column subset (v0.4.3+): intersect the request with the file's
+#' # actual schema before the read. Use this instead of
+#' # `cols = dplyr::any_of(c(...))` -- `any_of()` errors at the top level
+#' # under tidyselect >= 1.2.0.
+#' df <- dw_use(name = "dw_nut_country_series.parquet", sector = "nt",
+#'              cols = c("REF_AREA", "INDICATOR", "MAYBE_PRESENT_COL"),
+#'              cols_lenient = TRUE)
 #' }
 #' @seealso [dw_save()] for the write counterpart; [dw_verify_z()] for
 #' the underlying integrity check.
