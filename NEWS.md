@@ -10,6 +10,53 @@ _v0.5.0 will land the live `dw_publish()` submission branch (issue
 [#15](https://github.com/unicef-drp/cso-toolkit/issues/15)) once
 sector leads finalise the Helix endpoint contract._
 
+### `.dw_frozen_root()` resolution is now discoverable (issue [#38](https://github.com/unicef-drp/cso-toolkit/issues/38))
+
+`.dw_frozen_root()` falls through a 3-tier resolution chain when
+locating the URL-freeze cache root:
+
+1. `dw_frozen_root` global (opt-in; preferred)
+2. `<githubFolder>/_frozen` (fallback)
+3. `<getwd()>/_frozen` (last-resort fallback)
+
+Pre-v0.4.4 the helper resolved silently — consumers whose project
+layout didn't match the fallback heuristic had to grep `dw_io.R` to
+discover why `dw_use("https://...")` couldn't find their frozen file.
+
+v0.4.4 adds two discoverability improvements:
+
+- A new internal helper `.dw_frozen_root_resolved()` returns a
+  `(path, source)` pair so downstream callers can surface the chosen
+  tier in messages and error envelopes.
+- `.dw_frozen_root_notify_once()` emits a session-scoped notice the
+  first time the helper falls back beyond tier #1:
+  `message()` for tier #2 (`<githubFolder>/_frozen`),
+  `warning()` for tier #3 (`<getwd()>/_frozen`).
+  Consumers that explicitly set `dw_frozen_root` get no notice.
+
+The missing-frozen-copy error envelope in `.resolve_remote_url()`
+now includes the resolution tier so consumers see which fallback
+fired (or that the explicit global picked the path that's wrong):
+
+```text
+[cso_toolkit.dw_use:remote] Reviewer mode forbids fetching from the network.
+ Missing frozen copy: <path>
+ URL: <url>
+ Frozen-root resolution: <chosen-root> (<tier-name>)
+ Fix:
+   1. If the path above is wrong, set `dw_frozen_root <- '<your-canonical-frozen-path>'` in your profile.
+   2. Otherwise, a producer must call dw_use(...) once and commit the frozen file + sidecar.
+```
+
+Surfaced empirically by the DW-Production IM reviewer-mode audit on
+2026-05-28: the fallback resolved to `<githubFolder>/_frozen` instead
+of DW-Production's convention of `<projectFolder>/01_dw_prep/011_rawdata/_frozen/`.
+Three runs (75+ min of slow Teams network) were needed to diagnose
+what a single message could have surfaced at session start.
+
+No public-API changes. `dw_frozen_root()` (path-only) is preserved
+for backward compatibility with v0.4.3.1 callers.
+
 ## v0.4.3.1 (2026-05-28)
 
 Patch release. v0.4.3 (cut earlier today) bumped `DESCRIPTION::Version`
