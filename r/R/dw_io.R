@@ -1447,19 +1447,13 @@ dw_use <- function(path = NULL,
 	as.list(env)
 }
 
-#' Resolve a read path, falling back to canonical roots when missing
-#'
-#' Internal. If the literal `path` does not exist, attempts to substitute
-#' the sandbox roots (`teamsRawData`, `teamsWrkData`, `teamsFolder`) with
-#' their `*Canonical` counterparts so reviewer-mode reads can still find
-#' the deposit.
-#'
-#' @param path Character. Literal path that may not exist.
-#' @param fallback_canonical Logical. When `FALSE`, stop immediately on a
-#' missing literal path instead of trying canonical.
-#'
-#' @return Character. A path that exists.
-#'
+# Note: the canonical-fallback resolver group (`.resolve_for_read*`)
+# is documented inline at each function's own block below (lines 1700+).
+# An older orphan docstring used to sit here for a now-merged helper;
+# removed in v0.4.4 (PR #41) because roxygenise() was attaching it to
+# the next exported function in source order
+# (`dw_default_unicef_allowlist`).
+
 # ============================================================================
 # Remote-URL freeze (B1 from DW-Production alignment audit, 2026-05-25)
 #

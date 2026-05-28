@@ -2,27 +2,21 @@
 % Please edit documentation in R/dw_io.R
 \name{dw_default_unicef_allowlist}
 \alias{dw_default_unicef_allowlist}
-\title{Resolve a read path, falling back to canonical roots when missing}
+\title{Standard URL-allowlist patterns for UNICEF-owned reference data}
 \usage{
 dw_default_unicef_allowlist()
 }
-\arguments{
-\item{path}{Character. Literal path that may not exist.}
-
-\item{fallback_canonical}{Logical. When `FALSE`, stop immediately on a
-missing literal path instead of trying canonical.}
-}
 \value{
-Character. A path that exists.
-
-Standard URL-allowlist patterns for UNICEF-owned reference data
-
+Character vector of regex patterns.
+}
+\description{
 Returns a character vector of `^...`-anchored regex patterns covering
 UNICEF DRP GitHub-raw and repository URLs. Consumers seed
 `dw_url_allowlist` from this constant instead of re-deriving the
 patterns per project. Extend with project-specific patterns via
 `c(dw_default_unicef_allowlist(), ...)`.
-
+}
+\details{
 Surfaced empirically by the DW-Production reviewer-mode audit on
 2026-05-28 (IM `01_immunization.R`): every URL-using sector script
 was hand-writing the same `^https://raw\\.githubusercontent\\.com/unicef-drp/`
@@ -33,14 +27,6 @@ consumer's profile.
 The helper is purely additive: consumers must opt in by composing
 it into their `dw_url_allowlist` (the URL-freeze safety contract is
 unchanged — no URL is fetchable without explicit ratification).
-
-Character vector of regex patterns.
-}
-\description{
-Internal. If the literal `path` does not exist, attempts to substitute
-the sandbox roots (`teamsRawData`, `teamsWrkData`, `teamsFolder`) with
-their `*Canonical` counterparts so reviewer-mode reads can still find
-the deposit.
 }
 \examples{
 \dontrun{
