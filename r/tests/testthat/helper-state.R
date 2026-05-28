@@ -15,7 +15,12 @@
   "dw_mode", "dw_apis_allowed",
   "dwZDrive", "dw_z_available",
   "dwFunct",
-  "dw_url_allowlist", "dw_frozen_root", "githubFolder"
+  "dw_url_allowlist", "dw_frozen_root", "githubFolder",
+  # v0.4.4+: session-scoped sentinel for the once-per-session
+  # frozen-root fallback notice. Kept in the state-reset list so
+  # consecutive tests don't pollute each other when exercising the
+  # `.dw_frozen_root_notify_once()` path.
+  ".__cso_toolkit_frozen_root_notified__"
 )
 
 #' Snapshot current globals, assign new values, restore on test exit
