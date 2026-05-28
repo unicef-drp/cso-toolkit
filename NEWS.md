@@ -10,6 +10,29 @@ _v0.5.0 will land the live `dw_publish()` submission branch (issue
 [#15](https://github.com/unicef-drp/cso-toolkit/issues/15)) once
 sector leads finalise the Helix endpoint contract._
 
+## v0.4.3.1 (2026-05-28)
+
+Patch release. v0.4.3 (cut earlier today) bumped `DESCRIPTION::Version`
+and `NEWS.md` but missed three version stamps inside `r/R/dw_io.R`:
+
+- header banner (`# Toolkit version: 0.4.2`)
+- `dw_toolkit_version()` docstring (`Currently "0.4.2"`)
+- `dw_toolkit_version()` return value (`"0.4.2"`)
+
+Caught by Copilot review on DW-Production install PRs (#134 + #136):
+`dw_toolkit_version()` was returning `"0.4.2"` while consumers had
+`manifest::pulled_version = "v0.4.3"` — an inconsistency that would
+have polluted `dw_publish()` provenance sidecars with the wrong
+toolkit version. This patch bumps all three stamps to `0.4.3.1` so
+they agree with `DESCRIPTION` and the manifest pin.
+
+The release-cut checklist for the next minor (v0.5.0) should include
+a `grep -rn '0\.[0-9]\.[0-9]' r/R/` step to catch any future stamp
+drift before tagging.
+
+No behavioural changes; safe to install as a drop-in replacement for
+v0.4.3.
+
 ## v0.4.3 (2026-05-28)
 
 Integrity release. Two `dw_use()` fixes (issues
