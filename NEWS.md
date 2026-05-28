@@ -13,10 +13,12 @@ sector leads finalise the Helix endpoint contract._
 ### v0.4.3 candidate entries (integrity release)
 
 Surfaced by the DW-Production NT reviewer-mode reproducibility audit on
-2026-05-27 (DW-Production PR #133). All three findings landed on the
-DW-Production vendored copy first as `local_edits` and are now ported
-upstream so the next `cso_toolkit_pull(target_version = "v0.4.3")`
-drops those local edits.
+2026-05-27 (DW-Production PR #133). Two of the three findings (#30, #31)
+landed first on the DW-Production vendored copy as `local_edits` and
+are ported upstream in this PR so the next
+`cso_toolkit_pull(target_version = "v0.4.3")` drops those local edits.
+Issue #32 (provenance sidecars) is design-only at this stage and stays
+in a follow-up PR within the same v0.4.3 milestone.
 
 #### `dw_use()` — parquet / dta `col_select = NULL` conditional dispatch (issue [#30](https://github.com/unicef-drp/cso-toolkit/issues/30))
 
