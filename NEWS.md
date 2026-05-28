@@ -3,24 +3,30 @@
 ## Unreleased
 
 _Entries land here as PRs merge into `develop`. When the next release
-is cut, this header is renamed `## v0.4.3 (YYYY-MM-DD)` and a fresh
+is cut, this header is renamed `## v0.4.4 (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
 _v0.5.0 will land the live `dw_publish()` submission branch (issue
 [#15](https://github.com/unicef-drp/cso-toolkit/issues/15)) once
 sector leads finalise the Helix endpoint contract._
 
-### v0.4.3 candidate entries (integrity release)
+## v0.4.3 (2026-05-28)
 
-Surfaced by the DW-Production NT reviewer-mode reproducibility audit on
-2026-05-27 (DW-Production PR #133). Two of the three findings (#30, #31)
-landed first on the DW-Production vendored copy as `local_edits` and
-are ported upstream in this PR so the next
-`cso_toolkit_pull(target_version = "v0.4.3")` drops those local edits.
-Issue #32 (provenance sidecars) is design-only at this stage and stays
-in a follow-up PR within the same v0.4.3 milestone.
+Integrity release. Two `dw_use()` fixes (issues
+[#30](https://github.com/unicef-drp/cso-toolkit/issues/30) +
+[#31](https://github.com/unicef-drp/cso-toolkit/issues/31)) ported from
+the DW-Production NT reviewer-mode reproducibility audit on 2026-05-27
+(PR [#33](https://github.com/unicef-drp/cso-toolkit/pull/33); DW-Production
+PR [#133](https://github.com/unicef-drp/DW-Production/pull/133)). Both
+landed first on the DW-Production vendored copy as `local_edits`; this
+release lets the next `cso_toolkit_pull(target_version = "v0.4.3")` drop
+those local edits.
 
-#### `dw_use()` — parquet / dta `col_select = NULL` conditional dispatch (issue [#30](https://github.com/unicef-drp/cso-toolkit/issues/30))
+Issue [#32](https://github.com/unicef-drp/cso-toolkit/issues/32)
+(provenance sidecars) is the design-foundation companion in the same
+milestone; implementation ships in a follow-up PR.
+
+### `dw_use()` — parquet / dta `col_select = NULL` conditional dispatch (issue [#30](https://github.com/unicef-drp/cso-toolkit/issues/30))
 
 The v0.4.2 parquet branch unconditionally passed `col_select = cols`
 to `arrow::read_parquet()`. When a caller invoked `dw_use(path)` without
@@ -35,7 +41,7 @@ downstream of `1b_cmrs_series_import.R` failed with "object 'COLUMN'
 not found" because the upstream `dw_use(out_dw_nut_*.parquet)` returned
 an empty tibble. After the fix (Run #7): 24/25 stages OK.
 
-#### `dw_use(cols_lenient = FALSE)` — new flag for `any_of()`-style schema intersect (issue [#31](https://github.com/unicef-drp/cso-toolkit/issues/31))
+### `dw_use(cols_lenient = FALSE)` — new flag for `any_of()`-style schema intersect (issue [#31](https://github.com/unicef-drp/cso-toolkit/issues/31))
 
 Sector scripts that wanted "select these columns if present, ignore
 the absent" semantics passed `dw_use(cols = dplyr::any_of(c(...)))`.
@@ -56,7 +62,7 @@ Migration:
 - `dw_use(cols = dplyr::any_of(c(...)))` → `dw_use(cols = c(...), cols_lenient = TRUE)`
 - `dw_use(cols = dplyr::all_of(c(...)))` → `dw_use(cols = c(...))` (strict; `all_of()` at top level is deprecated in tidyselect 1.2.0 anyway)
 
-#### Companion issue: provenance sidecars (issue [#32](https://github.com/unicef-drp/cso-toolkit/issues/32))
+### Companion issue: provenance sidecars (issue [#32](https://github.com/unicef-drp/cso-toolkit/issues/32))
 
 Issue #32 sketches the producer → reviewer → ingestor integrity chain
 that `.write_remote_provenance` (v0.4.0, URL-freeze sidecars) is the
