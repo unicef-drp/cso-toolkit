@@ -1269,7 +1269,7 @@ dw_use <- function(path = NULL,
 
 	fmt <- tolower(tools::file_ext(sub("\\.gz$", "", resolved, ignore.case = TRUE)))
 
-	# v0.4.2+ lenient-cols: pre-intersect cols with the actual file schema so
+	# v0.4.3+ lenient-cols: pre-intersect cols with the actual file schema so
 	# callers can replicate the `dplyr::any_of()` "only-if-present" intent
 	# without invoking tidyselect helpers outside a selecting context (which
 	# error fatally under tidyselect >= 1.2.0). Schema introspection is
@@ -1353,7 +1353,7 @@ dw_use <- function(path = NULL,
 #'
 #' Format dispatch:
 #' \itemize{
-#'   \item `parquet`: `arrow::read_parquet(path, as_data_frame = FALSE)$schema$names`
+#'   \item `parquet`: `arrow::open_dataset(path)$schema$names` (metadata-only; avoids loading the data payload)
 #'   \item `csv` / `tsv` / `txt`: `data.table::fread(path, nrows = 0)` header read
 #'   \item `dta`: `haven::read_dta(path, n_max = 0)` header read
 #'   \item `xlsx`: `readxl::read_xlsx(path, n_max = 0)` header read
