@@ -2,13 +2,66 @@
 
 ## Unreleased
 
-_Entries land here as PRs merge into `develop`.  When the next release
-is cut, this header is renamed `## v0.5.0 (YYYY-MM-DD)` and a fresh
+_Entries land here as PRs merge into `develop`. When the next release
+is cut, this header is renamed `## v0.4.3 (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
 _v0.5.0 will land the live `dw_publish()` submission branch (issue
 [#15](https://github.com/unicef-drp/cso-toolkit/issues/15)) once
 sector leads finalise the Helix endpoint contract._
+
+### v0.4.3 candidate entries (integrity release)
+
+Surfaced by the DW-Production NT reviewer-mode reproducibility audit on
+2026-05-27 (DW-Production PR #133). Two of the three findings (#30, #31)
+landed first on the DW-Production vendored copy as `local_edits` and
+are ported upstream in this PR so the next
+`cso_toolkit_pull(target_version = "v0.4.3")` drops those local edits.
+Issue #32 (provenance sidecars) is design-only at this stage and stays
+in a follow-up PR within the same v0.4.3 milestone.
+
+#### `dw_use()` — parquet / dta `col_select = NULL` conditional dispatch (issue [#30](https://github.com/unicef-drp/cso-toolkit/issues/30))
+
+The v0.4.2 parquet branch unconditionally passed `col_select = cols`
+to `arrow::read_parquet()`. When a caller invoked `dw_use(path)` without
+explicit columns, `cols` defaulted to `NULL`, and
+`arrow::read_parquet(path, col_select = NULL)` returned a zero-column
+schema rather than all columns. The same pattern affected
+`haven::read_dta(col_select = NULL)`. Both branches now use conditional
+dispatch: pass `col_select` only when `cols` is non-NULL.
+
+Surfaced empirically by DW-Production Run #6 (NT pipeline): 13+ stages
+downstream of `1b_cmrs_series_import.R` failed with "object 'COLUMN'
+not found" because the upstream `dw_use(out_dw_nut_*.parquet)` returned
+an empty tibble. After the fix (Run #7): 24/25 stages OK.
+
+#### `dw_use(cols_lenient = FALSE)` — new flag for `any_of()`-style schema intersect (issue [#31](https://github.com/unicef-drp/cso-toolkit/issues/31))
+
+Sector scripts that wanted "select these columns if present, ignore
+the absent" semantics passed `dw_use(cols = dplyr::any_of(c(...)))`.
+`any_of()` errors fatally outside a tidyselect selecting context
+(tidyselect >= 1.2.0); R evaluates the helper before the call to
+`dw_use`, so no lazy-eval trick inside the toolkit can save it.
+
+New `cols_lenient = FALSE` parameter (default off for backwards compat).
+When `TRUE`, dw_use introspects the file schema cheaply (parquet
+metadata, csv / tsv / xlsx zero-row read, dta header) and intersects
+the requested `cols` with the actual columns before the data read.
+Empty intersection → warning + read all columns (forward-progress
+guarantee). New internal helper `.dw_schema_cols(path, fmt)` performs
+the schema-only read.
+
+Migration:
+
+- `dw_use(cols = dplyr::any_of(c(...)))` → `dw_use(cols = c(...), cols_lenient = TRUE)`
+- `dw_use(cols = dplyr::all_of(c(...)))` → `dw_use(cols = c(...))` (strict; `all_of()` at top level is deprecated in tidyselect 1.2.0 anyway)
+
+#### Companion issue: provenance sidecars (issue [#32](https://github.com/unicef-drp/cso-toolkit/issues/32))
+
+Issue #32 sketches the producer → reviewer → ingestor integrity chain
+that `.write_remote_provenance` (v0.4.0, URL-freeze sidecars) is the
+seed of. Foundational design captured; implementation deferred to a
+follow-up PR within the v0.4.3 milestone.
 
 ## v0.4.2 (2026-05-27)
 
