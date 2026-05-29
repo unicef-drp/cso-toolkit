@@ -24,6 +24,7 @@ Imports:
     digest,
     dplyr,
     jsonlite,
+    magrittr,
     readr,
     rlang,
     tibble,
