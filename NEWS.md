@@ -3,12 +3,30 @@
 ## Unreleased
 
 _Entries land here as PRs merge into `develop`. When the next release
-is cut, this header is renamed `## v0.4.4 (YYYY-MM-DD)` and a fresh
+is cut, this header is renamed `## v0.4.5 (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
 _v0.5.0 will land the live `dw_publish()` submission branch (issue
-[#15](https://github.com/unicef-drp/cso-toolkit/issues/15)) once
-sector leads finalise the Helix endpoint contract._
+[#15](https://github.com/unicef-drp/cso-toolkit/issues/15)) and the
+`dw_regions()` API redesign against the Country-and-Region-Metadata-API
+package (issue [#40](https://github.com/unicef-drp/cso-toolkit/issues/40))
+once sector leads finalise the Helix endpoint contract and the regions
+API output schema._
+
+## v0.4.4 (2026-05-29)
+
+Quality release. Three v0.4.4 milestone issues land in one cycle (PRs
+[#39](https://github.com/unicef-drp/cso-toolkit/pull/39),
+[#41](https://github.com/unicef-drp/cso-toolkit/pull/41),
+[#43](https://github.com/unicef-drp/cso-toolkit/pull/43)). All three
+surfaced empirically during the DW-Production v0.4.3.1 fanout audit
+(IM / WS / HVA install + reviewer-mode runs on 2026-05-28). No public
+API breaks; the bumped-default behaviour stays backwards-compatible
+for v0.4.3.1 consumers.
+
+Follow-up issue [#42](https://github.com/unicef-drp/cso-toolkit/issues/42)
+tracks the remaining un-prefixed exports for a single naming-cleanup
+PR (proposed v0.4.5).
 
 ### Three carry-forward bugs + `dw_`-prefix aliases (issue [#36](https://github.com/unicef-drp/cso-toolkit/issues/36))
 
@@ -721,8 +739,9 @@ UNICEF Chief Statistician Office (CSO) toolkit.
 - README — rebranded as the **UNICEF Chief Statistician Office (CSO)
   toolkit** and added an **Objective and motivation** section spelling out
   that the repo exists to facilitate the reproducibility and scalability
-  of analytics developed by the UNICEF Data and Analytics Section in the
-  Office of the Executive Director (OSE). Citation block updated to match.
+  of analytics developed by the UNICEF Chief Statistician Office (CSO),
+  within the Office of Strategy and Evidence (OSE). Citation block
+  updated to match.
 - `docs/dw_io_reference.md` — per-function reference for `dw_io.R` lifted
   out of the DW-Production `00_functions/README.md`.
 - `docs/dw_api_reference.md` — per-function reference for `dw_api.R` (same
