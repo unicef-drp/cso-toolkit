@@ -2,9 +2,19 @@
 % Please edit documentation in R/generate_markdown_report.R
 \name{process_all_csv_files}
 \alias{process_all_csv_files}
+\alias{dw_process_all_csv_files}
 \title{Generate descriptive-statistics Markdown reports for every CSV in a folder}
 \usage{
 process_all_csv_files(
+  folder_path,
+  country_column,
+  year_column,
+  indicator_column,
+  value_column,
+  output_path = NULL
+)
+
+dw_process_all_csv_files(
   folder_path,
   country_column,
   year_column,

@@ -2,9 +2,17 @@
 % Please edit documentation in R/profile_helpers.R
 \name{review_profile}
 \alias{review_profile}
+\alias{dw_review_profile}
 \title{Audit a profile script for the blocks the cso-toolkit contract expects}
 \usage{
 review_profile(
+  path,
+  require_dw_mode = TRUE,
+  require_z_drive_check = FALSE,
+  verbose = TRUE
+)
+
+dw_review_profile(
   path,
   require_dw_mode = TRUE,
   require_z_drive_check = FALSE,

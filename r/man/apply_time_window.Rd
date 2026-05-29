@@ -2,9 +2,20 @@
 % Please edit documentation in R/aggregate_data_v2.R
 \name{apply_time_window}
 \alias{apply_time_window}
+\alias{dw_apply_time_window}
 \title{Filter data to latest observation within a time window, with exemptions}
 \usage{
 apply_time_window(
+  data,
+  country_col = "REF_AREA",
+  time_col = "TIME_PERIOD",
+  start_year,
+  end_year,
+  exemptions = NULL,
+  exclusions = NULL
+)
+
+dw_apply_time_window(
   data,
   country_col = "REF_AREA",
   time_col = "TIME_PERIOD",
