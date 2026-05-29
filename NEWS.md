@@ -20,9 +20,11 @@ if (!exists("%>%", mode = "function", inherits = TRUE)) {
 
 In the installed-package context the local binding is a no-op (NAMESPACE's `importFrom(magrittr, "%>%")` wins). In standalone-source mode the local binding provides the same `%>%` symbol via `magrittr`'s namespace, so consumers don't have to `library(magrittr)` first.
 
-Also updated a misleading comment in `zzz.R::globalVariables` that claimed `.cso_require()` "attaches magrittr via .cso_require() at source-time" — it doesn't (`requireNamespace()` doesn't attach). The comment now reflects the v0.4.5 standalone-source mechanism.
+To make this fully honest: `magrittr` is now declared in `DESCRIPTION::Imports` (previously it came in transitively via dplyr), and `zzz.R::.cso_require` carries an `@importFrom magrittr %>%` roxygen tag so `NAMESPACE` gains the explicit `importFrom(magrittr, "%>%")` entry. Both belong to the principled fix: the package's dependency declaration now matches the comments and the test claims about the installed-package no-op path.
 
-Surfaced empirically by Copilot review of DW-Production PR [#144](https://github.com/unicef-drp/DW-Production/pull/144) (WS v0.4.4 install) on 2026-05-29.
+Also corrected a misleading comment in `zzz.R::globalVariables` that referred to a non-existent `apply_time_window.R` file (`apply_time_window()` is defined inside `aggregate_data_v2.R`).
+
+Surfaced empirically by Copilot review of DW-Production PR [#144](https://github.com/unicef-drp/DW-Production/pull/144) (WS v0.4.4 install) on 2026-05-29; Copilot review of cso-toolkit PR [#47](https://github.com/unicef-drp/cso-toolkit/pull/47) then flagged that the comment claims about NAMESPACE were aspirational, prompting the principled `magrittr` import declaration.
 
 
 

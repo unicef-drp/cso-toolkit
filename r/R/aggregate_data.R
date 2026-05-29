@@ -1,3 +1,11 @@
+# v0.4.5 (#46): bind `%>%` locally in standalone-source mode. In the
+# installed-package context this is a no-op (NAMESPACE has the
+# importFrom). See the equivalent gate in `aggregate_data_v2.R` for
+# the full rationale.
+if (!exists("%>%", mode = "function", inherits = TRUE)) {
+	`%>%` <- magrittr::`%>%`
+}
+
 #' Aggregate Data with Optional Weighting and Global Aggregation
 #'
 #' This function aggregates data by specified grouping variables, with options for
@@ -29,17 +37,6 @@
 #' aggregate_data(data, value = "value", weight = "weight", by = "region",
 #'                global = TRUE, method = "mean")
 #' }
-
-
-
-# v0.4.5 (#46): bind `%>%` locally in standalone-source mode. In the
-# installed-package context this is a no-op (NAMESPACE has the
-# importFrom). See the equivalent gate in `aggregate_data_v2.R` for
-# the full rationale.
-if (!exists("%>%", mode = "function", inherits = TRUE)) {
-	`%>%` <- magrittr::`%>%`
-}
-
 aggregate_data <- function(data, value, weight, by,
                            global = TRUE,
                            method = c("mean", "weighted_mean"),
