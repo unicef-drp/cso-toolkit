@@ -10,6 +10,33 @@ _v0.5.0 will land the live `dw_publish()` submission branch (issue
 [#15](https://github.com/unicef-drp/cso-toolkit/issues/15)) once
 sector leads finalise the Helix endpoint contract._
 
+### `dw_default_unicef_allowlist()` helper for consumers (issue [#37](https://github.com/unicef-drp/cso-toolkit/issues/37))
+
+New exported helper returns a character vector of `^...`-anchored
+regex patterns covering UNICEF DRP GitHub-raw and repository URLs.
+Consumers seed `dw_url_allowlist` from this constant instead of
+re-deriving the patterns per project:
+
+```r
+# In profile_<consumer>.R
+dw_url_allowlist <- c(
+  dw_default_unicef_allowlist(),
+  # Project-specific extras:
+  "^https://yourorg\\.github\\.io/"
+)
+```
+
+Surfaced empirically by the DW-Production reviewer-mode audit on
+2026-05-28 (IM `01_immunization.R`): every URL-using sector script
+hand-wrote the same `^https://raw\\.githubusercontent\\.com/unicef-drp/`
+pattern. The helper consolidates the duplication and lets future
+UNICEF-DRP additions land in one place upstream rather than in each
+consumer's profile.
+
+Purely additive — consumers must opt in by composing the helper into
+their `dw_url_allowlist`. The URL-freeze safety contract is unchanged
+(no URL is fetchable without explicit ratification).
+
 ### `.dw_frozen_root()` resolution is now discoverable (issue [#38](https://github.com/unicef-drp/cso-toolkit/issues/38))
 
 `.dw_frozen_root()` falls through a 3-tier resolution chain when
