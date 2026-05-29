@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------
 # 00_functions/dw_io.R
-# Toolkit version: 0.4.4
+# Toolkit version: 0.4.5
 # Purpose: Uniform read/write helpers for DW-Production R scripts.
 # Auto-dispatch by file extension; supports every IO form the
 # sector scripts currently use; enforces the reviewer/producer
