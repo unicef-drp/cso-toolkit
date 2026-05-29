@@ -15,6 +15,27 @@
 # aggregate_data_v2() below), not at file source-time, so vendoring
 # this file into a consumer's 00_functions/ without dplyr installed
 # only fails on first call -- not at source().
+#
+# v0.4.4 (#36): we also define a local fallback for `.cso_require()`
+# so this file is safe to source STANDALONE (without `zzz.R` having
+# been sourced first). Without the fallback, calling
+# `aggregate_data_v2(...)` after a bare `source("aggregate_data_v2.R")`
+# errored with "could not find function .cso_require". The check is
+# `exists(..., inherits = TRUE)`, so when `zzz.R` has already been
+# sourced into `.GlobalEnv` the shared helper wins and nothing is
+# redefined.
+if (!exists(".cso_require", mode = "function", inherits = TRUE)) {
+	.cso_require <- function(pkgs, where = "<unknown>") {
+		for (p in pkgs) {
+			if (!requireNamespace(p, quietly = TRUE)) {
+				stop(sprintf(
+					"[cso_toolkit.%s] Requires the '%s' package but it is not installed.\n  Fix: install.packages('%s')",
+					where, p, p
+				), call. = FALSE)
+			}
+		}
+	}
+}
 
 #' Aggregate Data v2.0 - Enhanced for Cross-Sector Use
 #'
@@ -289,3 +310,18 @@ apply_time_window <- function(data,
 ## source order, which is fragile. If you want the v2 behaviour through the
 ## v1 signature, call `aggregate_data_v2(..., global_label = "World",
 ## validate = FALSE)` explicitly.
+
+# =============================================================================
+# v0.4.4 — dw_-prefixed canonical alias (issue #36)
+# =============================================================================
+# Toolkit-export naming consolidates around the `dw_` prefix in v0.4.x;
+# the non-prefixed names here predate that convention. Adding the alias
+# lets consumers migrate at their own pace. The follow-up issue (filed
+# alongside this PR) tracks the rest of the un-prefixed exports
+# (aggregate_data, generate_markdown_report, apply_time_window,
+# generate_agg_footnote, create_profile, review_profile, test_scripts,
+# create_dw_sector_script).
+
+#' @rdname aggregate_data_v2
+#' @export
+dw_aggregate_data_v2 <- aggregate_data_v2

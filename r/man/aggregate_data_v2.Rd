@@ -2,9 +2,27 @@
 % Please edit documentation in R/aggregate_data_v2.R
 \name{aggregate_data_v2}
 \alias{aggregate_data_v2}
+\alias{dw_aggregate_data_v2}
 \title{Aggregate Data v2.0 - Enhanced for Cross-Sector Use}
 \usage{
 aggregate_data_v2(
+  data,
+  value,
+  weight,
+  by,
+  country_id = "REF_AREA",
+  global = TRUE,
+  method = c("weighted_mean", "mean", "sum", "proportion"),
+  coverage_threshold = NULL,
+  pop.coverage = TRUE,
+  country.coverage = TRUE,
+  total.population = FALSE,
+  number.affected = FALSE,
+  global_label = "WORLD",
+  validate = TRUE
+)
+
+dw_aggregate_data_v2(
   data,
   value,
   weight,
