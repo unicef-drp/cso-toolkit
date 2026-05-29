@@ -739,8 +739,9 @@ UNICEF Chief Statistician Office (CSO) toolkit.
 - README — rebranded as the **UNICEF Chief Statistician Office (CSO)
   toolkit** and added an **Objective and motivation** section spelling out
   that the repo exists to facilitate the reproducibility and scalability
-  of analytics developed by the UNICEF Data and Analytics Section in the
-  Office of the Executive Director (OSE). Citation block updated to match.
+  of analytics developed by the UNICEF Chief Statistician Office (CSO),
+  within the Office of Strategy and Evidence (OSE). Citation block
+  updated to match.
 - `docs/dw_io_reference.md` — per-function reference for `dw_io.R` lifted
   out of the DW-Production `00_functions/README.md`.
 - `docs/dw_api_reference.md` — per-function reference for `dw_api.R` (same

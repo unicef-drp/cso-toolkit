@@ -1,9 +1,10 @@
 # cso-toolkit — UNICEF Chief Statistician Office toolkit
 
 > Shared helpers, templates, and operating-model documentation for the
-> **UNICEF Chief Statistician Office (CSO)**. One IO + API contract,
-> one mode contract, three implementations (R · Python · Stata), one
-> vendoring model.
+> **UNICEF Chief Statistician Office (CSO)**, within the **Office of
+> Strategy and Evidence (OSE)**. One IO + API contract, one mode
+> contract, three implementations (R · Python · Stata), one vendoring
+> model.
 
 [![R CMD check](https://github.com/unicef-drp/cso-toolkit/actions/workflows/r-check.yml/badge.svg?branch=develop)](https://github.com/unicef-drp/cso-toolkit/actions/workflows/r-check.yml)
 [![License: MIT (code) + CC BY 4.0 (docs)](https://img.shields.io/badge/license-MIT%20%2B%20CC--BY--4.0-blue)](LICENSE)
@@ -44,9 +45,9 @@
 ## Motivation
 
 `cso-toolkit` exists to **facilitate the reproducibility and scalability
-of analytics developed by the UNICEF Data and Analytics Section in the
-Office of the Executive Director (OSE)**. Concretely, it does three
-things:
+of analytics developed by the UNICEF Chief Statistician Office (CSO),
+within the Office of Strategy and Evidence (OSE)**. Concretely, it does
+three things:
 
 1. **Encodes a single IO + API contract.** One way to read, write,
    compare, and merge data; one way to hit external APIs. Every call
