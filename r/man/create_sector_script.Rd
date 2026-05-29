@@ -2,9 +2,21 @@
 % Please edit documentation in R/create_sector_script.R
 \name{create_sector_script}
 \alias{create_sector_script}
+\alias{dw_create_sector_script}
 \title{Generate a prefilled sector-run script for a data-warehouse pipeline}
 \usage{
 create_sector_script(
+  sector_name,
+  sector_code,
+  base_dir = ".",
+  profile_name = "profile_DW_Production",
+  profile_file = "profile_DW-Production.R",
+  input_subpath = c("01_dw_prep", "011_input"),
+  output_subpath = c("01_dw_prep", "013_output"),
+  overwrite = FALSE
+)
+
+dw_create_sector_script(
   sector_name,
   sector_code,
   base_dir = ".",
@@ -28,10 +40,21 @@ structure and filenames (e.g., "nt", "ws").}
 [`create_dw_sector_script()`] which passes the canonical
 `"01_dw_prep/012_codes"` layout.}
 
-\item{profile_name}{Character. Name of the project profile object the
-generated script will check for. Defaults to
-`"profile_DW_Production"`. Set to the consumer's own profile object
-name if different.}
+\item{profile_name}{Character. Name of any variable the project's profile
+  sets when sourced successfully. The generated script will refuse to
+  run until that variable exists. Defaults to `"profile_DW_Production"`
+  (matches the boolean sentinel that [create_profile("DW-Production")]
+  emits at the end of its scaffold). The check is
+  `exists(profile_name) && !is.null(<value>)`, so any non-null
+  character / numeric / logical value satisfies it — including
+  `TRUE`, an absolute path string, or a sector-specific tag.
+
+  Note that the generated template ALSO references `projectFolder`
+  directly (when building `input_folder` and `output_folder` paths),
+  so the profile must define `projectFolder` for the runner to do
+  useful work — the sentinel check only confirms the profile was
+  sourced. If you change `profile_name`, make sure the profile still
+  defines `projectFolder`.}
 
 \item{profile_file}{Character. Filename of the project profile the
 generated script will instruct users to source on failure. Defaults to

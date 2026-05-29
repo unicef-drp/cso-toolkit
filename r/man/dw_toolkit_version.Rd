@@ -7,7 +7,7 @@
 dw_toolkit_version()
 }
 \value{
-Character. Currently `"0.4.0"`.
+Character. Currently `"0.4.4"`.
 }
 \description{
 Returns the upstream `cso-toolkit` tag the current `dw_io.R` /
@@ -28,6 +28,7 @@ stop("This script requires cso-toolkit >= 0.4.0; ",
 
 Other io: 
 \code{\link{dw_compare}()},
+\code{\link{dw_default_unicef_allowlist}()},
 \code{\link{dw_is_canonical}()},
 \code{\link{dw_isid}()},
 \code{\link{dw_merge}()},

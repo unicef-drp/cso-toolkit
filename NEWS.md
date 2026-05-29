@@ -2,13 +2,380 @@
 
 ## Unreleased
 
-_Entries land here as PRs merge into `develop`.  When the next release
-is cut, this header is renamed `## v0.5.0 (YYYY-MM-DD)` and a fresh
+_Entries land here as PRs merge into `develop`. When the next release
+is cut, this header is renamed `## v0.4.5 (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
 _v0.5.0 will land the live `dw_publish()` submission branch (issue
-[#15](https://github.com/unicef-drp/cso-toolkit/issues/15)) once
-sector leads finalise the Helix endpoint contract._
+[#15](https://github.com/unicef-drp/cso-toolkit/issues/15)) and the
+`dw_regions()` API redesign against the Country-and-Region-Metadata-API
+package (issue [#40](https://github.com/unicef-drp/cso-toolkit/issues/40))
+once sector leads finalise the Helix endpoint contract and the regions
+API output schema._
+
+## v0.4.4 (2026-05-29)
+
+Quality release. Three v0.4.4 milestone issues land in one cycle (PRs
+[#39](https://github.com/unicef-drp/cso-toolkit/pull/39),
+[#41](https://github.com/unicef-drp/cso-toolkit/pull/41),
+[#43](https://github.com/unicef-drp/cso-toolkit/pull/43)). All three
+surfaced empirically during the DW-Production v0.4.3.1 fanout audit
+(IM / WS / HVA install + reviewer-mode runs on 2026-05-28). No public
+API breaks; the bumped-default behaviour stays backwards-compatible
+for v0.4.3.1 consumers.
+
+Follow-up issue [#42](https://github.com/unicef-drp/cso-toolkit/issues/42)
+tracks the remaining un-prefixed exports for a single naming-cleanup
+PR (proposed v0.4.5).
+
+### Three carry-forward bugs + `dw_`-prefix aliases (issue [#36](https://github.com/unicef-drp/cso-toolkit/issues/36))
+
+Closes two of the three sub-fixes flagged on #36 during the HVA
+scaffold-install Copilot review on 2026-05-28. The third (a value-arg
+propagation bug in `dw_regions.R`) is moot — `dw_regions` is being
+redesigned to consume the new `unicef-drp/Country-and-Region-Metadata-API`
+package in [#40](https://github.com/unicef-drp/cso-toolkit/issues/40) (v0.5.0); the affected code path is removed.
+
+#### Sub-fix 1: `aggregate_data_v2.R` is now safe to source standalone
+
+Pre-fix, `aggregate_data_v2.R` called `.cso_require()` from `zzz.R`.
+Sourcing `aggregate_data_v2.R` directly (without sourcing `zzz.R`
+first) left `.cso_require` undefined; the first call to
+`aggregate_data_v2(...)` errored with `could not find function .cso_require`.
+
+The file now defines a local fallback for `.cso_require()` at source
+time, gated by `exists(".cso_require", mode = "function", inherits = TRUE)`.
+When `zzz.R` has already been sourced into `.GlobalEnv`, the shared
+helper wins and nothing is redefined; when only `aggregate_data_v2.R`
+is sourced, the local fallback provides the same behaviour.
+
+#### Sub-fix 2: `create_sector_script()` profile sentinel check relaxed (and aligned with `create_profile()`)
+
+Pre-fix, the generated `00_run_<sector>.R` template checked
+`isTRUE(profile_DW_Production)`. The DW-Production profile
+(`profile_DW-Production.R`) does not set `profile_DW_Production`, so
+the generated script errored at the sentinel check even after the
+profile was sourced successfully.
+
+The check is now relaxed from `isTRUE(<name>)` to `!is.null(<name>)`,
+which accepts any non-null value — character paths, numeric values,
+or the boolean sentinel that `create_profile("DW-Production")` emits
+(`profile_DW_Production <- TRUE`). The default `profile_name` stays at
+`"profile_DW_Production"` so the documented scaffold flow
+(`create_profile()` → `create_dw_sector_script()`) works out of the
+box without additional configuration.
+
+The new error message names the missing variable so future
+profile-vs-template mismatches surface a concrete fix. The roxygen
+`@param` doc also clarifies that the generated template uses
+`projectFolder` directly for input/output paths, so the profile MUST
+set `projectFolder` for the runner to do useful work — the sentinel
+check only confirms the profile was sourced.
+
+For DW-Production consumers (whose existing `profile_DW-Production.R`
+doesn't set the sentinel), the one-line `profile_DW_Production <- TRUE`
+must be added to the profile. Tracked as a separate DW-Production-side
+follow-up PR.
+
+#### `dw_`-prefixed canonical aliases for the two touched exports
+
+Toolkit-export naming consolidates around the `dw_` prefix in v0.4.x;
+the non-prefixed names predate that convention. While in this PR's
+files anyway, added:
+
+- `dw_aggregate_data_v2` (alias for `aggregate_data_v2`)
+- `dw_create_sector_script` (alias for `create_sector_script`)
+
+Both names point to the same function and share the same `\\code{\\link{}}` man page (via roxygen `@rdname`). The non-prefixed names continue to work — no breaking change. Follow-up issue tracks the rest of the un-prefixed exports (`aggregate_data`, `generate_markdown_report`, `apply_time_window`, `generate_agg_footnote`, `create_profile`, `review_profile`, `test_scripts`, `create_dw_sector_script`) as a single cleanup PR.
+
+### `dw_default_unicef_allowlist()` helper for consumers (issue [#37](https://github.com/unicef-drp/cso-toolkit/issues/37))
+
+New exported helper returns a character vector of `^...`-anchored
+regex patterns covering UNICEF DRP GitHub-raw and repository URLs.
+Consumers seed `dw_url_allowlist` from this constant instead of
+re-deriving the patterns per project:
+
+```r
+# In profile_<consumer>.R
+dw_url_allowlist <- c(
+  dw_default_unicef_allowlist(),
+  # Project-specific extras:
+  "^https://yourorg\\.github\\.io/"
+)
+```
+
+Surfaced empirically by the DW-Production reviewer-mode audit on
+2026-05-28 (IM `01_immunization.R`): every URL-using sector script
+hand-wrote the same `^https://raw\\.githubusercontent\\.com/unicef-drp/`
+pattern. The helper consolidates the duplication and lets future
+UNICEF-DRP additions land in one place upstream rather than in each
+consumer's profile.
+
+Purely additive — consumers must opt in by composing the helper into
+their `dw_url_allowlist`. The URL-freeze safety contract is unchanged
+(no URL is fetchable without explicit ratification).
+
+### `.dw_frozen_root()` resolution is now discoverable (issue [#38](https://github.com/unicef-drp/cso-toolkit/issues/38))
+
+`.dw_frozen_root()` falls through a 3-tier resolution chain when
+locating the URL-freeze cache root:
+
+1. `dw_frozen_root` global (opt-in; preferred)
+2. `<githubFolder>/_frozen` (fallback)
+3. `<getwd()>/_frozen` (last-resort fallback)
+
+Pre-v0.4.4 the helper resolved silently — consumers whose project
+layout didn't match the fallback heuristic had to grep `dw_io.R` to
+discover why `dw_use("https://...")` couldn't find their frozen file.
+
+v0.4.4 adds two discoverability improvements:
+
+- A new internal helper `.dw_frozen_root_resolved()` returns a
+  `(path, source)` pair so downstream callers can surface the chosen
+  tier in messages and error envelopes.
+- `.dw_frozen_root_notify_once()` emits a session-scoped notice the
+  first time the helper falls back beyond tier #1:
+  `message()` for tier #2 (`<githubFolder>/_frozen`),
+  `warning()` for tier #3 (`<getwd()>/_frozen`).
+  Consumers that explicitly set `dw_frozen_root` get no notice.
+
+The missing-frozen-copy error envelope in `.resolve_remote_url()`
+now includes the resolution tier so consumers see which fallback
+fired (or that the explicit global picked the path that's wrong):
+
+```text
+[cso_toolkit.dw_use:remote] Reviewer mode forbids fetching from the network.
+ Missing frozen copy: <path>
+ URL: <url>
+ Frozen-root resolution: <chosen-root> (<tier-name>)
+ Fix:
+   1. If the path above is wrong, set `dw_frozen_root <- '<your-canonical-frozen-path>'` in your profile.
+   2. Otherwise, a producer must call dw_use(...) once and commit the frozen file + sidecar.
+```
+
+Surfaced empirically by the DW-Production IM reviewer-mode audit on
+2026-05-28: the fallback resolved to `<githubFolder>/_frozen` instead
+of DW-Production's convention of `<projectFolder>/01_dw_prep/011_rawdata/_frozen/`.
+Three runs (75+ min of slow Teams network) were needed to diagnose
+what a single message could have surfaced at session start.
+
+No public-API changes. The internal `.dw_frozen_root()` (path-only)
+is preserved for backward compatibility with v0.4.3.1 callers.
+
+## v0.4.3.1 (2026-05-28)
+
+Patch release. v0.4.3 (cut earlier today) bumped `DESCRIPTION::Version`
+and `NEWS.md` but missed three version stamps inside `r/R/dw_io.R`:
+
+- header banner (`# Toolkit version: 0.4.2`)
+- `dw_toolkit_version()` docstring (`Currently "0.4.2"`)
+- `dw_toolkit_version()` return value (`"0.4.2"`)
+
+Caught by Copilot review on DW-Production install PRs (#134 + #136):
+`dw_toolkit_version()` was returning `"0.4.2"` while consumers had
+`manifest::pulled_version = "v0.4.3"` — an inconsistency that would
+have polluted `dw_publish()` provenance sidecars with the wrong
+toolkit version. This patch bumps all three stamps to `0.4.3.1` so
+they agree with `DESCRIPTION` and the manifest pin.
+
+The release-cut checklist for the next minor (v0.5.0) should include
+a `grep -rn '0\.[0-9]\.[0-9]' r/R/` step to catch any future stamp
+drift before tagging.
+
+No behavioural changes; safe to install as a drop-in replacement for
+v0.4.3.
+
+## v0.4.3 (2026-05-28)
+
+Integrity release. Two `dw_use()` fixes (issues
+[#30](https://github.com/unicef-drp/cso-toolkit/issues/30) +
+[#31](https://github.com/unicef-drp/cso-toolkit/issues/31)) ported from
+the DW-Production NT reviewer-mode reproducibility audit on 2026-05-27
+(PR [#33](https://github.com/unicef-drp/cso-toolkit/pull/33); DW-Production
+PR [#133](https://github.com/unicef-drp/DW-Production/pull/133)). Both
+landed first on the DW-Production vendored copy as `local_edits`; this
+release lets the next `cso_toolkit_pull(target_version = "v0.4.3")` drop
+those local edits.
+
+Issue [#32](https://github.com/unicef-drp/cso-toolkit/issues/32)
+(provenance sidecars) is the design-foundation companion in the same
+milestone; implementation ships in a follow-up PR.
+
+### `dw_use()` — parquet / dta `col_select = NULL` conditional dispatch (issue [#30](https://github.com/unicef-drp/cso-toolkit/issues/30))
+
+The v0.4.2 parquet branch unconditionally passed `col_select = cols`
+to `arrow::read_parquet()`. When a caller invoked `dw_use(path)` without
+explicit columns, `cols` defaulted to `NULL`, and
+`arrow::read_parquet(path, col_select = NULL)` returned a zero-column
+schema rather than all columns. The same pattern affected
+`haven::read_dta(col_select = NULL)`. Both branches now use conditional
+dispatch: pass `col_select` only when `cols` is non-NULL.
+
+Surfaced empirically by DW-Production Run #6 (NT pipeline): 13+ stages
+downstream of `1b_cmrs_series_import.R` failed with "object 'COLUMN'
+not found" because the upstream `dw_use(out_dw_nut_*.parquet)` returned
+an empty tibble. After the fix (Run #7): 24/25 stages OK.
+
+### `dw_use(cols_lenient = FALSE)` — new flag for `any_of()`-style schema intersect (issue [#31](https://github.com/unicef-drp/cso-toolkit/issues/31))
+
+Sector scripts that wanted "select these columns if present, ignore
+the absent" semantics passed `dw_use(cols = dplyr::any_of(c(...)))`.
+`any_of()` errors fatally outside a tidyselect selecting context
+(tidyselect >= 1.2.0); R evaluates the helper before the call to
+`dw_use`, so no lazy-eval trick inside the toolkit can save it.
+
+New `cols_lenient = FALSE` parameter (default off for backwards compat).
+When `TRUE`, dw_use introspects the file schema cheaply (parquet
+metadata, csv / tsv / xlsx zero-row read, dta header) and intersects
+the requested `cols` with the actual columns before the data read.
+Empty intersection → warning + read all columns (forward-progress
+guarantee). New internal helper `.dw_schema_cols(path, fmt)` performs
+the schema-only read.
+
+Migration:
+
+- `dw_use(cols = dplyr::any_of(c(...)))` → `dw_use(cols = c(...), cols_lenient = TRUE)`
+- `dw_use(cols = dplyr::all_of(c(...)))` → `dw_use(cols = c(...))` (strict; `all_of()` at top level is deprecated in tidyselect 1.2.0 anyway)
+
+### Companion issue: provenance sidecars (issue [#32](https://github.com/unicef-drp/cso-toolkit/issues/32))
+
+Issue #32 sketches the producer → reviewer → ingestor integrity chain
+that `.write_remote_provenance` (v0.4.0, URL-freeze sidecars) is the
+seed of. Foundational design captured; implementation deferred to a
+follow-up PR within the v0.4.3 milestone.
+
+## v0.4.2 (2026-05-27)
+
+Patch release. Fixes a Copilot-flagged silent-CSV bug in v0.4.1's
+new `dialect = "base"` dispatch on `dw_save()`. Surfaced by Copilot
+review of DW-Production PR #128 (the v0.4.1 cleanup pull) before
+any sector pipeline could write a corrupted `.tsv`.
+
+### `dw_save(dialect = "base")` now honours the dispatched separator
+
+v0.4.1 dispatched `dialect = "base"` through `utils::write.csv(x,
+file = path)`, which hardcodes a comma separator. That meant
+`dw_save(x, "out.tsv", dialect = "base")` silently produced
+CSV-formatted content with a `.tsv` extension -- indistinguishable
+from a real TSV at the filename level, but with wrong delimiters
+inside.
+
+v0.4.2 switches the dispatch to the equivalent underlying call:
+`utils::write.table(x, file = path, sep = sep, col.names = NA,
+qmethod = "double")`. `write.csv` is itself a wrapper around
+`write.table` with those exact args plus an enforced `sep = ","`,
+so:
+
+- For `.csv` (sep = `,`) the byte output is **identical** to
+  `utils::write.csv(x, file = path)`. The byte-parity guarantee
+  v0.4.1 introduced for legacy callers (e.g. DW-Production NT
+  `2[bcfg]_agg_*` scripts) is preserved.
+- For `.tsv` / `.txt` (sep = `\t`) the file now contains actual
+  **tab** separators with the same `row.names` / quoted-string
+  defaults.
+
+### Test coverage
+
+New regression test file `r/tests/testthat/test-dw_io-dialect.R`
+exercises four cases:
+
+- `dialect = "base"` on `.csv` produces byte-identical output to
+  `utils::write.csv()`.
+- `dialect = "base"` on `.tsv` produces tab-separated output (the
+  v0.4.2 fix).
+- `dialect = "base"` with `compress = TRUE` raises the envelope-
+  shaped error explaining the gzip-is-fwrite-only constraint.
+- An unrecognised `dialect` value raises a base R error from
+  `match.arg(dialect)` (which fires before the toolkit envelope
+  wrapping kicks in -- `match.arg` is the cheap validation gate
+  by design).
+
+Existing version-stamp assertions in `test-dw_io-mode-contract.R`
+and `test-dw_publish.R` updated from `"0.4.1"` to `"0.4.2"`.
+
+### No public-API change
+
+`dw_save()`'s signature is unchanged. Callers using `dialect =
+"base"` on `.csv` see no behavioural difference. Callers passing
+`.tsv` / `.txt` with `dialect = "base"` get correct tab output
+instead of silent comma output (which was the bug).
+
+## v0.4.1 (2026-05-27)
+
+Two regressions in v0.4.0 surfaced by Copilot review of the
+DW-Production pull ([DW-Production#127](https://github.com/unicef-drp/DW-Production/pull/127)).
+Patches validated on the NT branch in DW-Production before backport;
+see DW-Production `tests/test_v041_nt.R` for the focused harness
+(tests 1-4 all PASS against this v0.4.1 head).
+
+### `dw_save(..., dialect = ...)` parameter restored (BACKWARD COMPAT)
+
+v0.4.0 silently dropped the `dialect` parameter that v0.3.x exposed
+for byte-parity with `utils::write.csv()`. DW-Production NT scripts
+(`nt/2b_agg_iod.R`, `nt/2c_agg_vas_series.R`, `nt/2f_agg_bw.R`,
+`nt/2g_agg_iycf.R`) depend on `dialect = "base"` for legacy CSV byte
+parity. Under v0.4.0 those calls silently lost byte parity (the arg
+was forwarded via `...` into `data.table::fwrite` which doesn't
+accept it).
+
+v0.4.1 restores `dialect` as an explicit parameter on `dw_save()`:
+
+- `dialect = "fwrite"` (default) — `data.table::fwrite` path
+  (existing behaviour; row.names = FALSE, fast)
+- `dialect = "base"` — `utils::write.csv(x, file = path)` (preserves
+  row.names = TRUE + default-quoted strings; byte-parity with
+  legacy `write.csv()`)
+- `dialect = "base"` with `compress = TRUE` raises an explanatory
+  error (gzip is fwrite-only).
+
+Plumbed through CSV/TSV/TXT dispatch lines in `dw_save()` body.
+
+### `dw_save(..., overwrite = NULL)` -- mode-aware default (DESIGN ALIGNMENT)
+
+v0.4.0 shipped `overwrite = FALSE` uniformly across both modes
+(strict). The mode-contract design discussion in issue
+[#14](https://github.com/unicef-drp/cso-toolkit/issues/14) preferred
+**lenient** for reviewer mode: producer-mode keeps explicit-required;
+reviewer-mode keeps default-TRUE for scratch writes under
+`013_wrkdata/_local/` (already gitignored; safe to re-run).
+
+v0.4.1 changes `dw_save()` signature: `overwrite = FALSE` ->
+`overwrite = NULL` (sentinel). After mode detection, the sentinel
+resolves to:
+
+- reviewer mode -> `TRUE`  (scratch is safe to re-run)
+- producer mode -> `FALSE` (must be explicit)
+- mode unset    -> `FALSE` (safe default; matches v0.4.0 strict)
+
+Explicit `overwrite = TRUE` / `overwrite = FALSE` overrides the
+sentinel as before.
+
+### Migration
+
+- **Reviewer-mode pipelines**: no action required. Default behaviour
+  reverts to the pre-v0.4.0 lenient overwrite-on-re-run for scratch
+  paths.
+- **Producer-mode pipelines**: no change from v0.4.0 — still must
+  pass `overwrite = TRUE` explicitly to re-run against existing
+  artifacts.
+- **Sector scripts using `dialect = "base"`**: no action; the
+  argument now works again with the documented v0.3.x semantics.
+
+### Other Copilot findings (deferred to v0.4.2)
+
+Four canonical-side bugs surfaced by the same review but deferred
+because they have zero blast radius on current DW-Production
+pipelines (no sector currently calls `dw_regions()` / `dw_publish()`
+/ `dw_pop()`):
+
+- `dw_save` flow ordering: mirror destinations + `mirror_to_z` dots
+  leak (issues to be filed).
+- `dw_save` producer self-mirror when `teamsWrkData ==
+  teamsFolderCanonical`.
+- `dw_regions()` does not rename `Aggregate` -> `value` on regional
+  rows.
+- `create_sector_script` DW wrapper: wrong default paths + missing
+  profile sentinel.
 
 ## v0.4.0 (2026-05-26)
 
@@ -372,8 +739,9 @@ UNICEF Chief Statistician Office (CSO) toolkit.
 - README — rebranded as the **UNICEF Chief Statistician Office (CSO)
   toolkit** and added an **Objective and motivation** section spelling out
   that the repo exists to facilitate the reproducibility and scalability
-  of analytics developed by the UNICEF Data and Analytics Section in the
-  Office of the Executive Director (OSE). Citation block updated to match.
+  of analytics developed by the UNICEF Chief Statistician Office (CSO),
+  within the Office of Strategy and Evidence (OSE). Citation block
+  updated to match.
 - `docs/dw_io_reference.md` — per-function reference for `dw_io.R` lifted
   out of the DW-Production `00_functions/README.md`.
 - `docs/dw_api_reference.md` — per-function reference for `dw_api.R` (same

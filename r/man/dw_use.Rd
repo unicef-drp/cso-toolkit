@@ -10,6 +10,7 @@ dw_use(
   sector = NULL,
   kind = c("wrk", "raw", "meta"),
   cols = NULL,
+  cols_lenient = FALSE,
   as = c("tibble", "data.frame", "data.table"),
   fallback_canonical = TRUE,
   verify_z = TRUE,
@@ -27,6 +28,16 @@ dw_use(
 
 \item{cols}{Character vector. Optional column subset (for `.csv`, `.tsv`,
 `.xlsx`, `.dta`, `.parquet`).}
+
+\item{cols_lenient}{Logical. Default `FALSE`. When `TRUE` and `cols` is a
+non-NULL character vector, dw_use introspects the file schema cheaply
+(parquet metadata, dta header, csv / tsv / xlsx zero-row read) and
+intersects `cols` with the file's actual columns before the data read.
+Use this to replicate the `dplyr::any_of()` "only-if-present" intent
+without calling `any_of()` outside a tidyselect context (which errors
+fatally in tidyselect >= 1.2.0). When the intersection is empty, dw_use
+falls back to reading all columns and emits a warning. Supported
+formats: `csv`, `tsv`, `txt`, `xlsx`, `dta`, `parquet`.}
 
 \item{as}{Character. Return type: `"tibble"` (default), `"data.frame"`,
 or `"data.table"`.}
@@ -77,7 +88,22 @@ fallback with `fallback_canonical = FALSE`.
 }
 \examples{
 \dontrun{
+# Default: read everything
 warehouse <- dw_use(name = "dw_ed_edu.csv", sector = "ed", kind = "wrk")
+
+# Strict column subset (v0.4.3+: parquet / dta now correctly pass through
+# to all columns when `cols` is NULL; explicit `cols` still errors if a
+# requested name is missing from the file's schema).
+df <- dw_use(name = "dw_ed_edu.csv", sector = "ed", kind = "wrk",
+             cols = c("REF_AREA", "OBS_VALUE"))
+
+# Lenient column subset (v0.4.3+): intersect the request with the file's
+# actual schema before the read. Use this instead of
+# `cols = dplyr::any_of(c(...))` -- `any_of()` errors at the top level
+# under tidyselect >= 1.2.0.
+df <- dw_use(name = "dw_nut_country_series.parquet", sector = "nt",
+             cols = c("REF_AREA", "INDICATOR", "MAYBE_PRESENT_COL"),
+             cols_lenient = TRUE)
 }
 }
 \seealso{
@@ -86,6 +112,7 @@ the underlying integrity check.
 
 Other io: 
 \code{\link{dw_compare}()},
+\code{\link{dw_default_unicef_allowlist}()},
 \code{\link{dw_is_canonical}()},
 \code{\link{dw_isid}()},
 \code{\link{dw_merge}()},
