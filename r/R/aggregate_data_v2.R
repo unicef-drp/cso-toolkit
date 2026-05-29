@@ -38,6 +38,22 @@ if (!exists(".cso_require", mode = "function", inherits = TRUE)) {
 	}
 }
 
+# v0.4.5 (#46): the file uses the magrittr pipe (`%>%`) on dplyr verbs
+# below. In the installed-package context, `NAMESPACE` carries
+# `importFrom(magrittr, "%>%")` so the pipe is bound inside the
+# package. In STANDALONE-SOURCE mode (no NAMESPACE), `requireNamespace()`
+# called by `.cso_require()` loads but does NOT attach exports — so
+# `%>%` would still be unbound and `source("aggregate_data_v2.R")`
+# would error at the first pipe call.
+#
+# Bind `%>%` locally when it isn't already in scope. The
+# `exists(..., inherits = TRUE)` check makes this a no-op when the
+# installed package already provides the pipe via its NAMESPACE
+# importFrom.
+if (!exists("%>%", mode = "function", inherits = TRUE)) {
+	`%>%` <- magrittr::`%>%`
+}
+
 #' Aggregate Data v2.0 - Enhanced for Cross-Sector Use
 #'
 #' This function aggregates data by specified grouping variables with support for
@@ -326,3 +342,15 @@ apply_time_window <- function(data,
 #' @rdname aggregate_data_v2
 #' @export
 dw_aggregate_data_v2 <- aggregate_data_v2
+
+# =============================================================================
+# v0.4.5 — dw_-prefixed canonical aliases for the other two exports in this file (#42)
+# =============================================================================
+
+#' @rdname generate_agg_footnote
+#' @export
+dw_generate_agg_footnote <- generate_agg_footnote
+
+#' @rdname apply_time_window
+#' @export
+dw_apply_time_window <- apply_time_window

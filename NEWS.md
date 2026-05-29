@@ -3,8 +3,62 @@
 ## Unreleased
 
 _Entries land here as PRs merge into `develop`. When the next release
-is cut, this header is renamed `## v0.4.5 (YYYY-MM-DD)` and a fresh
+is cut, this header is renamed `## v0.4.6 (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
+
+## v0.4.5 (2026-05-29)
+
+Closes the v0.4.5 milestone with two deliverables — standalone-source
+`%>%` binding (issue [#46](https://github.com/unicef-drp/cso-toolkit/issues/46),
+PR [#47](https://github.com/unicef-drp/cso-toolkit/pull/47)) and 8 new
+`dw_`-prefixed aliases (issue [#42](https://github.com/unicef-drp/cso-toolkit/issues/42),
+PR [#48](https://github.com/unicef-drp/cso-toolkit/pull/48)). A companion
+declaration of `magrittr` as a first-class Import (with `importFrom`
+in NAMESPACE) makes the dependency surface honest. No public API
+breaks; both names remain exported throughout v0.4.x.
+
+### Standalone-source `%>%` binding (issue [#46](https://github.com/unicef-drp/cso-toolkit/issues/46))
+
+v0.4.4's #36 fix made `aggregate_data_v2.R` partially safe to source standalone by adding a local `.cso_require()` fallback. But the file still used the unqualified `%>%` operator without a binding — `.cso_require()` calls `requireNamespace()`, which loads but does NOT attach package exports, so `source("aggregate_data_v2.R")` errored at the first pipe call with `Error: could not find function "%>%"` even when magrittr was installed.
+
+Same one-line gate pattern resolves it. Applied to both files that use `%>%` standalone:
+
+```r
+if (!exists("%>%", mode = "function", inherits = TRUE)) {
+  `%>%` <- magrittr::`%>%`
+}
+```
+
+In the installed-package context the local binding is a no-op (NAMESPACE's `importFrom(magrittr, "%>%")` wins). In standalone-source mode the local binding provides the same `%>%` symbol via `magrittr`'s namespace, so consumers don't have to `library(magrittr)` first.
+
+To make this fully honest: `magrittr` is now declared in `DESCRIPTION::Imports` (previously it came in transitively via dplyr), and `zzz.R::.cso_require` carries an `@importFrom magrittr %>%` roxygen tag so `NAMESPACE` gains the explicit `importFrom(magrittr, "%>%")` entry. Both belong to the principled fix: the package's dependency declaration now matches the comments and the test claims about the installed-package no-op path.
+
+Also corrected a misleading comment in `zzz.R::globalVariables` that referred to a non-existent `apply_time_window.R` file (`apply_time_window()` is defined inside `aggregate_data_v2.R`).
+
+Surfaced empirically by Copilot review of DW-Production PR [#144](https://github.com/unicef-drp/DW-Production/pull/144) (WS v0.4.4 install) on 2026-05-29; Copilot review of cso-toolkit PR [#47](https://github.com/unicef-drp/cso-toolkit/pull/47) then flagged that the comment claims about NAMESPACE were aspirational, prompting the principled `magrittr` import declaration.
+
+### `dw_`-prefixed canonical aliases for the remaining un-prefixed exports (issue [#42](https://github.com/unicef-drp/cso-toolkit/issues/42))
+
+v0.4.4 added `dw_` aliases for `aggregate_data_v2` and `create_sector_script` (the two exports touched by #36). v0.4.5 extends the program to the remaining 8 un-prefixed exports so the toolkit's public surface consistently uses the `dw_` namespace:
+
+| Un-prefixed | `dw_`-prefixed alias |
+|---|---|
+| `aggregate_data` | `dw_aggregate_data` |
+| `generate_agg_footnote` | `dw_generate_agg_footnote` |
+| `apply_time_window` | `dw_apply_time_window` |
+| `generate_markdown_report` | `dw_generate_markdown_report` |
+| `process_all_csv_files` | `dw_process_all_csv_files` |
+| `create_profile` | `dw_create_profile` |
+| `review_profile` | `dw_review_profile` |
+| `test_scripts` | `dw_test_scripts` |
+
+Both names continue to work and share the same `\link{}` man page via roxygen `@rdname`. **No breaking change**: consumers using the un-prefixed names see no behaviour change. The un-prefixed names remain exported and will continue to work indefinitely in v0.4.x; a future v0.5.x cycle may emit a `lifecycle::deprecate_soft()` warning on the un-prefixed forms to nudge migration, but only after sector leads confirm the migration is complete.
+
+`create_dw_sector_script` was intentionally NOT aliased: it already carries a `dw` infix (it's a DW-Production-specific wrapper of `create_sector_script`), and `create_sector_script` got `dw_create_sector_script` in v0.4.4 anyway. The dual-naming is historical and won't be cleaned up under #42.
+
+The `test_scripts` → `dw_test_scripts` alias also got a roxygen note: a future v0.5.x rename to `dw_audit_scripts` (to surface the audit intent and avoid the testthat-name collision) is on the design horizon. For now the prefix-only alias keeps the cleanup additive.
+
+### Forward look
 
 _v0.5.0 will land the live `dw_publish()` submission branch (issue
 [#15](https://github.com/unicef-drp/cso-toolkit/issues/15)) and the

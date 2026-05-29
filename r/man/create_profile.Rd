@@ -2,9 +2,20 @@
 % Please edit documentation in R/profile_helpers.R
 \name{create_profile}
 \alias{create_profile}
+\alias{dw_create_profile}
 \title{Generate a project profile script for a CSO data-warehouse pipeline}
 \usage{
 create_profile(
+  repo_name,
+  project_title = repo_name,
+  output_path = ".",
+  include_dw_mode = TRUE,
+  include_z_drive_check = FALSE,
+  author = Sys.getenv("USERNAME", unset = Sys.info()[["user"]]),
+  overwrite = FALSE
+)
+
+dw_create_profile(
   repo_name,
   project_title = repo_name,
   output_path = ".",
