@@ -176,6 +176,7 @@ uniqueness check; [dw_verify_z()] for the Z: mirror integrity check;
 
 Other io: 
 \code{\link{dw_compare}()},
+\code{\link{dw_default_unicef_allowlist}()},
 \code{\link{dw_is_canonical}()},
 \code{\link{dw_isid}()},
 \code{\link{dw_merge}()},
