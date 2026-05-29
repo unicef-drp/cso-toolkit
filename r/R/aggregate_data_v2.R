@@ -34,6 +34,7 @@ if (!exists(".cso_require", mode = "function", inherits = TRUE)) {
 				), call. = FALSE)
 			}
 		}
+		invisible(TRUE)  # mirror the zzz.R return contract
 	}
 }
 

@@ -31,23 +31,33 @@ When `zzz.R` has already been sourced into `.GlobalEnv`, the shared
 helper wins and nothing is redefined; when only `aggregate_data_v2.R`
 is sourced, the local fallback provides the same behaviour.
 
-#### Sub-fix 2: `create_sector_script()` profile sentinel now uses a variable the profile actually sets
+#### Sub-fix 2: `create_sector_script()` profile sentinel check relaxed (and aligned with `create_profile()`)
 
-Pre-fix, the generated `00_run_<sector>.R` template checked for a
-`profile_DW_Production` sentinel that the DW-Production profile never
-defines, so the generated script errored immediately even after the
+Pre-fix, the generated `00_run_<sector>.R` template checked
+`isTRUE(profile_DW_Production)`. The DW-Production profile
+(`profile_DW-Production.R`) does not set `profile_DW_Production`, so
+the generated script errored at the sentinel check even after the
 profile was sourced successfully.
 
-The new default for `profile_name` is `"projectFolder"` (the absolute
-repo path the DW-Production profile sets). The check is also relaxed
-from `isTRUE(<name>)` to `!is.null(<name>)`, accepting any non-null
-value — character paths, numeric values, or boolean sentinels all
-satisfy the check.
+The check is now relaxed from `isTRUE(<name>)` to `!is.null(<name>)`,
+which accepts any non-null value — character paths, numeric values,
+or the boolean sentinel that `create_profile("DW-Production")` emits
+(`profile_DW_Production <- TRUE`). The default `profile_name` stays at
+`"profile_DW_Production"` so the documented scaffold flow
+(`create_profile()` → `create_dw_sector_script()`) works out of the
+box without additional configuration.
 
-Custom-named sentinels still work: pass `profile_name = "your_var"` to
-`create_sector_script()` / `create_dw_sector_script()`. The new error
-message also names the variable that's missing, so future
-profile-vs-template mismatches surface a concrete fix.
+The new error message names the missing variable so future
+profile-vs-template mismatches surface a concrete fix. The roxygen
+`@param` doc also clarifies that the generated template uses
+`projectFolder` directly for input/output paths, so the profile MUST
+set `projectFolder` for the runner to do useful work — the sentinel
+check only confirms the profile was sourced.
+
+For DW-Production consumers (whose existing `profile_DW-Production.R`
+doesn't set the sentinel), the one-line `profile_DW_Production <- TRUE`
+must be added to the profile. Tracked as a separate DW-Production-side
+follow-up PR.
 
 #### `dw_`-prefixed canonical aliases for the two touched exports
 
