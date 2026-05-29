@@ -1498,7 +1498,7 @@ dw_use <- function(path = NULL,
 #' }
 #'
 #' @seealso [dw_use()] for the consumer that reads `dw_url_allowlist`.
-#' @family url-freeze
+#' @family io
 #' @export
 dw_default_unicef_allowlist <- function() {
 	c(
