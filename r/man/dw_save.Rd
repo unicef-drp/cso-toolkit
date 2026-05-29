@@ -13,7 +13,8 @@ dw_save(
   isid = NULL,
   metadata = NULL,
   compress = FALSE,
-  overwrite = FALSE,
+  dialect = c("fwrite", "base"),
+  overwrite = NULL,
   provenance = TRUE,
   vintage = NULL,
   allow_canonical_write = FALSE,
@@ -44,10 +45,30 @@ run before the write.}
 \item{compress}{Logical. For `.csv` / `.tsv` / `.txt`, when `TRUE` the
 path is suffixed with `.gz` and `fwrite(compress = "gzip")` is used.}
 
-\item{overwrite}{Logical. When `FALSE` (the v0.4.0 default; was
-`TRUE` in v0.3.0 -- this is the only source-incompatible change),
-`dw_save()` stops if ANY of the three destinations (primary, Teams
-mirror, Z: mirror) already exists. Pass `TRUE` to replace existing
+\item{dialect}{Character. Writer dialect for `.csv` / `.tsv` / `.txt`:
+- `"fwrite"` (default) -- `data.table::fwrite` path: fast,
+  `row.names = FALSE`, configurable separator/na.
+- `"base"` -- `utils::write.table(..., col.names = NA, qmethod =
+  "double")` with the dispatched separator. For `.csv` this is
+  byte-identical to `utils::write.csv(x, file = path)` (which is
+  itself a wrapper around `write.table` with the same args);
+  restored in v0.4.1 for backward compatibility with sector
+  scripts that rely on legacy CSV byte output. For `.tsv` /
+  `.txt`, produces correct tab-separated output with the same
+  row.names / quoted-string defaults (rather than silent
+  CSV-formatted content with a TSV extension; the v0.4.1
+  implementation called `write.csv()` directly and so hardcoded
+  comma -- fixed in v0.4.2). Incompatible with `compress = TRUE`
+  (gzip is fwrite-only; raises an explanatory error).}
+
+\item{overwrite}{Logical or `NULL` (sentinel). When `NULL` (the
+v0.4.1 default), the value resolves to `TRUE` in reviewer mode
+(scratch writes under the local sandbox are safe to re-run) and
+`FALSE` in producer mode (must be explicit; re-runs against the
+canonical deposit require deliberate overwrite confirmation). When
+explicitly set, the check examines ALL destinations that will
+actually be written (primary, Teams mirror, Z: mirror); `dw_save()`
+stops if any of them already exists. Pass `TRUE` to replace existing
 deposits.}
 
 \item{provenance}{Logical. Whether to write the `.provenance.json`
@@ -107,11 +128,16 @@ successful producer write fans out redundantly to BOTH mirrors when
 both are configured.
 }
 
-**Overwrite gate (v0.4.0; breaking)** -- `overwrite = FALSE` is the new
-default. The check examines ALL destinations that will actually be
-written (primary, Teams mirror, Z: mirror); `dw_save()` stops if any of
-them already exists. Pass `overwrite = TRUE` to restore v0.3.0
-behaviour.
+**Overwrite gate (v0.4.0 strict, v0.4.1 mode-aware)** -- `overwrite =
+NULL` is the new default sentinel: it resolves to `TRUE` in reviewer
+mode (scratch writes are safe to re-run; the local repo sandbox under
+`013_wrkdata/_local/` is gitignored) and `FALSE` in producer mode
+(must be explicit; re-runs against the canonical deposit require
+deliberate overwrite confirmation). When explicitly set to `FALSE`,
+the check examines ALL destinations that will actually be written
+(primary, Teams mirror, Z: mirror); `dw_save()` stops if any of them
+already exists. Pass `overwrite = TRUE` to restore the unconditional
+v0.3.0 behaviour.
 
 **Mirror behaviour (v0.4.0)** -- automatic and paired. In producer
 mode, each successful primary write is carbon-copied to its derived
@@ -150,6 +176,7 @@ uniqueness check; [dw_verify_z()] for the Z: mirror integrity check;
 
 Other io: 
 \code{\link{dw_compare}()},
+\code{\link{dw_default_unicef_allowlist}()},
 \code{\link{dw_is_canonical}()},
 \code{\link{dw_isid}()},
 \code{\link{dw_merge}()},

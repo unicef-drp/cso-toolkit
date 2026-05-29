@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------
 # 00_functions/dw_io.R
-# Toolkit version: 0.4.0
+# Toolkit version: 0.4.4
 # Purpose: Uniform read/write helpers for DW-Production R scripts.
 # Auto-dispatch by file extension; supports every IO form the
 # sector scripts currently use; enforces the reviewer/producer
@@ -251,7 +251,7 @@ dw_is_canonical <- function(path) {
 #' rely on a v0.4.0+ contract (e.g. network-first reviewer reads,
 #' mirror-to-both producer writes).
 #'
-#' @return Character. Currently `"0.4.0"`.
+#' @return Character. Currently `"0.4.4"`.
 #'
 #' @examples
 #' if (utils::compareVersion(dw_toolkit_version(), "0.4.0") < 0) {
@@ -263,7 +263,7 @@ dw_is_canonical <- function(path) {
 #' @family io
 #' @export
 dw_toolkit_version <- function() {
-	"0.4.0"
+	"0.4.4"
 }
 
 # ============================================================================
@@ -625,11 +625,16 @@ dw_isid <- function(df, keys, where = "<unknown>") {
 #' both are configured.
 #' }
 #'
-#' **Overwrite gate (v0.4.0; breaking)** -- `overwrite = FALSE` is the new
-#' default. The check examines ALL destinations that will actually be
-#' written (primary, Teams mirror, Z: mirror); `dw_save()` stops if any of
-#' them already exists. Pass `overwrite = TRUE` to restore v0.3.0
-#' behaviour.
+#' **Overwrite gate (v0.4.0 strict, v0.4.1 mode-aware)** -- `overwrite =
+#' NULL` is the new default sentinel: it resolves to `TRUE` in reviewer
+#' mode (scratch writes are safe to re-run; the local repo sandbox under
+#' `013_wrkdata/_local/` is gitignored) and `FALSE` in producer mode
+#' (must be explicit; re-runs against the canonical deposit require
+#' deliberate overwrite confirmation). When explicitly set to `FALSE`,
+#' the check examines ALL destinations that will actually be written
+#' (primary, Teams mirror, Z: mirror); `dw_save()` stops if any of them
+#' already exists. Pass `overwrite = TRUE` to restore the unconditional
+#' v0.3.0 behaviour.
 #'
 #' **Mirror behaviour (v0.4.0)** -- automatic and paired. In producer
 #' mode, each successful primary write is carbon-copied to its derived
@@ -663,10 +668,29 @@ dw_isid <- function(df, keys, where = "<unknown>") {
 #' (title, abstract, producer, sources, contact, vintage, ...).
 #' @param compress Logical. For `.csv` / `.tsv` / `.txt`, when `TRUE` the
 #' path is suffixed with `.gz` and `fwrite(compress = "gzip")` is used.
-#' @param overwrite Logical. When `FALSE` (the v0.4.0 default; was
-#' `TRUE` in v0.3.0 -- this is the only source-incompatible change),
-#' `dw_save()` stops if ANY of the three destinations (primary, Teams
-#' mirror, Z: mirror) already exists. Pass `TRUE` to replace existing
+#' @param dialect Character. Writer dialect for `.csv` / `.tsv` / `.txt`:
+#'   - `"fwrite"` (default) -- `data.table::fwrite` path: fast,
+#'     `row.names = FALSE`, configurable separator/na.
+#'   - `"base"` -- `utils::write.table(..., col.names = NA, qmethod =
+#'     "double")` with the dispatched separator. For `.csv` this is
+#'     byte-identical to `utils::write.csv(x, file = path)` (which is
+#'     itself a wrapper around `write.table` with the same args);
+#'     restored in v0.4.1 for backward compatibility with sector
+#'     scripts that rely on legacy CSV byte output. For `.tsv` /
+#'     `.txt`, produces correct tab-separated output with the same
+#'     row.names / quoted-string defaults (rather than silent
+#'     CSV-formatted content with a TSV extension; the v0.4.1
+#'     implementation called `write.csv()` directly and so hardcoded
+#'     comma -- fixed in v0.4.2). Incompatible with `compress = TRUE`
+#'     (gzip is fwrite-only; raises an explanatory error).
+#' @param overwrite Logical or `NULL` (sentinel). When `NULL` (the
+#' v0.4.1 default), the value resolves to `TRUE` in reviewer mode
+#' (scratch writes under the local sandbox are safe to re-run) and
+#' `FALSE` in producer mode (must be explicit; re-runs against the
+#' canonical deposit require deliberate overwrite confirmation). When
+#' explicitly set, the check examines ALL destinations that will
+#' actually be written (primary, Teams mirror, Z: mirror); `dw_save()`
+#' stops if any of them already exists. Pass `TRUE` to replace existing
 #' deposits.
 #' @param provenance Logical. Whether to write the `.provenance.json`
 #' sidecar. Default `TRUE` (skipped for `.RData` / `.rda`).
@@ -706,13 +730,15 @@ dw_save <- function(x,
  isid = NULL,
  metadata = NULL,
  compress = FALSE,
- overwrite = FALSE,
+ dialect = c("fwrite", "base"),
+ overwrite = NULL,
  provenance = TRUE,
  vintage = NULL,
  allow_canonical_write = FALSE,
  ...) {
 
 	kind <- match.arg(kind)
+	dialect <- match.arg(dialect)
 	dots <- list(...)
 
 	# v0.4.0 deprecation: `mirror_to_z` is no longer a per-call flag.
@@ -742,6 +768,24 @@ dw_save <- function(x,
 	is_canon <- dw_is_canonical(path)
 	is_reviewer <- isTRUE(.try_get("dw_mode") == "reviewer")
 	is_producer <- isTRUE(.try_get("dw_mode") == "producer")
+
+	# === Lenient overwrite default (v0.4.1) ===
+	# Resolve the `overwrite = NULL` sentinel based on mode:
+	#   reviewer mode -> TRUE  (scratch writes are safe to re-run; the local
+	#                          repo sandbox under <wrk>/_local/ is gitignored
+	#                          and easy to nuke + re-run by design)
+	#   producer mode -> FALSE (must be explicit; re-runs against the canonical
+	#                          deposit require deliberate overwrite confirmation)
+	#   mode unset    -> FALSE (safe default; matches v0.4.0 strict for
+	#                          backward compat when dw_mode is not set)
+	#
+	# Background: v0.4.0 shipped with `overwrite = FALSE` uniform across both
+	# modes (strict). Reviewer-mode pipelines hit this on every re-run of
+	# scratch outputs, which is friction without safety benefit. v0.4.1
+	# relaxes only the reviewer side.
+	if (is.null(overwrite)) {
+		overwrite <- isTRUE(is_reviewer)
+	}
 
 	# === Reviewer-mode write guard (v0.4.0: broadened) ===
 	# Refuse any write whose primary path lands under a canonical root OR
@@ -832,9 +876,12 @@ dw_save <- function(x,
 	fmt_for_dispatch <- tolower(tools::file_ext(sub("\\.gz$", "", path,
 	 ignore.case = TRUE)))
 	switch(fmt_for_dispatch,
-		csv = .write_csv(x, tmp_path, sep = ",", compress = compress, ...),
-		tsv = .write_csv(x, tmp_path, sep = "\t", compress = compress, ...),
-		txt = .write_csv(x, tmp_path, sep = "\t", compress = compress, ...),
+		csv = .write_csv(x, tmp_path, sep = ",",  compress = compress,
+		                 dialect = dialect, ...),
+		tsv = .write_csv(x, tmp_path, sep = "\t", compress = compress,
+		                 dialect = dialect, ...),
+		txt = .write_csv(x, tmp_path, sep = "\t", compress = compress,
+		                 dialect = dialect, ...),
 		xlsx = .write_xlsx(x, tmp_path, ...),
 		rds = saveRDS(x, file = tmp_path, ...),
 		rdata = .write_rdata(x, tmp_path, ...),
@@ -931,8 +978,64 @@ dw_save <- function(x,
 #'
 #' @keywords internal
 #' @noRd
-.write_csv <- function(x, path, sep = ",", na = "", row.names = FALSE,
- compress = FALSE, ...) {
+.write_csv <- function(x, path, sep = ",", na = "",
+ compress = FALSE, dialect = "fwrite", ...) {
+	# Note: `row.names` is intentionally NOT a named parameter here, so
+	# that callers passing it via dw_save(..., row.names = TRUE) flow it
+	# through `...` to data.table::fwrite (which honours it). Prior to
+	# v0.4.2 row.names = FALSE was declared in the signature but never
+	# plumbed to either writer, so the argument was silently ignored
+	# (Copilot finding on PR #29). For the "base" dialect the call uses
+	# the underlying write.table default (row.names = TRUE) which
+	# preserves byte-parity with utils::write.csv().
+	# v0.4.1 restore + v0.4.2 separator fix.
+	#
+	# v0.4.1 restored the `dialect` parameter that v0.4.0 silently dropped,
+	# so callers depending on byte-parity with legacy utils::write.csv()
+	# could keep that contract.
+	#
+	# v0.4.2 fixes a Copilot-flagged silent-CSV bug: v0.4.1's dialect="base"
+	# branch called `utils::write.csv(x, file = path)`, which hardcodes a
+	# comma separator. That meant `dw_save(x, "out.tsv", dialect = "base")`
+	# silently produced CSV-formatted content with a .tsv extension.
+	#
+	# Fix: dispatch dialect="base" through utils::write.table() with the
+	# caller's `sep`. write.csv is itself a wrapper around
+	# write.table(..., sep = ",", col.names = NA, qmethod = "double"), so:
+	#   - For .csv (sep = ",") the byte output is identical to write.csv()
+	#     -- byte-parity guarantee preserved for callers that rely on it.
+	#   - For .tsv / .txt (sep = "\t") the file contains correct tab
+	#     separators with the same row.names / quoted-string defaults.
+	if (identical(dialect, "base")) {
+		if (isTRUE(compress)) {
+			stop(
+				"[cso_toolkit.dw_save] dialect = 'base' is incompatible ",
+				"with compress = TRUE: utils::write.table() cannot gzip its ",
+				"output, only data.table::fwrite() can.\n",
+				" Fix:\n",
+				"   1. Drop `compress = TRUE` to keep the base / write.csv ",
+				"byte-parity contract, OR\n",
+				"   2. Drop `dialect = \"base\"` (or set it to \"fwrite\") ",
+				"to use the data.table::fwrite path with gzip support.",
+				call. = FALSE
+			)
+		}
+		return(utils::write.table(x, file = path,
+		                          sep = sep,
+		                          col.names = NA,
+		                          qmethod = "double"))
+	}
+	if (!identical(dialect, "fwrite")) {
+		stop(
+			"[cso_toolkit.dw_save] dialect = '", dialect, "' is not ",
+			"recognised.\n",
+			" Fix: pass `dialect = \"fwrite\"` (default; data.table::fwrite) ",
+			"or `dialect = \"base\"` (utils::write.table with col.names = NA + ",
+			"qmethod = \"double\"; byte-parity with utils::write.csv() for ",
+			".csv, correct tab-separated output for .tsv / .txt).",
+			call. = FALSE
+		)
+	}
 	.require("data.table")
 	args <- list(x = x, file = path, sep = sep, na = na, ...)
 	if (isTRUE(compress)) args$compress <- "gzip"
@@ -1098,6 +1201,15 @@ dw_save <- function(x,
 #' @param kind Character. One of `"wrk"`, `"raw"`, `"meta"`. Default `"wrk"`.
 #' @param cols Character vector. Optional column subset (for `.csv`, `.tsv`,
 #' `.xlsx`, `.dta`, `.parquet`).
+#' @param cols_lenient Logical. Default `FALSE`. When `TRUE` and `cols` is a
+#' non-NULL character vector, dw_use introspects the file schema cheaply
+#' (parquet metadata, dta header, csv / tsv / xlsx zero-row read) and
+#' intersects `cols` with the file's actual columns before the data read.
+#' Use this to replicate the `dplyr::any_of()` "only-if-present" intent
+#' without calling `any_of()` outside a tidyselect context (which errors
+#' fatally in tidyselect >= 1.2.0). When the intersection is empty, dw_use
+#' falls back to reading all columns and emits a warning. Supported
+#' formats: `csv`, `tsv`, `txt`, `xlsx`, `dta`, `parquet`.
 #' @param as Character. Return type: `"tibble"` (default), `"data.frame"`,
 #' or `"data.table"`.
 #' @param fallback_canonical Logical. Default `TRUE`.
@@ -1118,7 +1230,22 @@ dw_save <- function(x,
 #'
 #' @examples
 #' \dontrun{
+#' # Default: read everything
 #' warehouse <- dw_use(name = "dw_ed_edu.csv", sector = "ed", kind = "wrk")
+#'
+#' # Strict column subset (v0.4.3+: parquet / dta now correctly pass through
+#' # to all columns when `cols` is NULL; explicit `cols` still errors if a
+#' # requested name is missing from the file's schema).
+#' df <- dw_use(name = "dw_ed_edu.csv", sector = "ed", kind = "wrk",
+#'              cols = c("REF_AREA", "OBS_VALUE"))
+#'
+#' # Lenient column subset (v0.4.3+): intersect the request with the file's
+#' # actual schema before the read. Use this instead of
+#' # `cols = dplyr::any_of(c(...))` -- `any_of()` errors at the top level
+#' # under tidyselect >= 1.2.0.
+#' df <- dw_use(name = "dw_nut_country_series.parquet", sector = "nt",
+#'              cols = c("REF_AREA", "INDICATOR", "MAYBE_PRESENT_COL"),
+#'              cols_lenient = TRUE)
 #' }
 #' @seealso [dw_save()] for the write counterpart; [dw_verify_z()] for
 #' the underlying integrity check.
@@ -1128,6 +1255,7 @@ dw_use <- function(path = NULL,
  name = NULL, sector = NULL,
  kind = c("wrk", "raw", "meta"),
  cols = NULL,
+ cols_lenient = FALSE,
  as = c("tibble", "data.frame", "data.table"),
  fallback_canonical = TRUE,
  verify_z = TRUE,
@@ -1155,6 +1283,28 @@ dw_use <- function(path = NULL,
 	}
 
 	fmt <- tolower(tools::file_ext(sub("\\.gz$", "", resolved, ignore.case = TRUE)))
+
+	# v0.4.3+ lenient-cols: pre-intersect cols with the actual file schema so
+	# callers can replicate the `dplyr::any_of()` "only-if-present" intent
+	# without invoking tidyselect helpers outside a selecting context (which
+	# error fatally under tidyselect >= 1.2.0). Schema introspection is
+	# format-specific and reads metadata only -- not the data payload.
+	if (isTRUE(cols_lenient) && !is.null(cols) && length(cols) > 0) {
+		schema_names <- .dw_schema_cols(resolved, fmt)
+		if (!is.null(schema_names)) {
+			kept <- intersect(cols, schema_names)
+			if (length(kept) == 0) {
+				warning(sprintf(
+					"[cso_toolkit.dw_use] cols_lenient = TRUE: none of the requested cols matched the file schema for %s (requested %d; schema has %d). Reading all columns.",
+					basename(resolved), length(cols), length(schema_names)
+				), call. = FALSE)
+				cols <- NULL
+			} else {
+				cols <- kept
+			}
+		}
+	}
+
 	x <- switch(fmt,
 		csv = .read_csv(resolved, sep = ",", cols = cols, ...),
 		tsv = .read_csv(resolved, sep = "\t", cols = cols, ...),
@@ -1163,8 +1313,16 @@ dw_use <- function(path = NULL,
 		rds = readRDS(resolved, ...),
 		rdata = .read_rdata(resolved, ...),
 		"rda" = .read_rdata(resolved, ...),
-		dta = { .require("haven"); haven::read_dta(resolved, col_select = cols, ...) },
-		parquet = { .require("arrow"); arrow::read_parquet(resolved, col_select = cols, ...) },
+		dta = {
+			.require("haven")
+			if (is.null(cols)) haven::read_dta(resolved, ...)
+			else                haven::read_dta(resolved, col_select = cols, ...)
+		},
+		parquet = {
+			.require("arrow")
+			if (is.null(cols)) arrow::read_parquet(resolved, ...)
+			else                arrow::read_parquet(resolved, col_select = cols, ...)
+		},
 		json = { .require("jsonlite"); jsonlite::read_json(resolved, ...) },
 		yml = { .require("yaml"); yaml::read_yaml(resolved, ...) },
 		yaml = { .require("yaml"); yaml::read_yaml(resolved, ...) },
@@ -1201,6 +1359,61 @@ dw_use <- function(path = NULL,
 	 select = cols, showProgress = FALSE, ...)
 }
 
+#' Cheap schema-only introspection for the `cols_lenient` path in dw_use
+#'
+#' Returns a character vector of column names by reading only the file
+#' metadata / header -- never the data payload. Returns `NULL` when the
+#' format does not support cheap schema introspection (the caller then
+#' skips lenient intersection and passes cols through unchanged).
+#'
+#' Format dispatch:
+#' \itemize{
+#'   \item `parquet`: `arrow::open_dataset(path)$schema$names` (metadata-only; avoids loading the data payload)
+#'   \item `csv` / `tsv` / `txt`: `data.table::fread(path, nrows = 0)` header read
+#'   \item `dta`: `haven::read_dta(path, n_max = 0)` header read
+#'   \item `xlsx`: `readxl::read_xlsx(path, n_max = 0)` header read
+#'   \item other: `NULL` (no introspection)
+#' }
+#'
+#' @keywords internal
+#' @noRd
+.dw_schema_cols <- function(path, fmt) {
+	tryCatch(
+		switch(fmt,
+			parquet = {
+				.require("arrow")
+				# Metadata-only read; avoids loading the data payload for
+				# large parquet files (594K-row CMRS series, etc.).
+				arrow::open_dataset(path)$schema$names
+			},
+			csv = ,
+			tsv = ,
+			txt = {
+				.require("data.table")
+				sep <- if (identical(fmt, "csv")) "," else "\t"
+				names(data.table::fread(input = path, sep = sep,
+				                        nrows = 0, showProgress = FALSE))
+			},
+			dta = {
+				.require("haven")
+				names(haven::read_dta(path, n_max = 0))
+			},
+			xlsx = {
+				.require("readxl")
+				names(readxl::read_xlsx(path, n_max = 0))
+			},
+			NULL
+		),
+		error = function(e) {
+			warning(sprintf(
+				"[cso_toolkit.dw_use] cols_lenient schema introspect failed for %s (%s): %s. Skipping lenient intersection.",
+				basename(path), fmt, conditionMessage(e)
+			), call. = FALSE)
+			NULL
+		}
+	)
+}
+
 #' XLSX reader (readxl::read_xlsx wrapper)
 #'
 #' @param path Character. Input path.
@@ -1234,19 +1447,13 @@ dw_use <- function(path = NULL,
 	as.list(env)
 }
 
-#' Resolve a read path, falling back to canonical roots when missing
-#'
-#' Internal. If the literal `path` does not exist, attempts to substitute
-#' the sandbox roots (`teamsRawData`, `teamsWrkData`, `teamsFolder`) with
-#' their `*Canonical` counterparts so reviewer-mode reads can still find
-#' the deposit.
-#'
-#' @param path Character. Literal path that may not exist.
-#' @param fallback_canonical Logical. When `FALSE`, stop immediately on a
-#' missing literal path instead of trying canonical.
-#'
-#' @return Character. A path that exists.
-#'
+# Note: the canonical-fallback resolver group (`.resolve_for_read*`)
+# is documented inline at each function's own block below (lines 1700+).
+# An older orphan docstring used to sit here for a now-merged helper;
+# removed in v0.4.4 (PR #41) because roxygenise() was attaching it to
+# the next exported function in source order
+# (`dw_default_unicef_allowlist`).
+
 # ============================================================================
 # Remote-URL freeze (B1 from DW-Production alignment audit, 2026-05-25)
 #
@@ -1258,6 +1465,47 @@ dw_use <- function(path = NULL,
 # that haven't been frozen by a producer yet, mirroring the existing
 # no-API contract.
 # ============================================================================
+
+#' Standard URL-allowlist patterns for UNICEF-owned reference data
+#'
+#' Returns a character vector of `^...`-anchored regex patterns covering
+#' UNICEF DRP GitHub-raw and repository URLs. Consumers seed
+#' `dw_url_allowlist` from this constant instead of re-deriving the
+#' patterns per project. Extend with project-specific patterns via
+#' `c(dw_default_unicef_allowlist(), ...)`.
+#'
+#' Surfaced empirically by the DW-Production reviewer-mode audit on
+#' 2026-05-28 (IM `01_immunization.R`): every URL-using sector script
+#' was hand-writing the same `^https://raw\\.githubusercontent\\.com/unicef-drp/`
+#' pattern. The helper consolidates the duplication and lets future
+#' UNICEF-DRP additions land in one place upstream rather than in each
+#' consumer's profile.
+#'
+#' The helper is purely additive: consumers must opt in by composing
+#' it into their `dw_url_allowlist` (the URL-freeze safety contract is
+#' unchanged — no URL is fetchable without explicit ratification).
+#'
+#' @return Character vector of regex patterns.
+#'
+#' @examples
+#' \dontrun{
+#' # In profile_<consumer>.R, seed the allowlist from the helper:
+#' dw_url_allowlist <- c(
+#'   dw_default_unicef_allowlist(),
+#'   # Project-specific extras (org-controlled raw / SDMX endpoints, ...):
+#'   "^https://yourorg\\.github\\.io/"
+#' )
+#' }
+#'
+#' @seealso [dw_use()] for the consumer that reads `dw_url_allowlist`.
+#' @family io
+#' @export
+dw_default_unicef_allowlist <- function() {
+	c(
+		"^https://raw\\.githubusercontent\\.com/unicef-drp/",
+		"^https://github\\.com/unicef-drp/"
+	)
+}
 
 #' Is the URL allowlisted for remote-URL freeze?
 #'
@@ -1284,14 +1532,69 @@ dw_use <- function(path = NULL,
 #' 2. `<githubFolder>/_frozen` if `githubFolder` is set;
 #' 3. `<getwd()>/_frozen`.
 #'
+#' @return Character path to the frozen-cache root.
 #' @keywords internal
 #' @noRd
 .dw_frozen_root <- function() {
+	.dw_frozen_root_resolved()$path
+}
+
+#' Frozen-cache root with resolution-source tag (v0.4.4+)
+#'
+#' Same logic as `.dw_frozen_root()` but returns a 2-element list:
+#' \itemize{
+#'   \item `$path` - the resolved filesystem path
+#'   \item `$source` - which tier of the resolution chain fired:
+#'     `"dw_frozen_root"` (#1, opt-in), `"githubFolder"` (#2, fallback),
+#'     `"getwd"` (#3, last-resort fallback)
+#' }
+#' Used by `.resolve_remote_url()` to surface the chosen tier in the
+#' missing-frozen-copy error envelope, so consumers can diagnose
+#' resolution mismatches without grepping the toolkit source.
+#'
+#' @keywords internal
+#' @noRd
+.dw_frozen_root_resolved <- function() {
 	root <- .try_get("dw_frozen_root")
-	if (!is.na(root) && nzchar(root)) return(root)
+	if (!is.na(root) && nzchar(root)) {
+		return(list(path = root, source = "dw_frozen_root"))
+	}
 	gh <- .try_get("githubFolder")
-	if (!is.na(gh) && nzchar(gh)) return(file.path(gh, "_frozen"))
-	file.path(getwd(), "_frozen")
+	if (!is.na(gh) && nzchar(gh)) {
+		return(list(path = file.path(gh, "_frozen"),
+		            source = "githubFolder"))
+	}
+	list(path = file.path(getwd(), "_frozen"), source = "getwd")
+}
+
+#' Warn once per session when `.dw_frozen_root()` falls back beyond tier #1
+#'
+#' Emits a `message()` on the first remote-URL resolution when the
+#' `dw_frozen_root` global is unset and the helper falls back to
+#' `<githubFolder>/_frozen` (tier #2). Emits a `warning()` on fall-
+#' back to `<getwd()>/_frozen` (tier #3) since that path is much less
+#' stable across consumer configurations. The notice is gated by a
+#' session-local sentinel so it fires only once per R session.
+#'
+#' Consumers that explicitly set `dw_frozen_root` (tier #1) get no
+#' notice (they've opted in).
+#'
+#' @keywords internal
+#' @noRd
+.dw_frozen_root_notify_once <- function(resolved) {
+	if (identical(resolved$source, "dw_frozen_root")) return(invisible(NULL))
+	sentinel <- ".__cso_toolkit_frozen_root_notified__"
+	if (isTRUE(.try_get(sentinel))) return(invisible(NULL))
+	assign(sentinel, TRUE, envir = .GlobalEnv)
+	msg <- sprintf(
+		"[dw_use:remote] `dw_frozen_root` global not set; falling back to %s ('%s' tier). %s",
+		resolved$path,
+		resolved$source,
+		"Set `dw_frozen_root <- '<path>'` in your profile if this is not the canonical location."
+	)
+	if (identical(resolved$source, "getwd")) warning(msg, call. = FALSE)
+	else                                      message(msg)
+	invisible(NULL)
 }
 
 #' Map a remote URL to its frozen-cache filesystem path
@@ -1365,17 +1668,27 @@ dw_use <- function(path = NULL,
 			url, allow_str
 		), call. = FALSE)
 	}
-	frozen_path <- .url_to_frozen_path(url)
+	resolved <- .dw_frozen_root_resolved()
+	.dw_frozen_root_notify_once(resolved)
+	frozen_path <- file.path(resolved$path, sub("^https?://", "", url))
 	if (file.exists(frozen_path)) {
 		message("[dw_use:remote] Reading frozen: ",
-		 sub(.dw_frozen_root(), "<dw_frozen_root>", frozen_path, fixed = TRUE))
+		 sub(resolved$path, "<dw_frozen_root>", frozen_path, fixed = TRUE))
 		return(frozen_path)
 	}
 	is_reviewer <- isTRUE(.try_get("dw_mode") == "reviewer")
 	if (is_reviewer) {
+		# v0.4.4+: surface the frozen-root resolution tier in the error
+		# envelope so consumers can diagnose path mismatches without
+		# grepping the toolkit source.
+		root_hint <- switch(resolved$source,
+			dw_frozen_root = "explicit `dw_frozen_root` global",
+			githubFolder   = "fallback via `<githubFolder>/_frozen`",
+			getwd          = "fallback via `<getwd()>/_frozen` (least reliable)"
+		)
 		stop(sprintf(
-			"[cso_toolkit.dw_use:remote] Reviewer mode forbids fetching from the network.\n Missing frozen copy: %s\n URL: %s\n Fix: a producer must call dw_use('%s') once and commit the frozen file + sidecar before the reviewer pipeline can read it.",
-			frozen_path, url, url
+			"[cso_toolkit.dw_use:remote] Reviewer mode forbids fetching from the network.\n Missing frozen copy: %s\n URL: %s\n Frozen-root resolution: %s (%s)\n Fix:\n   1. If the path above is wrong, set `dw_frozen_root <- '<your-canonical-frozen-path>'` in your profile.\n   2. Otherwise, a producer must call dw_use('%s') once and commit the frozen file + sidecar before the reviewer pipeline can read it.",
+			frozen_path, url, resolved$path, root_hint, url
 		), call. = FALSE)
 	}
 	.download_and_freeze(url, frozen_path)
