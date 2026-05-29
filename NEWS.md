@@ -3,8 +3,19 @@
 ## Unreleased
 
 _Entries land here as PRs merge into `develop`. When the next release
-is cut, this header is renamed `## v0.4.5 (YYYY-MM-DD)` and a fresh
+is cut, this header is renamed `## v0.4.6 (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
+
+## v0.4.5 (2026-05-29)
+
+Closes the v0.4.5 milestone with two deliverables — standalone-source
+`%>%` binding (issue [#46](https://github.com/unicef-drp/cso-toolkit/issues/46),
+PR [#47](https://github.com/unicef-drp/cso-toolkit/pull/47)) and 8 new
+`dw_`-prefixed aliases (issue [#42](https://github.com/unicef-drp/cso-toolkit/issues/42),
+PR [#48](https://github.com/unicef-drp/cso-toolkit/pull/48)). A companion
+declaration of `magrittr` as a first-class Import (with `importFrom`
+in NAMESPACE) makes the dependency surface honest. No public API
+breaks; both names remain exported throughout v0.4.x.
 
 ### Standalone-source `%>%` binding (issue [#46](https://github.com/unicef-drp/cso-toolkit/issues/46))
 
@@ -26,15 +37,6 @@ Also corrected a misleading comment in `zzz.R::globalVariables` that referred to
 
 Surfaced empirically by Copilot review of DW-Production PR [#144](https://github.com/unicef-drp/DW-Production/pull/144) (WS v0.4.4 install) on 2026-05-29; Copilot review of cso-toolkit PR [#47](https://github.com/unicef-drp/cso-toolkit/pull/47) then flagged that the comment claims about NAMESPACE were aspirational, prompting the principled `magrittr` import declaration.
 
-
-
-_v0.5.0 will land the live `dw_publish()` submission branch (issue
-[#15](https://github.com/unicef-drp/cso-toolkit/issues/15)) and the
-`dw_regions()` API redesign against the Country-and-Region-Metadata-API
-package (issue [#40](https://github.com/unicef-drp/cso-toolkit/issues/40))
-once sector leads finalise the Helix endpoint contract and the regions
-API output schema._
-
 ### `dw_`-prefixed canonical aliases for the remaining un-prefixed exports (issue [#42](https://github.com/unicef-drp/cso-toolkit/issues/42))
 
 v0.4.4 added `dw_` aliases for `aggregate_data_v2` and `create_sector_script` (the two exports touched by #36). v0.4.5 extends the program to the remaining 8 un-prefixed exports so the toolkit's public surface consistently uses the `dw_` namespace:
@@ -55,6 +57,15 @@ Both names continue to work and share the same `\link{}` man page via roxygen `@
 `create_dw_sector_script` was intentionally NOT aliased: it already carries a `dw` infix (it's a DW-Production-specific wrapper of `create_sector_script`), and `create_sector_script` got `dw_create_sector_script` in v0.4.4 anyway. The dual-naming is historical and won't be cleaned up under #42.
 
 The `test_scripts` → `dw_test_scripts` alias also got a roxygen note: a future v0.5.x rename to `dw_audit_scripts` (to surface the audit intent and avoid the testthat-name collision) is on the design horizon. For now the prefix-only alias keeps the cleanup additive.
+
+### Forward look
+
+_v0.5.0 will land the live `dw_publish()` submission branch (issue
+[#15](https://github.com/unicef-drp/cso-toolkit/issues/15)) and the
+`dw_regions()` API redesign against the Country-and-Region-Metadata-API
+package (issue [#40](https://github.com/unicef-drp/cso-toolkit/issues/40))
+once sector leads finalise the Helix endpoint contract and the regions
+API output schema._
 
 ## v0.4.4 (2026-05-29)
 
