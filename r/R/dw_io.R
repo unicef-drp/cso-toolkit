@@ -1447,19 +1447,13 @@ dw_use <- function(path = NULL,
 	as.list(env)
 }
 
-#' Resolve a read path, falling back to canonical roots when missing
-#'
-#' Internal. If the literal `path` does not exist, attempts to substitute
-#' the sandbox roots (`teamsRawData`, `teamsWrkData`, `teamsFolder`) with
-#' their `*Canonical` counterparts so reviewer-mode reads can still find
-#' the deposit.
-#'
-#' @param path Character. Literal path that may not exist.
-#' @param fallback_canonical Logical. When `FALSE`, stop immediately on a
-#' missing literal path instead of trying canonical.
-#'
-#' @return Character. A path that exists.
-#'
+# Note: the canonical-fallback resolver group (`.resolve_for_read*`)
+# is documented inline at each function's own block below (lines 1700+).
+# An older orphan docstring used to sit here for a now-merged helper;
+# removed in v0.4.4 (PR #41) because roxygenise() was attaching it to
+# the next exported function in source order
+# (`dw_default_unicef_allowlist`).
+
 # ============================================================================
 # Remote-URL freeze (B1 from DW-Production alignment audit, 2026-05-25)
 #
@@ -1471,6 +1465,47 @@ dw_use <- function(path = NULL,
 # that haven't been frozen by a producer yet, mirroring the existing
 # no-API contract.
 # ============================================================================
+
+#' Standard URL-allowlist patterns for UNICEF-owned reference data
+#'
+#' Returns a character vector of `^...`-anchored regex patterns covering
+#' UNICEF DRP GitHub-raw and repository URLs. Consumers seed
+#' `dw_url_allowlist` from this constant instead of re-deriving the
+#' patterns per project. Extend with project-specific patterns via
+#' `c(dw_default_unicef_allowlist(), ...)`.
+#'
+#' Surfaced empirically by the DW-Production reviewer-mode audit on
+#' 2026-05-28 (IM `01_immunization.R`): every URL-using sector script
+#' was hand-writing the same `^https://raw\\.githubusercontent\\.com/unicef-drp/`
+#' pattern. The helper consolidates the duplication and lets future
+#' UNICEF-DRP additions land in one place upstream rather than in each
+#' consumer's profile.
+#'
+#' The helper is purely additive: consumers must opt in by composing
+#' it into their `dw_url_allowlist` (the URL-freeze safety contract is
+#' unchanged — no URL is fetchable without explicit ratification).
+#'
+#' @return Character vector of regex patterns.
+#'
+#' @examples
+#' \dontrun{
+#' # In profile_<consumer>.R, seed the allowlist from the helper:
+#' dw_url_allowlist <- c(
+#'   dw_default_unicef_allowlist(),
+#'   # Project-specific extras (org-controlled raw / SDMX endpoints, ...):
+#'   "^https://yourorg\\.github\\.io/"
+#' )
+#' }
+#'
+#' @seealso [dw_use()] for the consumer that reads `dw_url_allowlist`.
+#' @family io
+#' @export
+dw_default_unicef_allowlist <- function() {
+	c(
+		"^https://raw\\.githubusercontent\\.com/unicef-drp/",
+		"^https://github\\.com/unicef-drp/"
+	)
+}
 
 #' Is the URL allowlisted for remote-URL freeze?
 #'
