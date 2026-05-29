@@ -23,10 +23,21 @@
 #'   `"."` (current working directory). For DW-Production consumers, see
 #'   [`create_dw_sector_script()`] which passes the canonical
 #'   `"01_dw_prep/012_codes"` layout.
-#' @param profile_name Character. Name of the project profile object the
-#'   generated script will check for. Defaults to
-#'   `"profile_DW_Production"`. Set to the consumer's own profile object
-#'   name if different.
+#' @param profile_name Character. Name of any variable the project's profile
+#'   sets when sourced successfully. The generated script will refuse to
+#'   run until that variable exists. Defaults to `"profile_DW_Production"`
+#'   (matches the boolean sentinel that [create_profile("DW-Production")]
+#'   emits at the end of its scaffold). The check is
+#'   `exists(profile_name) && !is.null(<value>)`, so any non-null
+#'   character / numeric / logical value satisfies it — including
+#'   `TRUE`, an absolute path string, or a sector-specific tag.
+#'
+#'   Note that the generated template ALSO references `projectFolder`
+#'   directly (when building `input_folder` and `output_folder` paths),
+#'   so the profile must define `projectFolder` for the runner to do
+#'   useful work — the sentinel check only confirms the profile was
+#'   sourced. If you change `profile_name`, make sure the profile still
+#'   defines `projectFolder`.
 #' @param profile_file Character. Filename of the project profile the
 #'   generated script will instruct users to source on failure. Defaults to
 #'   `"profile_DW-Production.R"`.
@@ -108,8 +119,8 @@ create_sector_script <- function(sector_name,
     "#=======================#",
     "# 0. Profile Verification",
     "#=======================#",
-    paste0("if (!exists(\"", profile_name, "\") || !isTRUE(", profile_name, ")) {"),
-    paste0("  stop(\"[X] Project profile not loaded. Please source('", profile_file, "') before running this script.\")"),
+    paste0("if (!exists(\"", profile_name, "\") || is.null(", profile_name, ")) {"),
+    paste0("  stop(\"[X] Project profile not loaded (\\\"", profile_name, "\\\" is not set). Please source('", profile_file, "') before running this script.\")"),
     "}",
     "",
     "# Fallback for log_message() if the project profile did not define one.",
@@ -218,3 +229,13 @@ create_dw_sector_script <- function(sector_name,
     overwrite      = overwrite
   )
 }
+
+# =============================================================================
+# v0.4.4 — dw_-prefixed canonical alias (issue #36)
+# =============================================================================
+# See aggregate_data_v2.R tail for the rationale + the follow-up issue
+# that tracks the rest of the un-prefixed exports.
+
+#' @rdname create_sector_script
+#' @export
+dw_create_sector_script <- create_sector_script

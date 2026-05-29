@@ -10,6 +10,66 @@ _v0.5.0 will land the live `dw_publish()` submission branch (issue
 [#15](https://github.com/unicef-drp/cso-toolkit/issues/15)) once
 sector leads finalise the Helix endpoint contract._
 
+### Three carry-forward bugs + `dw_`-prefix aliases (issue [#36](https://github.com/unicef-drp/cso-toolkit/issues/36))
+
+Closes two of the three sub-fixes flagged on #36 during the HVA
+scaffold-install Copilot review on 2026-05-28. The third (a value-arg
+propagation bug in `dw_regions.R`) is moot — `dw_regions` is being
+redesigned to consume the new `unicef-drp/Country-and-Region-Metadata-API`
+package in [#40](https://github.com/unicef-drp/cso-toolkit/issues/40) (v0.5.0); the affected code path is removed.
+
+#### Sub-fix 1: `aggregate_data_v2.R` is now safe to source standalone
+
+Pre-fix, `aggregate_data_v2.R` called `.cso_require()` from `zzz.R`.
+Sourcing `aggregate_data_v2.R` directly (without sourcing `zzz.R`
+first) left `.cso_require` undefined; the first call to
+`aggregate_data_v2(...)` errored with `could not find function .cso_require`.
+
+The file now defines a local fallback for `.cso_require()` at source
+time, gated by `exists(".cso_require", mode = "function", inherits = TRUE)`.
+When `zzz.R` has already been sourced into `.GlobalEnv`, the shared
+helper wins and nothing is redefined; when only `aggregate_data_v2.R`
+is sourced, the local fallback provides the same behaviour.
+
+#### Sub-fix 2: `create_sector_script()` profile sentinel check relaxed (and aligned with `create_profile()`)
+
+Pre-fix, the generated `00_run_<sector>.R` template checked
+`isTRUE(profile_DW_Production)`. The DW-Production profile
+(`profile_DW-Production.R`) does not set `profile_DW_Production`, so
+the generated script errored at the sentinel check even after the
+profile was sourced successfully.
+
+The check is now relaxed from `isTRUE(<name>)` to `!is.null(<name>)`,
+which accepts any non-null value — character paths, numeric values,
+or the boolean sentinel that `create_profile("DW-Production")` emits
+(`profile_DW_Production <- TRUE`). The default `profile_name` stays at
+`"profile_DW_Production"` so the documented scaffold flow
+(`create_profile()` → `create_dw_sector_script()`) works out of the
+box without additional configuration.
+
+The new error message names the missing variable so future
+profile-vs-template mismatches surface a concrete fix. The roxygen
+`@param` doc also clarifies that the generated template uses
+`projectFolder` directly for input/output paths, so the profile MUST
+set `projectFolder` for the runner to do useful work — the sentinel
+check only confirms the profile was sourced.
+
+For DW-Production consumers (whose existing `profile_DW-Production.R`
+doesn't set the sentinel), the one-line `profile_DW_Production <- TRUE`
+must be added to the profile. Tracked as a separate DW-Production-side
+follow-up PR.
+
+#### `dw_`-prefixed canonical aliases for the two touched exports
+
+Toolkit-export naming consolidates around the `dw_` prefix in v0.4.x;
+the non-prefixed names predate that convention. While in this PR's
+files anyway, added:
+
+- `dw_aggregate_data_v2` (alias for `aggregate_data_v2`)
+- `dw_create_sector_script` (alias for `create_sector_script`)
+
+Both names point to the same function and share the same `\\code{\\link{}}` man page (via roxygen `@rdname`). The non-prefixed names continue to work — no breaking change. Follow-up issue tracks the rest of the un-prefixed exports (`aggregate_data`, `generate_markdown_report`, `apply_time_window`, `generate_agg_footnote`, `create_profile`, `review_profile`, `test_scripts`, `create_dw_sector_script`) as a single cleanup PR.
+
 ### `dw_default_unicef_allowlist()` helper for consumers (issue [#37](https://github.com/unicef-drp/cso-toolkit/issues/37))
 
 New exported helper returns a character vector of `^...`-anchored
