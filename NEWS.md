@@ -6,6 +6,28 @@ _Entries land here as PRs merge into `develop`. When the next release
 is cut, this header is renamed `## v0.4.5 (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
+### Standalone-source `%>%` binding (issue [#46](https://github.com/unicef-drp/cso-toolkit/issues/46))
+
+v0.4.4's #36 fix made `aggregate_data_v2.R` partially safe to source standalone by adding a local `.cso_require()` fallback. But the file still used the unqualified `%>%` operator without a binding — `.cso_require()` calls `requireNamespace()`, which loads but does NOT attach package exports, so `source("aggregate_data_v2.R")` errored at the first pipe call with `Error: could not find function "%>%"` even when magrittr was installed.
+
+Same one-line gate pattern resolves it. Applied to both files that use `%>%` standalone:
+
+```r
+if (!exists("%>%", mode = "function", inherits = TRUE)) {
+  `%>%` <- magrittr::`%>%`
+}
+```
+
+In the installed-package context the local binding is a no-op (NAMESPACE's `importFrom(magrittr, "%>%")` wins). In standalone-source mode the local binding provides the same `%>%` symbol via `magrittr`'s namespace, so consumers don't have to `library(magrittr)` first.
+
+To make this fully honest: `magrittr` is now declared in `DESCRIPTION::Imports` (previously it came in transitively via dplyr), and `zzz.R::.cso_require` carries an `@importFrom magrittr %>%` roxygen tag so `NAMESPACE` gains the explicit `importFrom(magrittr, "%>%")` entry. Both belong to the principled fix: the package's dependency declaration now matches the comments and the test claims about the installed-package no-op path.
+
+Also corrected a misleading comment in `zzz.R::globalVariables` that referred to a non-existent `apply_time_window.R` file (`apply_time_window()` is defined inside `aggregate_data_v2.R`).
+
+Surfaced empirically by Copilot review of DW-Production PR [#144](https://github.com/unicef-drp/DW-Production/pull/144) (WS v0.4.4 install) on 2026-05-29; Copilot review of cso-toolkit PR [#47](https://github.com/unicef-drp/cso-toolkit/pull/47) then flagged that the comment claims about NAMESPACE were aspirational, prompting the principled `magrittr` import declaration.
+
+
+
 _v0.5.0 will land the live `dw_publish()` submission branch (issue
 [#15](https://github.com/unicef-drp/cso-toolkit/issues/15)) and the
 `dw_regions()` API redesign against the Country-and-Region-Metadata-API
