@@ -32,9 +32,17 @@
 
 
 
-aggregate_data <- function(data, value, weight, by, 
-                           global = TRUE, 
-                           method = c("mean", "weighted_mean"), 
+# v0.4.5 (#46): bind `%>%` locally in standalone-source mode. In the
+# installed-package context this is a no-op (NAMESPACE has the
+# importFrom). See the equivalent gate in `aggregate_data_v2.R` for
+# the full rationale.
+if (!exists("%>%", mode = "function", inherits = TRUE)) {
+	`%>%` <- magrittr::`%>%`
+}
+
+aggregate_data <- function(data, value, weight, by,
+                           global = TRUE,
+                           method = c("mean", "weighted_mean"),
                            pop.coverage = FALSE, country.coverage = FALSE) {
   
   # Ensure method is matched to allowed methods

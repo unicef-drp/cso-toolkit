@@ -50,9 +50,13 @@
 #-------------------------------------------------------------------
 
 utils::globalVariables(c(
-	# magrittr pipe used in aggregate_data.R / aggregate_data_v2.R /
-	# apply_time_window.R (these files attach magrittr via .cso_require()
-	# at source-time; CRAN's static analyser cannot see that).
+	# magrittr pipe used in aggregate_data.R, aggregate_data_v2.R,
+	# apply_time_window.R. In the installed-package context the pipe
+	# is bound via NAMESPACE's `importFrom(magrittr, "%>%")`. In
+	# STANDALONE-SOURCE mode (consumers source the .R file directly
+	# without first attaching the package), each of those files now
+	# (v0.4.5+, #46) defines a local `%>%` fallback at source time,
+	# gated by `exists()` so the installed-package path stays a no-op.
 	"%>%",
 
 	# aggregate_data.R
