@@ -35,6 +35,27 @@ package (issue [#40](https://github.com/unicef-drp/cso-toolkit/issues/40))
 once sector leads finalise the Helix endpoint contract and the regions
 API output schema._
 
+### `dw_`-prefixed canonical aliases for the remaining un-prefixed exports (issue [#42](https://github.com/unicef-drp/cso-toolkit/issues/42))
+
+v0.4.4 added `dw_` aliases for `aggregate_data_v2` and `create_sector_script` (the two exports touched by #36). v0.4.5 extends the program to the remaining 8 un-prefixed exports so the toolkit's public surface consistently uses the `dw_` namespace:
+
+| Un-prefixed | `dw_`-prefixed alias |
+|---|---|
+| `aggregate_data` | `dw_aggregate_data` |
+| `generate_agg_footnote` | `dw_generate_agg_footnote` |
+| `apply_time_window` | `dw_apply_time_window` |
+| `generate_markdown_report` | `dw_generate_markdown_report` |
+| `process_all_csv_files` | `dw_process_all_csv_files` |
+| `create_profile` | `dw_create_profile` |
+| `review_profile` | `dw_review_profile` |
+| `test_scripts` | `dw_test_scripts` |
+
+Both names continue to work and share the same `\link{}` man page via roxygen `@rdname`. **No breaking change**: consumers using the un-prefixed names see no behaviour change. The un-prefixed names remain exported and will continue to work indefinitely in v0.4.x; a future v0.5.x cycle may emit a `lifecycle::deprecate_soft()` warning on the un-prefixed forms to nudge migration, but only after sector leads confirm the migration is complete.
+
+`create_dw_sector_script` was intentionally NOT aliased: it already carries a `dw` infix (it's a DW-Production-specific wrapper of `create_sector_script`), and `create_sector_script` got `dw_create_sector_script` in v0.4.4 anyway. The dual-naming is historical and won't be cleaned up under #42.
+
+The `test_scripts` → `dw_test_scripts` alias also got a roxygen note: a future v0.5.x rename to `dw_audit_scripts` (to surface the audit intent and avoid the testthat-name collision) is on the design horizon. For now the prefix-only alias keeps the cleanup additive.
+
 ## v0.4.4 (2026-05-29)
 
 Quality release. Three v0.4.4 milestone issues land in one cycle (PRs

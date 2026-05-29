@@ -286,3 +286,15 @@ process_all_csv_files <- function(folder_path, country_column, year_column, indi
     generate_markdown_report(csv_file, country_column, year_column, indicator_column, value_column, output_path)
   }
 }
+
+# =============================================================================
+# v0.4.5 — dw_-prefixed canonical aliases (issue #42)
+# =============================================================================
+
+#' @rdname generate_markdown_report
+#' @export
+dw_generate_markdown_report <- generate_markdown_report
+
+#' @rdname process_all_csv_files
+#' @export
+dw_process_all_csv_files <- process_all_csv_files
