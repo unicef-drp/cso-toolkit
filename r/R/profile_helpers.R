@@ -352,3 +352,15 @@ review_profile <- function(path,
 
   invisible(out)
 }
+
+# =============================================================================
+# v0.4.5 — dw_-prefixed canonical aliases (issue #42)
+# =============================================================================
+
+#' @rdname create_profile
+#' @export
+dw_create_profile <- create_profile
+
+#' @rdname review_profile
+#' @export
+dw_review_profile <- review_profile

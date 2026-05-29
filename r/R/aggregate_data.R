@@ -1,3 +1,11 @@
+# v0.4.5 (#46): bind `%>%` locally in standalone-source mode. In the
+# installed-package context this is a no-op (NAMESPACE has the
+# importFrom). See the equivalent gate in `aggregate_data_v2.R` for
+# the full rationale.
+if (!exists("%>%", mode = "function", inherits = TRUE)) {
+	`%>%` <- magrittr::`%>%`
+}
+
 #' Aggregate Data with Optional Weighting and Global Aggregation
 #'
 #' This function aggregates data by specified grouping variables, with options for
@@ -29,12 +37,9 @@
 #' aggregate_data(data, value = "value", weight = "weight", by = "region",
 #'                global = TRUE, method = "mean")
 #' }
-
-
-
-aggregate_data <- function(data, value, weight, by, 
-                           global = TRUE, 
-                           method = c("mean", "weighted_mean"), 
+aggregate_data <- function(data, value, weight, by,
+                           global = TRUE,
+                           method = c("mean", "weighted_mean"),
                            pop.coverage = FALSE, country.coverage = FALSE) {
   
   # Ensure method is matched to allowed methods
@@ -105,6 +110,16 @@ aggregate_data <- function(data, value, weight, by,
 
     aggregated_data <- bind_rows(aggregated_data, global_aggregate)
   }
-  
+
   return(aggregated_data)
 }
+
+# =============================================================================
+# v0.4.5 — dw_-prefixed canonical alias (issue #42)
+# =============================================================================
+# Continues the v0.4.4 (#36) alias program. The non-prefixed name is
+# preserved for back-compat; consumers can migrate at their own pace.
+
+#' @rdname aggregate_data
+#' @export
+dw_aggregate_data <- aggregate_data

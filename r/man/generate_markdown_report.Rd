@@ -2,9 +2,19 @@
 % Please edit documentation in R/generate_markdown_report.R
 \name{generate_markdown_report}
 \alias{generate_markdown_report}
+\alias{dw_generate_markdown_report}
 \title{Generate a descriptive-statistics Markdown report from a single CSV file}
 \usage{
 generate_markdown_report(
+  csv_file_path,
+  country_column,
+  year_column,
+  indicator_column,
+  value_column,
+  output_path = NULL
+)
+
+dw_generate_markdown_report(
   csv_file_path,
   country_column,
   year_column,
