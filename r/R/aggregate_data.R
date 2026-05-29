@@ -110,6 +110,16 @@ aggregate_data <- function(data, value, weight, by,
 
     aggregated_data <- bind_rows(aggregated_data, global_aggregate)
   }
-  
+
   return(aggregated_data)
 }
+
+# =============================================================================
+# v0.4.5 — dw_-prefixed canonical alias (issue #42)
+# =============================================================================
+# Continues the v0.4.4 (#36) alias program. The non-prefixed name is
+# preserved for back-compat; consumers can migrate at their own pace.
+
+#' @rdname aggregate_data
+#' @export
+dw_aggregate_data <- aggregate_data

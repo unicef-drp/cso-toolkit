@@ -2,9 +2,22 @@
 % Please edit documentation in R/test_scripts.R
 \name{test_scripts}
 \alias{test_scripts}
+\alias{dw_test_scripts}
 \title{Audit R scripts for direct calls to commands wrapped by cso-toolkit}
 \usage{
 test_scripts(
+  path,
+  pattern = "\\\\.R$",
+  recursive = TRUE,
+  ignore_files = c("dw_io.R", "dw_api.R", "cso_toolkit_sync.R", "profile_helpers.R",
+    "test_scripts.R"),
+  ignore_dirs = c(".git", "renv", "packrat", "node_modules", ".Rproj.user"),
+  custom_rules = NULL,
+  error_on_violation = FALSE,
+  verbose = TRUE
+)
+
+dw_test_scripts(
   path,
   pattern = "\\\\.R$",
   recursive = TRUE,

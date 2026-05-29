@@ -251,3 +251,17 @@ test_scripts <- function(path,
 
   invisible(out)
 }
+
+# =============================================================================
+# v0.4.5 — dw_-prefixed canonical alias (issue #42)
+# =============================================================================
+# The `test_` prefix collides cosmetically with `testthat::test_*` test
+# naming. A future v0.5.x cycle may rename to `dw_audit_scripts` to
+# surface the intent more clearly (the function audits 00_functions/
+# call sites against the toolkit contract — it is not a unit-test
+# runner). For now, the prefix-only alias keeps the v0.4.5 cleanup
+# additive and back-compat.
+
+#' @rdname test_scripts
+#' @export
+dw_test_scripts <- test_scripts

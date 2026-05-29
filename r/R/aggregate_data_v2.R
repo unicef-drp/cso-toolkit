@@ -342,3 +342,15 @@ apply_time_window <- function(data,
 #' @rdname aggregate_data_v2
 #' @export
 dw_aggregate_data_v2 <- aggregate_data_v2
+
+# =============================================================================
+# v0.4.5 — dw_-prefixed canonical aliases for the other two exports in this file (#42)
+# =============================================================================
+
+#' @rdname generate_agg_footnote
+#' @export
+dw_generate_agg_footnote <- generate_agg_footnote
+
+#' @rdname apply_time_window
+#' @export
+dw_apply_time_window <- apply_time_window

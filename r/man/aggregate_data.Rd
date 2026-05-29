@@ -2,9 +2,21 @@
 % Please edit documentation in R/aggregate_data.R
 \name{aggregate_data}
 \alias{aggregate_data}
+\alias{dw_aggregate_data}
 \title{Aggregate Data with Optional Weighting and Global Aggregation}
 \usage{
 aggregate_data(
+  data,
+  value,
+  weight,
+  by,
+  global = TRUE,
+  method = c("mean", "weighted_mean"),
+  pop.coverage = FALSE,
+  country.coverage = FALSE
+)
+
+dw_aggregate_data(
   data,
   value,
   weight,

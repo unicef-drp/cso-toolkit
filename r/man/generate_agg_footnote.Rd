@@ -2,9 +2,20 @@
 % Please edit documentation in R/aggregate_data_v2.R
 \name{generate_agg_footnote}
 \alias{generate_agg_footnote}
+\alias{dw_generate_agg_footnote}
 \title{Generate standardized footnotes for aggregated estimates}
 \usage{
 generate_agg_footnote(
+  country_coverage,
+  total_countries,
+  pop_coverage,
+  start_year = NULL,
+  end_year = NULL,
+  exemptions = NULL,
+  exclusions = NULL
+)
+
+dw_generate_agg_footnote(
   country_coverage,
   total_countries,
   pop_coverage,
