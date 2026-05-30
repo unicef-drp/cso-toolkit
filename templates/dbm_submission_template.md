@@ -239,7 +239,7 @@ Sign-off comment on the PR / issue tracking this deposit:
 
 ## See also
 
-- `00_documentation/roles_and_workflow.md` — the role model behind PRODUCER / REVIEWER / INGESTOR
+- `00_documentation/roles_and_workflow.md` — the role model behind PRODUCER / REVIEWER / PUBLISHER
 - `00_documentation/toolkit_strategy.md` — why helpers live in cso-toolkit; vendoring contract
 - `book/appendices/d-sector-coverage.qmd` — per-sector reproducibility status
 - `00_functions/README.md` — what each helper does
