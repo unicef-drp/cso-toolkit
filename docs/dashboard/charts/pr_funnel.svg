@@ -1,4 +1,4 @@
-<svg role='img' aria-label='cso-toolkit pull-request funnel: open vs merged vs closed-unmerged' width='100%' viewBox='0 0 504.00 324.00'><title>cso-toolkit pull-request funnel: open vs merged vs closed-unmerged</title><desc>Bar chart of pull-request counts bucketed by state.</desc>
+<svg role='img' aria-label='DW-Production pull-request funnel: open vs merged vs closed-unmerged' width='100%' viewBox='0 0 504.00 324.00'><title>DW-Production pull-request funnel: open vs merged vs closed-unmerged</title><desc>Bar chart of DW-Production pull-request counts bucketed by state.</desc>
 <g class='svglite'>
 <defs>
   <style type='text/css'><![CDATA[
@@ -34,30 +34,30 @@
 </defs>
 <g clip-path='url(#pr_funnel-cpMzQuNjl8NDkyLjA0fDQyLjMwfDMwMi45NQ==)'>
 <polyline points='34.69,302.95 492.04,302.95 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
-<polyline points='34.69,237.62 492.04,237.62 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
-<polyline points='34.69,172.30 492.04,172.30 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
-<polyline points='34.69,106.97 492.04,106.97 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='34.69,232.96 492.04,232.96 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='34.69,162.97 492.04,162.97 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='34.69,92.97 492.04,92.97 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
 <polyline points='120.44,302.95 120.44,42.30 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
 <polyline points='263.37,302.95 263.37,42.30 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
 <polyline points='406.29,302.95 406.29,42.30 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
-<rect x='73.28' y='302.95' width='94.33' height='0.00' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #E69F00;' />
+<rect x='73.28' y='239.96' width='94.33' height='62.99' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #E69F00;' />
 <rect x='216.20' y='74.31' width='94.33' height='228.64' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #009E73;' />
-<rect x='359.13' y='302.95' width='94.33' height='0.00' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #9AA3AE;' />
-<text x='120.44' y='300.18' text-anchor='middle' style='font-size: 9.67px;fill: #1A1D23; font-family: "Arial";' textLength='5.38px' lengthAdjust='spacingAndGlyphs'>0</text>
-<text x='263.37' y='71.54' text-anchor='middle' style='font-size: 9.67px;fill: #1A1D23; font-family: "Arial";' textLength='10.75px' lengthAdjust='spacingAndGlyphs'>35</text>
-<text x='406.29' y='300.18' text-anchor='middle' style='font-size: 9.67px;fill: #1A1D23; font-family: "Arial";' textLength='5.38px' lengthAdjust='spacingAndGlyphs'>0</text>
+<rect x='359.13' y='249.29' width='94.33' height='53.66' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #9AA3AE;' />
+<text x='120.44' y='237.19' text-anchor='middle' style='font-size: 9.67px;fill: #1A1D23; font-family: "Arial";' textLength='10.75px' lengthAdjust='spacingAndGlyphs'>27</text>
+<text x='263.37' y='71.54' text-anchor='middle' style='font-size: 9.67px;fill: #1A1D23; font-family: "Arial";' textLength='10.75px' lengthAdjust='spacingAndGlyphs'>98</text>
+<text x='406.29' y='246.52' text-anchor='middle' style='font-size: 9.67px;fill: #1A1D23; font-family: "Arial";' textLength='10.75px' lengthAdjust='spacingAndGlyphs'>23</text>
 </g>
 <g clip-path='url(#pr_funnel-cpMC4wMHw1MDQuMDB8MC4wMHwzMjQuMDA=)'>
 <text x='29.76' y='306.10' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='4.89px' lengthAdjust='spacingAndGlyphs'>0</text>
-<text x='29.76' y='240.77' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>10</text>
-<text x='29.76' y='175.45' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>20</text>
-<text x='29.76' y='110.12' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>30</text>
+<text x='29.76' y='236.11' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>30</text>
+<text x='29.76' y='166.12' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>60</text>
+<text x='29.76' y='96.12' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>90</text>
 <text x='120.44' y='314.18' text-anchor='middle' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='21.52px' lengthAdjust='spacingAndGlyphs'>Open</text>
 <text x='263.37' y='314.18' text-anchor='middle' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='29.81px' lengthAdjust='spacingAndGlyphs'>Merged</text>
 <text x='406.29' y='314.18' text-anchor='middle' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='75.27px' lengthAdjust='spacingAndGlyphs'>Closed (unmerged)</text>
 <text transform='translate(15.13,172.62) rotate(-90)' text-anchor='middle' style='font-size: 10.00px;fill: #6A7585; font-family: "Arial";' textLength='57.81px' lengthAdjust='spacingAndGlyphs'>Pull requests</text>
-<text x='7.97' y='32.23' style='font-size: 10.00px;fill: #6A7585; font-family: "Arial";' textLength='272.41px' lengthAdjust='spacingAndGlyphs'>35 pull requests total — open vs merged vs closed-unmerged</text>
-<text x='7.97' y='16.57' style='font-size: 12.00px; font-weight: bold; font-family: "Arial";' textLength='119.97px' lengthAdjust='spacingAndGlyphs'>cso-toolkit PR funnel</text>
+<text x='7.97' y='32.23' style='font-size: 10.00px;fill: #6A7585; font-family: "Arial";' textLength='277.97px' lengthAdjust='spacingAndGlyphs'>148 pull requests total — open vs merged vs closed-unmerged</text>
+<text x='7.97' y='16.57' style='font-size: 12.00px; font-weight: bold; font-family: "Arial";' textLength='146.39px' lengthAdjust='spacingAndGlyphs'>DW-Production PR funnel</text>
 </g>
 </g>
 </svg>
