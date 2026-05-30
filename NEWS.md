@@ -3,8 +3,91 @@
 ## Unreleased
 
 _Entries land here as PRs merge into `develop`. When the next release
-is cut, this header is renamed `## v0.4.6 (YYYY-MM-DD)` and a fresh
+is cut, this header is renamed `## v0.4.7 (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
+
+## v0.4.6 (2026-05-30)
+
+Quality release. Four issues land in one cycle — one HIGH-severity
+canonical-recognition fix that would have allowed reviewer-mode
+overwrites of canonical Teams artefacts, plus three cleanups
+(re-exported `dw_root()` wrapper, uniform `.cso_require` envelope on
+standalone-source `%>%` gate, and cross-platform manifest hash
+stability via `.gitattributes` LF normalisation). No public API
+breaks.
+
+### `dw_is_canonical` recognises OneDrive-mounted Teams Documents path (issue [#54](https://github.com/unicef-drp/cso-toolkit/issues/54)) — **HIGH severity**
+
+Pre-fix, `dw_is_canonical()` matched canonical paths against
+`teamsFolderCanonical` and the Z: drive root only. On UNICEF laptops
+where the Teams "Documents" library is mounted via OneDrive
+(`C:/Users/<user>/UNICEF/<team> - Documents/...`), the canonical
+prefix the helper saw at runtime did not match the literal path the
+sector profile assembled when writing — so `dw_is_canonical()`
+returned `FALSE` for paths that were, in fact, canonical Teams
+deposits.
+
+Combined with the v0.4.0 reviewer-mode write-refusal contract
+(`dw_save` refuses canonical writes in reviewer mode unless
+`allow_canonical_write = TRUE`), the false-negative meant a reviewer-
+mode `dw_save()` call would have silently overwritten the canonical
+Teams artefact instead of hard-stopping.
+
+Surfaced empirically by the 2026-05-30 HVA + ED reviewer-mode
+fanout runs (DW-Production): the canonical path through the
+OneDrive-mounted Documents folder passed the
+`!dw_is_canonical(path)` precondition and would have written to the
+canonical artefact had the runs not been halted by the audit. The
+fix extends `dw_is_canonical()` to also recognise the OneDrive-
+mounted Documents form, so the canonical-write refusal contract
+fires correctly on UNICEF-laptop reviewer sessions.
+
+Tests in `r/tests/testthat/test-dw-is-canonical.R` extended to cover
+the OneDrive-mounted form alongside the existing Z: and
+`teamsFolderCanonical` cases.
+
+### `dw_root()` public wrapper re-exported (issue [#53](https://github.com/unicef-drp/cso-toolkit/issues/53))
+
+Several DW-Production sector scripts (carried forward from the v0.3
+era) call `dw_root()` directly to derive the sector-folder anchor
+for relative path resolution. `dw_root()` was never an exported entry
+in the v0.4.x NAMESPACE — sector scripts that vendored v0.4.x copies
+of the toolkit hit `Error: could not find function "dw_root"` the
+first time they sourced the profile.
+
+The internal helper is re-exported as a public wrapper in v0.4.6;
+the existing implementation is unchanged. NAMESPACE gains an
+`export(dw_root)` entry and `man/dw_root.Rd` is generated. The
+helper joins `Other io:` in the family cross-references so it
+surfaces in pkgdown alongside `dw_save`, `dw_use`, and friends.
+
+### Uniform `.cso_require` envelope on `%>%` standalone-source gate (issue [#51](https://github.com/unicef-drp/cso-toolkit/issues/51))
+
+v0.4.5's #46 fix added a local `%>%` binding gated by `exists()`. The
+gate worked, but it raised a bare base-R error if `magrittr` itself
+wasn't installed — without the `[cso_toolkit.<func>] WHAT / Why /
+Fix` envelope the rest of the toolkit follows.
+
+v0.4.6 wraps the local-binding fallback in `.cso_require("magrittr")`
+so the envelope shape is uniform. Consumers who source the file
+standalone without `magrittr` installed now see the same actionable
+three-part message as every other toolkit raise.
+
+### `.gitattributes` force LF + manifest CRLF/LF normalisation (issue [#52](https://github.com/unicef-drp/cso-toolkit/issues/52))
+
+`.toolkit_manifest.yml` carries SHA-256 hashes of vendored helpers
+so `cso_toolkit_check()` can flag drift. On Windows checkouts under
+default git autocrlf settings, files were written with CRLF endings
+while their recorded hashes were computed on LF — every Windows
+consumer's first `cso_toolkit_check()` call flagged spurious drift
+on every vendored file.
+
+A repository-root `.gitattributes` now forces LF endings on `.R`,
+`.py`, `.do`, `.yml`, `.yaml`, `.md`, and the manifest itself, so
+checkouts are deterministic across Windows, macOS, and Linux. The
+hash-computation path in `cso_toolkit_check()` also normalises
+CRLF → LF before hashing, so legacy checkouts that pre-date the
+`.gitattributes` see green even before re-cloning.
 
 ### Docs: third role renamed INGESTOR → PUBLISHER (DBM / DBR / DBP)
 
