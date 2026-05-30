@@ -18,7 +18,7 @@
 # Tabs:
 #   1 Landing               — KPIs + pipeline-phase distribution + activity + watch list
 #   2 Sectors               — per-sector cards + 5 v2 charts
-#   3 Pipeline Phases       — Production / Review / Publishing / Live kanban
+#   3 Pipeline Phases       — Production / Review / Live kanban
 #   4 cso-toolkit Branches  — branch, last commit, author, ahead/behind, PR link
 #   5 cso-toolkit Issues    — grouped by milestone (v0.4.6 / v0.5.0 / unlabelled)
 #   6 DBM Actions kanban    — TODO / IN-PROGRESS / DONE
@@ -109,10 +109,16 @@ compute_kpis <- function(state) {
 
   open_prs    <- length(Filter(function(p) identical(p$state, "open"),
                                state$cso_toolkit$prs %||% list()))
-  open_issues <- length(Filter(function(p) identical(p$state, "open"),
-                               state$cso_toolkit$issues %||% list()))
+  # GitHub's /issues endpoint returns PRs too; filter them out so the
+  # KPI matches the Issues tab on github.com.
+  issues_only <- Filter(function(i) is.null(i$pull_request),
+                        state$cso_toolkit$issues %||% list())
+  open_issues <- length(Filter(function(i) identical(i$state, "open"), issues_only))
+  # Normalize status the same way render_tab_actions does (uppercase + _->-)
+  # so we don't undercount in-progress/in_progress/IN-PROGRESS variants.
   open_actions <- length(Filter(function(a) {
-    grepl("(TODO|IN.PROGRESS)", a$status %||% "TODO")
+    st <- gsub("_", "-", toupper(a$status %||% "TODO"))
+    st %in% c("TODO", "IN-PROGRESS")
   }, state$actions %||% list()))
 
   list(
@@ -157,9 +163,10 @@ render_kpi_row <- function(kpis) {
 render_tab_landing <- function(state, kpis) {
   rep <- state$replication %||% list()
 
-  # pipeline phase distribution: Production / Review / Publishing / Live
+  # pipeline phase distribution: Production / Review / Live.
+  # "Publishing" is omitted until state.json carries a field that can drive it.
   phase_counts <- list(
-    Production = 0L, Review = 0L, Publishing = 0L, Live = 0L
+    Production = 0L, Review = 0L, Live = 0L
   )
   for (s in SECTOR_ORDER) {
     r <- rep[[s]]
@@ -180,9 +187,17 @@ render_tab_landing <- function(state, kpis) {
     "</div>"
   )
 
-  # activity feed: latest 8 PRs from cso-toolkit
+  # activity feed: latest 8 PRs from cso-toolkit (sorted by updated_at desc;
+  # GitHub API pagination order is not guaranteed to match recency).
   prs <- state$cso_toolkit$prs %||% list()
-  prs_sorted <- prs
+  prs_sorted <- if (length(prs) == 0) {
+    prs
+  } else {
+    ts <- vapply(prs, function(p) {
+      p$updated_at %||% p$created_at %||% ""
+    }, character(1))
+    prs[order(ts, decreasing = TRUE)]
+  }
   feed_html <- if (length(prs_sorted) == 0) {
     '<div class="muted">no PR activity captured yet</div>'
   } else {
@@ -380,10 +395,10 @@ render_tab_sectors <- function(state) {
 
 render_tab_phases <- function(state) {
   rep <- state$replication %||% list()
+  # "Publishing" is omitted until state.json carries a field that can drive it.
   phases <- list(
     Production = character(0),
     Review     = character(0),
-    Publishing = character(0),
     Live       = character(0)
   )
   for (s in SECTOR_ORDER) {
@@ -513,6 +528,13 @@ render_tab_actions <- function(state) {
     buckets[[st]] <- c(buckets[[st]], list(a))
   }
 
+  # Map severities to the supported CSS class set. Action severities are
+  # HIGH/MEDIUM/LOW/INFO; CSS defines .sev-high/.sev-medium/.sev-low/.sev-info.
+  sev_class <- function(sev) {
+    s <- tolower(sev %||% "info")
+    if (s %in% c("high", "medium", "low", "info")) s else "info"
+  }
+
   col_html <- function(name, items) {
     cards <- if (length(items) == 0) {
       '<div class="muted">(empty)</div>'
@@ -524,7 +546,7 @@ render_tab_actions <- function(state) {
           htmlescape(a$title    %||% a$id %||% ""),
           htmlescape(a$sector   %||% ""),
           htmlescape(a$owner    %||% ""),
-          tolower(sev), htmlescape(sev)
+          sev_class(sev), htmlescape(sev)
         )
       }, character(1)), collapse = "")
     }
@@ -629,11 +651,10 @@ h2 { margin-top: 0; }
 .kpi-value { font-size: 28px; font-weight: 600; }
 .kpi-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
 .kpi-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
-.phase-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.phase-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .phase-tile { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 12px; text-align: center; }
 .phase-tile.phase-production { border-top: 3px solid var(--info); }
 .phase-tile.phase-review     { border-top: 3px solid var(--partial); }
-.phase-tile.phase-publishing { border-top: 3px solid var(--accent); }
 .phase-tile.phase-live       { border-top: 3px solid var(--ok); }
 .phase-name { font-size: 12px; color: var(--muted); text-transform: uppercase; }
 .phase-count { font-size: 28px; font-weight: 600; }
@@ -675,6 +696,7 @@ details summary { cursor: pointer; color: var(--accent); }
 .sev-high { background: #fed7d7; color: var(--high); }
 .sev-info { background: #bee3f8; color: var(--info); }
 .sev-medium { background: #fefcbf; color: var(--partial); }
+.sev-low { background: #e5e7eb; color: var(--muted); }
 .placeholder { padding: 24px; background: var(--card); border: 1px dashed var(--border); border-radius: 6px; }
 code { background: #f0f3f7; padding: 1px 4px; border-radius: 3px; font-size: 12px; }
 '

@@ -76,6 +76,19 @@ jobs:
           DW_PROD_READ_TOKEN: ${{ secrets.DW_PROD_READ_TOKEN }}
         run: Rscript docs/dashboard/render.R
 
+      - name: Prune history older than retention window
+        # Retain ~90 days of nightly history snapshots in git to keep the
+        # tracked tree from growing without bound. Older snapshots remain
+        # accessible via git history.
+        run: |
+          set -euo pipefail
+          HISTORY_DIR="docs/dashboard/data/history"
+          if [ -d "$HISTORY_DIR" ]; then
+            # Each subdir is named YYYY-MM-DD. Drop anything older than 90 days.
+            find "$HISTORY_DIR" -mindepth 1 -maxdepth 1 -type d -mtime +90 -print -exec rm -rf {} +
+          fi
+        shell: bash
+
       - name: Commit refreshed artifacts
         run: |
           git config user.name  "github-actions[bot]"

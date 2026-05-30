@@ -7,9 +7,12 @@
 # render.R turns into a static SPA.
 #
 # Sources:
-#   (a) UNICEF SDMX        — rsdmx, with retry + timeout, caches to
+#   (a) UNICEF SDMX        — lightweight reachability probe (url() open +
+#                            setTimeLimit), caches the result to
 #                            data/sdmx_cache_latest.json on success.
 #                            Falls back to cache on network failure.
+#                            (rsdmx is checked only as a gate — full SDMX
+#                            parsing is not performed by this collector.)
 #   (b) cso-toolkit GitHub — `gh api` with GITHUB_TOKEN
 #                            (PRs / branches / issues / milestones).
 #   (c) DW-Production GH   — `gh api -H Authorization: bearer <PAT>`
@@ -35,10 +38,19 @@ suppressPackageStartupMessages({
 
 # ----- paths --------------------------------------------------------------- #
 
-SCRIPT_DIR     <- tryCatch(
-  dirname(normalizePath(sys.frame(1)$ofile, winslash = "/")),
-  error = function(e) getwd()
-)
+SCRIPT_DIR     <- local({
+  # Under `Rscript path/to/collect.R`, commandArgs() carries `--file=...`.
+  # `sys.frame(1)$ofile` is only set when the file is source()d, so the old
+  # code silently fell back to getwd() under Rscript and wrote to the wrong dir.
+  a <- commandArgs(trailingOnly = FALSE)
+  f <- sub("^--file=", "", grep("^--file=", a, value = TRUE))
+  if (length(f) == 1L && nzchar(f)) {
+    return(dirname(normalizePath(f, winslash = "/")))
+  }
+  ofile <- tryCatch(sys.frame(1)$ofile, error = function(e) NULL)
+  if (!is.null(ofile)) return(dirname(normalizePath(ofile, winslash = "/")))
+  getwd()
+})
 DASHBOARD_DIR  <- SCRIPT_DIR
 DATA_DIR       <- file.path(DASHBOARD_DIR, "data")
 SNAPSHOTS_DIR  <- file.path(DATA_DIR, "snapshots")
@@ -88,28 +100,48 @@ gh_api <- function(endpoint, token = NULL, paginate = FALSE) {
   # Returns parsed JSON, or NULL on failure.
   cmd  <- "gh"
   args <- c("api", endpoint)
-  if (paginate) args <- c(args, "--paginate")
+  # `--slurp` merges the pages of a `--paginate` array endpoint into one JSON
+  # value; without it gh concatenates page arrays ([...][...]) into invalid JSON.
+  if (paginate) args <- c(args, "--paginate", "--slurp")
   env  <- c()
   if (!is.null(token) && nzchar(token)) {
     env <- c(env, paste0("GH_TOKEN=", token))
   }
-  out <- tryCatch(
-    system2(cmd, args, stdout = TRUE, stderr = TRUE, env = env),
-    error = function(e) NULL
+  # Capture stdout straight to a temp file and parse the file. Going through
+  # system2(stdout = TRUE) splits output into lines whose re-join corrupts JSON
+  # on Windows (CRLF + escaped newlines inside PR / issue bodies). Keep stderr
+  # in its own temp file so we can log gh's error text on failure.
+  out_file <- tempfile("ghapi_out_", fileext = ".json")
+  err_file <- tempfile("ghapi_err_")
+  on.exit(try(unlink(c(out_file, err_file)), silent = TRUE), add = TRUE)
+  status <- tryCatch(
+    system2(cmd, args, stdout = out_file, stderr = err_file, env = env),
+    error = function(e) NA_integer_
   )
-  if (is.null(out) || length(out) == 0) return(NULL)
-  status <- attr(out, "status")
-  if (!is.null(status) && status != 0) {
-    log_warn(sprintf("gh api %s failed (status %s)", endpoint, status))
+  if (!identical(as.integer(status), 0L)) {
+    err_msg <- tryCatch(
+      paste(readLines(err_file, warn = FALSE), collapse = " | "),
+      error = function(e) ""
+    )
+    log_warn(sprintf("gh api %s failed (status %s): %s", endpoint, status, err_msg))
     return(NULL)
   }
-  tryCatch(
-    jsonlite::fromJSON(paste(out, collapse = "\n"), simplifyVector = FALSE),
+  if (!file.exists(out_file) || file.info(out_file)$size == 0) return(NULL)
+  parsed <- tryCatch(
+    jsonlite::fromJSON(out_file, simplifyVector = FALSE),
     error = function(e) {
       log_warn(sprintf("gh api %s: non-JSON output", endpoint))
       NULL
     }
   )
+  if (is.null(parsed)) return(NULL)
+  # `--paginate --slurp` wraps each page as one element: [[...],[...]].
+  # Flatten one level so callers see a flat array of objects, not pages.
+  if (paginate && length(parsed) > 0L && is.null(names(parsed)) &&
+      is.list(parsed[[1]]) && is.null(names(parsed[[1]]))) {
+    parsed <- do.call(c, parsed)
+  }
+  parsed
 }
 
 # ----- (a) UNICEF SDMX ----------------------------------------------------- #
@@ -194,6 +226,10 @@ collect_cso_toolkit_github <- function() {
 }
 
 # ----- (c) DW-Production GitHub state -------------------------------------- #
+#
+# DW-Production is a PRIVATE repository. The dashboard is published via GitHub
+# Pages, so this collector must emit only aggregate counts — never PR titles,
+# bodies, branch names, issue text, or any other private metadata.
 
 collect_dw_production_github <- function() {
   log_info("GH: DW-Production starting")
@@ -209,14 +245,27 @@ collect_dw_production_github <- function() {
   issues    <- gh_api(sprintf("repos/%s/issues?state=all&per_page=100", repo),  token, paginate = TRUE)
   milestones <- gh_api(sprintf("repos/%s/milestones?state=all", repo),          token)
 
+  prs_list    <- prs        %||% list()
+  issues_list <- issues     %||% list()
+
+  # Filter PRs out of /issues response (GitHub /issues includes PRs).
+  issues_only <- Filter(function(i) is.null(i$pull_request), issues_list)
+
   list(
     repo         = repo,
     fetched_at   = NOWUTC,
     reachable    = !is.null(prs),
-    prs          = prs       %||% list(),
-    branches     = branches  %||% list(),
-    issues       = issues    %||% list(),
-    milestones   = milestones %||% list()
+    # Counts only — no titles, bodies, branch names, or other private fields.
+    counts       = list(
+      prs_total       = length(prs_list),
+      prs_open        = length(Filter(function(p) identical(p$state, "open"),   prs_list)),
+      prs_closed      = length(Filter(function(p) identical(p$state, "closed"), prs_list)),
+      branches_total  = length(branches  %||% list()),
+      issues_total    = length(issues_only),
+      issues_open     = length(Filter(function(i) identical(i$state, "open"),   issues_only)),
+      issues_closed   = length(Filter(function(i) identical(i$state, "closed"), issues_only)),
+      milestones_total = length(milestones %||% list())
+    )
   )
 }
 
@@ -256,32 +305,31 @@ collect_actions <- function() {
   yml_files <- list.files(ACTIONS_DIR, pattern = "\\.ya?ml$", full.names = TRUE)
   if (length(yml_files) == 0) return(list())
 
-  # Lightweight YAML parser — flat key:value only.
-  # We bring in yaml if available, else fall back to a simple scanner.
-  if (requireNamespace("yaml", quietly = TRUE)) {
-    out <- lapply(yml_files, function(f) {
-      tryCatch(yaml::read_yaml(f), error = function(e) {
-        log_warn(sprintf("YAML parse failed: %s", basename(f)))
-        list(id = tools::file_path_sans_ext(basename(f)), parse_error = TRUE)
-      })
-    })
-  } else {
-    out <- lapply(yml_files, function(f) {
-      lines <- readLines(f, warn = FALSE)
-      kv    <- list()
-      for (ln in lines) {
-        if (!grepl(":", ln) || grepl("^\\s*#", ln)) next
-        parts <- strsplit(ln, ":", fixed = TRUE)[[1]]
-        k <- trimws(parts[1])
-        v <- trimws(paste(parts[-1], collapse = ":"))
-        v <- gsub('^"|"$', "", v)
-        kv[[k]] <- v
-      }
-      if (is.null(kv$id)) kv$id <- tools::file_path_sans_ext(basename(f))
-      kv
-    })
+  # Action YAMLs use block scalars (`description: |`) and nested arrays
+  # (`references:`). A flat key:value scanner would silently mis-parse them,
+  # so yaml is a hard requirement; if absent we mark every file as a parse
+  # error rather than emit incorrect/partial action objects.
+  if (!requireNamespace("yaml", quietly = TRUE)) {
+    log_warn("yaml package not installed; cannot parse action files")
+    return(lapply(yml_files, function(f) {
+      list(
+        id          = tools::file_path_sans_ext(basename(f)),
+        parse_error = TRUE,
+        parse_error_reason = "yaml package not installed"
+      )
+    }))
   }
-  out
+
+  lapply(yml_files, function(f) {
+    tryCatch(yaml::read_yaml(f), error = function(e) {
+      log_warn(sprintf("YAML parse failed: %s", basename(f)))
+      list(
+        id          = tools::file_path_sans_ext(basename(f)),
+        parse_error = TRUE,
+        parse_error_reason = conditionMessage(e)
+      )
+    })
+  })
 }
 
 # ----- assembly ------------------------------------------------------------ #
