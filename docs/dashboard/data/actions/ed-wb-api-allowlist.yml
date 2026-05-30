@@ -1,0 +1,17 @@
+id: ed-wb-api-allowlist
+title: "ED: World Bank API blocked by UNICEF corporate proxy"
+sector: ed
+severity: HIGH
+status: TODO
+owner: "UNICEF IT (via DBM ticket)"
+created_at: "2026-05-30"
+due_at: null
+blocker_for_dbm: "ED pipeline halts at step 3/5 (Learning Poverty + FLS) because proxy drops api.worldbank.org after ~7 requests"
+description: |
+  Three options:
+    (a) Have IT allowlist api.worldbank.org;
+    (b) Cache WB data once on a non-corporate network and commit as a frozen URL
+        under 01_dw_prep/011_rawdata/_frozen/api.worldbank.org/;
+    (c) Run the ED pipeline outside the corporate network for steps 3-5.
+references:
+  - "replication_ed_latest.json: halt_reason"

@@ -1,0 +1,27 @@
+{
+  "_schema_version": "1.0.0",
+  "sector": "ed",
+  "last_run_at": "2026-05-29T00:00:00Z",
+  "last_run_by": "reviewer",
+  "status": "PARTIAL_REPLICATED",
+  "steps_completed": "2 of 5",
+  "wall_time_s": 282,
+  "outputs": [
+    {"file": "ed_sdg_uis_nat.csv",      "rows": 105891, "cols": 13, "size_mb": 28.28, "sha256_16": "ef463cd7877c1826", "step": "1/5"},
+    {"file": "dw_ed_edu.csv (Teams)",   "rows": 107770, "cols": 12, "size_mb": 17.89, "sha256_16": "248a2b36ac192865", "step": "2/5"}
+  ],
+  "halt_step": "3/5 (Learning Poverty + FLS)",
+  "halt_reason": "World Bank API requests dropped by UNICEF corporate proxy after 7 of 9 indicators successfully fetched. SE.LPV.PRIM, .FE, .MA, .LD, .LD.FE, .LD.MA, .SD all OK. .SD.FE failed even with 5 retries + 180s timeout.",
+  "fixes_applied": [
+    "PR #151 merged (resolves merge-conflict parse blockers from prior smoke test)",
+    "Sector typo year_results -> edu_uis_year_results (02_aggregate_uis_sdg.R L155 + L282)",
+    "Uncommented WB API block at L59-71 of 03 (was completely commented out, leaving downstream lp_data reference undefined)",
+    "Staged pop_school_age.csv + ed_fls.csv + ed_webpage_templ_oos.xlsx from Teams to repo-local dwRawData/ed/",
+    "Direct httr fetch replaced wbstats call (wbstats default timeout too short)",
+    "Added 5-retry exponential backoff (2,4,8,16,32 s)"
+  ],
+  "toolkit_findings": [
+    "STEP 2 wrote to Teams canonical path /060.DW-MASTER/01_dw_prep/013_wrkdata/ed/dw_ed_edu.csv — same mode-lock issue as HVA (cso-toolkit#54)"
+  ],
+  "blockers_for_dbm": "Three DBM-actionable items:\n  1. World Bank API access: UNICEF corporate proxy drops api.worldbank.org requests after a threshold (7-8 requests). Options: (a) have IT allowlist api.worldbank.org; OR (b) cache WB data ONCE on a non-corporate network and commit as a frozen URL under 01_dw_prep/011_rawdata/_frozen/api.worldbank.org/; OR (c) run the ED pipeline outside the corporate network for STEP 3-5.\n  2. Sector code bug — typo at 02_aggregate_uis_sdg.R L155 + L282 referencing undefined 'year_results' instead of 'edu_uis_year_results' (defined at L77).\n  3. Sector code bug — 03_lp_wb_nat_aggr.R has the WB API fetch block (L59-71) commented out but references the resulting 'lp_data' variable downstream -> script crashes immediately if profile-side WB fetch isn't done."
+}

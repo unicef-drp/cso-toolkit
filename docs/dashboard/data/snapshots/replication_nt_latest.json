@@ -1,0 +1,26 @@
+{
+  "_schema_version": "1.0.0",
+  "sector": "nt",
+  "last_run_at": "2026-05-29T00:00:00Z",
+  "last_run_by": "reviewer",
+  "status": "FULLY_REPLICATED",
+  "wall_time_s": 1514.7,
+  "output_file": "dw_nut_tocopy.csv",
+  "output_path_repo_local": true,
+  "size_mb": 408.62,
+  "rows": 1064415,
+  "cols": 31,
+  "indicators": 40,
+  "ref_areas": 356,
+  "sha256": "77085de282901d1feb5ecea50f0a7a97ce28b2aaf61aa1ab87c6cc84058ac9ae",
+  "splits": ["ant 145MB", "sant 164MB", "iycf 56MB", "dant 31MB", "bw 4.6MB", "ane 3.5MB", "iod 2.6MB", "vas 1.7MB"],
+  "intermediates": 78,
+  "fixes_applied": [
+    "activated 19 commented-out stages (1a-1f imports + 2b-2j aggregations + 3a/3b targets + 4b format-merge)",
+    "openxlsx + countrycode + glue libraries added to lean driver (these are loaded by the profile in production, not present in lean-driver test mode)"
+  ],
+  "toolkit_findings": [
+    "dw_url_allowlist correctly blocked an unallowlisted URL (cmrs_series_indicators directory) with non-fatal warning"
+  ],
+  "blockers_for_dbm": null
+}
