@@ -1,8 +1,26 @@
+# Local fallback of .cso_require so this file is safe to source standalone
+# (vendored consumers may source the .R file without first attaching the
+# package).
+if (!exists(".cso_require", mode = "function", inherits = TRUE)) {
+	.cso_require <- function(pkgs, where = "<unknown>") {
+		for (p in pkgs) {
+			if (!requireNamespace(p, quietly = TRUE)) {
+				stop(sprintf(
+					"[cso_toolkit.%s] Requires the '%s' package but it is not installed.\n  Fix: install.packages('%s')",
+					where, p, p
+				), call. = FALSE)
+			}
+		}
+		invisible(TRUE)
+	}
+}
+
 # v0.4.5 (#46): bind `%>%` locally in standalone-source mode. In the
 # installed-package context this is a no-op (NAMESPACE has the
 # importFrom). See the equivalent gate in `aggregate_data_v2.R` for
 # the full rationale.
 if (!exists("%>%", mode = "function", inherits = TRUE)) {
+	.cso_require("magrittr", where = "aggregate_data")
 	`%>%` <- magrittr::`%>%`
 }
 
