@@ -334,9 +334,11 @@ render_tab_landing <- function(state, kpis) {
   tags_html <- if (length(topics) == 0) "" else paste0(
     '<div class="topic-tags" title="Subject areas (DW-Production 012_codes) — dashed = work not started">',
     paste(vapply(topics, function(t) {
-      sprintf('<span class="topic-tag%s">%s</span>',
-              if (isTRUE(t$started)) "" else " not-started", htmlescape(t$code))
+      cls <- if (isTRUE(t$started)) "" else " not-started"
+      lab <- if (isTRUE(t$started)) "" else ' aria-label="not started"'
+      sprintf('<span class="topic-tag%s"%s>%s</span>', cls, lab, htmlescape(t$code))
     }, character(1)), collapse = ""),
+    '<span class="topic-tags-note">dashed = not started</span>',
     '</div>')
 
   paste0(
@@ -919,7 +921,8 @@ code { background: #eef3f9; padding: 1px 5px; border-radius: 4px; font-size: 12p
 .mini-closed { background: #c2cad6; }
 .topic-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 16px; }
 .topic-tag { font-size: 11px; background: #eef2f6; color: #5a6573; border: 1px solid #e2e8ef; border-radius: 12px; padding: 2px 9px; text-transform: uppercase; letter-spacing: .3px; }
-.topic-tag.not-started { background: #f5f7f9; color: #adb5bf; border-style: dashed; }
+.topic-tag.not-started { background: #f5f7f9; color: #667085; border-style: dashed; }
+.topic-tags-note { font-size: 10px; color: var(--muted); align-self: center; margin-left: 2px; font-style: italic; }
 
 @media (max-width: 760px) {
   .hero { grid-template-columns: 1fr; }
