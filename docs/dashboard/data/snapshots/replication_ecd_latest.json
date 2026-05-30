@@ -5,11 +5,11 @@
   "last_run_by": "reviewer",
   "status": "BLOCKED",
   "halt_phase": "env-setup",
-  "halt_reason": "ecd_dw.R hardcodes four directories to 'C:/Users/mjugder/OneDrive - UNICEF/Documents/Work materials NYHQ/...' (the producer's personal OneDrive). None of the four paths resolve on the reviewer's machine. Additionally, library(xlsx) requires Java same as wt.",
+  "halt_reason": "ecd_dw.R hardcodes four directories to 'C:/Users/<producer>/OneDrive - UNICEF/Documents/Work materials NYHQ/...' (a producer-side personal OneDrive). None of the four paths resolve on the reviewer's machine. Additionally, library(xlsx) requires Java same as wt.",
   "fixes_attempted": [
     "Identified hardcoded paths at L20-23 of ecd_dw.R (db_dir, wrk_dir, out_dir, reg_group)",
     "Searched Teams for ECD.xlsx (referenced by the indicator scripts) — file does not exist on Teams (only ECD.csv variants exist under 011_rawdata/cpd/Old/ and 013_wrkdata/CPD/Old_*)",
     "Searched for ecd-specific raw inputs — none located at the path the script expects"
   ],
-  "blockers_for_dbm": "Four DBM-actionable items:\n  1. CRITICAL: Replace 4 hardcoded paths at ecd_dw.R L20-23 with profile-driven globals (dwRawData, dwCodes, dwWrkData, dwMetaData). The current code is portable only on the producer's (@mjugder's) machine.\n  2. Deposit the producer-side 'ECD.xlsx' file (referenced by all 6 ECD_*_dw.R indicator scripts, sheet='early stimulation', startRow=15) onto Teams at a canonical path so reviewers can read it. The file is currently only on the producer's OneDrive.\n  3. Java install OR xlsx -> openxlsx port (same as wt).\n  4. The script bypasses cso-toolkit entirely (no dw_use, dw_save). For v0.4.x compliance the sector lead must adopt dw_io contract."
+  "blockers_for_dbm": "Four DBM-actionable items:\n  1. CRITICAL: Replace 4 hardcoded paths at ecd_dw.R L20-23 with profile-driven globals (dwRawData, dwCodes, dwWrkData, dwMetaData). The current code is portable only on one producer's machine.\n  2. Deposit the producer-side 'ECD.xlsx' file (referenced by all 6 ECD_*_dw.R indicator scripts, sheet='early stimulation', startRow=15) onto Teams at a canonical path so reviewers can read it. The file is currently only on the producer-side OneDrive.\n  3. Java install OR xlsx -> openxlsx port (same as wt).\n  4. The script bypasses cso-toolkit entirely (no dw_use, dw_save). For v0.4.x compliance the sector lead must adopt dw_io contract."
 }

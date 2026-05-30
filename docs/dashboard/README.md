@@ -8,7 +8,7 @@ Eight tabs:
 
 1. **Landing** — KPIs, pipeline-phase distribution, activity feed, watch list of stalled sectors.
 2. **Sectors** — per-sector cards (status, rows, indicators, wall-time, fixes, toolkit findings, blockers) plus five summary charts.
-3. **Pipeline phases** — kanban board: Production / Review / Publishing / Live.
+3. **Pipeline phases** — kanban board: Production / Review / Live. (A "Publishing" phase is not yet emitted because `state.json` carries no field that can drive it; it will be added once such a signal exists.)
 4. **Branches** — cso-toolkit branches table: name, link, SHA, protected flag.
 5. **Issues** — cso-toolkit issues grouped by milestone (v0.4.6 / v0.5.0 / unlabelled), severity badge.
 6. **DBM actions** — TODO / IN-PROGRESS / DONE kanban sourced from `data/actions/<id>.yml`.
@@ -28,7 +28,7 @@ The dashboard regenerates from `data/state.json`. Two scripts:
 
 Assembles state from four sources:
 
-- **UNICEF SDMX** — `rsdmx` with retry + timeout. Caches a live probe to `data/sdmx_cache_latest.json`. Falls back to the cache on network failure.
+- **UNICEF SDMX** — lightweight HTTP reachability probe (`url()` open + `setTimeLimit`); the `rsdmx` package is checked only as a gate (full SDMX parsing is not performed). Caches the probe result to `data/sdmx_cache_latest.json`; falls back to the cache on network failure.
 - **cso-toolkit GitHub** — `gh api` using `GITHUB_TOKEN`. Pulls PRs, branches, issues, milestones.
 - **DW-Production GitHub** — `gh api` using `DW_PROD_READ_TOKEN` (a PAT). Same fields. The PR target repo is private; this token is the read-only handle.
 - **Operator snapshots** — reads `data/snapshots/teams_snapshot_latest.json` plus `data/snapshots/replication_<sector>_latest.json` files.
