@@ -75,6 +75,20 @@ read_svg <- function(name) {
   paste(readLines(path, warn = FALSE), collapse = "\n")
 }
 
+# Interactive ggiraph charts are committed as standalone widget HTML (operator
+# runs make_charts.R). Each is iframe-embedded so its JS/CSS deps stay isolated
+# from the main page; aspect-ratio CSS keeps it responsive without letterboxing.
+chart_frame <- function(file, title) {
+  path <- file.path(CHARTS_DIR, file)
+  if (!file.exists(path)) {
+    return(sprintf('<div class="chart-missing">chart not yet generated: %s</div>',
+                   htmlescape(file)))
+  }
+  sprintf(paste0('<iframe class="chart-frame" src="charts/%s" title="%s" ',
+                 'loading="lazy" scrolling="no"></iframe>'),
+          file, htmlescape(title))
+}
+
 htmlescape <- function(x) {
   if (is.null(x)) return("")
   x <- as.character(x)
@@ -452,17 +466,18 @@ render_tab_sectors <- function(state) {
   }, character(1)), collapse = "")
 
   charts_html <- paste0(
+    '<p class="chart-hint">Hover any bar, tile or point for the underlying figure.</p>',
     '<div class="chart-grid">',
       '<div class="chart"><h4>3-way parity (repo vs Teams vs Helix)</h4>',
-        read_svg("3way_parity.svg"), '</div>',
+        chart_frame("3way_parity.html", "Indicator coverage: repo-local vs Teams deposit vs SDMX-published"), '</div>',
       '<div class="chart"><h4>Coverage matrix</h4>',
-        read_svg("coverage_matrix.svg"), '</div>',
+        chart_frame("coverage_matrix.html", "Coverage matrix: pipeline stage reached per indicator set"), '</div>',
       '<div class="chart"><h4>Replication wall-time</h4>',
-        read_svg("walltime.svg"), '</div>',
+        chart_frame("walltime.html", "Replication wall-time by sector"), '</div>',
       '<div class="chart"><h4>PR funnel</h4>',
-        read_svg("pr_funnel.svg"), '</div>',
+        chart_frame("pr_funnel.html", "DW-Production pull-request funnel: open vs merged vs closed-unmerged"), '</div>',
       '<div class="chart"><h4>cso-toolkit drift</h4>',
-        read_svg("toolkit_drift.svg"), '</div>',
+        chart_frame("toolkit_drift.html", "cso-toolkit version adopted per DW-Production sector replication"), '</div>',
     '</div>'
   )
 
@@ -865,6 +880,8 @@ details summary { cursor: pointer; color: var(--accent); }
 .chart { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; box-shadow: var(--shadow); }
 .chart h4 { margin: 0 0 8px; font-size: 14px; color: var(--navy); }
 .chart svg { width: 100%; height: auto; }
+.chart-frame { width: 100%; aspect-ratio: 7 / 4.5; border: 0; display: block; }
+.chart-hint { font-size: 12px; color: var(--muted); margin: 4px 0 0; }
 .chart-missing { font-size: 12px; color: var(--muted); font-style: italic; padding: 24px; text-align: center; }
 .kanban { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; align-items: start; }
 .kanban-col { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; box-shadow: var(--shadow); }
