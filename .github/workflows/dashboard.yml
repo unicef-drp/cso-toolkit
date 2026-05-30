@@ -58,9 +58,13 @@ jobs:
 
       - name: Install R packages
         run: |
+          # collect.R + render.R only. Charts ship as committed static SVGs
+          # (make_charts.R is run by the operator, not in CI), so ggplot2 /
+          # svglite — and their systemfonts/textshaping system deps — are not
+          # installed here.
           install.packages(c(
             "yaml", "rsdmx", "httr", "jsonlite",
-            "data.table", "ggplot2", "svglite", "digest"
+            "data.table", "digest"
           ))
         shell: Rscript {0}
 
@@ -101,7 +105,11 @@ jobs:
             echo "No dashboard changes to commit."
           else
             git commit -m "chore(dashboard): nightly refresh [skip ci]"
-            git push
+            # Branch protection on develop/main rejects a direct bot push; that
+            # must NOT fail the job, because the deploy step publishes the
+            # freshly-rendered workspace regardless. History accumulation in git
+            # only happens where the push is allowed (e.g. an unprotected branch).
+            git push || echo "::warning::commit-back push rejected (protected branch); live deploy proceeds from the rendered workspace"
           fi
         shell: bash
 
