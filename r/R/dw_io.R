@@ -232,6 +232,22 @@ dw_resolve_path <- function(path = NULL, name = NULL, sector = NULL,
 #' @export
 dw_is_canonical <- function(path) {
 	path_n <- .normalize_for_comparison(path)
+
+	# OneDrive-mounted Teams Documents pattern: catches the per-user OneDrive
+	# path that mirrors the Teams "060.DW-MASTER" Documents library. Pattern:
+	#   <user-profile>/<org>/<library> - Documents/060.DW-MASTER/...
+	# The earlier teamsFolder-prefix check misses this when the consumer's
+	# profile sets teamsFolder via a different path (e.g., a Z: mirror).
+	# Backslash variants (raw Windows paths) are normalised to forward
+	# slashes first so the same regex catches both forms. Triggered #54:
+	# HVA + ED reviewer-mode runs overwrote canonical Teams artifacts
+	# because mode-lock missed this UNC pattern.
+	onedrive_pattern <- "/UNICEF/[^/]+ - Documents/060\\.DW-MASTER/"
+	if (!is.na(path_n) &&
+	    grepl(onedrive_pattern, gsub("\\\\", "/", path_n), perl = TRUE)) {
+		return(TRUE)
+	}
+
 	canon_roots <- c(
 		.try_get("teamsWrkDataCanonical"),
 		.try_get("teamsRawDataCanonical"),
