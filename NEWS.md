@@ -12,8 +12,8 @@ Quality release. Four issues land in one cycle — one HIGH-severity
 canonical-recognition fix that would have allowed reviewer-mode
 overwrites of canonical Teams artefacts, plus three cleanups
 (re-exported `dw_root()` wrapper, uniform `.cso_require` envelope on
-standalone-source `%>%` gate, and cross-platform manifest hash
-stability via `.gitattributes` LF normalisation). No public API
+standalone-source `%>%` gate, and an `r/.gitattributes` pin so the R
+subtree checks out with LF endings on Windows). No public API
 breaks.
 
 ### `dw_is_canonical` recognises OneDrive-mounted Teams Documents path (issue [#54](https://github.com/unicef-drp/cso-toolkit/issues/54)) — **HIGH severity**
@@ -73,21 +73,24 @@ so the envelope shape is uniform. Consumers who source the file
 standalone without `magrittr` installed now see the same actionable
 three-part message as every other toolkit raise.
 
-### `.gitattributes` force LF + manifest CRLF/LF normalisation (issue [#52](https://github.com/unicef-drp/cso-toolkit/issues/52))
+### `r/.gitattributes` pins LF endings on the R subtree (issue [#52](https://github.com/unicef-drp/cso-toolkit/issues/52))
 
-`.toolkit_manifest.yml` carries SHA-256 hashes of vendored helpers
-so `cso_toolkit_check()` can flag drift. On Windows checkouts under
-default git autocrlf settings, files were written with CRLF endings
-while their recorded hashes were computed on LF — every Windows
-consumer's first `cso_toolkit_check()` call flagged spurious drift
-on every vendored file.
+On Windows checkouts under default git `autocrlf` settings, R source
+files in the package subtree (`*.R`, `*.Rd`, `NAMESPACE`,
+`DESCRIPTION`, `*.yml`, `*.yaml`, `*.md`) were rewritten with CRLF
+endings on checkout. That made local working-tree SHA-256 hashes
+diverge from the LF-computed Git blob hashes — a recurring source
+of spurious "drift" complaints from Windows consumers comparing
+working-tree hashes against manifest entries computed on Linux.
 
-A repository-root `.gitattributes` now forces LF endings on `.R`,
-`.py`, `.do`, `.yml`, `.yaml`, `.md`, and the manifest itself, so
-checkouts are deterministic across Windows, macOS, and Linux. The
-hash-computation path in `cso_toolkit_check()` also normalises
-CRLF → LF before hashing, so legacy checkouts that pre-date the
-`.gitattributes` see green even before re-cloning.
+A new `r/.gitattributes` pins LF endings on the R subtree's source
+files so Windows checkouts of the package subtree are byte-identical
+to Linux/macOS. This is scoped to `r/` — the rest of the repo
+inherits the platform default. Per-file hash drift detection in
+`cso_toolkit_check()` itself is **not** part of this release; today
+the function only compares the pinned manifest version against the
+upstream latest tag. The richer drift logic is planned for the
+`cso_toolkit_diff()` / `cso_toolkit_pull()` work (stubbed in v0.4.6).
 
 ### Docs: third role renamed INGESTOR → PUBLISHER (DBM / DBR / DBP)
 
