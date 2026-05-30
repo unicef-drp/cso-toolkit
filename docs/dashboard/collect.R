@@ -289,20 +289,22 @@ collect_dw_production_github <- function() {
     NA_character_
   }
   bysec <- setNames(
-    lapply(SECTORS, function(s) list(prs_open = 0L, issues_open = 0L, branches = 0L)),
+    lapply(SECTORS, function(s) list(prs_open = 0L, prs_closed = 0L,
+                                     issues_open = 0L, issues_closed = 0L,
+                                     branches = 0L)),
     SECTORS
   )
   for (p in prs) {
-    if (identical(p$state, "open")) {
-      s <- sector_of(paste(p$title %||% "", p$head$ref %||% ""))
-      if (!is.na(s)) bysec[[s]]$prs_open <- bysec[[s]]$prs_open + 1L
-    }
+    s <- sector_of(paste(p$title %||% "", p$head$ref %||% ""))
+    if (is.na(s)) next
+    if (identical(p$state, "open")) bysec[[s]]$prs_open   <- bysec[[s]]$prs_open + 1L
+    else                            bysec[[s]]$prs_closed <- bysec[[s]]$prs_closed + 1L
   }
   for (i in issues) {
-    if (identical(i$state, "open")) {
-      s <- sector_of(i$title %||% "")
-      if (!is.na(s)) bysec[[s]]$issues_open <- bysec[[s]]$issues_open + 1L
-    }
+    s <- sector_of(i$title %||% "")
+    if (is.na(s)) next
+    if (identical(i$state, "open")) bysec[[s]]$issues_open   <- bysec[[s]]$issues_open + 1L
+    else                            bysec[[s]]$issues_closed <- bysec[[s]]$issues_closed + 1L
   }
   for (b in branches) {
     s <- sector_of(b$name %||% "")
