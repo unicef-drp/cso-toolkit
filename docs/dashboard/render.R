@@ -30,10 +30,19 @@ suppressPackageStartupMessages({
   library(jsonlite)
 })
 
-SCRIPT_DIR    <- tryCatch(
-  dirname(normalizePath(sys.frame(1)$ofile, winslash = "/")),
-  error = function(e) getwd()
-)
+SCRIPT_DIR    <- local({
+  # Under `Rscript path/to/render.R`, commandArgs() carries `--file=...`.
+  # `sys.frame(1)$ofile` is only set when source()d, so the old code fell back
+  # to getwd() under Rscript and read state.json / charts from the wrong dir.
+  a <- commandArgs(trailingOnly = FALSE)
+  f <- sub("^--file=", "", grep("^--file=", a, value = TRUE))
+  if (length(f) == 1L && nzchar(f)) {
+    return(dirname(normalizePath(f, winslash = "/")))
+  }
+  ofile <- tryCatch(sys.frame(1)$ofile, error = function(e) NULL)
+  if (!is.null(ofile)) return(dirname(normalizePath(ofile, winslash = "/")))
+  getwd()
+})
 DASHBOARD_DIR <- SCRIPT_DIR
 DATA_DIR      <- file.path(DASHBOARD_DIR, "data")
 CHARTS_DIR    <- file.path(DASHBOARD_DIR, "charts")
@@ -314,11 +323,24 @@ render_sector_card <- function(s, r) {
     sprintf('<pre class="blocker-pre">%s</pre>', htmlescape(blocker))
   }
 
-  rows_html <- ""
+  # rows: top-level scalar, else sum the per-file outputs[] array (WS / ED carry
+  # no scalar rows — their counts live in outputs[], which were being dropped).
+  total_rows <- NULL
+  n_files    <- 0L
   if (!is.null(r$rows)) {
+    total_rows <- r$rows
+  } else if (!is.null(r$outputs) && length(r$outputs) > 0) {
+    total_rows <- sum(vapply(r$outputs, function(o) {
+      v <- o$rows %||% 0; if (is.numeric(v)) v else 0
+    }, numeric(1)))
+    n_files <- length(r$outputs)
+  }
+  rows_html <- ""
+  if (!is.null(total_rows)) {
+    suffix <- if (n_files > 1L) sprintf(' <span class="muted">/ %d files</span>', n_files) else ""
     rows_html <- sprintf(
-      '<div class="card-stat"><span class="k">rows</span> <span class="v">%s</span></div>',
-      fmtnum(r$rows)
+      '<div class="card-stat"><span class="k">rows</span> <span class="v">%s</span>%s</div>',
+      fmtnum(total_rows), suffix
     )
   }
   ind_html <- ""
@@ -454,7 +476,7 @@ render_tab_branches <- function(state) {
       )
     }, character(1)), collapse = "")
     body <- sprintf(
-      '<table class="data-table"><thead><tr><th>Branch</th><th>Link</th><th>SHA</th><th>Protected</th></tr></thead><tbody>%s</tbody></table>',
+      '<div class="table-wrap"><table class="data-table"><thead><tr><th>Branch</th><th>Link</th><th>SHA</th><th>Protected</th></tr></thead><tbody>%s</tbody></table></div>',
       rows
     )
   }
@@ -472,23 +494,20 @@ render_tab_issues <- function(state) {
   issues <- state$cso_toolkit$issues %||% list()
   issues <- Filter(function(i) is.null(i$pull_request), issues)
 
-  bucket <- function(i) {
-    ms <- i$milestone$title %||% "unlabelled"
-    if (grepl("0\\.4\\.6", ms)) return("v0.4.6")
-    if (grepl("0\\.5\\.0", ms)) return("v0.5.0")
-    "unlabelled"
+  # Bucket by each issue's ACTUAL milestone title (null -> "unlabelled").
+  # The old 2-pattern allowlist dumped real v0.4.3/v0.4.4/v0.4.5 milestones
+  # into "unlabelled", asserting issues were unlabelled when they were not.
+  title_of <- function(i) {
+    t <- i$milestone$title %||% ""
+    if (!nzchar(t)) "unlabelled" else t
   }
+  titles <- vapply(issues, title_of, character(1))
+  named  <- sort(unique(titles[titles != "unlabelled"]), decreasing = TRUE)
+  order_names <- c(named, if ("unlabelled" %in% titles) "unlabelled")
 
-  groups <- list("v0.4.6" = list(), "v0.5.0" = list(), "unlabelled" = list())
-  for (i in issues) {
-    g <- bucket(i)
-    groups[[g]] <- c(groups[[g]], list(i))
-  }
-
-  section <- function(name, items) {
-    if (length(items) == 0) {
-      return(sprintf('<h3>%s</h3><div class="muted">none</div>', htmlescape(name)))
-    }
+  section <- function(name) {
+    items <- issues[titles == name]
+    if (length(items) == 0) return("")
     lis <- paste(vapply(items, function(i) {
       sev <- "info"
       labels <- vapply(i$labels %||% list(), function(l) l$name %||% "", character(1))
@@ -508,9 +527,7 @@ render_tab_issues <- function(state) {
   paste0(
     '<section id="tab-issues" class="tab-pane">',
     '<h2>cso-toolkit issues by milestone</h2>',
-    section("v0.4.6",     groups[["v0.4.6"]]),
-    section("v0.5.0",     groups[["v0.5.0"]]),
-    section("unlabelled", groups[["unlabelled"]]),
+    paste(vapply(order_names, section, character(1)), collapse = ""),
     '</section>'
   )
 }
@@ -621,7 +638,7 @@ render_tab_toolkit <- function(state) {
 CSS <- '
 :root {
   --fg: #1a1d23;
-  --muted: #6a7585;
+  --muted: #565f6d;
   --bg: #f6f7f9;
   --card: #ffffff;
   --border: #dde1e7;
@@ -699,26 +716,60 @@ details summary { cursor: pointer; color: var(--accent); }
 .sev-low { background: #e5e7eb; color: var(--muted); }
 .placeholder { padding: 24px; background: var(--card); border: 1px dashed var(--border); border-radius: 6px; }
 code { background: #f0f3f7; padding: 1px 4px; border-radius: 3px; font-size: 12px; }
+.table-wrap { overflow-x: auto; }
+nav.tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+@media (max-width: 640px) {
+  .row { grid-template-columns: 1fr; }
+  .phase-row { grid-template-columns: repeat(2, 1fr); }
+  nav.tabs { padding: 0 12px; }
+  main { padding: 16px; }
+}
 '
 
 JS <- '
 (function() {
-  function activate(tabId) {
-    document.querySelectorAll("nav.tabs button").forEach(function(b) {
-      b.classList.toggle("active", b.dataset.target === tabId);
+  var nav = document.querySelector("nav.tabs");
+  var buttons = Array.prototype.slice.call(document.querySelectorAll("nav.tabs button"));
+  var panes = Array.prototype.slice.call(document.querySelectorAll(".tab-pane"));
+  // Wire the WAI-ARIA tabs pattern programmatically so the 8 render functions
+  // stay simple: tablist / tab / tabpanel roles, aria-selected, aria-controls.
+  if (nav) { nav.setAttribute("role", "tablist"); nav.setAttribute("aria-label", "Dashboard sections"); }
+  buttons.forEach(function(b) {
+    var id = b.dataset.target;
+    b.setAttribute("role", "tab");
+    b.id = id + "-tab";
+    b.setAttribute("aria-controls", id);
+    var pane = document.getElementById(id);
+    if (pane) {
+      pane.setAttribute("role", "tabpanel");
+      pane.setAttribute("aria-labelledby", id + "-tab");
+      pane.setAttribute("tabindex", "0");
+    }
+  });
+  function activate(tabId, focus) {
+    buttons.forEach(function(b) {
+      var on = b.dataset.target === tabId;
+      b.classList.toggle("active", on);
+      b.setAttribute("aria-selected", on ? "true" : "false");
+      b.tabIndex = on ? 0 : -1;            // roving tabindex
+      if (on && focus) b.focus();
     });
-    document.querySelectorAll(".tab-pane").forEach(function(p) {
-      p.classList.toggle("active", p.id === tabId);
-    });
+    panes.forEach(function(p) { p.classList.toggle("active", p.id === tabId); });
     if (window.history && window.history.replaceState) {
       window.history.replaceState(null, "", "#" + tabId);
     }
   }
-  document.querySelectorAll("nav.tabs button").forEach(function(b) {
+  buttons.forEach(function(b, idx) {
     b.addEventListener("click", function() { activate(b.dataset.target); });
+    b.addEventListener("keydown", function(e) {
+      var d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+      if (!d) { return; }
+      e.preventDefault();
+      activate(buttons[(idx + d + buttons.length) % buttons.length].dataset.target, true);
+    });
   });
   var hash = (location.hash || "").replace(/^#/, "");
-  if (hash && document.getElementById(hash)) activate(hash);
+  activate(hash && document.getElementById(hash) ? hash : "tab-landing");
 })();
 '
 
@@ -765,6 +816,8 @@ html <- paste0(
   "<title>cso-toolkit sector dashboard</title>\n",
   '<meta name="viewport" content="width=device-width, initial-scale=1">\n',
   "<style>", CSS, "</style>\n",
+  # No-JS fallback: reveal every pane so all content stays reachable.
+  "<noscript><style>.tab-pane{display:block !important}</style></noscript>\n",
   "</head><body>\n",
   '<header class="app">',
     '<h1>cso-toolkit sector dashboard</h1>',
