@@ -8,7 +8,7 @@
 #
 # Reads:
 #   data/parity.json                            (3-way parity counts)
-#   data/state.json                             (cso_toolkit.prs for the funnel)
+#   data/state.json                             (dw_production.prs for the funnel)
 #   data/snapshots/replication_<sector>_latest.json  (wall_time_s per sector)
 #
 # Writes:
@@ -296,22 +296,13 @@ if (!file.exists(STATE_PATH)) {
   stop(sprintf("state.json not found at %s", STATE_PATH))
 }
 state <- jsonlite::fromJSON(STATE_PATH, simplifyVector = FALSE)
-prs   <- state$cso_toolkit$prs %||% list()
-
-n_open   <- 0L
-n_merged <- 0L
-n_closed <- 0L
-for (pr in prs) {
-  st     <- pr$state %||% "open"
-  merged <- !is.null(pr$merged_at)
-  if (identical(st, "open")) {
-    n_open <- n_open + 1L
-  } else if (merged) {
-    n_merged <- n_merged + 1L
-  } else {
-    n_closed <- n_closed + 1L
-  }
-}
+# DW-Production PR funnel from privacy-safe aggregate counts (collect.R emits
+# counts only — the private repo's PR list is never published).
+dwc      <- state$dw_production$counts %||% list()
+n_open   <- dwc$prs_open   %||% 0L
+n_merged <- dwc$prs_merged %||% 0L
+n_closed <- dwc$prs_closed %||% 0L
+n_total  <- dwc$prs_total  %||% (n_open + n_merged + n_closed)
 
 p4_df <- data.frame(
   stage = factor(c("Open", "Merged", "Closed (unmerged)"),
@@ -331,17 +322,17 @@ p4 <- ggplot(p4_df, aes(x = stage, y = count, fill = stage)) +
   scale_fill_manual(values = pal_pr, guide = "none") +
   scale_y_continuous(expand = expansion(mult = c(0, 0.14))) +
   labs(
-    title    = "cso-toolkit PR funnel",
+    title    = "DW-Production PR funnel",
     subtitle = sprintf("%d pull requests total — open vs merged vs closed-unmerged",
-                       length(prs)),
+                       n_total),
     x = NULL, y = "Pull requests"
   ) +
   theme_dash() +
   theme(legend.position = "none")
 
 save_svg(p4, "pr_funnel.svg",
-         title = "cso-toolkit pull-request funnel: open vs merged vs closed-unmerged",
-         desc  = "Bar chart of pull-request counts bucketed by state.")
+         title = "DW-Production pull-request funnel: open vs merged vs closed-unmerged",
+         desc  = "Bar chart of DW-Production pull-request counts bucketed by state.")
 
 # ======================================================================== #
 # Chart 5 — toolkit_drift.svg : version alignment across sector branches    #

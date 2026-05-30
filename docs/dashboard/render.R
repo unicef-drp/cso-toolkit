@@ -116,13 +116,12 @@ compute_kpis <- function(state) {
     identical(rep[[s]]$status, "BLOCKED")
   }, logical(1)))
 
-  open_prs    <- length(Filter(function(p) identical(p$state, "open"),
-                               state$cso_toolkit$prs %||% list()))
-  # GitHub's /issues endpoint returns PRs too; filter them out so the
-  # KPI matches the Issues tab on github.com.
-  issues_only <- Filter(function(i) is.null(i$pull_request),
-                        state$cso_toolkit$issues %||% list())
-  open_issues <- length(Filter(function(i) identical(i$state, "open"), issues_only))
+  # The dashboard tracks DW-Production sector work, so the PR/issue KPIs report
+  # DW-Production. collect.R emits privacy-safe aggregate counts only (the repo
+  # is private; the site is public), so read those — no per-item lists exist.
+  dwc <- state$dw_production$counts %||% list()
+  open_prs    <- dwc$prs_open    %||% 0L
+  open_issues <- dwc$issues_open %||% 0L
   # Normalize status the same way render_tab_actions does (uppercase + _->-)
   # so we don't undercount in-progress/in_progress/IN-PROGRESS variants.
   open_actions <- length(Filter(function(a) {
@@ -151,8 +150,8 @@ render_kpi_row <- function(kpis) {
     list(label = "Fully replicated", value = kpis$n_full,       sub = "v0.4.x mode-lock"),
     list(label = "Partial",          value = kpis$n_partial,    sub = "blocked mid-pipeline"),
     list(label = "Blocked",          value = kpis$n_blocked,    sub = "env / package issue"),
-    list(label = "Open PRs",         value = kpis$open_prs,     sub = "cso-toolkit"),
-    list(label = "Open issues",      value = kpis$open_issues,  sub = "cso-toolkit"),
+    list(label = "Open PRs",         value = kpis$open_prs,     sub = "DW-Production"),
+    list(label = "Open issues",      value = kpis$open_issues,  sub = "DW-Production"),
     list(label = "DBM actions open", value = kpis$open_actions, sub = "across sectors")
   )
   paste0(
@@ -198,6 +197,8 @@ render_tab_landing <- function(state, kpis) {
 
   # activity feed: latest 8 PRs from cso-toolkit (sorted by updated_at desc;
   # GitHub API pagination order is not guaranteed to match recency).
+  # cso-toolkit PRs (public repo) — DW-Production PR titles are private and must
+  # not be published, so the activity feed shows toolkit activity instead.
   prs <- state$cso_toolkit$prs %||% list()
   prs_sorted <- if (length(prs) == 0) {
     prs
@@ -274,7 +275,7 @@ render_tab_landing <- function(state, kpis) {
     '</div>',
     '<div class="row">',
       '<div class="col">',
-        '<h3>Activity feed</h3>',
+        '<h3>Recent cso-toolkit activity</h3>',
         feed_html,
       '</div>',
       '<div class="col">',
@@ -459,30 +460,31 @@ render_tab_phases <- function(state) {
   )
 }
 
-# ----- Tab 4: cso-toolkit Branches ----------------------------------------- #
+# ----- Tab 4: DW-Production Branches --------------------------------------- #
 
 render_tab_branches <- function(state) {
-  branches <- state$cso_toolkit$branches %||% list()
-  if (length(branches) == 0) {
-    body <- '<div class="muted">no branches captured</div>'
+  bysec <- state$dw_production$by_sector %||% list()
+  total <- state$dw_production$counts$branches_total %||% 0L
+  if (length(bysec) == 0) {
+    body <- '<div class="muted">DW-Production data unavailable (DW_PROD_READ_TOKEN not set)</div>'
   } else {
-    rows <- paste(vapply(branches, function(b) {
-      sprintf(
-        '<tr><td><code>%s</code></td><td><a href="https://github.com/unicef-drp/cso-toolkit/tree/%s">view</a></td><td>%s</td><td>%s</td></tr>',
-        htmlescape(b$name %||% ""),
-        htmlescape(b$name %||% ""),
-        htmlescape(substr(b$commit$sha %||% "", 1, 7)),
-        htmlescape(b$protected %||% FALSE)
-      )
+    rows <- paste(vapply(SECTOR_ORDER, function(s) {
+      sprintf('<tr><td>%s</td><td>%d</td></tr>',
+              htmlescape(SECTOR_LABELS[[s]] %||% s),
+              bysec[[s]]$branches %||% 0L)
     }, character(1)), collapse = "")
     body <- sprintf(
-      '<div class="table-wrap"><table class="data-table"><thead><tr><th>Branch</th><th>Link</th><th>SHA</th><th>Protected</th></tr></thead><tbody>%s</tbody></table></div>',
-      rows
+      paste0('<p class="muted">DW-Production is a private repo; branch <em>counts</em> are ',
+             'shown by sector (no branch names are published). %d branches total ',
+             '(sector-tagged subset listed; the remainder are cross-cutting / infra).</p>',
+             '<div class="table-wrap"><table class="data-table"><thead><tr>',
+             '<th>Sector</th><th>Branches</th></tr></thead><tbody>%s</tbody></table></div>'),
+      total, rows
     )
   }
   paste0(
     '<section id="tab-branches" class="tab-pane">',
-    '<h2>cso-toolkit branches</h2>',
+    '<h2>DW-Production branches by sector</h2>',
     body,
     '</section>'
   )
@@ -491,43 +493,32 @@ render_tab_branches <- function(state) {
 # ----- Tab 5: Issues by milestone ------------------------------------------ #
 
 render_tab_issues <- function(state) {
-  issues <- state$cso_toolkit$issues %||% list()
-  issues <- Filter(function(i) is.null(i$pull_request), issues)
-
-  # Bucket by each issue's ACTUAL milestone title (null -> "unlabelled").
-  # The old 2-pattern allowlist dumped real v0.4.3/v0.4.4/v0.4.5 milestones
-  # into "unlabelled", asserting issues were unlabelled when they were not.
-  title_of <- function(i) {
-    t <- i$milestone$title %||% ""
-    if (!nzchar(t)) "unlabelled" else t
-  }
-  titles <- vapply(issues, title_of, character(1))
-  named  <- sort(unique(titles[titles != "unlabelled"]), decreasing = TRUE)
-  order_names <- c(named, if ("unlabelled" %in% titles) "unlabelled")
-
-  section <- function(name) {
-    items <- issues[titles == name]
-    if (length(items) == 0) return("")
-    lis <- paste(vapply(items, function(i) {
-      sev <- "info"
-      labels <- vapply(i$labels %||% list(), function(l) l$name %||% "", character(1))
-      if (any(grepl("HIGH|critical", labels, ignore.case = TRUE))) sev <- "high"
-      sprintf(
-        '<li><span class="sev sev-%s">%s</span> <a href="%s">#%s</a> %s <span class="muted">(%s)</span></li>',
-        sev, sev,
-        htmlescape(i$html_url %||% "#"),
-        htmlescape(i$number   %||% ""),
-        htmlescape(i$title    %||% ""),
-        htmlescape(i$state    %||% "")
-      )
+  bysec <- state$dw_production$by_sector %||% list()
+  cnt   <- state$dw_production$counts %||% list()
+  if (length(bysec) == 0) {
+    body <- '<div class="muted">DW-Production data unavailable (DW_PROD_READ_TOKEN not set)</div>'
+  } else {
+    rows <- paste(vapply(SECTOR_ORDER, function(s) {
+      b <- bysec[[s]]
+      sprintf('<tr><td>%s</td><td>%d</td><td>%d</td></tr>',
+              htmlescape(SECTOR_LABELS[[s]] %||% s),
+              b$prs_open %||% 0L, b$issues_open %||% 0L)
     }, character(1)), collapse = "")
-    sprintf("<h3>%s</h3><ul>%s</ul>", htmlescape(name), lis)
+    body <- sprintf(
+      paste0('<p class="muted">DW-Production is a private repo; open PR and issue ',
+             '<em>counts</em> are shown by sector (no titles are published). ',
+             'Totals across the repo: %d open PRs, %d open issues ',
+             '(sector-tagged subset listed; the remainder are cross-cutting).</p>',
+             '<div class="table-wrap"><table class="data-table"><thead><tr>',
+             '<th>Sector</th><th>Open PRs</th><th>Open issues</th></tr></thead>',
+             '<tbody>%s</tbody></table></div>'),
+      cnt$prs_open %||% 0L, cnt$issues_open %||% 0L, rows
+    )
   }
-
   paste0(
     '<section id="tab-issues" class="tab-pane">',
-    '<h2>cso-toolkit issues by milestone</h2>',
-    paste(vapply(order_names, section, character(1)), collapse = ""),
+    '<h2>DW-Production PRs &amp; issues by sector</h2>',
+    body,
     '</section>'
   )
 }
