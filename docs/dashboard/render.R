@@ -551,25 +551,47 @@ render_tab_issues <- function(state) {
   if (length(bysec) == 0) {
     body <- '<div class="muted">DW-Production data unavailable (DW_PROD_READ_TOKEN not set)</div>'
   } else {
+    pct <- function(n, d) if (d > 0) round(100 * n / d) else 0L
+    # ---- overall open-vs-closed bars (issues + PRs) ----
+    io <- cnt$issues_open %||% 0L; ic <- cnt$issues_closed %||% 0L; it <- max(1L, io + ic)
+    po <- cnt$prs_open %||% 0L; pm <- cnt$prs_merged %||% 0L
+    pc <- (cnt$prs_total %||% 0L) - po - pm; pt <- max(1L, po + pm + pc)
+    overview <- sprintf(paste0(
+      '<div class="ovc"><span class="ovc-label">Issues</span><span class="ovc-bar">',
+        '<span class="ovc-seg ovc-open" style="width:%d%%"></span>',
+        '<span class="ovc-seg ovc-closed" style="width:%d%%"></span></span>',
+        '<span class="ovc-nums">%d open &middot; %d closed</span></div>',
+      '<div class="ovc"><span class="ovc-label">PRs</span><span class="ovc-bar">',
+        '<span class="ovc-seg ovc-open" style="width:%d%%"></span>',
+        '<span class="ovc-seg ovc-merged" style="width:%d%%"></span>',
+        '<span class="ovc-seg ovc-closed" style="width:%d%%"></span></span>',
+        '<span class="ovc-nums">%d open &middot; %d merged &middot; %d closed</span></div>'),
+      pct(io, it), pct(ic, it), io, ic,
+      pct(po, pt), pct(pm, pt), pct(pc, pt), po, pm, pc)
+
+    # ---- per-sector table: counts + open/closed mini-bar + GitHub link ----
     rows <- paste(vapply(SECTOR_ORDER, function(s) {
       b <- bysec[[s]]
-      sprintf('<tr><td>%s</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td></tr>',
-              htmlescape(SECTOR_LABELS[[s]] %||% s),
-              b$prs_open %||% 0L, b$prs_closed %||% 0L,
-              b$issues_open %||% 0L, b$issues_closed %||% 0L)
+      so <- b$issues_open %||% 0L; sc <- b$issues_closed %||% 0L; stot <- max(1L, so + sc)
+      gh <- sprintf("https://github.com/unicef-drp/DW-Production/issues?q=is%%3Aissue+%s",
+                    utils::URLencode(s))
+      sprintf(paste0('<tr><td>%s</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td>',
+        '<td><span class="mini-bar"><span class="mini-open" style="width:%d%%"></span>',
+        '<span class="mini-closed" style="width:%d%%"></span></span></td>',
+        '<td><a class="ghlink" href="%s">issues</a></td></tr>'),
+        htmlescape(SECTOR_LABELS[[s]] %||% s),
+        b$prs_open %||% 0L, b$prs_closed %||% 0L, so, sc,
+        pct(so, stot), pct(sc, stot), gh)
     }, character(1)), collapse = "")
-    body <- sprintf(
-      paste0('<p class="muted">DW-Production is a private repo; PR and issue ',
-             '<em>counts</em> are shown by sector (no titles are published). ',
-             'Repo totals: %d open / %d closed PRs, %d open / %d closed issues ',
-             '(sector-tagged subset listed; the remainder are cross-cutting).</p>',
-             '<div class="table-wrap"><table class="data-table"><thead><tr>',
-             '<th>Sector</th><th>Open PRs</th><th>Closed PRs</th>',
-             '<th>Open issues</th><th>Closed issues</th></tr></thead>',
-             '<tbody>%s</tbody></table></div>'),
-      cnt$prs_open %||% 0L, (cnt$prs_total %||% 0L) - (cnt$prs_open %||% 0L),
-      cnt$issues_open %||% 0L, cnt$issues_closed %||% 0L, rows
-    )
+    body <- sprintf(paste0(
+      '<p class="section-lead">Open vs closed across DW-Production (private repo &mdash; ',
+      '<em>counts</em> only, no titles; click any "issues" link to open that sector\'s ',
+      'real issues on GitHub).</p>%s',
+      '<div class="table-wrap"><table class="data-table"><thead><tr>',
+      '<th>Sector</th><th>Open PRs</th><th>Closed PRs</th><th>Open issues</th>',
+      '<th>Closed issues</th><th>Issues (open/closed)</th><th>GitHub</th>',
+      '</tr></thead><tbody>%s</tbody></table></div>'),
+      overview, rows)
   }
   paste0(
     '<section id="tab-issues" class="tab-pane">',
@@ -761,7 +783,7 @@ main { padding: 18px 24px; max-width: 1380px; margin: 0 auto; }
 a.kpi, .kpi { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 15px 16px; display: block; text-decoration: none; color: inherit; box-shadow: var(--shadow); border-top: 3px solid var(--cyan); transition: transform .08s, box-shadow .12s; position: relative; }
 a.kpi:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(16,42,77,.12); }
 a.kpi:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-a.kpi::after { content: "\2197"; position: absolute; top: 12px; right: 12px; color: var(--cyan); font-size: 13px; opacity: 0; transition: opacity .12s; }
+a.kpi::after { content: "\\2197"; position: absolute; top: 12px; right: 12px; color: var(--cyan); font-size: 13px; opacity: 0; transition: opacity .12s; }
 a.kpi:hover::after { opacity: 1; }
 .kpi-value { font-size: 30px; font-weight: 800; color: var(--navy); line-height: 1; }
 .kpi-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-top: 6px; }
@@ -795,7 +817,7 @@ a.kpi:hover::after { opacity: 1; }
 .dw-stat .l { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
 .ghlink { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 600; color: var(--accent); text-decoration: none; }
 .ghlink:hover { text-decoration: underline; }
-.ghlink::after { content: "\2197"; font-size: 11px; }
+.ghlink::after { content: "\\2197"; font-size: 11px; }
 .lock { font-size: 11px; color: var(--muted); }
 
 /* ---- pills / sev ---- */
@@ -847,11 +869,25 @@ details summary { cursor: pointer; color: var(--accent); }
 .diagram-frame svg { width: 100%; height: auto; }
 .data-table { width: 100%; border-collapse: collapse; font-size: 13px; background: var(--card); }
 .data-table th, .data-table td { padding: 9px 12px; border-bottom: 1px solid var(--border); text-align: left; }
-.data-table th { background: #eef3f9; color: var(--navy); font-size: 12px; text-transform: uppercase; letter-spacing: .4px; }
+.data-table th { background: #eef3f9; color: var(--navy); font-size: 12px; text-transform: uppercase; letter-spacing: .4px; cursor: pointer; user-select: none; white-space: nowrap; }
+.data-table th:hover { background: #e3ebf4; }
+.data-table th.sort-asc::after { content: " \\25B2"; font-size: 9px; color: var(--cyan); }
+.data-table th.sort-desc::after { content: " \\25BC"; font-size: 9px; color: var(--cyan); }
 .data-table tbody tr:hover { background: #f6f9fc; }
 .placeholder { padding: 24px; background: var(--card); border: 1px dashed var(--border); border-radius: 10px; }
 code { background: #eef3f9; padding: 1px 5px; border-radius: 4px; font-size: 12px; }
 .table-wrap { overflow-x: auto; }
+.ovc { display: flex; align-items: center; gap: 10px; margin: 6px 0; max-width: 660px; }
+.ovc-label { width: 56px; font-size: 12px; color: var(--muted); font-weight: 600; }
+.ovc-bar { flex: 1; display: flex; height: 18px; border-radius: 5px; overflow: hidden; background: #eef3f9; }
+.ovc-seg { height: 100%; }
+.ovc-open { background: var(--cyan); }
+.ovc-merged { background: var(--ok); }
+.ovc-closed { background: #aab4c2; }
+.ovc-nums { font-size: 12px; color: var(--muted); width: 180px; }
+.mini-bar { display: inline-flex; width: 96px; height: 10px; border-radius: 3px; overflow: hidden; background: #eef3f9; vertical-align: middle; }
+.mini-open { background: var(--cyan); }
+.mini-closed { background: #c2cad6; }
 
 @media (max-width: 760px) {
   .hero { grid-template-columns: 1fr; }
@@ -972,6 +1008,36 @@ JS <- '
   if (reset) { reset.addEventListener("click", function(e) {
     e.preventDefault(); try { localStorage.removeItem(KEY); } catch (e2) {} location.reload();
   }); }
+})();
+
+// ---- Sortable data tables (vanilla, no deps) ----
+(function() {
+  function val(tr, i) {
+    var td = tr.children[i];
+    if (!td) { return ""; }
+    var t = (td.getAttribute("data-sort") || td.textContent || "").trim();
+    var n = parseFloat(t.replace(/[,\\s]/g, ""));
+    return isNaN(n) ? t.toLowerCase() : n;
+  }
+  document.querySelectorAll("table.data-table").forEach(function(tbl) {
+    var ths = Array.prototype.slice.call(tbl.querySelectorAll("thead th"));
+    ths.forEach(function(th, i) {
+      th.addEventListener("click", function() {
+        var tbody = tbl.querySelector("tbody");
+        if (!tbody) { return; }
+        var rows = Array.prototype.slice.call(tbody.querySelectorAll("tr"));
+        var asc = th.getAttribute("data-asc") !== "true";
+        rows.sort(function(a, b) {
+          var va = val(a, i), vb = val(b, i);
+          return va < vb ? (asc ? -1 : 1) : va > vb ? (asc ? 1 : -1) : 0;
+        });
+        rows.forEach(function(r) { tbody.appendChild(r); });
+        ths.forEach(function(h) { h.removeAttribute("data-asc"); h.classList.remove("sort-asc", "sort-desc"); });
+        th.setAttribute("data-asc", asc ? "true" : "false");
+        th.classList.add(asc ? "sort-asc" : "sort-desc");
+      });
+    });
+  });
 })();
 '
 
