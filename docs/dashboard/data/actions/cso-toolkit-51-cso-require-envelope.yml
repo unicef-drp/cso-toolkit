@@ -1,0 +1,14 @@
+id: cso-toolkit-51-cso-require-envelope
+title: "cso-toolkit#51: cso_require envelope"
+sector: null
+severity: MEDIUM
+status: TODO
+owner: "cso-toolkit maintainers"
+created_at: "2026-05-30"
+due_at: null
+blocker_for_dbm: null
+description: |
+  Add cso_require() envelope to standardise required-package loading across
+  sector drivers. Tracked at cso-toolkit#51.
+references:
+  - "cso-toolkit issue tracker"

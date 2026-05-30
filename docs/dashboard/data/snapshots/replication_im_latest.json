@@ -1,0 +1,24 @@
+{
+  "_schema_version": "1.0.0",
+  "sector": "im",
+  "last_run_at": "2026-05-29T00:00:00Z",
+  "last_run_by": "reviewer",
+  "status": "FULLY_REPLICATED",
+  "wall_time_s": 11.1,
+  "output_file": "DW_IM_HELIX.csv",
+  "output_path_repo_local": true,
+  "size_mb": 12.84,
+  "rows": 87573,
+  "cols": 19,
+  "indicators": 18,
+  "ref_areas": 301,
+  "sha256": "4c13997ca93c112243548a3edf405a78518c4615e002e927ad290949ae6d1a6c",
+  "fixes_applied": [
+    "dw_url_allowlist seeded from dw_default_unicef_allowlist() (profile-only convention)",
+    "dw_frozen_root set explicitly to <dwRawData>/_frozen (profile-only convention)"
+  ],
+  "toolkit_findings": [
+    "Reviewer-mode mode-lock honored (output went to _local/im/output/ correctly because sector writes to a repo-relative path explicitly)"
+  ],
+  "blockers_for_dbm": null
+}

@@ -159,13 +159,13 @@ flowchart LR
 
     P["PRODUCER<br/>(Database Manager)<br/><br/>· runs sector pipeline<br/>· pulls live APIs (cached)<br/>· deposits dw_&lt;sector&gt;.&lt;ext&gt;<br/>· writes submission template"]
     R["REVIEWER<br/>(audit / repro)<br/><br/>· re-runs from canonical<br/>· compares to canonical<br/>· files issues<br/>· NEVER calls APIs"]
-    I["INGESTOR<br/>(downstream products)<br/><br/>· pulls signed-off deposits<br/>· publishes to data.unicef.org<br/>· feeds SDMX downstream"]
+    I["PUBLISHER (DBP)<br/>(downstream products)<br/><br/>· pulls signed-off deposits<br/>· publishes to data.unicef.org<br/>· feeds SDMX downstream"]
 
     A -->|fetch + cache| P
     P -->|deposit| B
     B -->|read-only| R
     R -.->|files issue| P
-    B -->|ingest| I
+    B -->|publish| I
     I --> C
 
     style P fill:#1cabe2,color:#fff
@@ -176,8 +176,8 @@ flowchart LR
 | Role | What they do | Where they write | Network access |
 |---|---|---|---|
 | **PRODUCER** (DBM) | Runs the sector pipeline, pulls upstream APIs, deposits final `dw_<sector>.<ext>` into the warehouse, writes a submission template. | The canonical deposit (`060.DW-MASTER`). | **Yes** — `dw_apis_allowed = TRUE`. |
-| **REVIEWER** | Re-runs the sector pipeline from pre-deposited inputs, compares against the canonical deposit, files issues. | A sandbox (`sandboxRoot`). Never touches canonical. | **No** — `dw_apis_allowed = FALSE`. Every API call site raises with a mode-lock message. |
-| **INGESTOR** | Pulls signed-off deposits into `data.unicef.org`, SDMX, and downstream products. | Internal infrastructure outside this repo. | N/A. |
+| **REVIEWER** (DBR) | Re-runs the sector pipeline from pre-deposited inputs, compares against the canonical deposit, files issues. | A sandbox (`sandboxRoot`). Never touches canonical. | **No** — `dw_apis_allowed = FALSE`. Every API call site raises with a mode-lock message. |
+| **PUBLISHER** (DBP) | Pulls signed-off deposits into `data.unicef.org`, SDMX, and downstream products. | Internal infrastructure outside this repo. | N/A. |
 
 The mode is a **session property** read once at profile load time
 (`dw_mode` in `~/.config/user_config.yml`). It is not a per-call
@@ -389,6 +389,12 @@ Semantic versioning (MAJOR.MINOR.PATCH).
 | `v0.2.0` | 2026-05-24 | Stata helpers shipped (`dw_save`, `dw_compare`, `dw_mkdir`); `dw_nestweight` ported from EduAnalyticsToolkit; workflow diagrams. |
 | `v0.3.0` | 2026-05-25 | Full Python port (10 modules, 26 public entries); Roxygen-complete R reference (26 Rd files + pkgdown); graceful three-part error envelopes across R + Python; secrets-redaction in `.provenance.json`. |
 | `v0.4.0` | 2026-05-26 | DW-Production backports (B1 remote-URL freeze, B2 gzip auto-detect, B3 sidecar `tryCatch`, B4 URLencode + cache-ext fix); testthat regression suite (237 PASS); GitHub Actions CI; tightened producer / reviewer mode contract for `dw_save` + `dw_use` — redundant Teams + Z: producer writes, network-first reviewer reads, `overwrite` default flipped TRUE → FALSE (issue #14, **BREAKING**); remaining Stata helpers — `dw_use`, `dw_require_no_api`, `dw_load_config` (issue #5); R demographics family — `dw_pop()` + `dw_regions()` (issues #17 + #18); `dw_publish()` STUB (issue #15; dry-run only, live submission deferred to v0.5.0). |
+| `v0.4.1` | 2026-05-27 | Patch. Restores `dialect = "base"` byte-parity dispatch on `dw_save()` (regression from v0.4.0); fixes Copilot-flagged `dw_use()` regression. Validated against DW-Production NT branch (`tests/test_v041_nt.R`, tests 1–4 PASS). |
+| `v0.4.2` | 2026-05-27 | Patch. Fixes a silent-`.tsv` bug in v0.4.1's `dialect = "base"` dispatch — `utils::write.csv()` hardcoded the comma separator, so a `.tsv` write produced CSV content with a `.tsv` extension. `dialect = "base"` now respects the file extension. |
+| `v0.4.3` | 2026-05-28 | Integrity release. Two `dw_use()` fixes (issues [#30](https://github.com/unicef-drp/cso-toolkit/issues/30) + [#31](https://github.com/unicef-drp/cso-toolkit/issues/31)) ported from the 2026-05-27 NT reviewer-mode reproducibility audit (DW-Production PR [#133](https://github.com/unicef-drp/DW-Production/pull/133)). `col_select = NULL` conditional dispatch for parquet / dta; new `cols_lenient` flag for `any_of()`-style schema intersect. |
+| `v0.4.4` | 2026-05-29 | Quality release. Three milestone issues land in one cycle (PRs [#39](https://github.com/unicef-drp/cso-toolkit/pull/39), [#41](https://github.com/unicef-drp/cso-toolkit/pull/41), [#43](https://github.com/unicef-drp/cso-toolkit/pull/43)). All three surfaced during the v0.4.3.1 fanout audit (IM / WS / HVA install + reviewer-mode runs on 2026-05-28). No public API breaks. |
+| `v0.4.5` | 2026-05-29 | Closes v0.4.5 milestone with standalone-source `%>%` binding (issue [#46](https://github.com/unicef-drp/cso-toolkit/issues/46) / PR [#47](https://github.com/unicef-drp/cso-toolkit/pull/47)) and 8 new `dw_`-prefixed aliases (issue [#42](https://github.com/unicef-drp/cso-toolkit/issues/42) / PR [#48](https://github.com/unicef-drp/cso-toolkit/pull/48)). `magrittr` declared as a first-class Import with `importFrom` in NAMESPACE. No public API breaks; both old and new names remain exported throughout v0.4.x. |
+| `v0.4.6` | 2026-05-30 | Quality release. Four issues land in one cycle — **HIGH-severity** `dw_is_canonical` recognises OneDrive-mounted Teams Documents path (issue [#54](https://github.com/unicef-drp/cso-toolkit/issues/54); pre-fix, reviewer-mode `dw_save()` could silently overwrite canonical Teams artefacts on UNICEF laptops where Documents is OneDrive-mounted); re-exported `dw_root()` public wrapper around `.dw_root_for()` (issue [#53](https://github.com/unicef-drp/cso-toolkit/issues/53)); `.cso_require("magrittr")` envelope on standalone-source `%>%` gate (issue [#51](https://github.com/unicef-drp/cso-toolkit/issues/51)); `r/.gitattributes` pin so the R subtree checks out with LF endings on Windows (issue [#52](https://github.com/unicef-drp/cso-toolkit/issues/52)). Also lands the cso-toolkit-hosted DW Operations Hub dashboard infrastructure (single-page SPA at `docs/dashboard/`, nightly cron via `.github/workflows/dashboard.yml`) and renames the third role INGESTOR → PUBLISHER (DBM/DBR/DBP). No public API breaks. |
 | `v0.5.0` | _planned_ | Live `dw_publish()` submission branch (Helix endpoint + auth + idempotency); Python + Stata siblings of `dw_pop()` and `dw_regions()`. |
 | `v1.0.0` | _committed API_ | After the `ed` sector pilot lands and a second sector vendors the helpers without modification. |
 
@@ -432,7 +438,7 @@ Code under [MIT](LICENSE); documentation under CC BY 4.0.
 - [`python/README.md`](python/README.md) — Python package overview.
 - [`stata/README.md`](stata/README.md) — Stata package overview.
 - [`docs/roles_and_workflow.md`](docs/roles_and_workflow.md) — full
-  PRODUCER / REVIEWER / INGESTOR role definitions + per-role workflow.
+  PRODUCER / REVIEWER / PUBLISHER role definitions + per-role workflow.
 - [`docs/toolkit_strategy.md`](docs/toolkit_strategy.md) — why the
   vendoring model exists.
 - [`docs/mode_contract_integration.md`](docs/mode_contract_integration.md)

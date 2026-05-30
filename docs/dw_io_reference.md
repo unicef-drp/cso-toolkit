@@ -183,6 +183,26 @@ to assert minimum-version requirements in consumer profiles:
 stopifnot(utils::compareVersion(dw_toolkit_version(), "0.4.0") >= 0)
 ```
 
+## `dw_root(kind = c("wrk", "raw", "meta"))` (since v0.4.6)
+
+Public wrapper around the internal `.dw_root_for()`. Returns the
+absolute path to the mode-aware repo / canonical root for one of the
+three vendored data kinds. Sector scripts use it to build paths
+without needing to know whether the session is producer or reviewer
+mode:
+
+```r
+# resolves to the repo-local wrkdata root in reviewer mode,
+# or the canonical Teams wrkdata root in producer mode
+final_path <- file.path(dw_root("wrk"), "nt", "2025", "dw_nut.csv")
+```
+
+The wrapper was added in v0.4.6 (issue
+[#53](https://github.com/unicef-drp/cso-toolkit/issues/53)) so that
+DW-Production sector scripts carried forward from the v0.3.x era —
+which already called `dw_root()` directly — resolve without a
+`could not find function "dw_root"` error after vendoring v0.4.x.
+
 ## `dw_compare(current, reference, by, value_cols, ...)`
 
 Generalised compare-vs-canonical. Normalises missingness, joins on `by`,
