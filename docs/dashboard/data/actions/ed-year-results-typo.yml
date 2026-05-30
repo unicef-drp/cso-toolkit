@@ -1,0 +1,14 @@
+id: ed-year-results-typo
+title: "ED: typo year_results -> edu_uis_year_results (02_aggregate_uis_sdg.R)"
+sector: ed
+severity: MEDIUM
+status: TODO
+owner: "ED sector lead"
+created_at: "2026-05-30"
+due_at: null
+blocker_for_dbm: "Sector code references undefined 'year_results' (defined as edu_uis_year_results at L77)"
+description: |
+  02_aggregate_uis_sdg.R lines 155 and 282 reference `year_results` instead of
+  `edu_uis_year_results` (the actual variable defined at L77). Fix in sector code.
+references:
+  - "replication_ed_latest.json: fixes_applied"

@@ -1,0 +1,20 @@
+{
+  "_schema_version": "1.0.0",
+  "sector": "ws",
+  "last_run_at": "2026-05-29T00:00:00Z",
+  "last_run_by": "reviewer",
+  "status": "FULLY_REPLICATED",
+  "wall_time_s": 7.4,
+  "outputs": [
+    {"file": "dw_ws_hhs.csv",          "rows": 404003, "cols": 18, "size_mb": 56.52, "sha256_16": "4c252d9b64de66b6"},
+    {"file": "dw_ws_sch_20250404.csv", "rows": 157143, "cols": 19, "size_mb": 22.04, "sha256_16": "0e46bc9bd5d0546f"},
+    {"file": "dw_ws_hcf_20250404.csv", "rows": 141731, "cols": 19, "size_mb": 25.69, "sha256_16": "25f0de9d9a4c9eef"}
+  ],
+  "output_path_repo_local": true,
+  "fixes_applied": [],
+  "toolkit_findings": [
+    "Reviewer-mode mode-lock honored (sector writes to _local/ws/output/ via dwWrkData)"
+  ],
+  "scope_note": "01214_ws_reagagg_hhs.R (regional aggregation) is Phase-2 work per the orchestrator comments and is NOT wired into the current conductor; not part of this replication scope",
+  "blockers_for_dbm": null
+}

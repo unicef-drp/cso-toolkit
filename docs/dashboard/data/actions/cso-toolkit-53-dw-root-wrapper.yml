@@ -1,0 +1,14 @@
+id: cso-toolkit-53-dw-root-wrapper
+title: "cso-toolkit#53: dw_root() wrapper / shim"
+sector: hva
+severity: MEDIUM
+status: TODO
+owner: "cso-toolkit maintainers"
+created_at: "2026-05-30"
+due_at: null
+blocker_for_dbm: "Reviewer had to write a dw_root() shim to replicate HVA; toolkit gap to be fixed in v0.4.6"
+description: |
+  HVA replication required a hand-written dw_root() shim. cso-toolkit should
+  expose this as a first-class API in v0.4.6.
+references:
+  - "replication_hva_latest.json: fixes_applied"

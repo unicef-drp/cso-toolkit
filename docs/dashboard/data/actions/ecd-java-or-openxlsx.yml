@@ -1,0 +1,15 @@
+id: ecd-java-or-openxlsx
+title: "ECD: install Java OR port xlsx -> openxlsx"
+sector: ecd
+severity: HIGH
+status: TODO
+owner: "UNICEF IT (Java) OR ECD sector lead (port)"
+created_at: "2026-05-30"
+due_at: null
+blocker_for_dbm: "library(xlsx) requires Java; same problem as wt"
+description: |
+  Same blocker as wt-java-or-openxlsx. Either IT installs Java/JRE on the
+  reviewer machine, or sector lead ports from xlsx to openxlsx.
+references:
+  - "replication_ecd_latest.json: halt_reason"
+  - "wt-java-or-openxlsx.yml"
