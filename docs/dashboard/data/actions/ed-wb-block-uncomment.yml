@@ -1,0 +1,15 @@
+id: ed-wb-block-uncomment
+title: "ED: (a sector script) has WB fetch block commented out ((lines withheld))"
+sector: ed
+severity: MEDIUM
+status: TODO
+owner: "ED sector lead"
+created_at: "2026-05-30"
+due_at: null
+blocker_for_dbm: "Downstream code references undefined lp_data; script crashes without profile-side WB fetch"
+description: |
+  (a sector script) has the WB API fetch block at (lines withheld) commented out, but
+  later code references the resulting 'lp_data' variable. Either uncomment the
+  block or guarantee profile-side fetch populates lp_data before this script runs.
+references:
+  - "replication_ed_latest.json: fixes_applied"

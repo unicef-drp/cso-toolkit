@@ -1,0 +1,16 @@
+id: wt-population-rds-deposit
+title: "WT: deposit upstream (a cached artifact) cache or document regeneration"
+sector: wt
+severity: MEDIUM
+status: TODO
+owner: "WT producer"
+created_at: "2026-05-30"
+due_at: null
+blocker_for_dbm: "wt (a sector script) requires <teamsWrkData>/CPD/wt/(a cached artifact) (producer-side artifact, not on Teams)"
+description: |
+  (a sector script) calls assert_required_files() listing
+  (a cached artifact) at <teamsWrkData>/CPD/wt/ as required. That cached artifact
+  does not exist on Teams. Producer must either commit (a cached artifact) OR
+  document how a reviewer regenerates it before wt can run.
+references:
+  - "replication_wt_latest.json: halt_reason_3"
