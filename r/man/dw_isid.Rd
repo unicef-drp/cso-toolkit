@@ -42,6 +42,7 @@ Other io:
 \code{\link{dw_is_canonical}()},
 \code{\link{dw_merge}()},
 \code{\link{dw_resolve_path}()},
+\code{\link{dw_root}()},
 \code{\link{dw_save}()},
 \code{\link{dw_toolkit_version}()},
 \code{\link{dw_use}()},

@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------
 # 00_functions/dw_io.R
-# Toolkit version: 0.4.5
+# Toolkit version: 0.4.6
 # Purpose: Uniform read/write helpers for DW-Production R scripts.
 # Auto-dispatch by file extension; supports every IO form the
 # sector scripts currently use; enforces the reviewer/producer
@@ -111,6 +111,21 @@
 	)
 }
 
+#' Resolve the mode-aware repo / canonical root for a vendored kind
+#'
+#' Public wrapper around the internal `.dw_root_for()`. Sector scripts use
+#' this to build paths like `file.path(dw_root("wrk"), "<sector>", "<vintage>")`
+#' without needing to know whether the session is producer or reviewer mode.
+#'
+#' @param kind One of "wrk", "raw", "meta" — selects which of the three
+#'   vendored data roots to return.
+#' @return Character. Absolute path to the resolved root.
+#' @seealso `.dw_root_for()` (internal helper, not exported);
+#'   [dw_resolve_path()] for the full sector/vintage/name path.
+#' @family io
+#' @export
+dw_root <- function(kind = c("wrk", "raw", "meta")) .dw_root_for(kind)
+
 # ============================================================================
 # Path resolution
 # ============================================================================
@@ -217,6 +232,22 @@ dw_resolve_path <- function(path = NULL, name = NULL, sector = NULL,
 #' @export
 dw_is_canonical <- function(path) {
 	path_n <- .normalize_for_comparison(path)
+
+	# OneDrive-mounted Teams Documents pattern: catches the per-user OneDrive
+	# path that mirrors the Teams "060.DW-MASTER" Documents library. Pattern:
+	#   <user-profile>/<org>/<library> - Documents/060.DW-MASTER/...
+	# The earlier teamsFolder-prefix check misses this when the consumer's
+	# profile sets teamsFolder via a different path (e.g., a Z: mirror).
+	# Backslash variants (raw Windows paths) are normalised to forward
+	# slashes first so the same regex catches both forms. Triggered #54:
+	# HVA + ED reviewer-mode runs overwrote canonical Teams artifacts
+	# because mode-lock missed this UNC pattern.
+	onedrive_pattern <- "/UNICEF/[^/]+ - Documents/060\\.DW-MASTER/"
+	if (!is.na(path_n) &&
+	    grepl(onedrive_pattern, gsub("\\\\", "/", path_n), perl = TRUE)) {
+		return(TRUE)
+	}
+
 	canon_roots <- c(
 		.try_get("teamsWrkDataCanonical"),
 		.try_get("teamsRawDataCanonical"),
@@ -251,7 +282,7 @@ dw_is_canonical <- function(path) {
 #' rely on a v0.4.0+ contract (e.g. network-first reviewer reads,
 #' mirror-to-both producer writes).
 #'
-#' @return Character. Currently `"0.4.5"`.
+#' @return Character. Currently `"0.4.6"`.
 #'
 #' @examples
 #' if (utils::compareVersion(dw_toolkit_version(), "0.4.0") < 0) {
@@ -263,7 +294,7 @@ dw_is_canonical <- function(path) {
 #' @family io
 #' @export
 dw_toolkit_version <- function() {
-	"0.4.5"
+	"0.4.6"
 }
 
 # ============================================================================
