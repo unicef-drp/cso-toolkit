@@ -1,0 +1,128 @@
+# Sector dashboard — nightly refresh + GitHub Pages deploy
+#
+# Coexistence note (Phase 6 discovery, 2026-05-30):
+#   At the time this workflow was authored, the repository had no pkgdown workflow
+#   (only .github/workflows/r-check.yml). This workflow therefore OWNS GitHub Pages
+#   deployment for cso-toolkit and publishes the entire docs/ tree.
+#
+#   If a pkgdown workflow is later added that also deploys to Pages, the two will
+#   conflict (GitHub Pages allows only one deployment source per repo). At that
+#   point the chosen approach is:
+#     - Let pkgdown own the Pages deploy (it rebuilds the whole site).
+#     - This workflow should then drop the `deploy` job and only commit refreshed
+#       files under docs/dashboard/** back to the branch. The pkgdown workflow
+#       must use `clean: false` (or otherwise preserve docs/dashboard/) so the
+#       dashboard subtree survives pkgdown rebuilds.
+#
+#   Until then, this workflow handles both refresh and deploy.
+
+name: dashboard
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  push:
+    branches:
+      - develop
+      - main
+    paths:
+      - "docs/dashboard/**"
+      - ".github/workflows/dashboard.yml"
+  workflow_dispatch:
+
+# Prevent overlapping runs from racing on the same commit / Pages deployment.
+concurrency:
+  group: dashboard-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Need write access via GITHUB_TOKEN for the commit-back step.
+          token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: true
+
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: "4.4"
+          use-public-rspm: true
+
+      - name: Install R packages
+        run: |
+          install.packages(c(
+            "yaml", "rsdmx", "httr", "jsonlite",
+            "data.table", "ggplot2", "svglite", "digest"
+          ))
+        shell: Rscript {0}
+
+      - name: Collect indicators
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DW_PROD_READ_TOKEN: ${{ secrets.DW_PROD_READ_TOKEN }}
+        run: Rscript docs/dashboard/collect.R
+
+      - name: Render dashboard
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DW_PROD_READ_TOKEN: ${{ secrets.DW_PROD_READ_TOKEN }}
+        run: Rscript docs/dashboard/render.R
+
+      - name: Prune history older than retention window
+        # Retain ~90 days of nightly history snapshots in git to keep the
+        # tracked tree from growing without bound. Older snapshots remain
+        # accessible via git history.
+        run: |
+          set -euo pipefail
+          HISTORY_DIR="docs/dashboard/data/history"
+          if [ -d "$HISTORY_DIR" ]; then
+            # Each subdir is named YYYY-MM-DD. Drop anything older than 90 days.
+            find "$HISTORY_DIR" -mindepth 1 -maxdepth 1 -type d -mtime +90 -print -exec rm -rf {} +
+          fi
+        shell: bash
+
+      - name: Commit refreshed artifacts
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/dashboard/index.html \
+                  docs/dashboard/data/state.json \
+                  docs/dashboard/data/history \
+                  docs/dashboard/data/sdmx_cache_*.json 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "No dashboard changes to commit."
+          else
+            git commit -m "chore(dashboard): nightly refresh [skip ci]"
+            git push
+          fi
+        shell: bash
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/
+
+  deploy:
+    needs: refresh
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Configure Pages
+        uses: actions/configure-pages@v4
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,26 @@
+{
+  "_schema_version": "1.0.0",
+  "sector": "hva",
+  "last_run_at": "2026-05-29T00:00:00Z",
+  "last_run_by": "reviewer",
+  "status": "FULLY_REPLICATED",
+  "wall_time_s": 27.9,
+  "output_file": "dw_hiv.csv",
+  "output_path_repo_local": false,
+  "output_path_canonical_teams": true,
+  "size_mb": 64.61,
+  "rows": 214229,
+  "cols": 26,
+  "indicators": 23,
+  "ref_areas": 195,
+  "sha256": "ac13c26618220ef89e2253adc13639699dc55cde347ef1b14081df32978c0a9a",
+  "matches_v6_baseline": true,
+  "fixes_applied": [
+    "dw_root() shim (cso-toolkit#53; toolkit gap to be fixed in v0.4.6)",
+    "dwMetaData path corrected to 01_dw_prep/010_metadata (per profile convention, not 012_codes/00_metadata)"
+  ],
+  "toolkit_findings": [
+    "CRITICAL: dw_save reviewer-mode mode-lock did NOT engage on OneDrive-mounted Teams Documents path. Producer's 2026-05-26 v6 output (67.09 MB, 214,674 rows) was OVERWRITTEN by this reviewer-mode run. Filed as cso-toolkit#54 (HIGH severity, v0.4.6)"
+  ],
+  "blockers_for_dbm": null
+}
