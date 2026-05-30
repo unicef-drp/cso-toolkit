@@ -1,0 +1,9 @@
+# Source files: stored AND checked out as LF on every platform.
+# Keeps sha256 manifest entries stable across Windows / Linux / macOS.
+*.R      text eol=lf
+*.Rd     text eol=lf
+*.yml    text eol=lf
+*.yaml   text eol=lf
+*.md     text eol=lf
+NAMESPACE text eol=lf
+DESCRIPTION text eol=lf

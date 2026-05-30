@@ -7,7 +7,7 @@
 dw_toolkit_version()
 }
 \value{
-Character. Currently `"0.4.5"`.
+Character. Currently `"0.4.6"`.
 }
 \description{
 Returns the upstream `cso-toolkit` tag the current `dw_io.R` /
@@ -33,6 +33,7 @@ Other io:
 \code{\link{dw_isid}()},
 \code{\link{dw_merge}()},
 \code{\link{dw_resolve_path}()},
+\code{\link{dw_root}()},
 \code{\link{dw_save}()},
 \code{\link{dw_use}()},
 \code{\link{dw_verify_z}()}
