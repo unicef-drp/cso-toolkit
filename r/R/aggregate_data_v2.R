@@ -51,6 +51,7 @@ if (!exists(".cso_require", mode = "function", inherits = TRUE)) {
 # installed package already provides the pipe via its NAMESPACE
 # importFrom.
 if (!exists("%>%", mode = "function", inherits = TRUE)) {
+	.cso_require("magrittr", where = "aggregate_data_v2")
 	`%>%` <- magrittr::`%>%`
 }
 
