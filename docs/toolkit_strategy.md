@@ -8,7 +8,7 @@
 
 The helpers in `00_functions/` (`dw_io.R`, `dw_api.R`, `cso_toolkit_sync.R`, the DBM submission template, the roles document) are **not specific to DW-Production**. They encode a shared workflow:
 
-- Producer / reviewer / publisher mode contract
+- Producer / reviewer mode contract + publisher publication boundary
 - Mode-aware file IO with provenance sidecars
 - Mode-aware API caching with deposit-side persistence
 - Sector-comparison reporting
