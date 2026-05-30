@@ -120,8 +120,8 @@
 #' @param kind One of "wrk", "raw", "meta" — selects which of the three
 #'   vendored data roots to return.
 #' @return Character. Absolute path to the resolved root.
-#' @seealso [.dw_root_for()] (internal); [dw_resolve_path()] for the full
-#'   sector/vintage/name path.
+#' @seealso `.dw_root_for()` (internal helper, not exported);
+#'   [dw_resolve_path()] for the full sector/vintage/name path.
 #' @family io
 #' @export
 dw_root <- function(kind = c("wrk", "raw", "meta")) .dw_root_for(kind)

@@ -19,8 +19,8 @@ this to build paths like `file.path(dw_root("wrk"), "<sector>", "<vintage>")`
 without needing to know whether the session is producer or reviewer mode.
 }
 \seealso{
-[.dw_root_for()] (internal); [dw_resolve_path()] for the full
-  sector/vintage/name path.
+`.dw_root_for()` (internal helper, not exported);
+  [dw_resolve_path()] for the full sector/vintage/name path.
 
 Other io: 
 \code{\link{dw_compare}()},
