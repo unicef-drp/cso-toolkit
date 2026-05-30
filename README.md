@@ -159,13 +159,13 @@ flowchart LR
 
     P["PRODUCER<br/>(Database Manager)<br/><br/>· runs sector pipeline<br/>· pulls live APIs (cached)<br/>· deposits dw_&lt;sector&gt;.&lt;ext&gt;<br/>· writes submission template"]
     R["REVIEWER<br/>(audit / repro)<br/><br/>· re-runs from canonical<br/>· compares to canonical<br/>· files issues<br/>· NEVER calls APIs"]
-    I["INGESTOR<br/>(downstream products)<br/><br/>· pulls signed-off deposits<br/>· publishes to data.unicef.org<br/>· feeds SDMX downstream"]
+    I["PUBLISHER (DBP)<br/>(downstream products)<br/><br/>· pulls signed-off deposits<br/>· publishes to data.unicef.org<br/>· feeds SDMX downstream"]
 
     A -->|fetch + cache| P
     P -->|deposit| B
     B -->|read-only| R
     R -.->|files issue| P
-    B -->|ingest| I
+    B -->|publish| I
     I --> C
 
     style P fill:#1cabe2,color:#fff
@@ -176,8 +176,8 @@ flowchart LR
 | Role | What they do | Where they write | Network access |
 |---|---|---|---|
 | **PRODUCER** (DBM) | Runs the sector pipeline, pulls upstream APIs, deposits final `dw_<sector>.<ext>` into the warehouse, writes a submission template. | The canonical deposit (`060.DW-MASTER`). | **Yes** — `dw_apis_allowed = TRUE`. |
-| **REVIEWER** | Re-runs the sector pipeline from pre-deposited inputs, compares against the canonical deposit, files issues. | A sandbox (`sandboxRoot`). Never touches canonical. | **No** — `dw_apis_allowed = FALSE`. Every API call site raises with a mode-lock message. |
-| **INGESTOR** | Pulls signed-off deposits into `data.unicef.org`, SDMX, and downstream products. | Internal infrastructure outside this repo. | N/A. |
+| **REVIEWER** (DBR) | Re-runs the sector pipeline from pre-deposited inputs, compares against the canonical deposit, files issues. | A sandbox (`sandboxRoot`). Never touches canonical. | **No** — `dw_apis_allowed = FALSE`. Every API call site raises with a mode-lock message. |
+| **PUBLISHER** (DBP) | Pulls signed-off deposits into `data.unicef.org`, SDMX, and downstream products. | Internal infrastructure outside this repo. | N/A. |
 
 The mode is a **session property** read once at profile load time
 (`dw_mode` in `~/.config/user_config.yml`). It is not a per-call
@@ -432,7 +432,7 @@ Code under [MIT](LICENSE); documentation under CC BY 4.0.
 - [`python/README.md`](python/README.md) — Python package overview.
 - [`stata/README.md`](stata/README.md) — Stata package overview.
 - [`docs/roles_and_workflow.md`](docs/roles_and_workflow.md) — full
-  PRODUCER / REVIEWER / INGESTOR role definitions + per-role workflow.
+  PRODUCER / REVIEWER / PUBLISHER role definitions + per-role workflow.
 - [`docs/toolkit_strategy.md`](docs/toolkit_strategy.md) — why the
   vendoring model exists.
 - [`docs/mode_contract_integration.md`](docs/mode_contract_integration.md)
