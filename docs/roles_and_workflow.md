@@ -41,7 +41,7 @@ flowchart LR
     CompareReport --> Issues
     Issues -.-> Pipeline
 
-    Canonical ==>|INGESTOR| Helix
+    Canonical ==>|PUBLISHER| Helix
     Canonical ==> SDMXout
     Canonical ==> Portal
     Canonical ==> SoWC
@@ -60,9 +60,9 @@ flowchart LR
 Read the diagram by colour:
 
 - **Yellow** — external upstream APIs. Only the **PRODUCER** session can touch them; reviewer-mode sessions are physically prevented by `dw_require_no_api()`.
-- **Blue** — canonical artefacts. **PRODUCER** writes; **REVIEWER** reads (with Z: integrity check); **INGESTOR** publishes from `013_wrkdata`.
+- **Blue** — canonical artefacts. **PRODUCER** writes; **REVIEWER** reads (with Z: integrity check); **PUBLISHER** publishes from `013_wrkdata`.
 - **Pink** — the per-user sandbox. Reviewer-mode `dw_save` calls route here; canonical writes hard-fail.
-- **Green** — downstream consumers. Reached only via the INGESTOR role.
+- **Green** — downstream consumers. Reached only via the PUBLISHER role.
 
 ### Role-vs-action matrix
 
@@ -73,12 +73,12 @@ flowchart LR
         PR_CAN[PRODUCER<br/>can write canonical]
         RV_READ[REVIEWER<br/>can read canonical]
         RV_SAND[REVIEWER<br/>can write sandbox]
-        IN_PUB[INGESTOR<br/>can publish 013_wrkdata]
+        IN_PUB[PUBLISHER<br/>can publish 013_wrkdata]
     end
     subgraph Forbidden
         RV_API[REVIEWER<br/>MUST NOT call APIs]
         RV_CAN[REVIEWER<br/>MUST NOT write canonical]
-        IN_RAW[INGESTOR<br/>MUST NOT publish<br/>unblessed deposits]
+        IN_RAW[PUBLISHER<br/>MUST NOT publish<br/>unblessed deposits]
         PR_SKIP[PRODUCER<br/>MUST NOT skip<br/>pre-deposit checklist]
     end
 
@@ -90,16 +90,18 @@ flowchart LR
 
 | Role | Reads from | Writes to | API calls | Owns |
 |---|---|---|---|---|
-| **PRODUCER** (Database Manager) | upstream APIs + `060.DW-MASTER` | `060.DW-MASTER` (Teams + Z: mirror) | YES | refreshing cached upstream data; producing the deposited indicator outputs |
-| **REVIEWER** (auditor / sector-lead validation) | `060.DW-MASTER` (read-only) + sandbox | sandbox only (`sandboxRoot` per user) | NO — forbidden by `dw_require_no_api()` | reproducibility validation; sector-lead sign-off; finding bugs |
-| **INGESTOR** (warehouse publisher) | `060.DW-MASTER/013_wrkdata` (PRODUCER-blessed outputs) | data warehouse: Helix, SDMX endpoints, data.unicef.org, SoWC tables | reads warehouse-publication endpoints only | publication into the canonical UNICEF data warehouse and downstream surfaces |
+| **PRODUCER** (Database Manager — DBM) | upstream APIs + `060.DW-MASTER` | `060.DW-MASTER` (Teams + Z: mirror) | YES | refreshing cached upstream data; producing the deposited indicator outputs |
+| **REVIEWER** (auditor / sector-lead validation — DBR) | `060.DW-MASTER` (read-only) + sandbox | sandbox only (`sandboxRoot` per user) | NO — forbidden by `dw_require_no_api()` | reproducibility validation; sector-lead sign-off; finding bugs |
+| **PUBLISHER** (warehouse publication — DBP) | `060.DW-MASTER/013_wrkdata` (PRODUCER-blessed outputs) | data warehouse: Helix, SDMX endpoints, data.unicef.org, SoWC tables | reads warehouse-publication endpoints only | publication into the canonical UNICEF data warehouse and downstream surfaces |
 
-The session-level `dw_mode` setting in `~/.config/user_config.yml` controls the PRODUCER / REVIEWER split at the technical level. INGESTOR is a third workflow not yet wired into the mode contract (future scope; see end).
+**Role acronyms:** **DBM** = Database Manager (PRODUCER) · **DBR** = Database Reviewer (REVIEWER) · **DBP** = Database Publisher (PUBLISHER).
+
+The session-level `dw_mode` setting in `~/.config/user_config.yml` controls the PRODUCER / REVIEWER split at the technical level. PUBLISHER is a third workflow not yet wired into the mode contract (future scope; see end).
 
 ## Folder layout — what each role touches
 
 ```
-060.DW-MASTER/                                   ← PRODUCER writes; REVIEWER + INGESTOR read
+060.DW-MASTER/                                   ← PRODUCER writes; REVIEWER + PUBLISHER read
 ├── 01_dw_prep/
 │   ├── 010_metadata/                            ← repo-tracked; PRODUCER updates via PR
 │   ├── 011_rawdata/
@@ -110,7 +112,7 @@ The session-level `dw_mode` setting in `~/.config/user_config.yml` controls the 
 │   │   │   └── temp/<sector>_compare_*          ← compare reports (REVIEWER + PRODUCER read; PRODUCER writes from pipeline run)
 │   │   ├── hosted_in_repo/<sector>/             ← runtime-derived precondition inputs (see ed/README.md)
 │   │   └── _apis/<api>/<cache_key>.<ext>        ← PRODUCER: API caches; REVIEWER reads
-│   └── 013_wrkdata/dw_<sector>.csv              ← PRODUCER: promoted from _tocopy; INGESTOR's input
+│   └── 013_wrkdata/dw_<sector>.csv              ← PRODUCER: promoted from _tocopy; PUBLISHER's input
 
 sandboxRoot/                                     ← REVIEWER writes; per-user; sandboxed
 └── 01_dw_prep/
@@ -120,15 +122,15 @@ sandboxRoot/                                     ← REVIEWER writes; per-user; 
 Z:/ drive (UNICEF Azure file share)              ← PRODUCER carbon-copies canonical writes;
                                                    REVIEWER's dw_use verifies Teams == Z:
 
-data warehouse / Helix / SDMX endpoints          ← INGESTOR writes from 060.DW-MASTER/013_wrkdata
-data.unicef.org / SoWC SI tables                 ← INGESTOR publishes from the same source
+data warehouse / Helix / SDMX endpoints          ← PUBLISHER writes from 060.DW-MASTER/013_wrkdata
+data.unicef.org / SoWC SI tables                 ← PUBLISHER publishes from the same source
 ```
 
 ## Common helpers used by each role
 
 The `00_functions/` helpers (`dw_io.R`, `dw_api.R`) are shared. Each role uses a different subset.
 
-| Helper | PRODUCER | REVIEWER | INGESTOR |
+| Helper | PRODUCER | REVIEWER | PUBLISHER |
 |---|---|---|---|
 | `dw_save(x, ..., allow_canonical_write)` | writes to 060 (Z: mirror automatic) | sandbox writes only; canonical writes hard-fail | reads only |
 | `dw_use(...)` | reads anywhere | reads from sandbox + canonical fallback; Z: integrity check | reads `013_wrkdata` |
@@ -183,7 +185,7 @@ Anyone reproducing or validating. The audit / QA role.
 7. **MUST NOT** write to canonical paths. The mode contract enforces this via `dw_save`'s call-site check; bypassing requires `allow_canonical_write = TRUE` (intended for DBM bootstraps only).
 8. **MUST NOT** call external APIs. The mode contract enforces this via `dw_api_fetch`'s reviewer-mode branch + `dw_require_no_api()` helper.
 
-### INGESTOR
+### PUBLISHER
 
 The warehouse publisher. Takes blessed outputs from 060 and pushes them into the canonical UNICEF data infrastructure.
 
@@ -202,7 +204,7 @@ This role is not yet codified in `00_functions/`. Documenting the boundary today
    - **State of the World's Children / State of African Children**: editorial tables built from the same 013_wrkdata via the SI table macros.
 4. **Rollback procedure** when a published value is later found wrong:
    - PRODUCER amends the source data → re-promotes
-   - INGESTOR re-publishes with a corrigendum note
+   - PUBLISHER re-publishes with a corrigendum note
    - SDMX endpoint version-bumps the dataflow
 5. **Future helpers** (not in scope yet): `dw_publish(file, target = "helix" | "sdmx" | "data_portal" | "sowc")`, parallel to `dw_save` / `dw_api_fetch`.
 
@@ -212,7 +214,7 @@ This role is not yet codified in `00_functions/`. Documenting the boundary today
 |---|---|
 | **PRODUCER** | skip the pre-deposit checklist; deposit without a compare-vs-prior-vintage report; deposit without sector-lead sign-off on non-trivial deltas |
 | **REVIEWER** | write to canonical paths; call external APIs; modify caches in 060 |
-| **INGESTOR** | promote outputs that haven't passed PRODUCER's checklist + REVIEWER's compare; publish without provenance chain back to original API fetches; rollback without amending the source |
+| **PUBLISHER** | promote outputs that haven't passed PRODUCER's checklist + REVIEWER's compare; publish without provenance chain back to original API fetches; rollback without amending the source |
 
 ## See also
 

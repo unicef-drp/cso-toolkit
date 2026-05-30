@@ -6,6 +6,21 @@ _Entries land here as PRs merge into `develop`. When the next release
 is cut, this header is renamed `## v0.4.6 (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
+### Docs: third role renamed INGESTOR → PUBLISHER (DBM / DBR / DBP)
+
+The third data-warehouse role is now **PUBLISHER** (was _INGESTOR_),
+aligning the role label with the verb the code already uses
+(`dw_publish()`; there is no `dw_ingest()`). **Docs-only** — no code,
+no exported-API change, and no mode-contract value changed: the
+contract still exposes `producer` / `reviewer`, and wiring a
+`publisher` mode remains future scope (issue
+[#15](https://github.com/unicef-drp/cso-toolkit/issues/15)). The role
+acronyms are now spelled out across the docs — **DBM** = Database
+Manager (PRODUCER), **DBR** = Database Reviewer (REVIEWER), **DBP** =
+Database Publisher (PUBLISHER). Touches `docs/roles_and_workflow.md`,
+`README.md`, `r/DESCRIPTION`, `templates/dbm_submission_template.md`,
+`docs/git_workflow.md`, `docs/toolkit_strategy.md`.
+
 ## v0.4.5 (2026-05-29)
 
 Closes the v0.4.5 milestone with two deliverables — standalone-source

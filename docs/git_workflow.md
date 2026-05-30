@@ -164,6 +164,6 @@ Case 2 just desyncs your working tree from the remote and the next
 ## See also
 
 - [`roles_and_workflow.md`](roles_and_workflow.md) — the parallel role
-  contract on the data side (PRODUCER / REVIEWER / INGESTOR).
+  contract on the data side (PRODUCER / REVIEWER / PUBLISHER).
 - [`toolkit_strategy.md`](toolkit_strategy.md) — vendoring model and version
   cadence; explains why `main` tags matter for downstream consumers.

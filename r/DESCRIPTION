@@ -11,7 +11,7 @@ Authors@R: c(
   )
 Description: Uniform IO, cached API access, mode-aware path routing, and
     version-drift detection helpers for UNICEF Data & Analytics database
-    managers, reviewers, and ingestors working with the DW-Production
+    managers, reviewers, and publishers working with the DW-Production
     indicator data warehouse. Designed for vendoring (copy into 00_functions/)
     rather than CRAN-style installation, to honour vintage permanence and
     AppLocker constraints on UNICEF laptops.
