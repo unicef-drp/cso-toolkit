@@ -99,13 +99,35 @@ write_json <- function(x, path) {
 gh_api <- function(endpoint, token = NULL, paginate = FALSE) {
   # Returns parsed JSON, or NULL on failure.
   cmd  <- "gh"
-  args <- c("api", endpoint)
+  # Split "path?a=1&b=2" into a path + `--method GET -f a=1 -f b=2` field args.
+  # Passing the raw `?a=1&b=2` query as one arg breaks on Linux runners: R's
+  # system2 routes the command through a shell to redirect stdout to a file, and
+  # the unescaped `&` backgrounds the command (`gh api ...pulls?state=all &
+  # per_page=100 --paginate ...`), so it fails with "sh: --paginate: not found"
+  # (exit 127). Field args carry no shell metacharacters; gh re-adds them as the
+  # query string. (Works on Windows too, where the `&` happened to be tolerated.)
+  parts <- strsplit(endpoint, "?", fixed = TRUE)[[1]]
+  args  <- c("api", parts[1])
+  if (length(parts) > 1L && nzchar(parts[2])) {
+    args <- c(args, "--method", "GET")
+    for (kv in strsplit(parts[2], "&", fixed = TRUE)[[1]]) {
+      pair <- strsplit(kv, "=", fixed = TRUE)[[1]]
+      if (length(pair) == 2L) args <- c(args, "-f", paste0(pair[1], "=", pair[2]))
+    }
+  }
   # `--slurp` merges the pages of a `--paginate` array endpoint into one JSON
   # value; without it gh concatenates page arrays ([...][...]) into invalid JSON.
   if (paginate) args <- c(args, "--paginate", "--slurp")
-  env  <- c()
+  # Authenticate via the GH_TOKEN environment variable (restored afterwards),
+  # NOT system2's `env=` argument: on Windows that arg leaks through as a literal
+  # `GH_TOKEN=...` command argument (gh then errors "unknown command", echoing
+  # the token into logs) and it is shell-fragile. gh reads GH_TOKEN from the env.
   if (!is.null(token) && nzchar(token)) {
-    env <- c(env, paste0("GH_TOKEN=", token))
+    old_tok <- Sys.getenv("GH_TOKEN", unset = NA_character_)
+    Sys.setenv(GH_TOKEN = token)
+    on.exit({
+      if (is.na(old_tok)) Sys.unsetenv("GH_TOKEN") else Sys.setenv(GH_TOKEN = old_tok)
+    }, add = TRUE)
   }
   # Capture stdout straight to a temp file and parse the file. Going through
   # system2(stdout = TRUE) splits output into lines whose re-join corrupts JSON
@@ -115,7 +137,7 @@ gh_api <- function(endpoint, token = NULL, paginate = FALSE) {
   err_file <- tempfile("ghapi_err_")
   on.exit(try(unlink(c(out_file, err_file)), silent = TRUE), add = TRUE)
   status <- tryCatch(
-    system2(cmd, args, stdout = out_file, stderr = err_file, env = env),
+    system2(cmd, args, stdout = out_file, stderr = err_file),
     error = function(e) NA_integer_
   )
   if (!identical(as.integer(status), 0L)) {
@@ -123,6 +145,8 @@ gh_api <- function(endpoint, token = NULL, paginate = FALSE) {
       paste(readLines(err_file, warn = FALSE), collapse = " | "),
       error = function(e) ""
     )
+    # Defensive: never surface a token even if a future error echoes one.
+    err_msg <- gsub("gh[oprsu]_[A-Za-z0-9_]+", "<redacted>", err_msg)
     log_warn(sprintf("gh api %s failed (status %s): %s", endpoint, status, err_msg))
     return(NULL)
   }
@@ -227,9 +251,13 @@ collect_cso_toolkit_github <- function() {
 
 # ----- (c) DW-Production GitHub state -------------------------------------- #
 #
-# DW-Production is a PRIVATE repository. The dashboard is published via GitHub
-# Pages, so this collector must emit only aggregate counts — never PR titles,
-# bodies, branch names, issue text, or any other private metadata.
+# DW-Production is a PRIVATE repository fetched via the DW_PROD_READ_TOKEN secret.
+# The dashboard is published to PUBLIC GitHub Pages, so this collector emits ONLY
+# aggregate counts — overall and per-sector — never PR/issue titles, bodies, or
+# branch names. Full objects are read transiently in memory to compute the
+# counts; only the integers below are written to state.json. (This keeps the
+# 795cd24 privacy posture: publishing the private repo's text to a public site is
+# a data-exfiltration boundary that authorization does not cross.)
 
 collect_dw_production_github <- function() {
   log_info("GH: DW-Production starting")
@@ -240,32 +268,62 @@ collect_dw_production_github <- function() {
     return(list(repo = repo, fetched_at = NOWUTC, reachable = FALSE))
   }
 
-  prs       <- gh_api(sprintf("repos/%s/pulls?state=all&per_page=100", repo), token, paginate = TRUE)
-  branches  <- gh_api(sprintf("repos/%s/branches?per_page=100", repo),         token, paginate = TRUE)
-  issues    <- gh_api(sprintf("repos/%s/issues?state=all&per_page=100", repo),  token, paginate = TRUE)
-  milestones <- gh_api(sprintf("repos/%s/milestones?state=all", repo),          token)
+  prs        <- gh_api(sprintf("repos/%s/pulls?state=all&per_page=100", repo), token, paginate = TRUE) %||% list()
+  branches   <- gh_api(sprintf("repos/%s/branches?per_page=100", repo),        token, paginate = TRUE) %||% list()
+  issues_raw <- gh_api(sprintf("repos/%s/issues?state=all&per_page=100", repo), token, paginate = TRUE) %||% list()
+  milestones <- gh_api(sprintf("repos/%s/milestones?state=all", repo),         token) %||% list()
+  issues     <- Filter(function(i) is.null(i$pull_request), issues_raw)
 
-  prs_list    <- prs        %||% list()
-  issues_list <- issues     %||% list()
-
-  # Filter PRs out of /issues response (GitHub /issues includes PRs).
-  issues_only <- Filter(function(i) is.null(i$pull_request), issues_list)
+  # Best-effort sector tagging from titles / branch names (read in memory only;
+  # never emitted). Aliases cover the conventional-commit scopes and branch
+  # naming the DW-Production sector PRs use (e.g. wt work lives on cp-cluster).
+  aliases <- list(
+    nt = "nutrition|\\bnt\\b", hva = "hiv|\\bhva\\b", im = "immun|\\bim\\b",
+    ws = "wash|water|\\bws\\b", mnch = "mnch|maternal|newborn",
+    cme = "\\bcme\\b|child.?mortal|\\bcm\\b", ed = "educat|\\bed\\b",
+    wt = "\\bwt\\b|cp.?cluster|women|weighting", ecd = "ecd|early.?child"
+  )
+  sector_of <- function(text) {
+    text <- tolower(text %||% "")
+    for (s in names(aliases)) if (grepl(aliases[[s]], text)) return(s)
+    NA_character_
+  }
+  bysec <- setNames(
+    lapply(SECTORS, function(s) list(prs_open = 0L, issues_open = 0L, branches = 0L)),
+    SECTORS
+  )
+  for (p in prs) {
+    if (identical(p$state, "open")) {
+      s <- sector_of(paste(p$title %||% "", p$head$ref %||% ""))
+      if (!is.na(s)) bysec[[s]]$prs_open <- bysec[[s]]$prs_open + 1L
+    }
+  }
+  for (i in issues) {
+    if (identical(i$state, "open")) {
+      s <- sector_of(i$title %||% "")
+      if (!is.na(s)) bysec[[s]]$issues_open <- bysec[[s]]$issues_open + 1L
+    }
+  }
+  for (b in branches) {
+    s <- sector_of(b$name %||% "")
+    if (!is.na(s)) bysec[[s]]$branches <- bysec[[s]]$branches + 1L
+  }
 
   list(
-    repo         = repo,
-    fetched_at   = NOWUTC,
-    reachable    = !is.null(prs),
-    # Counts only — no titles, bodies, branch names, or other private fields.
-    counts       = list(
-      prs_total       = length(prs_list),
-      prs_open        = length(Filter(function(p) identical(p$state, "open"),   prs_list)),
-      prs_closed      = length(Filter(function(p) identical(p$state, "closed"), prs_list)),
-      branches_total  = length(branches  %||% list()),
-      issues_total    = length(issues_only),
-      issues_open     = length(Filter(function(i) identical(i$state, "open"),   issues_only)),
-      issues_closed   = length(Filter(function(i) identical(i$state, "closed"), issues_only)),
-      milestones_total = length(milestones %||% list())
-    )
+    repo       = repo,
+    fetched_at = NOWUTC,
+    reachable  = TRUE,
+    counts = list(
+      prs_total      = length(prs),
+      prs_open       = length(Filter(function(p) identical(p$state, "open"), prs)),
+      prs_merged     = length(Filter(function(p) !is.null(p$merged_at), prs)),
+      prs_closed     = length(Filter(function(p) identical(p$state, "closed") && is.null(p$merged_at), prs)),
+      issues_total   = length(issues),
+      issues_open    = length(Filter(function(i) identical(i$state, "open"), issues)),
+      issues_closed  = length(Filter(function(i) identical(i$state, "closed"), issues)),
+      branches_total = length(branches)
+    ),
+    by_sector = bysec
   )
 }
 
