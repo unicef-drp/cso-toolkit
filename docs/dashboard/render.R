@@ -144,21 +144,26 @@ kpis <- compute_kpis(state)
 
 # ----- HTML pieces --------------------------------------------------------- #
 
+# KPI tiles are clickable deep-dive links: each jumps to the tab that explains
+# the number. With JS the tab activates in place; without JS the href anchor
+# still scrolls to the section (no-JS reveals every pane).
 render_kpi_row <- function(kpis) {
   tiles <- list(
-    list(label = "Sectors tracked",  value = kpis$n_sectors,    sub = "9 sectors in scope"),
-    list(label = "Fully replicated", value = kpis$n_full,       sub = "v0.4.x mode-lock"),
-    list(label = "Partial",          value = kpis$n_partial,    sub = "blocked mid-pipeline"),
-    list(label = "Blocked",          value = kpis$n_blocked,    sub = "env / package issue"),
-    list(label = "Open PRs",         value = kpis$open_prs,     sub = "DW-Production"),
-    list(label = "Open issues",      value = kpis$open_issues,  sub = "DW-Production"),
-    list(label = "DBM actions open", value = kpis$open_actions, sub = "across sectors")
+    list(label = "Sectors tracked",  value = kpis$n_sectors,    sub = "9 in scope",         jump = "tab-sectors"),
+    list(label = "Fully replicated", value = kpis$n_full,       sub = "v0.4.x mode-lock",    jump = "tab-sectors"),
+    list(label = "Partial",          value = kpis$n_partial,    sub = "halted mid-pipeline", jump = "tab-phases"),
+    list(label = "Blocked",          value = kpis$n_blocked,    sub = "env / package issue", jump = "tab-phases", alert = isTRUE(kpis$n_blocked > 0)),
+    list(label = "Open PRs",         value = kpis$open_prs,     sub = "DW-Production",        jump = "tab-issues"),
+    list(label = "Open issues",      value = kpis$open_issues,  sub = "DW-Production",        jump = "tab-issues"),
+    list(label = "DBM actions open", value = kpis$open_actions, sub = "across sectors",       jump = "tab-actions")
   )
   paste0(
     '<div class="kpi-row">',
     paste(vapply(tiles, function(t) {
       sprintf(
-        '<div class="kpi"><div class="kpi-value">%s</div><div class="kpi-label">%s</div><div class="kpi-sub">%s</div></div>',
+        '<a class="kpi%s" href="#%s" data-jump="%s"><div class="kpi-value">%s</div><div class="kpi-label">%s</div><div class="kpi-sub">%s</div></a>',
+        if (isTRUE(t$alert)) " alert" else "",
+        htmlescape(t$jump), htmlescape(t$jump),
         htmlescape(t$value), htmlescape(t$label), htmlescape(t$sub)
       )
     }, character(1)), collapse = ""),
@@ -259,29 +264,74 @@ render_tab_landing <- function(state, kpis) {
     )
   }
 
+  # Hero: one status verdict + a clickable sector traffic-light strip.
+  strip_html <- paste(vapply(SECTOR_ORDER, function(s) {
+    r  <- rep[[s]] %||% list()
+    st <- r$status %||% "UNKNOWN"
+    cls  <- if (identical(st, "FULLY_REPLICATED")) "st-ok"
+            else if (identical(st, "PARTIAL_REPLICATED")) "st-partial"
+            else if (identical(st, "BLOCKED")) "st-blocked" else "st-partial"
+    meta <- if (identical(st, "FULLY_REPLICATED")) "replicated"
+            else if (identical(st, "PARTIAL_REPLICATED")) "partial" else "blocked"
+    sprintf(paste0('<a class="s-dot" href="#tab-sectors" data-jump="tab-sectors" ',
+                   'title="%s"><span class="s-code">%s</span>',
+                   '<span class="s-state %s"></span><span class="s-meta">%s</span></a>'),
+            htmlescape(SECTOR_LABELS[[s]] %||% s), toupper(htmlescape(s)), cls, meta)
+  }, character(1)), collapse = "")
+
+  hero_html <- sprintf(paste0(
+    '<div class="hero">',
+      '<div><span class="hero-num">%d</span><span class="hero-den">/ %d sectors replicated</span>',
+        '<div class="hero-tags">',
+          '<span class="tag tag-ok">%d replicated</span>',
+          '<span class="tag tag-partial">%d partial</span>',
+          '<span class="tag tag-blocked">%d blocked</span>',
+        '</div>',
+      '</div>',
+      '<div><div class="strip-label">Sectors &middot; click to open</div>',
+        '<div class="sector-strip">%s</div>',
+      '</div>',
+    '</div>'),
+    kpis$n_full, kpis$n_sectors, kpis$n_full, kpis$n_partial, kpis$n_blocked, strip_html)
+
+  # DW-Production activity: privacy-safe counts + links that open on GitHub
+  # (they resolve for viewers with access; the repo stays private).
+  dwc <- state$dw_production$counts %||% list()
+  dw_html <- if (!isTRUE(state$dw_production$reachable)) {
+    '<div class="muted">DW-Production data unavailable (DW_PROD_READ_TOKEN not set).</div>'
+  } else {
+    sprintf(paste0(
+      '<div class="dw-stat-row">',
+        '<a class="dw-stat" href="#tab-issues" data-jump="tab-issues" style="text-decoration:none"><div class="n">%d</div><div class="l">open PRs</div></a>',
+        '<a class="dw-stat" href="#tab-issues" data-jump="tab-issues" style="text-decoration:none"><div class="n">%d</div><div class="l">open issues</div></a>',
+        '<a class="dw-stat" href="#tab-branches" data-jump="tab-branches" style="text-decoration:none"><div class="n">%d</div><div class="l">branches</div></a>',
+      '</div>',
+      '<div style="display:flex;gap:18px;flex-wrap:wrap;margin-bottom:8px">',
+        '<a class="ghlink" href="https://github.com/unicef-drp/DW-Production/pulls">PRs on GitHub</a>',
+        '<a class="ghlink" href="https://github.com/unicef-drp/DW-Production/issues">Issues on GitHub</a>',
+      '</div>',
+      '<div class="lock">Private repo &mdash; counts shown here; the GitHub links open for users with access.</div>'),
+      dwc$prs_open %||% 0L, dwc$issues_open %||% 0L, dwc$branches_total %||% 0L)
+  }
+
   paste0(
     '<section id="tab-landing" class="tab-pane active">',
     '<h2>Strategic overview</h2>',
+    '<p class="section-lead">Live status of the nine DW-Production sector replications, the toolkit they depend on, and the open work.</p>',
+    hero_html,
     render_kpi_row(kpis),
     '<div class="row">',
-      '<div class="col">',
-        '<h3>Pipeline phase distribution</h3>',
-        phase_html,
-      '</div>',
-      '<div class="col">',
-        '<h3>Diagram</h3>',
-        '<div class="diagram-frame">', read_svg("data_flow_diagram.svg"), '</div>',
-      '</div>',
+      '<div class="panel"><h3>Pipeline phases</h3>', phase_html, '</div>',
+      '<div class="panel"><div class="panel-head"><h3>Watch list</h3><span class="muted">stalled sectors</span></div>', watch_html, '</div>',
     '</div>',
     '<div class="row">',
-      '<div class="col">',
-        '<h3>Recent cso-toolkit activity</h3>',
-        feed_html,
-      '</div>',
-      '<div class="col">',
-        '<h3>Watch list (stalled sectors)</h3>',
-        watch_html,
-      '</div>',
+      '<div class="panel"><div class="panel-head"><h3>Recent cso-toolkit activity</h3>',
+        '<a class="ghlink" href="https://github.com/unicef-drp/cso-toolkit/pulls">all PRs</a></div>', feed_html, '</div>',
+      '<div class="panel"><div class="panel-head"><h3>DW-Production activity</h3>',
+        '<a class="ghlink" href="#tab-issues" data-jump="tab-issues">by sector</a></div>', dw_html, '</div>',
+    '</div>',
+    '<div class="panel"><h3>How the data flows</h3>',
+      '<div class="diagram-frame">', read_svg("data_flow_diagram.svg"), '</div>',
     '</div>',
     '</section>'
   )
@@ -476,7 +526,9 @@ render_tab_branches <- function(state) {
     body <- sprintf(
       paste0('<p class="muted">DW-Production is a private repo; branch <em>counts</em> are ',
              'shown by sector (no branch names are published). %d branches total ',
-             '(sector-tagged subset listed; the remainder are cross-cutting / infra).</p>',
+             '(sector-tagged subset listed; the remainder are cross-cutting / infra). ',
+             'GitHub branches have no open/closed state &mdash; merged work removes the branch, ',
+             'so this is the count of live branches per sector.</p>',
              '<div class="table-wrap"><table class="data-table"><thead><tr>',
              '<th>Sector</th><th>Branches</th></tr></thead><tbody>%s</tbody></table></div>'),
       total, rows
@@ -484,7 +536,8 @@ render_tab_branches <- function(state) {
   }
   paste0(
     '<section id="tab-branches" class="tab-pane">',
-    '<h2>DW-Production branches by sector</h2>',
+    '<div class="panel-head"><h2>DW-Production branches by sector</h2>',
+      '<a class="ghlink" href="https://github.com/unicef-drp/DW-Production/branches">Branches on GitHub</a></div>',
     body,
     '</section>'
   )
@@ -500,24 +553,29 @@ render_tab_issues <- function(state) {
   } else {
     rows <- paste(vapply(SECTOR_ORDER, function(s) {
       b <- bysec[[s]]
-      sprintf('<tr><td>%s</td><td>%d</td><td>%d</td></tr>',
+      sprintf('<tr><td>%s</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td></tr>',
               htmlescape(SECTOR_LABELS[[s]] %||% s),
-              b$prs_open %||% 0L, b$issues_open %||% 0L)
+              b$prs_open %||% 0L, b$prs_closed %||% 0L,
+              b$issues_open %||% 0L, b$issues_closed %||% 0L)
     }, character(1)), collapse = "")
     body <- sprintf(
-      paste0('<p class="muted">DW-Production is a private repo; open PR and issue ',
+      paste0('<p class="muted">DW-Production is a private repo; PR and issue ',
              '<em>counts</em> are shown by sector (no titles are published). ',
-             'Totals across the repo: %d open PRs, %d open issues ',
+             'Repo totals: %d open / %d closed PRs, %d open / %d closed issues ',
              '(sector-tagged subset listed; the remainder are cross-cutting).</p>',
              '<div class="table-wrap"><table class="data-table"><thead><tr>',
-             '<th>Sector</th><th>Open PRs</th><th>Open issues</th></tr></thead>',
+             '<th>Sector</th><th>Open PRs</th><th>Closed PRs</th>',
+             '<th>Open issues</th><th>Closed issues</th></tr></thead>',
              '<tbody>%s</tbody></table></div>'),
-      cnt$prs_open %||% 0L, cnt$issues_open %||% 0L, rows
+      cnt$prs_open %||% 0L, (cnt$prs_total %||% 0L) - (cnt$prs_open %||% 0L),
+      cnt$issues_open %||% 0L, cnt$issues_closed %||% 0L, rows
     )
   }
   paste0(
     '<section id="tab-issues" class="tab-pane">',
-    '<h2>DW-Production PRs &amp; issues by sector</h2>',
+    '<div class="panel-head"><h2>DW-Production PRs &amp; issues by sector</h2>',
+      '<span><a class="ghlink" href="https://github.com/unicef-drp/DW-Production/pulls">PRs on GitHub</a>',
+      ' &nbsp; <a class="ghlink" href="https://github.com/unicef-drp/DW-Production/issues">Issues on GitHub</a></span></div>',
     body,
     '</section>'
   )
@@ -543,27 +601,34 @@ render_tab_actions <- function(state) {
     if (s %in% c("high", "medium", "low", "info")) s else "info"
   }
 
+  card_html <- function(a, home) {
+    sev <- a$severity %||% "info"
+    tag <- if (nzchar(a$sector %||% "")) sprintf('<span class="kc-tag">%s</span>', htmlescape(a$sector)) else ""
+    own <- if (nzchar(a$owner  %||% "")) sprintf('<span>%s</span>', htmlescape(a$owner)) else ""
+    sprintf(paste0(
+      '<div class="kanban-card" draggable="true" data-aid="%s" data-home="%s">',
+        '<div class="kc-title">%s</div>',
+        '<div class="kc-meta">%s%s</div>',
+        '<span class="sev sev-%s">%s</span>',
+      '</div>'),
+      htmlescape(a$id %||% a$title %||% ""), home,
+      htmlescape(a$title %||% a$id %||% ""), tag, own,
+      sev_class(sev), htmlescape(sev))
+  }
   col_html <- function(name, items) {
-    cards <- if (length(items) == 0) {
-      '<div class="muted">(empty)</div>'
-    } else {
-      paste(vapply(items, function(a) {
-        sev   <- a$severity %||% "info"
-        sprintf(
-          '<div class="kanban-card"><div><strong>%s</strong></div><div class="muted">sector: %s</div><div class="muted">owner: %s</div><span class="sev sev-%s">%s</span></div>',
-          htmlescape(a$title    %||% a$id %||% ""),
-          htmlescape(a$sector   %||% ""),
-          htmlescape(a$owner    %||% ""),
-          sev_class(sev), htmlescape(sev)
-        )
-      }, character(1)), collapse = "")
-    }
-    sprintf('<div class="kanban-col"><h3>%s</h3>%s</div>', htmlescape(name), cards)
+    cards <- paste(vapply(items, function(a) card_html(a, name), character(1)), collapse = "")
+    sprintf(paste0(
+      '<div class="kanban-col" data-col="%s"><h3>%s <span class="kc-count">%d</span></h3>',
+      '<div class="kanban-cards" data-col="%s">%s</div></div>'),
+      name, htmlescape(name), length(items), name, cards)
   }
 
   paste0(
     '<section id="tab-actions" class="tab-pane">',
-    '<h2>DBM actions</h2>',
+    '<div class="panel-head"><h2>DBM actions</h2>',
+      '<span class="muted">Drag cards between columns &mdash; saved in your browser only ',
+      '(canonical status lives in <code>data/actions/*.yml</code>). ',
+      '<a href="#" id="kanban-reset">reset</a></span></div>',
     '<div class="kanban">',
       col_html("TODO",        buckets$TODO),
       col_html("IN-PROGRESS", buckets$`IN-PROGRESS`),
@@ -628,90 +693,170 @@ render_tab_toolkit <- function(state) {
 
 CSS <- '
 :root {
-  --fg: #1a1d23;
-  --muted: #565f6d;
-  --bg: #f6f7f9;
+  --navy: #002759;
+  --navy-2: #0a3a73;
+  --cyan: #1cabe2;
+  --cyan-soft: #e7f6fc;
+  --accent: #00689d;        /* cyan dark enough to pass AA as link text on white */
+  --fg: #1a2230;
+  --muted: #5a6573;
+  --bg: #eef3f8;
   --card: #ffffff;
-  --border: #dde1e7;
-  --accent: #2b6cb0;
-  --ok: #2f855a;
+  --border: #dbe3ec;
+  --ok: #1f8a4c;
   --partial: #b7791f;
-  --blocked: #c53030;
+  --blocked: #d3392a;
   --high: #9b2c2c;
-  --info: #2c5282;
+  --info: #002759;
+  --shadow: 0 1px 2px rgba(16,42,77,.06), 0 2px 8px rgba(16,42,77,.05);
 }
 * { box-sizing: border-box; }
-body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; color: var(--fg); background: var(--bg); }
-header.app { padding: 16px 24px; background: #fff; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-header.app h1 { margin: 0; font-size: 18px; }
-header.app .meta { font-size: 12px; color: var(--muted); }
-nav.tabs { display: flex; gap: 4px; padding: 0 24px; background: #fff; border-bottom: 1px solid var(--border); overflow-x: auto; }
-nav.tabs button { background: transparent; border: 0; padding: 12px 16px; font-size: 14px; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; }
-nav.tabs button.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
-main { padding: 24px; max-width: 1400px; margin: 0 auto; }
+body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif; color: var(--fg); background: var(--bg); }
+a { color: var(--accent); }
+h2 { margin: 0 0 4px; font-size: 20px; letter-spacing: -.2px; }
+h3 { font-size: 15px; }
+
+/* ---- branded header ---- */
+header.app { background: var(--navy); color: #fff; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; gap: 16px; border-bottom: 3px solid var(--cyan); min-height: 58px; }
+.brand { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.brand-mark { background: var(--cyan); color: var(--navy); font-weight: 800; font-size: 17px; letter-spacing: -.5px; padding: 5px 11px; border-radius: 4px; text-transform: lowercase; }
+.brand-title { font-size: 18px; font-weight: 700; line-height: 1.15; }
+.brand-sub { font-size: 12px; color: #a9c0da; }
+header.app .meta { font-size: 12px; color: #a9c0da; text-align: right; white-space: nowrap; }
+
+/* ---- nav ---- */
+nav.tabs { display: flex; gap: 2px; padding: 0 24px; background: #fff; border-bottom: 1px solid var(--border); overflow-x: auto; box-shadow: var(--shadow); position: sticky; top: 0; z-index: 5; }
+nav.tabs button { background: transparent; border: 0; padding: 13px 16px; font-size: 14px; color: var(--muted); cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; }
+nav.tabs button:hover { color: var(--navy); }
+nav.tabs button.active { color: var(--navy); border-bottom-color: var(--cyan); font-weight: 600; }
+nav.tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+main { padding: 18px 24px; max-width: 1380px; margin: 0 auto; }
 .tab-pane { display: none; }
 .tab-pane.active { display: block; }
-h2 { margin-top: 0; }
-.row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 24px 0; }
-.col h3 { margin-top: 0; }
-.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 16px 0 24px; }
-.kpi { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 14px; }
-.kpi-value { font-size: 28px; font-weight: 600; }
-.kpi-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
-.kpi-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
-.phase-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.phase-tile { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 12px; text-align: center; }
+.muted { color: var(--muted); font-size: 13px; }
+.section-lead { color: var(--muted); font-size: 13px; margin: -2px 0 14px; }
+
+/* ---- hero (landing) ---- */
+.hero { background: linear-gradient(120deg, var(--navy) 0%, var(--navy-2) 100%); color: #fff; border-radius: 12px; padding: 18px 22px; margin-bottom: 16px; display: grid; grid-template-columns: minmax(220px, 320px) 1fr; gap: 22px; align-items: center; }
+.hero-num { font-size: 52px; font-weight: 800; line-height: 1; }
+.hero-den { font-size: 15px; color: #bcd2ea; margin-left: 6px; }
+.hero-tags { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
+.tag { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px; }
+.tag-ok { background: rgba(46,204,113,.18); color: #b8f0cf; }
+.tag-partial { background: rgba(247,184,1,.18); color: #ffe39a; }
+.tag-blocked { background: rgba(231,76,60,.2); color: #ffc2bb; }
+.strip-label { font-size: 11px; text-transform: uppercase; letter-spacing: .6px; color: #91add0; margin-bottom: 8px; }
+.sector-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(86px, 1fr)); gap: 8px; }
+.s-dot { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); border-radius: 8px; padding: 9px 8px; text-align: center; cursor: pointer; text-decoration: none; color: #fff; transition: transform .08s, background .12s; }
+.s-dot:hover { transform: translateY(-2px); background: rgba(255,255,255,.13); }
+.s-dot .s-code { font-size: 13px; font-weight: 700; }
+.s-dot .s-state { display: block; height: 4px; border-radius: 3px; margin-top: 7px; }
+.s-dot .s-meta { font-size: 10px; color: #b9cbe2; margin-top: 5px; }
+.st-ok    { background: #2ecc71; }
+.st-partial { background: #f7b801; }
+.st-blocked { background: #e74c3c; }
+
+/* ---- KPI tiles (clickable deep-dive links) ---- */
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 0 0 16px; }
+a.kpi, .kpi { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 15px 16px; display: block; text-decoration: none; color: inherit; box-shadow: var(--shadow); border-top: 3px solid var(--cyan); transition: transform .08s, box-shadow .12s; position: relative; }
+a.kpi:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(16,42,77,.12); }
+a.kpi:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+a.kpi::after { content: "\2197"; position: absolute; top: 12px; right: 12px; color: var(--cyan); font-size: 13px; opacity: 0; transition: opacity .12s; }
+a.kpi:hover::after { opacity: 1; }
+.kpi-value { font-size: 30px; font-weight: 800; color: var(--navy); line-height: 1; }
+.kpi-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-top: 6px; }
+.kpi-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+.kpi.alert { border-top-color: var(--blocked); }
+.kpi.alert .kpi-value { color: var(--blocked); }
+
+/* ---- generic cards / panels ---- */
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+.panel { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; box-shadow: var(--shadow); }
+.panel h3 { margin: 0 0 10px; }
+.panel-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin: 0 0 10px; }
+.panel-head h3 { margin: 0; }
+
+/* ---- phase tiles ---- */
+.phase-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.phase-tile { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px; text-align: center; box-shadow: var(--shadow); }
 .phase-tile.phase-production { border-top: 3px solid var(--info); }
 .phase-tile.phase-review     { border-top: 3px solid var(--partial); }
 .phase-tile.phase-live       { border-top: 3px solid var(--ok); }
 .phase-name { font-size: 12px; color: var(--muted); text-transform: uppercase; }
-.phase-count { font-size: 28px; font-weight: 600; }
+.phase-count { font-size: 26px; font-weight: 800; color: var(--navy); }
+
+/* ---- activity + watch ---- */
 .activity-feed, .watch-list { list-style: none; padding: 0; margin: 0; }
-.activity-feed li, .watch-list li { padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
-.muted { color: var(--muted); font-size: 13px; }
+.activity-feed li, .watch-list li { padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+.activity-feed li:last-child, .watch-list li:last-child { border-bottom: 0; }
+.dw-stat-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.dw-stat { background: var(--cyan-soft); border-radius: 8px; padding: 10px 14px; }
+.dw-stat .n { font-size: 22px; font-weight: 800; color: var(--navy); }
+.dw-stat .l { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+.ghlink { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 600; color: var(--accent); text-decoration: none; }
+.ghlink:hover { text-decoration: underline; }
+.ghlink::after { content: "\2197"; font-size: 11px; }
+.lock { font-size: 11px; color: var(--muted); }
+
+/* ---- pills / sev ---- */
 .pill { display: inline-block; padding: 2px 8px; font-size: 11px; border-radius: 10px; text-transform: uppercase; letter-spacing: .5px; }
 .pill-open      { background: #fef3c7; color: #92400e; }
 .pill-closed    { background: #e5e7eb; color: #374151; }
-.pill-ok        { background: #c6f6d5; color: var(--ok); }
-.pill-partial   { background: #fefcbf; color: var(--partial); }
-.pill-blocked   { background: #fed7d7; color: var(--blocked); }
+.pill-merged    { background: #e7e0fb; color: #5b3ea8; }
+.pill-ok        { background: #d4f3e0; color: var(--ok); }
+.pill-partial   { background: #fdf0c8; color: var(--partial); }
+.pill-blocked   { background: #fbdcd8; color: var(--blocked); }
 .pill-muted     { background: #e2e8f0; color: var(--muted); }
+.sev { display: inline-block; padding: 2px 6px; font-size: 11px; border-radius: 4px; text-transform: uppercase; }
+.sev-high { background: #fbdcd8; color: var(--high); }
+.sev-info { background: #d6ecfa; color: var(--info); }
+.sev-medium { background: #fdf0c8; color: var(--partial); }
+.sev-low { background: #e5e7eb; color: var(--muted); }
 .blocker { margin-top: 4px; font-size: 12px; color: var(--muted); }
+
+/* ---- sector cards ---- */
 .sector-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
-.sector-card { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 14px; }
-.card-head { margin-bottom: 8px; }
-.sector-tag { display: inline-block; background: var(--info); color: #fff; padding: 2px 6px; font-size: 11px; border-radius: 4px; text-transform: uppercase; }
-.card-stats { display: flex; gap: 12px; flex-wrap: wrap; margin: 8px 0; font-size: 12px; }
+.sector-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 15px; box-shadow: var(--shadow); }
+.card-head { margin-bottom: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.sector-tag { display: inline-block; background: var(--navy); color: #fff; padding: 2px 7px; font-size: 11px; border-radius: 4px; text-transform: uppercase; font-weight: 700; }
+.card-stats { display: flex; gap: 14px; flex-wrap: wrap; margin: 8px 0; font-size: 12px; }
 .card-stat .k { color: var(--muted); margin-right: 4px; }
-.card-stat .v { font-weight: 600; }
+.card-stat .v { font-weight: 700; color: var(--navy); }
 details { margin-top: 8px; font-size: 13px; }
 details summary { cursor: pointer; color: var(--accent); }
-.blocker-pre { white-space: pre-wrap; font-size: 12px; background: #f0f3f7; padding: 8px; border-radius: 4px; }
-.chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 16px; margin-top: 16px; }
-.chart { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 12px; }
-.chart h4 { margin: 0 0 8px; font-size: 14px; }
+.blocker-pre { white-space: pre-wrap; font-size: 12px; background: #f1f5fa; padding: 8px; border-radius: 6px; }
+
+/* ---- charts / kanban / tables ---- */
+.chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 16px; margin-top: 12px; }
+.chart { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; box-shadow: var(--shadow); }
+.chart h4 { margin: 0 0 8px; font-size: 14px; color: var(--navy); }
 .chart svg { width: 100%; height: auto; }
 .chart-missing { font-size: 12px; color: var(--muted); font-style: italic; padding: 24px; text-align: center; }
-.kanban { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
-.kanban-col { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 12px; min-height: 200px; }
-.kanban-col h3 { margin-top: 0; font-size: 14px; text-transform: uppercase; color: var(--muted); }
-.kanban-card { background: #fafbfc; border: 1px solid var(--border); border-radius: 4px; padding: 8px; margin-bottom: 8px; font-size: 13px; }
+.kanban { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; align-items: start; }
+.kanban-col { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; box-shadow: var(--shadow); }
+.kanban-col h3 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; color: var(--muted); letter-spacing: .5px; }
+.kc-count { display: inline-block; background: #eef3f9; color: var(--muted); border-radius: 10px; padding: 0 7px; font-size: 11px; font-weight: 700; vertical-align: middle; }
+.kanban-cards { min-height: 36px; }
+.kanban-card { background: #f7fafd; border: 1px solid var(--border); border-left: 3px solid var(--cyan); border-radius: 6px; padding: 8px 10px; margin-bottom: 7px; font-size: 13px; cursor: grab; }
+.kanban-card:active { cursor: grabbing; }
+.kanban-card.dragging { opacity: .45; }
+.kanban-col.drop-target { outline: 2px dashed var(--cyan); outline-offset: -3px; background: var(--cyan-soft); }
+.kc-title { font-weight: 600; font-size: 13px; line-height: 1.25; }
+.kc-meta { font-size: 11px; color: var(--muted); margin: 3px 0 5px; display: flex; gap: 8px; flex-wrap: wrap; }
+.kc-tag { background: var(--navy); color: #fff; border-radius: 3px; padding: 0 5px; text-transform: uppercase; font-weight: 700; }
 .diagram-frame svg { width: 100%; height: auto; }
 .data-table { width: 100%; border-collapse: collapse; font-size: 13px; background: var(--card); }
-.data-table th, .data-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); text-align: left; }
-.data-table th { background: #f0f3f7; }
-.sev { display: inline-block; padding: 2px 6px; font-size: 11px; border-radius: 4px; text-transform: uppercase; }
-.sev-high { background: #fed7d7; color: var(--high); }
-.sev-info { background: #bee3f8; color: var(--info); }
-.sev-medium { background: #fefcbf; color: var(--partial); }
-.sev-low { background: #e5e7eb; color: var(--muted); }
-.placeholder { padding: 24px; background: var(--card); border: 1px dashed var(--border); border-radius: 6px; }
-code { background: #f0f3f7; padding: 1px 4px; border-radius: 3px; font-size: 12px; }
+.data-table th, .data-table td { padding: 9px 12px; border-bottom: 1px solid var(--border); text-align: left; }
+.data-table th { background: #eef3f9; color: var(--navy); font-size: 12px; text-transform: uppercase; letter-spacing: .4px; }
+.data-table tbody tr:hover { background: #f6f9fc; }
+.placeholder { padding: 24px; background: var(--card); border: 1px dashed var(--border); border-radius: 10px; }
+code { background: #eef3f9; padding: 1px 5px; border-radius: 4px; font-size: 12px; }
 .table-wrap { overflow-x: auto; }
-nav.tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-@media (max-width: 640px) {
+
+@media (max-width: 760px) {
+  .hero { grid-template-columns: 1fr; }
   .row { grid-template-columns: 1fr; }
-  .phase-row { grid-template-columns: repeat(2, 1fr); }
+  .phase-row { grid-template-columns: repeat(3, 1fr); }
   nav.tabs { padding: 0 12px; }
   main { padding: 16px; }
 }
@@ -759,8 +904,74 @@ JS <- '
       activate(buttons[(idx + d + buttons.length) % buttons.length].dataset.target, true);
     });
   });
+  // Clickable deep-dive elements (KPI tiles, sector dots, "by sector" / GitHub
+  // links) anywhere on the page jump to their tab; the href is the no-JS fallback.
+  document.addEventListener("click", function(e) {
+    var el = e.target.closest && e.target.closest("[data-jump]");
+    if (!el) { return; }
+    e.preventDefault();
+    activate(el.getAttribute("data-jump"));
+    if (window.scrollTo) { window.scrollTo({ top: 0, behavior: "smooth" }); }
+  });
   var hash = (location.hash || "").replace(/^#/, "");
   activate(hash && document.getElementById(hash) ? hash : "tab-landing");
+})();
+
+// ---- DBM kanban: HTML5 drag-drop with per-browser persistence ----
+// Canonical status lives in data/actions/*.yml; moves here are a personal view
+// saved to localStorage (they do not change the repo or other viewers boards).
+(function() {
+  var KEY = "dbm-kanban-v1";
+  function cardsIn(col) { return document.querySelector(".kanban-cards[data-col=" + col + "]"); }
+  function refreshCounts() {
+    document.querySelectorAll(".kanban-col").forEach(function(c) {
+      var n = c.querySelectorAll(".kanban-card").length;
+      var badge = c.querySelector(".kc-count");
+      if (badge) { badge.textContent = n; }
+    });
+  }
+  function save() {
+    var m = {};
+    document.querySelectorAll(".kanban-card").forEach(function(card) {
+      var holder = card.closest(".kanban-cards");
+      if (!holder) { return; }
+      var col = holder.getAttribute("data-col");
+      if (col !== card.getAttribute("data-home")) { m[card.getAttribute("data-aid")] = col; }
+    });
+    try { localStorage.setItem(KEY, JSON.stringify(m)); } catch (e) {}
+  }
+  // restore saved positions
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) {}
+  Object.keys(saved).forEach(function(aid) {
+    var card = document.querySelector(".kanban-card[data-aid=" + aid + "]");
+    var dest = cardsIn(saved[aid]);
+    if (card && dest) { dest.appendChild(card); }
+  });
+  refreshCounts();
+
+  var dragged = null;
+  document.querySelectorAll(".kanban-card").forEach(function(card) {
+    card.addEventListener("dragstart", function() { dragged = card; setTimeout(function(){ card.classList.add("dragging"); }, 0); });
+    card.addEventListener("dragend", function() {
+      card.classList.remove("dragging"); dragged = null;
+      document.querySelectorAll(".kanban-col").forEach(function(c) { c.classList.remove("drop-target"); });
+    });
+  });
+  document.querySelectorAll(".kanban-col").forEach(function(col) {
+    col.addEventListener("dragover", function(e) { e.preventDefault(); col.classList.add("drop-target"); });
+    col.addEventListener("dragleave", function(e) { if (e.target === col) { col.classList.remove("drop-target"); } });
+    col.addEventListener("drop", function(e) {
+      e.preventDefault(); col.classList.remove("drop-target");
+      if (!dragged) { return; }
+      col.querySelector(".kanban-cards").appendChild(dragged);
+      save(); refreshCounts();
+    });
+  });
+  var reset = document.getElementById("kanban-reset");
+  if (reset) { reset.addEventListener("click", function(e) {
+    e.preventDefault(); try { localStorage.removeItem(KEY); } catch (e2) {} location.reload();
+  }); }
 })();
 '
 
@@ -804,15 +1015,19 @@ panes_html <- paste0(
 html <- paste0(
   "<!doctype html>\n",
   '<html lang="en"><head><meta charset="utf-8">\n',
-  "<title>cso-toolkit sector dashboard</title>\n",
+  "<title>DW Operations Hub &middot; UNICEF</title>\n",
   '<meta name="viewport" content="width=device-width, initial-scale=1">\n',
   "<style>", CSS, "</style>\n",
   # No-JS fallback: reveal every pane so all content stays reachable.
   "<noscript><style>.tab-pane{display:block !important}</style></noscript>\n",
   "</head><body>\n",
   '<header class="app">',
-    '<h1>cso-toolkit sector dashboard</h1>',
-    sprintf('<div class="meta">generated %s &middot; %d sectors</div>',
+    '<div class="brand">',
+      '<span class="brand-mark">unicef</span>',
+      '<div><div class="brand-title">DW Operations Hub</div>',
+        '<div class="brand-sub">Data Warehouse &middot; sector-replication tracker</div></div>',
+    '</div>',
+    sprintf('<div class="meta">generated %s<br>%d sectors tracked</div>',
             htmlescape(state$generated_at %||% ""), length(SECTOR_ORDER)),
   "</header>\n",
   nav_html, "\n",
