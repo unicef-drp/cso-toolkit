@@ -1,0 +1,13 @@
+[
+  {"key": "nt",     "label": "Nutrition",            "mine": 40, "dep": 40, "sdmx": 40},
+  {"key": "hva",    "label": "HIV/AIDS",             "mine": 0,  "dep": 23, "sdmx": 23},
+  {"key": "im",     "label": "Immunization",         "mine": 18, "dep": 0,  "sdmx": 18},
+  {"key": "ws_hhs", "label": "WASH households",      "mine": 28, "dep": 0,  "sdmx": 55},
+  {"key": "ws_sch", "label": "WASH schools",         "mine": 12, "dep": 0,  "sdmx": 55},
+  {"key": "ws_hcf", "label": "WASH health-care fac", "mine": 15, "dep": 0,  "sdmx": 55},
+  {"key": "mnch",   "label": "MNCH",                 "mine": 27, "dep": 0,  "sdmx": 36},
+  {"key": "cme",    "label": "Child mortality",      "mine": 24, "dep": 0,  "sdmx": 34},
+  {"key": "ed",     "label": "Education",            "mine": 16, "dep": 16, "sdmx": 35},
+  {"key": "wt",     "label": "Women's status",       "mine": 0,  "dep": 6,  "sdmx": 6},
+  {"key": "ecd",    "label": "Early childhood dev",  "mine": 0,  "dep": 8,  "sdmx": 8}
+]
