@@ -314,10 +314,22 @@ render_tab_landing <- function(state, kpis) {
       dwc$prs_open %||% 0L, dwc$issues_open %||% 0L, dwc$branches_total %||% 0L)
   }
 
+  # Subject-area topic tags (grey metadata pills), generated from the
+  # DW-Production 012_codes folders; dashed = work not started.
+  topics <- state$topics %||% list()
+  tags_html <- if (length(topics) == 0) "" else paste0(
+    '<div class="topic-tags" title="Subject areas (DW-Production 012_codes) — dashed = work not started">',
+    paste(vapply(topics, function(t) {
+      sprintf('<span class="topic-tag%s">%s</span>',
+              if (isTRUE(t$started)) "" else " not-started", htmlescape(t$code))
+    }, character(1)), collapse = ""),
+    '</div>')
+
   paste0(
     '<section id="tab-landing" class="tab-pane active">',
     '<h2>Strategic overview</h2>',
     '<p class="section-lead">Live status of the nine DW-Production sector replications, the toolkit they depend on, and the open work.</p>',
+    tags_html,
     hero_html,
     render_kpi_row(kpis),
     '<div class="row">',
@@ -888,6 +900,9 @@ code { background: #eef3f9; padding: 1px 5px; border-radius: 4px; font-size: 12p
 .mini-bar { display: inline-flex; width: 96px; height: 10px; border-radius: 3px; overflow: hidden; background: #eef3f9; vertical-align: middle; }
 .mini-open { background: var(--cyan); }
 .mini-closed { background: #c2cad6; }
+.topic-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 16px; }
+.topic-tag { font-size: 11px; background: #eef2f6; color: #5a6573; border: 1px solid #e2e8ef; border-radius: 12px; padding: 2px 9px; text-transform: uppercase; letter-spacing: .3px; }
+.topic-tag.not-started { background: #f5f7f9; color: #adb5bf; border-style: dashed; }
 
 @media (max-width: 760px) {
   .hero { grid-template-columns: 1fr; }
@@ -1037,6 +1052,20 @@ JS <- '
         th.classList.add(asc ? "sort-asc" : "sort-desc");
       });
     });
+  });
+})();
+
+// ---- External links open in a new tab (rel=noopener for safety) ----
+// In-page links (data-jump "#tab-..." anchors) start with "#", so they are
+// untouched; only http(s) links to other sites get target=_blank.
+(function() {
+  var links = document.querySelectorAll("a[href]");
+  Array.prototype.forEach.call(links, function(a) {
+    var h = a.getAttribute("href") || "";
+    if (h.lastIndexOf("http", 0) === 0) {
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+    }
   });
 })();
 '

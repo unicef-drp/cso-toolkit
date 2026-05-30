@@ -392,6 +392,41 @@ collect_actions <- function() {
   })
 }
 
+# ----- (e) subject topics (DW-Production 01_dw_prep/012_codes folders) ------ #
+#
+# Topic tags = one per subject-code folder under 01_dw_prep/012_codes, read via
+# the GitHub API. Only folder NAMES are emitted (subject codes like nt / econ /
+# pv) — never file contents. A subject is "started" if its folder holds a
+# non-placeholder file OR it is one of the tracked replication sectors (their
+# code may live elsewhere). Empty (gitkeep-only) folders render as "not started"
+# (grey). climate has a handbook chapter but no code folder yet, so it is added
+# as a not-started topic.
+
+collect_topics <- function() {
+  log_info("Topics: DW-Production 012_codes starting")
+  token <- Sys.getenv("DW_PROD_READ_TOKEN", unset = NA)
+  if (is.na(token) || !nzchar(token)) {
+    log_warn("DW_PROD_READ_TOKEN not set; topics unavailable")
+    return(list())
+  }
+  base <- "01_dw_prep/012_codes/"
+  tree <- gh_api("repos/unicef-drp/DW-Production/git/trees/HEAD?recursive=1",
+                 token, paginate = FALSE)
+  paths   <- vapply(tree$tree %||% list(), function(x) x$path %||% "", character(1))
+  rel     <- sub(base, "", grep(paste0("^", base), paths, value = TRUE), fixed = TRUE)
+  folders <- sort(unique(sub("/.*$", "", rel[grepl("/", rel)])))
+  topics  <- lapply(folders, function(f) {
+    files    <- rel[startsWith(rel, paste0(f, "/"))]
+    has_code <- any(grepl("/", files) & !grepl("gitkeep", files, ignore.case = TRUE))
+    list(code = f, started = has_code || (f %in% SECTORS))
+  })
+  if (!"climate" %in% folders) {
+    topics[[length(topics) + 1L]] <- list(code = "climate", started = FALSE)
+  }
+  log_info(sprintf("Topics: %d subjects", length(topics)))
+  topics
+}
+
 # ----- assembly ------------------------------------------------------------ #
 
 build_state <- function() {
@@ -405,7 +440,8 @@ build_state <- function() {
     dw_production  = collect_dw_production_github(),
     teams_snapshot = collect_teams_snapshot(),
     replication    = collect_replication_snapshots(),
-    actions        = collect_actions()
+    actions        = collect_actions(),
+    topics         = collect_topics()
   )
 }
 
