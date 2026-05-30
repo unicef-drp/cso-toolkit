@@ -1,0 +1,10 @@
+{
+  "checked_at": "2026-05-30T15:55:08Z",
+  "endpoints": {
+    "unicef_health_status": {
+      "status": "ok",
+      "checked_at": "2026-05-30T15:55:08Z"
+    }
+  },
+  "source": "live"
+}

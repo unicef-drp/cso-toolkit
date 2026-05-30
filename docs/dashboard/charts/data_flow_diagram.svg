@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" role="img" aria-labelledby="dfd-title dfd-desc">
+  <title id="dfd-title">Dashboard hybrid-privacy data flow</title>
+  <desc id="dfd-desc">Teams data is read and reduced to JSON snapshots only on the operator machine; only those snapshots are committed. A GitHub Action runner combines the snapshots with SDMX and GitHub API data to build and publish the dashboard.</desc>
+
+  <defs>
+    <marker id="dfd-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#002759"/>
+    </marker>
+    <marker id="dfd-arrow-cyan" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1CABE2"/>
+    </marker>
+  </defs>
+
+  <style>
+    .lane    { fill:#ffffff; stroke:#dde1e7; stroke-width:1; rx:10; }
+    .box     { fill:#ffffff; stroke:#9aa6b4; stroke-width:1.2; rx:8; }
+    .box-cyan{ fill:#e8f6fc; stroke:#1CABE2; stroke-width:1.4; rx:8; }
+    .box-navy{ fill:#002759; stroke:#002759; rx:8; }
+    .box-src { fill:#f2f5f8; stroke:#7d8b9c; stroke-width:1.1; rx:8; }
+    .box-data{ fill:#fff7e6; stroke:#c9922a; stroke-width:1.2; rx:8; }
+    .box-out { fill:#eafaf2; stroke:#2f855a; stroke-width:1.3; rx:8; }
+    .t       { font-size:13px; fill:#1a1d23; }
+    .t-bold  { font-size:13px; fill:#1a1d23; font-weight:600; }
+    .t-mono  { font-family:'SFMono-Regular', Consolas, 'Liberation Mono', monospace; font-size:11px; fill:#243447; }
+    .t-white { font-size:13px; fill:#ffffff; font-weight:600; }
+    .t-sub   { font-size:11px; fill:#6a7585; }
+    .lane-h  { font-size:13px; font-weight:700; fill:#002759; letter-spacing:.3px; }
+    .edge    { fill:none; stroke:#002759; stroke-width:1.6; marker-end:url(#dfd-arrow); }
+    .edge-cyan{ fill:none; stroke:#1CABE2; stroke-width:1.8; marker-end:url(#dfd-arrow-cyan); }
+    .edge-lbl{ font-size:10.5px; fill:#5a6675; }
+  </style>
+
+  <!-- ===== Title ===== -->
+  <text x="480" y="30" text-anchor="middle" font-size="18" font-weight="700" fill="#002759">cso-toolkit dashboard — hybrid-privacy data flow</text>
+  <text x="480" y="49" text-anchor="middle" class="t-sub">Teams data is reduced to JSON on the operator machine; only sanitised snapshots are committed and published.</text>
+
+  <!-- ============================================================ -->
+  <!-- ZONE A — OPERATOR MACHINE (privacy boundary)                 -->
+  <!-- ============================================================ -->
+  <rect x="24" y="74" width="912" height="150" rx="12" fill="#f4fbfe" stroke="#1CABE2" stroke-width="2" stroke-dasharray="7 5"/>
+  <text x="40" y="96" class="lane-h">A · OPERATOR MACHINE</text>
+  <text x="40" y="113" class="t-sub">Privacy boundary — Teams data never leaves this machine. Only JSON snapshots cross the dashed line.</text>
+
+  <!-- Teams folder -->
+  <rect x="44"  y="132" width="158" height="68" class="box-cyan" rx="8"/>
+  <text x="123" y="158" text-anchor="middle" class="t-bold">Teams folder</text>
+  <text x="123" y="176" text-anchor="middle" class="t-mono">060.DW-MASTER</text>
+  <text x="123" y="192" text-anchor="middle" class="t-sub">SharePoint / Teams sync</text>
+
+  <!-- snapshot-teams.R -->
+  <rect x="262" y="132" width="158" height="68" class="box" rx="8"/>
+  <text x="341" y="162" text-anchor="middle" class="t-bold">snapshot-teams.R</text>
+  <text x="341" y="180" text-anchor="middle" class="t-sub">reduce → sanitise → JSON</text>
+
+  <!-- snapshots written -->
+  <rect x="480" y="124" width="222" height="84" class="box-data" rx="8"/>
+  <text x="591" y="146" text-anchor="middle" class="t-bold">snapshots/ (committed JSON)</text>
+  <text x="591" y="164" text-anchor="middle" class="t-mono">teams_snapshot_latest.json</text>
+  <text x="591" y="180" text-anchor="middle" class="t-mono">replication_&lt;sector&gt;_latest.json</text>
+  <text x="591" y="197" text-anchor="middle" class="t-sub">docs/dashboard/data/snapshots/</text>
+
+  <!-- operator commit -->
+  <rect x="762" y="132" width="152" height="68" class="box-navy" rx="8"/>
+  <text x="838" y="162" text-anchor="middle" class="t-white">operator commits</text>
+  <text x="838" y="180" text-anchor="middle" font-size="11" fill="#bfe6f7">→ cso-toolkit (git)</text>
+
+  <!-- Zone A edges -->
+  <path class="edge-cyan" d="M202,166 L258,166"/>
+  <path class="edge-cyan" d="M420,166 L476,166"/>
+  <path class="edge" d="M702,166 L758,166"/>
+
+  <!-- ============================================================ -->
+  <!-- ZONE B — GITHUB ACTION RUNNER                                -->
+  <!-- ============================================================ -->
+  <rect x="24" y="242" width="912" height="208" rx="12" class="lane"/>
+  <text x="40" y="264" class="lane-h">B · cso-toolkit GITHUB ACTION RUNNER</text>
+  <text x="40" y="281" class="t-sub">Triggers: nightly cron 06:00 UTC · on-push (develop / main) · workflow_dispatch</text>
+
+  <!-- Source: SDMX -->
+  <rect x="44"  y="298" width="150" height="56" class="box-src" rx="8"/>
+  <text x="119" y="322" text-anchor="middle" class="t-bold">UNICEF SDMX</text>
+  <text x="119" y="340" text-anchor="middle" class="t-sub">live probe + cache</text>
+
+  <!-- Source: GitHub API -->
+  <rect x="44"  y="366" width="150" height="64" class="box-src" rx="8"/>
+  <text x="119" y="388" text-anchor="middle" class="t-bold">GitHub API</text>
+  <text x="119" y="404" text-anchor="middle" class="t-sub">PRs / issues / branches</text>
+  <text x="119" y="420" text-anchor="middle" class="t-sub">DW-Prod via DW_PROD_READ_TOKEN</text>
+
+  <!-- collect.R -->
+  <rect x="262" y="324" width="150" height="80" class="box" rx="8"/>
+  <text x="337" y="352" text-anchor="middle" class="t-bold">collect.R</text>
+  <text x="337" y="370" text-anchor="middle" class="t-sub">merge all sources</text>
+  <text x="337" y="386" text-anchor="middle" class="t-sub">+ operator snapshots</text>
+
+  <!-- state.json -->
+  <rect x="478" y="332" width="140" height="64" class="box-data" rx="8"/>
+  <text x="548" y="360" text-anchor="middle" class="t-bold">state.json</text>
+  <text x="548" y="378" text-anchor="middle" class="t-mono">data/state.json</text>
+
+  <!-- render.R -->
+  <rect x="684" y="324" width="130" height="80" class="box" rx="8"/>
+  <text x="749" y="352" text-anchor="middle" class="t-bold">render.R</text>
+  <text x="749" y="370" text-anchor="middle" class="t-sub">inline SVG + CSS</text>
+  <text x="749" y="386" text-anchor="middle" class="t-sub">single-page SPA</text>
+
+  <!-- index.html -->
+  <rect x="838" y="332" width="78" height="64" class="box-out" rx="8"/>
+  <text x="877" y="360" text-anchor="middle" class="t-bold">index</text>
+  <text x="877" y="378" text-anchor="middle" class="t-mono">.html</text>
+
+  <!-- Zone B edges -->
+  <path class="edge" d="M194,326 L256,338"/>
+  <path class="edge" d="M194,398 L256,388"/>
+  <path class="edge" d="M412,364 L474,364"/>
+  <path class="edge" d="M618,364 L680,364"/>
+  <path class="edge" d="M814,364 L834,364"/>
+
+  <!-- ============================================================ -->
+  <!-- ZONE C edge — committed snapshots feed collect.R             -->
+  <!-- ============================================================ -->
+  <!-- from snapshots box (Zone A) down into collect.R (Zone B) -->
+  <path class="edge" d="M560,208 L560,250 Q560,290 420,300 L360,318"/>
+  <rect x="392" y="252" width="196" height="22" rx="5" fill="#fff7e6" stroke="#c9922a" stroke-width="1"/>
+  <text x="490" y="267" text-anchor="middle" class="edge-lbl">C · committed snapshots → collect.R</text>
+
+  <!-- ============================================================ -->
+  <!-- ZONE D — GITHUB PAGES                                        -->
+  <!-- ============================================================ -->
+  <rect x="24" y="468" width="912" height="56" rx="12" class="lane"/>
+  <text x="40" y="490" class="lane-h">PUBLISH · GitHub Pages (served from docs/, beside the pkgdown site)</text>
+  <rect x="684" y="478" width="232" height="38" class="box-out" rx="8"/>
+  <text x="800" y="502" text-anchor="middle" class="t-bold">GitHub Pages · docs/</text>
+
+  <!-- index.html (Zone B) down to GitHub Pages -->
+  <path class="edge" d="M877,396 L877,474"/>
+</svg>
