@@ -1,0 +1,14 @@
+id: cso-toolkit-52-crlf-normalisation
+title: "cso-toolkit#52: CRLF normalisation"
+sector: null
+severity: MEDIUM
+status: TODO
+owner: "cso-toolkit maintainers"
+created_at: "2026-05-30"
+due_at: null
+blocker_for_dbm: null
+description: |
+  Cross-platform CRLF normalisation hardening across cso-toolkit IO helpers.
+  Tracked at cso-toolkit#52.
+references:
+  - "cso-toolkit issue tracker"

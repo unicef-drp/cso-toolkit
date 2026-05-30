@@ -19,6 +19,14 @@
 #   - cso_toolkit_pull() refuses (loudly) to pull from a missing source
 # This lets the vendoring scaffolding land now without blocking on the
 # downstream repo creation.
+#
+# Line-ending convention (fixes #52):
+#   - Manifests written by cso_toolkit_pull() hash the working-tree content
+#     directly. To keep those sha256 entries stable across Windows / Linux /
+#     macOS, the source tree pins LF endings via r/.gitattributes for *.R,
+#     *.Rd, *.yml/*.yaml, *.md, NAMESPACE, and DESCRIPTION. After checkout,
+#     the working tree is LF on every platform, so the working-tree hash
+#     matches the Git blob hash.
 #-------------------------------------------------------------------
 
 #' Locate the toolkit manifest next to vendored helpers

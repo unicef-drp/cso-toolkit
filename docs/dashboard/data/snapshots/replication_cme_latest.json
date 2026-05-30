@@ -1,0 +1,21 @@
+{
+  "_schema_version": "1.0.0",
+  "sector": "cme",
+  "last_run_at": "2026-05-29T00:00:00Z",
+  "last_run_by": "reviewer",
+  "status": "FULLY_REPLICATED",
+  "wall_time_s": 18.5,
+  "output_file": "cme_regional_aggregates.csv",
+  "output_path_repo_local": true,
+  "size_mb": 2.86,
+  "rows": 33270,
+  "cols": 6,
+  "sha256": "f149173f332286ce4763067619a8f737130d9bb0f129f67f04fbe2250181416f",
+  "fixes_applied": [
+    "Installed shinyregionalaggregate from unicef-drp/Shiny_regional_aggregate via remotes::install_github"
+  ],
+  "toolkit_findings": [
+    "CME bypasses cso-toolkit; uses data.table::fread + shinyregionalaggregate package directly. No mode-lock applies because no dw_save call. Output written to repo-local 013_wrkdata/ correctly via direct file path."
+  ],
+  "blockers_for_dbm": "If reviewer-mode contract should engage, sector lead must refactor 00_run_cme.R / cme_regional_aggregate.R to use dw_save and dw_use. Currently bypasses toolkit entirely. NOT a regression but a forward-investment for v0.4.x adoption."
+}

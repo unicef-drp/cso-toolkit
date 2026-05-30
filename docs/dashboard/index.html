@@ -1,0 +1,742 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>cso-toolkit sector dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root {
+  --fg: #1a1d23;
+  --muted: #565f6d;
+  --bg: #f6f7f9;
+  --card: #ffffff;
+  --border: #dde1e7;
+  --accent: #2b6cb0;
+  --ok: #2f855a;
+  --partial: #b7791f;
+  --blocked: #c53030;
+  --high: #9b2c2c;
+  --info: #2c5282;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; color: var(--fg); background: var(--bg); }
+header.app { padding: 16px 24px; background: #fff; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+header.app h1 { margin: 0; font-size: 18px; }
+header.app .meta { font-size: 12px; color: var(--muted); }
+nav.tabs { display: flex; gap: 4px; padding: 0 24px; background: #fff; border-bottom: 1px solid var(--border); overflow-x: auto; }
+nav.tabs button { background: transparent; border: 0; padding: 12px 16px; font-size: 14px; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; }
+nav.tabs button.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+main { padding: 24px; max-width: 1400px; margin: 0 auto; }
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+h2 { margin-top: 0; }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 24px 0; }
+.col h3 { margin-top: 0; }
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 16px 0 24px; }
+.kpi { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 14px; }
+.kpi-value { font-size: 28px; font-weight: 600; }
+.kpi-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+.kpi-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.phase-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.phase-tile { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 12px; text-align: center; }
+.phase-tile.phase-production { border-top: 3px solid var(--info); }
+.phase-tile.phase-review     { border-top: 3px solid var(--partial); }
+.phase-tile.phase-live       { border-top: 3px solid var(--ok); }
+.phase-name { font-size: 12px; color: var(--muted); text-transform: uppercase; }
+.phase-count { font-size: 28px; font-weight: 600; }
+.activity-feed, .watch-list { list-style: none; padding: 0; margin: 0; }
+.activity-feed li, .watch-list li { padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+.muted { color: var(--muted); font-size: 13px; }
+.pill { display: inline-block; padding: 2px 8px; font-size: 11px; border-radius: 10px; text-transform: uppercase; letter-spacing: .5px; }
+.pill-open      { background: #fef3c7; color: #92400e; }
+.pill-closed    { background: #e5e7eb; color: #374151; }
+.pill-ok        { background: #c6f6d5; color: var(--ok); }
+.pill-partial   { background: #fefcbf; color: var(--partial); }
+.pill-blocked   { background: #fed7d7; color: var(--blocked); }
+.pill-muted     { background: #e2e8f0; color: var(--muted); }
+.blocker { margin-top: 4px; font-size: 12px; color: var(--muted); }
+.sector-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+.sector-card { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 14px; }
+.card-head { margin-bottom: 8px; }
+.sector-tag { display: inline-block; background: var(--info); color: #fff; padding: 2px 6px; font-size: 11px; border-radius: 4px; text-transform: uppercase; }
+.card-stats { display: flex; gap: 12px; flex-wrap: wrap; margin: 8px 0; font-size: 12px; }
+.card-stat .k { color: var(--muted); margin-right: 4px; }
+.card-stat .v { font-weight: 600; }
+details { margin-top: 8px; font-size: 13px; }
+details summary { cursor: pointer; color: var(--accent); }
+.blocker-pre { white-space: pre-wrap; font-size: 12px; background: #f0f3f7; padding: 8px; border-radius: 4px; }
+.chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 16px; margin-top: 16px; }
+.chart { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 12px; }
+.chart h4 { margin: 0 0 8px; font-size: 14px; }
+.chart svg { width: 100%; height: auto; }
+.chart-missing { font-size: 12px; color: var(--muted); font-style: italic; padding: 24px; text-align: center; }
+.kanban { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.kanban-col { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 12px; min-height: 200px; }
+.kanban-col h3 { margin-top: 0; font-size: 14px; text-transform: uppercase; color: var(--muted); }
+.kanban-card { background: #fafbfc; border: 1px solid var(--border); border-radius: 4px; padding: 8px; margin-bottom: 8px; font-size: 13px; }
+.diagram-frame svg { width: 100%; height: auto; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; background: var(--card); }
+.data-table th, .data-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); text-align: left; }
+.data-table th { background: #f0f3f7; }
+.sev { display: inline-block; padding: 2px 6px; font-size: 11px; border-radius: 4px; text-transform: uppercase; }
+.sev-high { background: #fed7d7; color: var(--high); }
+.sev-info { background: #bee3f8; color: var(--info); }
+.sev-medium { background: #fefcbf; color: var(--partial); }
+.sev-low { background: #e5e7eb; color: var(--muted); }
+.placeholder { padding: 24px; background: var(--card); border: 1px dashed var(--border); border-radius: 6px; }
+code { background: #f0f3f7; padding: 1px 4px; border-radius: 3px; font-size: 12px; }
+.table-wrap { overflow-x: auto; }
+nav.tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+@media (max-width: 640px) {
+  .row { grid-template-columns: 1fr; }
+  .phase-row { grid-template-columns: repeat(2, 1fr); }
+  nav.tabs { padding: 0 12px; }
+  main { padding: 16px; }
+}
+</style>
+<noscript><style>.tab-pane{display:block !important}</style></noscript>
+</head><body>
+<header class="app"><h1>cso-toolkit sector dashboard</h1><div class="meta">generated 2026-05-30T15:55:08Z &middot; 9 sectors</div></header>
+<nav class="tabs"><button data-target="tab-landing" class="active">Landing</button><button data-target="tab-sectors">Sectors</button><button data-target="tab-phases">Pipeline phases</button><button data-target="tab-branches">Branches</button><button data-target="tab-issues">Issues</button><button data-target="tab-actions">DBM actions</button><button data-target="tab-history">History</button><button data-target="tab-toolkit">cso-toolkit</button></nav>
+<main>
+<section id="tab-landing" class="tab-pane active"><h2>Strategic overview</h2><div class="kpi-row"><div class="kpi"><div class="kpi-value">9</div><div class="kpi-label">Sectors tracked</div><div class="kpi-sub">9 sectors in scope</div></div><div class="kpi"><div class="kpi-value">6</div><div class="kpi-label">Fully replicated</div><div class="kpi-sub">v0.4.x mode-lock</div></div><div class="kpi"><div class="kpi-value">1</div><div class="kpi-label">Partial</div><div class="kpi-sub">blocked mid-pipeline</div></div><div class="kpi"><div class="kpi-value">2</div><div class="kpi-label">Blocked</div><div class="kpi-sub">env / package issue</div></div><div class="kpi"><div class="kpi-value">0</div><div class="kpi-label">Open PRs</div><div class="kpi-sub">cso-toolkit</div></div><div class="kpi"><div class="kpi-value">8</div><div class="kpi-label">Open issues</div><div class="kpi-sub">cso-toolkit</div></div><div class="kpi"><div class="kpi-value">16</div><div class="kpi-label">DBM actions open</div><div class="kpi-sub">across sectors</div></div></div><div class="row"><div class="col"><h3>Pipeline phase distribution</h3><div class="phase-row"><div class="phase-tile phase-production"><div class="phase-name">Production</div><div class="phase-count">3</div></div><div class="phase-tile phase-review"><div class="phase-name">Review</div><div class="phase-count">6</div></div><div class="phase-tile phase-live"><div class="phase-name">Live</div><div class="phase-count">0</div></div></div></div><div class="col"><h3>Diagram</h3><div class="diagram-frame"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" role="img" aria-labelledby="dfd-title dfd-desc">
+  <title id="dfd-title">Dashboard hybrid-privacy data flow</title>
+  <desc id="dfd-desc">Teams data is read and reduced to JSON snapshots only on the operator machine; only those snapshots are committed. A GitHub Action runner combines the snapshots with SDMX and GitHub API data to build and publish the dashboard.</desc>
+
+  <defs>
+    <marker id="dfd-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#002759"/>
+    </marker>
+    <marker id="dfd-arrow-cyan" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1CABE2"/>
+    </marker>
+  </defs>
+
+  <style>
+    .lane    { fill:#ffffff; stroke:#dde1e7; stroke-width:1; rx:10; }
+    .box     { fill:#ffffff; stroke:#9aa6b4; stroke-width:1.2; rx:8; }
+    .box-cyan{ fill:#e8f6fc; stroke:#1CABE2; stroke-width:1.4; rx:8; }
+    .box-navy{ fill:#002759; stroke:#002759; rx:8; }
+    .box-src { fill:#f2f5f8; stroke:#7d8b9c; stroke-width:1.1; rx:8; }
+    .box-data{ fill:#fff7e6; stroke:#c9922a; stroke-width:1.2; rx:8; }
+    .box-out { fill:#eafaf2; stroke:#2f855a; stroke-width:1.3; rx:8; }
+    .t       { font-size:13px; fill:#1a1d23; }
+    .t-bold  { font-size:13px; fill:#1a1d23; font-weight:600; }
+    .t-mono  { font-family:'SFMono-Regular', Consolas, 'Liberation Mono', monospace; font-size:11px; fill:#243447; }
+    .t-white { font-size:13px; fill:#ffffff; font-weight:600; }
+    .t-sub   { font-size:11px; fill:#6a7585; }
+    .lane-h  { font-size:13px; font-weight:700; fill:#002759; letter-spacing:.3px; }
+    .edge    { fill:none; stroke:#002759; stroke-width:1.6; marker-end:url(#dfd-arrow); }
+    .edge-cyan{ fill:none; stroke:#1CABE2; stroke-width:1.8; marker-end:url(#dfd-arrow-cyan); }
+    .edge-lbl{ font-size:10.5px; fill:#5a6675; }
+  </style>
+
+  <!-- ===== Title ===== -->
+  <text x="480" y="30" text-anchor="middle" font-size="18" font-weight="700" fill="#002759">cso-toolkit dashboard — hybrid-privacy data flow</text>
+  <text x="480" y="49" text-anchor="middle" class="t-sub">Teams data is reduced to JSON on the operator machine; only sanitised snapshots are committed and published.</text>
+
+  <!-- ============================================================ -->
+  <!-- ZONE A — OPERATOR MACHINE (privacy boundary)                 -->
+  <!-- ============================================================ -->
+  <rect x="24" y="74" width="912" height="150" rx="12" fill="#f4fbfe" stroke="#1CABE2" stroke-width="2" stroke-dasharray="7 5"/>
+  <text x="40" y="96" class="lane-h">A · OPERATOR MACHINE</text>
+  <text x="40" y="113" class="t-sub">Privacy boundary — Teams data never leaves this machine. Only JSON snapshots cross the dashed line.</text>
+
+  <!-- Teams folder -->
+  <rect x="44"  y="132" width="158" height="68" class="box-cyan" rx="8"/>
+  <text x="123" y="158" text-anchor="middle" class="t-bold">Teams folder</text>
+  <text x="123" y="176" text-anchor="middle" class="t-mono">060.DW-MASTER</text>
+  <text x="123" y="192" text-anchor="middle" class="t-sub">SharePoint / Teams sync</text>
+
+  <!-- snapshot-teams.R -->
+  <rect x="262" y="132" width="158" height="68" class="box" rx="8"/>
+  <text x="341" y="162" text-anchor="middle" class="t-bold">snapshot-teams.R</text>
+  <text x="341" y="180" text-anchor="middle" class="t-sub">reduce → sanitise → JSON</text>
+
+  <!-- snapshots written -->
+  <rect x="480" y="124" width="222" height="84" class="box-data" rx="8"/>
+  <text x="591" y="146" text-anchor="middle" class="t-bold">snapshots/ (committed JSON)</text>
+  <text x="591" y="164" text-anchor="middle" class="t-mono">teams_snapshot_latest.json</text>
+  <text x="591" y="180" text-anchor="middle" class="t-mono">replication_&lt;sector&gt;_latest.json</text>
+  <text x="591" y="197" text-anchor="middle" class="t-sub">docs/dashboard/data/snapshots/</text>
+
+  <!-- operator commit -->
+  <rect x="762" y="132" width="152" height="68" class="box-navy" rx="8"/>
+  <text x="838" y="162" text-anchor="middle" class="t-white">operator commits</text>
+  <text x="838" y="180" text-anchor="middle" font-size="11" fill="#bfe6f7">→ cso-toolkit (git)</text>
+
+  <!-- Zone A edges -->
+  <path class="edge-cyan" d="M202,166 L258,166"/>
+  <path class="edge-cyan" d="M420,166 L476,166"/>
+  <path class="edge" d="M702,166 L758,166"/>
+
+  <!-- ============================================================ -->
+  <!-- ZONE B — GITHUB ACTION RUNNER                                -->
+  <!-- ============================================================ -->
+  <rect x="24" y="242" width="912" height="208" rx="12" class="lane"/>
+  <text x="40" y="264" class="lane-h">B · cso-toolkit GITHUB ACTION RUNNER</text>
+  <text x="40" y="281" class="t-sub">Triggers: nightly cron 06:00 UTC · on-push (develop / main) · workflow_dispatch</text>
+
+  <!-- Source: SDMX -->
+  <rect x="44"  y="298" width="150" height="56" class="box-src" rx="8"/>
+  <text x="119" y="322" text-anchor="middle" class="t-bold">UNICEF SDMX</text>
+  <text x="119" y="340" text-anchor="middle" class="t-sub">live probe + cache</text>
+
+  <!-- Source: GitHub API -->
+  <rect x="44"  y="366" width="150" height="64" class="box-src" rx="8"/>
+  <text x="119" y="388" text-anchor="middle" class="t-bold">GitHub API</text>
+  <text x="119" y="404" text-anchor="middle" class="t-sub">PRs / issues / branches</text>
+  <text x="119" y="420" text-anchor="middle" class="t-sub">DW-Prod via DW_PROD_READ_TOKEN</text>
+
+  <!-- collect.R -->
+  <rect x="262" y="324" width="150" height="80" class="box" rx="8"/>
+  <text x="337" y="352" text-anchor="middle" class="t-bold">collect.R</text>
+  <text x="337" y="370" text-anchor="middle" class="t-sub">merge all sources</text>
+  <text x="337" y="386" text-anchor="middle" class="t-sub">+ operator snapshots</text>
+
+  <!-- state.json -->
+  <rect x="478" y="332" width="140" height="64" class="box-data" rx="8"/>
+  <text x="548" y="360" text-anchor="middle" class="t-bold">state.json</text>
+  <text x="548" y="378" text-anchor="middle" class="t-mono">data/state.json</text>
+
+  <!-- render.R -->
+  <rect x="684" y="324" width="130" height="80" class="box" rx="8"/>
+  <text x="749" y="352" text-anchor="middle" class="t-bold">render.R</text>
+  <text x="749" y="370" text-anchor="middle" class="t-sub">inline SVG + CSS</text>
+  <text x="749" y="386" text-anchor="middle" class="t-sub">single-page SPA</text>
+
+  <!-- index.html -->
+  <rect x="838" y="332" width="78" height="64" class="box-out" rx="8"/>
+  <text x="877" y="360" text-anchor="middle" class="t-bold">index</text>
+  <text x="877" y="378" text-anchor="middle" class="t-mono">.html</text>
+
+  <!-- Zone B edges -->
+  <path class="edge" d="M194,326 L256,338"/>
+  <path class="edge" d="M194,398 L256,388"/>
+  <path class="edge" d="M412,364 L474,364"/>
+  <path class="edge" d="M618,364 L680,364"/>
+  <path class="edge" d="M814,364 L834,364"/>
+
+  <!-- ============================================================ -->
+  <!-- ZONE C edge — committed snapshots feed collect.R             -->
+  <!-- ============================================================ -->
+  <!-- from snapshots box (Zone A) down into collect.R (Zone B) -->
+  <path class="edge" d="M560,208 L560,250 Q560,290 420,300 L360,318"/>
+  <rect x="392" y="252" width="196" height="22" rx="5" fill="#fff7e6" stroke="#c9922a" stroke-width="1"/>
+  <text x="490" y="267" text-anchor="middle" class="edge-lbl">C · committed snapshots → collect.R</text>
+
+  <!-- ============================================================ -->
+  <!-- ZONE D — GITHUB PAGES                                        -->
+  <!-- ============================================================ -->
+  <rect x="24" y="468" width="912" height="56" rx="12" class="lane"/>
+  <text x="40" y="490" class="lane-h">PUBLISH · GitHub Pages (served from docs/, beside the pkgdown site)</text>
+  <rect x="684" y="478" width="232" height="38" class="box-out" rx="8"/>
+  <text x="800" y="502" text-anchor="middle" class="t-bold">GitHub Pages · docs/</text>
+
+  <!-- index.html (Zone B) down to GitHub Pages -->
+  <path class="edge" d="M877,396 L877,474"/>
+</svg></div></div></div><div class="row"><div class="col"><h3>Activity feed</h3><ul class="activity-feed"><li><span class="pill pill-closed">closed</span> <a href="https://github.com/unicef-drp/cso-toolkit/pull/56">#56</a> release: cut v0.4.6 (#51 + #52 + #53 + #54) <span class="muted">(jpazvd)</span></li><li><span class="pill pill-closed">closed</span> <a href="https://github.com/unicef-drp/cso-toolkit/pull/55">#55</a> docs: rename third role INGESTOR -&gt; PUBLISHER (DBM/DBR/DBP) <span class="muted">(jpazvd)</span></li><li><span class="pill pill-closed">closed</span> <a href="https://github.com/unicef-drp/cso-toolkit/pull/57">#57</a> feat(docs): DW Operations Hub dashboard (cso-toolkit hosted, GitHub Pages) <span class="muted">(jpazvd)</span></li><li><span class="pill pill-closed">closed</span> <a href="https://github.com/unicef-drp/cso-toolkit/pull/50">#50</a> release: v0.4.5 → main <span class="muted">(jpazvd)</span></li><li><span class="pill pill-closed">closed</span> <a href="https://github.com/unicef-drp/cso-toolkit/pull/49">#49</a> chore(release): cut v0.4.5 <span class="muted">(jpazvd)</span></li><li><span class="pill pill-closed">closed</span> <a href="https://github.com/unicef-drp/cso-toolkit/pull/48">#48</a> feat(r): dw_ canonical aliases for 8 remaining un-prefixed exports (closes #42) <span class="muted">(jpazvd)</span></li><li><span class="pill pill-closed">closed</span> <a href="https://github.com/unicef-drp/cso-toolkit/pull/47">#47</a> fix(r): standalone-source %&gt;% binding for aggregate_data + aggregate_data_v2 (closes #46) <span class="muted">(jpazvd)</span></li><li><span class="pill pill-closed">closed</span> <a href="https://github.com/unicef-drp/cso-toolkit/pull/45">#45</a> release: develop → main — v0.4.1 + v0.4.2 + v0.4.3 + v0.4.3.1 + v0.4.4 catch-up <span class="muted">(jpazvd)</span></li></ul></div><div class="col"><h3>Watch list (stalled sectors)</h3><ul class="watch-list"><li><strong>Education (ED)</strong> <span class="pill pill-partial">PARTIAL_REPLICATED</span><div class="blocker">Three DBM-actionable items:
+  1. World Bank API access: UNICEF corporate proxy drops api.worldbank.org requests after a threshold (7-8 requests). Options: (a) have IT allowlist api.worldbank.org; OR (b) cache WB data ONCE on a non-corporate network and commit as a frozen URL unde</div></li><li><strong>Women's Status (WT)</strong> <span class="pill pill-blocked">BLOCKED</span><div class="blocker">Three DBM-actionable items:
+  1. Java dependency — sector lead must port wt_dw.R + sub-scripts from xlsx to openxlsx (recommended path; openxlsx is pure-R, no Java dependency) so the pipeline runs in environments without a Java runtime.
+  2. xlsx file schema mismatch — sector cod</div></li><li><strong>Early Childhood Dev (ECD)</strong> <span class="pill pill-blocked">BLOCKED</span><div class="blocker">Four DBM-actionable items:
+  1. CRITICAL: Replace 4 hardcoded paths at ecd_dw.R L20-23 with profile-driven globals (dwRawData, dwCodes, dwWrkData, dwMetaData). The current code is portable only on one producer's machine.
+  2. Deposit the producer-side 'ECD.xlsx' file (referenced </div></li></ul></div></div></section><section id="tab-sectors" class="tab-pane"><h2>Per-sector status</h2><div class="sector-grid"><div class="sector-card"><div class="card-head"><span class="sector-tag">nt</span> <strong>Nutrition (NT)</strong> <span class="pill pill-ok">FULLY_REPLICATED</span></div><div class="card-stats"><div class="card-stat"><span class="k">rows</span> <span class="v">1.06M</span></div><div class="card-stat"><span class="k">indicators</span> <span class="v">40</span></div><div class="card-stat"><span class="k">wall time</span> <span class="v">1514.7s</span></div></div><details><summary>Fixes applied (2)</summary><ul><li>activated 19 commented-out stages (1a-1f imports + 2b-2j aggregations + 3a/3b targets + 4b format-merge)</li><li>openxlsx + countrycode + glue libraries added to lean driver (these are loaded by the profile in production, not present in lean-driver test mode)</li></ul></details><details><summary>Toolkit findings (1)</summary><ul><li>dw_url_allowlist correctly blocked an unallowlisted URL (cmrs_series_indicators directory) with non-fatal warning</li></ul></details><details><summary>Blockers for DBM</summary><div class="muted">none</div></details></div><div class="sector-card"><div class="card-head"><span class="sector-tag">hva</span> <strong>HIV/AIDS (HVA)</strong> <span class="pill pill-ok">FULLY_REPLICATED</span></div><div class="card-stats"><div class="card-stat"><span class="k">rows</span> <span class="v">214k</span></div><div class="card-stat"><span class="k">indicators</span> <span class="v">23</span></div><div class="card-stat"><span class="k">wall time</span> <span class="v">27.9s</span></div></div><details><summary>Fixes applied (2)</summary><ul><li>dw_root() shim (cso-toolkit#53; toolkit gap to be fixed in v0.4.6)</li><li>dwMetaData path corrected to 01_dw_prep/010_metadata (per profile convention, not 012_codes/00_metadata)</li></ul></details><details><summary>Toolkit findings (1)</summary><ul><li>CRITICAL: dw_save reviewer-mode mode-lock did NOT engage on OneDrive-mounted Teams Documents path. Producer's 2026-05-26 v6 output (67.09 MB, 214,674 rows) was OVERWRITTEN by this reviewer-mode run. Filed as cso-toolkit#54 (HIGH severity, v0.4.6)</li></ul></details><details><summary>Blockers for DBM</summary><div class="muted">none</div></details></div><div class="sector-card"><div class="card-head"><span class="sector-tag">im</span> <strong>Immunization (IM)</strong> <span class="pill pill-ok">FULLY_REPLICATED</span></div><div class="card-stats"><div class="card-stat"><span class="k">rows</span> <span class="v">88k</span></div><div class="card-stat"><span class="k">indicators</span> <span class="v">18</span></div><div class="card-stat"><span class="k">wall time</span> <span class="v">11.1s</span></div></div><details><summary>Fixes applied (2)</summary><ul><li>dw_url_allowlist seeded from dw_default_unicef_allowlist() (profile-only convention)</li><li>dw_frozen_root set explicitly to &lt;dwRawData&gt;/_frozen (profile-only convention)</li></ul></details><details><summary>Toolkit findings (1)</summary><ul><li>Reviewer-mode mode-lock honored (output went to _local/im/output/ correctly because sector writes to a repo-relative path explicitly)</li></ul></details><details><summary>Blockers for DBM</summary><div class="muted">none</div></details></div><div class="sector-card"><div class="card-head"><span class="sector-tag">ws</span> <strong>Water &amp; Sanitation (WS)</strong> <span class="pill pill-ok">FULLY_REPLICATED</span></div><div class="card-stats"><div class="card-stat"><span class="k">rows</span> <span class="v">703k</span> <span class="muted">/ 3 files</span></div><div class="card-stat"><span class="k">wall time</span> <span class="v">7.4s</span></div></div><details><summary>Fixes applied (0)</summary><div class="muted">none</div></details><details><summary>Toolkit findings (1)</summary><ul><li>Reviewer-mode mode-lock honored (sector writes to _local/ws/output/ via dwWrkData)</li></ul></details><details><summary>Blockers for DBM</summary><div class="muted">none</div></details></div><div class="sector-card"><div class="card-head"><span class="sector-tag">mnch</span> <strong>MNCH</strong> <span class="pill pill-ok">FULLY_REPLICATED</span></div><div class="card-stats"><div class="card-stat"><span class="k">rows</span> <span class="v">15k</span></div><div class="card-stat"><span class="k">wall time</span> <span class="v">43.6s</span></div></div><details><summary>Fixes applied (0)</summary><div class="muted">none</div></details><details><summary>Toolkit findings (1)</summary><ul><li>CRITICAL: sector bypasses cso-toolkit entirely. The script uses raw write.csv() to write directly into Teams RAW data directory at 011_rawdata/dw_mnch_aggregates.csv — this mixes derived output with canonical raw inputs. Reviewer-mode mode-lock cannot engage when sector code does not call dw_save.</li></ul></details><details><summary>Blockers for DBM</summary><pre class="blocker-pre">Refactor 01_aggregate.R:128 from `write.csv(aggregate_export, file.path(teamsRawData, 'dw_mnch_aggregates.csv'), ...)` to `dw_save(aggregate_export, file.path(dwWrkData, '_local', 'mnch', 'output', 'dw_mnch_aggregates.csv'), sector = 'mnch')`. Sector lead must adopt the dw_io contract.</pre></details></div><div class="sector-card"><div class="card-head"><span class="sector-tag">cme</span> <strong>Child Mortality (CME)</strong> <span class="pill pill-ok">FULLY_REPLICATED</span></div><div class="card-stats"><div class="card-stat"><span class="k">rows</span> <span class="v">33k</span></div><div class="card-stat"><span class="k">wall time</span> <span class="v">18.5s</span></div></div><details><summary>Fixes applied (1)</summary><ul><li>Installed shinyregionalaggregate from unicef-drp/Shiny_regional_aggregate via remotes::install_github</li></ul></details><details><summary>Toolkit findings (1)</summary><ul><li>CME bypasses cso-toolkit; uses data.table::fread + shinyregionalaggregate package directly. No mode-lock applies because no dw_save call. Output written to repo-local 013_wrkdata/ correctly via direct file path.</li></ul></details><details><summary>Blockers for DBM</summary><pre class="blocker-pre">If reviewer-mode contract should engage, sector lead must refactor 00_run_cme.R / cme_regional_aggregate.R to use dw_save and dw_use. Currently bypasses toolkit entirely. NOT a regression but a forward-investment for v0.4.x adoption.</pre></details></div><div class="sector-card"><div class="card-head"><span class="sector-tag">ed</span> <strong>Education (ED)</strong> <span class="pill pill-partial">PARTIAL_REPLICATED</span></div><div class="card-stats"><div class="card-stat"><span class="k">rows</span> <span class="v">214k</span> <span class="muted">/ 2 files</span></div><div class="card-stat"><span class="k">wall time</span> <span class="v">282.0s</span></div></div><details><summary>Fixes applied (6)</summary><ul><li>PR #151 merged (resolves merge-conflict parse blockers from prior smoke test)</li><li>Sector typo year_results -&gt; edu_uis_year_results (02_aggregate_uis_sdg.R L155 + L282)</li><li>Uncommented WB API block at L59-71 of 03 (was completely commented out, leaving downstream lp_data reference undefined)</li><li>Staged pop_school_age.csv + ed_fls.csv + ed_webpage_templ_oos.xlsx from Teams to repo-local dwRawData/ed/</li><li>Direct httr fetch replaced wbstats call (wbstats default timeout too short)</li><li>Added 5-retry exponential backoff (2,4,8,16,32 s)</li></ul></details><details><summary>Toolkit findings (1)</summary><ul><li>STEP 2 wrote to Teams canonical path /060.DW-MASTER/01_dw_prep/013_wrkdata/ed/dw_ed_edu.csv — same mode-lock issue as HVA (cso-toolkit#54)</li></ul></details><details><summary>Blockers for DBM</summary><pre class="blocker-pre">Three DBM-actionable items:
+  1. World Bank API access: UNICEF corporate proxy drops api.worldbank.org requests after a threshold (7-8 requests). Options: (a) have IT allowlist api.worldbank.org; OR (b) cache WB data ONCE on a non-corporate network and commit as a frozen URL under 01_dw_prep/011_rawdata/_frozen/api.worldbank.org/; OR (c) run the ED pipeline outside the corporate network for STEP 3-5.
+  2. Sector code bug — typo at 02_aggregate_uis_sdg.R L155 + L282 referencing undefined 'year_results' instead of 'edu_uis_year_results' (defined at L77).
+  3. Sector code bug — 03_lp_wb_nat_aggr.R has the WB API fetch block (L59-71) commented out but references the resulting 'lp_data' variable downstream -&gt; script crashes immediately if profile-side WB fetch isn't done.</pre></details></div><div class="sector-card"><div class="card-head"><span class="sector-tag">wt</span> <strong>Women's Status (WT)</strong> <span class="pill pill-blocked">BLOCKED</span></div><div class="card-stats"></div><details><summary>Fixes applied (5)</summary><ul><li>Installed xlsx + summarytools + xlsxjars + matrixStats + pander + rapportools (xlsx still fails on Java load)</li><li>Patched library(xlsx) -&gt; library(openxlsx) in wt_dw.R + population.R</li><li>Wrote read.xlsx2 -&gt; openxlsx::read.xlsx shim in driver</li><li>Removed rm(list=ls(all=TRUE)) in wt_dw.R that wipes driver-set globals</li><li>Set required_vars globals (teamsRawData, teamsWrkData, dwCodes, githubFolder) explicitly</li></ul></details><details><summary>Toolkit findings (0)</summary><div class="muted">none</div></details><details><summary>Blockers for DBM</summary><pre class="blocker-pre">Three DBM-actionable items:
+  1. Java dependency — sector lead must port wt_dw.R + sub-scripts from xlsx to openxlsx (recommended path; openxlsx is pure-R, no Java dependency) so the pipeline runs in environments without a Java runtime.
+  2. xlsx file schema mismatch — sector code expects columns Region.Name, M49.Code.region., X2025.Submission..if.data.submission.is.required. but the canonical Teams xlsx '9. CompositionOfRegions_RCs_20241219.xlsx' has columns M49, Name, Ref_Area_Type, RC_Region, RC_UNSDCode, RC_RegionName, RC_Name. Either the sector code is reading the wrong sheet/file, OR the producer's working xlsx differs from the Teams-deposited copy. Sector lead must reconcile.
+  3. Upstream cache dependency — wt regional_classification.R requires &lt;teamsWrkData&gt;/CPD/wt/population.rds, a producer-side cached artifact not present on Teams. Producer must commit this artifact OR document how the reviewer regenerates it before wt can run.</pre></details></div><div class="sector-card"><div class="card-head"><span class="sector-tag">ecd</span> <strong>Early Childhood Dev (ECD)</strong> <span class="pill pill-blocked">BLOCKED</span></div><div class="card-stats"></div><details><summary>Fixes applied (3)</summary><ul><li>Identified hardcoded paths at L20-23 of ecd_dw.R (db_dir, wrk_dir, out_dir, reg_group)</li><li>Searched Teams for ECD.xlsx (referenced by the indicator scripts) — file does not exist on Teams (only ECD.csv variants exist under 011_rawdata/cpd/Old/ and 013_wrkdata/CPD/Old_*)</li><li>Searched for ecd-specific raw inputs — none located at the path the script expects</li></ul></details><details><summary>Toolkit findings (0)</summary><div class="muted">none</div></details><details><summary>Blockers for DBM</summary><pre class="blocker-pre">Four DBM-actionable items:
+  1. CRITICAL: Replace 4 hardcoded paths at ecd_dw.R L20-23 with profile-driven globals (dwRawData, dwCodes, dwWrkData, dwMetaData). The current code is portable only on one producer's machine.
+  2. Deposit the producer-side 'ECD.xlsx' file (referenced by all 6 ECD_*_dw.R indicator scripts, sheet='early stimulation', startRow=15) onto Teams at a canonical path so reviewers can read it. The file is currently only on the producer-side OneDrive.
+  3. Java install OR xlsx -&gt; openxlsx port (same as wt).
+  4. The script bypasses cso-toolkit entirely (no dw_use, dw_save). For v0.4.x compliance the sector lead must adopt dw_io contract.</pre></details></div></div><h3>Charts</h3><div class="chart-grid"><div class="chart"><h4>3-way parity (repo vs Teams vs Helix)</h4><svg role='img' aria-label='Indicator coverage by sector: repo-local vs Teams deposit vs SDMX-published' width='100%' viewBox='0 0 504.00 324.00'><title>Indicator coverage by sector: repo-local vs Teams deposit vs SDMX-published</title><desc>Grouped bar chart; the gap from the local bar to the SDMX bar is the count of published indicators not yet replicated locally.</desc>
+<g class='svglite'>
+<defs>
+  <style type='text/css'><![CDATA[
+    .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite rect, .svglite circle {
+      fill: none;
+      stroke: #000000;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-miterlimit: 10.00;
+    }
+    .svglite text {
+      white-space: pre;
+    }
+    .svglite g.glyphgroup path {
+      fill: inherit;
+      stroke: none;
+    }
+  ]]></style>
+</defs>
+<rect width='100%' height='100%' style='stroke: none; fill: #FFFFFF;'/>
+<defs>
+  <clipPath id='3way_parity-cpMC4wMHw1MDQuMDB8MC4wMHwzMjQuMDA='>
+    <rect x='0.00' y='0.00' width='504.00' height='324.00' />
+  </clipPath>
+</defs>
+<g clip-path='url(#3way_parity-cpMC4wMHw1MDQuMDB8MC4wMHwzMjQuMDA=)'>
+<rect x='0.000000000000064' y='0.00' width='504.00' height='324.00' style='stroke-width: 1.07; stroke: none; fill: #FFFFFF;' />
+</g>
+<defs>
+  <clipPath id='3way_parity-cpOTkuNTd8NDkyLjA0fDQyLjMwfDI1OS4wNg=='>
+    <rect x='99.57' y='42.30' width='392.47' height='216.76' />
+  </clipPath>
+</defs>
+<g clip-path='url(#3way_parity-cpOTkuNTd8NDkyLjA0fDQyLjMwfDI1OS4wNg==)'>
+<polyline points='99.57,247.45 492.04,247.45 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='99.57,228.10 492.04,228.10 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='99.57,208.74 492.04,208.74 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='99.57,189.39 492.04,189.39 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='99.57,170.03 492.04,170.03 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='99.57,150.68 492.04,150.68 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='99.57,131.33 492.04,131.33 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='99.57,111.97 492.04,111.97 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='99.57,92.62 492.04,92.62 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='99.57,73.27 492.04,73.27 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='99.57,53.91 492.04,53.91 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='117.41,259.06 117.41,42.30 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='247.16,259.06 247.16,42.30 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='376.90,259.06 376.90,42.30 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<rect x='117.41' y='56.62' width='259.49' height='4.64' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #0072B2;' />
+<rect x='117.41' y='75.98' width='0.00' height='4.64' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #0072B2;' />
+<rect x='117.41' y='95.33' width='116.77' height='4.64' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #0072B2;' />
+<rect x='117.41' y='114.68' width='181.64' height='4.64' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #0072B2;' />
+<rect x='117.41' y='134.04' width='77.85' height='4.64' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #0072B2;' />
+<rect x='117.41' y='153.39' width='97.31' height='4.64' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #0072B2;' />
+<rect x='117.41' y='172.74' width='175.15' height='4.64' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #0072B2;' />
+<rect x='117.41' y='192.10' width='155.69' height='4.64' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #0072B2;' />
+<rect x='117.41' y='211.45' width='103.79' height='4.64' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #0072B2;' />
+<rect x='117.41' y='230.81' width='0.00' height='4.64' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #0072B2;' />
+<rect x='117.41' y='250.16' width='0.00' height='4.64' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #0072B2;' />
+<rect x='117.41' y='51.59' width='259.49' height='4.64' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #E69F00;' />
+<rect x='117.41' y='70.94' width='149.20' height='4.64' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #E69F00;' />
+<rect x='117.41' y='90.30' width='0.00' height='4.64' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #E69F00;' />
+<rect x='117.41' y='109.65' width='0.00' height='4.64' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #E69F00;' />
+<rect x='117.41' y='129.01' width='0.00' height='4.64' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #E69F00;' />
+<rect x='117.41' y='148.36' width='0.00' height='4.64' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #E69F00;' />
+<rect x='117.41' y='167.71' width='0.00' height='4.64' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #E69F00;' />
+<rect x='117.41' y='187.07' width='0.00' height='4.64' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #E69F00;' />
+<rect x='117.41' y='206.42' width='103.79' height='4.64' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #E69F00;' />
+<rect x='117.41' y='225.77' width='38.92' height='4.64' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #E69F00;' />
+<rect x='117.41' y='245.13' width='51.90' height='4.64' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #E69F00;' />
+<rect x='117.41' y='46.56' width='259.49' height='4.64' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #56B4E9;' />
+<rect x='117.41' y='65.91' width='149.20' height='4.64' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #56B4E9;' />
+<rect x='117.41' y='85.27' width='116.77' height='4.64' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #56B4E9;' />
+<rect x='117.41' y='104.62' width='356.79' height='4.64' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #56B4E9;' />
+<rect x='117.41' y='123.97' width='356.79' height='4.64' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #56B4E9;' />
+<rect x='117.41' y='143.33' width='356.79' height='4.64' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #56B4E9;' />
+<rect x='117.41' y='162.68' width='233.54' height='4.64' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #56B4E9;' />
+<rect x='117.41' y='182.03' width='220.56' height='4.64' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #56B4E9;' />
+<rect x='117.41' y='201.39' width='227.05' height='4.64' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #56B4E9;' />
+<rect x='117.41' y='220.74' width='38.92' height='4.64' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #56B4E9;' />
+<rect x='117.41' y='240.09' width='51.90' height='4.64' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #56B4E9;' />
+</g>
+<g clip-path='url(#3way_parity-cpMC4wMHw1MDQuMDB8MC4wMHwzMjQuMDA=)'>
+<text x='94.64' y='250.60' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='76.77px' lengthAdjust='spacingAndGlyphs'>Early childhood dev</text>
+<text x='94.64' y='231.25' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='62.12px' lengthAdjust='spacingAndGlyphs'>Women's status</text>
+<text x='94.64' y='211.89' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='39.12px' lengthAdjust='spacingAndGlyphs'>Education</text>
+<text x='94.64' y='192.54' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='55.70px' lengthAdjust='spacingAndGlyphs'>Child mortality</text>
+<text x='94.64' y='173.18' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='26.41px' lengthAdjust='spacingAndGlyphs'>MNCH</text>
+<text x='94.64' y='153.83' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='86.67px' lengthAdjust='spacingAndGlyphs'>WASH health-care fac</text>
+<text x='94.64' y='134.48' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='58.36px' lengthAdjust='spacingAndGlyphs'>WASH schools</text>
+<text x='94.64' y='115.12' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='73.52px' lengthAdjust='spacingAndGlyphs'>WASH households</text>
+<text x='94.64' y='95.77' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='52.30px' lengthAdjust='spacingAndGlyphs'>Immunization</text>
+<text x='94.64' y='76.42' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='37.66px' lengthAdjust='spacingAndGlyphs'>HIV/AIDS</text>
+<text x='94.64' y='57.06' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='32.73px' lengthAdjust='spacingAndGlyphs'>Nutrition</text>
+<text x='117.41' y='270.29' text-anchor='middle' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='4.89px' lengthAdjust='spacingAndGlyphs'>0</text>
+<text x='247.16' y='270.29' text-anchor='middle' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>20</text>
+<text x='376.90' y='270.29' text-anchor='middle' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>40</text>
+<text x='295.81' y='282.05' text-anchor='middle' style='font-size: 10.00px;fill: #6A7585; font-family: "Arial";' textLength='43.36px' lengthAdjust='spacingAndGlyphs'>Indicators</text>
+<rect x='235.10' y='301.30' width='8.55' height='8.55' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #0072B2;' />
+<rect x='278.02' y='301.30' width='8.55' height='8.55' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #E69F00;' />
+<rect x='317.05' y='301.30' width='8.55' height='8.55' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #56B4E9;' />
+<text x='249.84' y='308.72' style='font-size: 8.80px; font-family: "Arial";' textLength='22.00px' lengthAdjust='spacingAndGlyphs'>MINE</text>
+<text x='292.76' y='308.72' style='font-size: 8.80px; font-family: "Arial";' textLength='18.11px' lengthAdjust='spacingAndGlyphs'>DEP</text>
+<text x='331.79' y='308.72' style='font-size: 8.80px; font-family: "Arial";' textLength='25.44px' lengthAdjust='spacingAndGlyphs'>SDMX</text>
+<text x='7.97' y='32.23' style='font-size: 10.00px;fill: #6A7585; font-family: "Arial";' textLength='385.55px' lengthAdjust='spacingAndGlyphs'>Bars per indicator set; gap to SDMX = indicators published but not yet replicated locally</text>
+<text x='7.97' y='16.57' style='font-size: 12.00px; font-weight: bold; font-family: "Arial";' textLength='401.08px' lengthAdjust='spacingAndGlyphs'>Indicator coverage — repo-local vs Teams deposit vs SDMX-published</text>
+</g>
+</g>
+</svg></div><div class="chart"><h4>Coverage matrix</h4><svg role='img' aria-label='Coverage matrix: pipeline stage reached per indicator set' width='100%' viewBox='0 0 504.00 324.00'><title>Coverage matrix: pipeline stage reached per indicator set</title><desc>Tile grid; rows are indicator sets, columns are Local, Teams and SDMX stages; each cell marked full (check), partial (half-circle) or none (dash).</desc>
+<g class='svglite'>
+<defs>
+  <style type='text/css'><![CDATA[
+    .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite rect, .svglite circle {
+      fill: none;
+      stroke: #000000;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-miterlimit: 10.00;
+    }
+    .svglite text {
+      white-space: pre;
+    }
+    .svglite g.glyphgroup path {
+      fill: inherit;
+      stroke: none;
+    }
+  ]]></style>
+</defs>
+<rect width='100%' height='100%' style='stroke: none; fill: #FFFFFF;'/>
+<defs>
+  <clipPath id='coverage_matrix-cpMC4wMHw1MDQuMDB8MC4wMHwzMjQuMDA='>
+    <rect x='0.00' y='0.00' width='504.00' height='324.00' />
+  </clipPath>
+</defs>
+<g clip-path='url(#coverage_matrix-cpMC4wMHw1MDQuMDB8MC4wMHwzMjQuMDA=)'>
+<rect x='0.000000000000064' y='0.00' width='504.00' height='324.00' style='stroke-width: 1.07; stroke: none; fill: #FFFFFF;' />
+</g>
+<defs>
+  <clipPath id='coverage_matrix-cpOTkuNTd8NDkyLjA0fDU1LjM4fDI4NC4xNQ=='>
+    <rect x='99.57' y='55.38' width='392.47' height='228.77' />
+  </clipPath>
+</defs>
+<g clip-path='url(#coverage_matrix-cpOTkuNTd8NDkyLjA0fDU1LjM4fDI4NC4xNQ==)'>
+<rect x='111.84' y='57.43' width='122.65' height='20.43' style='stroke-width: 2.35; stroke: #FFFFFF; stroke-linecap: butt; stroke-linejoin: miter; fill: #009E73;' />
+<rect x='234.49' y='57.43' width='122.65' height='20.43' style='stroke-width: 2.35; stroke: #FFFFFF; stroke-linecap: butt; stroke-linejoin: miter; fill: #009E73;' />
+<rect x='357.13' y='57.43' width='122.65' height='20.43' style='stroke-width: 2.35; stroke: #FFFFFF; stroke-linecap: butt; stroke-linejoin: miter; fill: #009E73;' />
+<rect x='111.84' y='77.85' width='122.65' height='20.43' style='stroke-width: 2.35; stroke: #FFFFFF; stroke-linecap: butt; stroke-linejoin: miter; fill: #CBD2DA;' />
+<rect x='234.49' y='77.85' width='122.65' height='20.43' style='stroke-width: 2.35; stroke: #FFFFFF; stroke-linecap: butt; stroke-linejoin: miter; fill: #009E73;' />
+<rect x='357.13' y='77.85' width='122.65' height='20.43' style='stroke-width: 2.35; stroke: #FFFFFF; stroke-linecap: butt; stroke-linejoin: miter; fill: #009E73;' />
+<rect x='111.84' y='98.28' width='122.65' height='20.43' style='stroke-width: 2.35; stroke: #FFFFFF; stroke-linecap: butt; stroke-linejoin: miter; fill: #009E73;' />
+<rect x='234.49' y='98.28' width='122.65' height='20.43' style='stroke-width: 2.35; stroke: #FFFFFF; stroke-linecap: butt; stroke-linejoin: miter; fill: #CBD2DA;' />
+<rect x='357.13' y='98.28' width='122.65' height='20.43' style='stroke-width: 2.35; stroke: #FFFFFF; stroke-linecap: butt; stroke-linejoin: miter; fill: #009E73;' />
+<rect x='111.84' y='118.70' width='122.65' height='20.43' style='stroke-width: 2.35; stroke: #FFFFFF; stroke-linecap: butt; stroke-linejoin: miter; fill: #E69F00;' />
+<rect x='234.49' y='118.70' width='122.65' height='20.43' style='stroke-width: 2.35; stroke: #FFFFFF; stroke-linecap: butt; stroke-linejoin: miter; fill: #CBD2DA;' />
+<rect x='357.13' y='118.70' width='122.65' height='20.43' style='stroke-width: 2.35; stroke: #FFFFFF; stroke-linecap: butt; stroke-linejoin: miter; fill: #009E73;' />
+<rect x='111.84' y='139.13' width='122.65' height='20.43' style='stroke-width: 2.35; stroke: #FFFFFF; stroke-linecap: butt; stroke-linejoin: miter; fill: #E69F00;' />
+<rect x='234.49' y='139.13' width='122.65' height='20.43' style='stroke-width: 2.35; stroke: #FFFFFF; stroke-linecap: butt; stroke-linejoin: miter; fill: #CBD2DA;' />
+<rect x='357.13' y='139.13' width='122.65' height='20.43' style='stroke-width: 2.35; stroke: #FFFFFF; stroke-linecap: butt; stroke-linejoin: miter; fill: #009E73;' />
+<rect x='111.84' y='159.55' width='122.65' height='20.43' style='stroke-width: 2.35; stroke: #FFFFFF; stroke-linecap: butt; stroke-linejoin: miter; fill: #E69F00;' />
+<rect x='234.49' y='159.55' width='122.65' height='20.43' style='stroke-width: 2.35; stroke: #FFFFFF; stroke-linecap: butt; stroke-linejoin: miter; fill: #CBD2DA;' />
+<rect x='357.13' y='159.55' width='122.65' height='20.43' style='stroke-width: 2.35; stroke: #FFFFFF; stroke-linecap: butt; stroke-linejoin: miter; fill: #009E73;' />
+<rect x='111.84' y='179.98' width='122.65' height='20.43' style='stroke-width: 2.35; stroke: #FFFFFF; stroke-linecap: butt; stroke-linejoin: miter; fill: #E69F00;' />
+<rect x='234.49' y='179.98' width='122.65' height='20.43' style='stroke-width: 2.35; stroke: #FFFFFF; stroke-linecap: butt; stroke-linejoin: miter; fill: #CBD2DA;' />
+<rect x='357.13' y='179.98' width='122.65' height='20.43' style='stroke-width: 2.35; stroke: #FFFFFF; stroke-linecap: butt; stroke-linejoin: miter; fill: #009E73;' />
+<rect x='111.84' y='200.40' width='122.65' height='20.43' style='stroke-width: 2.35; stroke: #FFFFFF; stroke-linecap: butt; stroke-linejoin: miter; fill: #E69F00;' />
+<rect x='234.49' y='200.40' width='122.65' height='20.43' style='stroke-width: 2.35; stroke: #FFFFFF; stroke-linecap: butt; stroke-linejoin: miter; fill: #CBD2DA;' />
+<rect x='357.13' y='200.40' width='122.65' height='20.43' style='stroke-width: 2.35; stroke: #FFFFFF; stroke-linecap: butt; stroke-linejoin: miter; fill: #009E73;' />
+<rect x='111.84' y='220.83' width='122.65' height='20.43' style='stroke-width: 2.35; stroke: #FFFFFF; stroke-linecap: butt; stroke-linejoin: miter; fill: #E69F00;' />
+<rect x='234.49' y='220.83' width='122.65' height='20.43' style='stroke-width: 2.35; stroke: #FFFFFF; stroke-linecap: butt; stroke-linejoin: miter; fill: #E69F00;' />
+<rect x='357.13' y='220.83' width='122.65' height='20.43' style='stroke-width: 2.35; stroke: #FFFFFF; stroke-linecap: butt; stroke-linejoin: miter; fill: #009E73;' />
+<rect x='111.84' y='241.26' width='122.65' height='20.43' style='stroke-width: 2.35; stroke: #FFFFFF; stroke-linecap: butt; stroke-linejoin: miter; fill: #CBD2DA;' />
+<rect x='234.49' y='241.26' width='122.65' height='20.43' style='stroke-width: 2.35; stroke: #FFFFFF; stroke-linecap: butt; stroke-linejoin: miter; fill: #009E73;' />
+<rect x='357.13' y='241.26' width='122.65' height='20.43' style='stroke-width: 2.35; stroke: #FFFFFF; stroke-linecap: butt; stroke-linejoin: miter; fill: #009E73;' />
+<rect x='111.84' y='261.68' width='122.65' height='20.43' style='stroke-width: 2.35; stroke: #FFFFFF; stroke-linecap: butt; stroke-linejoin: miter; fill: #CBD2DA;' />
+<rect x='234.49' y='261.68' width='122.65' height='20.43' style='stroke-width: 2.35; stroke: #FFFFFF; stroke-linecap: butt; stroke-linejoin: miter; fill: #009E73;' />
+<rect x='357.13' y='261.68' width='122.65' height='20.43' style='stroke-width: 2.35; stroke: #FFFFFF; stroke-linecap: butt; stroke-linejoin: miter; fill: #009E73;' />
+<text x='173.16' y='71.71' text-anchor='middle' style='font-size: 11.38px;fill: #FFFFFF; font-family: "Arial";' textLength='8.52px' lengthAdjust='spacingAndGlyphs'>✓</text>
+<text x='295.81' y='71.71' text-anchor='middle' style='font-size: 11.38px;fill: #FFFFFF; font-family: "Arial";' textLength='8.52px' lengthAdjust='spacingAndGlyphs'>✓</text>
+<text x='418.46' y='71.71' text-anchor='middle' style='font-size: 11.38px;fill: #FFFFFF; font-family: "Arial";' textLength='8.52px' lengthAdjust='spacingAndGlyphs'>✓</text>
+<text x='173.16' y='92.14' text-anchor='middle' style='font-size: 11.38px;fill: #1A1D23; font-family: "Arial";' textLength='6.33px' lengthAdjust='spacingAndGlyphs'>–</text>
+<text x='295.81' y='92.14' text-anchor='middle' style='font-size: 11.38px;fill: #FFFFFF; font-family: "Arial";' textLength='8.52px' lengthAdjust='spacingAndGlyphs'>✓</text>
+<text x='418.46' y='92.14' text-anchor='middle' style='font-size: 11.38px;fill: #FFFFFF; font-family: "Arial";' textLength='8.52px' lengthAdjust='spacingAndGlyphs'>✓</text>
+<text x='173.16' y='112.56' text-anchor='middle' style='font-size: 11.38px;fill: #FFFFFF; font-family: "Arial";' textLength='8.52px' lengthAdjust='spacingAndGlyphs'>✓</text>
+<text x='295.81' y='112.56' text-anchor='middle' style='font-size: 11.38px;fill: #1A1D23; font-family: "Arial";' textLength='6.33px' lengthAdjust='spacingAndGlyphs'>–</text>
+<text x='418.46' y='112.56' text-anchor='middle' style='font-size: 11.38px;fill: #FFFFFF; font-family: "Arial";' textLength='8.52px' lengthAdjust='spacingAndGlyphs'>✓</text>
+<text x='173.16' y='132.99' text-anchor='middle' style='font-size: 11.38px;fill: #1A1D23; font-family: "Arial";' textLength='9.80px' lengthAdjust='spacingAndGlyphs'>◑</text>
+<text x='295.81' y='132.99' text-anchor='middle' style='font-size: 11.38px;fill: #1A1D23; font-family: "Arial";' textLength='6.33px' lengthAdjust='spacingAndGlyphs'>–</text>
+<text x='418.46' y='132.99' text-anchor='middle' style='font-size: 11.38px;fill: #FFFFFF; font-family: "Arial";' textLength='8.52px' lengthAdjust='spacingAndGlyphs'>✓</text>
+<text x='173.16' y='153.41' text-anchor='middle' style='font-size: 11.38px;fill: #1A1D23; font-family: "Arial";' textLength='9.80px' lengthAdjust='spacingAndGlyphs'>◑</text>
+<text x='295.81' y='153.41' text-anchor='middle' style='font-size: 11.38px;fill: #1A1D23; font-family: "Arial";' textLength='6.33px' lengthAdjust='spacingAndGlyphs'>–</text>
+<text x='418.46' y='153.41' text-anchor='middle' style='font-size: 11.38px;fill: #FFFFFF; font-family: "Arial";' textLength='8.52px' lengthAdjust='spacingAndGlyphs'>✓</text>
+<text x='173.16' y='173.84' text-anchor='middle' style='font-size: 11.38px;fill: #1A1D23; font-family: "Arial";' textLength='9.80px' lengthAdjust='spacingAndGlyphs'>◑</text>
+<text x='295.81' y='173.84' text-anchor='middle' style='font-size: 11.38px;fill: #1A1D23; font-family: "Arial";' textLength='6.33px' lengthAdjust='spacingAndGlyphs'>–</text>
+<text x='418.46' y='173.84' text-anchor='middle' style='font-size: 11.38px;fill: #FFFFFF; font-family: "Arial";' textLength='8.52px' lengthAdjust='spacingAndGlyphs'>✓</text>
+<text x='173.16' y='194.26' text-anchor='middle' style='font-size: 11.38px;fill: #1A1D23; font-family: "Arial";' textLength='9.80px' lengthAdjust='spacingAndGlyphs'>◑</text>
+<text x='295.81' y='194.26' text-anchor='middle' style='font-size: 11.38px;fill: #1A1D23; font-family: "Arial";' textLength='6.33px' lengthAdjust='spacingAndGlyphs'>–</text>
+<text x='418.46' y='194.26' text-anchor='middle' style='font-size: 11.38px;fill: #FFFFFF; font-family: "Arial";' textLength='8.52px' lengthAdjust='spacingAndGlyphs'>✓</text>
+<text x='173.16' y='214.69' text-anchor='middle' style='font-size: 11.38px;fill: #1A1D23; font-family: "Arial";' textLength='9.80px' lengthAdjust='spacingAndGlyphs'>◑</text>
+<text x='295.81' y='214.69' text-anchor='middle' style='font-size: 11.38px;fill: #1A1D23; font-family: "Arial";' textLength='6.33px' lengthAdjust='spacingAndGlyphs'>–</text>
+<text x='418.46' y='214.69' text-anchor='middle' style='font-size: 11.38px;fill: #FFFFFF; font-family: "Arial";' textLength='8.52px' lengthAdjust='spacingAndGlyphs'>✓</text>
+<text x='173.16' y='235.11' text-anchor='middle' style='font-size: 11.38px;fill: #1A1D23; font-family: "Arial";' textLength='9.80px' lengthAdjust='spacingAndGlyphs'>◑</text>
+<text x='295.81' y='235.11' text-anchor='middle' style='font-size: 11.38px;fill: #1A1D23; font-family: "Arial";' textLength='9.80px' lengthAdjust='spacingAndGlyphs'>◑</text>
+<text x='418.46' y='235.11' text-anchor='middle' style='font-size: 11.38px;fill: #FFFFFF; font-family: "Arial";' textLength='8.52px' lengthAdjust='spacingAndGlyphs'>✓</text>
+<text x='173.16' y='255.54' text-anchor='middle' style='font-size: 11.38px;fill: #1A1D23; font-family: "Arial";' textLength='6.33px' lengthAdjust='spacingAndGlyphs'>–</text>
+<text x='295.81' y='255.54' text-anchor='middle' style='font-size: 11.38px;fill: #FFFFFF; font-family: "Arial";' textLength='8.52px' lengthAdjust='spacingAndGlyphs'>✓</text>
+<text x='418.46' y='255.54' text-anchor='middle' style='font-size: 11.38px;fill: #FFFFFF; font-family: "Arial";' textLength='8.52px' lengthAdjust='spacingAndGlyphs'>✓</text>
+<text x='173.16' y='275.97' text-anchor='middle' style='font-size: 11.38px;fill: #1A1D23; font-family: "Arial";' textLength='6.33px' lengthAdjust='spacingAndGlyphs'>–</text>
+<text x='295.81' y='275.97' text-anchor='middle' style='font-size: 11.38px;fill: #FFFFFF; font-family: "Arial";' textLength='8.52px' lengthAdjust='spacingAndGlyphs'>✓</text>
+<text x='418.46' y='275.97' text-anchor='middle' style='font-size: 11.38px;fill: #FFFFFF; font-family: "Arial";' textLength='8.52px' lengthAdjust='spacingAndGlyphs'>✓</text>
+</g>
+<g clip-path='url(#coverage_matrix-cpMC4wMHw1MDQuMDB8MC4wMHwzMjQuMDA=)'>
+<text x='173.16' y='48.60' text-anchor='middle' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='21.03px' lengthAdjust='spacingAndGlyphs'>Local</text>
+<text x='295.81' y='48.60' text-anchor='middle' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='25.92px' lengthAdjust='spacingAndGlyphs'>Teams</text>
+<text x='418.46' y='48.60' text-anchor='middle' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='25.44px' lengthAdjust='spacingAndGlyphs'>SDMX</text>
+<text x='94.64' y='275.04' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='76.77px' lengthAdjust='spacingAndGlyphs'>Early childhood dev</text>
+<text x='94.64' y='254.62' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='62.12px' lengthAdjust='spacingAndGlyphs'>Women's status</text>
+<text x='94.64' y='234.19' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='39.12px' lengthAdjust='spacingAndGlyphs'>Education</text>
+<text x='94.64' y='213.77' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='55.70px' lengthAdjust='spacingAndGlyphs'>Child mortality</text>
+<text x='94.64' y='193.34' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='26.41px' lengthAdjust='spacingAndGlyphs'>MNCH</text>
+<text x='94.64' y='172.92' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='86.67px' lengthAdjust='spacingAndGlyphs'>WASH health-care fac</text>
+<text x='94.64' y='152.49' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='58.36px' lengthAdjust='spacingAndGlyphs'>WASH schools</text>
+<text x='94.64' y='132.07' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='73.52px' lengthAdjust='spacingAndGlyphs'>WASH households</text>
+<text x='94.64' y='111.64' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='52.30px' lengthAdjust='spacingAndGlyphs'>Immunization</text>
+<text x='94.64' y='91.21' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='37.66px' lengthAdjust='spacingAndGlyphs'>HIV/AIDS</text>
+<text x='94.64' y='70.79' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='32.73px' lengthAdjust='spacingAndGlyphs'>Nutrition</text>
+<rect x='220.71' y='302.15' width='6.84' height='6.84' style='stroke-width: 2.35; stroke: #FFFFFF; stroke-linecap: butt; stroke-linejoin: miter; fill: #009E73;' />
+<rect x='294.16' y='302.15' width='6.84' height='6.84' style='stroke-width: 2.35; stroke: #FFFFFF; stroke-linecap: butt; stroke-linejoin: miter; fill: #E69F00;' />
+<rect x='339.02' y='302.15' width='6.84' height='6.84' style='stroke-width: 2.35; stroke: #FFFFFF; stroke-linecap: butt; stroke-linejoin: miter; fill: #CBD2DA;' />
+<text x='234.59' y='308.72' style='font-size: 8.80px; font-family: "Arial";' textLength='52.53px' lengthAdjust='spacingAndGlyphs'>full (= SDMX)</text>
+<text x='308.05' y='308.72' style='font-size: 8.80px; font-family: "Arial";' textLength='23.94px' lengthAdjust='spacingAndGlyphs'>partial</text>
+<text x='352.90' y='308.72' style='font-size: 8.80px; font-family: "Arial";' textLength='19.56px' lengthAdjust='spacingAndGlyphs'>none</text>
+<text x='7.97' y='32.23' style='font-size: 10.00px;fill: #6A7585; font-family: "Arial";' textLength='345.55px' lengthAdjust='spacingAndGlyphs'>full = count equals SDMX ceiling · partial = 0 &lt; count &lt; SDMX · none = absent</text>
+<text x='7.97' y='16.57' style='font-size: 12.00px; font-weight: bold; font-family: "Arial";' textLength='338.67px' lengthAdjust='spacingAndGlyphs'>Coverage matrix — pipeline stage reached per indicator set</text>
+</g>
+</g>
+</svg></div><div class="chart"><h4>Replication wall-time</h4><svg role='img' aria-label='Replication wall-time by sector' width='100%' viewBox='0 0 504.00 324.00'><title>Replication wall-time by sector</title><desc>Horizontal bars on a square-root scale; Nutrition at about 25 minutes dwarfs the others, which run in seconds.</desc>
+<g class='svglite'>
+<defs>
+  <style type='text/css'><![CDATA[
+    .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite rect, .svglite circle {
+      fill: none;
+      stroke: #000000;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-miterlimit: 10.00;
+    }
+    .svglite text {
+      white-space: pre;
+    }
+    .svglite g.glyphgroup path {
+      fill: inherit;
+      stroke: none;
+    }
+  ]]></style>
+</defs>
+<rect width='100%' height='100%' style='stroke: none; fill: #FFFFFF;'/>
+<defs>
+  <clipPath id='walltime-cpMC4wMHw1MDQuMDB8MC4wMHwzMjQuMDA='>
+    <rect x='0.00' y='0.00' width='504.00' height='324.00' />
+  </clipPath>
+</defs>
+<g clip-path='url(#walltime-cpMC4wMHw1MDQuMDB8MC4wMHwzMjQuMDA=)'>
+<rect x='0.00' y='0.00' width='504.00' height='324.00' style='stroke-width: 1.07; stroke: none; fill: #FFFFFF;' />
+</g>
+<defs>
+  <clipPath id='walltime-cpNjguNjB8NDkyLjA0fDQyLjMwfDI5MC45NA=='>
+    <rect x='68.60' y='42.30' width='423.44' height='248.64' />
+  </clipPath>
+</defs>
+<g clip-path='url(#walltime-cpNjguNjB8NDkyLjA0fDQyLjMwfDI5MC45NA==)'>
+<polyline points='68.60,270.22 492.04,270.22 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='68.60,235.69 492.04,235.69 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='68.60,201.15 492.04,201.15 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='68.60,166.62 492.04,166.62 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='68.60,132.09 492.04,132.09 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='68.60,97.55 492.04,97.55 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='68.60,63.02 492.04,63.02 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='68.60,290.94 68.60,42.30 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='274.78,290.94 274.78,42.30 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='360.18,290.94 360.18,42.30 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='425.71,290.94 425.71,42.30 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='480.95,290.94 480.95,42.30 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<rect x='68.60' y='258.48' width='25.08' height='23.48' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #0072B2;' />
+<rect x='68.60' y='223.95' width='30.72' height='23.48' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #0072B2;' />
+<rect x='68.60' y='189.41' width='39.66' height='23.48' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #0072B2;' />
+<rect x='68.60' y='154.88' width='48.70' height='23.48' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #0072B2;' />
+<rect x='68.60' y='120.35' width='60.88' height='23.48' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #0072B2;' />
+<rect x='68.60' y='85.81' width='154.84' height='23.48' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #0072B2;' />
+<rect x='68.60' y='51.28' width='358.85' height='23.48' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #0072B2;' />
+<text x='95.10' y='273.38' style='font-size: 8.82px;fill: #1A1D23; font-family: "Arial";' textLength='11.77px' lengthAdjust='spacingAndGlyphs'>7 s</text>
+<text x='101.25' y='238.84' style='font-size: 8.82px;fill: #1A1D23; font-family: "Arial";' textLength='16.02px' lengthAdjust='spacingAndGlyphs'>11 s</text>
+<text x='110.26' y='204.31' style='font-size: 8.82px;fill: #1A1D23; font-family: "Arial";' textLength='16.67px' lengthAdjust='spacingAndGlyphs'>18 s</text>
+<text x='119.31' y='169.78' style='font-size: 8.82px;fill: #1A1D23; font-family: "Arial";' textLength='16.67px' lengthAdjust='spacingAndGlyphs'>28 s</text>
+<text x='131.49' y='135.24' style='font-size: 8.82px;fill: #1A1D23; font-family: "Arial";' textLength='16.67px' lengthAdjust='spacingAndGlyphs'>44 s</text>
+<text x='226.03' y='100.71' style='font-size: 8.82px;fill: #1A1D23; font-family: "Arial";' textLength='21.56px' lengthAdjust='spacingAndGlyphs'>5 min</text>
+<text x='430.63' y='66.17' style='font-size: 8.82px;fill: #1A1D23; font-family: "Arial";' textLength='26.47px' lengthAdjust='spacingAndGlyphs'>25 min</text>
+</g>
+<g clip-path='url(#walltime-cpMC4wMHw1MDQuMDB8MC4wMHwzMjQuMDA=)'>
+<text x='63.67' y='273.37' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='26.08px' lengthAdjust='spacingAndGlyphs'>WASH</text>
+<text x='63.67' y='238.84' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='52.30px' lengthAdjust='spacingAndGlyphs'>Immunization</text>
+<text x='63.67' y='204.30' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='55.70px' lengthAdjust='spacingAndGlyphs'>Child mortality</text>
+<text x='63.67' y='169.77' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='37.66px' lengthAdjust='spacingAndGlyphs'>HIV/AIDS</text>
+<text x='63.67' y='135.24' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='26.41px' lengthAdjust='spacingAndGlyphs'>MNCH</text>
+<text x='63.67' y='100.70' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='39.12px' lengthAdjust='spacingAndGlyphs'>Education</text>
+<text x='63.67' y='66.17' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='32.73px' lengthAdjust='spacingAndGlyphs'>Nutrition</text>
+<text x='68.60' y='302.17' text-anchor='middle' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='4.89px' lengthAdjust='spacingAndGlyphs'>0</text>
+<text x='274.78' y='302.17' text-anchor='middle' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='14.67px' lengthAdjust='spacingAndGlyphs'>500</text>
+<text x='360.18' y='302.17' text-anchor='middle' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='19.56px' lengthAdjust='spacingAndGlyphs'>1000</text>
+<text x='425.71' y='302.17' text-anchor='middle' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='19.56px' lengthAdjust='spacingAndGlyphs'>1500</text>
+<text x='480.95' y='302.17' text-anchor='middle' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='19.56px' lengthAdjust='spacingAndGlyphs'>2000</text>
+<text x='280.32' y='313.93' text-anchor='middle' style='font-size: 10.00px;fill: #6A7585; font-family: "Arial";' textLength='103.53px' lengthAdjust='spacingAndGlyphs'>Wall time (s, sqrt scale)</text>
+<text x='7.97' y='32.23' style='font-size: 10.00px;fill: #6A7585; font-family: "Arial";' textLength='257.08px' lengthAdjust='spacingAndGlyphs'>sqrt scale — Nutrition (~25 min, 8 splits) dwarfs the others</text>
+<text x='7.97' y='16.57' style='font-size: 12.00px; font-weight: bold; font-family: "Arial";' textLength='175.98px' lengthAdjust='spacingAndGlyphs'>Replication wall-time by sector</text>
+</g>
+</g>
+</svg></div><div class="chart"><h4>PR funnel</h4><svg role='img' aria-label='cso-toolkit pull-request funnel: open vs merged vs closed-unmerged' width='100%' viewBox='0 0 504.00 324.00'><title>cso-toolkit pull-request funnel: open vs merged vs closed-unmerged</title><desc>Bar chart of pull-request counts bucketed by state.</desc>
+<g class='svglite'>
+<defs>
+  <style type='text/css'><![CDATA[
+    .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite rect, .svglite circle {
+      fill: none;
+      stroke: #000000;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-miterlimit: 10.00;
+    }
+    .svglite text {
+      white-space: pre;
+    }
+    .svglite g.glyphgroup path {
+      fill: inherit;
+      stroke: none;
+    }
+  ]]></style>
+</defs>
+<rect width='100%' height='100%' style='stroke: none; fill: #FFFFFF;'/>
+<defs>
+  <clipPath id='pr_funnel-cpMC4wMHw1MDQuMDB8MC4wMHwzMjQuMDA='>
+    <rect x='0.00' y='0.00' width='504.00' height='324.00' />
+  </clipPath>
+</defs>
+<g clip-path='url(#pr_funnel-cpMC4wMHw1MDQuMDB8MC4wMHwzMjQuMDA=)'>
+<rect x='0.000000000000064' y='0.00' width='504.00' height='324.00' style='stroke-width: 1.07; stroke: none; fill: #FFFFFF;' />
+</g>
+<defs>
+  <clipPath id='pr_funnel-cpMzQuNjl8NDkyLjA0fDQyLjMwfDMwMi45NQ=='>
+    <rect x='34.69' y='42.30' width='457.36' height='260.65' />
+  </clipPath>
+</defs>
+<g clip-path='url(#pr_funnel-cpMzQuNjl8NDkyLjA0fDQyLjMwfDMwMi45NQ==)'>
+<polyline points='34.69,302.95 492.04,302.95 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='34.69,237.62 492.04,237.62 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='34.69,172.30 492.04,172.30 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='34.69,106.97 492.04,106.97 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='120.44,302.95 120.44,42.30 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='263.37,302.95 263.37,42.30 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='406.29,302.95 406.29,42.30 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<rect x='73.28' y='302.95' width='94.33' height='0.00' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #E69F00;' />
+<rect x='216.20' y='74.31' width='94.33' height='228.64' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #009E73;' />
+<rect x='359.13' y='302.95' width='94.33' height='0.00' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #9AA3AE;' />
+<text x='120.44' y='300.18' text-anchor='middle' style='font-size: 9.67px;fill: #1A1D23; font-family: "Arial";' textLength='5.38px' lengthAdjust='spacingAndGlyphs'>0</text>
+<text x='263.37' y='71.54' text-anchor='middle' style='font-size: 9.67px;fill: #1A1D23; font-family: "Arial";' textLength='10.75px' lengthAdjust='spacingAndGlyphs'>35</text>
+<text x='406.29' y='300.18' text-anchor='middle' style='font-size: 9.67px;fill: #1A1D23; font-family: "Arial";' textLength='5.38px' lengthAdjust='spacingAndGlyphs'>0</text>
+</g>
+<g clip-path='url(#pr_funnel-cpMC4wMHw1MDQuMDB8MC4wMHwzMjQuMDA=)'>
+<text x='29.76' y='306.10' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='4.89px' lengthAdjust='spacingAndGlyphs'>0</text>
+<text x='29.76' y='240.77' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>10</text>
+<text x='29.76' y='175.45' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>20</text>
+<text x='29.76' y='110.12' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='9.78px' lengthAdjust='spacingAndGlyphs'>30</text>
+<text x='120.44' y='314.18' text-anchor='middle' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='21.52px' lengthAdjust='spacingAndGlyphs'>Open</text>
+<text x='263.37' y='314.18' text-anchor='middle' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='29.81px' lengthAdjust='spacingAndGlyphs'>Merged</text>
+<text x='406.29' y='314.18' text-anchor='middle' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='75.27px' lengthAdjust='spacingAndGlyphs'>Closed (unmerged)</text>
+<text transform='translate(15.13,172.62) rotate(-90)' text-anchor='middle' style='font-size: 10.00px;fill: #6A7585; font-family: "Arial";' textLength='57.81px' lengthAdjust='spacingAndGlyphs'>Pull requests</text>
+<text x='7.97' y='32.23' style='font-size: 10.00px;fill: #6A7585; font-family: "Arial";' textLength='272.41px' lengthAdjust='spacingAndGlyphs'>35 pull requests total — open vs merged vs closed-unmerged</text>
+<text x='7.97' y='16.57' style='font-size: 12.00px; font-weight: bold; font-family: "Arial";' textLength='119.97px' lengthAdjust='spacingAndGlyphs'>cso-toolkit PR funnel</text>
+</g>
+</g>
+</svg></div><div class="chart"><h4>cso-toolkit drift</h4><svg role='img' aria-label='cso-toolkit version adopted per DW-Production sector replication' width='100%' viewBox='0 0 504.00 324.00'><title>cso-toolkit version adopted per DW-Production sector replication</title><desc>Lollipop chart; all nine sector replications from the 2026-05-18 audit sit at cso-toolkit v0.4.5, with v0.4.6 marked as the in-flight release.</desc>
+<g class='svglite'>
+<defs>
+  <style type='text/css'><![CDATA[
+    .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite rect, .svglite circle {
+      fill: none;
+      stroke: #000000;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-miterlimit: 10.00;
+    }
+    .svglite text {
+      white-space: pre;
+    }
+    .svglite g.glyphgroup path {
+      fill: inherit;
+      stroke: none;
+    }
+  ]]></style>
+</defs>
+<rect width='100%' height='100%' style='stroke: none; fill: #FFFFFF;'/>
+<defs>
+  <clipPath id='toolkit_drift-cpMC4wMHw1MDQuMDB8MC4wMHwzMjQuMDA='>
+    <rect x='0.00' y='0.00' width='504.00' height='324.00' />
+  </clipPath>
+</defs>
+<g clip-path='url(#toolkit_drift-cpMC4wMHw1MDQuMDB8MC4wMHwzMjQuMDA=)'>
+<rect x='0.00' y='0.00' width='504.00' height='324.00' style='stroke-width: 1.07; stroke: none; fill: #FFFFFF;' />
+<polyline points='221.44,302.95 221.44,42.30 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='390.57,302.95 390.57,42.30 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<line x1='390.57' y1='302.95' x2='390.57' y2='42.30' style='stroke-width: 1.28; stroke: #D55E00; stroke-dasharray: 6.83,6.83; stroke-linecap: butt;' />
+<text x='390.57' y='50.25' text-anchor='middle' style='font-size: 8.54px;fill: #D55E00; font-family: "Arial";' textLength='58.38px' lengthAdjust='spacingAndGlyphs'>v0.4.6 (in flight)</text>
+<line x1='136.88' y1='59.30' x2='221.44' y2='59.30' style='stroke-width: 1.71; stroke: #CBD2DA; stroke-linecap: butt;' />
+<line x1='136.88' y1='87.63' x2='221.44' y2='87.63' style='stroke-width: 1.71; stroke: #CBD2DA; stroke-linecap: butt;' />
+<line x1='136.88' y1='115.96' x2='221.44' y2='115.96' style='stroke-width: 1.71; stroke: #CBD2DA; stroke-linecap: butt;' />
+<line x1='136.88' y1='144.29' x2='221.44' y2='144.29' style='stroke-width: 1.71; stroke: #CBD2DA; stroke-linecap: butt;' />
+<line x1='136.88' y1='172.62' x2='221.44' y2='172.62' style='stroke-width: 1.71; stroke: #CBD2DA; stroke-linecap: butt;' />
+<line x1='136.88' y1='200.96' x2='221.44' y2='200.96' style='stroke-width: 1.71; stroke: #CBD2DA; stroke-linecap: butt;' />
+<line x1='136.88' y1='229.29' x2='221.44' y2='229.29' style='stroke-width: 1.71; stroke: #CBD2DA; stroke-linecap: butt;' />
+<line x1='136.88' y1='257.62' x2='221.44' y2='257.62' style='stroke-width: 1.71; stroke: #CBD2DA; stroke-linecap: butt;' />
+<line x1='136.88' y1='285.95' x2='221.44' y2='285.95' style='stroke-width: 1.71; stroke: #CBD2DA; stroke-linecap: butt;' />
+<circle cx='221.44' cy='59.30' r='3.56' style='stroke-width: 0.71; stroke: #009E73; fill: #009E73;' />
+<circle cx='221.44' cy='87.63' r='3.56' style='stroke-width: 0.71; stroke: #009E73; fill: #009E73;' />
+<circle cx='221.44' cy='115.96' r='3.56' style='stroke-width: 0.71; stroke: #009E73; fill: #009E73;' />
+<circle cx='221.44' cy='144.29' r='3.56' style='stroke-width: 0.71; stroke: #009E73; fill: #009E73;' />
+<circle cx='221.44' cy='172.62' r='3.56' style='stroke-width: 0.71; stroke: #009E73; fill: #009E73;' />
+<circle cx='221.44' cy='200.96' r='3.56' style='stroke-width: 0.71; stroke: #009E73; fill: #009E73;' />
+<circle cx='221.44' cy='229.29' r='3.56' style='stroke-width: 0.71; stroke: #009E73; fill: #009E73;' />
+<circle cx='221.44' cy='257.62' r='3.56' style='stroke-width: 0.71; stroke: #009E73; fill: #009E73;' />
+<circle cx='221.44' cy='285.95' r='3.56' style='stroke-width: 0.71; stroke: #009E73; fill: #009E73;' />
+<text x='115.03' y='289.10' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='107.06px' lengthAdjust='spacingAndGlyphs'>Early Childhood Dev (ECD)</text>
+<text x='115.03' y='260.77' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='85.55px' lengthAdjust='spacingAndGlyphs'>Women's Status (WT)</text>
+<text x='115.03' y='232.44' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='59.64px' lengthAdjust='spacingAndGlyphs'>Education (ED)</text>
+<text x='115.03' y='204.11' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='83.55px' lengthAdjust='spacingAndGlyphs'>Child Mortality (CME)</text>
+<text x='115.03' y='175.77' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='26.41px' lengthAdjust='spacingAndGlyphs'>MNCH</text>
+<text x='115.03' y='147.44' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='95.42px' lengthAdjust='spacingAndGlyphs'>Water &amp; Sanitation (WS)</text>
+<text x='115.03' y='119.11' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='70.34px' lengthAdjust='spacingAndGlyphs'>Immunization (IM)</text>
+<text x='115.03' y='90.78' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='63.39px' lengthAdjust='spacingAndGlyphs'>HIV/AIDS (HVA)</text>
+<text x='115.03' y='62.45' text-anchor='end' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='52.75px' lengthAdjust='spacingAndGlyphs'>Nutrition (NT)</text>
+<text x='221.44' y='314.18' text-anchor='middle' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='23.95px' lengthAdjust='spacingAndGlyphs'>v0.4.5</text>
+<text x='390.57' y='314.18' text-anchor='middle' style='font-size: 8.80px;fill: #4D4D4D; font-family: "Arial";' textLength='23.95px' lengthAdjust='spacingAndGlyphs'>v0.4.6</text>
+<text x='7.97' y='32.23' style='font-size: 10.00px;fill: #6A7585; font-family: "Arial";' textLength='423.64px' lengthAdjust='spacingAndGlyphs'>2026-05-18 audit — all nine sector replications pinned at v0.4.5 (current release); v0.4.6 in flight</text>
+<text x='7.97' y='16.57' style='font-size: 12.00px; font-weight: bold; font-family: "Arial";' textLength='308.39px' lengthAdjust='spacingAndGlyphs'>cso-toolkit version adopted per DW-Production sector</text>
+</g>
+</g>
+</svg></div></div></section><section id="tab-phases" class="tab-pane"><h2>Pipeline phases</h2><div class="kanban"><div class="kanban-col"><h3>Production</h3><div class="kanban-card"><strong>Education (ED)</strong><br><span class="muted">PARTIAL_REPLICATED</span></div><div class="kanban-card"><strong>Women's Status (WT)</strong><br><span class="muted">BLOCKED</span></div><div class="kanban-card"><strong>Early Childhood Dev (ECD)</strong><br><span class="muted">BLOCKED</span></div></div><div class="kanban-col"><h3>Review</h3><div class="kanban-card"><strong>Nutrition (NT)</strong><br><span class="muted">FULLY_REPLICATED</span></div><div class="kanban-card"><strong>HIV/AIDS (HVA)</strong><br><span class="muted">FULLY_REPLICATED</span></div><div class="kanban-card"><strong>Immunization (IM)</strong><br><span class="muted">FULLY_REPLICATED</span></div><div class="kanban-card"><strong>Water &amp; Sanitation (WS)</strong><br><span class="muted">FULLY_REPLICATED</span></div><div class="kanban-card"><strong>MNCH</strong><br><span class="muted">FULLY_REPLICATED</span></div><div class="kanban-card"><strong>Child Mortality (CME)</strong><br><span class="muted">FULLY_REPLICATED</span></div></div><div class="kanban-col"><h3>Live</h3><div class="muted">(empty)</div></div></div></section><section id="tab-branches" class="tab-pane"><h2>cso-toolkit branches</h2><div class="table-wrap"><table class="data-table"><thead><tr><th>Branch</th><th>Link</th><th>SHA</th><th>Protected</th></tr></thead><tbody><tr><td><code>develop</code></td><td><a href="https://github.com/unicef-drp/cso-toolkit/tree/develop">view</a></td><td>f368093</td><td>TRUE</td></tr><tr><td><code>main</code></td><td><a href="https://github.com/unicef-drp/cso-toolkit/tree/main">view</a></td><td>cbcda83</td><td>TRUE</td></tr></tbody></table></div></section><section id="tab-issues" class="tab-pane"><h2>cso-toolkit issues by milestone</h2><h3>v0.5.0</h3><ul><li><span class="sev sev-info">info</span> <a href="https://github.com/unicef-drp/cso-toolkit/issues/40">#40</a> [v0.5.0] Redesign dw_regions() to consume the canonical Country-and-Region-Metadata-API <span class="muted">(open)</span></li><li><span class="sev sev-info">info</span> <a href="https://github.com/unicef-drp/cso-toolkit/issues/15">#15</a> [future] Create dw_publish — API-only submission to data warehouse / Helix platform <span class="muted">(open)</span></li></ul><h3>v0.4.6</h3><ul><li><span class="sev sev-info">info</span> <a href="https://github.com/unicef-drp/cso-toolkit/issues/54">#54</a> v0.4.6 — dw_save reviewer-mode mode-lock missed OneDrive-mounted Teams Documents path <span class="muted">(closed)</span></li><li><span class="sev sev-info">info</span> <a href="https://github.com/unicef-drp/cso-toolkit/issues/53">#53</a> v0.4.6 — re-export dw_root() public wrapper around .dw_root_for() (sector scripts depend on it) <span class="muted">(closed)</span></li><li><span class="sev sev-info">info</span> <a href="https://github.com/unicef-drp/cso-toolkit/issues/52">#52</a> v0.4.6 — manifest sha256 normalisation (Windows CRLF / LF cross-platform drift) <span class="muted">(closed)</span></li><li><span class="sev sev-info">info</span> <a href="https://github.com/unicef-drp/cso-toolkit/issues/51">#51</a> v0.4.6 — standalone-source %&gt;% gate should use .cso_require() envelope <span class="muted">(closed)</span></li></ul><h3>v0.4.5</h3><ul><li><span class="sev sev-info">info</span> <a href="https://github.com/unicef-drp/cso-toolkit/issues/46">#46</a> [v0.4.5] aggregate_data_v2.R standalone-source needs local %&gt;% binding too <span class="muted">(closed)</span></li></ul><h3>v0.4.4</h3><ul><li><span class="sev sev-info">info</span> <a href="https://github.com/unicef-drp/cso-toolkit/issues/38">#38</a> [v0.4.4] Make .dw_frozen_root() resolution discoverable + warn on fallback <span class="muted">(closed)</span></li><li><span class="sev sev-info">info</span> <a href="https://github.com/unicef-drp/cso-toolkit/issues/37">#37</a> [v0.4.4] dw_default_unicef_allowlist() helper for consumers <span class="muted">(closed)</span></li><li><span class="sev sev-info">info</span> <a href="https://github.com/unicef-drp/cso-toolkit/issues/36">#36</a> [v0.4.4] Three substantive bugs in toolkit helpers (carry-forward from PR #33 / v0.4.3.1) <span class="muted">(closed)</span></li></ul><h3>v0.4.3</h3><ul><li><span class="sev sev-info">info</span> <a href="https://github.com/unicef-drp/cso-toolkit/issues/32">#32</a> [v0.4.3] Provenance sidecars: producer -&gt; reviewer -&gt; ingestor integrity chain <span class="muted">(open)</span></li><li><span class="sev sev-info">info</span> <a href="https://github.com/unicef-drp/cso-toolkit/issues/31">#31</a> [v0.4.3] dw_use: add cols_lenient = FALSE flag for any_of()-style schema intersect <span class="muted">(closed)</span></li><li><span class="sev sev-info">info</span> <a href="https://github.com/unicef-drp/cso-toolkit/issues/30">#30</a> [v0.4.3] dw_use: conditional dispatch for parquet/dta col_select=NULL (NT pipeline blocker) <span class="muted">(closed)</span></li></ul><h3>unlabelled</h3><ul><li><span class="sev sev-info">info</span> <a href="https://github.com/unicef-drp/cso-toolkit/issues/42">#42</a> [v0.4.5+] Rename remaining 8 un-prefixed exports to the dw_ convention <span class="muted">(closed)</span></li><li><span class="sev sev-info">info</span> <a href="https://github.com/unicef-drp/cso-toolkit/issues/28">#28</a> [v0.4.2] create_sector_script DW wrapper: wrong default paths (011_input/013_output) + nonexistent profile sentinel <span class="muted">(open)</span></li><li><span class="sev sev-info">info</span> <a href="https://github.com/unicef-drp/cso-toolkit/issues/27">#27</a> [v0.4.2] dw_regions(): Aggregate column not renamed to caller's value arg; regional rows have NA in value <span class="muted">(open)</span></li><li><span class="sev sev-info">info</span> <a href="https://github.com/unicef-drp/cso-toolkit/issues/26">#26</a> [v0.4.2] dw_save: producer-mode self-mirror when teamsWrkData == teamsFolderCanonical emits false Teams-mirror-failed warning <span class="muted">(open)</span></li><li><span class="sev sev-info">info</span> <a href="https://github.com/unicef-drp/cso-toolkit/issues/25">#25</a> [v0.4.2] dw_save flow ordering: mirror destinations computed before .gz suffix; mirror_to_z dots leak <span class="muted">(open)</span></li><li><span class="sev sev-info">info</span> <a href="https://github.com/unicef-drp/cso-toolkit/issues/18">#18</a> [v0.4.0] dw_regions() — UNICEF regional aggregates <span class="muted">(open)</span></li><li><span class="sev sev-info">info</span> <a href="https://github.com/unicef-drp/cso-toolkit/issues/17">#17</a> [v0.4.0] dw_pop() — convenience wrapper for latest population <span class="muted">(closed)</span></li><li><span class="sev sev-info">info</span> <a href="https://github.com/unicef-drp/cso-toolkit/issues/14">#14</a> [v0.4.0] producer/reviewer mode contract — dw_save + dw_use (network-first reads, local-only reviewer writes, redundant producer writes, explicit overwrite) <span class="muted">(closed)</span></li><li><span class="sev sev-info">info</span> <a href="https://github.com/unicef-drp/cso-toolkit/issues/5">#5</a> v0.3: ship remaining Stata-side helpers (dw_use, dw_require_no_api, dw_load_config) <span class="muted">(closed)</span></li></ul></section><section id="tab-actions" class="tab-pane"><h2>DBM actions</h2><div class="kanban"><div class="kanban-col"><h3>TODO</h3><div class="kanban-card"><div><strong>CME: adopt dw_io contract (forward-investment for v0.4.x)</strong></div><div class="muted">sector: cme</div><div class="muted">owner: @karavan88</div><span class="sev sev-medium">MEDIUM</span></div><div class="kanban-card"><div><strong>cso-toolkit#51: cso_require envelope</strong></div><div class="muted">sector: </div><div class="muted">owner: cso-toolkit maintainers</div><span class="sev sev-medium">MEDIUM</span></div><div class="kanban-card"><div><strong>cso-toolkit#52: CRLF normalisation</strong></div><div class="muted">sector: </div><div class="muted">owner: cso-toolkit maintainers</div><span class="sev sev-medium">MEDIUM</span></div><div class="kanban-card"><div><strong>cso-toolkit#53: dw_root() wrapper / shim</strong></div><div class="muted">sector: hva</div><div class="muted">owner: cso-toolkit maintainers</div><span class="sev sev-medium">MEDIUM</span></div><div class="kanban-card"><div><strong>cso-toolkit#54: dw_save reviewer-mode mode-lock fails on OneDrive-mounted Teams paths</strong></div><div class="muted">sector: hva</div><div class="muted">owner: cso-toolkit maintainers</div><span class="sev sev-high">HIGH</span></div><div class="kanban-card"><div><strong>ECD: adopt cso-toolkit dw_io contract (currently bypasses entirely)</strong></div><div class="muted">sector: ecd</div><div class="muted">owner: ECD sector lead (@mjugder)</div><span class="sev sev-medium">MEDIUM</span></div><div class="kanban-card"><div><strong>ECD: deposit producer-side ECD.xlsx onto Teams at a canonical path</strong></div><div class="muted">sector: ecd</div><div class="muted">owner: ECD sector lead (@mjugder)</div><span class="sev sev-high">HIGH</span></div><div class="kanban-card"><div><strong>ECD: replace 4 hardcoded mjugder paths with profile globals</strong></div><div class="muted">sector: ecd</div><div class="muted">owner: ECD sector lead (@mjugder)</div><span class="sev sev-high">HIGH</span></div><div class="kanban-card"><div><strong>ECD: install Java OR port xlsx -&gt; openxlsx</strong></div><div class="muted">sector: ecd</div><div class="muted">owner: UNICEF IT (Java) OR ECD sector lead (port)</div><span class="sev sev-high">HIGH</span></div><div class="kanban-card"><div><strong>ED: World Bank API blocked by UNICEF corporate proxy</strong></div><div class="muted">sector: ed</div><div class="muted">owner: UNICEF IT (via DBM ticket)</div><span class="sev sev-high">HIGH</span></div><div class="kanban-card"><div><strong>ED: 03_lp_wb_nat_aggr.R has WB fetch block commented out (L59-71)</strong></div><div class="muted">sector: ed</div><div class="muted">owner: ED sector lead</div><span class="sev sev-medium">MEDIUM</span></div><div class="kanban-card"><div><strong>ED: typo year_results -&gt; edu_uis_year_results (02_aggregate_uis_sdg.R)</strong></div><div class="muted">sector: ed</div><div class="muted">owner: ED sector lead</div><span class="sev sev-medium">MEDIUM</span></div><div class="kanban-card"><div><strong>MNCH: refactor 01_aggregate.R:128 raw write.csv to dw_save</strong></div><div class="muted">sector: mnch</div><div class="muted">owner: @dewang8</div><span class="sev sev-high">HIGH</span></div><div class="kanban-card"><div><strong>WT: install Java OR port xlsx -&gt; openxlsx</strong></div><div class="muted">sector: wt</div><div class="muted">owner: UNICEF IT (Java) OR WT sector lead (port)</div><span class="sev sev-high">HIGH</span></div><div class="kanban-card"><div><strong>WT: deposit upstream population.rds cache or document regeneration</strong></div><div class="muted">sector: wt</div><div class="muted">owner: WT producer</div><span class="sev sev-medium">MEDIUM</span></div><div class="kanban-card"><div><strong>WT: reconcile xlsx schema mismatch (sector code vs Teams file)</strong></div><div class="muted">sector: wt</div><div class="muted">owner: WT sector lead</div><span class="sev sev-high">HIGH</span></div></div><div class="kanban-col"><h3>IN-PROGRESS</h3><div class="muted">(empty)</div></div><div class="kanban-col"><h3>DONE</h3><div class="muted">(empty)</div></div></div></section><section id="tab-history" class="tab-pane"><h2>History trends</h2><p class="muted">Time series begin after the first overnight collection run. Today is day 1 — only a single data point exists.</p><div class="placeholder">Snapshot generated at: <code>2026-05-30T15:55:08Z</code></div></section><section id="tab-toolkit" class="tab-pane"><h2>cso-toolkit</h2><h3>Open v0.4.6 issues</h3><div class="muted">no open v0.4.6 issues</div><h3>Cycle burndown</h3><p class="muted">Burndown chart populates after history accumulates.</p></section></main>
+<script>
+(function() {
+  var nav = document.querySelector("nav.tabs");
+  var buttons = Array.prototype.slice.call(document.querySelectorAll("nav.tabs button"));
+  var panes = Array.prototype.slice.call(document.querySelectorAll(".tab-pane"));
+  // Wire the WAI-ARIA tabs pattern programmatically so the 8 render functions
+  // stay simple: tablist / tab / tabpanel roles, aria-selected, aria-controls.
+  if (nav) { nav.setAttribute("role", "tablist"); nav.setAttribute("aria-label", "Dashboard sections"); }
+  buttons.forEach(function(b) {
+    var id = b.dataset.target;
+    b.setAttribute("role", "tab");
+    b.id = id + "-tab";
+    b.setAttribute("aria-controls", id);
+    var pane = document.getElementById(id);
+    if (pane) {
+      pane.setAttribute("role", "tabpanel");
+      pane.setAttribute("aria-labelledby", id + "-tab");
+      pane.setAttribute("tabindex", "0");
+    }
+  });
+  function activate(tabId, focus) {
+    buttons.forEach(function(b) {
+      var on = b.dataset.target === tabId;
+      b.classList.toggle("active", on);
+      b.setAttribute("aria-selected", on ? "true" : "false");
+      b.tabIndex = on ? 0 : -1;            // roving tabindex
+      if (on && focus) b.focus();
+    });
+    panes.forEach(function(p) { p.classList.toggle("active", p.id === tabId); });
+    if (window.history && window.history.replaceState) {
+      window.history.replaceState(null, "", "#" + tabId);
+    }
+  }
+  buttons.forEach(function(b, idx) {
+    b.addEventListener("click", function() { activate(b.dataset.target); });
+    b.addEventListener("keydown", function(e) {
+      var d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+      if (!d) { return; }
+      e.preventDefault();
+      activate(buttons[(idx + d + buttons.length) % buttons.length].dataset.target, true);
+    });
+  });
+  var hash = (location.hash || "").replace(/^#/, "");
+  activate(hash && document.getElementById(hash) ? hash : "tab-landing");
+})();
+</script>
+</body></html>
+

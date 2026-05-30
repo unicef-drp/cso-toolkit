@@ -1,0 +1,18 @@
+id: wt-xlsx-schema-reconcile
+title: "WT: reconcile xlsx schema mismatch (sector code vs Teams file)"
+sector: wt
+severity: HIGH
+status: TODO
+owner: "WT sector lead"
+created_at: "2026-05-30"
+due_at: null
+blocker_for_dbm: "Sector code expects different columns than the Teams xlsx file provides"
+description: |
+  Sector code expects columns: Region.Name, M49.Code.region.,
+    X2025.Submission..if.data.submission.is.required.
+  Canonical Teams xlsx (9. CompositionOfRegions_RCs_20241219.xlsx) has columns:
+    M49, Name, Ref_Area_Type, RC_Region, RC_UNSDCode, RC_RegionName, RC_Name
+  Either the sector code is reading the wrong sheet/file, OR the producer's
+  working xlsx differs from the Teams-deposited copy. Sector lead must reconcile.
+references:
+  - "replication_wt_latest.json: halt_reason_2"
