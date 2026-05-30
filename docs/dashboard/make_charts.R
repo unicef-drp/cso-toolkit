@@ -161,7 +161,7 @@ p1_df <- rbind(
   data.frame(label = parity$label, series = "SDMX", value = parity$sdmx)
 )
 p1_df$series <- factor(p1_df$series, levels = c("MINE", "DEP", "SDMX"))
-p1_df$tt   <- paste0(as.character(p1_df$label), " &mdash; ", as.character(p1_df$series),
+p1_df$tt   <- paste0(as.character(p1_df$label), " — ", as.character(p1_df$series),
                      ": ", p1_df$value, " indicators")
 p1_df$ttid <- paste(p1_df$label, p1_df$series)
 
@@ -220,7 +220,7 @@ pal_stage <- c(
 glyph_map <- c(full = "✓", partial = "◑", none = "–")  # check / half-circle / dash
 p2_df$glyph <- glyph_map[as.character(p2_df$status)]
 status_lab  <- c(full = "full (= SDMX ceiling)", partial = "partial", none = "none")
-p2_df$tt    <- paste0(as.character(p2_df$label), " &mdash; ", as.character(p2_df$stage_x),
+p2_df$tt    <- paste0(as.character(p2_df$label), " — ", as.character(p2_df$stage_x),
                       ": ", status_lab[as.character(p2_df$status)])
 p2_df$ttid  <- paste(p2_df$label, p2_df$stage_x)
 
@@ -356,7 +356,7 @@ drift_df <- data.frame(
 )
 drift_df$sector <- factor(drift_df$sector, levels = rev(drift_df$sector))
 drift_df$tt   <- paste0(as.character(drift_df$sector),
-                        " &mdash; cso-toolkit v0.4.5 (2026-05-18 audit)")
+                        " — cso-toolkit v0.4.5 (2026-05-18 audit)")
 drift_df$ttid <- as.character(drift_df$sector)
 in_flight <- 0.46  # cso-toolkit v0.4.6 dashed marker (in flight)
 
