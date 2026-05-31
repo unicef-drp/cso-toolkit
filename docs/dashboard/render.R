@@ -995,6 +995,7 @@ details summary { cursor: pointer; color: var(--accent); }
 .chart:hover .chart-fs, .chart-fs:focus-visible { opacity: 1; }
 .chart-fs:focus-visible { outline: 2px solid var(--cyan); }
 .chart-frame:fullscreen { width: 100vw; height: 100vh; aspect-ratio: auto; }
+.chart-frame:-webkit-full-screen { width: 100vw; height: 100vh; aspect-ratio: auto; }
 .chart-hint { font-size: 12px; color: var(--muted); margin: 4px 0 0; }
 .chart-missing { font-size: 12px; color: var(--muted); font-style: italic; padding: 24px; text-align: center; }
 .kanban { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; align-items: start; }
@@ -1214,7 +1215,10 @@ JS <- '
     var frame = card && card.querySelector("iframe.chart-frame");
     if (!frame) { return; }
     var req = frame.requestFullscreen || frame.webkitRequestFullscreen || frame.msRequestFullscreen;
-    if (req) { req.call(frame); }
+    if (req) {
+      var p = req.call(frame);
+      if (p && typeof p.catch === "function") { p.catch(function() {}); }
+    }
   });
 })();
 '
