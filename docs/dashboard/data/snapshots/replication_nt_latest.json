@@ -16,11 +16,11 @@
   "splits": ["ant 145MB", "sant 164MB", "iycf 56MB", "dant 31MB", "bw 4.6MB", "ane 3.5MB", "iod 2.6MB", "vas 1.7MB"],
   "intermediates": 78,
   "fixes_applied": [
-    "activated 19 commented-out stages (1a-1f imports + 2b-2j aggregations + 3a/3b targets + 4b format-merge)",
-    "openxlsx + countrycode + glue libraries added to lean driver (these are loaded by the profile in production, not present in lean-driver test mode)"
+    "activated 19 commented-out stages (import, aggregation, target, and format-merge steps) in a sector script",
+    "added the openxlsx, countrycode, and glue libraries to the lean test driver (these are loaded by the profile in production but absent in lean-driver test mode)"
   ],
   "toolkit_findings": [
-    "dw_url_allowlist correctly blocked an unallowlisted URL (cmrs_series_indicators directory) with non-fatal warning"
+    "dw_url_allowlist correctly blocked an unallowlisted URL with a non-fatal warning"
   ],
   "blockers_for_dbm": null
 }

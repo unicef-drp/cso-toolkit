@@ -15,7 +15,7 @@
   "sha256": "4c13997ca93c112243548a3edf405a78518c4615e002e927ad290949ae6d1a6c",
   "fixes_applied": [
     "dw_url_allowlist seeded from dw_default_unicef_allowlist() (profile-only convention)",
-    "dw_frozen_root set explicitly to <dwRawData>/_frozen (profile-only convention)"
+    "dw_frozen_root set explicitly under dwRawData (profile-only convention)"
   ],
   "toolkit_findings": [
     "Reviewer-mode mode-lock honored (output went to _local/im/output/ correctly because sector writes to a repo-relative path explicitly)"

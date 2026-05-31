@@ -1,15 +1,16 @@
 id: ecd-hardcoded-paths
-title: "ECD: replace 4 hardcoded (producer) paths with profile globals"
+title: "ECD: replace producer-side machine paths with portable profile globals"
 sector: ecd
 severity: HIGH
 status: TODO
-owner: "ECD sector lead ((maintainer))"
+owner: "ECD sector lead"
 created_at: "2026-05-30"
 due_at: null
-blocker_for_dbm: "(a sector script) (lines withheld) hardcode C:/Users/(producer)/... paths; portable only on the producer's machine"
+blocker_for_dbm: "The ECD prep script hardcodes producer-side machine paths; portable only on one machine."
 description: |
-  (a sector script) lines 20-23 hardcode four directories to the producer's personal
-  OneDrive ('(producer path withheld)/...').
-  Replace with profile-driven globals: dwRawData, dwCodes, dwWrkData, dwMetaData.
+  The ECD prep script hardcodes input/output directories to a producer-side
+  personal path, so it runs only on one machine. Replace them with the
+  profile-driven path globals (dwRawData, dwCodes, dwWrkData, dwMetaData).
+  Detail in the private DW-Production tracker.
 references:
   - "replication_ecd_latest.json: halt_reason"

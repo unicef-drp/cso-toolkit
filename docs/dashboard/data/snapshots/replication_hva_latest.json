@@ -17,10 +17,10 @@
   "matches_v6_baseline": true,
   "fixes_applied": [
     "dw_root() shim (cso-toolkit#53; toolkit gap to be fixed in v0.4.6)",
-    "dwMetaData path corrected to 01_dw_prep/010_metadata (per profile convention, not 012_codes/00_metadata)"
+    "dwMetaData path corrected to the 01_dw_prep metadata location (per profile convention, not the 012_codes metadata location)"
   ],
   "toolkit_findings": [
-    "CRITICAL: dw_save reviewer-mode mode-lock did NOT engage on OneDrive-mounted Teams Documents path. Producer's 2026-05-26 v6 output (67.09 MB, 214,674 rows) was OVERWRITTEN by this reviewer-mode run. Filed as cso-toolkit#54 (HIGH severity, v0.4.6)"
+    "CRITICAL: dw_save reviewer-mode mode-lock did NOT engage on a cloud-synced shared path. A producer output was overwritten by this reviewer-mode run. Filed as cso-toolkit#54 (HIGH severity, v0.4.6)"
   ],
   "blockers_for_dbm": null
 }
