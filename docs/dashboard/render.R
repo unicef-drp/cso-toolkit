@@ -467,6 +467,24 @@ render_tab_sectors <- function(state) {
     render_sector_card(s, rep[[s]] %||% list())
   }, character(1)), collapse = "")
 
+  # Full subject-area universe: the nine tracked replication sectors above, plus
+  # every other DW-Production 012_codes subject (generated from state$topics so
+  # the set can't drift). The not-yet-tracked subjects render as grey placeholder
+  # cards, so the page shows the whole roadmap, not only the active sectors.
+  topics <- state$topics %||% list()
+  others <- Filter(function(t) !((t$code %||% "") %in% SECTOR_ORDER), topics)
+  others_html <- if (length(others) == 0) "" else paste0(
+    '<h3>Other subject areas <span class="h3-note">&mdash; not yet replicated</span></h3>',
+    '<div class="sector-grid">',
+    paste(vapply(others, function(t) {
+      sprintf(paste0('<div class="sector-card idle">',
+        '<div class="card-head"><span class="sector-tag">%s</span> ',
+        '<span class="pill pill-muted">not started</span></div>',
+        '<p class="idle-note">No replication work tracked yet.</p></div>'),
+        htmlescape(toupper(t$code %||% "")))
+    }, character(1)), collapse = ""),
+    '</div>')
+
   charts_html <- paste0(
     '<p class="chart-hint">Hover any bar, tile or point for the underlying figure.</p>',
     '<div class="chart-grid">',
@@ -487,6 +505,7 @@ render_tab_sectors <- function(state) {
     '<section id="tab-sectors" class="tab-pane">',
     '<h2>Per-sector status</h2>',
     '<div class="sector-grid">', cards, '</div>',
+    others_html,
     '<h3>Charts</h3>',
     charts_html,
     '</section>'
@@ -873,6 +892,10 @@ a.kpi:hover::after { opacity: 1; }
 /* ---- sector cards ---- */
 .sector-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
 .sector-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 15px; box-shadow: var(--shadow); }
+.sector-card.idle { background: #f5f7f9; border-style: dashed; box-shadow: none; }
+.sector-card.idle .sector-tag { background: #e2e8ef; color: #667085; }
+.idle-note { margin: 8px 0 0; font-size: 12px; color: var(--muted); }
+.h3-note { font-weight: 400; font-size: 13px; color: var(--muted); }
 .card-head { margin-bottom: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .sector-tag { display: inline-block; background: var(--navy); color: #fff; padding: 2px 7px; font-size: 11px; border-radius: 4px; text-transform: uppercase; font-weight: 700; }
 .card-stats { display: flex; gap: 14px; flex-wrap: wrap; margin: 8px 0; font-size: 12px; }
