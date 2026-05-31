@@ -98,7 +98,7 @@ chart_frame <- function(file, title) {
                  'aria-label="View this chart fullscreen">&#x26F6;</button>',
                  '<iframe class="chart-frame" src="charts/%s" title="%s" ',
                  'loading="lazy" scrolling="no" allow="fullscreen" allowfullscreen></iframe>'),
-          file, file, htmlescape(title))
+          htmlescape(file), htmlescape(file), htmlescape(title))
 }
 
 htmlescape <- function(x) {
