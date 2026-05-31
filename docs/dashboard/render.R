@@ -115,6 +115,38 @@ if (!file.exists(STATE_PATH)) {
 }
 state <- jsonlite::fromJSON(STATE_PATH, simplifyVector = FALSE)
 
+# ----- per-sector replicated-indicator counts ------------------------------ #
+# Derived from the authoritative parity.json (the same source behind the
+# 3-way-parity + coverage charts). A sector's replicated count = max(repo-local
+# "mine", Teams "dep"), summed over its indicator sets (WASH = 3 sets), because a
+# run's output lands in one place. This reproduces the snapshot `indicators`
+# field exactly for the sectors that carry it (nt 40, hva 23, im 18) and
+# completes the rest (ws 55, mnch 27, cme 24, ed 16). BLOCKED sectors count 0 —
+# their non-zero "dep" is the producer's prior deposit, not a replication.
+PARITY_PATH <- file.path(DATA_DIR, "parity.json")
+INDIC_BY_SECTOR <- local({
+  if (!file.exists(PARITY_PATH)) return(list())
+  rows <- jsonlite::fromJSON(PARITY_PATH, simplifyVector = FALSE)
+  agg  <- list()
+  for (r in rows) {
+    sec <- sub("_.*$", "", r$key %||% "")
+    if (!nzchar(sec)) next
+    a <- agg[[sec]] %||% list(mine = 0, dep = 0)
+    a$mine <- a$mine + (r$mine %||% 0)
+    a$dep  <- a$dep  + (r$dep  %||% 0)
+    agg[[sec]] <- a
+  }
+  rep <- state$replication %||% list()
+  out <- list()
+  for (sec in names(agg)) {
+    out[[sec]] <- if (identical(rep[[sec]]$status, "BLOCKED")) 0L
+                  else as.integer(max(agg[[sec]]$mine, agg[[sec]]$dep))
+  }
+  out
+})
+INDIC_TOTAL    <- as.integer(sum(unlist(INDIC_BY_SECTOR), na.rm = TRUE))
+N_INDIC_SECTORS <- length(Filter(function(v) v > 0, INDIC_BY_SECTOR))
+
 # ----- compute KPIs -------------------------------------------------------- #
 
 compute_kpis <- function(state) {
@@ -162,7 +194,9 @@ compute_kpis <- function(state) {
     open_actions    = open_actions,
     n_subjects      = n_subjects,
     n_not_repl      = n_not_repl,
-    n_empty         = n_empty
+    n_empty         = n_empty,
+    indicators_replicated = INDIC_TOTAL,
+    n_indic_sectors       = N_INDIC_SECTORS
   )
 }
 
@@ -180,6 +214,7 @@ render_kpi_row <- function(kpis) {
     list(label = "Partial",          value = kpis$n_partial,    sub = "halted mid-pipeline", jump = "tab-phases"),
     list(label = "Blocked",          value = kpis$n_blocked,    sub = "env / package issue", jump = "tab-phases", alert = isTRUE(kpis$n_blocked > 0)),
     list(label = "Not yet replicated", value = kpis$n_not_repl, sub = sprintf("%d subject folders empty", kpis$n_empty), jump = "tab-sectors", idle = TRUE),
+    list(label = "Indicators replicated", value = kpis$indicators_replicated, sub = sprintf("across %d sectors (vs SDMX)", kpis$n_indic_sectors), jump = "tab-sectors"),
     list(label = "Open PRs",         value = kpis$open_prs,     sub = "DW-Production",        jump = "tab-issues"),
     list(label = "Open issues",      value = kpis$open_issues,  sub = "DW-Production",        jump = "tab-issues"),
     list(label = "DBM actions open", value = kpis$open_actions, sub = "across sectors",       jump = "tab-actions")
@@ -439,11 +474,14 @@ render_sector_card <- function(s, r) {
       fmtnum(total_rows), suffix
     )
   }
+  # Indicator count from the authoritative parity.json (replicated = max repo /
+  # Teams), falling back to the snapshot field; not shown for BLOCKED sectors.
   ind_html <- ""
-  if (!is.null(r$indicators)) {
+  ind_val  <- INDIC_BY_SECTOR[[s]] %||% r$indicators
+  if (!is.null(ind_val) && !identical(r$status, "BLOCKED")) {
     ind_html <- sprintf(
       '<div class="card-stat"><span class="k">indicators</span> <span class="v">%s</span></div>',
-      htmlescape(r$indicators)
+      htmlescape(ind_val)
     )
   }
   walltime_html <- ""
