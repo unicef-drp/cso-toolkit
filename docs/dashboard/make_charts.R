@@ -112,7 +112,12 @@ GIRAFE_OPTS <- list(
                  "box-shadow:0 2px 8px rgba(0,0,0,.25);"),
     opacity = 0.98),
   ggiraph::opts_selection(type = "none"),
-  ggiraph::opts_toolbar(saveaspng = FALSE),
+  # saveaspng = TRUE: a working PNG download. hidden = "fullscreen": ggiraph's
+  # fullscreen is a position:fixed modal appended inside the iframe document, so
+  # it is trapped in the small iframe box and cannot fill the screen. We hide it
+  # and provide a parent-level fullscreen control (render.R) that fullscreens the
+  # iframe element itself via the real Fullscreen API.
+  ggiraph::opts_toolbar(saveaspng = TRUE, hidden = "fullscreen"),
   ggiraph::opts_sizing(rescale = TRUE)  # fill the iframe width, preserve aspect
 )
 
