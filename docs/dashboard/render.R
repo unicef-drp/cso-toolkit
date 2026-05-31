@@ -534,6 +534,9 @@ render_tab_phases <- function(state) {
   paste0(
     '<section id="tab-phases" class="tab-pane">',
     '<h2>Pipeline phases</h2>',
+    '<p class="section-lead">Each sector sits in the furthest phase it has reached. ',
+    '<strong>Live</strong> = published to the SDMX endpoint; that step is not yet ',
+    'instrumented, so Live shows 0 &mdash; this means "not tracked yet", not a failed publish.</p>',
     '<div class="kanban">', cols, '</div>',
     '</section>'
   )
@@ -615,7 +618,9 @@ render_tab_issues <- function(state) {
     body <- sprintf(paste0(
       '<p class="section-lead">Open vs closed across DW-Production (private repo &mdash; ',
       '<em>counts</em> only, no titles; click any "issues" link to open that sector\'s ',
-      'real issues on GitHub).</p>%s',
+      'real issues on GitHub). Per-sector rows cover sector-tagged PRs/issues; ',
+      'cross-cutting and infrastructure items are counted in the totals above but ',
+      'not attributed to a sector, so the rows need not sum to the bars.</p>%s',
       '<div class="table-wrap"><table class="data-table"><thead><tr>',
       '<th>Sector</th><th>Open PRs</th><th>Closed PRs</th><th>Open issues</th>',
       '<th>Closed issues</th><th>Issues (open/closed)</th><th>GitHub</th>',

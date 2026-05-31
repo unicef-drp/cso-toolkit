@@ -346,7 +346,8 @@ save_girafe(p4, "pr_funnel.html")
 # Small dataset embedded inline (not in data/). These are the nine DW-Production
 # review/sector-*-2026-05-18 replication branches (NOT cso-toolkit's own
 # branches); the 2026-05-18 audit found all nine adopting cso-toolkit v0.4.5.
-# v0.4.6 is the in-flight cso-toolkit release.
+# v0.4.6 is the next cso-toolkit release. This is a fixed point-in-time audit,
+# not live data — labelled as such so it cannot go stale.
 drift_df <- data.frame(
   sector  = c("Nutrition (NT)", "HIV/AIDS (HVA)", "Immunization (IM)",
               "Water & Sanitation (WS)", "MNCH", "Child Mortality (CME)",
@@ -358,13 +359,13 @@ drift_df$sector <- factor(drift_df$sector, levels = rev(drift_df$sector))
 drift_df$tt   <- paste0(as.character(drift_df$sector),
                         " — cso-toolkit v0.4.5 (2026-05-18 audit)")
 drift_df$ttid <- as.character(drift_df$sector)
-in_flight <- 0.46  # cso-toolkit v0.4.6 dashed marker (in flight)
+in_flight <- 0.46  # cso-toolkit v0.4.6 dashed marker (next release)
 
 p5 <- ggplot(drift_df, aes(x = version, y = sector)) +
   geom_vline(xintercept = in_flight, linetype = "dashed",
              color = unname(OKABE_ITO["vermillion"]), linewidth = 0.6) +
   annotate("text", x = in_flight, y = Inf,
-           label = "v0.4.6 (in flight)", hjust = 0.5, vjust = 1.3,
+           label = "v0.4.6 (next release)", hjust = 0.5, vjust = 1.3,
            size = 3, color = unname(OKABE_ITO["vermillion"])) +
   geom_segment(aes(x = 0.445, xend = version, yend = sector),
                color = "#cbd2da", linewidth = 0.8) +
@@ -378,7 +379,8 @@ p5 <- ggplot(drift_df, aes(x = version, y = sector)) +
   coord_cartesian(clip = "off") +
   labs(
     title    = "cso-toolkit version adopted per DW-Production sector",
-    subtitle = "2026-05-18 audit — all nine sector replications pinned at v0.4.5 (current release); v0.4.6 in flight",
+    subtitle = paste0("Point-in-time audit (2026-05-18): all nine sector ",
+                      "replications had adopted cso-toolkit v0.4.5"),
     x = NULL, y = NULL
   ) +
   theme_dash() +
