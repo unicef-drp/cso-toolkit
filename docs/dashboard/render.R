@@ -143,6 +143,15 @@ compute_kpis <- function(state) {
     st %in% c("TODO", "IN-PROGRESS")
   }, state$actions %||% list()))
 
+  # Subject-area coverage from the full 012_codes universe. "Not yet replicated"
+  # = subject areas with no replication sector; of those, "folders empty" =
+  # subjects whose 012_codes folder has no pipeline code yet (started == FALSE).
+  topics      <- state$topics %||% list()
+  topic_codes <- vapply(topics, function(t) t$code %||% "", character(1))
+  n_subjects  <- length(topics)
+  n_not_repl  <- length(setdiff(topic_codes, SECTOR_ORDER))
+  n_empty     <- sum(vapply(topics, function(t) !isTRUE(t$started), logical(1)))
+
   list(
     n_sectors       = n_total,
     n_full          = n_full,
@@ -150,7 +159,10 @@ compute_kpis <- function(state) {
     n_blocked       = n_blocked,
     open_prs        = open_prs,
     open_issues     = open_issues,
-    open_actions    = open_actions
+    open_actions    = open_actions,
+    n_subjects      = n_subjects,
+    n_not_repl      = n_not_repl,
+    n_empty         = n_empty
   )
 }
 
@@ -167,6 +179,7 @@ render_kpi_row <- function(kpis) {
     list(label = "Fully replicated", value = kpis$n_full,       sub = "v0.4.x mode-lock",    jump = "tab-sectors"),
     list(label = "Partial",          value = kpis$n_partial,    sub = "halted mid-pipeline", jump = "tab-phases"),
     list(label = "Blocked",          value = kpis$n_blocked,    sub = "env / package issue", jump = "tab-phases", alert = isTRUE(kpis$n_blocked > 0)),
+    list(label = "Not yet replicated", value = kpis$n_not_repl, sub = sprintf("%d subject folders empty", kpis$n_empty), jump = "tab-sectors", idle = TRUE),
     list(label = "Open PRs",         value = kpis$open_prs,     sub = "DW-Production",        jump = "tab-issues"),
     list(label = "Open issues",      value = kpis$open_issues,  sub = "DW-Production",        jump = "tab-issues"),
     list(label = "DBM actions open", value = kpis$open_actions, sub = "across sectors",       jump = "tab-actions")
@@ -175,8 +188,9 @@ render_kpi_row <- function(kpis) {
     '<div class="kpi-row">',
     paste(vapply(tiles, function(t) {
       sprintf(
-        '<a class="kpi%s" href="#%s" data-jump="%s"><div class="kpi-value">%s</div><div class="kpi-label">%s</div><div class="kpi-sub">%s</div></a>',
+        '<a class="kpi%s%s" href="#%s" data-jump="%s"><div class="kpi-value">%s</div><div class="kpi-label">%s</div><div class="kpi-sub">%s</div></a>',
         if (isTRUE(t$alert)) " alert" else "",
+        if (isTRUE(t$idle)) " idle" else "",
         htmlescape(t$jump), htmlescape(t$jump),
         htmlescape(t$value), htmlescape(t$label), htmlescape(t$sub)
       )
@@ -300,13 +314,16 @@ render_tab_landing <- function(state, kpis) {
           '<span class="tag tag-ok">%d replicated</span>',
           '<span class="tag tag-partial">%d partial</span>',
           '<span class="tag tag-blocked">%d blocked</span>',
+          '<span class="tag tag-idle">%d not yet replicated</span>',
         '</div>',
+        '<div class="hero-sub">%d subject areas tracked &middot; %d awaiting replication &middot; %d folders still empty</div>',
       '</div>',
       '<div><div class="strip-label">Sectors &middot; click to open</div>',
         '<div class="sector-strip">%s</div>',
       '</div>',
     '</div>'),
-    kpis$n_full, kpis$n_sectors, kpis$n_full, kpis$n_partial, kpis$n_blocked, strip_html)
+    kpis$n_full, kpis$n_sectors, kpis$n_full, kpis$n_partial, kpis$n_blocked,
+    kpis$n_not_repl, kpis$n_subjects, kpis$n_not_repl, kpis$n_empty, strip_html)
 
   # DW-Production activity: privacy-safe counts + links that open on GitHub
   # (they resolve for viewers with access; the repo stays private).
@@ -477,11 +494,23 @@ render_tab_sectors <- function(state) {
     '<h3>Other subject areas <span class="h3-note">&mdash; not yet replicated</span></h3>',
     '<div class="sector-grid">',
     paste(vapply(others, function(t) {
+      code     <- toupper(htmlescape(t$code %||% ""))
+      has_code <- isTRUE(t$started)
+      pill     <- if (has_code) "not replicated" else "not started"
+      folder_v <- if (has_code) "has code" else "empty"
+      note     <- if (has_code)
+        "Subject folder has pipeline code, but no replication run is captured yet — no snapshot, indicators or wall-time."
+      else
+        "Subject folder is still empty — no replication pipeline code yet."
       sprintf(paste0('<div class="sector-card idle">',
         '<div class="card-head"><span class="sector-tag">%s</span> ',
-        '<span class="pill pill-muted">not started</span></div>',
-        '<p class="idle-note">No replication work tracked yet.</p></div>'),
-        htmlescape(toupper(t$code %||% "")))
+        '<span class="pill pill-muted">%s</span></div>',
+        '<div class="card-stats">',
+          '<div class="card-stat"><span class="k">012_codes folder</span> <span class="v">%s</span></div>',
+          '<div class="card-stat"><span class="k">replication</span> <span class="v">none</span></div>',
+        '</div>',
+        '<p class="idle-note">%s</p></div>'),
+        code, pill, folder_v, note)
     }, character(1)), collapse = ""),
     '</div>')
 
@@ -820,6 +849,10 @@ main { padding: 18px 24px; max-width: 1380px; margin: 0 auto; }
 .tag-ok { background: rgba(46,204,113,.18); color: #b8f0cf; }
 .tag-partial { background: rgba(247,184,1,.18); color: #ffe39a; }
 .tag-blocked { background: rgba(231,76,60,.2); color: #ffc2bb; }
+.tag-idle { background: rgba(255,255,255,.12); color: #cdd9e6; border: 1px dashed rgba(255,255,255,.3); }
+.hero-sub { margin-top: 10px; font-size: 12px; color: #bcd2ea; }
+.kpi.idle { background: #f5f7f9; border-style: dashed; }
+.kpi.idle .kpi-value { color: #667085; }
 .strip-label { font-size: 11px; text-transform: uppercase; letter-spacing: .6px; color: #91add0; margin-bottom: 8px; }
 .sector-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(86px, 1fr)); gap: 8px; }
 .s-dot { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); border-radius: 8px; padding: 9px 8px; text-align: center; cursor: pointer; text-decoration: none; color: #fff; transition: transform .08s, background .12s; }
@@ -892,9 +925,10 @@ a.kpi:hover::after { opacity: 1; }
 /* ---- sector cards ---- */
 .sector-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
 .sector-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 15px; box-shadow: var(--shadow); }
-.sector-card.idle { background: #f5f7f9; border-style: dashed; box-shadow: none; }
+.sector-card.idle { background: #f5f7f9; border-style: dashed; box-shadow: none; min-height: 150px; display: flex; flex-direction: column; }
 .sector-card.idle .sector-tag { background: #e2e8ef; color: #667085; }
-.idle-note { margin: 8px 0 0; font-size: 12px; color: var(--muted); }
+.sector-card.idle .card-stat .v { color: #8a93a0; }
+.idle-note { margin: auto 0 0; font-size: 12px; color: var(--muted); }
 .h3-note { font-weight: 400; font-size: 13px; color: var(--muted); }
 .card-head { margin-bottom: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .sector-tag { display: inline-block; background: var(--navy); color: #fff; padding: 2px 7px; font-size: 11px; border-radius: 4px; text-transform: uppercase; font-weight: 700; }
