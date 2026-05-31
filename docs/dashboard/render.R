@@ -87,14 +87,18 @@ chart_frame <- function(file, title) {
   # allow="fullscreen" + allowfullscreen: the ggiraph toolbar's fullscreen button
   # calls requestFullscreen() from inside the iframe, which the browser blocks
   # unless the parent page grants the iframe fullscreen permission.
-  # The ⛶ button is handled by parent-page JS (fullscreens the iframe element);
-  # ggiraph's own in-iframe fullscreen is hidden in make_charts.R because it is a
-  # position:fixed modal trapped inside the small iframe.
-  sprintf(paste0('<button class="chart-fs" type="button" title="View fullscreen" ',
+  # Two corner controls: ↗ opens the standalone chart HTML in a NEW TAB (the
+  # widget fills the window via browser.fill, so the chart shows at full size —
+  # far larger than the card); ⛶ fullscreens the iframe element in place (handled
+  # by parent-page JS — ggiraph's own in-iframe fullscreen is hidden in
+  # make_charts.R because it is a position:fixed modal trapped inside the iframe).
+  sprintf(paste0('<a class="chart-open" href="charts/%s" target="_blank" rel="noopener noreferrer" ',
+                 'title="Open full chart in a new tab" aria-label="Open this chart full size in a new tab">&#x2197;</a>',
+                 '<button class="chart-fs" type="button" title="View fullscreen" ',
                  'aria-label="View this chart fullscreen">&#x26F6;</button>',
                  '<iframe class="chart-frame" src="charts/%s" title="%s" ',
                  'loading="lazy" scrolling="no" allow="fullscreen" allowfullscreen></iframe>'),
-          file, htmlescape(title))
+          htmlescape(file), htmlescape(file), htmlescape(title))
 }
 
 htmlescape <- function(x) {
@@ -806,33 +810,49 @@ render_tab_history <- function(state) {
 # ----- Tab 8: cso-toolkit overview ----------------------------------------- #
 
 render_tab_toolkit <- function(state) {
-  open_v046 <- Filter(function(i) {
-    is.null(i$pull_request) && identical(i$state, "open") &&
-      grepl("0\\.4\\.6", i$milestone$title %||% "")
-  }, state$cso_toolkit$issues %||% list())
+  # Open cso-toolkit issues, grouped by milestone. cso-toolkit is PUBLIC, so its
+  # own issue titles + links are fine to publish. "Unscheduled" holds issues with
+  # no milestone and sorts last.
+  issues <- Filter(function(i) is.null(i$pull_request) && identical(i$state, "open"),
+                   state$cso_toolkit$issues %||% list())
 
-  v046_html <- if (length(open_v046) == 0) {
-    '<div class="muted">no open v0.4.6 issues</div>'
+  issues_html <- if (length(issues) == 0) {
+    '<div class="muted">No open cso-toolkit issues.</div>'
   } else {
-    paste0(
-      "<ul>",
-      paste(vapply(open_v046, function(i) {
-        sprintf(
-          '<li><a href="%s">#%s</a> %s</li>',
-          htmlescape(i$html_url %||% "#"),
-          htmlescape(i$number   %||% ""),
-          htmlescape(i$title    %||% "")
-        )
-      }, character(1)), collapse = ""),
-      "</ul>"
-    )
+    ms     <- vapply(issues, function(i) i$milestone$title %||% "Unscheduled", character(1))
+    named  <- sort(unique(ms[ms != "Unscheduled"]))
+    groups <- c(named, if ("Unscheduled" %in% ms) "Unscheduled")
+    paste(vapply(groups, function(g) {
+      grp   <- issues[ms == g]
+      items <- paste(vapply(grp, function(i) sprintf(
+        '<li><a href="%s">#%s</a> %s</li>',
+        htmlescape(i$html_url %||% "#"),
+        htmlescape(i$number   %||% ""),
+        htmlescape(i$title    %||% "")
+      ), character(1)), collapse = "")
+      sprintf('<h4 class="ms-head">%s <span class="muted">(%d)</span></h4><ul class="issue-list">%s</ul>',
+              htmlescape(g), length(grp), items)
+    }, character(1)), collapse = "")
   }
 
   paste0(
     '<section id="tab-toolkit" class="tab-pane">',
-    '<h2>cso-toolkit</h2>',
-    '<h3>Open v0.4.6 issues</h3>',
-    v046_html,
+    '<div class="panel-head"><h2>cso-toolkit</h2>',
+      '<a class="ghlink" href="https://github.com/unicef-drp/cso-toolkit">Repo on GitHub</a></div>',
+    '<p class="section-lead">The <strong>CSO toolkit</strong> is the shared data-engineering toolkit of the ',
+      'UNICEF Chief Statistician Office (CSO), within the Office of Strategy and Evidence (OSE). It gives every ',
+      'sector pipeline one contract to read, write, compare and merge data &mdash; auto-dispatched by file type, ',
+      'with a provenance sidecar on every write and a reviewer / producer &ldquo;mode&rdquo; lock &mdash; across ',
+      'R, Python and Stata. The DW-Production sector replications tracked on this dashboard all depend on it. ',
+      'Source: <a href="https://github.com/unicef-drp/cso-toolkit">github.com/unicef-drp/cso-toolkit</a>.</p>',
+    '<div class="new-issue-bar"><span class="nib-label">File a new issue:</span>',
+      '<a class="btn-issue" href="https://github.com/unicef-drp/cso-toolkit/issues/new" ',
+        'target="_blank" rel="noopener noreferrer">cso-toolkit &#x2197;</a>',
+      '<a class="btn-issue" href="https://github.com/unicef-drp/DW-Production/issues/new" ',
+        'target="_blank" rel="noopener noreferrer">DW-Production &#x2197;</a>',
+    '</div>',
+    sprintf('<h3>Open issues <span class="muted">(%d)</span></h3>', length(issues)),
+    issues_html,
     '<h3>Cycle burndown</h3>',
     '<p class="muted">Burndown chart populates after history accumulates.</p>',
     '</section>'
@@ -992,10 +1012,19 @@ details summary { cursor: pointer; color: var(--accent); }
 .chart svg { width: 100%; height: auto; }
 .chart-frame { width: 100%; aspect-ratio: 7 / 4.5; border: 0; display: block; }
 .chart-fs { position: absolute; top: 10px; right: 12px; z-index: 2; width: 28px; height: 28px; padding: 0; border: 1px solid var(--border); border-radius: 6px; background: #fff; color: var(--navy); font-size: 15px; line-height: 1; cursor: pointer; opacity: .5; transition: opacity .15s; }
-.chart:hover .chart-fs, .chart-fs:focus-visible { opacity: 1; }
-.chart-fs:focus-visible { outline: 2px solid var(--cyan); }
+.chart-open { position: absolute; top: 10px; right: 44px; z-index: 2; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); border-radius: 6px; background: #fff; color: var(--navy); font-size: 14px; text-decoration: none; opacity: .5; transition: opacity .15s; }
+.chart:hover .chart-fs, .chart:hover .chart-open, .chart-fs:focus-visible, .chart-open:focus-visible { opacity: 1; }
+.chart-fs:focus-visible, .chart-open:focus-visible { outline: 2px solid var(--cyan); }
 .chart-frame:fullscreen { width: 100vw; height: 100vh; aspect-ratio: auto; }
 .chart-frame:-webkit-full-screen { width: 100vw; height: 100vh; aspect-ratio: auto; }
+.ms-head { margin: 14px 0 4px; font-size: 13px; color: var(--navy); }
+.issue-list { margin: 0 0 6px; padding-left: 20px; }
+.issue-list li { margin: 3px 0; font-size: 13px; }
+.new-issue-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 4px 0 14px; }
+.nib-label { font-size: 13px; color: var(--muted); }
+.btn-issue { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 6px; background: var(--cyan); color: #fff; text-decoration: none; }
+.btn-issue:hover { background: var(--accent); }
+.btn-issue:focus-visible { outline: 2px solid var(--navy); outline-offset: 1px; }
 .chart-hint { font-size: 12px; color: var(--muted); margin: 4px 0 0; }
 .chart-missing { font-size: 12px; color: var(--muted); font-style: italic; padding: 24px; text-align: center; }
 .kanban { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; align-items: start; }
