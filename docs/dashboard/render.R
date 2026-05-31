@@ -87,7 +87,12 @@ chart_frame <- function(file, title) {
   # allow="fullscreen" + allowfullscreen: the ggiraph toolbar's fullscreen button
   # calls requestFullscreen() from inside the iframe, which the browser blocks
   # unless the parent page grants the iframe fullscreen permission.
-  sprintf(paste0('<iframe class="chart-frame" src="charts/%s" title="%s" ',
+  # The ⛶ button is handled by parent-page JS (fullscreens the iframe element);
+  # ggiraph's own in-iframe fullscreen is hidden in make_charts.R because it is a
+  # position:fixed modal trapped inside the small iframe.
+  sprintf(paste0('<button class="chart-fs" type="button" title="View fullscreen" ',
+                 'aria-label="View this chart fullscreen">&#x26F6;</button>',
+                 '<iframe class="chart-frame" src="charts/%s" title="%s" ',
                  'loading="lazy" scrolling="no" allow="fullscreen" allowfullscreen></iframe>'),
           file, htmlescape(title))
 }
@@ -982,10 +987,15 @@ details summary { cursor: pointer; color: var(--accent); }
 
 /* ---- charts / kanban / tables ---- */
 .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 16px; margin-top: 12px; }
-.chart { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; box-shadow: var(--shadow); }
+.chart { position: relative; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; box-shadow: var(--shadow); }
 .chart h4 { margin: 0 0 8px; font-size: 14px; color: var(--navy); }
 .chart svg { width: 100%; height: auto; }
 .chart-frame { width: 100%; aspect-ratio: 7 / 4.5; border: 0; display: block; }
+.chart-fs { position: absolute; top: 10px; right: 12px; z-index: 2; width: 28px; height: 28px; padding: 0; border: 1px solid var(--border); border-radius: 6px; background: #fff; color: var(--navy); font-size: 15px; line-height: 1; cursor: pointer; opacity: .5; transition: opacity .15s; }
+.chart:hover .chart-fs, .chart-fs:focus-visible { opacity: 1; }
+.chart-fs:focus-visible { outline: 2px solid var(--cyan); }
+.chart-frame:fullscreen { width: 100vw; height: 100vh; aspect-ratio: auto; }
+.chart-frame:-webkit-full-screen { width: 100vw; height: 100vh; aspect-ratio: auto; }
 .chart-hint { font-size: 12px; color: var(--muted); margin: 4px 0 0; }
 .chart-missing { font-size: 12px; color: var(--muted); font-style: italic; padding: 24px; text-align: center; }
 .kanban { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; align-items: start; }
@@ -1188,6 +1198,26 @@ JS <- '
     if (h.lastIndexOf("http", 0) === 0) {
       a.target = "_blank";
       a.rel = "noopener noreferrer";
+    }
+  });
+})();
+
+// ---- Chart fullscreen (parent-level) ----
+// ggiraph fullscreen is a position:fixed modal trapped inside the small chart
+// iframe, so it cannot fill the screen. Fullscreen the iframe element itself
+// instead (permitted by allow="fullscreen" on the iframe); opts_sizing(rescale)
+// then scales the chart to the fullscreen size.
+(function() {
+  document.addEventListener("click", function(e) {
+    var btn = e.target.closest && e.target.closest(".chart-fs");
+    if (!btn) { return; }
+    var card = btn.closest(".chart");
+    var frame = card && card.querySelector("iframe.chart-frame");
+    if (!frame) { return; }
+    var req = frame.requestFullscreen || frame.webkitRequestFullscreen || frame.msRequestFullscreen;
+    if (req) {
+      var p = req.call(frame);
+      if (p && typeof p.catch === "function") { p.catch(function() {}); }
     }
   });
 })();
