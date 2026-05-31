@@ -845,6 +845,12 @@ render_tab_toolkit <- function(state) {
       'with a provenance sidecar on every write and a reviewer / producer &ldquo;mode&rdquo; lock &mdash; across ',
       'R, Python and Stata. The DW-Production sector replications tracked on this dashboard all depend on it. ',
       'Source: <a href="https://github.com/unicef-drp/cso-toolkit">github.com/unicef-drp/cso-toolkit</a>.</p>',
+    '<div class="new-issue-bar"><span class="nib-label">File a new issue:</span>',
+      '<a class="btn-issue" href="https://github.com/unicef-drp/cso-toolkit/issues/new" ',
+        'target="_blank" rel="noopener noreferrer">cso-toolkit &#x2197;</a>',
+      '<a class="btn-issue" href="https://github.com/unicef-drp/DW-Production/issues/new" ',
+        'target="_blank" rel="noopener noreferrer">DW-Production &#x2197;</a>',
+    '</div>',
     sprintf('<h3>Open issues <span class="muted">(%d)</span></h3>', length(issues)),
     issues_html,
     '<h3>Cycle burndown</h3>',
@@ -1014,6 +1020,11 @@ details summary { cursor: pointer; color: var(--accent); }
 .ms-head { margin: 14px 0 4px; font-size: 13px; color: var(--navy); }
 .issue-list { margin: 0 0 6px; padding-left: 20px; }
 .issue-list li { margin: 3px 0; font-size: 13px; }
+.new-issue-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 4px 0 14px; }
+.nib-label { font-size: 13px; color: var(--muted); }
+.btn-issue { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 6px; background: var(--cyan); color: #fff; text-decoration: none; }
+.btn-issue:hover { background: var(--accent); }
+.btn-issue:focus-visible { outline: 2px solid var(--navy); outline-offset: 1px; }
 .chart-hint { font-size: 12px; color: var(--muted); margin: 4px 0 0; }
 .chart-missing { font-size: 12px; color: var(--muted); font-style: italic; padding: 24px; text-align: center; }
 .kanban { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; align-items: start; }
