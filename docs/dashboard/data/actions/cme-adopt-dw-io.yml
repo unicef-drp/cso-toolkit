@@ -1,15 +1,13 @@
 id: cme-adopt-dw-io
-title: "CME: adopt dw_io contract (forward-investment for v0.4.x)"
+title: "CME: adopt the cso-toolkit dw_io contract (forward-investment for v0.4.x)"
 sector: cme
 severity: MEDIUM
 status: TODO
-owner: "@karavan88"
+owner: "CME sector lead"
 created_at: "2026-05-30"
 due_at: null
-blocker_for_dbm: "CME currently bypasses cso-toolkit entirely (data.table::fread + direct file paths); no mode-lock applies"
+blocker_for_dbm: "CME currently bypasses cso-toolkit (direct file IO); no reviewer-mode mode-lock applies."
 description: |
-  Refactor 00_run_cme.R + cme_regional_aggregate.R to use dw_save / dw_use
-  so reviewer-mode mode-lock and dw_use provenance engage. Not a regression —
-  forward-investment for v0.4.x adoption.
+  Refactor the CME sector drivers to use dw_save / dw_use so reviewer-mode mode-lock and dw_use provenance engage. Not a regression — forward-investment for v0.4.x adoption. Detail in the private DW-Production tracker.
 references:
   - "replication_cme_latest.json: blockers_for_dbm"

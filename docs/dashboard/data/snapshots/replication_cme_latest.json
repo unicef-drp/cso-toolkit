@@ -15,7 +15,7 @@
     "Installed shinyregionalaggregate from unicef-drp/Shiny_regional_aggregate via remotes::install_github"
   ],
   "toolkit_findings": [
-    "CME bypasses cso-toolkit; uses data.table::fread + shinyregionalaggregate package directly. No mode-lock applies because no dw_save call. Output written to repo-local 013_wrkdata/ correctly via direct file path."
+    "CME bypasses cso-toolkit; uses data.table::fread + shinyregionalaggregate package directly. No mode-lock applies because no dw_save call. Output written to repo-local working storage correctly via direct file path."
   ],
-  "blockers_for_dbm": "If reviewer-mode contract should engage, sector lead must refactor 00_run_cme.R / cme_regional_aggregate.R to use dw_save and dw_use. Currently bypasses toolkit entirely. NOT a regression but a forward-investment for v0.4.x adoption."
+  "blockers_for_dbm": "If the reviewer-mode contract should engage, the sector must adopt dw_save / dw_use (currently bypasses cso-toolkit). Not a regression — forward-investment for v0.4.x."
 }

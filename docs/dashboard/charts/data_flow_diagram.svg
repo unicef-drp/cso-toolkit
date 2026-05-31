@@ -44,7 +44,7 @@
   <!-- Teams folder -->
   <rect x="44"  y="132" width="158" height="68" class="box-cyan" rx="8"/>
   <text x="123" y="158" text-anchor="middle" class="t-bold">Teams folder</text>
-  <text x="123" y="176" text-anchor="middle" class="t-mono">060.DW-MASTER</text>
+  <text x="123" y="176" text-anchor="middle" class="t-mono">(shared workspace)</text>
   <text x="123" y="192" text-anchor="middle" class="t-sub">SharePoint / Teams sync</text>
 
   <!-- snapshot-teams.R -->

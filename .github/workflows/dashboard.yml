@@ -80,6 +80,27 @@ jobs:
           DW_PROD_READ_TOKEN: ${{ secrets.DW_PROD_READ_TOKEN }}
         run: Rscript docs/dashboard/render.R
 
+      - name: Privacy leak-guard
+        # DW-Production is private; this dashboard is public. Fail the build if
+        # private detail (named individuals, personal/Teams paths, DW-Production
+        # source filenames + line numbers, internal infra) appears in any
+        # published file. HARD tokens must be absent everywhere; SOFT infra
+        # tokens must be absent from the DW-derived sources + the rendered page
+        # (cso-toolkit's own public issue/PR titles may legitimately mention them).
+        run: |
+          set -uo pipefail
+          HARD='mjugder|karavan88|dewang8|C:[\\/]Users|[a-z0-9]+_dw\.R|[0-9]+_aggregate[a-z_]*\.R|_aggr\.R|regional_classification\.R|\byear_results\b|\blp_data\b|population\.rds|ECD\.xlsx|CompositionOfRegions|L[0-9]+-[0-9]+|SE\.LPV|060\.DW-MASTER'
+          SOFT='OneDrive|corporate proxy|api\.worldbank\.org|01[13]_(raw|wrk)data'
+          fail=0
+          if grep -rInE "$HARD" docs/dashboard/data docs/dashboard/index.html docs/dashboard/charts/*.svg; then fail=1; fi
+          if grep -rInE "$SOFT" docs/dashboard/data/actions docs/dashboard/data/snapshots docs/dashboard/index.html; then fail=1; fi
+          if [ "$fail" = 1 ]; then
+            echo "::error::Private DW-Production detail detected in published dashboard files (see matches above)."
+            exit 1
+          fi
+          echo "leak-guard: clean — no private detail in published files."
+        shell: bash
+
       - name: Prune history older than retention window
         # Retain ~90 days of nightly history snapshots in git to keep the
         # tracked tree from growing without bound. Older snapshots remain
