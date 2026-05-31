@@ -84,8 +84,11 @@ chart_frame <- function(file, title) {
     return(sprintf('<div class="chart-missing">chart not yet generated: %s</div>',
                    htmlescape(file)))
   }
+  # allow="fullscreen" + allowfullscreen: the ggiraph toolbar's fullscreen button
+  # calls requestFullscreen() from inside the iframe, which the browser blocks
+  # unless the parent page grants the iframe fullscreen permission.
   sprintf(paste0('<iframe class="chart-frame" src="charts/%s" title="%s" ',
-                 'loading="lazy" scrolling="no"></iframe>'),
+                 'loading="lazy" scrolling="no" allow="fullscreen" allowfullscreen></iframe>'),
           file, htmlescape(title))
 }
 
