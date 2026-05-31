@@ -239,13 +239,38 @@ collect_cso_toolkit_github <- function() {
   issues    <- gh_api(sprintf("repos/%s/issues?state=all&per_page=100", repo),  token, paginate = TRUE)
   milestones <- gh_api(sprintf("repos/%s/milestones?state=all", repo),          token)
 
+  # Keep only the fields the dashboard renders (activity feed needs
+  # number/title/state/html_url/user.login/dates; the toolkit tab needs
+  # pull_request + milestone.title). Dropping `body` (and the milestone
+  # `description`) keeps cso-toolkit PR/issue prose — which can carry
+  # infrastructure detail — OUT of the committed public state.json, and keeps
+  # the file small. cso-toolkit is public, but the dashboard publishes only
+  # what it renders.
+  slim <- function(items) lapply(items %||% list(), function(o) {
+    out <- list(
+      number = o$number, title = o$title, state = o$state,
+      html_url = o$html_url, user = list(login = o$user$login),
+      created_at = o$created_at, updated_at = o$updated_at,
+      closed_at = o$closed_at, merged_at = o$merged_at
+    )
+    if (!is.null(o$pull_request)) out$pull_request <- TRUE
+    if (!is.null(o$milestone))
+      out$milestone <- list(title = o$milestone$title, state = o$milestone$state)
+    out
+  })
+  slim_ms <- function(ms) lapply(ms %||% list(), function(m) list(
+    title = m$title, state = m$state, number = m$number,
+    open_issues = m$open_issues, closed_issues = m$closed_issues,
+    due_on = m$due_on, closed_at = m$closed_at
+  ))
+
   list(
     repo         = repo,
     fetched_at   = NOWUTC,
-    prs          = prs       %||% list(),
-    branches     = branches  %||% list(),
-    issues       = issues    %||% list(),
-    milestones   = milestones %||% list()
+    prs          = slim(prs),
+    branches     = lapply(branches %||% list(), function(b) list(name = b$name)),
+    issues       = slim(issues),
+    milestones   = slim_ms(milestones)
   )
 }
 
@@ -392,6 +417,41 @@ collect_actions <- function() {
   })
 }
 
+# ----- (e) subject topics (DW-Production 01_dw_prep/012_codes folders) ------ #
+#
+# Topic tags = one per subject-code folder under 01_dw_prep/012_codes, read via
+# the GitHub API. Only folder NAMES are emitted (subject codes like nt / econ /
+# pv) — never file contents. A subject is "started" if its folder holds a
+# non-placeholder file OR it is one of the tracked replication sectors (their
+# code may live elsewhere). Empty (gitkeep-only) folders render as "not started"
+# (grey). climate has a handbook chapter but no code folder yet, so it is added
+# as a not-started topic.
+
+collect_topics <- function() {
+  log_info("Topics: DW-Production 012_codes starting")
+  token <- Sys.getenv("DW_PROD_READ_TOKEN", unset = NA)
+  if (is.na(token) || !nzchar(token)) {
+    log_warn("DW_PROD_READ_TOKEN not set; topics unavailable")
+    return(list())
+  }
+  base <- "01_dw_prep/012_codes/"
+  tree <- gh_api("repos/unicef-drp/DW-Production/git/trees/HEAD?recursive=1",
+                 token, paginate = FALSE)
+  paths   <- vapply(tree$tree %||% list(), function(x) x$path %||% "", character(1))
+  rel     <- sub(base, "", grep(paste0("^", base), paths, value = TRUE), fixed = TRUE)
+  folders <- sort(unique(sub("/.*$", "", rel[grepl("/", rel)])))
+  topics  <- lapply(folders, function(f) {
+    files    <- rel[startsWith(rel, paste0(f, "/"))]
+    has_code <- any(grepl("/", files) & !grepl("gitkeep", files, ignore.case = TRUE))
+    list(code = f, started = has_code || (f %in% SECTORS))
+  })
+  if (!"climate" %in% folders) {
+    topics[[length(topics) + 1L]] <- list(code = "climate", started = FALSE)
+  }
+  log_info(sprintf("Topics: %d subjects", length(topics)))
+  topics
+}
+
 # ----- assembly ------------------------------------------------------------ #
 
 build_state <- function() {
@@ -405,7 +465,8 @@ build_state <- function() {
     dw_production  = collect_dw_production_github(),
     teams_snapshot = collect_teams_snapshot(),
     replication    = collect_replication_snapshots(),
-    actions        = collect_actions()
+    actions        = collect_actions(),
+    topics         = collect_topics()
   )
 }
 

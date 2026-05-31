@@ -75,6 +75,20 @@ read_svg <- function(name) {
   paste(readLines(path, warn = FALSE), collapse = "\n")
 }
 
+# Interactive ggiraph charts are committed as standalone widget HTML (operator
+# runs make_charts.R). Each is iframe-embedded so its JS/CSS deps stay isolated
+# from the main page; aspect-ratio CSS keeps it responsive without letterboxing.
+chart_frame <- function(file, title) {
+  path <- file.path(CHARTS_DIR, file)
+  if (!file.exists(path)) {
+    return(sprintf('<div class="chart-missing">chart not yet generated: %s</div>',
+                   htmlescape(file)))
+  }
+  sprintf(paste0('<iframe class="chart-frame" src="charts/%s" title="%s" ',
+                 'loading="lazy" scrolling="no"></iframe>'),
+          file, htmlescape(title))
+}
+
 htmlescape <- function(x) {
   if (is.null(x)) return("")
   x <- as.character(x)
@@ -314,10 +328,24 @@ render_tab_landing <- function(state, kpis) {
       dwc$prs_open %||% 0L, dwc$issues_open %||% 0L, dwc$branches_total %||% 0L)
   }
 
+  # Subject-area topic tags (grey metadata pills), generated from the
+  # DW-Production 012_codes folders; dashed = work not started.
+  topics <- state$topics %||% list()
+  tags_html <- if (length(topics) == 0) "" else paste0(
+    '<div class="topic-tags" title="Subject areas (DW-Production 012_codes) — dashed = work not started">',
+    paste(vapply(topics, function(t) {
+      cls <- if (isTRUE(t$started)) "" else " not-started"
+      lab <- if (isTRUE(t$started)) "" else ' aria-label="not started"'
+      sprintf('<span class="topic-tag%s"%s>%s</span>', cls, lab, htmlescape(t$code))
+    }, character(1)), collapse = ""),
+    '<span class="topic-tags-note">dashed = not started</span>',
+    '</div>')
+
   paste0(
     '<section id="tab-landing" class="tab-pane active">',
     '<h2>Strategic overview</h2>',
     '<p class="section-lead">Live status of the nine DW-Production sector replications, the toolkit they depend on, and the open work.</p>',
+    tags_html,
     hero_html,
     render_kpi_row(kpis),
     '<div class="row">',
@@ -439,18 +467,37 @@ render_tab_sectors <- function(state) {
     render_sector_card(s, rep[[s]] %||% list())
   }, character(1)), collapse = "")
 
+  # Full subject-area universe: the nine tracked replication sectors above, plus
+  # every other DW-Production 012_codes subject (generated from state$topics so
+  # the set can't drift). The not-yet-tracked subjects render as grey placeholder
+  # cards, so the page shows the whole roadmap, not only the active sectors.
+  topics <- state$topics %||% list()
+  others <- Filter(function(t) !((t$code %||% "") %in% SECTOR_ORDER), topics)
+  others_html <- if (length(others) == 0) "" else paste0(
+    '<h3>Other subject areas <span class="h3-note">&mdash; not yet replicated</span></h3>',
+    '<div class="sector-grid">',
+    paste(vapply(others, function(t) {
+      sprintf(paste0('<div class="sector-card idle">',
+        '<div class="card-head"><span class="sector-tag">%s</span> ',
+        '<span class="pill pill-muted">not started</span></div>',
+        '<p class="idle-note">No replication work tracked yet.</p></div>'),
+        htmlescape(toupper(t$code %||% "")))
+    }, character(1)), collapse = ""),
+    '</div>')
+
   charts_html <- paste0(
+    '<p class="chart-hint">Hover any bar, tile or point for the underlying figure.</p>',
     '<div class="chart-grid">',
       '<div class="chart"><h4>3-way parity (repo vs Teams vs Helix)</h4>',
-        read_svg("3way_parity.svg"), '</div>',
+        chart_frame("3way_parity.html", "Indicator coverage: repo-local vs Teams deposit vs SDMX-published"), '</div>',
       '<div class="chart"><h4>Coverage matrix</h4>',
-        read_svg("coverage_matrix.svg"), '</div>',
+        chart_frame("coverage_matrix.html", "Coverage matrix: pipeline stage reached per indicator set"), '</div>',
       '<div class="chart"><h4>Replication wall-time</h4>',
-        read_svg("walltime.svg"), '</div>',
+        chart_frame("walltime.html", "Replication wall-time by sector"), '</div>',
       '<div class="chart"><h4>PR funnel</h4>',
-        read_svg("pr_funnel.svg"), '</div>',
+        chart_frame("pr_funnel.html", "DW-Production pull-request funnel: open vs merged vs closed-unmerged"), '</div>',
       '<div class="chart"><h4>cso-toolkit drift</h4>',
-        read_svg("toolkit_drift.svg"), '</div>',
+        chart_frame("toolkit_drift.html", "cso-toolkit version adopted per DW-Production sector replication"), '</div>',
     '</div>'
   )
 
@@ -458,6 +505,7 @@ render_tab_sectors <- function(state) {
     '<section id="tab-sectors" class="tab-pane">',
     '<h2>Per-sector status</h2>',
     '<div class="sector-grid">', cards, '</div>',
+    others_html,
     '<h3>Charts</h3>',
     charts_html,
     '</section>'
@@ -505,6 +553,9 @@ render_tab_phases <- function(state) {
   paste0(
     '<section id="tab-phases" class="tab-pane">',
     '<h2>Pipeline phases</h2>',
+    '<p class="section-lead">Each sector sits in the furthest phase it has reached. ',
+    '<strong>Live</strong> = published to the SDMX endpoint; that step is not yet ',
+    'instrumented, so Live shows 0 &mdash; this means "not tracked yet", not a failed publish.</p>',
     '<div class="kanban">', cols, '</div>',
     '</section>'
   )
@@ -586,7 +637,9 @@ render_tab_issues <- function(state) {
     body <- sprintf(paste0(
       '<p class="section-lead">Open vs closed across DW-Production (private repo &mdash; ',
       '<em>counts</em> only, no titles; click any "issues" link to open that sector\'s ',
-      'real issues on GitHub).</p>%s',
+      'real issues on GitHub). Per-sector rows cover sector-tagged PRs/issues; ',
+      'cross-cutting and infrastructure items are counted in the totals above but ',
+      'not attributed to a sector, so the rows need not sum to the bars.</p>%s',
       '<div class="table-wrap"><table class="data-table"><thead><tr>',
       '<th>Sector</th><th>Open PRs</th><th>Closed PRs</th><th>Open issues</th>',
       '<th>Closed issues</th><th>Issues (open/closed)</th><th>GitHub</th>',
@@ -839,6 +892,10 @@ a.kpi:hover::after { opacity: 1; }
 /* ---- sector cards ---- */
 .sector-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
 .sector-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 15px; box-shadow: var(--shadow); }
+.sector-card.idle { background: #f5f7f9; border-style: dashed; box-shadow: none; }
+.sector-card.idle .sector-tag { background: #e2e8ef; color: #667085; }
+.idle-note { margin: 8px 0 0; font-size: 12px; color: var(--muted); }
+.h3-note { font-weight: 400; font-size: 13px; color: var(--muted); }
 .card-head { margin-bottom: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .sector-tag { display: inline-block; background: var(--navy); color: #fff; padding: 2px 7px; font-size: 11px; border-radius: 4px; text-transform: uppercase; font-weight: 700; }
 .card-stats { display: flex; gap: 14px; flex-wrap: wrap; margin: 8px 0; font-size: 12px; }
@@ -853,6 +910,8 @@ details summary { cursor: pointer; color: var(--accent); }
 .chart { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; box-shadow: var(--shadow); }
 .chart h4 { margin: 0 0 8px; font-size: 14px; color: var(--navy); }
 .chart svg { width: 100%; height: auto; }
+.chart-frame { width: 100%; aspect-ratio: 7 / 4.5; border: 0; display: block; }
+.chart-hint { font-size: 12px; color: var(--muted); margin: 4px 0 0; }
 .chart-missing { font-size: 12px; color: var(--muted); font-style: italic; padding: 24px; text-align: center; }
 .kanban { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; align-items: start; }
 .kanban-col { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; box-shadow: var(--shadow); }
@@ -888,6 +947,10 @@ code { background: #eef3f9; padding: 1px 5px; border-radius: 4px; font-size: 12p
 .mini-bar { display: inline-flex; width: 96px; height: 10px; border-radius: 3px; overflow: hidden; background: #eef3f9; vertical-align: middle; }
 .mini-open { background: var(--cyan); }
 .mini-closed { background: #c2cad6; }
+.topic-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 16px; }
+.topic-tag { font-size: 11px; background: #eef2f6; color: #5a6573; border: 1px solid #e2e8ef; border-radius: 12px; padding: 2px 9px; text-transform: uppercase; letter-spacing: .3px; }
+.topic-tag.not-started { background: #f5f7f9; color: #667085; border-style: dashed; }
+.topic-tags-note { font-size: 10px; color: var(--muted); align-self: center; margin-left: 2px; font-style: italic; }
 
 @media (max-width: 760px) {
   .hero { grid-template-columns: 1fr; }
@@ -1037,6 +1100,20 @@ JS <- '
         th.classList.add(asc ? "sort-asc" : "sort-desc");
       });
     });
+  });
+})();
+
+// ---- External links open in a new tab (rel=noopener for safety) ----
+// In-page links (data-jump "#tab-..." anchors) start with "#", so they are
+// untouched; only http(s) links to other sites get target=_blank.
+(function() {
+  var links = document.querySelectorAll("a[href]");
+  Array.prototype.forEach.call(links, function(a) {
+    var h = a.getAttribute("href") || "";
+    if (h.lastIndexOf("http", 0) === 0) {
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+    }
   });
 })();
 '

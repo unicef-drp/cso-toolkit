@@ -1,14 +1,15 @@
 id: ecd-adopt-cso-toolkit
-title: "ECD: adopt cso-toolkit dw_io contract (currently bypasses entirely)"
+title: "ECD: adopt the cso-toolkit dw_io contract (currently bypasses)"
 sector: ecd
 severity: MEDIUM
 status: TODO
-owner: "ECD sector lead (@mjugder)"
+owner: "ECD sector lead"
 created_at: "2026-05-30"
 due_at: null
-blocker_for_dbm: "ECD code uses neither dw_use nor dw_save; for v0.4.x compliance the sector lead must adopt dw_io contract"
+blocker_for_dbm: "ECD code uses neither dw_use nor dw_save; v0.4.x compliance needs dw_io adoption."
 description: |
-  ECD bypasses cso-toolkit entirely (no dw_use, no dw_save). For v0.4.x
-  compliance the sector lead must refactor to use the dw_io contract.
+  ECD bypasses cso-toolkit (no dw_use / dw_save). For v0.4.x compliance the
+  sector lead must adopt the dw_io contract. Detail in the private
+  DW-Production tracker.
 references:
   - "replication_ecd_latest.json: blockers_for_dbm"

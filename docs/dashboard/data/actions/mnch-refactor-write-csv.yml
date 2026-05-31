@@ -1,21 +1,14 @@
 id: mnch-refactor-write-csv
-title: "MNCH: refactor 01_aggregate.R:128 raw write.csv to dw_save"
+title: "MNCH: route the raw CSV write through dw_save"
 sector: mnch
 severity: HIGH
 status: TODO
-owner: "@dewang8"
+owner: "MNCH sector lead"
 created_at: "2026-05-30"
 due_at: null
-blocker_for_dbm: "MNCH bypasses cso-toolkit entirely; reviewer-mode mode-lock cannot engage when sector code does not call dw_save"
+blocker_for_dbm: "MNCH writes a derived output directly (no dw_save), so reviewer-mode mode-lock cannot engage."
 description: |
-  01_aggregate.R:128 currently writes:
-    write.csv(aggregate_export, file.path(teamsRawData, 'dw_mnch_aggregates.csv'), ...)
-  This (a) bypasses dw_save (no mode-lock) and (b) writes a derived output
-  directly into the canonical RAW data directory (mixes raw + derived).
-  Should become:
-    dw_save(aggregate_export,
-            file.path(dwWrkData, '_local', 'mnch', 'output', 'dw_mnch_aggregates.csv'),
-            sector = 'mnch')
+  An MNCH aggregation step writes a derived CSV directly into canonical raw storage, bypassing dw_save (no mode-lock) and mixing raw with derived. Route it through dw_save to a working path with sector provenance. Detail in the private DW-Production tracker.
 references:
   - "replication_mnch_latest.json: blockers_for_dbm"
   - "docs/mode_contract_integration.md"

@@ -1,19 +1,13 @@
 id: cso-toolkit-54-mode-lock
-title: "cso-toolkit#54: dw_save reviewer-mode mode-lock fails on OneDrive-mounted Teams paths"
+title: "cso-toolkit#54: dw_save reviewer-mode mode-lock can miss cloud-synced shared paths"
 sector: hva
 severity: HIGH
 status: TODO
 owner: "cso-toolkit maintainers"
 created_at: "2026-05-30"
 due_at: null
-blocker_for_dbm: "Reviewer-mode runs OVERWROTE producer's v6 HVA output (67.09 MB, 214,674 rows); same issue affects ED step 2/5"
-description: |
-  HVA reviewer-mode replay overwrote the producer's 2026-05-26 v6 output on Teams.
-  dw_save mode-lock did not engage because the OneDrive-mounted Teams path
-  bypasses the path classifier. Affects hva and ed today; any sector that writes
-  to a Teams-canonical OneDrive path is at risk.
-
-  Tracked at cso-toolkit#54 (HIGH severity, v0.4.6 milestone).
+blocker_for_dbm: "Reviewer-mode replay can overwrite a producer output when the shared path is cloud-synced; affects HVA and ED."
+description: "Reviewer-mode replay overwrote a producer output because dw_save mode-lock did not engage on a cloud-synced shared path (the path classifier was bypassed). Any sector writing to such a path is at risk. Tracked at cso-toolkit#54 (HIGH, v0.4.6 milestone)."
 references:
   - "replication_hva_latest.json: toolkit_findings"
   - "replication_ed_latest.json: toolkit_findings"

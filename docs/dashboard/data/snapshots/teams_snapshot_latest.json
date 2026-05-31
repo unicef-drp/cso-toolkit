@@ -7,11 +7,11 @@
       "snapshot_source": "How the operator generated this snapshot (e.g. 'manual', 'teams_inventory.ps1')",
       "sectors": {
         "<code>": {
-          "deposited": "boolean — whether the canonical file exists at the expected Teams path",
+          "deposited": "boolean — whether the canonical file exists at the expected shared Teams path",
           "rows": "integer — observation count in the deposited file (null if not deposited)",
           "indicators": "integer — distinct indicator count (null if not deposited)",
           "size_mb": "numeric — file size on Teams (null if not deposited)",
-          "path_teams": "string — canonical Teams path (relative to the OneDrive root)",
+          "path_teams": "string — canonical shared Teams path (internal path withheld)",
           "deposit_date": "YYYY-MM-DD — date producer last deposited (null if not deposited)",
           "notes": "free-text operator note"
         }
@@ -26,7 +26,7 @@
       "rows": 1160000,
       "indicators": 40,
       "size_mb": null,
-      "path_teams": "060.DW-MASTER/01_dw_prep/013_wrkdata/nt/dw_nut_tocopy.csv",
+      "path_teams": "(internal path withheld)",
       "deposit_date": null,
       "notes": "1.16M rows x 40 indicators on Teams (operator-confirmed today)"
     },
@@ -35,16 +35,16 @@
       "rows": 214000,
       "indicators": 23,
       "size_mb": null,
-      "path_teams": "060.DW-MASTER/01_dw_prep/013_wrkdata/hva/dw_hiv.csv",
+      "path_teams": "(internal path withheld)",
       "deposit_date": null,
-      "notes": "214k rows x 23 indicators (producer v6 baseline; reviewer-mode overwrite incident filed as cso-toolkit#54)"
+      "notes": "214k rows x 23 indicators (reviewer-mode overwrite incident filed as cso-toolkit#54)"
     },
     "im": {
       "deposited": false,
       "rows": null,
       "indicators": null,
       "size_mb": null,
-      "path_teams": "060.DW-MASTER/01_dw_prep/013_wrkdata/im/DW_IM_HELIX.csv",
+      "path_teams": "(internal path withheld)",
       "deposit_date": null,
       "notes": "not deposited to Teams (reviewer ran locally to repo)"
     },
@@ -53,7 +53,7 @@
       "rows": null,
       "indicators": null,
       "size_mb": null,
-      "path_teams": "060.DW-MASTER/01_dw_prep/013_wrkdata/ws/",
+      "path_teams": "(internal path withheld)",
       "deposit_date": null,
       "notes": "not deposited to Teams (reviewer ran locally to repo; 3 outputs hhs/sch/hcf)"
     },
@@ -62,9 +62,9 @@
       "rows": 15037,
       "indicators": 27,
       "size_mb": 2.78,
-      "path_teams": "060.DW-MASTER/01_dw_prep/011_rawdata/dw_mnch_aggregates.csv",
+      "path_teams": "(internal path withheld)",
       "deposit_date": null,
-      "notes": "15k rows x 27 indicators on Teams; CRITICAL: producer writes to 011_rawdata (raw input dir) via write.csv, bypasses dw_save"
+      "notes": "15k rows x 27 indicators on Teams; CRITICAL: a derived output is written directly to canonical raw storage, bypassing dw_save"
     },
     "cme": {
       "deposited": false,
@@ -73,16 +73,16 @@
       "size_mb": null,
       "path_teams": null,
       "deposit_date": null,
-      "notes": "no Teams deposit expected (sector publishes via separate cme regional-aggregate path)"
+      "notes": "no Teams deposit expected (sector publishes via a separate regional-aggregate path)"
     },
     "ed": {
       "deposited": true,
       "rows": 107770,
       "indicators": 16,
       "size_mb": 17.89,
-      "path_teams": "060.DW-MASTER/01_dw_prep/013_wrkdata/ed/dw_ed_edu.csv",
+      "path_teams": "(internal path withheld)",
       "deposit_date": null,
-      "notes": "107k rows x 16 indicators on Teams (step 2/5 only; 3/5 blocked on WB API proxy)"
+      "notes": "107k rows x 16 indicators on Teams (step 2/5 only; 3/5 blocked on the World Bank API on the reviewer network)"
     },
     "wt": {
       "deposited": false,
@@ -91,7 +91,7 @@
       "size_mb": null,
       "path_teams": null,
       "deposit_date": null,
-      "notes": "6 indicators in scope; pipeline BLOCKED on Java/xlsx + schema mismatch + missing population.rds"
+      "notes": "6 indicators in scope; pipeline BLOCKED on a Java dependency + an Excel column-schema mismatch + an undeposited upstream population cache"
     },
     "ecd": {
       "deposited": false,
@@ -100,7 +100,7 @@
       "size_mb": null,
       "path_teams": null,
       "deposit_date": null,
-      "notes": "8 indicators in scope; pipeline BLOCKED on hardcoded mjugder paths + missing ECD.xlsx on Teams"
+      "notes": "8 indicators in scope; pipeline BLOCKED on producer-side machine paths + an undeposited input workbook on Teams"
     }
   }
 }
