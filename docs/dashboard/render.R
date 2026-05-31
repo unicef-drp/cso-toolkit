@@ -127,20 +127,20 @@ PARITY_PATH <- file.path(DATA_DIR, "parity.json")
 INDIC_BY_SECTOR <- local({
   if (!file.exists(PARITY_PATH)) return(list())
   rows <- jsonlite::fromJSON(PARITY_PATH, simplifyVector = FALSE)
-  agg  <- list()
+  # Sum, over each sector's indicator sets, of max(repo-local "mine", Teams
+  # "dep"). Per-set max (not max of the per-sector sums) so a sector whose sets
+  # split between repo-local and Teams is counted correctly, not undercounted.
+  agg <- list()
   for (r in rows) {
     sec <- sub("_.*$", "", r$key %||% "")
     if (!nzchar(sec)) next
-    a <- agg[[sec]] %||% list(mine = 0, dep = 0)
-    a$mine <- a$mine + (r$mine %||% 0)
-    a$dep  <- a$dep  + (r$dep  %||% 0)
-    agg[[sec]] <- a
+    agg[[sec]] <- (agg[[sec]] %||% 0) + max(r$mine %||% 0, r$dep %||% 0)
   }
   rep <- state$replication %||% list()
   out <- list()
   for (sec in names(agg)) {
     out[[sec]] <- if (identical(rep[[sec]]$status, "BLOCKED")) 0L
-                  else as.integer(max(agg[[sec]]$mine, agg[[sec]]$dep))
+                  else as.integer(agg[[sec]])
   }
   out
 })
