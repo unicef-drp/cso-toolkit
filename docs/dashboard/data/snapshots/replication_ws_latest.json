@@ -13,8 +13,8 @@
   "output_path_repo_local": true,
   "fixes_applied": [],
   "toolkit_findings": [
-    "Reviewer-mode mode-lock honored (sector writes to _local/ws/output/ via dwWrkData)"
+    "Reviewer-mode mode-lock honored (sector writes to a repo-local working path via dwWrkData)"
   ],
-  "scope_note": "01214_ws_reagagg_hhs.R (regional aggregation) is Phase-2 work per the orchestrator comments and is NOT wired into the current conductor; not part of this replication scope",
+  "scope_note": "A regional-aggregation sector script is Phase-2 work per the orchestrator comments and is NOT wired into the current conductor; not part of this replication scope",
   "blockers_for_dbm": null
 }
