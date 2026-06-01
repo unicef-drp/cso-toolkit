@@ -107,6 +107,24 @@ dw_regions <- function(data,
 			paste(utils::head(names(data), 10), collapse = ", ")
 		), call. = FALSE)
 	}
+	# Guard against the value-arg colliding with one of
+	# aggregate_data_v2's hardcoded output column names. Without this
+	# check, the collision would surface as an obscure dplyr::if_else()
+	# error from inside the aggregator (because aggregate_data_v2 would
+	# try to compute a metadata column under the same name as the value
+	# column it's also referencing). Fire the envelope here, before the
+	# aggregator gets called. (Copilot, PR #77.)
+	aggregate_meta_cols <- c(
+		"Aggregate", "Pop_Covered", "Country_Coverage", "Total_Countries",
+		"Total_Population", "Data_Population", "Number_Affected"
+	)
+	if (value %in% aggregate_meta_cols) {
+		stop(sprintf(
+			"[cso_toolkit.dw_regions] `value = \"%s\"` collides with an aggregate_data_v2 metadata column.\n  Reserved names: %s\n  Fix: rename the value column on your input tibble before calling dw_regions(), then pass the new name as `value =`.",
+			value,
+			paste(aggregate_meta_cols, collapse = ", ")
+		), call. = FALSE)
+	}
 
 	# --- 1. Region taxonomy --------------------------------------------------
 	taxonomy_path <- paste0(taxonomy, ".csv")
@@ -238,20 +256,11 @@ dw_regions <- function(data,
 	# `aggregate_data_v2()` always produces an output column literally
 	# named "Aggregate"; without this rename, `bind_rows(data, regional)`
 	# below would leave the caller's value column NA for regional rows
-	# and stash the regional value in a parallel `Aggregate` column.
-	#
-	# Guard: `aggregate_data_v2()` emits its own metadata columns
-	# (Pop_Covered, Country_Coverage, ...). If the caller's `value` arg
-	# collides with one of those, renaming would silently produce
-	# duplicated column names that break downstream dplyr ops. Surface
-	# the conflict as an envelope error instead. (Copilot, PR #77.)
-	if ("Aggregate" %in% names(regional) && value != "Aggregate") {
-		if (value %in% names(regional)) {
-			stop(sprintf(
-				"[cso_toolkit.dw_regions] Cannot rename Aggregate -> `%s`: the regional output already has a column named `%s` (from aggregate_data_v2 metadata).\n  Fix: pass a different `value =` argument that does not collide with aggregate_data_v2's metadata columns (Pop_Covered, Country_Coverage, etc.), or rename your input column before calling dw_regions().",
-				value, value
-			), call. = FALSE)
-		}
+	# and stash the regional value in a parallel `Aggregate` column. The
+	# upstream guard at the top of dw_regions() already refused the case
+	# where `value` matches one of aggregate_data_v2's metadata names,
+	# so this rename cannot create a duplicate column.
+	if ("Aggregate" %in% names(regional)) {
 		names(regional)[names(regional) == "Aggregate"] <- value
 	}
 	# Drop the merged .pop weight column from the regional rows so the
