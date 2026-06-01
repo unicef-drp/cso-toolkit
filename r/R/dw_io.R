@@ -1507,7 +1507,7 @@ dw_stage <- function(path, overwrite = FALSE) {
 		src <- first_src()
 		if (is.null(src)) {
 			stop(sprintf(
-				"[dw_stage] '%s' not found in sandbox, Z:, or Teams.\n Looked: %s\n Fix: the producer has not deposited this input, or your mount is missing.",
+				"[cso_toolkit.dw_stage] '%s' not found in sandbox, Z:, or Teams.\n Looked: %s\n Fix: ask the producer to deposit this input, or remount the missing canonical drive.",
 				basename(sandbox_path),
 				paste(unique(c(sandbox_path, unname(src_candidates))), collapse = "\n        ")
 			), call. = FALSE)
@@ -1518,7 +1518,7 @@ dw_stage <- function(path, overwrite = FALSE) {
 			zsha <- sha(src_candidates[["z"]]); tsha <- sha(src_candidates[["teams"]])
 			if (!is.na(zsha) && !is.na(tsha) && zsha != tsha) {
 				stop(sprintf(
-					"[dw_stage] CANONICAL INTEGRITY: Z: and Teams disagree for '%s'.\n Z=%s Teams=%s\n Resolve the canonical mismatch before reviewing.",
+					"[cso_toolkit.dw_stage] CANONICAL INTEGRITY: Z: and Teams disagree for '%s'.\n Z=%s Teams=%s\n Fix: re-deposit the canonical artifact on whichever mirror is stale and re-stage; the producer's deposit pipeline must converge Z: and Teams before any reviewer reads.",
 					basename(sandbox_path), short(zsha), short(tsha)), call. = FALSE)
 			}
 		}
@@ -1535,6 +1535,14 @@ dw_stage <- function(path, overwrite = FALSE) {
 			if (file.exists(tmp_path)) file.remove(tmp_path)
 			file.copy(src$path, tmp_path, overwrite = TRUE)
 			if (identical(sha(tmp_path), src_sha)) {
+				# Windows: file.rename() cannot overwrite an existing
+				# target. When overwrite = TRUE and sandbox_path already
+				# exists (e.g. a forced re-stage to refresh a drifted
+				# copy), file.remove() the existing target before the
+				# rename. The window between remove and rename is microseconds;
+				# the integrity contract is preserved because the rename's
+				# success/failure is captured in ok_rename.
+				if (file.exists(sandbox_path)) file.remove(sandbox_path)
 				ok_rename <- tryCatch(
 					file.rename(tmp_path, sandbox_path),
 					warning = function(w) FALSE,
@@ -1548,8 +1556,8 @@ dw_stage <- function(path, overwrite = FALSE) {
 		}
 		if (!ok_copy) {
 			stop(sprintf(
-				"[dw_stage] COPY INTEGRITY: sandbox copy of '%s' does not match source after re-copy (src %s != sandbox %s). Aborting review.",
-				basename(sandbox_path), short(src_sha), short(sha(sandbox_path))), call. = FALSE)
+				"[cso_toolkit.dw_stage] COPY INTEGRITY: sandbox copy of '%s' does not match source after re-copy (src %s != sandbox %s).\n Fix: investigate the filesystem between %s and the sandbox (disk full / antivirus / permission); re-stage with overwrite = TRUE once the filesystem is healthy.",
+				basename(sandbox_path), short(src_sha), short(sha(sandbox_path)), toupper(src$root)), call. = FALSE)
 		}
 		# Sidecar: use jsonlite (same writer dw_save's .write_provenance uses);
 		# `type` discriminates this sidecar from dw_save's `.provenance.json`
@@ -1572,8 +1580,8 @@ dw_stage <- function(path, overwrite = FALSE) {
 	# ---- later run, overwrite = FALSE: verify, do NOT re-copy ----
 	if (!file.exists(sidecar)) {
 		stop(sprintf(
-			"[dw_stage] '%s' present in sandbox but has no archived hash sidecar.\n Re-stage with overwrite = TRUE to establish the baseline.",
-			basename(sandbox_path)), call. = FALSE)
+			"[cso_toolkit.dw_stage] '%s' present in sandbox but has no archived hash sidecar at %s.\n Fix: re-stage with overwrite = TRUE to establish the baseline.",
+			basename(sandbox_path), sidecar), call. = FALSE)
 	}
 	sc <- tryCatch(
 		jsonlite::fromJSON(sidecar, simplifyVector = TRUE),
@@ -1585,13 +1593,13 @@ dw_stage <- function(path, overwrite = FALSE) {
 	# during the v0.4.5-dev iterations before the schema was finalised.
 	if (!is.null(sc) && nzchar(sc$type %||% "") && !identical(sc$type, "dw_stage")) {
 		stop(sprintf(
-			"[dw_stage] sidecar at %s has type='%s' (expected 'dw_stage').\n Re-stage with overwrite = TRUE to refresh.",
+			"[cso_toolkit.dw_stage] sidecar at %s has type='%s' (expected 'dw_stage').\n Fix: re-stage with overwrite = TRUE to refresh — the sidecar was likely written by another tool (e.g. dw_save) and shouldn't be interpreted as a dw_stage archive.",
 			sidecar, sc$type), call. = FALSE)
 	}
 	live <- sha(sandbox_path)
 	if (is.null(sc) || is.na(live) || !identical(live, sc$sha256)) {
 		stop(sprintf(
-			"[dw_stage] SANDBOX DRIFT: '%s' no longer matches its archived hash (archived %s != live %s).\n The staged copy was modified. Re-stage with overwrite = TRUE or investigate.",
+			"[cso_toolkit.dw_stage] SANDBOX DRIFT: '%s' no longer matches its archived hash (archived %s != live %s).\n The staged copy was modified out of band.\n Fix: re-stage with overwrite = TRUE to restore the canonical version, or investigate which tool wrote to the sandbox before re-running the review.",
 			basename(sandbox_path), short(sc$sha256 %||% NA), short(live)), call. = FALSE)
 	}
 	# optional upstream-drift check (size+mtime fast-path; sha256 only on change).
@@ -1605,7 +1613,7 @@ dw_stage <- function(path, overwrite = FALSE) {
 		 live_mtime_iso != (sc$mtime %||% "")) {
 			if (!identical(sha(src$path), sc$sha256)) {
 				warning(sprintf(
-					"[dw_stage] UPSTREAM CHANGED: '%s' on %s differs from the staged copy. Re-stage with overwrite = TRUE to refresh.",
+					"[cso_toolkit.dw_stage] UPSTREAM CHANGED: '%s' on %s differs from the staged copy.\n Fix: re-stage with overwrite = TRUE to refresh the sandbox to the new canonical bytes — auto-refresh is intentionally not performed so the reviewer keeps explicit control of when canonical inputs roll forward.",
 					basename(sandbox_path), toupper(src$root)), call. = FALSE)
 			}
 		}
