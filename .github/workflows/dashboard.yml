@@ -108,7 +108,14 @@ jobs:
           # Any @handle — catches named individuals generically. Checked in the
           # data only: index.html legitimately contains CSS at-rules (@media etc.).
           HANDLE='@[a-z][a-z0-9_-]{2,}'
-          SOFT='OneDrive|corporate proxy|api\.worldbank\.org|01[13]_(raw|wrk)data'
+          # Bare `OneDrive` was previously in SOFT but it's a brand name that
+          # appears legitimately in the toolkit's own public content (e.g.
+          # issue #82's title mentions "OneDrive pattern"). The actual
+          # sensitive content is the full `C:\Users\<u>\<org>\<library> -
+          # Documents\060.DW-MASTER\...` path, which the HARD pattern
+          # `C:[\\/]Users` already catches. Removing bare OneDrive eliminates
+          # the false-positive that blocked the 2026-06-01 deploy (#85).
+          SOFT='corporate proxy|api\.worldbank\.org|01[13]_(raw|wrk)data'
 
           # Wrap grep so an exit code of 2+ (e.g. unreadable path, missing file
           # from a bash-glob that expanded to a literal string) fails the build
