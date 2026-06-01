@@ -233,6 +233,15 @@ dw_regions <- function(data,
 	if ("REGION" %in% names(regional)) {
 		names(regional)[names(regional) == "REGION"] <- "REF_AREA"
 	}
+	# Rename Aggregate -> caller's `value` so regional rows carry the
+	# regional value in the same column as the country-level rows. Pre-#27
+	# `aggregate_data_v2()` always produces an output column literally
+	# named "Aggregate"; without this rename, `bind_rows(data, regional)`
+	# below would leave the caller's value column NA for regional rows
+	# and stash the regional value in a parallel `Aggregate` column.
+	if ("Aggregate" %in% names(regional) && value != "Aggregate") {
+		names(regional)[names(regional) == "Aggregate"] <- value
+	}
 	# Drop the merged .pop weight column from the regional rows so the
 	# schema matches the input.
 	if (weight_col == "OBS_VALUE.pop" && "OBS_VALUE.pop" %in% names(regional)) {

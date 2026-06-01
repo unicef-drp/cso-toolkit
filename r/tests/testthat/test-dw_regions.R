@@ -58,9 +58,41 @@ test_that("dw_regions appends regional aggregate rows to country-level input", {
   # Two regions in the fixture: WCA + ESA
   region_rows <- out[out$REF_AREA %in% c("WCA", "ESA"), , drop = FALSE]
   expect_equal(nrow(region_rows), 2L)
-  # Aggregates should be in [0, 1] (we passed proportions)
-  expect_true(all(!is.na(region_rows$Aggregate)))
-  expect_true(all(region_rows$Aggregate >= 0 & region_rows$Aggregate <= 1))
+  # Aggregates should be in [0, 1] (we passed proportions). Post-#27,
+  # the regional values land in the caller's `value` column
+  # (OBS_VALUE here), NOT in a parallel "Aggregate" column.
+  expect_true(all(!is.na(region_rows$OBS_VALUE)))
+  expect_true(all(region_rows$OBS_VALUE >= 0 & region_rows$OBS_VALUE <= 1))
+})
+
+test_that("dw_regions renames Aggregate to caller's value column (#27)", {
+  d <- local_tempdir()
+  .dw_regions_seed_caches(d)
+  local_state(teamsRawData = d, teamsRawDataCanonical = d,
+              dw_apis_allowed = FALSE)
+
+  national <- data.frame(
+    REF_AREA    = c("BFA", "MLI", "NER", "TCD", "SEN"),
+    INDICATOR   = rep("MyInd", 5),
+    TIME_PERIOD = rep(2023, 5),
+    OBS_VALUE   = c(0.50, 0.45, 0.60, 0.30, 0.55),
+    stringsAsFactors = FALSE
+  )
+  out <- dw_regions(national, value = "OBS_VALUE")
+
+  # The caller's `value` column must exist on the output and carry the
+  # regional aggregate values for the regional rows.
+  expect_true("OBS_VALUE" %in% names(out))
+  # The literal "Aggregate" column from aggregate_data_v2() must NOT
+  # leak through to the dw_regions output (pre-#27 it stayed because
+  # dw_regions never renamed it back to the caller's value name).
+  expect_false("Aggregate" %in% names(out))
+
+  region_rows <- out[out$REF_AREA %in% c("WCA", "ESA"), , drop = FALSE]
+  expect_false(
+    any(is.na(region_rows$OBS_VALUE)),
+    info = "Regional rows have NA in caller's value column (pre-#27 bug)"
+  )
 })
 
 test_that("dw_regions errors when a `by` column is missing (Copilot #21.2)", {
