@@ -100,7 +100,7 @@ jobs:
           HANDLE='@[a-z][a-z0-9_-]{2,}'
           SOFT='OneDrive|corporate proxy|api\.worldbank\.org|01[13]_(raw|wrk)data'
           fail=0
-          if grep -rInE "$HARD"   docs/dashboard/data docs/dashboard/index.html docs/dashboard/charts/*.svg; then fail=1; fi
+          if grep -rInE "$HARD"   docs/dashboard/data docs/dashboard/index.html docs/dashboard/charts/*.svg docs/dashboard/charts/*.html; then fail=1; fi
           if grep -rInE "$HANDLE" docs/dashboard/data; then fail=1; fi
           if grep -rInE "$SOFT"   docs/dashboard/data/actions docs/dashboard/data/snapshots docs/dashboard/index.html; then fail=1; fi
           if [ "$fail" = 1 ]; then
