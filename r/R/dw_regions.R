@@ -107,6 +107,24 @@ dw_regions <- function(data,
 			paste(utils::head(names(data), 10), collapse = ", ")
 		), call. = FALSE)
 	}
+	# Guard against the value-arg colliding with one of
+	# aggregate_data_v2's hardcoded output column names. Without this
+	# check, the collision would surface as an obscure dplyr::if_else()
+	# error from inside the aggregator (because aggregate_data_v2 would
+	# try to compute a metadata column under the same name as the value
+	# column it's also referencing). Fire the envelope here, before the
+	# aggregator gets called. (Copilot, PR #77.)
+	aggregate_meta_cols <- c(
+		"Aggregate", "Pop_Covered", "Country_Coverage", "Total_Countries",
+		"Total_Population", "Data_Population", "Number_Affected"
+	)
+	if (value %in% aggregate_meta_cols) {
+		stop(sprintf(
+			"[cso_toolkit.dw_regions] `value = \"%s\"` collides with an aggregate_data_v2 metadata column.\n  Reserved names: %s\n  Fix: rename the value column on your input tibble before calling dw_regions(), then pass the new name as `value =`.",
+			value,
+			paste(aggregate_meta_cols, collapse = ", ")
+		), call. = FALSE)
+	}
 
 	# --- 1. Region taxonomy --------------------------------------------------
 	taxonomy_path <- paste0(taxonomy, ".csv")
@@ -232,6 +250,18 @@ dw_regions <- function(data,
 	# renaming).
 	if ("REGION" %in% names(regional)) {
 		names(regional)[names(regional) == "REGION"] <- "REF_AREA"
+	}
+	# Rename Aggregate -> caller's `value` so regional rows carry the
+	# regional value in the same column as the country-level rows. Pre-#27
+	# `aggregate_data_v2()` always produces an output column literally
+	# named "Aggregate"; without this rename, `bind_rows(data, regional)`
+	# below would leave the caller's value column NA for regional rows
+	# and stash the regional value in a parallel `Aggregate` column. The
+	# upstream guard at the top of dw_regions() already refused the case
+	# where `value` matches one of aggregate_data_v2's metadata names,
+	# so this rename cannot create a duplicate column.
+	if ("Aggregate" %in% names(regional)) {
+		names(regional)[names(regional) == "Aggregate"] <- value
 	}
 	# Drop the merged .pop weight column from the regional rows so the
 	# schema matches the input.
