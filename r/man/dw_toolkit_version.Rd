@@ -35,6 +35,7 @@ Other io:
 \code{\link{dw_resolve_path}()},
 \code{\link{dw_root}()},
 \code{\link{dw_save}()},
+\code{\link{dw_stage}()},
 \code{\link{dw_use}()},
 \code{\link{dw_verify_z}()}
 }

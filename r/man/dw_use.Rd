@@ -14,6 +14,8 @@ dw_use(
   as = c("tibble", "data.frame", "data.table"),
   fallback_canonical = TRUE,
   verify_z = TRUE,
+  stage = NULL,
+  overwrite = FALSE,
   ...
 )
 }
@@ -53,6 +55,20 @@ repo-local fallback is allowed when Teams + Z: are both missing
 
 \item{verify_z}{`TRUE`, `FALSE`, or `"sha256"`. Controls the Z: integrity
 check for canonical reads. Default `TRUE` (size compare).}
+
+\item{stage}{Logical or `NULL`. Reviewer-mode auto-stage opt-in (new in
+v0.4.9). When `TRUE`, the canonical input is copied into the sandbox
+via [dw_stage()] with a hash-guard and the verified sandbox copy is
+read. When `NULL` (default), falls back to the session global
+`dw_autostage` (set via the profile); when that is also unset, staging
+is OFF and `dw_use()` reads in place via the v0.4.0 reviewer-mode
+fallback chain. Only applies in reviewer mode and only to local
+(non-`http(s)://`) paths.}
+
+\item{overwrite}{Logical. Default `FALSE`. Forwarded to [dw_stage()] when
+`stage = TRUE` -- forces a re-copy of the sandbox file from the
+canonical source and re-archives the hash sidecar. No effect when
+`stage` is not active.}
 
 \item{...}{Format-specific arguments passed through to the underlying
 reader.}
@@ -119,6 +135,7 @@ Other io:
 \code{\link{dw_resolve_path}()},
 \code{\link{dw_root}()},
 \code{\link{dw_save}()},
+\code{\link{dw_stage}()},
 \code{\link{dw_toolkit_version}()},
 \code{\link{dw_verify_z}()}
 }

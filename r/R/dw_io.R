@@ -117,7 +117,7 @@
 #' this to build paths like `file.path(dw_root("wrk"), "<sector>", "<vintage>")`
 #' without needing to know whether the session is producer or reviewer mode.
 #'
-#' @param kind One of "wrk", "raw", "meta" — selects which of the three
+#' @param kind One of "wrk", "raw", "meta" -- selects which of the three
 #'   vendored data roots to return.
 #' @return Character. Absolute path to the resolved root.
 #' @seealso `.dw_root_for()` (internal helper, not exported);
@@ -331,7 +331,7 @@ dw_toolkit_version <- function() {
 	# the primary onto itself. The pre-#26 implementation returned
 	# `teams = pn`, which on Windows produced a "file.copy() onto self"
 	# warning that .dw_mirror_to_teams caught and re-emitted as
-	# "[cso_toolkit.dw_save] Teams mirror FAILED" — false alarm on every
+	# "[cso_toolkit.dw_save] Teams mirror FAILED" -- false alarm on every
 	# canonical-direct write.
 	if (dw_is_canonical(pn)) {
 		z_mirror <- .dw_z_mirror_path(pn)
@@ -1266,6 +1266,18 @@ dw_save <- function(x,
 #' (with a provenance warning); set `FALSE` to fail fast instead.
 #' @param verify_z `TRUE`, `FALSE`, or `"sha256"`. Controls the Z: integrity
 #' check for canonical reads. Default `TRUE` (size compare).
+#' @param stage Logical or `NULL`. Reviewer-mode auto-stage opt-in (new in
+#' v0.4.9). When `TRUE`, the canonical input is copied into the sandbox
+#' via [dw_stage()] with a hash-guard and the verified sandbox copy is
+#' read. When `NULL` (default), falls back to the session global
+#' `dw_autostage` (set via the profile); when that is also unset, staging
+#' is OFF and `dw_use()` reads in place via the v0.4.0 reviewer-mode
+#' fallback chain. Only applies in reviewer mode and only to local
+#' (non-`http(s)://`) paths.
+#' @param overwrite Logical. Default `FALSE`. Forwarded to [dw_stage()] when
+#' `stage = TRUE` -- forces a re-copy of the sandbox file from the
+#' canonical source and re-archives the hash sidecar. No effect when
+#' `stage` is not active.
 #' @param ... Format-specific arguments passed through to the underlying
 #' reader.
 #'
@@ -1303,6 +1315,8 @@ dw_use <- function(path = NULL,
  as = c("tibble", "data.frame", "data.table"),
  fallback_canonical = TRUE,
  verify_z = TRUE,
+ stage = NULL,
+ overwrite = FALSE,
  ...) {
 	kind <- match.arg(kind)
 	as <- match.arg(as)
@@ -1311,7 +1325,18 @@ dw_use <- function(path = NULL,
 		path <- dw_resolve_path(name = name, sector = sector, kind = kind)
 	}
 
-	resolved <- .resolve_for_read(path, fallback_canonical = fallback_canonical)
+	# v0.4.9 reviewer auto-stage. Opt-in: `stage = TRUE` per call, or
+	# globally via `dw_autostage <- TRUE` in the profile. When on
+	# (reviewer mode + local non-URL path), copy the canonical input
+	# into the sandbox with a hash-guard and read the verified sandbox
+	# copy. Default OFF -> existing read-in-place behaviour is unchanged.
+	stage_on <- if (!is.null(stage)) isTRUE(stage) else isTRUE(.try_get("dw_autostage"))
+	if (stage_on && isTRUE(.try_get("dw_mode") == "reviewer") &&
+	 !is.null(path) && !grepl("^https?://", path)) {
+		resolved <- dw_stage(path, overwrite = overwrite)
+	} else {
+		resolved <- .resolve_for_read(path, fallback_canonical = fallback_canonical)
+	}
 
 	# Z: integrity check for canonical reads (non-blocking)
 	if (isTRUE(verify_z) || identical(verify_z, "sha256")) {
@@ -1384,6 +1409,216 @@ dw_use <- function(path = NULL,
 		)
 	}
 	x
+}
+
+#' Stage a canonical input into the reviewer sandbox with hash-guard
+#'
+#' Reviewer-mode helper that copies a canonical input from Z: (or Teams)
+#' into the local sandbox the first time the script needs it, then on
+#' every later run verifies the sandbox copy still matches its archived
+#' hash before letting the read proceed.
+#'
+#' The five-state lifecycle:
+#' \enumerate{
+#' \item **First stage**: file missing -> copy from first available
+#' source (Z: > Teams) -> re-hash the staged copy against the source
+#' hash (retry once, then STOP) -> archive the hash in a
+#' `<path>.staged.json` sidecar.
+#' \item **Second run** (`overwrite = FALSE`): sandbox + sidecar both
+#' exist + sandbox sha matches archived sha -> no-op, return the
+#' sandbox path.
+#' \item **Tampered sandbox**: sandbox sha differs from archived sha
+#' -> STOP with the SANDBOX DRIFT envelope.
+#' \item **Forced re-stage** (`overwrite = TRUE`): unconditionally
+#' re-copy from source, re-verify, re-archive. Bypasses both the
+#' skip-on-match and the sandbox-drift check.
+#' \item **Upstream changed**: sandbox matches its archive, but the
+#' upstream Z:/Teams source no longer matches the archived hash
+#' (detected via a size+mtime fast-path + sha-only-on-change) ->
+#' WARN, return the sandbox path. Auto-re-copy is deliberately NOT
+#' performed -- re-stage is the reviewer's explicit decision.
+#' }
+#'
+#' Cross-mirror integrity: when both Z: and Teams hold the file, the
+#' two are sha-compared before either is used; disagreement is a
+#' canonical-integrity STOP. Reviewer-mode only; in producer mode the
+#' function is a no-op (returns `path` unchanged).
+#'
+#' Sidecar suffix is `<path>.staged.json` (distinct from
+#' [dw_save()]'s `.provenance.json` slot, so a sandbox file written by
+#' dw_save and then staged by dw_stage carries both metadata blocks
+#' side-by-side). The sidecar carries a `type: "dw_stage"` field; the
+#' read path refuses to interpret sidecars with a wrong `type`.
+#'
+#' @param path Character. Sandbox path to stage. In reviewer mode this
+#' is the same path the consumer script will pass to [dw_use()] /
+#' downstream readers.
+#' @param overwrite Logical. Default `FALSE`. When `TRUE`, the sandbox
+#' file is re-copied from the canonical source regardless of whether
+#' it already exists or matches its sidecar.
+#'
+#' @return Character. The (normalised) sandbox path. Outside reviewer
+#' mode, returns `path` unchanged with no I/O.
+#'
+#' @section Side effects:
+#' First stage: creates `dirname(path)` if missing, copies the source
+#' file via an atomic `<path>.dw_stage.tmp` -> `file.rename(path)`,
+#' writes `<path>.staged.json`. Drift / integrity failures emit a
+#' \code{stop()} with an envelope-shaped message; upstream-changed
+#' emits a \code{warning()}.
+#'
+#' @seealso [dw_use()] (which forwards `stage = TRUE` here when the
+#' caller opts in); [dw_save()] (writes its own `.provenance.json`
+#' sidecar with a different schema).
+#' @family io
+#' @export
+dw_stage <- function(path, overwrite = FALSE) {
+	if (!isTRUE(.try_get("dw_mode") == "reviewer")) return(path)  # no-op outside reviewer
+	.require("digest")
+	.require("jsonlite")
+
+	path_n <- .normalize_for_comparison(path)
+	# Derive the sandbox target + its canonical source mirrors.
+	# In reviewer mode teams*Data == sandbox; *Canonical == the real source.
+	mirrors <- .dw_remote_mirrors(path_n)   # $teams (canonical), $z
+	sandbox_path <- path_n                   # literal already points at sandbox in reviewer mode
+	src_candidates <- c(z = mirrors$z, teams = mirrors$teams)
+	src_candidates <- src_candidates[!is.na(src_candidates) & nzchar(src_candidates)]
+
+	# Distinct suffix from dw_save's `.provenance.json`: a sandbox file
+	# can be both written by dw_save and staged by dw_stage, and the two
+	# sidecar schemas differ. Use `.staged.json` for stage-side metadata
+	# so the schemas can't overwrite each other on the next access.
+	sidecar <- paste0(sandbox_path, ".staged.json")
+	short <- function(h) if (is.na(h) || !nzchar(h)) "<na>" else substr(h, 1, 12)
+	sha <- function(f) tryCatch(digest::digest(file = f, algo = "sha256"),
+	 error = function(e) NA_character_)
+	first_src <- function() {
+		for (k in c("z", "teams")) if (!is.na(src_candidates[k])) {
+			p <- src_candidates[[k]]; if (file.exists(p)) return(list(path = p, root = k))
+		}
+		NULL
+	}
+
+	dir.create(dirname(sandbox_path), recursive = TRUE, showWarnings = FALSE)
+	needs_copy <- !file.exists(sandbox_path) || isTRUE(overwrite)
+
+	if (needs_copy) {
+		src <- first_src()
+		if (is.null(src)) {
+			stop(sprintf(
+				"[cso_toolkit.dw_stage] '%s' not found in sandbox, Z:, or Teams.\n Looked: %s\n Fix: ask the producer to deposit this input, or remount the missing canonical drive.",
+				basename(sandbox_path),
+				paste(unique(c(sandbox_path, unname(src_candidates))), collapse = "\n        ")
+			), call. = FALSE)
+		}
+		# cross-mirror integrity: if BOTH mirrors exist, they must agree
+		if (!is.na(src_candidates["z"]) && !is.na(src_candidates["teams"]) &&
+		 file.exists(src_candidates[["z"]]) && file.exists(src_candidates[["teams"]])) {
+			zsha <- sha(src_candidates[["z"]]); tsha <- sha(src_candidates[["teams"]])
+			if (!is.na(zsha) && !is.na(tsha) && zsha != tsha) {
+				stop(sprintf(
+					"[cso_toolkit.dw_stage] CANONICAL INTEGRITY: Z: and Teams disagree for '%s'.\n Z=%s Teams=%s\n Fix: re-deposit the canonical artifact on whichever mirror is stale and re-stage; the producer's deposit pipeline must converge Z: and Teams before any reviewer reads.",
+					basename(sandbox_path), short(zsha), short(tsha)), call. = FALSE)
+			}
+		}
+		src_sha <- sha(src$path)
+		# Atomic-rename copy: stage to `<sandbox>.dw_stage.tmp`, verify the
+		# tmp's hash, then `file.rename()` it onto `sandbox_path`. Without
+		# this, two parallel reviewer R sessions racing to stage the same
+		# file could each see `!file.exists(sandbox_path)`, both copy, and
+		# the second writer would clobber the first mid-stream. Matches
+		# the atomic-rename pattern dw_save already uses on its writes.
+		tmp_path <- paste0(sandbox_path, ".dw_stage.tmp")
+		ok_copy <- FALSE
+		for (attempt in 1:2) {
+			if (file.exists(tmp_path)) file.remove(tmp_path)
+			file.copy(src$path, tmp_path, overwrite = TRUE)
+			if (identical(sha(tmp_path), src_sha)) {
+				# Windows: file.rename() cannot overwrite an existing
+				# target. When overwrite = TRUE and sandbox_path already
+				# exists (e.g. a forced re-stage to refresh a drifted
+				# copy), file.remove() the existing target before the
+				# rename. The window between remove and rename is microseconds;
+				# the integrity contract is preserved because the rename's
+				# success/failure is captured in ok_rename.
+				if (file.exists(sandbox_path)) file.remove(sandbox_path)
+				ok_rename <- tryCatch(
+					file.rename(tmp_path, sandbox_path),
+					warning = function(w) FALSE,
+					error   = function(e) FALSE
+				)
+				if (isTRUE(ok_rename)) { ok_copy <- TRUE; break }
+			}
+			if (file.exists(tmp_path)) file.remove(tmp_path)
+			if (attempt == 1) message("[dw_stage] copy mismatch for ",
+			 basename(sandbox_path), " -- retrying once ...")
+		}
+		if (!ok_copy) {
+			stop(sprintf(
+				"[cso_toolkit.dw_stage] COPY INTEGRITY: sandbox copy of '%s' does not match source after re-copy (src %s != sandbox %s).\n Fix: investigate the filesystem between %s and the sandbox (disk full / antivirus / permission); re-stage with overwrite = TRUE once the filesystem is healthy.",
+				basename(sandbox_path), short(src_sha), short(sha(sandbox_path)), toupper(src$root)), call. = FALSE)
+		}
+		# Sidecar: use jsonlite (same writer dw_save's .write_provenance uses);
+		# `type` discriminates this sidecar from dw_save's `.provenance.json`
+		# schema so neither code path silently mis-reads the other's format.
+		jsonlite::write_json(list(
+			type               = "dw_stage",
+			source             = unname(src$path),
+			source_root        = unname(src$root),
+			sha256             = unname(src_sha),
+			size               = unname(file.size(src$path)),
+			mtime              = format(file.mtime(src$path), "%Y-%m-%dT%H:%M:%S%z"),
+			staged_at          = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"),
+			dw_toolkit_version = tryCatch(dw_toolkit_version(), error = function(e) NA_character_)
+		), path = sidecar, auto_unbox = TRUE, pretty = TRUE, na = "null")
+		message(sprintf("[dw_stage] %s staged from %s + copy verified (sha256 %s)",
+		 basename(sandbox_path), toupper(src$root), short(src_sha)))
+		return(sandbox_path)
+	}
+
+	# ---- later run, overwrite = FALSE: verify, do NOT re-copy ----
+	if (!file.exists(sidecar)) {
+		stop(sprintf(
+			"[cso_toolkit.dw_stage] '%s' present in sandbox but has no archived hash sidecar at %s.\n Fix: re-stage with overwrite = TRUE to establish the baseline.",
+			basename(sandbox_path), sidecar), call. = FALSE)
+	}
+	sc <- tryCatch(
+		jsonlite::fromJSON(sidecar, simplifyVector = TRUE),
+		error = function(e) NULL
+	)
+	# Schema-type guard: refuse to read a sidecar that wasn't written by
+	# dw_stage (e.g. a renamed dw_save sidecar). A missing `type` field
+	# is tolerated for backwards compatibility with sidecars written
+	# during the v0.4.5-dev iterations before the schema was finalised.
+	if (!is.null(sc) && nzchar(sc$type %||% "") && !identical(sc$type, "dw_stage")) {
+		stop(sprintf(
+			"[cso_toolkit.dw_stage] sidecar at %s has type='%s' (expected 'dw_stage').\n Fix: re-stage with overwrite = TRUE to refresh -- the sidecar was likely written by another tool (e.g. dw_save) and shouldn't be interpreted as a dw_stage archive.",
+			sidecar, sc$type), call. = FALSE)
+	}
+	live <- sha(sandbox_path)
+	if (is.null(sc) || is.na(live) || !identical(live, sc$sha256)) {
+		stop(sprintf(
+			"[cso_toolkit.dw_stage] SANDBOX DRIFT: '%s' no longer matches its archived hash (archived %s != live %s).\n The staged copy was modified out of band.\n Fix: re-stage with overwrite = TRUE to restore the canonical version, or investigate which tool wrote to the sandbox before re-running the review.",
+			basename(sandbox_path), short(sc$sha256 %||% NA), short(live)), call. = FALSE)
+	}
+	# optional upstream-drift check (size+mtime fast-path; sha256 only on change).
+	# `sc$mtime` is the ISO-8601 string written by jsonlite above, so format
+	# the live source's mtime the same way before comparing -- otherwise
+	# every read tries to compute sha256, defeating the fast-path.
+	src <- first_src()
+	if (!is.null(src)) {
+		live_mtime_iso <- format(file.mtime(src$path), "%Y-%m-%dT%H:%M:%S%z")
+		if (file.size(src$path) != (sc$size %||% -1) ||
+		 live_mtime_iso != (sc$mtime %||% "")) {
+			if (!identical(sha(src$path), sc$sha256)) {
+				warning(sprintf(
+					"[cso_toolkit.dw_stage] UPSTREAM CHANGED: '%s' on %s differs from the staged copy.\n Fix: re-stage with overwrite = TRUE to refresh the sandbox to the new canonical bytes -- auto-refresh is intentionally not performed so the reviewer keeps explicit control of when canonical inputs roll forward.",
+					basename(sandbox_path), toupper(src$root)), call. = FALSE)
+			}
+		}
+	}
+	sandbox_path
 }
 
 #' CSV/TSV/TXT reader (data.table::fread wrapper)
@@ -1527,7 +1762,7 @@ dw_use <- function(path = NULL,
 #'
 #' The helper is purely additive: consumers must opt in by composing
 #' it into their `dw_url_allowlist` (the URL-freeze safety contract is
-#' unchanged — no URL is fetchable without explicit ratification).
+#' unchanged -- no URL is fetchable without explicit ratification).
 #'
 #' @return Character vector of regex patterns.
 #'
