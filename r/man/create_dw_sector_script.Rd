@@ -32,8 +32,8 @@ Invisibly, the path of the file written.
 Thin convenience wrapper around [`create_sector_script()`] that fills in
 the DW-Production layout: scripts land at
 `01_dw_prep/012_codes/<sector_code>/00_run_<sector_code>.R`, input under
-`01_dw_prep/011_input/<sector_code>`, output under
-`01_dw_prep/013_output/<sector_code>`. Suitable for use inside the
+`01_dw_prep/011_rawdata/<sector_code>`, output under
+`01_dw_prep/013_wrkdata/<sector_code>`. Suitable for use inside the
 DW-Production repo root.
 }
 \examples{
