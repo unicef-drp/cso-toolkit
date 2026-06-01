@@ -7,7 +7,7 @@
 dw_toolkit_version()
 }
 \value{
-Character. Currently `"0.4.7"`.
+Character. Currently `"0.4.8"`.
 }
 \description{
 Returns the upstream `cso-toolkit` tag the current `dw_io.R` /
