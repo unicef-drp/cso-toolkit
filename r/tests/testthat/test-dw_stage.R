@@ -1,4 +1,4 @@
-# T1-T6 regression suite for dw_stage() — reviewer-mode auto-stage with
+# T1-T6 regression suite for dw_stage() -- reviewer-mode auto-stage with
 # hash-guard, the v0.4.9 headline feature. Five lifecycle states plus the
 # cross-mirror integrity branch are each exercised against a self-contained
 # sandbox/Z:/Teams tempdir fixture per test (no real Teams sync or Z: mount
@@ -51,7 +51,7 @@ setup_stage_fixture <- function(env = parent.frame(),
   )
 }
 
-test_that("T1: first stage — copy + hash-verify + sidecar written (#dw_stage)", {
+test_that("T1: first stage -- copy + hash-verify + sidecar written (#dw_stage)", {
   fx <- setup_stage_fixture()
   out <- dw_stage(fx$sandbox_path)
   expect_true(file.exists(out))
@@ -68,7 +68,7 @@ test_that("T1: first stage — copy + hash-verify + sidecar written (#dw_stage)"
   expect_true(sc$source_root %in% c("z", "teams"))
 })
 
-test_that("T2: second run — copy skipped, mtime preserved (no re-copy)", {
+test_that("T2: second run -- copy skipped, mtime preserved (no re-copy)", {
   fx <- setup_stage_fixture()
   dw_stage(fx$sandbox_path)
   mtime_before <- file.mtime(fx$sandbox_path)
@@ -78,14 +78,14 @@ test_that("T2: second run — copy skipped, mtime preserved (no re-copy)", {
   expect_equal(as.numeric(mtime_after), as.numeric(mtime_before))
 })
 
-test_that("T3: tampered sandbox — STOP with SANDBOX DRIFT envelope", {
+test_that("T3: tampered sandbox -- STOP with SANDBOX DRIFT envelope", {
   fx <- setup_stage_fixture()
   dw_stage(fx$sandbox_path)
   writeLines("id,value\nXXX,9\n", fx$sandbox_path)
   expect_error(dw_stage(fx$sandbox_path), regexp = "SANDBOX DRIFT")
 })
 
-test_that("T4: overwrite = TRUE — re-copies + restores from source", {
+test_that("T4: overwrite = TRUE -- re-copies + restores from source", {
   fx <- setup_stage_fixture()
   dw_stage(fx$sandbox_path)
   writeLines("id,value\nXXX,9\n", fx$sandbox_path)
@@ -96,7 +96,7 @@ test_that("T4: overwrite = TRUE — re-copies + restores from source", {
   expect_identical(sandbox_sha, src_sha)
 })
 
-test_that("T5: upstream changed — WARN, do NOT auto-re-copy", {
+test_that("T5: upstream changed -- WARN, do NOT auto-re-copy", {
   fx <- setup_stage_fixture()
   dw_stage(fx$sandbox_path)
   Sys.sleep(1.1)
@@ -111,7 +111,7 @@ test_that("T5: upstream changed — WARN, do NOT auto-re-copy", {
   expect_identical(sandbox_before, sandbox_after)
 })
 
-test_that("T6: cross-mirror disagreement — STOP with CANONICAL INTEGRITY", {
+test_that("T6: cross-mirror disagreement -- STOP with CANONICAL INTEGRITY", {
   fx <- setup_stage_fixture()
   # Force Z: and Teams to disagree BEFORE any sandbox copy exists.
   writeLines("id,value\nDIFFERENT,1\n", fx$z_path)

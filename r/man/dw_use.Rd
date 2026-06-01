@@ -66,7 +66,7 @@ fallback chain. Only applies in reviewer mode and only to local
 (non-`http(s)://`) paths.}
 
 \item{overwrite}{Logical. Default `FALSE`. Forwarded to [dw_stage()] when
-`stage = TRUE` — forces a re-copy of the sandbox file from the
+`stage = TRUE` -- forces a re-copy of the sandbox file from the
 canonical source and re-archives the hash sidecar. No effect when
 `stage` is not active.}
 
