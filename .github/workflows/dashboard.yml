@@ -99,10 +99,33 @@ jobs:
           # data only: index.html legitimately contains CSS at-rules (@media etc.).
           HANDLE='@[a-z][a-z0-9_-]{2,}'
           SOFT='OneDrive|corporate proxy|api\.worldbank\.org|01[13]_(raw|wrk)data'
+
+          # Wrap grep so an exit code of 2+ (e.g. unreadable path, missing file
+          # from a bash-glob that expanded to a literal string) fails the build
+          # rather than silently passing as "no match". The previous `if grep
+          # ...; then fail=1; fi` pattern set fail=1 only on grep exit 0 (match),
+          # leaving exit 2 (error) treated as clean — a privacy gate must not
+          # silent-pass on its own scan errors.
+          run_check() {
+            grep -rInE "$1" "${@:2}" --exclude-dir=lib
+            local rc=$?
+            case $rc in
+              0) return 0 ;;   # match → leak
+              1) return 1 ;;   # no match → clean
+              *) echo "::error::leak-guard: grep exited with code $rc — treating as leak"; return 0 ;;
+            esac
+          }
+
           fail=0
-          if grep -rInE "$HARD"   docs/dashboard/data docs/dashboard/index.html docs/dashboard/charts/*.svg; then fail=1; fi
-          if grep -rInE "$HANDLE" docs/dashboard/data; then fail=1; fi
-          if grep -rInE "$SOFT"   docs/dashboard/data/actions docs/dashboard/data/snapshots docs/dashboard/index.html; then fail=1; fi
+          # charts/ is now scanned RECURSIVELY (no globs) so the guard auto-
+          # covers both static SVG and ggiraph HTML widget files without the
+          # glob-expansion-to-literal-string trap. --exclude-dir=lib skips
+          # vendored htmlwidgets / ggiraphjs / fonts under charts/lib/, which
+          # legitimately contain CSS @-rules and generic identifiers that
+          # would false-positive on HANDLE.
+          if run_check "$HARD"   docs/dashboard/data docs/dashboard/index.html docs/dashboard/charts; then fail=1; fi
+          if run_check "$HANDLE" docs/dashboard/data; then fail=1; fi
+          if run_check "$SOFT"   docs/dashboard/data/actions docs/dashboard/data/snapshots docs/dashboard/index.html; then fail=1; fi
           if [ "$fail" = 1 ]; then
             echo "::error::Private DW-Production detail detected in published dashboard files (see matches above)."
             exit 1
