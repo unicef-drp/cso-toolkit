@@ -239,7 +239,19 @@ dw_regions <- function(data,
 	# named "Aggregate"; without this rename, `bind_rows(data, regional)`
 	# below would leave the caller's value column NA for regional rows
 	# and stash the regional value in a parallel `Aggregate` column.
+	#
+	# Guard: `aggregate_data_v2()` emits its own metadata columns
+	# (Pop_Covered, Country_Coverage, ...). If the caller's `value` arg
+	# collides with one of those, renaming would silently produce
+	# duplicated column names that break downstream dplyr ops. Surface
+	# the conflict as an envelope error instead. (Copilot, PR #77.)
 	if ("Aggregate" %in% names(regional) && value != "Aggregate") {
+		if (value %in% names(regional)) {
+			stop(sprintf(
+				"[cso_toolkit.dw_regions] Cannot rename Aggregate -> `%s`: the regional output already has a column named `%s` (from aggregate_data_v2 metadata).\n  Fix: pass a different `value =` argument that does not collide with aggregate_data_v2's metadata columns (Pop_Covered, Country_Coverage, etc.), or rename your input column before calling dw_regions().",
+				value, value
+			), call. = FALSE)
+		}
 		names(regional)[names(regional) == "Aggregate"] <- value
 	}
 	# Drop the merged .pop weight column from the regional rows so the

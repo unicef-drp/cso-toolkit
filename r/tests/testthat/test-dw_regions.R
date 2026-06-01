@@ -89,10 +89,40 @@ test_that("dw_regions renames Aggregate to caller's value column (#27)", {
   expect_false("Aggregate" %in% names(out))
 
   region_rows <- out[out$REF_AREA %in% c("WCA", "ESA"), , drop = FALSE]
+  # Anchor: the assertion below is meaningless without regional rows.
+  # `any(is.na(empty))` returns FALSE and would vacuously pass; pin the
+  # row count to the fixture's two regions (WCA + ESA) so future
+  # taxonomy changes that drop regional rows fail this test loudly
+  # rather than silently. (Copilot, PR #77.)
+  expect_equal(nrow(region_rows), 2L)
   expect_false(
     any(is.na(region_rows$OBS_VALUE)),
     info = "Regional rows have NA in caller's value column (pre-#27 bug)"
   )
+})
+
+test_that("dw_regions errors on value-arg collision with metadata col (#27)", {
+  d <- local_tempdir()
+  .dw_regions_seed_caches(d)
+  local_state(teamsRawData = d, teamsRawDataCanonical = d,
+              dw_apis_allowed = FALSE)
+
+  national <- data.frame(
+    REF_AREA    = c("BFA", "MLI"),
+    INDICATOR   = c("A", "A"),
+    TIME_PERIOD = c(2023, 2023),
+    # User unwisely names their value column after aggregate_data_v2's
+    # built-in metadata column.
+    Pop_Covered = c(0.5, 0.5),
+    stringsAsFactors = FALSE
+  )
+  err <- tryCatch(
+    dw_regions(national, value = "Pop_Covered"),
+    error = identity
+  )
+  expect_s3_class(err, "error")
+  expect_envelope(err, function_name = "dw_regions")
+  expect_match(conditionMessage(err), "Pop_Covered")
 })
 
 test_that("dw_regions errors when a `by` column is missing (Copilot #21.2)", {
