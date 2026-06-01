@@ -3,8 +3,72 @@
 ## Unreleased
 
 _Entries land here as PRs merge into `develop`. When the next release
-is cut, this header is renamed `## v0.4.8 (YYYY-MM-DD)` and a fresh
+is cut, this header is renamed `## v0.4.9 (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
+
+## v0.4.8 (2026-06-01)
+
+Same-day dashboard-hardening micro-release. Two issues land, both
+exposed by the v0.4.7 dashboard refresh that failed at 13:56 UTC on
+the v0.4.7 develop tip and blocked the public site from picking up
+the v0.4.7 release. No R-package code or public API touched — the
+substantive changes are confined to `.github/workflows/dashboard.yml`,
+`docs/dashboard/collect.R`, and `docs/dashboard/render.R`.
+
+### Leak-guard `OneDrive` over-match (issue [#85](https://github.com/unicef-drp/cso-toolkit/issues/85))
+
+PRs [#86](https://github.com/unicef-drp/cso-toolkit/pull/86) (diagnostic uplift) + [#87](https://github.com/unicef-drp/cso-toolkit/pull/87) (substantive fix).
+
+The 2026-06-01 dashboard refresh failed because the SOFT leak-guard
+matched the bare word `OneDrive` in cso-toolkit's own public issue-#82
+title (`"dw_is_canonical: derive OneDrive pattern from
+teamsFolderCanonical at call time (#61.1 follow-up)"`). The workflow
+comment had already anticipated this — "cso-toolkit's own public
+issue/PR titles may legitimately mention them" — but the SOFT regex
+still listed bare `OneDrive` while its scope still included
+`docs/dashboard/index.html`.
+
+The actually-sensitive content is the full personal OneDrive-mounted
+Teams path of the form `C:\Users\<u>\UNICEF\<library> - Documents\
+060.DW-MASTER\...`, which the HARD pattern `C:[\\/]Users` + the more
+specific `060\.DW-MASTER` token already catch. Dropping bare
+`OneDrive` from SOFT eliminates the false-positive without losing
+any defensive coverage.
+
+Discovery was unblocked by the diagnostic uplift shipped in #86:
+`run_check()` now runs a second `grep -rhoE` after any match and
+prints the deduplicated matched-token list inside a GHA `::group::`
+(short and uncorrupted by log-line truncation), and a new
+`if: failure()` step archives the regenerated `index.html` and
+`state.json` as a 14-day artifact. Without #86 the original failure's
+matched-line was truncated at ~23 KB in the GH Actions log (line 365
+of the regenerated `index.html` is one 78 KB line), so the actual
+matched token could not be identified.
+
+### `prs_closed` semantic collision (issue [#74](https://github.com/unicef-drp/cso-toolkit/issues/74))
+
+PR [#88](https://github.com/unicef-drp/cso-toolkit/pull/88).
+
+`collect.R::dw_production` used `prs_closed` with two different
+meanings: overall `counts$prs_closed` was closed-unmerged only
+(since `counts$prs_merged` is tracked separately), but per-sector
+`by_sector[..]$prs_closed` counted all non-open PRs (merged +
+closed-unmerged together). Copilot's PR #72 review flagged the
+collision as easy-to-misuse on a future refactor.
+
+Fix (Option 2 from the issue body — the cheaper of the two): rename
+the per-sector field to `prs_closed_total`. The renderer reads the
+new field via `b$prs_closed_total %||% b$prs_closed %||% 0L` so a
+stale `state.json` (rendered without re-running `collect.R`) still
+surfaces the legacy field's value rather than silently showing 0.
+The dashboard table column header changes from `Closed PRs` to
+`Non-open PRs (merged + closed)` so the data matches the label.
+
+### Verification
+
+A `workflow_dispatch` against the post-merge develop tip confirms the
+dashboard `refresh + leak-guard + deploy` jobs all pass cleanly. The
+public site is unblocked.
 
 ## v0.4.7 (2026-06-01)
 
