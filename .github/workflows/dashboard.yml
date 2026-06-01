@@ -27,7 +27,7 @@ on:
       - main
     # paths-ignore (rather than the narrower paths) — the dashboard
     # reflects more than its own subtree (NEWS.md, top-level README,
-    # CITATION, dashboard data committed elsewhere). Excluding the
+    # LICENSE, dashboard data committed elsewhere). Excluding the
     # language-package trees that have their own check workflows
     # (r/, python/, stata/) keeps R-only refactors from spinning
     # the deploy, without missing the "snapshot commit elsewhere in
