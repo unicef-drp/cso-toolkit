@@ -3,8 +3,93 @@
 ## Unreleased
 
 _Entries land here as PRs merge into `develop`. When the next release
-is cut, this header is renamed `## v0.4.9 (YYYY-MM-DD)` and a fresh
+is cut, this header is renamed `## v0.4.10 (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
+
+## v0.4.9 (2026-06-01)
+
+Headline feature: `dw_stage()` — reviewer-mode auto-stage with hash-
+guard. Reviewer pipelines that read canonical inputs which live on
+Teams or Z: but not yet in the reviewer's local sandbox can now opt
+into automatic, integrity-checked staging via `dw_use(stage = TRUE)`
+(per-call) or a session-level `dw_autostage <- TRUE` global. Producer-
+mode is a deliberate no-op; the v0.4.0 producer write contract is
+unchanged. RFC + spec at `DW-Production/docs/proposals/reviewer-
+autostage-rfc.md`.
+
+PR [#91](https://github.com/unicef-drp/cso-toolkit/pull/91).
+
+### Five-state lifecycle (plus cross-mirror integrity branch)
+
+`dw_stage(path, overwrite = FALSE)`:
+
+- **First stage**: file missing → copy from first available source
+  (Z: > Teams) via atomic `<path>.dw_stage.tmp` → `file.rename()` →
+  re-hash the staged copy against the source hash (retry once, then
+  STOP with the `[cso_toolkit.dw_stage] COPY INTEGRITY` envelope) →
+  archive the hash in a `<path>.staged.json` sidecar.
+- **Second run** (`overwrite = FALSE`): sandbox + sidecar both exist
+  and the sandbox sha matches the archived sha → no-op, returns the
+  sandbox path. The sandbox file is NEVER re-copied without an
+  explicit `overwrite = TRUE`.
+- **Tampered sandbox**: sandbox sha differs from archived sha →
+  `[cso_toolkit.dw_stage] SANDBOX DRIFT` STOP with explicit
+  `Fix: re-stage with overwrite = TRUE` guidance.
+- **Forced re-stage** (`overwrite = TRUE`): unconditionally re-copy,
+  re-verify, and re-archive, even if a sandbox copy already exists.
+  On Windows, the existing sandbox file is removed before
+  `file.rename()` so the atomic-rename pattern works cross-platform.
+- **Upstream changed**: sandbox matches its archive, but the upstream
+  Z:/Teams source no longer matches the archived hash (detected via
+  a size+mtime fast-path with sha-only-on-change) → WARN. The
+  sandbox is NOT auto-refreshed — re-stage is the reviewer's
+  explicit decision.
+
+**Cross-mirror integrity**: when both Z: and Teams hold the file,
+they are sha-compared before either is used as source. Disagreement
+is an envelope-shaped `[cso_toolkit.dw_stage] CANONICAL INTEGRITY`
+STOP, and neither the sandbox copy nor the sidecar is written.
+
+### Sidecar format + collision-safety
+
+The sidecar at `<path>.staged.json` carries a `type: "dw_stage"`
+discriminator field. The read path refuses to interpret sidecars
+with a wrong `type` — so a sandbox file written by `dw_save()`
+(which writes a `.provenance.json` sidecar with a different schema)
+and later staged by `dw_stage()` keeps the two metadata blocks
+side-by-side rather than overwriting each other. Sidecar I/O uses
+`jsonlite::write_json` / `jsonlite::fromJSON` consistently with
+`dw_save()`'s `.write_provenance`.
+
+### `dw_use()` opt-in
+
+Two new params, both default OFF — existing `dw_use()` callers see
+no behaviour change:
+
+- `stage = NULL`: when `TRUE`, the canonical input is staged via
+  `dw_stage()` and the verified sandbox copy is read. When `NULL`,
+  falls back to the session global `dw_autostage` (set via the
+  profile); when that is also unset, staging is OFF. Only applies in
+  reviewer mode and only to local (non-`http(s)://`) paths.
+- `overwrite = FALSE`: forwarded to `dw_stage()` when `stage = TRUE`
+  — forces a re-copy of the sandbox file from the canonical source
+  and re-archives the hash sidecar. No effect when `stage` is not
+  active.
+
+### Test coverage
+
+New `r/tests/testthat/test-dw_stage.R` pins the full T1–T6 lifecycle
+(plus a producer-mode no-op assertion) against self-contained
+sandbox/Z:/Teams tempdir fixtures per test. No real Teams sync or
+Z: mount is touched.
+
+### Origin
+
+Prototyped on DW-Production `feat/dw_root-and-dw_stage` (commits
+`88d986d` core + `67b1598` dw_use wiring + `1426f2c` hardening) and
+ported here on PR #91 with code-review uplift — Windows file.rename
+overwrite path, `[cso_toolkit.<func>]` envelope conformance across 6
+stop/warning sites + explicit `Fix:` guidance lines.
 
 ## v0.4.8 (2026-06-01)
 
