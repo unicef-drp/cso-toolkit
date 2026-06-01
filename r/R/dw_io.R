@@ -320,15 +320,23 @@ dw_toolkit_version <- function() {
 .dw_remote_mirrors <- function(primary_path) {
 	pn <- .normalize_for_comparison(primary_path)
 
-	# Canonical primary -> treat the primary itself as the Teams write
-	# and derive Z: from it (matches Python `_dw_remote_mirrors`).  This
-	# is the DBM-bootstrap path: when a producer writes directly under
-	# `teamsFolderCanonical`, the v0.4.0 redundant-write contract still
-	# applies via the Z: mirror.
+	# Canonical primary -> primary write IS the canonical Teams artifact;
+	# only Z: needs a separate mirror (matches Python `_dw_remote_mirrors`).
+	# This is the DBM-bootstrap path: when a producer writes directly
+	# under `teamsFolderCanonical`, the v0.4.0 redundant-write contract
+	# still applies via the Z: mirror.
+	#
+	# teams is returned as NA (not the primary path itself) so the
+	# producer-mode mirror code in dw_save() does NOT try to file.copy()
+	# the primary onto itself. The pre-#26 implementation returned
+	# `teams = pn`, which on Windows produced a "file.copy() onto self"
+	# warning that .dw_mirror_to_teams caught and re-emitted as
+	# "[cso_toolkit.dw_save] Teams mirror FAILED" — false alarm on every
+	# canonical-direct write.
 	if (dw_is_canonical(pn)) {
 		z_mirror <- .dw_z_mirror_path(pn)
 		if (is.null(z_mirror)) z_mirror <- NA_character_
-		return(list(teams = pn, z = z_mirror))
+		return(list(teams = NA_character_, z = z_mirror))
 	}
 
 	candidates <- list(
