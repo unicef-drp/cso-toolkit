@@ -346,10 +346,11 @@ collect_dw_production_github <- function() {
   # Per-sector aggregation counts any non-open PR (merged + closed-unmerged)
   # under `prs_closed_total`, distinguishing it from the overall-counts
   # `prs_closed` field above which means "closed-unmerged only" (since the
-  # overall block tracks `prs_merged` separately). The two scopes used the
-  # same field name in v0.4.7, which Copilot flagged as a future-bug
-  # (#74); v0.4.8 surfaces the difference at the field-name level so the
-  # renderer column header can be honest about what it is showing.
+  # overall block tracks `prs_merged` separately). The two scopes used to
+  # share the same field name, which Copilot flagged as a future-bug;
+  # the rename surfaces the difference at the field-name level so the
+  # renderer column header can be honest about what it is showing. See
+  # #74 for the design discussion.
   for (p in prs) {
     s <- sector_of(paste(p$title %||% "", p$head$ref %||% ""))
     if (is.na(s)) next
