@@ -136,6 +136,23 @@ save_girafe <- function(plot, name, width = W_IN, height = H_IN) {
   # selfcontained = FALSE + a shared libdir: every chart loads its JS/CSS/fonts
   # from charts/lib/ (no CDN, no pandoc dependency). render.R iframes each html.
   htmlwidgets::saveWidget(g, path, selfcontained = FALSE, libdir = "lib")
+  # Collapse double-escaped entities introduced by the htmlwidgets/ggiraph
+  # chain: an apostrophe in an auto-generated tooltip becomes &amp;#39; rather
+  # than &#39;, which the browser then renders as the literal string "&#39;".
+  # One pass of regex unescape is safe here because tooltips are derived from
+  # data fields, not authored prose — no legitimate occurrence of the
+  # double-escape pattern is expected.
+  #
+  # Force UTF-8 read + raw binary write with explicit LF: keeps the committed
+  # widgets byte-identical across operator platforms. The default
+  # readLines / writeLines path uses the system locale (CP1252 on a default
+  # Windows R session) which mojibakes the em-dashes embedded in tooltip
+  # text, and writeLines() in text mode would CRLF-translate on Windows.
+  text <- readLines(path, warn = FALSE, encoding = "UTF-8")
+  text <- gsub("&amp;(amp|#[0-9]+|lt|gt|quot|apos);", "&\\1;", text, perl = TRUE)
+  con <- file(path, open = "wb")
+  on.exit(close(con), add = TRUE)
+  writeLines(enc2utf8(text), con, sep = "\n", useBytes = TRUE)
   message(sprintf("wrote %s", path))
 }
 
