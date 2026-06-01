@@ -791,6 +791,23 @@ dw_save <- function(x,
 		 vintage = vintage)
 	}
 
+	# Optional compression: append .gz for CSV/TSV/TXT, and auto-enable
+	# compression when the path ALREADY ends in .gz (no caller foot-gun).
+	# Applied BEFORE mirror destinations are computed so teams_mirror /
+	# z_mirror carry the same `.gz` suffix as the primary write (fixes
+	# #25: compressed bytes were previously copied to mirror filenames
+	# without the .gz extension, and the overwrite check looked for the
+	# uncompressed mirror name and missed any existing .gz mirror).
+	# (Backported from DW-Production 00_functions/dw_io.R; see B2 in
+	# docs/dw-production-alignment-2026-05-25.md.)
+	fmt <- tolower(tools::file_ext(path))
+	path_ends_in_gz <- grepl("\\.gz$", path, ignore.case = TRUE)
+	if (isTRUE(compress) && fmt %in% c("csv", "tsv", "txt") && !path_ends_in_gz) {
+		path <- paste0(path, ".gz")
+	} else if (!isTRUE(compress) && path_ends_in_gz) {
+		compress <- TRUE
+	}
+
 	# Compute remote mirror destinations once (NA if not applicable).
 	mirrors <- .dw_remote_mirrors(path)
 	teams_mirror <- mirrors$teams
@@ -886,18 +903,6 @@ dw_save <- function(x,
 	# Quality contract -- isid before write
 	if (!is.null(isid) && is.data.frame(x)) {
 		dw_isid(x, keys = isid, where = path)
-	}
-
-	# Optional compression: append .gz for CSV/TSV/TXT, and auto-enable
-	# compression when the path ALREADY ends in .gz (no caller foot-gun).
-	# (Backported from DW-Production 00_functions/dw_io.R; see B2 in
-	# docs/dw-production-alignment-2026-05-25.md.)
-	fmt <- tolower(tools::file_ext(path))
-	path_ends_in_gz <- grepl("\\.gz$", path, ignore.case = TRUE)
-	if (isTRUE(compress) && fmt %in% c("csv", "tsv", "txt") && !path_ends_in_gz) {
-		path <- paste0(path, ".gz")
-	} else if (!isTRUE(compress) && path_ends_in_gz) {
-		compress <- TRUE
 	}
 
 	dir.create(dirname(path), recursive = TRUE, showWarnings = FALSE)
