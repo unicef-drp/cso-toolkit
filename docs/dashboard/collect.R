@@ -293,20 +293,44 @@ collect_dw_production_github <- function() {
     return(list(repo = repo, fetched_at = NOWUTC, reachable = FALSE))
   }
 
-  prs        <- gh_api(sprintf("repos/%s/pulls?state=all&per_page=100", repo), token, paginate = TRUE) %||% list()
-  branches   <- gh_api(sprintf("repos/%s/branches?per_page=100", repo),        token, paginate = TRUE) %||% list()
-  issues_raw <- gh_api(sprintf("repos/%s/issues?state=all&per_page=100", repo), token, paginate = TRUE) %||% list()
-  milestones <- gh_api(sprintf("repos/%s/milestones?state=all", repo),         token) %||% list()
-  issues     <- Filter(function(i) is.null(i$pull_request), issues_raw)
+  # Capture each gh_api return BEFORE %||% so we can distinguish a
+  # "API call failed" NULL from a genuinely-empty repo (#63.1, Copilot
+  # PR #62 review). Pre-fix, reachable=TRUE was set unconditionally
+  # once the token was present, even if every endpoint failed and got
+  # coerced to list() — the dashboard then reported DW-Production as
+  # reachable with all counts at zero, indistinguishable from a quiet
+  # repo.
+  prs_raw        <- gh_api(sprintf("repos/%s/pulls?state=all&per_page=100", repo), token, paginate = TRUE)
+  branches_raw   <- gh_api(sprintf("repos/%s/branches?per_page=100", repo),        token, paginate = TRUE)
+  issues_raw     <- gh_api(sprintf("repos/%s/issues?state=all&per_page=100", repo), token, paginate = TRUE)
+  milestones_raw <- gh_api(sprintf("repos/%s/milestones?state=all", repo),         token)
+
+  prs        <- prs_raw        %||% list()
+  branches   <- branches_raw   %||% list()
+  issues_all <- issues_raw     %||% list()
+  milestones <- milestones_raw %||% list()
+  issues     <- Filter(function(i) is.null(i$pull_request), issues_all)
+
+  # reachable = at least one endpoint returned data. All four NULL means
+  # the token didn't grant access OR the network is down.
+  truly_reachable <- (
+    !is.null(prs_raw) || !is.null(branches_raw) ||
+    !is.null(issues_raw) || !is.null(milestones_raw)
+  )
 
   # Best-effort sector tagging from titles / branch names (read in memory only;
-  # never emitted). Aliases cover the conventional-commit scopes and branch
-  # naming the DW-Production sector PRs use (e.g. wt work lives on cp-cluster).
+  # never emitted). First-hit-wins on the alias dict ordering below — keep
+  # the most specific patterns first so a generic alias later in the list
+  # cannot absorb traffic that should hit a narrower earlier entry.
+  # Aliases tightened in #63.2 (Copilot PR #62 review): the previous `wt`
+  # entry matched bare "women" and `cme` matched bare `\bcm\b`, both of
+  # which over-matched unrelated DW-Production titles ("women's health",
+  # "scm" in measurements, etc.).
   aliases <- list(
     nt = "nutrition|\\bnt\\b", hva = "hiv|\\bhva\\b", im = "immun|\\bim\\b",
     ws = "wash|water|\\bws\\b", mnch = "mnch|maternal|newborn",
-    cme = "\\bcme\\b|child.?mortal|\\bcm\\b", ed = "educat|\\bed\\b",
-    wt = "\\bwt\\b|cp.?cluster|women|weighting", ecd = "ecd|early.?child"
+    cme = "\\bcme\\b|child.?mortal", ed = "educat|\\bed\\b",
+    wt = "\\bwt\\b|cp.?cluster|weighting", ecd = "ecd|early.?child"
   )
   sector_of <- function(text) {
     text <- tolower(text %||% "")
@@ -339,7 +363,7 @@ collect_dw_production_github <- function() {
   list(
     repo       = repo,
     fetched_at = NOWUTC,
-    reachable  = TRUE,
+    reachable  = truly_reachable,
     counts = list(
       prs_total      = length(prs),
       prs_open       = length(Filter(function(p) identical(p$state, "open"), prs)),
