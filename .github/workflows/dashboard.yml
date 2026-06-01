@@ -108,7 +108,14 @@ jobs:
           # Any @handle — catches named individuals generically. Checked in the
           # data only: index.html legitimately contains CSS at-rules (@media etc.).
           HANDLE='@[a-z][a-z0-9_-]{2,}'
-          SOFT='OneDrive|corporate proxy|api\.worldbank\.org|01[13]_(raw|wrk)data'
+          # Bare `OneDrive` was previously in SOFT but it's a brand name that
+          # appears legitimately in the toolkit's own public content (e.g.
+          # issue #82's title mentions "OneDrive pattern"). The actual
+          # sensitive content is the full `C:\Users\<u>\<org>\<library> -
+          # Documents\060.DW-MASTER\...` path, which the HARD pattern
+          # `C:[\\/]Users` already catches. Removing bare OneDrive eliminates
+          # the false-positive that blocked the 2026-06-01 deploy (#85).
+          SOFT='corporate proxy|api\.worldbank\.org|01[13]_(raw|wrk)data'
 
           # Wrap grep so an exit code of 2+ (e.g. unreadable path, missing file
           # from a bash-glob that expanded to a literal string) fails the build
@@ -116,13 +123,27 @@ jobs:
           # ...; then fail=1; fi` pattern set fail=1 only on grep exit 0 (match),
           # leaving exit 2 (error) treated as clean — a privacy gate must not
           # silent-pass on its own scan errors.
+          #
+          # The match path runs grep twice: once with -InE to surface
+          # `file:line:content` for the operator, and a second pass with
+          # -oE to print just the matched TOKENS (sorted, unique). The
+          # token list is what an operator actually needs to triage the
+          # leak; without it the truncated log line wastes everyone's
+          # time. (#85 hardening.)
           run_check() {
-            grep -rInE "$1" "${@:2}" --exclude-dir=lib
+            local pat="$1"; shift
+            grep -rInE "$pat" "$@" --exclude-dir=lib
             local rc=$?
             case $rc in
-              0) return 0 ;;   # match → leak
-              1) return 1 ;;   # no match → clean
-              *) echo "::error::leak-guard: grep exited with code $rc — treating as leak"; return 0 ;;
+              0)
+                echo "::group::leak-guard: matched tokens (unique)"
+                grep -rhoE "$pat" "$@" --exclude-dir=lib | sort -u
+                echo "::endgroup::"
+                return 0 ;;        # match → leak
+              1) return 1 ;;        # no match → clean
+              *)
+                echo "::error::leak-guard: grep exited with code $rc — treating as leak"
+                return 0 ;;
             esac
           }
 
@@ -142,6 +163,23 @@ jobs:
           fi
           echo "leak-guard: clean — no private detail in published files."
         shell: bash
+
+      - name: Upload regenerated dashboard payload on leak-guard failure
+        # The leak-guard fires on the regenerated index.html / state.json that
+        # the CI builds from fresh upstream data. Those files are never
+        # committed (commit-back is gated by leak-guard success), so without
+        # this artifact upload the operator has no way to inspect the exact
+        # bytes that tripped the guard. Uploads on FAILURE only — clean runs
+        # publish via the deploy job below. (#85 hardening.)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dashboard-payload-on-failure
+          path: |
+            docs/dashboard/index.html
+            docs/dashboard/data/state.json
+          if-no-files-found: warn
+          retention-days: 14
 
       - name: Prune history older than retention window
         # Retain ~90 days of nightly history snapshots in git to keep the
