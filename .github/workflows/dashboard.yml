@@ -25,9 +25,19 @@ on:
     branches:
       - develop
       - main
-    paths:
-      - "docs/dashboard/**"
-      - ".github/workflows/dashboard.yml"
+    # paths-ignore (rather than the narrower paths) — the dashboard
+    # reflects more than its own subtree (NEWS.md, top-level README,
+    # LICENSE, dashboard data committed elsewhere). Excluding the
+    # language-package trees that have their own check workflows
+    # (r/, python/, stata/) keeps R-only refactors from spinning
+    # the deploy, without missing the "snapshot commit elsewhere in
+    # the repo" case Copilot flagged on PR #60 (#61.3). The 06:00 UTC
+    # cron and workflow_dispatch remain as belt-and-suspenders for
+    # external-state-driven refreshes.
+    paths-ignore:
+      - "r/**"
+      - "python/**"
+      - "stata/**"
   workflow_dispatch:
 
 # Prevent overlapping runs from racing on the same commit / Pages deployment.

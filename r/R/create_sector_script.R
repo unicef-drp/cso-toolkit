@@ -25,28 +25,24 @@
 #'   `"01_dw_prep/012_codes"` layout.
 #' @param profile_name Character. Name of any variable the project's profile
 #'   sets when sourced successfully. The generated script will refuse to
-#'   run until that variable exists. Defaults to `"profile_DW_Production"`
-#'   (matches the boolean sentinel that [create_profile("DW-Production")]
-#'   emits at the end of its scaffold). The check is
-#'   `exists(profile_name) && !is.null(<value>)`, so any non-null
-#'   character / numeric / logical value satisfies it — including
-#'   `TRUE`, an absolute path string, or a sector-specific tag.
-#'
-#'   Note that the generated template ALSO references `projectFolder`
-#'   directly (when building `input_folder` and `output_folder` paths),
-#'   so the profile must define `projectFolder` for the runner to do
-#'   useful work — the sentinel check only confirms the profile was
-#'   sourced. If you change `profile_name`, make sure the profile still
-#'   defines `projectFolder`.
+#'   run until that variable exists. Defaults to `"projectFolder"`, which
+#'   matches the always-set global at the top of `profile_DW-Production.R`
+#'   (and which the generated template ALSO references directly when
+#'   building `input_folder` and `output_folder` paths — so the sentinel
+#'   and the runtime path construction share one source of truth). The
+#'   check is `exists(profile_name) && !is.null(<value>)`, so any
+#'   non-null character / numeric / logical value satisfies it.
+#'   If you change `profile_name`, make sure the profile still defines
+#'   `projectFolder` for the path construction to work.
 #' @param profile_file Character. Filename of the project profile the
 #'   generated script will instruct users to source on failure. Defaults to
 #'   `"profile_DW-Production.R"`.
 #' @param input_subpath Character vector. Path components, relative to
 #'   `projectFolder` (as defined in the profile), that the generated script
 #'   uses as the sector's input folder. Defaults to
-#'   `c("01_dw_prep", "011_input")`.
+#'   `c("01_dw_prep", "011_rawdata")` (the DW-Production canonical layout).
 #' @param output_subpath Character vector. Same idea, for the sector's
-#'   output folder. Defaults to `c("01_dw_prep", "013_output")`.
+#'   output folder. Defaults to `c("01_dw_prep", "013_wrkdata")`.
 #' @param overwrite Logical. If `FALSE` (default), stops when the target file
 #'   already exists. Set `TRUE` to overwrite.
 #'
@@ -70,10 +66,10 @@
 create_sector_script <- function(sector_name,
                                  sector_code,
                                  base_dir = ".",
-                                 profile_name = "profile_DW_Production",
+                                 profile_name = "projectFolder",
                                  profile_file = "profile_DW-Production.R",
-                                 input_subpath = c("01_dw_prep", "011_input"),
-                                 output_subpath = c("01_dw_prep", "013_output"),
+                                 input_subpath = c("01_dw_prep", "011_rawdata"),
+                                 output_subpath = c("01_dw_prep", "013_wrkdata"),
                                  overwrite = FALSE) {
   user <- Sys.getenv("USERNAME", unset = Sys.info()[["user"]])
   timestamp <- format(Sys.time(), "%Y-%m-%d %H:%M")
@@ -195,8 +191,8 @@ create_sector_script <- function(sector_name,
 #' Thin convenience wrapper around [`create_sector_script()`] that fills in
 #' the DW-Production layout: scripts land at
 #' `01_dw_prep/012_codes/<sector_code>/00_run_<sector_code>.R`, input under
-#' `01_dw_prep/011_input/<sector_code>`, output under
-#' `01_dw_prep/013_output/<sector_code>`. Suitable for use inside the
+#' `01_dw_prep/011_rawdata/<sector_code>`, output under
+#' `01_dw_prep/013_wrkdata/<sector_code>`. Suitable for use inside the
 #' DW-Production repo root.
 #'
 #' @inheritParams create_sector_script
@@ -222,10 +218,10 @@ create_dw_sector_script <- function(sector_name,
     sector_name    = sector_name,
     sector_code    = sector_code,
     base_dir       = file.path(project_root, "01_dw_prep", "012_codes"),
-    profile_name   = "profile_DW_Production",
+    profile_name   = "projectFolder",
     profile_file   = "profile_DW-Production.R",
-    input_subpath  = c("01_dw_prep", "011_input"),
-    output_subpath = c("01_dw_prep", "013_output"),
+    input_subpath  = c("01_dw_prep", "011_rawdata"),
+    output_subpath = c("01_dw_prep", "013_wrkdata"),
     overwrite      = overwrite
   )
 }

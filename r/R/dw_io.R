@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------
 # 00_functions/dw_io.R
-# Toolkit version: 0.4.6
+# Toolkit version: 0.4.7
 # Purpose: Uniform read/write helpers for DW-Production R scripts.
 # Auto-dispatch by file extension; supports every IO form the
 # sector scripts currently use; enforces the reviewer/producer
@@ -282,7 +282,7 @@ dw_is_canonical <- function(path) {
 #' rely on a v0.4.0+ contract (e.g. network-first reviewer reads,
 #' mirror-to-both producer writes).
 #'
-#' @return Character. Currently `"0.4.6"`.
+#' @return Character. Currently `"0.4.7"`.
 #'
 #' @examples
 #' if (utils::compareVersion(dw_toolkit_version(), "0.4.0") < 0) {
@@ -294,7 +294,7 @@ dw_is_canonical <- function(path) {
 #' @family io
 #' @export
 dw_toolkit_version <- function() {
-	"0.4.6"
+	"0.4.7"
 }
 
 # ============================================================================
@@ -320,15 +320,23 @@ dw_toolkit_version <- function() {
 .dw_remote_mirrors <- function(primary_path) {
 	pn <- .normalize_for_comparison(primary_path)
 
-	# Canonical primary -> treat the primary itself as the Teams write
-	# and derive Z: from it (matches Python `_dw_remote_mirrors`).  This
-	# is the DBM-bootstrap path: when a producer writes directly under
-	# `teamsFolderCanonical`, the v0.4.0 redundant-write contract still
-	# applies via the Z: mirror.
+	# Canonical primary -> primary write IS the canonical Teams artifact;
+	# only Z: needs a separate mirror (matches Python `_dw_remote_mirrors`).
+	# This is the DBM-bootstrap path: when a producer writes directly
+	# under `teamsFolderCanonical`, the v0.4.0 redundant-write contract
+	# still applies via the Z: mirror.
+	#
+	# teams is returned as NA (not the primary path itself) so the
+	# producer-mode mirror code in dw_save() does NOT try to file.copy()
+	# the primary onto itself. The pre-#26 implementation returned
+	# `teams = pn`, which on Windows produced a "file.copy() onto self"
+	# warning that .dw_mirror_to_teams caught and re-emitted as
+	# "[cso_toolkit.dw_save] Teams mirror FAILED" — false alarm on every
+	# canonical-direct write.
 	if (dw_is_canonical(pn)) {
 		z_mirror <- .dw_z_mirror_path(pn)
 		if (is.null(z_mirror)) z_mirror <- NA_character_
-		return(list(teams = pn, z = z_mirror))
+		return(list(teams = NA_character_, z = z_mirror))
 	}
 
 	candidates <- list(
@@ -791,6 +799,23 @@ dw_save <- function(x,
 		 vintage = vintage)
 	}
 
+	# Optional compression: append .gz for CSV/TSV/TXT, and auto-enable
+	# compression when the path ALREADY ends in .gz (no caller foot-gun).
+	# Applied BEFORE mirror destinations are computed so teams_mirror /
+	# z_mirror carry the same `.gz` suffix as the primary write (fixes
+	# #25: compressed bytes were previously copied to mirror filenames
+	# without the .gz extension, and the overwrite check looked for the
+	# uncompressed mirror name and missed any existing .gz mirror).
+	# (Backported from DW-Production 00_functions/dw_io.R; see B2 in
+	# docs/dw-production-alignment-2026-05-25.md.)
+	fmt <- tolower(tools::file_ext(path))
+	path_ends_in_gz <- grepl("\\.gz$", path, ignore.case = TRUE)
+	if (isTRUE(compress) && fmt %in% c("csv", "tsv", "txt") && !path_ends_in_gz) {
+		path <- paste0(path, ".gz")
+	} else if (!isTRUE(compress) && path_ends_in_gz) {
+		compress <- TRUE
+	}
+
 	# Compute remote mirror destinations once (NA if not applicable).
 	mirrors <- .dw_remote_mirrors(path)
 	teams_mirror <- mirrors$teams
@@ -886,18 +911,6 @@ dw_save <- function(x,
 	# Quality contract -- isid before write
 	if (!is.null(isid) && is.data.frame(x)) {
 		dw_isid(x, keys = isid, where = path)
-	}
-
-	# Optional compression: append .gz for CSV/TSV/TXT, and auto-enable
-	# compression when the path ALREADY ends in .gz (no caller foot-gun).
-	# (Backported from DW-Production 00_functions/dw_io.R; see B2 in
-	# docs/dw-production-alignment-2026-05-25.md.)
-	fmt <- tolower(tools::file_ext(path))
-	path_ends_in_gz <- grepl("\\.gz$", path, ignore.case = TRUE)
-	if (isTRUE(compress) && fmt %in% c("csv", "tsv", "txt") && !path_ends_in_gz) {
-		path <- paste0(path, ".gz")
-	} else if (!isTRUE(compress) && path_ends_in_gz) {
-		compress <- TRUE
 	}
 
 	dir.create(dirname(path), recursive = TRUE, showWarnings = FALSE)
