@@ -338,16 +338,23 @@ collect_dw_production_github <- function() {
     NA_character_
   }
   bysec <- setNames(
-    lapply(SECTORS, function(s) list(prs_open = 0L, prs_closed = 0L,
+    lapply(SECTORS, function(s) list(prs_open = 0L, prs_closed_total = 0L,
                                      issues_open = 0L, issues_closed = 0L,
                                      branches = 0L)),
     SECTORS
   )
+  # Per-sector aggregation counts any non-open PR (merged + closed-unmerged)
+  # under `prs_closed_total`, distinguishing it from the overall-counts
+  # `prs_closed` field above which means "closed-unmerged only" (since the
+  # overall block tracks `prs_merged` separately). The two scopes used the
+  # same field name in v0.4.7, which Copilot flagged as a future-bug
+  # (#74); v0.4.8 surfaces the difference at the field-name level so the
+  # renderer column header can be honest about what it is showing.
   for (p in prs) {
     s <- sector_of(paste(p$title %||% "", p$head$ref %||% ""))
     if (is.na(s)) next
-    if (identical(p$state, "open")) bysec[[s]]$prs_open   <- bysec[[s]]$prs_open + 1L
-    else                            bysec[[s]]$prs_closed <- bysec[[s]]$prs_closed + 1L
+    if (identical(p$state, "open")) bysec[[s]]$prs_open         <- bysec[[s]]$prs_open + 1L
+    else                            bysec[[s]]$prs_closed_total <- bysec[[s]]$prs_closed_total + 1L
   }
   for (i in issues) {
     s <- sector_of(i$title %||% "")

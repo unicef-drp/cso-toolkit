@@ -710,7 +710,7 @@ render_tab_issues <- function(state) {
         '<span class="mini-closed" style="width:%d%%"></span></span></td>',
         '<td><a class="ghlink" href="%s">issues</a></td></tr>'),
         htmlescape(SECTOR_LABELS[[s]] %||% s),
-        b$prs_open %||% 0L, b$prs_closed %||% 0L, so, sc,
+        b$prs_open %||% 0L, b$prs_closed_total %||% 0L, so, sc,
         pct(so, stot), pct(sc, stot), gh)
     }, character(1)), collapse = "")
     body <- sprintf(paste0(
@@ -720,7 +720,7 @@ render_tab_issues <- function(state) {
       'cross-cutting and infrastructure items are counted in the totals above but ',
       'not attributed to a sector, so the rows need not sum to the bars.</p>%s',
       '<div class="table-wrap"><table class="data-table"><thead><tr>',
-      '<th>Sector</th><th>Open PRs</th><th>Closed PRs</th><th>Open issues</th>',
+      '<th>Sector</th><th>Open PRs</th><th>Non-open PRs<br><span class="muted">(merged + closed)</span></th><th>Open issues</th>',
       '<th>Closed issues</th><th>Issues (open/closed)</th><th>GitHub</th>',
       '</tr></thead><tbody>%s</tbody></table></div>'),
       overview, rows)
