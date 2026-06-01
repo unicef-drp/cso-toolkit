@@ -1,34 +1,43 @@
 #!/usr/bin/env Rscript
 # docs/dashboard/make_charts.R
 # -----------------------------------------------------------------------------
-# Generate the five v2 SVG charts for the cso-toolkit sector dashboard.
+# Generate the five interactive (ggiraph) charts for the cso-toolkit dashboard.
 #
-# Loads ggplot2 ONCE and writes five SVGs to charts/. Reproducible from
-# committed data only — no network, no per-sector R re-runs.
+# Loads ggplot2/ggiraph ONCE and writes five self-contained-as-a-folder HTML
+# widgets to charts/. Reproducible from committed data only — no network, no
+# per-sector R re-runs.
+#
+# This script is OPERATOR-run, NOT run in CI. The GitHub Action runs only
+# collect.R + render.R (jsonlite-only); render.R iframe-embeds the committed
+# chart widgets below. So the charts/ HTML + charts/lib/ MUST be committed.
 #
 # Reads:
 #   data/parity.json                            (3-way parity counts)
-#   data/state.json                             (cso_toolkit.prs for the funnel)
+#   data/state.json                             (dw_production.counts for the funnel)
 #   data/snapshots/replication_<sector>_latest.json  (wall_time_s per sector)
 #
 # Writes:
-#   charts/3way_parity.svg
-#   charts/coverage_matrix.svg
-#   charts/walltime.svg
-#   charts/pr_funnel.svg
-#   charts/toolkit_drift.svg
+#   charts/3way_parity.html
+#   charts/coverage_matrix.html
+#   charts/walltime.html
+#   charts/pr_funnel.html
+#   charts/toolkit_drift.html
+#   charts/lib/                                 (shared ggiraph/d3 deps, no CDN)
 #
-# Each SVG is emitted standalone via svglite (viewBox present) and then
-# post-processed so the root <svg> carries width="100%" with no fixed pixel
-# height. The dashboard CSS (`.chart svg { width:100%; height:auto }`) then
-# scales it responsively off the viewBox aspect ratio.
+# Each chart is a ggiraph girafe() widget saved via saveWidget(selfcontained =
+# FALSE, libdir = "lib"): a small standalone HTML that loads its JS/CSS/fonts
+# from the shared local charts/lib/ — works fully offline, no CDN. render.R
+# embeds each as <iframe src="charts/<name>.html"> so the widget deps stay
+# isolated from the main page. Hover highlights cyan; tooltips are navy chips.
 #
-# Required: jsonlite, ggplot2, svglite
+# Required (operator side only): jsonlite, ggplot2, ggiraph, htmlwidgets
 # -----------------------------------------------------------------------------
 
 suppressPackageStartupMessages({
   library(jsonlite)
   library(ggplot2)
+  library(ggiraph)       # interactive geoms (hover + tooltip)
+  library(htmlwidgets)   # saveWidget
 })
 
 # ----- paths --------------------------------------------------------------- #
@@ -91,46 +100,59 @@ theme_dash <- function(base_size = 11) {
 W_IN <- 7
 H_IN <- 4.5
 
-# ----- SVG writer: emit standalone, then force responsive width ------------ #
+# ----- girafe writer: interactive widget -> self-contained-as-a-folder HTML - #
 
-save_svg <- function(plot, name, title = NULL, desc = NULL,
-                     width = W_IN, height = H_IN) {
+# Brand interactivity: hover highlights the focused element cyan; tooltips are
+# navy chips. Selection is off (we only want hover read-outs, not click-select).
+GIRAFE_OPTS <- list(
+  ggiraph::opts_hover(css = "fill:#1CABE2;stroke:#1CABE2;cursor:pointer;"),
+  ggiraph::opts_tooltip(
+    css = paste0("background:#002759;color:#fff;padding:5px 9px;border-radius:5px;",
+                 "font-family:sans-serif;font-size:12px;line-height:1.35;",
+                 "box-shadow:0 2px 8px rgba(0,0,0,.25);"),
+    opacity = 0.98),
+  ggiraph::opts_selection(type = "none"),
+  # saveaspng = TRUE: a working PNG download. hidden = "fullscreen": ggiraph's
+  # fullscreen is a position:fixed modal appended inside the iframe document, so
+  # it is trapped in the small iframe box and cannot fill the screen. We hide it
+  # and provide a parent-level fullscreen control (render.R) that fullscreens the
+  # iframe element itself via the real Fullscreen API.
+  ggiraph::opts_toolbar(saveaspng = TRUE, hidden = "fullscreen"),
+  ggiraph::opts_sizing(rescale = TRUE)  # fill the iframe width, preserve aspect
+)
+
+save_girafe <- function(plot, name, width = W_IN, height = H_IN) {
+  stopifnot(grepl("\\.html$", name))
   path <- file.path(CHARTS_DIR, name)
-  stem <- tools::file_path_sans_ext(name)
-  # standalone = FALSE: emit an inline-ready fragment (no <?xml?> prolog / DOCTYPE)
-  # since render.R inlines every SVG into ONE HTML document — an XML prolog mid-body
-  # is invalid HTML. The root <svg> keeps its xmlns + viewBox.
-  svglite::svglite(path, width = width, height = height, standalone = FALSE)
-  print(plot)
-  invisible(grDevices::dev.off())
-
-  txt <- readLines(path, warn = FALSE)
-
-  # svglite derives clipPath ids from rect geometry, so identical panels across
-  # charts collide as duplicate ids when inlined together. Namespace them per
-  # chart so every id is globally unique regardless of geometry.
-  txt <- gsub("(id=['\"]|url\\(#)cp", paste0("\\1", stem, "-cp"), txt)
-
-  i <- grep("<svg ", txt)[1]
-  if (!is.na(i)) {
-    # Responsive: drop svglite's fixed pt width/height, keep the viewBox so the
-    # dashboard CSS (`width:100%; height:auto`) scales off the aspect ratio.
-    txt[i] <- sub("width='[0-9.]+pt' height='[0-9.]+pt'", "width='100%'", txt[i])
-    if (!grepl("width='100%'", txt[i], fixed = TRUE) &&
-        !grepl('width="100%"', txt[i], fixed = TRUE)) {
-      txt[i] <- sub("(<svg )", "\\1width='100%' ", txt[i])
-    }
-    # Accessible name: role=img + aria-label + injected <title>/<desc> as the
-    # first children, so screen readers announce each chart (svglite emits none).
-    if (!is.null(title)) {
-      lab <- gsub("[<>'\"]", "", title)
-      txt[i] <- sub("(<svg )", sprintf("\\1role='img' aria-label='%s' ", lab), txt[i])
-      node <- sprintf("<title>%s</title>%s", title,
-                      if (!is.null(desc)) sprintf("<desc>%s</desc>", desc) else "")
-      txt[i] <- sub(">", paste0(">", node), txt[i])  # inject after opening <svg ...>
-    }
-  }
-  writeLines(txt, path, useBytes = TRUE)
+  g <- ggiraph::girafe(ggobj = plot, width_svg = width, height_svg = height,
+                       options = GIRAFE_OPTS)
+  # Fill the host iframe instead of saveWidget's default fixed 960x500 box, so
+  # opts_sizing(rescale) has a container width to scale the SVG to. Combined with
+  # the iframe's aspect-ratio CSS (matching width:height), the chart fits exactly.
+  g$sizingPolicy <- htmlwidgets::sizingPolicy(
+    browser.fill = TRUE, viewer.fill = TRUE, knitr.figure = FALSE,
+    defaultWidth = "100%", defaultHeight = "100%", padding = 0
+  )
+  # selfcontained = FALSE + a shared libdir: every chart loads its JS/CSS/fonts
+  # from charts/lib/ (no CDN, no pandoc dependency). render.R iframes each html.
+  htmlwidgets::saveWidget(g, path, selfcontained = FALSE, libdir = "lib")
+  # Collapse double-escaped entities introduced by the htmlwidgets/ggiraph
+  # chain: an apostrophe in an auto-generated tooltip becomes &amp;#39; rather
+  # than &#39;, which the browser then renders as the literal string "&#39;".
+  # One pass of regex unescape is safe here because tooltips are derived from
+  # data fields, not authored prose — no legitimate occurrence of the
+  # double-escape pattern is expected.
+  #
+  # Force UTF-8 read + raw binary write with explicit LF: keeps the committed
+  # widgets byte-identical across operator platforms. The default
+  # readLines / writeLines path uses the system locale (CP1252 on a default
+  # Windows R session) which mojibakes the em-dashes embedded in tooltip
+  # text, and writeLines() in text mode would CRLF-translate on Windows.
+  text <- readLines(path, warn = FALSE, encoding = "UTF-8")
+  text <- gsub("&amp;(amp|#[0-9]+|lt|gt|quot|apos);", "&\\1;", text, perl = TRUE)
+  con <- file(path, open = "wb")
+  on.exit(close(con), add = TRUE)
+  writeLines(enc2utf8(text), con, sep = "\n", useBytes = TRUE)
   message(sprintf("wrote %s", path))
 }
 
@@ -161,6 +183,9 @@ p1_df <- rbind(
   data.frame(label = parity$label, series = "SDMX", value = parity$sdmx)
 )
 p1_df$series <- factor(p1_df$series, levels = c("MINE", "DEP", "SDMX"))
+p1_df$tt   <- paste0(as.character(p1_df$label), " — ", as.character(p1_df$series),
+                     ": ", p1_df$value, " indicators")
+p1_df$ttid <- paste(p1_df$label, p1_df$series)
 
 pal_3way <- c(
   MINE = unname(OKABE_ITO["blue"]),       # repo-local
@@ -169,7 +194,8 @@ pal_3way <- c(
 )
 
 p1 <- ggplot(p1_df, aes(x = label, y = value, fill = series)) +
-  geom_col(position = position_dodge(width = 0.78), width = 0.72) +
+  geom_col_interactive(aes(tooltip = tt, data_id = ttid),
+                       position = position_dodge(width = 0.78), width = 0.72) +
   coord_flip() +
   scale_fill_manual(values = pal_3way) +
   labs(
@@ -179,9 +205,7 @@ p1 <- ggplot(p1_df, aes(x = label, y = value, fill = series)) +
   ) +
   theme_dash()
 
-save_svg(p1, "3way_parity.svg",
-         title = "Indicator coverage by sector: repo-local vs Teams deposit vs SDMX-published",
-         desc  = "Grouped bar chart; the gap from the local bar to the SDMX bar is the count of published indicators not yet replicated locally.")
+save_girafe(p1, "3way_parity.html")
 
 # ======================================================================== #
 # Chart 2 — coverage_matrix.svg : tile heatmap of pipeline stage reached    #
@@ -217,9 +241,14 @@ pal_stage <- c(
 # matrix is readable in monochrome or by colour-blind viewers.
 glyph_map <- c(full = "✓", partial = "◑", none = "–")  # check / half-circle / dash
 p2_df$glyph <- glyph_map[as.character(p2_df$status)]
+status_lab  <- c(full = "full (= SDMX ceiling)", partial = "partial", none = "none")
+p2_df$tt    <- paste0(as.character(p2_df$label), " — ", as.character(p2_df$stage_x),
+                      ": ", status_lab[as.character(p2_df$status)])
+p2_df$ttid  <- paste(p2_df$label, p2_df$stage_x)
 
 p2 <- ggplot(p2_df, aes(x = stage_x, y = label, fill = status)) +
-  geom_tile(color = "#ffffff", linewidth = 1.1) +
+  geom_tile_interactive(aes(tooltip = tt, data_id = ttid),
+                        color = "#ffffff", linewidth = 1.1) +
   geom_text(aes(label = glyph, color = status == "full"),
             size = 4, show.legend = FALSE) +
   scale_fill_manual(
@@ -238,9 +267,7 @@ p2 <- ggplot(p2_df, aes(x = stage_x, y = label, fill = status)) +
   theme_dash() +
   theme(panel.grid = element_blank())
 
-save_svg(p2, "coverage_matrix.svg",
-         title = "Coverage matrix: pipeline stage reached per indicator set",
-         desc  = "Tile grid; rows are indicator sets, columns are Local, Teams and SDMX stages; each cell marked full (check), partial (half-circle) or none (dash).")
+save_girafe(p2, "coverage_matrix.html")
 
 # ======================================================================== #
 # Chart 3 — walltime.svg : horizontal bars, sqrt x-scale, on-bar labels     #
@@ -271,9 +298,12 @@ p3_df <- p3_df[!is.na(p3_df$secs), , drop = FALSE]
 p3_df <- p3_df[order(p3_df$secs), , drop = FALSE]
 p3_df$label <- factor(p3_df$label, levels = p3_df$label)
 p3_df$tag   <- fmt_secs(p3_df$secs)
+p3_df$tt    <- paste0(as.character(p3_df$label), ": ", p3_df$tag, " wall time")
+p3_df$ttid  <- as.character(p3_df$label)
 
 p3 <- ggplot(p3_df, aes(x = label, y = secs)) +
-  geom_col(fill = unname(OKABE_ITO["blue"]), width = 0.68) +
+  geom_col_interactive(aes(tooltip = tt, data_id = ttid),
+                       fill = unname(OKABE_ITO["blue"]), width = 0.68) +
   geom_text(aes(label = tag), hjust = -0.12, size = 3.1, color = "#1a1d23") +
   coord_flip() +
   scale_y_sqrt(expand = expansion(mult = c(0, 0.18))) +
@@ -284,9 +314,7 @@ p3 <- ggplot(p3_df, aes(x = label, y = secs)) +
   ) +
   theme_dash()
 
-save_svg(p3, "walltime.svg",
-         title = "Replication wall-time by sector",
-         desc  = "Horizontal bars on a square-root scale; Nutrition at about 25 minutes dwarfs the others, which run in seconds.")
+save_girafe(p3, "walltime.html")
 
 # ======================================================================== #
 # Chart 4 — pr_funnel.svg : Open / Merged / Closed-unmerged                 #
@@ -296,28 +324,21 @@ if (!file.exists(STATE_PATH)) {
   stop(sprintf("state.json not found at %s", STATE_PATH))
 }
 state <- jsonlite::fromJSON(STATE_PATH, simplifyVector = FALSE)
-prs   <- state$cso_toolkit$prs %||% list()
-
-n_open   <- 0L
-n_merged <- 0L
-n_closed <- 0L
-for (pr in prs) {
-  st     <- pr$state %||% "open"
-  merged <- !is.null(pr$merged_at)
-  if (identical(st, "open")) {
-    n_open <- n_open + 1L
-  } else if (merged) {
-    n_merged <- n_merged + 1L
-  } else {
-    n_closed <- n_closed + 1L
-  }
-}
+# DW-Production PR funnel from privacy-safe aggregate counts (collect.R emits
+# counts only — the private repo's PR list is never published).
+dwc      <- state$dw_production$counts %||% list()
+n_open   <- dwc$prs_open   %||% 0L
+n_merged <- dwc$prs_merged %||% 0L
+n_closed <- dwc$prs_closed %||% 0L
+n_total  <- dwc$prs_total  %||% (n_open + n_merged + n_closed)
 
 p4_df <- data.frame(
   stage = factor(c("Open", "Merged", "Closed (unmerged)"),
                  levels = c("Open", "Merged", "Closed (unmerged)")),
   count = c(n_open, n_merged, n_closed)
 )
+p4_df$tt   <- paste0(as.character(p4_df$stage), ": ", p4_df$count, " pull requests")
+p4_df$ttid <- as.character(p4_df$stage)
 
 pal_pr <- c(
   "Open"              = unname(OKABE_ITO["orange"]),
@@ -326,22 +347,20 @@ pal_pr <- c(
 )
 
 p4 <- ggplot(p4_df, aes(x = stage, y = count, fill = stage)) +
-  geom_col(width = 0.66) +
+  geom_col_interactive(aes(tooltip = tt, data_id = ttid), width = 0.66) +
   geom_text(aes(label = count), vjust = -0.4, size = 3.4, color = "#1a1d23") +
   scale_fill_manual(values = pal_pr, guide = "none") +
   scale_y_continuous(expand = expansion(mult = c(0, 0.14))) +
   labs(
-    title    = "cso-toolkit PR funnel",
+    title    = "DW-Production PR funnel",
     subtitle = sprintf("%d pull requests total — open vs merged vs closed-unmerged",
-                       length(prs)),
+                       n_total),
     x = NULL, y = "Pull requests"
   ) +
   theme_dash() +
   theme(legend.position = "none")
 
-save_svg(p4, "pr_funnel.svg",
-         title = "cso-toolkit pull-request funnel: open vs merged vs closed-unmerged",
-         desc  = "Bar chart of pull-request counts bucketed by state.")
+save_girafe(p4, "pr_funnel.html")
 
 # ======================================================================== #
 # Chart 5 — toolkit_drift.svg : version alignment across sector branches    #
@@ -349,7 +368,8 @@ save_svg(p4, "pr_funnel.svg",
 # Small dataset embedded inline (not in data/). These are the nine DW-Production
 # review/sector-*-2026-05-18 replication branches (NOT cso-toolkit's own
 # branches); the 2026-05-18 audit found all nine adopting cso-toolkit v0.4.5.
-# v0.4.6 is the in-flight cso-toolkit release.
+# v0.4.6 is the next cso-toolkit release. This is a fixed point-in-time audit,
+# not live data — labelled as such so it cannot go stale.
 drift_df <- data.frame(
   sector  = c("Nutrition (NT)", "HIV/AIDS (HVA)", "Immunization (IM)",
               "Water & Sanitation (WS)", "MNCH", "Child Mortality (CME)",
@@ -358,17 +378,21 @@ drift_df <- data.frame(
   stringsAsFactors = FALSE
 )
 drift_df$sector <- factor(drift_df$sector, levels = rev(drift_df$sector))
-in_flight <- 0.46  # cso-toolkit v0.4.6 dashed marker (in flight)
+drift_df$tt   <- paste0(as.character(drift_df$sector),
+                        " — cso-toolkit v0.4.5 (2026-05-18 audit)")
+drift_df$ttid <- as.character(drift_df$sector)
+in_flight <- 0.46  # cso-toolkit v0.4.6 dashed marker (next release)
 
 p5 <- ggplot(drift_df, aes(x = version, y = sector)) +
   geom_vline(xintercept = in_flight, linetype = "dashed",
              color = unname(OKABE_ITO["vermillion"]), linewidth = 0.6) +
   annotate("text", x = in_flight, y = Inf,
-           label = "v0.4.6 (in flight)", hjust = 0.5, vjust = 1.3,
+           label = "v0.4.6 (next release)", hjust = 0.5, vjust = 1.3,
            size = 3, color = unname(OKABE_ITO["vermillion"])) +
   geom_segment(aes(x = 0.445, xend = version, yend = sector),
                color = "#cbd2da", linewidth = 0.8) +
-  geom_point(color = unname(OKABE_ITO["green"]), size = 3) +
+  geom_point_interactive(aes(tooltip = tt, data_id = ttid),
+                         color = unname(OKABE_ITO["green"]), size = 3) +
   scale_x_continuous(
     breaks = c(0.45, 0.46),
     labels = c("v0.4.5", "v0.4.6"),
@@ -377,14 +401,13 @@ p5 <- ggplot(drift_df, aes(x = version, y = sector)) +
   coord_cartesian(clip = "off") +
   labs(
     title    = "cso-toolkit version adopted per DW-Production sector",
-    subtitle = "2026-05-18 audit — all nine sector replications pinned at v0.4.5 (current release); v0.4.6 in flight",
+    subtitle = paste0("Point-in-time audit (2026-05-18): all nine sector ",
+                      "replications had adopted cso-toolkit v0.4.5"),
     x = NULL, y = NULL
   ) +
   theme_dash() +
   theme(panel.grid.major.y = element_blank())
 
-save_svg(p5, "toolkit_drift.svg",
-         title = "cso-toolkit version adopted per DW-Production sector replication",
-         desc  = "Lollipop chart; all nine sector replications from the 2026-05-18 audit sit at cso-toolkit v0.4.5, with v0.4.6 marked as the in-flight release.")
+save_girafe(p5, "toolkit_drift.html")
 
-message("make_charts.R: 5 SVGs written to ", CHARTS_DIR)
+message("make_charts.R: 5 interactive charts written to ", CHARTS_DIR)

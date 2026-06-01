@@ -14,7 +14,7 @@
   "sha256": "2ad816539d23bfb41112a560b82a455631b4027bdb025de2bb80b54e56d170f3",
   "fixes_applied": [],
   "toolkit_findings": [
-    "CRITICAL: sector bypasses cso-toolkit entirely. The script uses raw write.csv() to write directly into Teams RAW data directory at 011_rawdata/dw_mnch_aggregates.csv — this mixes derived output with canonical raw inputs. Reviewer-mode mode-lock cannot engage when sector code does not call dw_save."
+    "CRITICAL: sector bypasses cso-toolkit entirely. A sector script writes a derived CSV directly into canonical raw storage in a shared Teams folder — this mixes derived output with canonical raw inputs. Reviewer-mode mode-lock cannot engage when sector code does not call dw_save."
   ],
-  "blockers_for_dbm": "Refactor 01_aggregate.R:128 from `write.csv(aggregate_export, file.path(teamsRawData, 'dw_mnch_aggregates.csv'), ...)` to `dw_save(aggregate_export, file.path(dwWrkData, '_local', 'mnch', 'output', 'dw_mnch_aggregates.csv'), sector = 'mnch')`. Sector lead must adopt the dw_io contract."
+  "blockers_for_dbm": "Route the derived CSV write through dw_save (it currently writes directly to canonical raw storage, bypassing mode-lock)."
 }

@@ -1,15 +1,13 @@
 id: ed-wb-block-uncomment
-title: "ED: 03_lp_wb_nat_aggr.R has WB fetch block commented out (L59-71)"
+title: "ED: re-enable the World Bank fetch block"
 sector: ed
 severity: MEDIUM
 status: TODO
 owner: "ED sector lead"
 created_at: "2026-05-30"
 due_at: null
-blocker_for_dbm: "Downstream code references undefined lp_data; script crashes without profile-side WB fetch"
+blocker_for_dbm: "A disabled fetch block leaves a downstream variable undefined; the script crashes without it."
 description: |
-  03_lp_wb_nat_aggr.R has the WB API fetch block at L59-71 commented out, but
-  later code references the resulting 'lp_data' variable. Either uncomment the
-  block or guarantee profile-side fetch populates lp_data before this script runs.
+  The World Bank fetch block in an ED prep script is commented out, but downstream code uses its result. Re-enable it or guarantee the data is populated upstream first. Detail in the private DW-Production tracker.
 references:
   - "replication_ed_latest.json: fixes_applied"

@@ -1,16 +1,13 @@
 id: wt-java-or-openxlsx
-title: "WT: install Java OR port xlsx -> openxlsx"
+title: "WT: remove the Java dependency (port xlsx → openxlsx)"
 sector: wt
 severity: HIGH
 status: TODO
 owner: "UNICEF IT (Java) OR WT sector lead (port)"
 created_at: "2026-05-30"
 due_at: null
-blocker_for_dbm: "library(xlsx) requires Java; not installed on reviewer laptop (AppLocker likely blocks)"
+blocker_for_dbm: "A sector script needs Java (library(xlsx)), which is not available on the reviewer machine."
 description: |
-  Two paths:
-    (1) IT installs Java/JRE (or AdoptOpenJDK) on the reviewer machine; OR
-    (2) Sector lead ports wt_dw.R + sub-scripts from xlsx to openxlsx (pure-R,
-        no Java dependency). Recommended path.
+  A WT sector script depends on library(xlsx), which needs Java (unavailable on the reviewer machine). Either IT installs a JRE, or the sector lead ports to openxlsx (pure-R, no Java) — recommended. Detail in the private DW-Production tracker.
 references:
   - "replication_wt_latest.json: halt_reason_1"
