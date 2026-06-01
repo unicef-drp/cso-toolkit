@@ -3,8 +3,145 @@
 ## Unreleased
 
 _Entries land here as PRs merge into `develop`. When the next release
-is cut, this header is renamed `## v0.4.7 (YYYY-MM-DD)` and a fresh
+is cut, this header is renamed `## v0.4.8 (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
+
+## v0.4.7 (2026-06-01)
+
+Backlog-clearing quality release. Lands all four v0.4.2-deferred
+correctness bugs (issues
+[#25](https://github.com/unicef-drp/cso-toolkit/issues/25),
+[#26](https://github.com/unicef-drp/cso-toolkit/issues/26),
+[#27](https://github.com/unicef-drp/cso-toolkit/issues/27),
+[#28](https://github.com/unicef-drp/cso-toolkit/issues/28))
+that had been carrying since v0.4.2 (2026-05-27), plus the two
+queued v0.4.7 follow-up trackers
+([#61](https://github.com/unicef-drp/cso-toolkit/issues/61),
+[#63](https://github.com/unicef-drp/cso-toolkit/issues/63))
+from PR #60 / PR #62 Copilot reviews. No public API breaks. Six
+PRs (#75–#81) land into develop in this cycle; one deferred concern
+(`dw_is_canonical` literal-regex robustness) is tracked separately
+as [#82](https://github.com/unicef-drp/cso-toolkit/issues/82).
+
+### `dw_save` mirror paths honour `.gz` suffix (issue [#25](https://github.com/unicef-drp/cso-toolkit/issues/25))
+
+PR [#75](https://github.com/unicef-drp/cso-toolkit/pull/75).
+`dw_save()` resolved the `.gz` suffix AFTER computing remote mirror
+destinations via `.dw_remote_mirrors(path)`. When `compress = TRUE`
+(or the path already ended in `.gz`), this caused two downstream
+problems:
+
+- Compressed bytes copied to mirror filenames WITHOUT the `.gz`
+  extension (misleading filename relative to file contents).
+- The overwrite check looked for the un-suffixed mirror name and
+  missed any existing `.gz` mirror at the destination — overwrite
+  protection silently bypassed.
+
+Fix: move the `.gz` suffix block to BEFORE the mirrors computation
+so every downstream reference to `path` / `teams_mirror` /
+`z_mirror` carries the same final extension. Bug B from the
+original #25 (the `mirror_to_z` keyword leaking through `dots`)
+was already fixed in v0.4.0; this release closes Bug A.
+
+New regression file `r/tests/testthat/test-dw_io-compress-mirror.R`
+pins three cases — `compress = TRUE` mirror suffix, path-ends-in-
+`.gz` mirror suffix, and the overwrite-check collision detection.
+
+### `dw_save` no self-mirror when primary is canonical (issue [#26](https://github.com/unicef-drp/cso-toolkit/issues/26))
+
+PR [#76](https://github.com/unicef-drp/cso-toolkit/pull/76).
+Producer-mode `dw_save()` emitted a false `[cso_toolkit.dw_save]
+Teams mirror FAILED` warning when the profile resolved `teamsWrkData`
+(or any sibling local global) directly to `teamsFolderCanonical` —
+the common bootstrap pattern. `.dw_remote_mirrors()` was returning
+the primary path AS the Teams mirror destination, then
+`.dw_mirror_to_teams(primary, primary)` ran a `file.copy()` onto
+itself which on Windows triggers a tryCatch-trapped warning that
+got re-emitted as the false-fail alarm. Nothing actually failed.
+
+Fix: `.dw_remote_mirrors()` now returns `teams = NA_character_`
+when the primary path is canonical. The Z: mirror behaviour is
+unchanged (still derived from the canonical path).
+
+### `dw_regions` renames `Aggregate` to caller's `value` (issue [#27](https://github.com/unicef-drp/cso-toolkit/issues/27))
+
+PR [#77](https://github.com/unicef-drp/cso-toolkit/pull/77).
+`aggregate_data_v2()` hard-codes its output value column as
+`Aggregate`. `dw_regions()` renamed `REGION → REF_AREA` to make
+regional rows shape-compatible with country-level rows, but never
+renamed `Aggregate` back to the caller's `value` arg. Consequence:
+`bind_rows(data, regional)` produced rows where country-level
+rows had the value in the caller's value column and regional rows
+had `NA` in that column (with the regional value stashed in a
+parallel `Aggregate` column).
+
+Fix: after the `REGION → REF_AREA` rename, also rename `Aggregate
+→ value`. Guarded with an upstream check for value-arg collision
+with `aggregate_data_v2`'s metadata column names (`Pop_Covered`,
+`Country_Coverage`, etc.) so the conflict surfaces an envelope-
+shaped error BEFORE the aggregator runs.
+
+### `create_sector_script` DW wrapper paths + sentinel (issue [#28](https://github.com/unicef-drp/cso-toolkit/issues/28))
+
+PR [#78](https://github.com/unicef-drp/cso-toolkit/pull/78). Two
+bugs in the DW-Production wrapper inside `create_sector_script.R`:
+
+- Wrong subpath defaults: hard-coded `c("01_dw_prep", "011_input")`
+  / `c("01_dw_prep", "013_output")`, but the canonical DW layout
+  uses `011_rawdata` / `013_wrkdata`. Generated sector scripts
+  pointed at non-existent directories.
+- Non-existent profile sentinel: generated scripts checked
+  `if (!exists("profile_DW_Production") || is.null(...))`, but
+  `profile_DW-Production.R` defines no global by that name.
+
+Fix: both the generic `create_sector_script()` defaults AND the
+`create_dw_sector_script()` wrapper now use `011_rawdata` /
+`013_wrkdata`. Default `profile_name` switched from
+`"profile_DW_Production"` to `"projectFolder"` (always set by the
+profile). Roxygen + `r/man/*.Rd` files updated to match.
+
+### `dw_is_canonical` regression coverage on canon_roots branch (issue [#61](https://github.com/unicef-drp/cso-toolkit/issues/61) — finding #61.2)
+
+PR [#81](https://github.com/unicef-drp/cso-toolkit/pull/81). Pre-
+v0.4.7 `test-dw-is-canonical.R` only exercised the OneDrive UNC
+literal-regex branch (positive, both slash variants) and a generic
+repo-local negative. A regression in the canon_roots loop (the
+runtime-resolved `teams{Wrk,Raw,Folder}Canonical` globals) could
+have shipped silently. Added six new test cases pinning the
+canon_roots branch + the sibling-spoof negative + the
+no-canonical-globals-set case.
+
+Finding #61.1 (replace literal regex with a runtime-derived pattern)
+is intentionally deferred — the v0.4.6 fix was empirically-driven
+by the 2026-05-30 HVA + ED audit. Tracked at
+[#82](https://github.com/unicef-drp/cso-toolkit/issues/82).
+Finding #61.4 (pipeline phases 3-vs-4 columns) verified
+self-consistent in current `render.R` and `dashboard/README.md`.
+
+### Dashboard `dashboard.yml` paths-ignore (issue [#61](https://github.com/unicef-drp/cso-toolkit/issues/61) — finding #61.3)
+
+PR [#80](https://github.com/unicef-drp/cso-toolkit/pull/80). Pre-
+fix, the dashboard workflow's push trigger restricted refresh to
+commits touching `docs/dashboard/**` or the workflow itself, but
+the published payload also reflects top-level NEWS.md, README,
+LICENSE, and operator snapshots elsewhere. Switched from narrow
+`paths:` allow-list to `paths-ignore:` covering the three language-
+package trees (`r/`, `python/`, `stata/`) that have their own
+check workflows.
+
+### Dashboard `collect.R` reachable + alias overmatch (issue [#63](https://github.com/unicef-drp/cso-toolkit/issues/63))
+
+PR [#79](https://github.com/unicef-drp/cso-toolkit/pull/79). Two
+Copilot findings from PR #62 review:
+
+- `reachable = TRUE` was set unconditionally once the token was
+  present. Captured each `gh_api()` return BEFORE `%||%` so we
+  can distinguish "API failed" from "endpoint empty"; reachable is
+  now true iff at least one of the four endpoints returned data.
+- Sector aliases over-matched: `wt`'s `women` caught generic
+  women's-health titles; `cme`'s `\bcm\b` caught `scm` and other
+  bare "cm" tokens. Dropped both. Added a header comment about the
+  first-hit precedence semantics.
 
 ## v0.4.6 (2026-05-30)
 
