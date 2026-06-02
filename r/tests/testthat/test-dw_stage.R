@@ -131,3 +131,36 @@ test_that("dw_stage is a no-op outside reviewer mode", {
   expect_identical(out, fx$sandbox_path)
   expect_false(file.exists(fx$sandbox_path))
 })
+
+test_that("T7: CANONICAL-rooted input is normalised to the sandbox (v0.4.9.1)", {
+  # Regression for the v0.4.9 bug: a sector conductor that sets
+  # `inputdir <- file.path(teamsRawDataCanonical, ...)` passes dw_stage a
+  # canonical-rooted path. dw_stage must map it back to the sandbox, copy the
+  # canonical source in, and write the sidecar SANDBOX-side -- NOT next to the
+  # Teams source. (Before the fix, the file existed at the canonical path so
+  # dw_stage reported "present in sandbox" and wrote `<teams>/...staged.json`.)
+  fx <- setup_stage_fixture()
+
+  # Pass the CANONICAL path (what the conductor builds), not the sandbox path.
+  out <- dw_stage(fx$teams_path)
+
+  # Returns the sandbox target, and the sandbox copy + sandbox sidecar exist.
+  expect_identical(.normalize_for_comparison(out),
+                   .normalize_for_comparison(fx$sandbox_path))
+  expect_true(file.exists(fx$sandbox_path))
+  expect_true(file.exists(fx$sidecar))                       # sandbox-side sidecar
+  expect_false(file.exists(paste0(fx$teams_path, ".staged.json")))  # NOT Teams-side
+  # Content copied through, canonical source untouched.
+  expect_identical(readLines(fx$sandbox_path), readLines(fx$teams_path))
+})
+
+test_that("T8: canonical input is idempotent on the second call (skip copy)", {
+  fx <- setup_stage_fixture()
+  dw_stage(fx$teams_path)
+  mt1 <- file.mtime(fx$sandbox_path)
+  Sys.sleep(1.1)
+  out <- dw_stage(fx$teams_path)               # second call, canonical input again
+  expect_identical(file.mtime(fx$sandbox_path), mt1)  # copy skipped
+  expect_identical(.normalize_for_comparison(out),
+                   .normalize_for_comparison(fx$sandbox_path))
+})

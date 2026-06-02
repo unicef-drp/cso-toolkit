@@ -6,7 +6,24 @@ _Entries land here as PRs merge into `develop`. When the next release
 is cut, this header is renamed `## v0.4.10 (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
-## v0.4.9 (2026-06-01)
+## v0.4.9.1 (2026-06-02)
+
+Bug fix: `dw_stage()` now handles **canonical-rooted input paths**. A
+sector script that reads `dw_use(file.path(inputdir, "x.csv"))` where the
+conductor sets `inputdir <- file.path(teamsRawDataCanonical, ...)` was
+passing `dw_stage` a path under the canonical Teams root. `dw_stage`
+assumed the input already pointed at the sandbox, so it wrote the
+`.staged.json` sidecar next to the **Teams** source and tested the Teams
+file for "present in sandbox" — and `.dw_remote_mirrors` flagged the path
+canonical (`teams = NA`), leaving no source to copy from. Result:
+`dw_autostage` silently failed for the common conductor pattern.
+
+Fix: new internal `.dw_canonical_to_sandbox()` (inverse of the
+sandbox-to-canonical mapping) normalises the input to a sandbox target before
+deriving mirrors + sidecar. Sandbox-rooted inputs pass through unchanged
+(no behaviour change for already-working callers); canonical-rooted inputs
+now stage correctly. Found by the 2026-06-02 DW-Production reviewer-mode
+sector reproduction (nt).
 
 Headline feature: `dw_stage()` — reviewer-mode auto-stage with hash-
 guard. Reviewer pipelines that read canonical inputs which live on
