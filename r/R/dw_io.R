@@ -315,6 +315,44 @@ dw_toolkit_version <- function() {
 #' destination not configured in the profile (or unavailable, in the
 #' Z: case) resolves to NA.
 #'
+#' Map a canonical (Teams / Z:) path back to its sandbox / repo-local equivalent
+#'
+#' Internal. Inverse of the sandbox -> canonical mapping used by
+#' [.dw_remote_mirrors()]. If `path` lies under a `*Canonical` root
+#' (`teamsRawDataCanonical` / `teamsWrkDataCanonical` / `teamsFolderCanonical`),
+#' returns the equivalent path under the corresponding local root
+#' (`teamsRawData` / `teamsWrkData` / `teamsFolder`), which in reviewer mode
+#' points at the sandbox. Otherwise returns the input unchanged.
+#'
+#' Needed by [dw_stage()]: callers (e.g. sector conductors that set
+#' `inputdir <- file.path(teamsRawDataCanonical, ...)`) legitimately pass a
+#' canonical-rooted path. Without this normalisation, dw_stage would treat the
+#' canonical path AS the sandbox target -- writing the `.staged.json` sidecar
+#' next to the Teams source and testing the Teams file for "present in sandbox".
+#'
+#' @keywords internal
+#' @noRd
+.dw_canonical_to_sandbox <- function(path) {
+	pn <- .normalize_for_comparison(path)
+	pairs <- list(
+		c(.try_get("teamsRawDataCanonical"), .try_get("teamsRawData")),
+		c(.try_get("teamsWrkDataCanonical"), .try_get("teamsWrkData")),
+		c(.try_get("teamsFolderCanonical"),  .try_get("teamsFolder"))
+	)
+	for (p in pairs) {
+		canon <- p[1]; local <- p[2]
+		if (is.na(canon) || !nzchar(canon) || is.na(local) || !nzchar(local)) next
+		cn <- sub("/+$", "", .normalize_for_comparison(canon))
+		ln <- sub("/+$", "", .normalize_for_comparison(local))
+		if (identical(cn, ln)) next  # not redirected (e.g. producer mode); nothing to map
+		if (identical(pn, cn) || startsWith(pn, paste0(cn, "/"))) {
+			rel <- sub("^/", "", substring(pn, nchar(cn) + 1L))
+			return(if (nzchar(rel)) file.path(ln, rel) else ln)
+		}
+	}
+	pn  # not canonical-rooted; already a sandbox / literal path
+}
+
 #' @keywords internal
 #' @noRd
 .dw_remote_mirrors <- function(primary_path) {
@@ -1478,10 +1516,18 @@ dw_stage <- function(path, overwrite = FALSE) {
 	.require("jsonlite")
 
 	path_n <- .normalize_for_comparison(path)
-	# Derive the sandbox target + its canonical source mirrors.
+	# Normalise the input to a SANDBOX target. Callers may pass either a
+	# sandbox-rooted path (literal) OR a canonical-rooted path (e.g. a sector
+	# conductor that sets inputdir <- file.path(teamsRawDataCanonical, ...)).
+	# .dw_canonical_to_sandbox() maps the latter back to the sandbox; the
+	# former passes through unchanged. Deriving mirrors + sidecar from the
+	# SANDBOX path is essential: a canonical input would otherwise be flagged
+	# canonical by .dw_remote_mirrors (teams = NA, no source) and the sidecar
+	# would land next to the Teams source.
+	sandbox_path <- .dw_canonical_to_sandbox(path_n)
+	# Derive the canonical source mirrors from the sandbox target.
 	# In reviewer mode teams*Data == sandbox; *Canonical == the real source.
-	mirrors <- .dw_remote_mirrors(path_n)   # $teams (canonical), $z
-	sandbox_path <- path_n                   # literal already points at sandbox in reviewer mode
+	mirrors <- .dw_remote_mirrors(sandbox_path)   # $teams (canonical), $z
 	src_candidates <- c(z = mirrors$z, teams = mirrors$teams)
 	src_candidates <- src_candidates[!is.na(src_candidates) & nzchar(src_candidates)]
 
