@@ -12,7 +12,7 @@ aggregate_data_v2(
   by,
   country_id = "REF_AREA",
   global = TRUE,
-  method = c("weighted_mean", "mean", "sum", "proportion"),
+  method = c("weighted_mean", "mean", "sum", "proportion", "total"),
   coverage_threshold = NULL,
   pop.coverage = TRUE,
   country.coverage = TRUE,
@@ -29,7 +29,7 @@ dw_aggregate_data_v2(
   by,
   country_id = "REF_AREA",
   global = TRUE,
-  method = c("weighted_mean", "mean", "sum", "proportion"),
+  method = c("weighted_mean", "mean", "sum", "proportion", "total"),
   coverage_threshold = NULL,
   pop.coverage = TRUE,
   country.coverage = TRUE,
@@ -52,7 +52,7 @@ dw_aggregate_data_v2(
 
 \item{global}{Logical. Include global aggregation? Default TRUE.}
 
-\item{method}{Character. Aggregation method: "weighted_mean", "mean", "sum", "proportion". Default "weighted_mean".}
+\item{method}{Character. Aggregation method: "weighted_mean", "mean", "sum", "proportion", "total". Default "weighted_mean". Note: "sum" returns a population-weighted rate (sum(value)/sum(weight)*100); "total" returns an additive count/stock total (sum(value)) for person-count indicators (e.g. refugees, displaced persons, births) where the regional value is the sum of the country values.}
 
 \item{coverage_threshold}{Numeric. Minimum population coverage (0-1) to report aggregate. Default NULL (no threshold).}
 
