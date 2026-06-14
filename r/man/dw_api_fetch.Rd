@@ -4,7 +4,16 @@
 \alias{dw_api_fetch}
 \title{Fetch from an external API, mode-aware, with deposit cache}
 \usage{
-dw_api_fetch(api, cache_key, refresh = FALSE, ext = NULL, metadata = NULL, ...)
+dw_api_fetch(
+  api,
+  cache_key,
+  refresh = FALSE,
+  ext = NULL,
+  metadata = NULL,
+  verbose = NULL,
+  debug = NULL,
+  ...
+)
 }
 \arguments{
 \item{api}{Character. API identifier. One of `"uis"`, `"sdmx"`,
@@ -22,6 +31,14 @@ default via `.dw_api_default_ext`).}
 
 \item{metadata}{Named list merged into the cache's
 `.provenance.json` sidecar.}
+
+\item{verbose}{Logical or `NULL`. Show high-level progress and result
+messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].}
+
+\item{debug}{Logical or `NULL`. Show internal troubleshooting detail
+(resolved paths, dims, branch decisions). `NULL` (default) inherits
+`getOption("dw.debug", FALSE)`; implies `verbose`. See [dw_verbosity()].}
 
 \item{...}{API-specific arguments — see the per-API helpers
 (`.api_fetch_uis`, `.api_fetch_sdmx`, etc.).}

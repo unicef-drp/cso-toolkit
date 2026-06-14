@@ -4,11 +4,15 @@
 \alias{dw_root}
 \title{Resolve the mode-aware repo / canonical root for a vendored kind}
 \usage{
-dw_root(kind = c("wrk", "raw", "meta"))
+dw_root(kind = c("wrk", "raw", "meta"), debug = NULL)
 }
 \arguments{
-\item{kind}{One of "wrk", "raw", "meta" — selects which of the three
+\item{kind}{One of "wrk", "raw", "meta" -- selects which of the three
 vendored data roots to return.}
+
+\item{debug}{Logical or `NULL`. Emit resolution detail for
+troubleshooting. `NULL` (default) inherits `getOption("dw.debug", FALSE)`.
+See [dw_verbosity()].}
 }
 \value{
 Character. Absolute path to the resolved root.
@@ -33,6 +37,7 @@ Other io:
 \code{\link{dw_stage}()},
 \code{\link{dw_toolkit_version}()},
 \code{\link{dw_use}()},
+\code{\link{dw_verbosity}()},
 \code{\link{dw_verify_z}()}
 }
 \concept{io}

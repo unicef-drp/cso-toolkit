@@ -11,7 +11,8 @@ dw_nestweight(
   weight = NULL,
   new_weight = "weight_adj",
   only = NULL,
-  verbose = TRUE
+  verbose = NULL,
+  debug = NULL
 )
 }
 \arguments{
@@ -36,9 +37,14 @@ where the predicate is `TRUE` are eligible for the denominator
 (i.e. they contribute to the redistributed weights). Useful for
 "only redistribute over respondents who were asked the question".}
 
-\item{verbose}{Logical. If `TRUE` (default), reports per-stratum mean
-of `value` under original vs. redistributed weights, plus the
-pooled mean. Set `FALSE` to suppress.}
+\item{verbose}{Logical or `NULL`. Reports per-stratum mean of `value`
+under original vs. redistributed weights, plus the pooled mean.
+`NULL` (default) inherits `getOption("dw.verbose", TRUE)`; set
+`TRUE`/`FALSE` to override for this call. See [dw_verbosity()].}
+
+\item{debug}{Logical or `NULL`. Show internal troubleshooting detail
+(resolved paths, dims, branch decisions). `NULL` (default) inherits
+`getOption("dw.debug", FALSE)`; implies `verbose`. See [dw_verbosity()].}
 }
 \value{
 The input `data` with one new column (`new_weight`) appended.

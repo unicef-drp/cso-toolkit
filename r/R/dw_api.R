@@ -163,12 +163,20 @@
 #'   to list existing caches; [dw_save()] (used to write the cache);
 #'   [dw_use()] (used to read it back).
 #' @family api
+#' @param verbose Logical or `NULL`. Show high-level progress and result
+#'   messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+#'   set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].
+#' @param debug Logical or `NULL`. Show internal troubleshooting detail
+#'   (resolved paths, dims, branch decisions). `NULL` (default) inherits
+#'   `getOption("dw.debug", FALSE)`; implies `verbose`. See [dw_verbosity()].
 #' @export
 dw_api_fetch <- function(api,
                          cache_key,
                          refresh = FALSE,
                          ext = NULL,
                          metadata = NULL,
+                         verbose = NULL,
+                         debug = NULL,
                          ...) {
 
 	# Resolve per-api default extension if caller didn't override.
@@ -177,6 +185,8 @@ dw_api_fetch <- function(api,
 	cache_path           <- .dw_api_cache_path(api, cache_key, ext)
 	canonical_cache_path <- .dw_api_canonical_cache_path(api, cache_key, ext)
 	args <- list(...)
+	vd <- .dw_vd(verbose, debug); v <- vd$v; d <- vd$d
+	.dw_dbg("dw_api_fetch", "api=", api, " cache_key=", cache_key, " refresh=", refresh, " ext=", ext, d = d)
 
 	# Try cache first (sandbox or canonical fallback) unless explicit refresh.
 	if (!isTRUE(refresh)) {
@@ -184,8 +194,8 @@ dw_api_fetch <- function(api,
 		            else if (file.exists(canonical_cache_path)) canonical_cache_path
 		            else NA_character_
 		if (!is.na(hit_path)) {
-			message("[dw_api/", api, "/", cache_key, "] cache hit: ", hit_path)
-			return(dw_use(hit_path))
+			.dw_msg("dw_api_fetch", api, "/", cache_key, " cache hit: ", hit_path, v = v)
+			return(dw_use(hit_path, verbose = FALSE, debug = d))
 		}
 	}
 
@@ -199,7 +209,7 @@ dw_api_fetch <- function(api,
 	}
 
 	# Producer mode: dispatch on api
-	message("[dw_api/", api, "/", cache_key, "] fetching live...")
+	.dw_msg("dw_api_fetch", api, "/", cache_key, " fetching live...", v = v)
 	t0 <- Sys.time()
 	result <- switch(api,
 		"uis"            = do.call(.api_fetch_uis,            args),
@@ -218,6 +228,7 @@ dw_api_fetch <- function(api,
 		), call. = FALSE)
 	)
 	elapsed <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
+	.dw_dbg("dw_api_fetch", "fetched in ", round(elapsed, 2), "s; rows=", if (is.data.frame(result)) nrow(result) else NA, d = d)
 
 	# Cache to deposit (writes via dw_save -> mode-aware path + Z: mirror +
 	# provenance sidecar).
@@ -232,8 +243,9 @@ dw_api_fetch <- function(api,
 		),
 		metadata
 	)
-	dw_save(result, path = cache_path, metadata = api_metadata, mirror_to_z = TRUE)
+	dw_save(result, path = cache_path, metadata = api_metadata, mirror_to_z = TRUE, verbose = v, debug = d)
 
+	.dw_msg("dw_api_fetch", "done: ", api, "/", cache_key, " (", if (is.data.frame(result)) paste0(nrow(result), " rows") else class(result)[1], ")", v = v)
 	result
 }
 
@@ -256,16 +268,27 @@ dw_api_fetch <- function(api,
 #' @seealso [dw_api_fetch()] (populates the cache); [dw_api_inventory()]
 #'   (lists all caches).
 #' @family api
+#' @param verbose Logical or `NULL`. Show high-level progress and result
+#'   messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+#'   set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].
+#' @param debug Logical or `NULL`. Show internal troubleshooting detail
+#'   (resolved paths, dims, branch decisions). `NULL` (default) inherits
+#'   `getOption("dw.debug", FALSE)`; implies `verbose`. See [dw_verbosity()].
 #' @export
-dw_api_cached <- function(api, cache_key, ext = "csv") {
+dw_api_cached <- function(api, cache_key, ext = "csv", verbose = NULL, debug = NULL) {
 	cache_path <- .dw_api_canonical_cache_path(api, cache_key, ext)
+	vd <- .dw_vd(verbose, debug); v <- vd$v; d <- vd$d
+	.dw_msg("dw_api_cached", "reading cache ", api, "/", cache_key, v = v)
+	.dw_dbg("dw_api_cached", "cache_path=", cache_path, d = d)
 	if (!file.exists(cache_path)) {
 		stop(sprintf(
 			"[cso_toolkit.dw_api_cached] No cache at %s\n  Reason: the cached fetch has not been produced yet (or the wrong api / cache_key / ext was passed).\n  Fix:\n    1. Ask the Database Manager to run dw_api_fetch('%s', cache_key = '%s', ...) in producer mode, OR\n    2. Verify api/cache_key/ext spelling: an `ext` mismatch is a common cause.",
 			cache_path, api, cache_key
 		), call. = FALSE)
 	}
-	dw_use(cache_path)
+	out <- dw_use(cache_path, verbose = FALSE, debug = d)
+	.dw_msg("dw_api_cached", "loaded ", if (is.data.frame(out)) paste0(nrow(out), " rows") else class(out)[1], v = v)
+	out
 }
 
 # ============================================================================
@@ -286,9 +309,18 @@ dw_api_cached <- function(api, cache_key, ext = "csv") {
 #' @seealso [dw_api_fetch()] (populates caches); [dw_api_cached()] (reads
 #'   a single cache).
 #' @family api
+#' @param verbose Logical or `NULL`. Show high-level progress and result
+#'   messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+#'   set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].
+#' @param debug Logical or `NULL`. Show internal troubleshooting detail
+#'   (resolved paths, dims, branch decisions). `NULL` (default) inherits
+#'   `getOption("dw.debug", FALSE)`; implies `verbose`. See [dw_verbosity()].
 #' @export
-dw_api_inventory <- function(api = NULL) {
+dw_api_inventory <- function(api = NULL, verbose = NULL, debug = NULL) {
 	root <- file.path(.try_get("teamsRawDataCanonical"), "_apis")
+	vd <- .dw_vd(verbose, debug); v <- vd$v; d <- vd$d
+	.dw_msg("dw_api_inventory", "scanning ", if (is.null(api)) "all APIs" else api, v = v)
+	.dw_dbg("dw_api_inventory", "root=", root, d = d)
 	if (!dir.exists(root)) return(data.frame())
 	apis <- if (is.null(api)) list.dirs(root, recursive = FALSE, full.names = FALSE)
 	        else api
@@ -320,7 +352,9 @@ dw_api_inventory <- function(api = NULL) {
 		}
 	}
 	if (length(rows) == 0) return(data.frame())
-	do.call(rbind, rows)
+	out <- do.call(rbind, rows)
+	.dw_msg("dw_api_inventory", "found ", nrow(out), " cache file(s)", v = v)
+	out
 }
 
 # ============================================================================

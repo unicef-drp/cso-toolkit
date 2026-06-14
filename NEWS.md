@@ -6,6 +6,30 @@ _Entries land here as PRs merge into `develop`. When the next release
 is cut, this header is renamed `## v0.4.10 (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
+**Toolkit-wide `verbose` / `debug` convention.** Every public `dw_*` helper now
+takes optional `verbose` and `debug` arguments so a database manager, reviewer,
+or publisher can quiet a run, narrate progress, or open up internals when
+troubleshooting — without editing toolkit code.
+
+- New foundation in `dw_io.R`: `.dw_v()` / `.dw_d()` / `.dw_vd()` resolve a
+  per-call `NULL` against `options(dw.verbose, dw.debug)` (defaults `TRUE` /
+  `FALSE`; `debug` implies `verbose`); `.dw_msg()` / `.dw_dbg()` emit to
+  `stderr` with `[cso_toolkit.<fn>]` / `[cso_toolkit.<fn>:debug]` prefixes.
+- New exported setter `dw_verbosity(verbose = , debug = )` flips the session
+  options for a whole session.
+- Entry-point helpers (`dw_save`, `dw_use`, `dw_stage`, `dw_compare`,
+  `dw_merge`, `dw_isid`, `dw_verify_z`, `dw_api_fetch`, `dw_api_cached`,
+  `dw_api_inventory`, `dw_pop`, `dw_regions`, `dw_nestweight`, `dw_publish`)
+  gain `verbose = NULL` + `debug = NULL`, with start/result messages and debug
+  traces; internal calls thread the settings down so one control governs a whole
+  call tree. Pure lookups (`dw_root`, `dw_resolve_path`, `dw_is_canonical`,
+  `dw_toolkit_version`, `dw_default_unicef_allowlist`) gain `debug` only.
+- `dw_nestweight()`'s diagnostics now emit via `message()` (was `cat()`), so they
+  no longer contaminate captured `stdout`.
+
+Backward-compatible: the new arguments are trailing and optional, and at their
+defaults the on-screen behaviour is unchanged. Mirrors DW-Production PR #263.
+
 ## v0.4.9.1 (2026-06-02)
 
 Bug fix: `dw_stage()` now handles **canonical-rooted input paths**. A
