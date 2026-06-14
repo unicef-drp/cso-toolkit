@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------
 # 00_functions/dw_io.R
-# Toolkit version: 0.4.9
+# Toolkit version: 0.4.10
 # Purpose: Uniform read/write helpers for DW-Production R scripts.
 # Auto-dispatch by file extension; supports every IO form the
 # sector scripts currently use; enforces the reviewer/producer
@@ -63,6 +63,54 @@
 #'
 #' @keywords internal
 #' @noRd
+# ============================================================================
+# Verbosity convention (toolkit-wide)
+# ============================================================================
+# Two on-screen levels, with global defaults that any call can override:
+#   verbose (default TRUE)  -- high-level progress + results ("what happened")
+#   debug   (default FALSE) -- internals: resolved paths, params, dims, branch
+#                              decisions ("how / why"); debug implies verbose.
+# Session switches: options(dw.verbose = ..., dw.debug = ...) or dw_verbosity().
+# Every public dw_* takes `verbose = NULL` / `debug = NULL` (NULL = inherit the
+# session default); functions resolve once via .dw_vd() and emit with .dw_msg()
+# (verbose) / .dw_dbg() (debug).
+
+.dw_v <- function(verbose = NULL)
+	if (is.null(verbose)) isTRUE(getOption("dw.verbose", TRUE)) else isTRUE(verbose)
+
+.dw_d <- function(debug = NULL)
+	if (is.null(debug)) isTRUE(getOption("dw.debug", FALSE)) else isTRUE(debug)
+
+# Resolve both at once; debug implies verbose. Returns list(v=, d=).
+.dw_vd <- function(verbose = NULL, debug = NULL) {
+	d <- .dw_d(debug)
+	list(v = (.dw_v(verbose) || d), d = d)
+}
+
+.dw_msg <- function(fn, ..., v = TRUE)
+	if (isTRUE(v)) message("[cso_toolkit.", fn, "] ", ...)
+
+.dw_dbg <- function(fn, ..., d = FALSE)
+	if (isTRUE(d)) message("[cso_toolkit.", fn, ":debug] ", ...)
+
+#' Set toolkit verbosity for the session
+#'
+#' @param verbose TRUE/FALSE -- show high-level progress + results (default TRUE).
+#' @param debug TRUE/FALSE -- show internal troubleshooting detail (default
+#'   FALSE; implies verbose). Pass NULL to leave a setting unchanged.
+#' @return (invisibly) the *effective* `list(verbose=, debug=)` after the call.
+#'   Because `debug` implies `verbose`, `verbose` reads `TRUE` whenever `debug`
+#'   is `TRUE`, even if you passed `verbose = FALSE` alongside it.
+#' @family io
+#' @export
+dw_verbosity <- function(verbose = NULL, debug = NULL) {
+	if (!is.null(verbose)) options(dw.verbose = isTRUE(verbose))
+	if (!is.null(debug)) options(dw.debug = isTRUE(debug))
+	eff <- .dw_vd()  # effective state: debug implies verbose
+	.dw_msg("dw_verbosity", "verbose=", eff$v, " | debug=", eff$d, v = TRUE)
+	invisible(list(verbose = eff$v, debug = eff$d))
+}
+
 .require <- function(pkg) {
 	if (!requireNamespace(pkg, quietly = TRUE)) {
 		stop(sprintf(
@@ -123,8 +171,15 @@
 #' @seealso `.dw_root_for()` (internal helper, not exported);
 #'   [dw_resolve_path()] for the full sector/vintage/name path.
 #' @family io
+#' @param debug Logical or `NULL`. Emit resolution detail for
+#'   troubleshooting. `NULL` (default) inherits `getOption("dw.debug", FALSE)`.
+#'   See [dw_verbosity()].
 #' @export
-dw_root <- function(kind = c("wrk", "raw", "meta")) .dw_root_for(kind)
+dw_root <- function(kind = c("wrk", "raw", "meta"), debug = NULL) {
+	r <- .dw_root_for(kind)
+	.dw_dbg("dw_root", "kind=", match.arg(kind), " -> ", r, d = .dw_d(debug))
+	r
+}
 
 # ============================================================================
 # Path resolution
@@ -160,11 +215,16 @@ dw_root <- function(kind = c("wrk", "raw", "meta")) .dw_root_for(kind)
 #' a canonical root; [dw_save()] and [dw_use()] which call this helper
 #' internally.
 #' @family io
+#' @param debug Logical or `NULL`. Emit resolution detail for
+#'   troubleshooting. `NULL` (default) inherits `getOption("dw.debug", FALSE)`.
+#'   See [dw_verbosity()].
 #' @export
 dw_resolve_path <- function(path = NULL, name = NULL, sector = NULL,
  kind = c("wrk", "raw", "meta"),
- vintage = NULL) {
+ vintage = NULL,
+ debug = NULL) {
 	kind <- match.arg(kind)
+	d <- .dw_d(debug)
 	root <- .dw_root_for(kind = kind)
 	if (is.na(root) || !nzchar(root)) {
 		global_name <- switch(kind, wrk = "teamsWrkData",
@@ -185,7 +245,9 @@ dw_resolve_path <- function(path = NULL, name = NULL, sector = NULL,
 	}
 	subpath <- gsub("/+", "/", subpath)
 	subpath <- sub("^/", "", subpath)
-	file.path(root, subpath)
+	out <- file.path(root, subpath)
+	.dw_dbg("dw_resolve_path", "kind=", kind, " root=", root, " -> ", out, d = d)
+	out
 }
 
 #' Normalise a path for descendant comparison
@@ -229,8 +291,13 @@ dw_resolve_path <- function(path = NULL, name = NULL, sector = NULL,
 #'
 #' @seealso [dw_resolve_path()], [dw_verify_z()].
 #' @family io
+#' @param debug Logical or `NULL`. Emit resolution detail for
+#'   troubleshooting. `NULL` (default) inherits `getOption("dw.debug", FALSE)`.
+#'   See [dw_verbosity()].
 #' @export
-dw_is_canonical <- function(path) {
+dw_is_canonical <- function(path, debug = NULL) {
+	d <- .dw_d(debug)
+	.dw_dbg("dw_is_canonical", "testing ", path, d = d)
 	path_n <- .normalize_for_comparison(path)
 
 	# OneDrive-mounted Teams Documents pattern: catches the per-user OneDrive
@@ -282,7 +349,7 @@ dw_is_canonical <- function(path) {
 #' rely on a v0.4.0+ contract (e.g. network-first reviewer reads,
 #' mirror-to-both producer writes).
 #'
-#' @return Character. Currently `"0.4.9"`.
+#' @return Character. Currently `"0.4.10"`.
 #'
 #' @examples
 #' if (utils::compareVersion(dw_toolkit_version(), "0.4.0") < 0) {
@@ -292,9 +359,13 @@ dw_is_canonical <- function(path) {
 #'
 #' @seealso [cso_toolkit_check()] for upstream drift detection.
 #' @family io
+#' @param debug Logical or `NULL`. Emit resolution detail for
+#'   troubleshooting. `NULL` (default) inherits `getOption("dw.debug", FALSE)`.
+#'   See [dw_verbosity()].
 #' @export
-dw_toolkit_version <- function() {
-	"0.4.9"
+dw_toolkit_version <- function(debug = NULL) {
+	.dw_dbg("dw_toolkit_version", "vendored tag = 0.4.10", d = .dw_d(debug))
+	"0.4.10"
 }
 
 # ============================================================================
@@ -571,10 +642,19 @@ dw_toolkit_version <- function() {
 #' @seealso [dw_save()] (carbon-copies on canonical writes) and [dw_use()]
 #' (runs an automatic size check on canonical reads).
 #' @family io
+#' @param verbose Logical or `NULL`. Show high-level progress and result
+#'   messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+#'   set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].
+#' @param debug Logical or `NULL`. Show internal troubleshooting detail
+#'   (resolved paths, dims, branch decisions). `NULL` (default) inherits
+#'   `getOption("dw.debug", FALSE)`; implies `verbose`. See [dw_verbosity()].
 #' @export
-dw_verify_z <- function(path, compare = c("size", "sha256")) {
+dw_verify_z <- function(path, compare = c("size", "sha256"), verbose = NULL, debug = NULL) {
 	compare <- match.arg(compare)
+	vd <- .dw_vd(verbose, debug); v <- vd$v; d <- vd$d
 	z_path <- .dw_z_mirror_path(path)
+	.dw_msg("dw_verify_z", "checking Z: mirror (", compare, ") for ", basename(path), v = v)
+	.dw_dbg("dw_verify_z", "z_path=", z_path, d = d)
 	if (is.na(z_path)) {
 		return(list(status = "no_z_mirror", path = path, z_path = NA_character_))
 	}
@@ -629,8 +709,16 @@ dw_verify_z <- function(path, compare = c("size", "sha256")) {
 #' @seealso [dw_save()] (auto-invokes `dw_isid` when an `isid =` argument
 #' is passed).
 #' @family io
+#' @param verbose Logical or `NULL`. Show high-level progress and result
+#'   messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+#'   set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].
+#' @param debug Logical or `NULL`. Show internal troubleshooting detail
+#'   (resolved paths, dims, branch decisions). `NULL` (default) inherits
+#'   `getOption("dw.debug", FALSE)`; implies `verbose`. See [dw_verbosity()].
 #' @export
-dw_isid <- function(df, keys, where = "<unknown>") {
+dw_isid <- function(df, keys, where = "<unknown>", verbose = NULL, debug = NULL) {
+	vd <- .dw_vd(verbose, debug); v <- vd$v; d <- vd$d
+	.dw_dbg("dw_isid", "checking ", nrow(df), " rows on [", paste(keys, collapse = ","), "]", d = d)
 	missing_keys <- setdiff(keys, names(df))
 	if (length(missing_keys) > 0) {
 		present <- paste(utils::head(names(df), 10), collapse = ", ")
@@ -656,6 +744,7 @@ dw_isid <- function(df, keys, where = "<unknown>") {
 			paste(keys, collapse = ", ")
 		), call. = FALSE)
 	}
+	.dw_msg("dw_isid", "OK -- unique on [", paste(keys, collapse = ","), "] (", nrow(df), " rows)", v = v)
 	invisible(TRUE)
 }
 
@@ -799,6 +888,12 @@ dw_isid <- function(df, keys, where = "<unknown>") {
 #' uniqueness check; [dw_verify_z()] for the Z: mirror integrity check;
 #' [dw_resolve_path()] for the path-resolution rules.
 #' @family io
+#' @param verbose Logical or `NULL`. Show high-level progress and result
+#'   messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+#'   set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].
+#' @param debug Logical or `NULL`. Show internal troubleshooting detail
+#'   (resolved paths, dims, branch decisions). `NULL` (default) inherits
+#'   `getOption("dw.debug", FALSE)`; implies `verbose`. See [dw_verbosity()].
 #' @export
 dw_save <- function(x,
  path = NULL,
@@ -812,11 +907,14 @@ dw_save <- function(x,
  provenance = TRUE,
  vintage = NULL,
  allow_canonical_write = FALSE,
+ verbose = NULL,
+ debug = NULL,
  ...) {
 
 	kind <- match.arg(kind)
 	dialect <- match.arg(dialect)
 	dots <- list(...)
+	vd <- .dw_vd(verbose, debug); v <- vd$v; d <- vd$d
 
 	# v0.4.0 deprecation: `mirror_to_z` is no longer a per-call flag.
 	# Producer-mode mirroring to BOTH Z: and Teams is now automatic,
@@ -862,6 +960,9 @@ dw_save <- function(x,
 	is_canon <- dw_is_canonical(path)
 	is_reviewer <- isTRUE(.try_get("dw_mode") == "reviewer")
 	is_producer <- isTRUE(.try_get("dw_mode") == "producer")
+	.dw_msg("dw_save", "writing ", basename(path), v = v)
+	.dw_dbg("dw_save", "path=", path, " | fmt=", fmt, d = d)
+	.dw_dbg("dw_save", "mode=", .try_get("dw_mode"), " | canonical=", is_canon, " | teams=", teams_mirror, " | z=", z_mirror, d = d)
 
 	# === Lenient overwrite default (v0.4.1) ===
 	# Resolve the `overwrite = NULL` sentinel based on mode:
@@ -948,7 +1049,7 @@ dw_save <- function(x,
 
 	# Quality contract -- isid before write
 	if (!is.null(isid) && is.data.frame(x)) {
-		dw_isid(x, keys = isid, where = path)
+		dw_isid(x, keys = isid, where = path, verbose = FALSE, debug = d)
 	}
 
 	dir.create(dirname(path), recursive = TRUE, showWarnings = FALSE)
@@ -1344,6 +1445,12 @@ dw_save <- function(x,
 #' @seealso [dw_save()] for the write counterpart; [dw_verify_z()] for
 #' the underlying integrity check.
 #' @family io
+#' @param verbose Logical or `NULL`. Show high-level progress and result
+#'   messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+#'   set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].
+#' @param debug Logical or `NULL`. Show internal troubleshooting detail
+#'   (resolved paths, dims, branch decisions). `NULL` (default) inherits
+#'   `getOption("dw.debug", FALSE)`; implies `verbose`. See [dw_verbosity()].
 #' @export
 dw_use <- function(path = NULL,
  name = NULL, sector = NULL,
@@ -1355,9 +1462,12 @@ dw_use <- function(path = NULL,
  verify_z = TRUE,
  stage = NULL,
  overwrite = FALSE,
+ verbose = NULL,
+ debug = NULL,
  ...) {
 	kind <- match.arg(kind)
 	as <- match.arg(as)
+	vd <- .dw_vd(verbose, debug); v <- vd$v; d <- vd$d
 
 	if (is.null(path)) {
 		path <- dw_resolve_path(name = name, sector = sector, kind = kind)
@@ -1371,16 +1481,18 @@ dw_use <- function(path = NULL,
 	stage_on <- if (!is.null(stage)) isTRUE(stage) else isTRUE(.try_get("dw_autostage"))
 	if (stage_on && isTRUE(.try_get("dw_mode") == "reviewer") &&
 	 !is.null(path) && !grepl("^https?://", path)) {
-		resolved <- dw_stage(path, overwrite = overwrite)
+		resolved <- dw_stage(path, overwrite = overwrite, verbose = v, debug = d)
 	} else {
 		resolved <- .resolve_for_read(path, fallback_canonical = fallback_canonical)
 	}
+	.dw_msg("dw_use", "reading ", basename(resolved), v = v)
+	.dw_dbg("dw_use", "resolved=", resolved, d = d)
 
 	# Z: integrity check for canonical reads (non-blocking)
 	if (isTRUE(verify_z) || identical(verify_z, "sha256")) {
 		if (dw_is_canonical(resolved) && isTRUE(.try_get("dw_z_available"))) {
 			cmp <- if (identical(verify_z, "sha256")) "sha256" else "size"
-			res <- dw_verify_z(resolved, compare = cmp)
+			res <- dw_verify_z(resolved, compare = cmp, verbose = v, debug = d)
 			if (!is.null(res) && !res$status %in% c("match_size", "match_sha256", "no_z_mirror")) {
 				warning("[dw_use] Z: integrity check failed: ", res$status,
 				 "\n Teams: ", res$path,
@@ -1446,6 +1558,7 @@ dw_use <- function(path = NULL,
 			"data.table" = { .require("data.table"); data.table::as.data.table(x) }
 		)
 	}
+	.dw_msg("dw_use", "read ", if (is.data.frame(x)) paste0(nrow(x), " x ", ncol(x)) else class(x)[1], v = v)
 	x
 }
 
@@ -1509,9 +1622,16 @@ dw_use <- function(path = NULL,
 #' caller opts in); [dw_save()] (writes its own `.provenance.json`
 #' sidecar with a different schema).
 #' @family io
+#' @param verbose Logical or `NULL`. Show high-level progress and result
+#'   messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+#'   set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].
+#' @param debug Logical or `NULL`. Show internal troubleshooting detail
+#'   (resolved paths, dims, branch decisions). `NULL` (default) inherits
+#'   `getOption("dw.debug", FALSE)`; implies `verbose`. See [dw_verbosity()].
 #' @export
-dw_stage <- function(path, overwrite = FALSE) {
+dw_stage <- function(path, overwrite = FALSE, verbose = NULL, debug = NULL) {
 	if (!isTRUE(.try_get("dw_mode") == "reviewer")) return(path)  # no-op outside reviewer
+	vd <- .dw_vd(verbose, debug); v <- vd$v; d <- vd$d
 	.require("digest")
 	.require("jsonlite")
 
@@ -1525,6 +1645,7 @@ dw_stage <- function(path, overwrite = FALSE) {
 	# canonical by .dw_remote_mirrors (teams = NA, no source) and the sidecar
 	# would land next to the Teams source.
 	sandbox_path <- .dw_canonical_to_sandbox(path_n)
+	.dw_dbg("dw_stage", "sandbox=", sandbox_path, d = d)
 	# Derive the canonical source mirrors from the sandbox target.
 	# In reviewer mode teams*Data == sandbox; *Canonical == the real source.
 	mirrors <- .dw_remote_mirrors(sandbox_path)   # $teams (canonical), $z
@@ -1664,6 +1785,7 @@ dw_stage <- function(path, overwrite = FALSE) {
 			}
 		}
 	}
+	.dw_msg("dw_stage", "verified staged copy of ", basename(sandbox_path), v = v)
 	sandbox_path
 }
 
@@ -1824,12 +1946,17 @@ dw_stage <- function(path, overwrite = FALSE) {
 #'
 #' @seealso [dw_use()] for the consumer that reads `dw_url_allowlist`.
 #' @family io
+#' @param debug Logical or `NULL`. Emit resolution detail for
+#'   troubleshooting. `NULL` (default) inherits `getOption("dw.debug", FALSE)`.
+#'   See [dw_verbosity()].
 #' @export
-dw_default_unicef_allowlist <- function() {
-	c(
+dw_default_unicef_allowlist <- function(debug = NULL) {
+	pats <- c(
 		"^https://raw\\.githubusercontent\\.com/unicef-drp/",
 		"^https://github\\.com/unicef-drp/"
 	)
+	.dw_dbg("dw_default_unicef_allowlist", "returning ", length(pats), " patterns", d = .dw_d(debug))
+	pats
 }
 
 #' Is the URL allowlisted for remote-URL freeze?
@@ -2175,6 +2302,12 @@ dw_default_unicef_allowlist <- function() {
 #' supplied); [dw_merge()] for a Stata-style join with cardinality
 #' assertion.
 #' @family io
+#' @param verbose Logical or `NULL`. Show high-level progress and result
+#'   messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+#'   set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].
+#' @param debug Logical or `NULL`. Show internal troubleshooting detail
+#'   (resolved paths, dims, branch decisions). `NULL` (default) inherits
+#'   `getOption("dw.debug", FALSE)`; implies `verbose`. See [dw_verbosity()].
 #' @export
 dw_compare <- function(current, reference,
  by,
@@ -2182,11 +2315,14 @@ dw_compare <- function(current, reference,
  numeric_value_cols = NULL,
  tol = 1e-5,
  label = "compare",
- write_report_to = NULL) {
+ write_report_to = NULL,
+ verbose = NULL,
+ debug = NULL) {
 
 	.require("dplyr")
-	if (is.character(current) && length(current) == 1) current <- dw_use(current)
-	if (is.character(reference) && length(reference) == 1) reference <- dw_use(reference)
+	vd <- .dw_vd(verbose, debug); v <- vd$v; d <- vd$d
+	if (is.character(current) && length(current) == 1) current <- dw_use(current, verbose = v, debug = d)
+	if (is.character(reference) && length(reference) == 1) reference <- dw_use(reference, verbose = v, debug = d)
 
 	common <- intersect(names(current), names(reference))
 	by <- by[by %in% common]
@@ -2202,6 +2338,10 @@ dw_compare <- function(current, reference,
 	}
 	value_cols <- if (is.null(value_cols)) setdiff(common, by) else value_cols[value_cols %in% common]
 	numeric_value_cols <- intersect(numeric_value_cols, value_cols)
+	.dw_msg("dw_compare", sprintf(
+	 "%s: current=%d rows vs reference=%d rows | keys [%s] | value cols [%s]",
+	 label, nrow(current), nrow(reference),
+	 paste(by, collapse = ", "), paste(value_cols, collapse = ", ")), v = v)
 
 	norm <- function(v) {
 		v <- trimws(as.character(v))
@@ -2213,6 +2353,7 @@ dw_compare <- function(current, reference,
 
 	added <- dplyr::anti_join(current, reference, by = by)
 	removed <- dplyr::anti_join(reference, current, by = by)
+	.dw_dbg("dw_compare", "anti-join added=", nrow(added), " removed=", nrow(removed), d = d)
 
 	cur_sub <- dplyr::select(current, dplyr::all_of(c(by, value_cols)))
 	ref_sub <- dplyr::select(reference, dplyr::all_of(c(by, value_cols)))
@@ -2254,6 +2395,10 @@ dw_compare <- function(current, reference,
 		completed_at = format(Sys.time(), "%Y-%m-%d %H:%M:%S")
 	)
 
+	.dw_msg("dw_compare", sprintf(
+	 "%s: added=%d | removed=%d | changed=%d | row delta %+d",
+	 label, nrow(added), nrow(removed), nrow(changed), nrow(current) - nrow(reference)), v = v)
+
 	if (!is.null(write_report_to)) {
 		dir.create(write_report_to, recursive = TRUE, showWarnings = FALSE)
 		prefix <- file.path(write_report_to, label)
@@ -2262,6 +2407,7 @@ dw_compare <- function(current, reference,
 		data.table::fwrite(added, paste0(prefix, "_added_rows.csv"))
 		data.table::fwrite(removed, paste0(prefix, "_removed_rows.csv"))
 		data.table::fwrite(changed, paste0(prefix, "_changed_rows.csv"))
+		.dw_msg("dw_compare", "report written to: ", write_report_to, v = v)
 	}
 
 	list(summary = summary_tbl, added = added, removed = removed, changed = changed)
@@ -2290,11 +2436,19 @@ dw_compare <- function(current, reference,
 #' @seealso [dw_use()] (used to materialise `using` when a path is
 #' supplied); [dw_compare()] for a row-level diff.
 #' @family io
+#' @param verbose Logical or `NULL`. Show high-level progress and result
+#'   messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+#'   set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].
+#' @param debug Logical or `NULL`. Show internal troubleshooting detail
+#'   (resolved paths, dims, branch decisions). `NULL` (default) inherits
+#'   `getOption("dw.debug", FALSE)`; implies `verbose`. See [dw_verbosity()].
 #' @export
-dw_merge <- function(x, using, by, how = c("m:1", "1:1", "1:m", "m:m"), ...) {
+dw_merge <- function(x, using, by, how = c("m:1", "1:1", "1:m", "m:m"), verbose = NULL, debug = NULL, ...) {
 	how <- match.arg(how)
 	.require("dplyr")
-	y <- if (is.character(using) && length(using) == 1) dw_use(using) else using
+	vd <- .dw_vd(verbose, debug); v <- vd$v; d <- vd$d
+	y <- if (is.character(using) && length(using) == 1) dw_use(using, verbose = v, debug = d) else using
+	.dw_msg("dw_merge", "merge ", how, " on [", paste(by, collapse = ","), "]", v = v)
 	x_dup <- anyDuplicated(x[, by, drop = FALSE]) > 0
 	y_dup <- anyDuplicated(y[, by, drop = FALSE]) > 0
 	expected_x_dup <- how %in% c("m:1", "m:m")
@@ -2307,7 +2461,10 @@ dw_merge <- function(x, using, by, how = c("m:1", "1:1", "1:m", "m:m"), ...) {
 		warning("dw_merge: right-side duplicates on `by` (",
 		 paste(by, collapse = ","), ") do not match how='", how, "'")
 	}
-	dplyr::left_join(x, y, by = by, ...)
+	out <- dplyr::left_join(x, y, by = by, ...)
+	.dw_msg("dw_merge", "result ", nrow(out), " x ", ncol(out), v = v)
+	.dw_dbg("dw_merge", "x rows=", nrow(x), " y rows=", nrow(y), d = d)
+	out
 }
 
 # ============================================================================

@@ -11,7 +11,9 @@ dw_regions(
   method = "weighted_mean",
   taxonomy = "UNICEF_REP_REG_GLOBAL",
   by = c("INDICATOR", "TIME_PERIOD"),
-  refresh_metadata = FALSE
+  refresh_metadata = FALSE,
+  verbose = NULL,
+  debug = NULL
 )
 }
 \arguments{
@@ -40,6 +42,14 @@ that survive the aggregate (typically `INDICATOR` and
 \item{refresh_metadata}{Logical.  When `TRUE` and the session is
 in producer mode, force a live re-fetch of the region taxonomy
 and overwrite the cache.  Default `FALSE` (cache-first).}
+
+\item{verbose}{Logical or `NULL`. Show high-level progress and result
+messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].}
+
+\item{debug}{Logical or `NULL`. Show internal troubleshooting detail
+(resolved paths, dims, branch decisions). `NULL` (default) inherits
+`getOption("dw.debug", FALSE)`; implies `verbose`. See [dw_verbosity()].}
 }
 \value{
 A tibble containing the original country-level rows of

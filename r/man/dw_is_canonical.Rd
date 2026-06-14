@@ -4,10 +4,14 @@
 \alias{dw_is_canonical}
 \title{Test whether a path lives under a canonical deposit root}
 \usage{
-dw_is_canonical(path)
+dw_is_canonical(path, debug = NULL)
 }
 \arguments{
 \item{path}{Character. Filesystem path to test (need not exist).}
+
+\item{debug}{Logical or `NULL`. Emit resolution detail for
+troubleshooting. `NULL` (default) inherits `getOption("dw.debug", FALSE)`.
+See [dw_verbosity()].}
 }
 \value{
 Logical. `TRUE` if `path` lies under a canonical root, otherwise
@@ -33,6 +37,7 @@ Other io:
 \code{\link{dw_stage}()},
 \code{\link{dw_toolkit_version}()},
 \code{\link{dw_use}()},
+\code{\link{dw_verbosity}()},
 \code{\link{dw_verify_z}()}
 }
 \concept{io}

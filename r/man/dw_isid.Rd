@@ -4,7 +4,7 @@
 \alias{dw_isid}
 \title{Stata-style uniqueness check on a key tuple}
 \usage{
-dw_isid(df, keys, where = "<unknown>")
+dw_isid(df, keys, where = "<unknown>", verbose = NULL, debug = NULL)
 }
 \arguments{
 \item{df}{Data frame to check.}
@@ -14,6 +14,14 @@ identify rows.}
 
 \item{where}{Character. Context label included in the error message
 (typically the resolved output path).}
+
+\item{verbose}{Logical or `NULL`. Show high-level progress and result
+messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].}
+
+\item{debug}{Logical or `NULL`. Show internal troubleshooting detail
+(resolved paths, dims, branch decisions). `NULL` (default) inherits
+`getOption("dw.debug", FALSE)`; implies `verbose`. See [dw_verbosity()].}
 }
 \value{
 Invisibly, `TRUE` when the check passes. Stops with a sample
@@ -47,6 +55,7 @@ Other io:
 \code{\link{dw_stage}()},
 \code{\link{dw_toolkit_version}()},
 \code{\link{dw_use}()},
+\code{\link{dw_verbosity}()},
 \code{\link{dw_verify_z}()}
 }
 \concept{io}

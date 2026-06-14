@@ -66,7 +66,7 @@ if (!exists("%>%", mode = "function", inherits = TRUE)) {
 #' @param by Character vector. Column names to group by for aggregation.
 #' @param country_id Character. Column name identifying countries (for country coverage). Default "REF_AREA".
 #' @param global Logical. Include global aggregation? Default TRUE.
-#' @param method Character. Aggregation method: "weighted_mean", "mean", "sum", "proportion". Default "weighted_mean".
+#' @param method Character. Aggregation method: "weighted_mean", "mean", "sum", "proportion", "total". Default "weighted_mean". Note: "sum" returns a population-weighted rate (sum(value)/sum(weight)*100); "total" returns an additive count/stock total (sum(value)) for person-count indicators (e.g. refugees, displaced persons, births) where the regional value is the sum of the country values.
 #' @param coverage_threshold Numeric. Minimum population coverage (0-1) to report aggregate. Default NULL (no threshold).
 #' @param pop.coverage Logical. Return population coverage? Default TRUE.
 #' @param country.coverage Logical. Return country count? Default TRUE.
@@ -87,7 +87,7 @@ aggregate_data_v2 <- function(data,
                               by, 
                               country_id = "REF_AREA",
                               global = TRUE, 
-                              method = c("weighted_mean", "mean", "sum", "proportion"),
+                              method = c("weighted_mean", "mean", "sum", "proportion", "total"),
                               coverage_threshold = NULL,
                               pop.coverage = TRUE, 
                               country.coverage = TRUE,
@@ -151,6 +151,7 @@ aggregate_data_v2 <- function(data,
         method == "mean" ~ mean(as.numeric(!!value_sym), na.rm = TRUE),
         method == "weighted_mean" ~ stats::weighted.mean(as.numeric(!!value_sym), as.numeric(!!weight_sym), na.rm = TRUE),
         method == "sum" ~ (sum(as.numeric(!!value_sym), na.rm = TRUE) / sum(as.numeric(!!weight_sym), na.rm = TRUE)) * 100,
+        method == "total" ~ sum(as.numeric(!!value_sym), na.rm = TRUE),
         method == "proportion" ~ {
           datapop <- sum(.weight_non_na, na.rm = TRUE)
           popaffected <- sum(.num_affected, na.rm = TRUE)
@@ -181,6 +182,7 @@ aggregate_data_v2 <- function(data,
           method == "mean" ~ mean(as.numeric(!!value_sym), na.rm = TRUE),
           method == "weighted_mean" ~ stats::weighted.mean(as.numeric(!!value_sym), as.numeric(!!weight_sym), na.rm = TRUE),
           method == "sum" ~ (sum(as.numeric(!!value_sym), na.rm = TRUE) / sum(as.numeric(!!weight_sym), na.rm = TRUE)) * 100,
+          method == "total" ~ sum(as.numeric(!!value_sym), na.rm = TRUE),
           method == "proportion" ~ {
             datapop <- sum(.weight_non_na, na.rm = TRUE)
             popaffected <- sum(.num_affected, na.rm = TRUE)

@@ -4,7 +4,15 @@
 \alias{dw_merge}
 \title{Stata-style merge with cardinality assertion}
 \usage{
-dw_merge(x, using, by, how = c("m:1", "1:1", "1:m", "m:m"), ...)
+dw_merge(
+  x,
+  using,
+  by,
+  how = c("m:1", "1:1", "1:m", "m:m"),
+  verbose = NULL,
+  debug = NULL,
+  ...
+)
 }
 \arguments{
 \item{x}{Left-hand data frame.}
@@ -16,6 +24,14 @@ dw_merge(x, using, by, how = c("m:1", "1:1", "1:m", "m:m"), ...)
 
 \item{how}{Character. One of `"m:1"`, `"1:1"`, `"1:m"`, `"m:m"`.
 Default `"m:1"`.}
+
+\item{verbose}{Logical or `NULL`. Show high-level progress and result
+messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].}
+
+\item{debug}{Logical or `NULL`. Show internal troubleshooting detail
+(resolved paths, dims, branch decisions). `NULL` (default) inherits
+`getOption("dw.debug", FALSE)`; implies `verbose`. See [dw_verbosity()].}
 
 \item{...}{Passed to `dplyr::left_join`.}
 }
@@ -42,6 +58,7 @@ Other io:
 \code{\link{dw_stage}()},
 \code{\link{dw_toolkit_version}()},
 \code{\link{dw_use}()},
+\code{\link{dw_verbosity}()},
 \code{\link{dw_verify_z}()}
 }
 \concept{io}
