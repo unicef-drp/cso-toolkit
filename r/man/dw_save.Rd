@@ -18,6 +18,8 @@ dw_save(
   provenance = TRUE,
   vintage = NULL,
   allow_canonical_write = FALSE,
+  verbose = NULL,
+  debug = NULL,
   ...
 )
 }
@@ -79,6 +81,14 @@ recorded in the sidecar and used by [dw_resolve_path()].}
 
 \item{allow_canonical_write}{Logical. Bypass the reviewer-mode guard
 that forbids writes to canonical / Z: roots. Default `FALSE`.}
+
+\item{verbose}{Logical or `NULL`. Show high-level progress and result
+messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].}
+
+\item{debug}{Logical or `NULL`. Show internal troubleshooting detail
+(resolved paths, dims, branch decisions). `NULL` (default) inherits
+`getOption("dw.debug", FALSE)`; implies `verbose`. See [dw_verbosity()].}
 
 \item{...}{Format-specific arguments passed through to the underlying
 writer (`fwrite`, `write_xlsx`, `saveRDS`, ...). The legacy
@@ -185,6 +195,7 @@ Other io:
 \code{\link{dw_stage}()},
 \code{\link{dw_toolkit_version}()},
 \code{\link{dw_use}()},
+\code{\link{dw_verbosity}()},
 \code{\link{dw_verify_z}()}
 }
 \concept{io}

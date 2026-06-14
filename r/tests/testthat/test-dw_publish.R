@@ -117,7 +117,7 @@ test_that("dw_publish dry_run = TRUE returns a validated payload", {
   expect_identical(body$vintage,   "2025")
   expect_identical(body$sector,    "hva")
   expect_identical(body$endpoint,  "helix")
-  expect_identical(body$toolkit,   "0.4.9")
+  expect_identical(body$toolkit,   "0.4.10")
   # bytes is the size of the test file
   expect_true(body$bytes > 0)
 })

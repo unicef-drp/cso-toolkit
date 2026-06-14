@@ -78,6 +78,12 @@
 #' @seealso [dw_pop()] (population denominators); [aggregate_data_v2()]
 #'   (the underlying aggregator).
 #' @family demographics
+#' @param verbose Logical or `NULL`. Show high-level progress and result
+#'   messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+#'   set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].
+#' @param debug Logical or `NULL`. Show internal troubleshooting detail
+#'   (resolved paths, dims, branch decisions). `NULL` (default) inherits
+#'   `getOption("dw.debug", FALSE)`; implies `verbose`. See [dw_verbosity()].
 #' @export
 dw_regions <- function(data,
                        value,
@@ -85,9 +91,13 @@ dw_regions <- function(data,
                        method           = "weighted_mean",
                        taxonomy         = "UNICEF_REP_REG_GLOBAL",
                        by               = c("INDICATOR", "TIME_PERIOD"),
-                       refresh_metadata = FALSE) {
+                       refresh_metadata = FALSE,
+                       verbose          = NULL,
+                       debug            = NULL) {
 
 	.cso_require(c("dplyr"), where = "dw_regions")
+	vd <- .dw_vd(verbose, debug); v <- vd$v; d <- vd$d
+	.dw_msg("dw_regions", "aggregating value=", value, " | taxonomy=", taxonomy, " | method=", method, v = v)
 
 	if (!is.data.frame(data)) {
 		stop("[cso_toolkit.dw_regions] `data` must be a data frame.\n  Fix: pass the tibble returned by your sector pipeline (e.g. dw_use(...)).",
@@ -133,7 +143,9 @@ dw_regions <- function(data,
 		cache_key  = paste0("regions_", tolower(taxonomy)),
 		refresh    = refresh_metadata,
 		owner_repo = "unicef-drp/Country-and-Region-Metadata",
-		path       = taxonomy_path
+		path       = taxonomy_path,
+		verbose    = v,
+		debug      = d
 	)
 	# Expect columns: REF_AREA, REGION (or similar).  Try common alternates.
 	col_country <- intersect(c("REF_AREA", "ISO3", "iso3c", "country_code"),
@@ -161,7 +173,7 @@ dw_regions <- function(data,
 		# latest year per country from dw_pop()).
 		if ("TIME_PERIOD" %in% names(working)) {
 			years_needed <- unique(working$TIME_PERIOD)
-			pop_exact <- dw_pop(year = years_needed)
+			pop_exact <- dw_pop(year = years_needed, verbose = FALSE, debug = d)
 			# For any (country, year) pair where WB has no published
 			# population yet (e.g. very recent sector vintage),
 			# paint that country's latest-year value onto each
@@ -169,7 +181,7 @@ dw_regions <- function(data,
 			# actually attaches a denominator.  Country-years still
 			# without any WB record at all drop out of the weighted
 			# average naturally (NA propagates).
-			latest_per_country <- dw_pop()
+			latest_per_country <- dw_pop(verbose = FALSE, debug = d)
 			latest_per_country$TIME_PERIOD <- NULL
 			names(latest_per_country)[names(latest_per_country) == "OBS_VALUE"] <- "OBS_VALUE_LATEST"
 			missing_keys <- expand.grid(
@@ -198,7 +210,7 @@ dw_regions <- function(data,
 			if (!weight_col %in% names(working)) weight_col <- "OBS_VALUE"
 		}
 		else {
-			pop <- dw_pop()
+			pop <- dw_pop(verbose = FALSE, debug = d)
 			working <- merge(working, pop[, c("REF_AREA", "OBS_VALUE")],
 			                 by = "REF_AREA",
 			                 all.x = TRUE, suffixes = c("", ".pop"))
@@ -273,5 +285,7 @@ dw_regions <- function(data,
 	# bind_rows is forgiving about column mismatches (NA-fills); use it so
 	# coverage metadata columns surface in the regional rows but not the
 	# country-level rows.
-	dplyr::bind_rows(data, regional)
+	out <- dplyr::bind_rows(data, regional)
+	.dw_msg("dw_regions", "returned ", nrow(out), " rows (", length(unique(out$REF_AREA)), " areas incl. regions)", v = v)
+	out
 }

@@ -4,7 +4,12 @@
 \alias{dw_default_unicef_allowlist}
 \title{Standard URL-allowlist patterns for UNICEF-owned reference data}
 \usage{
-dw_default_unicef_allowlist()
+dw_default_unicef_allowlist(debug = NULL)
+}
+\arguments{
+\item{debug}{Logical or `NULL`. Emit resolution detail for
+troubleshooting. `NULL` (default) inherits `getOption("dw.debug", FALSE)`.
+See [dw_verbosity()].}
 }
 \value{
 Character vector of regex patterns.
@@ -26,7 +31,7 @@ consumer's profile.
 
 The helper is purely additive: consumers must opt in by composing
 it into their `dw_url_allowlist` (the URL-freeze safety contract is
-unchanged — no URL is fetchable without explicit ratification).
+unchanged -- no URL is fetchable without explicit ratification).
 }
 \examples{
 \dontrun{
@@ -53,6 +58,7 @@ Other io:
 \code{\link{dw_stage}()},
 \code{\link{dw_toolkit_version}()},
 \code{\link{dw_use}()},
+\code{\link{dw_verbosity}()},
 \code{\link{dw_verify_z}()}
 }
 \concept{io}

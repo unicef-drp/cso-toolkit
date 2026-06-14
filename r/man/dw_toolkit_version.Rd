@@ -4,10 +4,15 @@
 \alias{dw_toolkit_version}
 \title{Toolkit version that this `dw_io.R` was vendored from}
 \usage{
-dw_toolkit_version()
+dw_toolkit_version(debug = NULL)
+}
+\arguments{
+\item{debug}{Logical or `NULL`. Emit resolution detail for
+troubleshooting. `NULL` (default) inherits `getOption("dw.debug", FALSE)`.
+See [dw_verbosity()].}
 }
 \value{
-Character. Currently `"0.4.9"`.
+Character. Currently `"0.4.10"`.
 }
 \description{
 Returns the upstream `cso-toolkit` tag the current `dw_io.R` /
@@ -37,6 +42,7 @@ Other io:
 \code{\link{dw_save}()},
 \code{\link{dw_stage}()},
 \code{\link{dw_use}()},
+\code{\link{dw_verbosity}()},
 \code{\link{dw_verify_z}()}
 }
 \concept{io}

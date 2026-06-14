@@ -16,6 +16,8 @@ dw_use(
   verify_z = TRUE,
   stage = NULL,
   overwrite = FALSE,
+  verbose = NULL,
+  debug = NULL,
   ...
 )
 }
@@ -69,6 +71,14 @@ fallback chain. Only applies in reviewer mode and only to local
 `stage = TRUE` -- forces a re-copy of the sandbox file from the
 canonical source and re-archives the hash sidecar. No effect when
 `stage` is not active.}
+
+\item{verbose}{Logical or `NULL`. Show high-level progress and result
+messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].}
+
+\item{debug}{Logical or `NULL`. Show internal troubleshooting detail
+(resolved paths, dims, branch decisions). `NULL` (default) inherits
+`getOption("dw.debug", FALSE)`; implies `verbose`. See [dw_verbosity()].}
 
 \item{...}{Format-specific arguments passed through to the underlying
 reader.}
@@ -137,6 +147,7 @@ Other io:
 \code{\link{dw_save}()},
 \code{\link{dw_stage}()},
 \code{\link{dw_toolkit_version}()},
+\code{\link{dw_verbosity}()},
 \code{\link{dw_verify_z}()}
 }
 \concept{io}
