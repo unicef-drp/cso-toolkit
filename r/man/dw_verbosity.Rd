@@ -13,7 +13,9 @@ dw_verbosity(verbose = NULL, debug = NULL)
 FALSE; implies verbose). Pass NULL to leave a setting unchanged.}
 }
 \value{
-(invisibly) the resolved list(verbose=, debug=).
+(invisibly) the *effective* `list(verbose=, debug=)` after the call.
+  Because `debug` implies `verbose`, `verbose` reads `TRUE` whenever `debug`
+  is `TRUE`, even if you passed `verbose = FALSE` alongside it.
 }
 \description{
 Set toolkit verbosity for the session
