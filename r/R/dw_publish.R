@@ -81,6 +81,14 @@
 #'   stop until the v0.5.0 live-submission branch lands.  Note:
 #'   neither branch performs an actual reachability or credential
 #'   check in v0.4.0 -- that ships with the live branch in v0.5.0.
+#' @param verbose Logical or NULL.  When `TRUE`, emit
+#'   `[cso_toolkit.dw_publish]` progress messages to stderr.  `NULL`
+#'   (the default) defers to the session setting `options(dw.verbose)`
+#'   managed by `dw_verbosity()`.
+#' @param debug Logical or NULL.  When `TRUE`, emit
+#'   `[cso_toolkit.dw_publish:debug]` detail lines to stderr (and
+#'   implies `verbose`).  `NULL` (the default) defers to
+#'   `options(dw.debug)`.
 #' @param ... Forwarded to the underlying HTTP client (currently
 #'   unused; reserved for the v0.5.0 live-submission branch).
 #'
@@ -114,6 +122,12 @@
 #'   [dw_api_fetch()] (the mode-contract sibling for fetch-direction
 #'   external calls).
 #' @family api
+#' @param verbose Logical or `NULL`. Show high-level progress and result
+#'   messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+#'   set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].
+#' @param debug Logical or `NULL`. Show internal troubleshooting detail
+#'   (resolved paths, dims, branch decisions). `NULL` (default) inherits
+#'   `getOption("dw.debug", FALSE)`; implies `verbose`. See [dw_verbosity()].
 #' @export
 dw_publish <- function(path,
                        indicator,
@@ -121,6 +135,8 @@ dw_publish <- function(path,
                        sector,
                        endpoint = "helix",
                        dry_run  = TRUE,
+                       verbose  = NULL,
+                       debug    = NULL,
                        ...) {
 
 	# --- 1. Mode contract: producer-only (raises BEFORE any I/O) -----------
@@ -216,6 +232,9 @@ dw_publish <- function(path,
 	# This is the shape the v0.5.0 live branch will POST.  We assemble
 	# it now so dry-run callers see the exact structure their call site
 	# will produce.
+	vd <- .dw_vd(verbose, debug); v <- vd$v; d <- vd$d
+	.dw_msg("dw_publish", "preparing ", endpoint, " submission for ", indicator, " (", vintage, ")", v = v)
+	.dw_dbg("dw_publish", "path=", path, " sector=", sector, " dry_run=", dry_run, d = d)
 	payload <- list(
 		path       = path,
 		indicator  = indicator,
@@ -231,6 +250,7 @@ dw_publish <- function(path,
 
 	# --- 4. Dry-run vs live branch ------------------------------------------
 	if (isTRUE(dry_run)) {
+		.dw_msg("dw_publish", "DRY RUN -- payload validated, nothing submitted (sha256 ", substr(payload$sha256, 1, 12), ")", v = v)
 		return(list(
 			submission_id = NA_character_,
 			status        = "dry_run",

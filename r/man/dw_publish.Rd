@@ -11,6 +11,8 @@ dw_publish(
   sector,
   endpoint = "helix",
   dry_run = TRUE,
+  verbose = NULL,
+  debug = NULL,
   ...
 )
 }
@@ -35,6 +37,14 @@ an envelope-shaped `"Live submission not yet implemented"`
 stop until the v0.5.0 live-submission branch lands.  Note:
 neither branch performs an actual reachability or credential
 check in v0.4.0 -- that ships with the live branch in v0.5.0.}
+
+\item{verbose}{Logical or `NULL`. Show high-level progress and result
+messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].}
+
+\item{debug}{Logical or `NULL`. Show internal troubleshooting detail
+(resolved paths, dims, branch decisions). `NULL` (default) inherits
+`getOption("dw.debug", FALSE)`; implies `verbose`. See [dw_verbosity()].}
 
 \item{...}{Forwarded to the underlying HTTP client (currently
 unused; reserved for the v0.5.0 live-submission branch).}

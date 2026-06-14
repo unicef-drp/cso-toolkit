@@ -4,7 +4,7 @@
 \alias{dw_api_cached}
 \title{Read an API cache without fetching}
 \usage{
-dw_api_cached(api, cache_key, ext = "csv")
+dw_api_cached(api, cache_key, ext = "csv", verbose = NULL, debug = NULL)
 }
 \arguments{
 \item{api}{Character. API identifier.}
@@ -12,6 +12,14 @@ dw_api_cached(api, cache_key, ext = "csv")
 \item{cache_key}{Character. Cache filename basename.}
 
 \item{ext}{Character. File extension. Default `"csv"`.}
+
+\item{verbose}{Logical or `NULL`. Show high-level progress and result
+messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].}
+
+\item{debug}{Logical or `NULL`. Show internal troubleshooting detail
+(resolved paths, dims, branch decisions). `NULL` (default) inherits
+`getOption("dw.debug", FALSE)`; implies `verbose`. See [dw_verbosity()].}
 }
 \value{
 The cached object.

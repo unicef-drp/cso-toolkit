@@ -9,7 +9,9 @@ dw_pop(
   indicator = "SP.POP.TOTL",
   countries = NULL,
   refresh = FALSE,
-  cache_key = "wb_population_sp_pop_totl"
+  cache_key = "wb_population_sp_pop_totl",
+  verbose = NULL,
+  debug = NULL
 )
 }
 \arguments{
@@ -29,6 +31,14 @@ mode, force a live fetch and overwrite the cache.  Default
 
 \item{cache_key}{Character.  Cache filename basename forwarded to
 [dw_api_fetch()].  Default `"wb_population_sp_pop_totl"`.}
+
+\item{verbose}{Logical or `NULL`. Show high-level progress and result
+messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].}
+
+\item{debug}{Logical or `NULL`. Show internal troubleshooting detail
+(resolved paths, dims, branch decisions). `NULL` (default) inherits
+`getOption("dw.debug", FALSE)`; implies `verbose`. See [dw_verbosity()].}
 }
 \value{
 A tibble with columns `REF_AREA`, `TIME_PERIOD`,

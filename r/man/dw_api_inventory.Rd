@@ -4,10 +4,18 @@
 \alias{dw_api_inventory}
 \title{List all cached API fetches under the canonical root}
 \usage{
-dw_api_inventory(api = NULL)
+dw_api_inventory(api = NULL, verbose = NULL, debug = NULL)
 }
 \arguments{
 \item{api}{Character. Optional API filter; default `NULL` lists all.}
+
+\item{verbose}{Logical or `NULL`. Show high-level progress and result
+messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].}
+
+\item{debug}{Logical or `NULL`. Show internal troubleshooting detail
+(resolved paths, dims, branch decisions). `NULL` (default) inherits
+`getOption("dw.debug", FALSE)`; implies `verbose`. See [dw_verbosity()].}
 }
 \value{
 A data frame with columns `api`, `cache_key`, `ext`, `size_bytes`,
