@@ -81,14 +81,6 @@
 #'   stop until the v0.5.0 live-submission branch lands.  Note:
 #'   neither branch performs an actual reachability or credential
 #'   check in v0.4.0 -- that ships with the live branch in v0.5.0.
-#' @param verbose Logical or NULL.  When `TRUE`, emit
-#'   `[cso_toolkit.dw_publish]` progress messages to stderr.  `NULL`
-#'   (the default) defers to the session setting `options(dw.verbose)`
-#'   managed by `dw_verbosity()`.
-#' @param debug Logical or NULL.  When `TRUE`, emit
-#'   `[cso_toolkit.dw_publish:debug]` detail lines to stderr (and
-#'   implies `verbose`).  `NULL` (the default) defers to
-#'   `options(dw.debug)`.
 #' @param ... Forwarded to the underlying HTTP client (currently
 #'   unused; reserved for the v0.5.0 live-submission branch).
 #'
