@@ -98,15 +98,17 @@
 #' @param verbose TRUE/FALSE -- show high-level progress + results (default TRUE).
 #' @param debug TRUE/FALSE -- show internal troubleshooting detail (default
 #'   FALSE; implies verbose). Pass NULL to leave a setting unchanged.
-#' @return (invisibly) the resolved list(verbose=, debug=).
+#' @return (invisibly) the *effective* `list(verbose=, debug=)` after the call.
+#'   Because `debug` implies `verbose`, `verbose` reads `TRUE` whenever `debug`
+#'   is `TRUE`, even if you passed `verbose = FALSE` alongside it.
 #' @family io
 #' @export
 dw_verbosity <- function(verbose = NULL, debug = NULL) {
 	if (!is.null(verbose)) options(dw.verbose = isTRUE(verbose))
 	if (!is.null(debug)) options(dw.debug = isTRUE(debug))
-	cur <- list(verbose = .dw_v(), debug = .dw_d())
-	.dw_msg("dw_verbosity", "verbose=", cur$verbose, " | debug=", cur$debug, v = TRUE)
-	invisible(cur)
+	eff <- .dw_vd()  # effective state: debug implies verbose
+	.dw_msg("dw_verbosity", "verbose=", eff$v, " | debug=", eff$d, v = TRUE)
+	invisible(list(verbose = eff$v, debug = eff$d))
 }
 
 .require <- function(pkg) {
