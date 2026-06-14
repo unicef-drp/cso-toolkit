@@ -41,12 +41,6 @@
 #'   `FALSE` (cache-first).
 #' @param cache_key Character.  Cache filename basename forwarded to
 #'   [dw_api_fetch()].  Default `"wb_population_sp_pop_totl"`.
-#' @param verbose Logical or `NULL`.  When `TRUE`, emit progress
-#'   messages to stderr.  `NULL` (default) inherits the session
-#'   setting from [dw_verbosity()].
-#' @param debug Logical or `NULL`.  When `TRUE`, emit detailed debug
-#'   messages (implies `verbose`).  `NULL` (default) inherits the
-#'   session setting from [dw_verbosity()].
 #'
 #' @return A tibble with columns `REF_AREA`, `TIME_PERIOD`,
 #'   `OBS_VALUE`.  Sorted by `REF_AREA`, `TIME_PERIOD` (ascending).

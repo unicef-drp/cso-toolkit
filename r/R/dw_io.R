@@ -105,7 +105,7 @@ dw_verbosity <- function(verbose = NULL, debug = NULL) {
 	if (!is.null(verbose)) options(dw.verbose = isTRUE(verbose))
 	if (!is.null(debug)) options(dw.debug = isTRUE(debug))
 	cur <- list(verbose = .dw_v(), debug = .dw_d())
-	message("[cso_toolkit] verbosity -> verbose=", cur$verbose, " | debug=", cur$debug)
+	.dw_msg("dw_verbosity", "verbose=", cur$verbose, " | debug=", cur$debug, v = TRUE)
 	invisible(cur)
 }
 
@@ -2336,12 +2336,10 @@ dw_compare <- function(current, reference,
 	}
 	value_cols <- if (is.null(value_cols)) setdiff(common, by) else value_cols[value_cols %in% common]
 	numeric_value_cols <- intersect(numeric_value_cols, value_cols)
-	if (v) {
-		message(sprintf(
-		 "[cso_toolkit.dw_compare] %s: current=%d rows vs reference=%d rows | keys [%s] | value cols [%s]",
-		 label, nrow(current), nrow(reference),
-		 paste(by, collapse = ", "), paste(value_cols, collapse = ", ")))
-	}
+	.dw_msg("dw_compare", sprintf(
+	 "%s: current=%d rows vs reference=%d rows | keys [%s] | value cols [%s]",
+	 label, nrow(current), nrow(reference),
+	 paste(by, collapse = ", "), paste(value_cols, collapse = ", ")), v = v)
 
 	norm <- function(v) {
 		v <- trimws(as.character(v))
@@ -2395,11 +2393,9 @@ dw_compare <- function(current, reference,
 		completed_at = format(Sys.time(), "%Y-%m-%d %H:%M:%S")
 	)
 
-	if (v) {
-		message(sprintf(
-		 "[cso_toolkit.dw_compare] %s: added=%d | removed=%d | changed=%d | row delta %+d",
-		 label, nrow(added), nrow(removed), nrow(changed), nrow(current) - nrow(reference)))
-	}
+	.dw_msg("dw_compare", sprintf(
+	 "%s: added=%d | removed=%d | changed=%d | row delta %+d",
+	 label, nrow(added), nrow(removed), nrow(changed), nrow(current) - nrow(reference)), v = v)
 
 	if (!is.null(write_report_to)) {
 		dir.create(write_report_to, recursive = TRUE, showWarnings = FALSE)
@@ -2409,7 +2405,7 @@ dw_compare <- function(current, reference,
 		data.table::fwrite(added, paste0(prefix, "_added_rows.csv"))
 		data.table::fwrite(removed, paste0(prefix, "_removed_rows.csv"))
 		data.table::fwrite(changed, paste0(prefix, "_changed_rows.csv"))
-		if (v) message("[cso_toolkit.dw_compare] report written to: ", write_report_to)
+		.dw_msg("dw_compare", "report written to: ", write_report_to, v = v)
 	}
 
 	list(summary = summary_tbl, added = added, removed = removed, changed = changed)
