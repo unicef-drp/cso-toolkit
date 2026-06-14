@@ -47,9 +47,13 @@
 #'   where the predicate is `TRUE` are eligible for the denominator
 #'   (i.e. they contribute to the redistributed weights). Useful for
 #'   "only redistribute over respondents who were asked the question".
-#' @param verbose Logical. If `TRUE` (default), reports per-stratum mean
-#'   of `value` under original vs. redistributed weights, plus the
-#'   pooled mean. Set `FALSE` to suppress.
+#' @param verbose Logical or `NULL`. Reports per-stratum mean of `value`
+#'   under original vs. redistributed weights, plus the pooled mean.
+#'   `NULL` (default) inherits `getOption("dw.verbose", TRUE)`; set
+#'   `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].
+#' @param debug Logical or `NULL`. Show internal troubleshooting detail
+#'   (resolved paths, dims, branch decisions). `NULL` (default) inherits
+#'   `getOption("dw.debug", FALSE)`; implies `verbose`. See [dw_verbosity()].
 #'
 #' @return The input `data` with one new column (`new_weight`) appended.
 #'
@@ -80,7 +84,10 @@ dw_nestweight <- function(data,
                        weight = NULL,
                        new_weight = "weight_adj",
                        only = NULL,
-                       verbose = TRUE) {
+                       verbose = NULL,
+                       debug = NULL) {
+  vb <- .dw_v(verbose); db <- .dw_d(debug); if (db) vb <- TRUE
+  .dw_dbg("dw_nestweight", "value=", value, " by=", by, " weight=", if (is.null(weight)) "(unit)" else weight, d = db)
   if (!is.data.frame(data)) {
     stop(sprintf(
       "[cso_toolkit.dw_nestweight] `data` must be a data frame; got %s.\n  Fix: convert your input (e.g. as.data.frame(x)) before calling.",
@@ -165,27 +172,23 @@ dw_nestweight <- function(data,
 
   data[[new_weight]] <- w_new
 
-  if (isTRUE(verbose)) {
+  if (vb) {
     v           <- data[[value]]
     n_strata    <- length(total_w_by)
     n_eligible  <- sum(eligible)
     n_total     <- nrow(data)
-    cat("dw_nestweight():", n_strata, "stratum levels;",
-        n_eligible, "/", n_total, "observations eligible.\n")
+    .dw_msg("dw_nestweight", n_strata, " stratum levels; ", n_eligible, "/", n_total, " observations eligible", v = vb)
     # Pooled-mean diagnostic only meaningful for numeric `value`; for
     # character / factor / logical, skip with a clear note rather than
     # erroring out of an otherwise-successful redistribution.
     if (is.numeric(v)) {
       orig_mean <- stats::weighted.mean(v, w_orig, na.rm = TRUE)
       adj_mean  <- stats::weighted.mean(v, w_new,  na.rm = TRUE)
-      cat("  Pooled mean of `", value, "`:\n", sep = "")
-      cat("    weighted by `", if (is.null(weight)) "(unit)" else weight,
-          "`         : ", format(orig_mean, digits = 6), "\n", sep = "")
-      cat("    weighted by `", new_weight,
-          "` (nestweighted): ", format(adj_mean, digits = 6), "\n", sep = "")
+      .dw_msg("dw_nestweight", "pooled mean of `", value, "`:", v = vb)
+      .dw_msg("dw_nestweight", "  weighted by `", if (is.null(weight)) "(unit)" else weight, "` : ", format(orig_mean, digits = 6), v = vb)
+      .dw_msg("dw_nestweight", "  weighted by `", new_weight, "` (nestweighted): ", format(adj_mean, digits = 6), v = vb)
     } else {
-      cat("  (`", value, "` is non-numeric (",
-          class(v)[1L], "); pooled mean diagnostic skipped.)\n", sep = "")
+      .dw_msg("dw_nestweight", "  (`", value, "` is non-numeric (", class(v)[1L], "); pooled mean diagnostic skipped)", v = vb)
     }
   }
 

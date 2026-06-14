@@ -4,13 +4,21 @@
 \alias{dw_verify_z}
 \title{Verify a canonical Teams file matches its Z: drive mirror}
 \usage{
-dw_verify_z(path, compare = c("size", "sha256"))
+dw_verify_z(path, compare = c("size", "sha256"), verbose = NULL, debug = NULL)
 }
 \arguments{
 \item{path}{Character. Path to a file under `teamsFolderCanonical`.}
 
 \item{compare}{Character. `"size"` (default, fast) or `"sha256"` (deep,
 requires the `digest` package).}
+
+\item{verbose}{Logical or `NULL`. Show high-level progress and result
+messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].}
+
+\item{debug}{Logical or `NULL`. Show internal troubleshooting detail
+(resolved paths, dims, branch decisions). `NULL` (default) inherits
+`getOption("dw.debug", FALSE)`; implies `verbose`. See [dw_verbosity()].}
 }
 \value{
 A list with `status` and supporting fields. `status` is one of:
@@ -38,6 +46,7 @@ Other io:
 \code{\link{dw_save}()},
 \code{\link{dw_stage}()},
 \code{\link{dw_toolkit_version}()},
-\code{\link{dw_use}()}
+\code{\link{dw_use}()},
+\code{\link{dw_verbosity}()}
 }
 \concept{io}

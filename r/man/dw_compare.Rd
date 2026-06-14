@@ -12,7 +12,9 @@ dw_compare(
   numeric_value_cols = NULL,
   tol = 1e-05,
   label = "compare",
-  write_report_to = NULL
+  write_report_to = NULL,
+  verbose = NULL,
+  debug = NULL
 )
 }
 \arguments{
@@ -38,6 +40,14 @@ filenames. Default `"compare"`.}
 `<label>_summary.csv`, `<label>_added_rows.csv`,
 `<label>_removed_rows.csv`, `<label>_changed_rows.csv`. Default
 `NULL` (don't write).}
+
+\item{verbose}{Logical or `NULL`. Show high-level progress and result
+messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].}
+
+\item{debug}{Logical or `NULL`. Show internal troubleshooting detail
+(resolved paths, dims, branch decisions). `NULL` (default) inherits
+`getOption("dw.debug", FALSE)`; implies `verbose`. See [dw_verbosity()].}
 }
 \value{
 A list with `summary` (one-row tibble) and `added`, `removed`,
@@ -66,6 +76,7 @@ Other io:
 \code{\link{dw_stage}()},
 \code{\link{dw_toolkit_version}()},
 \code{\link{dw_use}()},
+\code{\link{dw_verbosity}()},
 \code{\link{dw_verify_z}()}
 }
 \concept{io}
