@@ -3,8 +3,16 @@
 ## Unreleased
 
 _Entries land here as PRs merge into `develop`. When the next release
-is cut, this header is renamed `## v0.4.10 (YYYY-MM-DD)` and a fresh
+is cut, this header is renamed `## v0.4.11 (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
+
+## v0.4.10 (2026-06-14)
+
+**`aggregate_data_v2()` gains a `"total"` method** for additive count /
+stock indicators (refugees, displaced persons, births): the regional and
+global value is the additive sum of the country values (`sum(value)`),
+distinct from `"sum"` which returns a population-weighted rate
+(`sum(value) / sum(weight) * 100`). (#98)
 
 **Toolkit-wide `verbose` / `debug` convention.** Every public `dw_*` helper now
 takes optional `verbose` and `debug` arguments so a database manager, reviewer,
