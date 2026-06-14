@@ -4,7 +4,7 @@
 \alias{dw_stage}
 \title{Stage a canonical input into the reviewer sandbox with hash-guard}
 \usage{
-dw_stage(path, overwrite = FALSE)
+dw_stage(path, overwrite = FALSE, verbose = NULL, debug = NULL)
 }
 \arguments{
 \item{path}{Character. Sandbox path to stage. In reviewer mode this
@@ -14,6 +14,14 @@ downstream readers.}
 \item{overwrite}{Logical. Default `FALSE`. When `TRUE`, the sandbox
 file is re-copied from the canonical source regardless of whether
 it already exists or matches its sidecar.}
+
+\item{verbose}{Logical or `NULL`. Show high-level progress and result
+messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].}
+
+\item{debug}{Logical or `NULL`. Show internal troubleshooting detail
+(resolved paths, dims, branch decisions). `NULL` (default) inherits
+`getOption("dw.debug", FALSE)`; implies `verbose`. See [dw_verbosity()].}
 }
 \value{
 Character. The (normalised) sandbox path. Outside reviewer
@@ -83,6 +91,7 @@ Other io:
 \code{\link{dw_save}()},
 \code{\link{dw_toolkit_version}()},
 \code{\link{dw_use}()},
+\code{\link{dw_verbosity}()},
 \code{\link{dw_verify_z}()}
 }
 \concept{io}

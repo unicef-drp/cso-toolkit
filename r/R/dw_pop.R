@@ -41,6 +41,12 @@
 #'   `FALSE` (cache-first).
 #' @param cache_key Character.  Cache filename basename forwarded to
 #'   [dw_api_fetch()].  Default `"wb_population_sp_pop_totl"`.
+#' @param verbose Logical or `NULL`.  When `TRUE`, emit progress
+#'   messages to stderr.  `NULL` (default) inherits the session
+#'   setting from [dw_verbosity()].
+#' @param debug Logical or `NULL`.  When `TRUE`, emit detailed debug
+#'   messages (implies `verbose`).  `NULL` (default) inherits the
+#'   session setting from [dw_verbosity()].
 #'
 #' @return A tibble with columns `REF_AREA`, `TIME_PERIOD`,
 #'   `OBS_VALUE`.  Sorted by `REF_AREA`, `TIME_PERIOD` (ascending).
@@ -60,21 +66,33 @@
 #'   workflow that consumes `dw_pop()` output;
 #'   [dw_api_fetch()] for the underlying cache mechanics.
 #' @family demographics
+#' @param verbose Logical or `NULL`. Show high-level progress and result
+#'   messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+#'   set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].
+#' @param debug Logical or `NULL`. Show internal troubleshooting detail
+#'   (resolved paths, dims, branch decisions). `NULL` (default) inherits
+#'   `getOption("dw.debug", FALSE)`; implies `verbose`. See [dw_verbosity()].
 #' @export
 dw_pop <- function(year      = NULL,
                    indicator = "SP.POP.TOTL",
                    countries = NULL,
                    refresh   = FALSE,
-                   cache_key = "wb_population_sp_pop_totl") {
+                   cache_key = "wb_population_sp_pop_totl",
+                   verbose   = NULL,
+                   debug     = NULL) {
 
 	.cso_require("dplyr", where = "dw_pop")
+	vd <- .dw_vd(verbose, debug); v <- vd$v; d <- vd$d
+	.dw_msg("dw_pop", "population: indicator=", indicator, if (is.null(year)) " (latest/country)" else paste0(" year=", paste(year, collapse = ",")), v = v)
 
 	# Resolve via the standard API cache layer.
 	raw <- dw_api_fetch(
 		api       = "wb",
 		cache_key = cache_key,
 		refresh   = refresh,
-		indicator = indicator
+		indicator = indicator,
+		verbose   = v,
+		debug     = d
 	)
 
 	# The wbstats response shape (post-2021):
@@ -117,5 +135,6 @@ dw_pop <- function(year      = NULL,
 	# Stable sort: country, year ascending
 	tidy <- tidy[order(tidy$REF_AREA, tidy$TIME_PERIOD), , drop = FALSE]
 	rownames(tidy) <- NULL
+	.dw_msg("dw_pop", "returned ", nrow(tidy), " rows", v = v)
 	tidy
 }

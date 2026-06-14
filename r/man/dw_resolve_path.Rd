@@ -9,7 +9,8 @@ dw_resolve_path(
   name = NULL,
   sector = NULL,
   kind = c("wrk", "raw", "meta"),
-  vintage = NULL
+  vintage = NULL,
+  debug = NULL
 )
 }
 \arguments{
@@ -27,6 +28,10 @@ profile-defined root to resolve against.}
 
 \item{vintage}{Character. Optional subfolder (e.g. `"2026-05"` or
 `"2026-05-23"`) inserted between `sector` and `name`.}
+
+\item{debug}{Logical or `NULL`. Emit resolution detail for
+troubleshooting. `NULL` (default) inherits `getOption("dw.debug", FALSE)`.
+See [dw_verbosity()].}
 }
 \value{
 Character. Absolute filesystem path.
@@ -60,6 +65,7 @@ Other io:
 \code{\link{dw_stage}()},
 \code{\link{dw_toolkit_version}()},
 \code{\link{dw_use}()},
+\code{\link{dw_verbosity}()},
 \code{\link{dw_verify_z}()}
 }
 \concept{io}
