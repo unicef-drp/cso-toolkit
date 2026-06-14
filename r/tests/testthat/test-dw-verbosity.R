@@ -31,9 +31,9 @@ test_that(".dw_msg / .dw_dbg emit prefixed messages and stay silent when off", {
 test_that("dw_verbosity() sets session options and returns the resolved state", {
   op <- options(dw.verbose = TRUE, dw.debug = FALSE); on.exit(options(op), add = TRUE)
   res <- suppressMessages(dw_verbosity(verbose = FALSE, debug = TRUE))
-  expect_false(getOption("dw.verbose"))
+  expect_false(getOption("dw.verbose"))   # raw option is set FALSE
   expect_true(getOption("dw.debug"))
-  expect_false(res$verbose)
+  expect_true(res$verbose)                # effective verbose is TRUE: debug implies verbose
   expect_true(res$debug)
 })
 
