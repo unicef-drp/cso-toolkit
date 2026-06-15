@@ -4,11 +4,19 @@
 \alias{cso_toolkit_check}
 \title{Check if a newer cso-toolkit version is available upstream}
 \usage{
-cso_toolkit_check(quiet = TRUE)
+cso_toolkit_check(quiet = TRUE, verbose = NULL, debug = NULL)
 }
 \arguments{
 \item{quiet}{Logical. If `TRUE` (default), suppress all `message()`
 output and just return the result list invisibly.}
+
+\item{verbose}{Logical or `NULL`. Show high-level progress and result
+messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].}
+
+\item{debug}{Logical or `NULL`. Show internal troubleshooting detail
+(resolved paths, dims, branch decisions). `NULL` (default) inherits
+`getOption("dw.debug", FALSE)`; implies `verbose`. See [dw_verbosity()].}
 }
 \value{
 Invisibly, a named list with `source`, `pinned_version`,

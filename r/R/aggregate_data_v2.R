@@ -80,6 +80,12 @@ if (!exists("%>%", mode = "function", inherits = TRUE)) {
 #'   [generate_agg_footnote()] for the standard footnote string;
 #'   [apply_time_window()] to filter to the latest observation in a window.
 #' @family aggregate
+#' @param verbose Logical or `NULL`. Show high-level progress and result
+#'   messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+#'   set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].
+#' @param debug Logical or `NULL`. Show internal troubleshooting detail.
+#'   `NULL` (default) inherits `getOption("dw.debug", FALSE)`; implies
+#'   `verbose`. See [dw_verbosity()].
 #' @export
 aggregate_data_v2 <- function(data,
                               value, 
@@ -94,7 +100,9 @@ aggregate_data_v2 <- function(data,
                               total.population = FALSE,
                               number.affected = FALSE,
                               global_label = "WORLD",
-                              validate = TRUE) {
+                              validate = TRUE,
+                              verbose = NULL,
+                              debug = NULL) {
 
   .cso_require(c("dplyr", "tidyr", "rlang"), where = "aggregate_data_v2")
 
@@ -126,6 +134,10 @@ aggregate_data_v2 <- function(data,
   }
 
   method <- match.arg(method)
+
+  vd <- .dw_vd(verbose, debug); v <- vd$v; d <- vd$d
+  .dw_msg("aggregate_data_v2", "aggregating '", value, "' by [", paste(by, collapse = ", "), "] (method=", method, ")", v = v)
+  .dw_dbg("aggregate_data_v2", "input ", nrow(data), " x ", ncol(data), " | weight=", weight, " | country_id=", country_id, " | global=", global, " | coverage_threshold=", if (is.null(coverage_threshold)) "NULL" else format(coverage_threshold), d = d)
 
   value_sym   <- rlang::sym(value)
   weight_sym  <- rlang::sym(weight)
@@ -218,7 +230,10 @@ aggregate_data_v2 <- function(data,
   if (total.population) output_cols <- c(output_cols, "Total_Population", "Data_Population")
   if (number.affected && method == "proportion") output_cols <- c(output_cols, "Number_Affected")
 
-  aggregated_data %>% dplyr::select(dplyr::all_of(output_cols))
+  result <- aggregated_data %>% dplyr::select(dplyr::all_of(output_cols))
+  .dw_dbg("aggregate_data_v2", "output cols: ", paste(output_cols, collapse = ", "), d = d)
+  .dw_msg("aggregate_data_v2", "produced ", nrow(result), " x ", ncol(result), " aggregate row(s)", v = v)
+  result
 }
 
 #' Generate standardized footnotes for aggregated estimates
@@ -248,6 +263,12 @@ aggregate_data_v2 <- function(data,
 #' @seealso [aggregate_data_v2()] (typically the producer of the
 #'   coverage numbers fed into this footnote).
 #' @family aggregate
+#' @param verbose Logical or `NULL`. Show high-level progress and result
+#'   messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+#'   set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].
+#' @param debug Logical or `NULL`. Show internal troubleshooting detail.
+#'   `NULL` (default) inherits `getOption("dw.debug", FALSE)`; implies
+#'   `verbose`. See [dw_verbosity()].
 #' @export
 generate_agg_footnote <- function(country_coverage,
                                   total_countries,
@@ -255,7 +276,12 @@ generate_agg_footnote <- function(country_coverage,
                                   start_year = NULL,
                                   end_year = NULL,
                                   exemptions = NULL,
-                                  exclusions = NULL) {
+                                  exclusions = NULL,
+                                  verbose = NULL,
+                                  debug = NULL) {
+  vd <- .dw_vd(verbose, debug); v <- vd$v; d <- vd$d
+  .dw_msg("generate_agg_footnote", "building footnote for ", country_coverage, "/", total_countries, " countries", v = v)
+  .dw_dbg("generate_agg_footnote", "pop_coverage=", round(pop_coverage * 100), "% | years=", if (is.null(start_year)) "NA" else start_year, "-", if (is.null(end_year)) "NA" else end_year, " | exemptions=", length(exemptions), " | exclusions=", length(exclusions), d = d)
   footnote <- paste0(
     country_coverage, "/", total_countries, " countries (",
     round(pop_coverage * 100), " % population coverage)"
@@ -272,6 +298,7 @@ generate_agg_footnote <- function(country_coverage,
   if (!is.null(exclusions) && length(exclusions) > 0) {
     footnote <- paste0(footnote, ". Exclusions: ", paste(exclusions, collapse = ", "))
   }
+  .dw_msg("generate_agg_footnote", "footnote: ", footnote, v = v)
   footnote
 }
 
@@ -299,6 +326,12 @@ generate_agg_footnote <- function(country_coverage,
 #' @seealso [aggregate_data_v2()] (typical downstream consumer of the
 #'   windowed slice).
 #' @family aggregate
+#' @param verbose Logical or `NULL`. Show high-level progress and result
+#'   messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+#'   set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].
+#' @param debug Logical or `NULL`. Show internal troubleshooting detail.
+#'   `NULL` (default) inherits `getOption("dw.debug", FALSE)`; implies
+#'   `verbose`. See [dw_verbosity()].
 #' @export
 apply_time_window <- function(data,
                               country_col = "REF_AREA",
@@ -306,11 +339,16 @@ apply_time_window <- function(data,
                               start_year,
                               end_year,
                               exemptions = NULL,
-                              exclusions = NULL) {
+                              exclusions = NULL,
+                              verbose = NULL,
+                              debug = NULL) {
   .cso_require(c("dplyr", "rlang"), where = "apply_time_window")
   country_sym <- rlang::sym(country_col)
   time_sym <- rlang::sym(time_col)
-  data %>%
+  vd <- .dw_vd(verbose, debug); v <- vd$v; d <- vd$d
+  .dw_msg("apply_time_window", "selecting latest obs per '", country_col, "' within [", start_year, ", ", end_year, "]", v = v)
+  .dw_dbg("apply_time_window", "input ", nrow(data), " rows | time_col=", time_col, " | exemptions=", length(exemptions), " | exclusions=", length(exclusions), d = d)
+  out <- data %>%
     dplyr::filter(!(!!country_sym %in% exclusions)) %>%
     dplyr::group_by(!!country_sym) %>%
     dplyr::mutate(
@@ -322,6 +360,8 @@ apply_time_window <- function(data,
     dplyr::filter(.eligible) %>%
     dplyr::select(-starts_with(".")) %>%
     dplyr::ungroup()
+  .dw_msg("apply_time_window", "kept ", nrow(out), " row(s) (", nrow(data), " in)", v = v)
+  out
 }
 
 ## Note on `aggregate_data()` (the v1 signature):

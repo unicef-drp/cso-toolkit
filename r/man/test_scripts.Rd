@@ -14,7 +14,8 @@ test_scripts(
   ignore_dirs = c(".git", "renv", "packrat", "node_modules", ".Rproj.user"),
   custom_rules = NULL,
   error_on_violation = FALSE,
-  verbose = TRUE
+  verbose = TRUE,
+  debug = NULL
 )
 
 dw_test_scripts(
@@ -26,7 +27,8 @@ dw_test_scripts(
   ignore_dirs = c(".git", "renv", "packrat", "node_modules", ".Rproj.user"),
   custom_rules = NULL,
   error_on_violation = FALSE,
-  verbose = TRUE
+  verbose = TRUE,
+  debug = NULL
 )
 }
 \arguments{
@@ -52,6 +54,10 @@ when any `family == "io"` or `"api"` violation is found (useful in CI).
 Default `FALSE`.}
 
 \item{verbose}{Logical. Print a formatted summary. Default `TRUE`.}
+
+\item{debug}{Logical or NULL. Print internal diagnostics (file count,
+rule count, per-family violation tallies). `NULL` (default) inherits
+`options(dw.debug)`. `TRUE` implies `verbose`. See [dw_verbosity()].}
 }
 \value{
 A data frame with columns `file`, `line`, `rule`, `family`,
