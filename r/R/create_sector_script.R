@@ -62,6 +62,12 @@
 #'   generated script's logging and try-catch are designed to work with
 #'   the profile sentinel set by [create_profile()].
 #' @family scaffolding
+#' @param verbose Logical or `NULL`. Show high-level progress and result
+#'   messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+#'   set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].
+#' @param debug Logical or `NULL`. Show internal troubleshooting detail.
+#'   `NULL` (default) inherits `getOption("dw.debug", FALSE)`; implies
+#'   `verbose`. See [dw_verbosity()].
 #' @export
 create_sector_script <- function(sector_name,
                                  sector_code,
@@ -70,12 +76,18 @@ create_sector_script <- function(sector_name,
                                  profile_file = "profile_DW-Production.R",
                                  input_subpath = c("01_dw_prep", "011_rawdata"),
                                  output_subpath = c("01_dw_prep", "013_wrkdata"),
-                                 overwrite = FALSE) {
+                                 overwrite = FALSE,
+                                 verbose = NULL,
+                                 debug = NULL) {
+  vd <- .dw_vd(verbose, debug); v <- vd$v; d <- vd$d
+  .dw_msg("create_sector_script", "generating run script for sector '", sector_code, "' (", sector_name, ") under ", base_dir, v = v)
   user <- Sys.getenv("USERNAME", unset = Sys.info()[["user"]])
   timestamp <- format(Sys.time(), "%Y-%m-%d %H:%M")
 
   script_dir <- file.path(base_dir, sector_code)
   script_path <- file.path(script_dir, paste0("00_run_", sector_code, ".R"))
+  .dw_dbg("create_sector_script", "script_path=", script_path, " | profile_name=", profile_name, " | profile_file=", profile_file, d = d)
+  .dw_dbg("create_sector_script", "input_subpath=[", paste(input_subpath, collapse = ", "), "] output_subpath=[", paste(output_subpath, collapse = ", "), "] overwrite=", overwrite, d = d)
 
   if (!dir.exists(script_dir)) {
     dir.create(script_dir, recursive = TRUE)
@@ -182,7 +194,8 @@ create_sector_script <- function(sector_name,
   )
 
   writeLines(template, con = script_path)
-  message("[OK] Sector script created: ", script_path)
+  .dw_msg("create_sector_script", "wrote ", length(template), "-line run script: ", script_path, v = v)
+  if (v) message("[OK] Sector script created: ", script_path)
   invisible(script_path)
 }
 
@@ -209,11 +222,22 @@ create_sector_script <- function(sector_name,
 #' }
 #' @seealso [create_sector_script()] (the generic underlying helper).
 #' @family scaffolding
+#' @param verbose Logical or `NULL`. Show high-level progress and result
+#'   messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+#'   set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].
+#' @param debug Logical or `NULL`. Show internal troubleshooting detail.
+#'   `NULL` (default) inherits `getOption("dw.debug", FALSE)`; implies
+#'   `verbose`. See [dw_verbosity()].
 #' @export
 create_dw_sector_script <- function(sector_name,
                                     sector_code,
                                     project_root = ".",
-                                    overwrite = FALSE) {
+                                    overwrite = FALSE,
+                                    verbose = NULL,
+                                    debug = NULL) {
+  vd <- .dw_vd(verbose, debug); v <- vd$v; d <- vd$d
+  .dw_msg("create_dw_sector_script", "scaffolding DW-Production sector '", sector_code, "' under ", project_root, v = v)
+  .dw_dbg("create_dw_sector_script", "base_dir=", file.path(project_root, "01_dw_prep", "012_codes"), d = d)
   create_sector_script(
     sector_name    = sector_name,
     sector_code    = sector_code,
@@ -222,7 +246,9 @@ create_dw_sector_script <- function(sector_name,
     profile_file   = "profile_DW-Production.R",
     input_subpath  = c("01_dw_prep", "011_rawdata"),
     output_subpath = c("01_dw_prep", "013_wrkdata"),
-    overwrite      = overwrite
+    overwrite      = overwrite,
+    verbose        = verbose,
+    debug          = debug
   )
 }
 

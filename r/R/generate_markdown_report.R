@@ -61,6 +61,12 @@
 #'   summarise.
 #' @param output_path Character. Directory to write `<basename>.md` into.
 #'   Default `NULL` writes the file in the current working directory.
+#' @param verbose Logical or `NULL`. Show high-level progress and result
+#'   messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+#'   set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].
+#' @param debug Logical or `NULL`. Show internal troubleshooting detail
+#'   (resolved paths, dims, branch decisions). `NULL` (default) inherits
+#'   `getOption("dw.debug", FALSE)`; implies `verbose`. See [dw_verbosity()].
 #'
 #' @return Invisibly, `NULL`. Side effect: writes a `.md` file.
 #'
@@ -78,9 +84,13 @@
 #' @seealso [process_all_csv_files()] to loop over a folder of CSVs.
 #' @family reporting
 #' @export
-generate_markdown_report <- function(csv_file_path, country_column, year_column, indicator_column, value_column, output_path = NULL) {
+generate_markdown_report <- function(csv_file_path, country_column, year_column, indicator_column, value_column, output_path = NULL, verbose = NULL, debug = NULL) {
 
   .cso_require(c("dplyr", "readr", "rlang"), where = "generate_markdown_report")
+
+  vd <- .dw_vd(verbose, debug); v <- vd$v; d <- vd$d
+  .dw_msg("generate_markdown_report", "reading ", basename(csv_file_path), v = v)
+  .dw_dbg("generate_markdown_report", "csv_file_path=", csv_file_path, " output_path=", if (is.null(output_path)) "<cwd>" else output_path, d = d)
 
   # Read the CSV file (generic helper accepting an arbitrary path; dw_use
   # is not applicable because the file is not part of the warehouse layout).
@@ -95,6 +105,7 @@ generate_markdown_report <- function(csv_file_path, country_column, year_column,
   num_unique_indicators <- if (indicator_column %in% names(data)) dplyr::n_distinct(data[[indicator_column]]) else NA
   num_variables <- ncol(data)
   num_observations <- nrow(data)  # Number of observations (rows) in the dataset
+  .dw_dbg("generate_markdown_report", "rows=", num_observations, " cols=", num_variables, " countries=", num_unique_countries, " years=", num_unique_years, " indicators=", num_unique_indicators, d = d)
 
   # Function to get variable details
   get_variable_details <- function(data) {
@@ -245,7 +256,7 @@ generate_markdown_report <- function(csv_file_path, country_column, year_column,
 
   # Save the markdown content to the output file
   writeLines(markdown_content, con = output_file)
-  message("Markdown report saved to ", output_file)
+  .dw_msg("generate_markdown_report", "report saved to ", output_file, v = v)
 }
 
 #' Generate descriptive-statistics Markdown reports for every CSV in a folder
@@ -259,6 +270,12 @@ generate_markdown_report <- function(csv_file_path, country_column, year_column,
 #'   Column names — see [generate_markdown_report()].
 #' @param output_path Character. Output directory for `.md` files. Default
 #'   `NULL` writes into the current working directory.
+#' @param verbose Logical or `NULL`. Show high-level progress and result
+#'   messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+#'   set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].
+#' @param debug Logical or `NULL`. Show internal troubleshooting detail
+#'   (resolved paths, dims, branch decisions). `NULL` (default) inherits
+#'   `getOption("dw.debug", FALSE)`; implies `verbose`. See [dw_verbosity()].
 #'
 #' @return Invisibly, `NULL`.
 #'
@@ -276,14 +293,18 @@ generate_markdown_report <- function(csv_file_path, country_column, year_column,
 #' @seealso [generate_markdown_report()] (single-file engine).
 #' @family reporting
 #' @export
-process_all_csv_files <- function(folder_path, country_column, year_column, indicator_column, value_column, output_path = NULL) {
+process_all_csv_files <- function(folder_path, country_column, year_column, indicator_column, value_column, output_path = NULL, verbose = NULL, debug = NULL) {
   # List all CSV files in the folder
   csv_files <- list.files(path = folder_path, pattern = "\\.csv$", full.names = TRUE)
 
   # Loop through each CSV file and generate a Markdown report
+  vd <- .dw_vd(verbose, debug); v <- vd$v; d <- vd$d
+  .dw_msg("process_all_csv_files", "found ", length(csv_files), " CSV file(s) in ", folder_path, v = v)
+  .dw_dbg("process_all_csv_files", "folder_path=", folder_path, " output_path=", if (is.null(output_path)) "<cwd>" else output_path, d = d)
+
   for (csv_file in csv_files) {
-    message("Processing file: ", csv_file)
-    generate_markdown_report(csv_file, country_column, year_column, indicator_column, value_column, output_path)
+    .dw_msg("process_all_csv_files", "processing ", csv_file, v = v)
+    generate_markdown_report(csv_file, country_column, year_column, indicator_column, value_column, output_path, verbose = v, debug = d)
   }
 }
 

@@ -13,7 +13,9 @@ aggregate_data(
   global = TRUE,
   method = c("mean", "weighted_mean"),
   pop.coverage = FALSE,
-  country.coverage = FALSE
+  country.coverage = FALSE,
+  verbose = NULL,
+  debug = NULL
 )
 
 dw_aggregate_data(
@@ -24,7 +26,9 @@ dw_aggregate_data(
   global = TRUE,
   method = c("mean", "weighted_mean"),
   pop.coverage = FALSE,
-  country.coverage = FALSE
+  country.coverage = FALSE,
+  verbose = NULL,
+  debug = NULL
 )
 }
 \arguments{
@@ -43,6 +47,14 @@ dw_aggregate_data(
 \item{pop.coverage}{Logical; if TRUE, shows share of child population in the reference group covered with data}
 
 \item{country.coverage}{Logical; if TRUE, adds a column counting the number of non-NA observations contributing to each group.}
+
+\item{verbose}{Logical or `NULL`. Show high-level progress and result
+messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].}
+
+\item{debug}{Logical or `NULL`. Show internal troubleshooting detail.
+`NULL` (default) inherits `getOption("dw.debug", FALSE)`; implies
+`verbose`. See [dw_verbosity()].}
 }
 \value{
 A data frame with aggregated data.
