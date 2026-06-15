@@ -12,7 +12,9 @@ apply_time_window(
   start_year,
   end_year,
   exemptions = NULL,
-  exclusions = NULL
+  exclusions = NULL,
+  verbose = NULL,
+  debug = NULL
 )
 
 dw_apply_time_window(
@@ -22,7 +24,9 @@ dw_apply_time_window(
   start_year,
   end_year,
   exemptions = NULL,
-  exclusions = NULL
+  exclusions = NULL,
+  verbose = NULL,
+  debug = NULL
 )
 }
 \arguments{
@@ -41,6 +45,14 @@ latest observation is kept even when outside the window.}
 
 \item{exclusions}{Optional character vector of country codes to drop
 before ranking.}
+
+\item{verbose}{Logical or `NULL`. Show high-level progress and result
+messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].}
+
+\item{debug}{Logical or `NULL`. Show internal troubleshooting detail.
+`NULL` (default) inherits `getOption("dw.debug", FALSE)`; implies
+`verbose`. See [dw_verbosity()].}
 }
 \value{
 A data frame with one row per country (or none for countries

@@ -93,6 +93,12 @@
 #'
 #' @param quiet Logical. If `TRUE` (default), suppress all `message()`
 #'   output and just return the result list invisibly.
+#' @param verbose Logical or `NULL`. Show high-level progress and result
+#'   messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+#'   set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].
+#' @param debug Logical or `NULL`. Show internal troubleshooting detail
+#'   (resolved paths, dims, branch decisions). `NULL` (default) inherits
+#'   `getOption("dw.debug", FALSE)`; implies `verbose`. See [dw_verbosity()].
 #'
 #' @return Invisibly, a named list with `source`, `pinned_version`,
 #'   `upstream_version`, `updates_available`, `updated_files`, or `NULL`.
@@ -108,7 +114,7 @@
 #'   [cso_toolkit_pull()] for the refresh workflow.
 #' @family sync
 #' @export
-cso_toolkit_check <- function(quiet = TRUE) {
+cso_toolkit_check <- function(quiet = TRUE, verbose = NULL, debug = NULL) {
 	# Mode contract: reviewers don't poll GitHub
 	if (!isTRUE(.try_get("dw_apis_allowed"))) {
 		if (!quiet) message("cso_toolkit_check: skipped (reviewer mode forbids API calls)")
@@ -123,6 +129,12 @@ cso_toolkit_check <- function(quiet = TRUE) {
 		return(invisible(NULL))
 	}
 
+	vd <- .dw_vd(verbose, debug); v <- vd$v; d <- vd$d
+	if (isTRUE(quiet)) { v <- FALSE; d <- FALSE }  # honour the quiet contract
+	.dw_msg("cso_toolkit_check", "checking upstream '", m$source, "' for a newer tag", v = v)
+	.dw_dbg("cso_toolkit_check", "manifest source=", m$source, " | pinned=", m$pulled_version %||% "0.0.0", d = d)
+
+	.dw_dbg("cso_toolkit_check", "querying upstream latest tag via .cso_upstream_latest_tag()", d = d)
 	upstream <- tryCatch(.cso_upstream_latest_tag(m$source),
 	                     error = function(e) NULL)
 	if (is.null(upstream)) {
@@ -170,6 +182,12 @@ cso_toolkit_check <- function(quiet = TRUE) {
 #'
 #' @param target_version Character. Optional explicit tag to diff against.
 #'   Defaults to the latest upstream tag.
+#' @param verbose Logical or `NULL`. Show high-level progress and result
+#'   messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+#'   set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].
+#' @param debug Logical or `NULL`. Show internal troubleshooting detail
+#'   (resolved paths, dims, branch decisions). `NULL` (default) inherits
+#'   `getOption("dw.debug", FALSE)`; implies `verbose`. See [dw_verbosity()].
 #'
 #' @return Invisibly, `NULL` for the stub.
 #'
@@ -177,9 +195,12 @@ cso_toolkit_check <- function(quiet = TRUE) {
 #'   inspecting); [cso_toolkit_pull()] (executes the upgrade).
 #' @family sync
 #' @export
-cso_toolkit_diff <- function(target_version = NULL) {
+cso_toolkit_diff <- function(target_version = NULL, verbose = NULL, debug = NULL) {
 	m <- .cso_load_manifest()
 	if (is.null(m)) return(invisible(NULL))
+	vd <- .dw_vd(verbose, debug); v <- vd$v; d <- vd$d
+	.dw_msg("cso_toolkit_diff", "diffing vendored copies against upstream '", m$source %||% "<unset>", "'", v = v)
+	.dw_dbg("cso_toolkit_diff", "source=", m$source %||% "<unset>", " | target_version=", target_version %||% "<latest>", d = d)
 	message("cso_toolkit_diff: not yet implemented.\n",
 	        "  Upstream repo (", m$source %||% "<unset>",
 	        ") needs to exist before diff is meaningful.\n",
@@ -205,6 +226,12 @@ cso_toolkit_diff <- function(target_version = NULL) {
 #' @param confirm Logical. Prompt per file. Default `TRUE`.
 #' @param dry_run Logical. Show what would change without writing. Default
 #'   `FALSE`.
+#' @param verbose Logical or `NULL`. Show high-level progress and result
+#'   messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+#'   set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].
+#' @param debug Logical or `NULL`. Show internal troubleshooting detail
+#'   (resolved paths, dims, branch decisions). `NULL` (default) inherits
+#'   `getOption("dw.debug", FALSE)`; implies `verbose`. See [dw_verbosity()].
 #'
 #' @return Invisibly, `NULL` for the stub.
 #'
@@ -215,7 +242,9 @@ cso_toolkit_diff <- function(target_version = NULL) {
 #' @export
 cso_toolkit_pull <- function(target_version,
                              confirm = TRUE,
-                             dry_run = FALSE) {
+                             dry_run = FALSE,
+                             verbose = NULL,
+                             debug = NULL) {
 	if (!isTRUE(.try_get("dw_apis_allowed"))) {
 		stop("[cso_toolkit.cso_toolkit_pull] Forbidden in reviewer mode.\n  Reason: pulling a new toolkit version requires hitting GitHub, which the reviewer-mode contract forbids.\n  Fix: switch the profile to producer mode (set dw_mode: producer in user_config.yml) before re-running.",
 		     call. = FALSE)
@@ -244,6 +273,10 @@ cso_toolkit_pull <- function(target_version,
 		     call. = FALSE)
 	}
 
+	vd <- .dw_vd(verbose, debug); v <- vd$v; d <- vd$d
+	.dw_msg("cso_toolkit_pull", "refreshing vendored copies from '", m$source, "' to ", target_version, v = v)
+	.dw_dbg("cso_toolkit_pull", "source=", m$source, " | target_version=", target_version, " | confirm=", confirm, " | dry_run=", dry_run, d = d)
+	.dw_dbg("cso_toolkit_pull", "upstream latest tag resolved to ", upstream_check, d = d)
 	message("cso_toolkit_pull: implementation TBD when cso-toolkit exists.\n",
 	        "  Target version: ", target_version, "\n",
 	        "  dry_run: ", dry_run, "\n",
