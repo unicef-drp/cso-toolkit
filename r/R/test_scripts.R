@@ -143,9 +143,6 @@
 #'   [dw_use()] and [dw_api_fetch()] (the toolkit functions whose direct
 #'   bypasses this auditor catches).
 #' @family audit
-#' @param debug Logical or `NULL`. Show internal troubleshooting detail.
-#'   `NULL` (default) inherits `getOption("dw.debug", FALSE)`; implies
-#'   `verbose`. See [dw_verbosity()].
 #' @export
 test_scripts <- function(path,
                          pattern = "\\.R$",

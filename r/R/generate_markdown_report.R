@@ -83,12 +83,6 @@
 #' }
 #' @seealso [process_all_csv_files()] to loop over a folder of CSVs.
 #' @family reporting
-#' @param verbose Logical or `NULL`. Show high-level progress and result
-#'   messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
-#'   set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].
-#' @param debug Logical or `NULL`. Show internal troubleshooting detail.
-#'   `NULL` (default) inherits `getOption("dw.debug", FALSE)`; implies
-#'   `verbose`. See [dw_verbosity()].
 #' @export
 generate_markdown_report <- function(csv_file_path, country_column, year_column, indicator_column, value_column, output_path = NULL, verbose = NULL, debug = NULL) {
 
@@ -298,12 +292,6 @@ generate_markdown_report <- function(csv_file_path, country_column, year_column,
 #' }
 #' @seealso [generate_markdown_report()] (single-file engine).
 #' @family reporting
-#' @param verbose Logical or `NULL`. Show high-level progress and result
-#'   messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
-#'   set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].
-#' @param debug Logical or `NULL`. Show internal troubleshooting detail.
-#'   `NULL` (default) inherits `getOption("dw.debug", FALSE)`; implies
-#'   `verbose`. See [dw_verbosity()].
 #' @export
 process_all_csv_files <- function(folder_path, country_column, year_column, indicator_column, value_column, output_path = NULL, verbose = NULL, debug = NULL) {
   # List all CSV files in the folder

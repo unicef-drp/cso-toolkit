@@ -113,12 +113,6 @@
 #' @seealso [cso_toolkit_diff()] for per-file diffs;
 #'   [cso_toolkit_pull()] for the refresh workflow.
 #' @family sync
-#' @param verbose Logical or `NULL`. Show high-level progress and result
-#'   messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
-#'   set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].
-#' @param debug Logical or `NULL`. Show internal troubleshooting detail.
-#'   `NULL` (default) inherits `getOption("dw.debug", FALSE)`; implies
-#'   `verbose`. See [dw_verbosity()].
 #' @export
 cso_toolkit_check <- function(quiet = TRUE, verbose = NULL, debug = NULL) {
 	# Mode contract: reviewers don't poll GitHub
@@ -136,6 +130,7 @@ cso_toolkit_check <- function(quiet = TRUE, verbose = NULL, debug = NULL) {
 	}
 
 	vd <- .dw_vd(verbose, debug); v <- vd$v; d <- vd$d
+	if (isTRUE(quiet)) { v <- FALSE; d <- FALSE }  # honour the quiet contract
 	.dw_msg("cso_toolkit_check", "checking upstream '", m$source, "' for a newer tag", v = v)
 	.dw_dbg("cso_toolkit_check", "manifest source=", m$source, " | pinned=", m$pulled_version %||% "0.0.0", d = d)
 
@@ -199,12 +194,6 @@ cso_toolkit_check <- function(quiet = TRUE, verbose = NULL, debug = NULL) {
 #' @seealso [cso_toolkit_check()] (which surfaces when a diff is worth
 #'   inspecting); [cso_toolkit_pull()] (executes the upgrade).
 #' @family sync
-#' @param verbose Logical or `NULL`. Show high-level progress and result
-#'   messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
-#'   set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].
-#' @param debug Logical or `NULL`. Show internal troubleshooting detail.
-#'   `NULL` (default) inherits `getOption("dw.debug", FALSE)`; implies
-#'   `verbose`. See [dw_verbosity()].
 #' @export
 cso_toolkit_diff <- function(target_version = NULL, verbose = NULL, debug = NULL) {
 	m <- .cso_load_manifest()
@@ -250,12 +239,6 @@ cso_toolkit_diff <- function(target_version = NULL, verbose = NULL, debug = NULL
 #'   needed; [cso_toolkit_diff()] to inspect per-file changes before
 #'   overwriting.
 #' @family sync
-#' @param verbose Logical or `NULL`. Show high-level progress and result
-#'   messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
-#'   set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].
-#' @param debug Logical or `NULL`. Show internal troubleshooting detail.
-#'   `NULL` (default) inherits `getOption("dw.debug", FALSE)`; implies
-#'   `verbose`. See [dw_verbosity()].
 #' @export
 cso_toolkit_pull <- function(target_version,
                              confirm = TRUE,

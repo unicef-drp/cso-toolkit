@@ -40,9 +40,9 @@ recursed).}
 messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
 set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].}
 
-\item{debug}{Logical or `NULL`. Show internal troubleshooting detail.
-`NULL` (default) inherits `getOption("dw.debug", FALSE)`; implies
-`verbose`. See [dw_verbosity()].}
+\item{debug}{Logical or `NULL`. Show internal troubleshooting detail
+(resolved paths, dims, branch decisions). `NULL` (default) inherits
+`getOption("dw.debug", FALSE)`; implies `verbose`. See [dw_verbosity()].}
 }
 \value{
 Invisibly, `NULL`.
