@@ -4,7 +4,13 @@
 \alias{cso_toolkit_pull}
 \title{Refresh the vendored copies to a specific cso-toolkit tag}
 \usage{
-cso_toolkit_pull(target_version, confirm = TRUE, dry_run = FALSE)
+cso_toolkit_pull(
+  target_version,
+  confirm = TRUE,
+  dry_run = FALSE,
+  verbose = NULL,
+  debug = NULL
+)
 }
 \arguments{
 \item{target_version}{Character. Tag to pull (e.g. `"v0.2.0"`).}
@@ -13,6 +19,14 @@ cso_toolkit_pull(target_version, confirm = TRUE, dry_run = FALSE)
 
 \item{dry_run}{Logical. Show what would change without writing. Default
 `FALSE`.}
+
+\item{verbose}{Logical or `NULL`. Show high-level progress and result
+messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].}
+
+\item{debug}{Logical or `NULL`. Show internal troubleshooting detail.
+`NULL` (default) inherits `getOption("dw.debug", FALSE)`; implies
+`verbose`. See [dw_verbosity()].}
 }
 \value{
 Invisibly, `NULL` for the stub.

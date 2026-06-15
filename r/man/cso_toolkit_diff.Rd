@@ -4,11 +4,19 @@
 \alias{cso_toolkit_diff}
 \title{Show per-file diff between vendored copy and upstream version}
 \usage{
-cso_toolkit_diff(target_version = NULL)
+cso_toolkit_diff(target_version = NULL, verbose = NULL, debug = NULL)
 }
 \arguments{
 \item{target_version}{Character. Optional explicit tag to diff against.
 Defaults to the latest upstream tag.}
+
+\item{verbose}{Logical or `NULL`. Show high-level progress and result
+messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].}
+
+\item{debug}{Logical or `NULL`. Show internal troubleshooting detail.
+`NULL` (default) inherits `getOption("dw.debug", FALSE)`; implies
+`verbose`. See [dw_verbosity()].}
 }
 \value{
 Invisibly, `NULL` for the stub.

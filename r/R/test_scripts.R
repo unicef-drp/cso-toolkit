@@ -121,6 +121,9 @@
 #'   when any `family == "io"` or `"api"` violation is found (useful in CI).
 #'   Default `FALSE`.
 #' @param verbose Logical. Print a formatted summary. Default `TRUE`.
+#' @param debug Logical or NULL. Print internal diagnostics (file count,
+#'   rule count, per-family violation tallies). `NULL` (default) inherits
+#'   `options(dw.debug)`. `TRUE` implies `verbose`. See [dw_verbosity()].
 #'
 #' @return A data frame with columns `file`, `line`, `rule`, `family`,
 #'   `message`, `suggest`, `snippet`. Empty data frame if clean.
@@ -140,6 +143,9 @@
 #'   [dw_use()] and [dw_api_fetch()] (the toolkit functions whose direct
 #'   bypasses this auditor catches).
 #' @family audit
+#' @param debug Logical or `NULL`. Show internal troubleshooting detail.
+#'   `NULL` (default) inherits `getOption("dw.debug", FALSE)`; implies
+#'   `verbose`. See [dw_verbosity()].
 #' @export
 test_scripts <- function(path,
                          pattern = "\\.R$",
@@ -152,13 +158,19 @@ test_scripts <- function(path,
                                          "node_modules", ".Rproj.user"),
                          custom_rules = NULL,
                          error_on_violation = FALSE,
-                         verbose = TRUE) {
+                         verbose = TRUE,
+                         debug = NULL) {
   if (!file.exists(path)) {
     stop(sprintf(
       "[cso_toolkit.test_scripts] Path not found: %s\n  Fix: pass an existing file or directory. Relative paths resolve against %s.",
       path, getwd()
     ), call. = FALSE)
   }
+
+  vd <- .dw_vd(verbose, debug); v <- vd$v; d <- vd$d
+  .dw_msg("test_scripts", "auditing scripts under ", path, v = v)
+  .dw_dbg("test_scripts", "pattern=", pattern, " recursive=", recursive,
+          " custom_rules=", length(if (is.null(custom_rules)) list() else custom_rules), d = d)
 
   files <- if (dir.exists(path)) {
     all <- list.files(path, pattern = pattern, recursive = recursive,
@@ -173,6 +185,7 @@ test_scripts <- function(path,
   }
 
   rules <- c(.cso_test_rules, if (is.null(custom_rules)) list() else custom_rules)
+  .dw_dbg("test_scripts", "files=", length(files), " rules=", length(rules), d = d)
 
   violations <- vector("list", 0)
 
@@ -220,7 +233,7 @@ test_scripts <- function(path,
                stringsAsFactors = FALSE)
   }
 
-  if (isTRUE(verbose)) {
+  if (isTRUE(v)) {
     cat("\ncso-toolkit contract audit\n")
     cat(strrep("-", 72), "\n", sep = "")
     cat("Files scanned : ", length(files), "\n", sep = "")
@@ -248,6 +261,11 @@ test_scripts <- function(path,
       paste(offenders, collapse = "\n    ")
     ), call. = FALSE)
   }
+
+  .dw_msg("test_scripts", "done: ", nrow(out), " violation(s) across ",
+          length(unique(out$file)), " file(s)", v = v)
+  .dw_dbg("test_scripts", "by family: io=", sum(out$family == "io"),
+          " api=", sum(out$family == "api"), d = d)
 
   invisible(out)
 }
