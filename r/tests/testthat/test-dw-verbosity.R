@@ -64,3 +64,12 @@ test_that("pure lookups expose debug only (no verbose output)", {
   expect_message(dw_toolkit_version(debug = TRUE),
                  "\\[cso_toolkit\\.dw_toolkit_version:debug\\]")
 })
+
+test_that("worker functions honour the convention (generate_agg_footnote)", {
+  op <- options(dw.verbose = TRUE, dw.debug = FALSE); on.exit(options(op), add = TRUE)
+  expect_message(generate_agg_footnote(120, 195, 0.92, 2015, 2023),
+                 "[cso_toolkit.generate_agg_footnote]", fixed = TRUE)
+  expect_silent(generate_agg_footnote(120, 195, 0.92, 2015, 2023, verbose = FALSE))
+  expect_message(generate_agg_footnote(120, 195, 0.92, 2015, 2023, debug = TRUE),
+                 "[cso_toolkit.generate_agg_footnote:debug]", fixed = TRUE)
+})

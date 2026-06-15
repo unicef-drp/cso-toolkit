@@ -55,14 +55,26 @@ if (!exists("%>%", mode = "function", inherits = TRUE)) {
 #' aggregate_data(data, value = "value", weight = "weight", by = "region",
 #'                global = TRUE, method = "mean")
 #' }
+#' @param verbose Logical or `NULL`. Show high-level progress and result
+#'   messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+#'   set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].
+#' @param debug Logical or `NULL`. Show internal troubleshooting detail.
+#'   `NULL` (default) inherits `getOption("dw.debug", FALSE)`; implies
+#'   `verbose`. See [dw_verbosity()].
 aggregate_data <- function(data, value, weight, by,
                            global = TRUE,
                            method = c("mean", "weighted_mean"),
-                           pop.coverage = FALSE, country.coverage = FALSE) {
+                           pop.coverage = FALSE, country.coverage = FALSE,
+                           verbose = NULL, debug = NULL) {
   
   # Ensure method is matched to allowed methods
   method <- match.arg(method)
   
+  # Resolve verbosity once (debug implies verbose)
+  vd <- .dw_vd(verbose, debug); v <- vd$v; d <- vd$d
+  .dw_msg("aggregate_data", "Aggregating '", value, "' by ", paste(by, collapse = ", "), " (method=", method, ")", v = v)
+  .dw_dbg("aggregate_data", "input rows=", nrow(data), " weight='", weight, "' global=", global, " pop.coverage=", pop.coverage, " country.coverage=", country.coverage, d = d)
+
   # Convert character inputs to symbols for tidy evaluation
   value_sym   <- rlang::sym(value)
   weight_sym  <- rlang::sym(weight)
@@ -100,6 +112,8 @@ aggregate_data <- function(data, value, weight, by,
   
   # Add global aggregation if requested
   if (global) {
+    .dw_dbg("aggregate_data", "appending global 'World' aggregate row", d = d)
+
     global_aggregate <- data %>%
       summarise(
         Aggregate = dplyr::case_when(
@@ -129,6 +143,7 @@ aggregate_data <- function(data, value, weight, by,
     aggregated_data <- bind_rows(aggregated_data, global_aggregate)
   }
 
+  .dw_msg("aggregate_data", "Produced ", nrow(aggregated_data), " aggregated row(s), ", ncol(aggregated_data), " column(s)", v = v)
   return(aggregated_data)
 }
 

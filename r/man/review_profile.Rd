@@ -9,14 +9,16 @@ review_profile(
   path,
   require_dw_mode = TRUE,
   require_z_drive_check = FALSE,
-  verbose = TRUE
+  verbose = TRUE,
+  debug = NULL
 )
 
 dw_review_profile(
   path,
   require_dw_mode = TRUE,
   require_z_drive_check = FALSE,
-  verbose = TRUE
+  verbose = TRUE,
+  debug = NULL
 )
 }
 \arguments{
@@ -31,6 +33,10 @@ do not need the Z: advisory; flag as a warning only when missing.}
 
 \item{verbose}{Logical. Print a formatted summary to the console (default
 `TRUE`).}
+
+\item{debug}{Logical or `NULL`. Show internal troubleshooting detail.
+`NULL` (default) inherits `getOption("dw.debug", FALSE)`; implies
+`verbose`. See [dw_verbosity()].}
 }
 \value{
 A data frame with columns `check`, `status`

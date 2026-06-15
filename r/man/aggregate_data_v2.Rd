@@ -19,7 +19,9 @@ aggregate_data_v2(
   total.population = FALSE,
   number.affected = FALSE,
   global_label = "WORLD",
-  validate = TRUE
+  validate = TRUE,
+  verbose = NULL,
+  debug = NULL
 )
 
 dw_aggregate_data_v2(
@@ -36,7 +38,9 @@ dw_aggregate_data_v2(
   total.population = FALSE,
   number.affected = FALSE,
   global_label = "WORLD",
-  validate = TRUE
+  validate = TRUE,
+  verbose = NULL,
+  debug = NULL
 )
 }
 \arguments{
@@ -67,6 +71,14 @@ dw_aggregate_data_v2(
 \item{global_label}{Character. Label for global aggregate row. Default "WORLD".}
 
 \item{validate}{Logical. Perform input validation? Default TRUE.}
+
+\item{verbose}{Logical or `NULL`. Show high-level progress and result
+messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].}
+
+\item{debug}{Logical or `NULL`. Show internal troubleshooting detail.
+`NULL` (default) inherits `getOption("dw.debug", FALSE)`; implies
+`verbose`. See [dw_verbosity()].}
 }
 \value{
 A data frame with aggregated data including requested metadata columns.

@@ -13,7 +13,9 @@ create_sector_script(
   profile_file = "profile_DW-Production.R",
   input_subpath = c("01_dw_prep", "011_rawdata"),
   output_subpath = c("01_dw_prep", "013_wrkdata"),
-  overwrite = FALSE
+  overwrite = FALSE,
+  verbose = NULL,
+  debug = NULL
 )
 
 dw_create_sector_script(
@@ -24,7 +26,9 @@ dw_create_sector_script(
   profile_file = "profile_DW-Production.R",
   input_subpath = c("01_dw_prep", "011_rawdata"),
   output_subpath = c("01_dw_prep", "013_wrkdata"),
-  overwrite = FALSE
+  overwrite = FALSE,
+  verbose = NULL,
+  debug = NULL
 )
 }
 \arguments{
@@ -66,6 +70,14 @@ output folder. Defaults to `c("01_dw_prep", "013_wrkdata")`.}
 
 \item{overwrite}{Logical. If `FALSE` (default), stops when the target file
 already exists. Set `TRUE` to overwrite.}
+
+\item{verbose}{Logical or `NULL`. Show high-level progress and result
+messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].}
+
+\item{debug}{Logical or `NULL`. Show internal troubleshooting detail.
+`NULL` (default) inherits `getOption("dw.debug", FALSE)`; implies
+`verbose`. See [dw_verbosity()].}
 }
 \value{
 Invisibly, the path of the file written. Prints a confirmation

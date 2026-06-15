@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------
 # 00_functions/dw_io.R
-# Toolkit version: 0.4.10
+# Toolkit version: 0.4.11
 # Purpose: Uniform read/write helpers for DW-Production R scripts.
 # Auto-dispatch by file extension; supports every IO form the
 # sector scripts currently use; enforces the reviewer/producer
@@ -349,7 +349,7 @@ dw_is_canonical <- function(path, debug = NULL) {
 #' rely on a v0.4.0+ contract (e.g. network-first reviewer reads,
 #' mirror-to-both producer writes).
 #'
-#' @return Character. Currently `"0.4.10"`.
+#' @return Character. Currently `"0.4.11"`.
 #'
 #' @examples
 #' if (utils::compareVersion(dw_toolkit_version(), "0.4.0") < 0) {
@@ -364,8 +364,8 @@ dw_is_canonical <- function(path, debug = NULL) {
 #'   See [dw_verbosity()].
 #' @export
 dw_toolkit_version <- function(debug = NULL) {
-	.dw_dbg("dw_toolkit_version", "vendored tag = 0.4.10", d = .dw_d(debug))
-	"0.4.10"
+	.dw_dbg("dw_toolkit_version", "vendored tag = 0.4.11", d = .dw_d(debug))
+	"0.4.11"
 }
 
 # ============================================================================

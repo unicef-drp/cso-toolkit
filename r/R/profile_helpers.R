@@ -54,6 +54,12 @@
 #'   toolkit contract; [create_sector_script()] for sector-level
 #'   scaffolding that depends on the profile sentinel.
 #' @family scaffolding
+#' @param verbose Logical or `NULL`. Show high-level progress and result
+#'   messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+#'   set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].
+#' @param debug Logical or `NULL`. Show internal troubleshooting detail.
+#'   `NULL` (default) inherits `getOption("dw.debug", FALSE)`; implies
+#'   `verbose`. See [dw_verbosity()].
 #' @export
 create_profile <- function(repo_name,
                            project_title = repo_name,
@@ -61,7 +67,9 @@ create_profile <- function(repo_name,
                            include_dw_mode = TRUE,
                            include_z_drive_check = FALSE,
                            author = Sys.getenv("USERNAME", unset = Sys.info()[["user"]]),
-                           overwrite = FALSE) {
+                           overwrite = FALSE,
+                           verbose = NULL,
+                           debug = NULL) {
   sentinel <- paste0("profile_", gsub("[-.]+", "_", repo_name))
   filename <- paste0("profile_", repo_name, ".R")
   if (!dir.exists(output_path)) dir.create(output_path, recursive = TRUE)
@@ -72,6 +80,10 @@ create_profile <- function(repo_name,
       path
     ), call. = FALSE)
   }
+
+  vd <- .dw_vd(verbose, debug); v <- vd$v; d <- vd$d
+  .dw_msg("create_profile", "scaffolding profile for repo '", repo_name, "' -> ", filename, v = v)
+  .dw_dbg("create_profile", "sentinel=", sentinel, " include_dw_mode=", include_dw_mode, " include_z_drive_check=", include_z_drive_check, " overwrite=", overwrite, d = d)
 
   timestamp <- format(Sys.time(), "%Y-%m-%d %H:%M")
 
@@ -193,7 +205,9 @@ create_profile <- function(repo_name,
   lines <- c(header, z_block, config_block, mode_block,
              packages_block, sentinel_block)
   writeLines(lines, con = path)
-  message("[OK] Profile written: ", path)
+  .dw_dbg("create_profile", "wrote ", length(lines), " lines", d = d)
+  if (v) message("[OK] Profile written: ", path)
+  .dw_msg("create_profile", "profile written to ", path, v = v)
   invisible(normalizePath(path, mustWork = FALSE))
 }
 
@@ -230,11 +244,15 @@ create_profile <- function(repo_name,
 #' @seealso [create_profile()] (generates a profile that passes every
 #'   check by construction); [test_scripts()] for the script-level audit.
 #' @family scaffolding
+#' @param debug Logical or `NULL`. Show internal troubleshooting detail.
+#'   `NULL` (default) inherits `getOption("dw.debug", FALSE)`; implies
+#'   `verbose`. See [dw_verbosity()].
 #' @export
 review_profile <- function(path,
                            require_dw_mode = TRUE,
                            require_z_drive_check = FALSE,
-                           verbose = TRUE) {
+                           verbose = TRUE,
+                           debug = NULL) {
   if (!file.exists(path)) {
     stop(sprintf(
       "[cso_toolkit.review_profile] Profile file not found: %s\n  Fix: pass the correct path; relative paths resolve against %s.",
@@ -242,6 +260,9 @@ review_profile <- function(path,
     ), call. = FALSE)
   }
   src <- readLines(path, warn = FALSE)
+  vd <- .dw_vd(verbose, debug); v <- vd$v; d <- vd$d
+  .dw_msg("review_profile", "auditing ", basename(path), v = v)
+  .dw_dbg("review_profile", "read ", length(src), " lines from ", path, " | require_dw_mode=", require_dw_mode, " require_z_drive_check=", require_z_drive_check, d = d)
   joined <- paste(src, collapse = "\n")
 
   has <- function(pattern, perl = TRUE) {
@@ -334,7 +355,7 @@ review_profile <- function(path,
                stringsAsFactors = FALSE)
   }))
 
-  if (isTRUE(verbose)) {
+  if (v) {
     icon <- function(s) switch(s, pass = "[OK]", warn = "[!] ", fail = "[X]", " ")
     cat("\nProfile review:", normalizePath(path, mustWork = FALSE), "\n")
     cat(strrep("-", 72), "\n", sep = "")
@@ -350,6 +371,7 @@ review_profile <- function(path,
                 n_pass, n_warn, n_fail))
   }
 
+  .dw_dbg("review_profile", "checks: ", nrow(out), " total | ", sum(out$status == "pass"), " pass / ", sum(out$status == "warn"), " warn / ", sum(out$status == "fail"), " fail", d = d)
   invisible(out)
 }
 
