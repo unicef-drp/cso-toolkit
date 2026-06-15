@@ -55,9 +55,9 @@ Default `FALSE`.}
 
 \item{verbose}{Logical. Print a formatted summary. Default `TRUE`.}
 
-\item{debug}{Logical or `NULL`. Show internal troubleshooting detail.
-`NULL` (default) inherits `getOption("dw.debug", FALSE)`; implies
-`verbose`. See [dw_verbosity()].}
+\item{debug}{Logical or NULL. Print internal diagnostics (file count,
+rule count, per-family violation tallies). `NULL` (default) inherits
+`options(dw.debug)`. `TRUE` implies `verbose`. See [dw_verbosity()].}
 }
 \value{
 A data frame with columns `file`, `line`, `rule`, `family`,

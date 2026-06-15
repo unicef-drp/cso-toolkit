@@ -206,7 +206,7 @@ create_profile <- function(repo_name,
              packages_block, sentinel_block)
   writeLines(lines, con = path)
   .dw_dbg("create_profile", "wrote ", length(lines), " lines", d = d)
-  message("[OK] Profile written: ", path)
+  if (v) message("[OK] Profile written: ", path)
   .dw_msg("create_profile", "profile written to ", path, v = v)
   invisible(normalizePath(path, mustWork = FALSE))
 }

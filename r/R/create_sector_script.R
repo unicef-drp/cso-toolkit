@@ -195,7 +195,7 @@ create_sector_script <- function(sector_name,
 
   writeLines(template, con = script_path)
   .dw_msg("create_sector_script", "wrote ", length(template), "-line run script: ", script_path, v = v)
-  message("[OK] Sector script created: ", script_path)
+  if (v) message("[OK] Sector script created: ", script_path)
   invisible(script_path)
 }
 
