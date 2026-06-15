@@ -3,8 +3,10 @@
 ## Unreleased
 
 _Entries land here as PRs merge into `develop`. When the next release
-is cut, this header is renamed `## v0.4.11 (YYYY-MM-DD)` and a fresh
+is cut, this header is renamed `## v0.4.12 (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
+
+## v0.4.11 (2026-06-14)
 
 **Verbose/debug convention extended to every worker function.** The `verbose` /
 `debug` controls introduced in v0.4.10 (for the `dw_*` I/O helpers) now cover the
