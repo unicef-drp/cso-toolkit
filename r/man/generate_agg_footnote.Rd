@@ -12,7 +12,9 @@ generate_agg_footnote(
   start_year = NULL,
   end_year = NULL,
   exemptions = NULL,
-  exclusions = NULL
+  exclusions = NULL,
+  verbose = NULL,
+  debug = NULL
 )
 
 dw_generate_agg_footnote(
@@ -22,7 +24,9 @@ dw_generate_agg_footnote(
   start_year = NULL,
   end_year = NULL,
   exemptions = NULL,
-  exclusions = NULL
+  exclusions = NULL,
+  verbose = NULL,
+  debug = NULL
 )
 }
 \arguments{
@@ -45,6 +49,14 @@ appended as `"Exemptions: ..."`.}
 
 \item{exclusions}{Optional character vector of country codes that
 were dropped before aggregation; appended as `"Exclusions: ..."`.}
+
+\item{verbose}{Logical or `NULL`. Show high-level progress and result
+messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].}
+
+\item{debug}{Logical or `NULL`. Show internal troubleshooting detail.
+`NULL` (default) inherits `getOption("dw.debug", FALSE)`; implies
+`verbose`. See [dw_verbosity()].}
 }
 \value{
 Character. A single-line footnote.

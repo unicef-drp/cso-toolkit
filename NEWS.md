@@ -6,6 +6,18 @@ _Entries land here as PRs merge into `develop`. When the next release
 is cut, this header is renamed `## v0.4.11 (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
+**Verbose/debug convention extended to every worker function.** The `verbose` /
+`debug` controls introduced in v0.4.10 (for the `dw_*` I/O helpers) now cover the
+remaining exported workers: `aggregate_data`, `aggregate_data_v2`,
+`apply_time_window`, `generate_agg_footnote`, `create_profile`,
+`create_sector_script`, `create_dw_sector_script`, `cso_toolkit_check`,
+`cso_toolkit_diff`, `cso_toolkit_pull`, `generate_markdown_report`,
+`process_all_csv_files` — each gains `verbose = NULL` / `debug = NULL` with
+start/result messages (`[cso_toolkit.<fn>]`) and debug traces. `review_profile()`
+and `test_scripts()` keep their existing `verbose` and gain `debug`. The `dw_*`
+aliases inherit it automatically, so **every exported function now honours the
+convention**.
+
 ## v0.4.10 (2026-06-14)
 
 **`aggregate_data_v2()` gains a `"total"` method** for additive count /

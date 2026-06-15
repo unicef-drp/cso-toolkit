@@ -11,7 +11,9 @@ generate_markdown_report(
   year_column,
   indicator_column,
   value_column,
-  output_path = NULL
+  output_path = NULL,
+  verbose = NULL,
+  debug = NULL
 )
 
 dw_generate_markdown_report(
@@ -20,7 +22,9 @@ dw_generate_markdown_report(
   year_column,
   indicator_column,
   value_column,
-  output_path = NULL
+  output_path = NULL,
+  verbose = NULL,
+  debug = NULL
 )
 }
 \arguments{
@@ -37,6 +41,14 @@ summarise.}
 
 \item{output_path}{Character. Directory to write `<basename>.md` into.
 Default `NULL` writes the file in the current working directory.}
+
+\item{verbose}{Logical or `NULL`. Show high-level progress and result
+messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].}
+
+\item{debug}{Logical or `NULL`. Show internal troubleshooting detail.
+`NULL` (default) inherits `getOption("dw.debug", FALSE)`; implies
+`verbose`. See [dw_verbosity()].}
 }
 \value{
 Invisibly, `NULL`. Side effect: writes a `.md` file.

@@ -11,7 +11,9 @@ process_all_csv_files(
   year_column,
   indicator_column,
   value_column,
-  output_path = NULL
+  output_path = NULL,
+  verbose = NULL,
+  debug = NULL
 )
 
 dw_process_all_csv_files(
@@ -20,7 +22,9 @@ dw_process_all_csv_files(
   year_column,
   indicator_column,
   value_column,
-  output_path = NULL
+  output_path = NULL,
+  verbose = NULL,
+  debug = NULL
 )
 }
 \arguments{
@@ -31,6 +35,14 @@ recursed).}
 
 \item{output_path}{Character. Output directory for `.md` files. Default
 `NULL` writes into the current working directory.}
+
+\item{verbose}{Logical or `NULL`. Show high-level progress and result
+messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].}
+
+\item{debug}{Logical or `NULL`. Show internal troubleshooting detail.
+`NULL` (default) inherits `getOption("dw.debug", FALSE)`; implies
+`verbose`. See [dw_verbosity()].}
 }
 \value{
 Invisibly, `NULL`.
