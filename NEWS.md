@@ -6,6 +6,19 @@ _Entries land here as PRs merge into `develop`. When the next release
 is cut, this header is renamed `## v0.4.12 (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
+- **`dw_use(sheet = NULL)` reads every sheet of an `.xlsx`** into a named
+  list of data frames (read-all-sheets). The default `sheet = 1` is
+  unchanged, so single-sheet callers are unaffected. Multi-sheet reference
+  workbooks now resolve in one mode-aware `dw_use` call instead of a
+  `getSheetNames()` + per-sheet loop.
+- **`dw_is_canonical()` now recognises the `dwZDrive` (Z:) root.** The Z:
+  drive is an exact carbon-copy mirror of the Teams canonical deposit, so an
+  explicit Z: path short-circuits the reviewer read resolver and runs the Z:
+  integrity check (previously it fell through to the repo-local fallback
+  branch with a spurious provenance warning, and skipped the Z: check).
+- **`test_scripts()` `io-xlsx` rule extended** to also flag `getSheetNames`,
+  `excel_sheets`, and `loadWorkbook` (sheet-enumeration that bypasses
+  `dw_use`); the suggestion points at `dw_use(sheet = NULL)`.
 - **`dw_compare()` handles degenerate sides gracefully.** A missing/unreadable
   `reference` (e.g. a first producer deposit with nothing in Teams/Z) is now
   treated as empty **with a warning** instead of `stop()`ping; an empty/0-row
