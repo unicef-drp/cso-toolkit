@@ -17,8 +17,8 @@
 # requires only data.table (already in DESCRIPTION Imports) -- no
 # skip_if_not_installed() guard is needed.
 
-test_that("dw_toolkit_version() returns the current v0.4.11 stamp", {
-  expect_identical(dw_toolkit_version(), "0.4.11")
+test_that("dw_toolkit_version() returns the current v0.5.0 stamp", {
+  expect_identical(dw_toolkit_version(), "0.5.0")
 })
 
 test_that("reviewer mode forbids canonical writes (v0.3.0 preserved)", {
