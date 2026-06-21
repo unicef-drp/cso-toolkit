@@ -6,6 +6,14 @@ _Entries land here as PRs merge into `develop`. When the next release
 is cut, this header is renamed `## v0.4.12 (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
+- **`dw_compare()` handles degenerate sides gracefully.** A missing/unreadable
+  `reference` (e.g. a first producer deposit with nothing in Teams/Z) is now
+  treated as empty **with a warning** instead of `stop()`ping; an empty/0-row
+  `current` (no data loaded in memory) and an empty `reference` each emit a
+  warning so an all-removed / all-added delta isn't reported silently. Both
+  sides empty still stops. Roxygen documents the reviewer-mode caveat that
+  `current` should be passed in memory (a wrk-rooted path is canonical-redirected).
+
 ## v0.4.11 (2026-06-14)
 
 **Verbose/debug convention extended to every worker function.** The `verbose` /

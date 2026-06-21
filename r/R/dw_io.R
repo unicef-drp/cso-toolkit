@@ -2279,8 +2279,14 @@ dw_default_unicef_allowlist <- function(debug = NULL) {
 #' tolerance-based equality; string columns normalise to trimmed lowercase
 #' empty-equivalents (`""`, `"NA"`, `"N/A"`, `"NULL"`, `"."`).
 #'
-#' @param current Data frame or character path to a file. The "new" side.
-#' @param reference Data frame or character path to a file. The "old" side.
+#' @param current Data frame or character path. The "new" side. In REVIEWER
+#'   mode prefer an **in-memory** data frame: a wrk-rooted path is resolved
+#'   network-first and redirected to the canonical deposit, so a path can
+#'   silently compare the deposit against itself. An empty/0-row `current`
+#'   warns ("nothing loaded to compare").
+#' @param reference Data frame or character path. The "old" side. A missing or
+#'   unreadable reference (a first producer deposit -- nothing in Teams/Z yet)
+#'   is treated as empty with a warning, not an error.
 #' @param by Character vector of key columns.
 #' @param value_cols Character vector of columns to value-compare. Default
 #' `NULL` (= all non-key columns present on both sides).
@@ -2321,8 +2327,44 @@ dw_compare <- function(current, reference,
 
 	.require("dplyr")
 	vd <- .dw_vd(verbose, debug); v <- vd$v; d <- vd$d
-	if (is.character(current) && length(current) == 1) current <- dw_use(current, verbose = v, debug = d)
-	if (is.character(reference) && length(reference) == 1) reference <- dw_use(reference, verbose = v, debug = d)
+	if (is.character(current) && length(current) == 1) {
+		current <- dw_use(current, verbose = v, debug = d)
+	}
+	# The reference (deposited "old" side) may legitimately be absent on a first
+	# producer run -- materialise it under tryCatch so a missing/unreadable
+	# reference becomes NULL (warned below as a first deposit) instead of
+	# stopping the whole comparison.
+	ref_unreadable <- NULL
+	if (is.character(reference) && length(reference) == 1) {
+		reference <- tryCatch(
+			dw_use(reference, verbose = v, debug = d),
+			error = function(e) { ref_unreadable <<- conditionMessage(e); NULL }
+		)
+	}
+
+	# Both sides absent -> genuinely nothing (not even columns) to compare;
+	# stop with guidance before the per-side warnings below.
+	if (is.null(current) && is.null(reference)) {
+		stop("[cso_toolkit.dw_compare] both `current` and `reference` are empty -- nothing to compare. Load the new data into `current` (and deposit/point at a reference) first.", call. = FALSE)
+	}
+
+	# Degenerate-side warnings: an empty/absent side makes added/removed
+	# misleading (all-removed or all-added), so surface it explicitly rather
+	# than silently reporting a mass delta.
+	side_empty <- function(z) is.null(z) || (is.data.frame(z) && nrow(z) == 0L)
+	if (side_empty(current)) {
+		warning("[cso_toolkit.dw_compare] `current` is empty -- no data loaded in memory to compare; every `reference` row would report as removed.", call. = FALSE)
+	}
+	if (side_empty(reference)) {
+		warning(sprintf(
+			"[cso_toolkit.dw_compare] `reference` is empty%s -- treating as a first deposit: nothing to compare against; every `current` row reports as added.",
+			if (!is.null(ref_unreadable)) sprintf(" (not found: %s)", ref_unreadable) else ""), call. = FALSE)
+	}
+
+	# Backfill a NULL side with a 0-row frame matching the other's columns so the
+	# added/removed/changed machinery still returns a clean degenerate result.
+	if (is.null(current) && is.data.frame(reference)) current <- reference[0, , drop = FALSE]
+	if (is.null(reference) && is.data.frame(current)) reference <- current[0, , drop = FALSE]
 
 	common <- intersect(names(current), names(reference))
 	by <- by[by %in% common]
