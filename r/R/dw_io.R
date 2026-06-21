@@ -1558,10 +1558,12 @@ dw_use <- function(path = NULL,
 	)
 
 	if (fmt %in% c("csv", "tsv", "txt", "xlsx", "dta", "parquet")) {
-		.coerce_as <- function(z) switch(as,
-			"tibble" = { .require("tibble"); tibble::as_tibble(z) },
-			"data.frame" = as.data.frame(z),
-			"data.table" = { .require("data.table"); data.table::as.data.table(z) }
+		# Resolve the coercion once -- run .require() a single time, not once
+		# per sheet when read-all-sheets returns a list of frames.
+		.coerce_as <- switch(as,
+			"tibble"     = { .require("tibble");     function(z) tibble::as_tibble(z) },
+			"data.frame" = function(z) as.data.frame(z),
+			"data.table" = { .require("data.table"); function(z) data.table::as.data.table(z) }
 		)
 		# read-all-sheets (xlsx `sheet = NULL`) yields a named list of
 		# frames -> coerce each; otherwise coerce the single frame.
@@ -1873,11 +1875,12 @@ dw_stage <- function(path, overwrite = FALSE, verbose = NULL, debug = NULL) {
 #' XLSX reader (readxl::read_xlsx wrapper)
 #'
 #' @param path Character. Input path.
-#' @param sheet Sheet name or index. Default `1`.
+#' @param sheet Sheet name or index (default `1`), or `NULL` to read **all**
+#'   sheets into a named list of tibbles (one per sheet).
 #' @param cols Character vector. Optional column subset (applied post-read).
 #' @param ... Passed to `readxl::read_xlsx`.
 #'
-#' @return A tibble.
+#' @return A tibble, or (when `sheet = NULL`) a named list of tibbles.
 #'
 #' @keywords internal
 #' @noRd
