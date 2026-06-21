@@ -169,10 +169,12 @@ test_that("overwrite gate refuses when ANY destination already exists", {
   expect_envelope(err, function_name = "dw_save")
   expect_match(conditionMessage(err), "overwrite|exists")
 
-  # Same call with overwrite=TRUE succeeds (suppress info messages
-  # from the mirror block — they are not errors / warnings).
+  # Same call with overwrite=TRUE + force=TRUE succeeds. A non-interactive
+  # producer overwrite now requires force (interactive sessions are prompted);
+  # suppress mirror info messages — they are not errors / warnings.
   suppressMessages({
-    out <- dw_save(df, path = primary, isid = "REF_AREA", overwrite = TRUE)
+    out <- dw_save(df, path = primary, isid = "REF_AREA",
+                   overwrite = TRUE, force = TRUE)
   })
   expect_true(file.exists(out))
 })
