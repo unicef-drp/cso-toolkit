@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------
 # 00_functions/dw_io.R
-# Toolkit version: 0.4.11
+# Toolkit version: 0.5.0
 # Purpose: Uniform read/write helpers for DW-Production R scripts.
 # Auto-dispatch by file extension; supports every IO form the
 # sector scripts currently use; enforces the reviewer/producer
@@ -315,10 +315,16 @@ dw_is_canonical <- function(path, debug = NULL) {
 		return(TRUE)
 	}
 
+	# The Z: drive is an exact carbon-copy mirror of the Teams canonical
+	# deposit (the producer-mode redundant write target), so a path under it
+	# is equally a canonical artifact: reviewer reads of an explicit Z: path
+	# short-circuit + run the Z: integrity check, and reviewer writes to it
+	# stay barred. dwZDrive is NA when Z: is unmounted (filtered out below).
 	canon_roots <- c(
 		.try_get("teamsWrkDataCanonical"),
 		.try_get("teamsRawDataCanonical"),
-		.try_get("teamsFolderCanonical")
+		.try_get("teamsFolderCanonical"),
+		.try_get("dwZDrive")
 	)
 	canon_roots <- canon_roots[!is.na(canon_roots) & nzchar(canon_roots)]
 	if (length(canon_roots) == 0) return(FALSE)
@@ -349,7 +355,7 @@ dw_is_canonical <- function(path, debug = NULL) {
 #' rely on a v0.4.0+ contract (e.g. network-first reviewer reads,
 #' mirror-to-both producer writes).
 #'
-#' @return Character. Currently `"0.4.11"`.
+#' @return Character. Currently `"0.5.0"`.
 #'
 #' @examples
 #' if (utils::compareVersion(dw_toolkit_version(), "0.4.0") < 0) {
@@ -364,8 +370,8 @@ dw_is_canonical <- function(path, debug = NULL) {
 #'   See [dw_verbosity()].
 #' @export
 dw_toolkit_version <- function(debug = NULL) {
-	.dw_dbg("dw_toolkit_version", "vendored tag = 0.4.11", d = .dw_d(debug))
-	"0.4.11"
+	.dw_dbg("dw_toolkit_version", "vendored tag = 0.5.0", d = .dw_d(debug))
+	"0.5.0"
 }
 
 # ============================================================================
@@ -858,6 +864,10 @@ dw_isid <- function(df, keys, where = "<unknown>", verbose = NULL, debug = NULL)
 #' actually be written (primary, Teams mirror, Z: mirror); `dw_save()`
 #' stops if any of them already exists. Pass `TRUE` to replace existing
 #' deposits.
+#' @param force Logical. Default `FALSE`. Overwriting an EXISTING producer
+#' deposit requires confirmation: interactively `dw_save()` prompts `[y/N]`;
+#' non-interactively it stops. Pass `force = TRUE` to skip the prompt for a
+#' deliberate automated re-deposit. Reviewer-mode sandbox writes are unaffected.
 #' @param provenance Logical. Whether to write the `.provenance.json`
 #' sidecar. Default `TRUE` (skipped for `.RData` / `.rda`).
 #' @param vintage Character. Optional vintage tag (e.g. `"2026-05"`)
@@ -904,6 +914,7 @@ dw_save <- function(x,
  compress = FALSE,
  dialect = c("fwrite", "base"),
  overwrite = NULL,
+ force = FALSE,
  provenance = TRUE,
  vintage = NULL,
  allow_canonical_write = FALSE,
@@ -1044,6 +1055,35 @@ dw_save <- function(x,
 				"migration notes.)",
 				call. = FALSE
 			)
+		}
+	}
+
+	# === Producer overwrite confirmation ===
+	# Overwriting an EXISTING producer deposit is destructive, so it requires
+	# explicit confirmation: an interactive [y/N] prompt, or `force = TRUE` for a
+	# deliberate automated re-deposit. A non-interactive run without `force` stops
+	# rather than silently clobbering canonical. Reviewer sandbox writes (which
+	# default overwrite = TRUE) never reach here: is_producer is FALSE for them.
+	if (isTRUE(overwrite) && is_producer && !isTRUE(force)) {
+		overwriting <- character(0)
+		if (file.exists(path)) overwriting <- c(overwriting, path)
+		if (will_fan_out) {
+			if (!is.na(teams_mirror) && file.exists(teams_mirror)) overwriting <- c(overwriting, teams_mirror)
+			if (!is.na(z_mirror) && file.exists(z_mirror)) overwriting <- c(overwriting, z_mirror)
+		}
+		if (length(overwriting) > 0) {
+			if (interactive()) {
+				message("[cso_toolkit.dw_save] About to OVERWRITE existing deposit(s):\n ",
+					paste(overwriting, collapse = "\n "))
+				ans <- tolower(trimws(readline("  Overwrite? [y/N]: ")))
+				if (!ans %in% c("y", "yes")) {
+					stop("[cso_toolkit.dw_save] Overwrite declined at the prompt -- nothing written.\n Fix: re-run and answer 'y' to overwrite, or write to a different path.", call. = FALSE)
+				}
+			} else {
+				stop(sprintf(
+					"[cso_toolkit.dw_save] Refusing to overwrite an existing producer deposit non-interactively:\n %s\n Fix: run interactively to confirm at the prompt, or pass `force = TRUE` for a deliberate automated re-deposit.",
+					paste(overwriting, collapse = "\n ")), call. = FALSE)
+			}
 		}
 	}
 
@@ -1552,11 +1592,16 @@ dw_use <- function(path = NULL,
 	)
 
 	if (fmt %in% c("csv", "tsv", "txt", "xlsx", "dta", "parquet")) {
-		x <- switch(as,
-			"tibble" = { .require("tibble"); tibble::as_tibble(x) },
-			"data.frame" = as.data.frame(x),
-			"data.table" = { .require("data.table"); data.table::as.data.table(x) }
+		# Resolve the coercion once -- run .require() a single time, not once
+		# per sheet when read-all-sheets returns a list of frames.
+		.coerce_as <- switch(as,
+			"tibble"     = { .require("tibble");     function(z) tibble::as_tibble(z) },
+			"data.frame" = function(z) as.data.frame(z),
+			"data.table" = { .require("data.table"); function(z) data.table::as.data.table(z) }
 		)
+		# read-all-sheets (xlsx `sheet = NULL`) yields a named list of
+		# frames -> coerce each; otherwise coerce the single frame.
+		x <- if (is.list(x) && !is.data.frame(x)) lapply(x, .coerce_as) else .coerce_as(x)
 	}
 	.dw_msg("dw_use", "read ", if (is.data.frame(x)) paste0(nrow(x), " x ", ncol(x)) else class(x)[1], v = v)
 	x
@@ -1864,19 +1909,32 @@ dw_stage <- function(path, overwrite = FALSE, verbose = NULL, debug = NULL) {
 #' XLSX reader (readxl::read_xlsx wrapper)
 #'
 #' @param path Character. Input path.
-#' @param sheet Sheet name or index. Default `1`.
+#' @param sheet Sheet name or index (default `1`), or `NULL` to read **all**
+#'   sheets into a named list of tibbles (one per sheet).
 #' @param cols Character vector. Optional column subset (applied post-read).
 #' @param ... Passed to `readxl::read_xlsx`.
 #'
-#' @return A tibble.
+#' @return A tibble, or (when `sheet = NULL`) a named list of tibbles.
 #'
 #' @keywords internal
 #' @noRd
 .read_xlsx <- function(path, sheet = 1, cols = NULL, ...) {
 	.require("readxl")
-	x <- readxl::read_xlsx(path, sheet = sheet, ...)
-	if (!is.null(cols)) x <- x[, intersect(names(x), cols), drop = FALSE]
-	x
+	read_one <- function(sh) {
+		x <- readxl::read_xlsx(path, sheet = sh, ...)
+		if (!is.null(cols)) x <- x[, intersect(names(x), cols), drop = FALSE]
+		x
+	}
+	# Explicit `sheet = NULL` -> read every sheet into a named list of data
+	# frames (read-all-sheets). The default `sheet = 1` is unchanged, so
+	# existing single-sheet callers are unaffected.
+	if (is.null(sheet)) {
+		sheets <- readxl::excel_sheets(path)
+		out <- lapply(sheets, read_one)
+		names(out) <- sheets
+		return(out)
+	}
+	read_one(sheet)
 }
 
 #' .RData / .rda reader (load() into a fresh env, returned as a list)
@@ -2279,8 +2337,14 @@ dw_default_unicef_allowlist <- function(debug = NULL) {
 #' tolerance-based equality; string columns normalise to trimmed lowercase
 #' empty-equivalents (`""`, `"NA"`, `"N/A"`, `"NULL"`, `"."`).
 #'
-#' @param current Data frame or character path to a file. The "new" side.
-#' @param reference Data frame or character path to a file. The "old" side.
+#' @param current Data frame or character path. The "new" side. In REVIEWER
+#'   mode prefer an **in-memory** data frame: a wrk-rooted path is resolved
+#'   network-first and redirected to the canonical deposit, so a path can
+#'   silently compare the deposit against itself. An empty/0-row `current`
+#'   warns ("nothing loaded to compare").
+#' @param reference Data frame or character path. The "old" side. A missing or
+#'   unreadable reference (a first producer deposit -- nothing in Teams/Z yet)
+#'   is treated as empty with a warning, not an error.
 #' @param by Character vector of key columns.
 #' @param value_cols Character vector of columns to value-compare. Default
 #' `NULL` (= all non-key columns present on both sides).
@@ -2321,8 +2385,44 @@ dw_compare <- function(current, reference,
 
 	.require("dplyr")
 	vd <- .dw_vd(verbose, debug); v <- vd$v; d <- vd$d
-	if (is.character(current) && length(current) == 1) current <- dw_use(current, verbose = v, debug = d)
-	if (is.character(reference) && length(reference) == 1) reference <- dw_use(reference, verbose = v, debug = d)
+	if (is.character(current) && length(current) == 1) {
+		current <- dw_use(current, verbose = v, debug = d)
+	}
+	# The reference (deposited "old" side) may legitimately be absent on a first
+	# producer run -- materialise it under tryCatch so a missing/unreadable
+	# reference becomes NULL (warned below as a first deposit) instead of
+	# stopping the whole comparison.
+	ref_unreadable <- NULL
+	if (is.character(reference) && length(reference) == 1) {
+		reference <- tryCatch(
+			dw_use(reference, verbose = v, debug = d),
+			error = function(e) { ref_unreadable <<- conditionMessage(e); NULL }
+		)
+	}
+
+	# Both sides absent -> genuinely nothing (not even columns) to compare;
+	# stop with guidance before the per-side warnings below.
+	if (is.null(current) && is.null(reference)) {
+		stop("[cso_toolkit.dw_compare] both `current` and `reference` are empty -- nothing to compare.\n Fix: load the new data into `current` (and deposit/point at a reference) first.", call. = FALSE)
+	}
+
+	# Degenerate-side warnings: an empty/absent side makes added/removed
+	# misleading (all-removed or all-added), so surface it explicitly rather
+	# than silently reporting a mass delta.
+	side_empty <- function(z) is.null(z) || (is.data.frame(z) && nrow(z) == 0L)
+	if (side_empty(current)) {
+		warning("[cso_toolkit.dw_compare] `current` is empty -- no data loaded in memory to compare; every `reference` row would report as removed.\n Fix: pass the recomputed rows into `current` (an in-memory data frame); check the upstream step produced data.", call. = FALSE)
+	}
+	if (side_empty(reference)) {
+		warning(sprintf(
+			"[cso_toolkit.dw_compare] `reference` is empty%s -- treating as a first deposit: nothing to compare against; every `current` row reports as added.\n Fix: expected on a first deposit; otherwise check the reference path/deposit is present and readable.",
+			if (!is.null(ref_unreadable)) sprintf(" (unreadable: %s)", ref_unreadable) else ""), call. = FALSE)
+	}
+
+	# Backfill a NULL side with a 0-row frame matching the other's columns so the
+	# added/removed/changed machinery still returns a clean degenerate result.
+	if (is.null(current) && is.data.frame(reference)) current <- reference[0, , drop = FALSE]
+	if (is.null(reference) && is.data.frame(current)) reference <- current[0, , drop = FALSE]
 
 	common <- intersect(names(current), names(reference))
 	by <- by[by %in% common]
