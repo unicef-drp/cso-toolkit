@@ -315,10 +315,16 @@ dw_is_canonical <- function(path, debug = NULL) {
 		return(TRUE)
 	}
 
+	# The Z: drive is an exact carbon-copy mirror of the Teams canonical
+	# deposit (the producer-mode redundant write target), so a path under it
+	# is equally a canonical artifact: reviewer reads of an explicit Z: path
+	# short-circuit + run the Z: integrity check, and reviewer writes to it
+	# stay barred. dwZDrive is NA when Z: is unmounted (filtered out below).
 	canon_roots <- c(
 		.try_get("teamsWrkDataCanonical"),
 		.try_get("teamsRawDataCanonical"),
-		.try_get("teamsFolderCanonical")
+		.try_get("teamsFolderCanonical"),
+		.try_get("dwZDrive")
 	)
 	canon_roots <- canon_roots[!is.na(canon_roots) & nzchar(canon_roots)]
 	if (length(canon_roots) == 0) return(FALSE)
@@ -1552,11 +1558,16 @@ dw_use <- function(path = NULL,
 	)
 
 	if (fmt %in% c("csv", "tsv", "txt", "xlsx", "dta", "parquet")) {
-		x <- switch(as,
-			"tibble" = { .require("tibble"); tibble::as_tibble(x) },
-			"data.frame" = as.data.frame(x),
-			"data.table" = { .require("data.table"); data.table::as.data.table(x) }
+		# Resolve the coercion once -- run .require() a single time, not once
+		# per sheet when read-all-sheets returns a list of frames.
+		.coerce_as <- switch(as,
+			"tibble"     = { .require("tibble");     function(z) tibble::as_tibble(z) },
+			"data.frame" = function(z) as.data.frame(z),
+			"data.table" = { .require("data.table"); function(z) data.table::as.data.table(z) }
 		)
+		# read-all-sheets (xlsx `sheet = NULL`) yields a named list of
+		# frames -> coerce each; otherwise coerce the single frame.
+		x <- if (is.list(x) && !is.data.frame(x)) lapply(x, .coerce_as) else .coerce_as(x)
 	}
 	.dw_msg("dw_use", "read ", if (is.data.frame(x)) paste0(nrow(x), " x ", ncol(x)) else class(x)[1], v = v)
 	x
@@ -1864,19 +1875,32 @@ dw_stage <- function(path, overwrite = FALSE, verbose = NULL, debug = NULL) {
 #' XLSX reader (readxl::read_xlsx wrapper)
 #'
 #' @param path Character. Input path.
-#' @param sheet Sheet name or index. Default `1`.
+#' @param sheet Sheet name or index (default `1`), or `NULL` to read **all**
+#'   sheets into a named list of tibbles (one per sheet).
 #' @param cols Character vector. Optional column subset (applied post-read).
 #' @param ... Passed to `readxl::read_xlsx`.
 #'
-#' @return A tibble.
+#' @return A tibble, or (when `sheet = NULL`) a named list of tibbles.
 #'
 #' @keywords internal
 #' @noRd
 .read_xlsx <- function(path, sheet = 1, cols = NULL, ...) {
 	.require("readxl")
-	x <- readxl::read_xlsx(path, sheet = sheet, ...)
-	if (!is.null(cols)) x <- x[, intersect(names(x), cols), drop = FALSE]
-	x
+	read_one <- function(sh) {
+		x <- readxl::read_xlsx(path, sheet = sh, ...)
+		if (!is.null(cols)) x <- x[, intersect(names(x), cols), drop = FALSE]
+		x
+	}
+	# Explicit `sheet = NULL` -> read every sheet into a named list of data
+	# frames (read-all-sheets). The default `sheet = 1` is unchanged, so
+	# existing single-sheet callers are unaffected.
+	if (is.null(sheet)) {
+		sheets <- readxl::excel_sheets(path)
+		out <- lapply(sheets, read_one)
+		names(out) <- sheets
+		return(out)
+	}
+	read_one(sheet)
 }
 
 #' .RData / .rda reader (load() into a fresh env, returned as a list)
