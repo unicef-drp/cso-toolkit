@@ -1071,7 +1071,7 @@ dw_save <- function(x,
 					paste(overwriting, collapse = "\n "))
 				ans <- tolower(trimws(readline("  Overwrite? [y/N]: ")))
 				if (!ans %in% c("y", "yes")) {
-					stop("[cso_toolkit.dw_save] Overwrite declined at the prompt -- nothing written.", call. = FALSE)
+					stop("[cso_toolkit.dw_save] Overwrite declined at the prompt -- nothing written.\n Fix: re-run and answer 'y' to overwrite, or write to a different path.", call. = FALSE)
 				}
 			} else {
 				stop(sprintf(
@@ -2379,7 +2379,7 @@ dw_compare <- function(current, reference,
 	# Both sides absent -> genuinely nothing (not even columns) to compare;
 	# stop with guidance before the per-side warnings below.
 	if (is.null(current) && is.null(reference)) {
-		stop("[cso_toolkit.dw_compare] both `current` and `reference` are empty -- nothing to compare. Load the new data into `current` (and deposit/point at a reference) first.", call. = FALSE)
+		stop("[cso_toolkit.dw_compare] both `current` and `reference` are empty -- nothing to compare.\n Fix: load the new data into `current` (and deposit/point at a reference) first.", call. = FALSE)
 	}
 
 	# Degenerate-side warnings: an empty/absent side makes added/removed
@@ -2387,12 +2387,12 @@ dw_compare <- function(current, reference,
 	# than silently reporting a mass delta.
 	side_empty <- function(z) is.null(z) || (is.data.frame(z) && nrow(z) == 0L)
 	if (side_empty(current)) {
-		warning("[cso_toolkit.dw_compare] `current` is empty -- no data loaded in memory to compare; every `reference` row would report as removed.", call. = FALSE)
+		warning("[cso_toolkit.dw_compare] `current` is empty -- no data loaded in memory to compare; every `reference` row would report as removed.\n Fix: pass the recomputed rows into `current` (an in-memory data frame); check the upstream step produced data.", call. = FALSE)
 	}
 	if (side_empty(reference)) {
 		warning(sprintf(
-			"[cso_toolkit.dw_compare] `reference` is empty%s -- treating as a first deposit: nothing to compare against; every `current` row reports as added.",
-			if (!is.null(ref_unreadable)) sprintf(" (not found: %s)", ref_unreadable) else ""), call. = FALSE)
+			"[cso_toolkit.dw_compare] `reference` is empty%s -- treating as a first deposit: nothing to compare against; every `current` row reports as added.\n Fix: expected on a first deposit; otherwise check the reference path/deposit is present and readable.",
+			if (!is.null(ref_unreadable)) sprintf(" (unreadable: %s)", ref_unreadable) else ""), call. = FALSE)
 	}
 
 	# Backfill a NULL side with a 0-row frame matching the other's columns so the
