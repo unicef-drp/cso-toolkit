@@ -17,8 +17,8 @@
 # requires only data.table (already in DESCRIPTION Imports) -- no
 # skip_if_not_installed() guard is needed.
 
-test_that("dw_toolkit_version() returns the current v0.4.11 stamp", {
-  expect_identical(dw_toolkit_version(), "0.4.11")
+test_that("dw_toolkit_version() returns the current v0.5.0 stamp", {
+  expect_identical(dw_toolkit_version(), "0.5.0")
 })
 
 test_that("reviewer mode forbids canonical writes (v0.3.0 preserved)", {
@@ -169,10 +169,12 @@ test_that("overwrite gate refuses when ANY destination already exists", {
   expect_envelope(err, function_name = "dw_save")
   expect_match(conditionMessage(err), "overwrite|exists")
 
-  # Same call with overwrite=TRUE succeeds (suppress info messages
-  # from the mirror block — they are not errors / warnings).
+  # Same call with overwrite=TRUE + force=TRUE succeeds. A non-interactive
+  # producer overwrite now requires force (interactive sessions are prompted);
+  # suppress mirror info messages — they are not errors / warnings.
   suppressMessages({
-    out <- dw_save(df, path = primary, isid = "REF_AREA", overwrite = TRUE)
+    out <- dw_save(df, path = primary, isid = "REF_AREA",
+                   overwrite = TRUE, force = TRUE)
   })
   expect_true(file.exists(out))
 })

@@ -15,6 +15,7 @@ dw_save(
   compress = FALSE,
   dialect = c("fwrite", "base"),
   overwrite = NULL,
+  force = FALSE,
   provenance = TRUE,
   vintage = NULL,
   allow_canonical_write = FALSE,
@@ -72,6 +73,11 @@ explicitly set, the check examines ALL destinations that will
 actually be written (primary, Teams mirror, Z: mirror); `dw_save()`
 stops if any of them already exists. Pass `TRUE` to replace existing
 deposits.}
+
+\item{force}{Logical. Default `FALSE`. Overwriting an EXISTING producer
+deposit requires confirmation: interactively `dw_save()` prompts `[y/N]`;
+non-interactively it stops. Pass `force = TRUE` to skip the prompt for a
+deliberate automated re-deposit. Reviewer-mode sandbox writes are unaffected.}
 
 \item{provenance}{Logical. Whether to write the `.provenance.json`
 sidecar. Default `TRUE` (skipped for `.RData` / `.rda`).}

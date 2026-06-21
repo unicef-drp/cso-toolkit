@@ -32,3 +32,13 @@ test_that("dw_is_canonical handles trailing slashes on canonical roots", {
   expect_true(dw_is_canonical("/data/wrk-can/ed/x.csv"))
   expect_false(dw_is_canonical("/data/wrk-canary/ed/x.csv"))
 })
+
+# The Z: drive is an exact carbon-copy mirror of the Teams canonical deposit,
+# so a path under `dwZDrive` is treated as canonical too (reviewer reads of an
+# explicit Z: path short-circuit + run the Z: integrity check).
+test_that("dw_is_canonical recognises the dwZDrive (Z:) mirror root", {
+  local_state(dwZDrive = "/data/zmirror/060.DW-MASTER")
+  expect_true(dw_is_canonical("/data/zmirror/060.DW-MASTER"))
+  expect_true(dw_is_canonical("/data/zmirror/060.DW-MASTER/ed/x.csv"))
+  expect_false(dw_is_canonical("/data/zmirror/060.DW-MASTER-other/x.csv"))
+})
