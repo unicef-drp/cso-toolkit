@@ -18,9 +18,15 @@ dw_compare(
 )
 }
 \arguments{
-\item{current}{Data frame or character path to a file. The "new" side.}
+\item{current}{Data frame or character path. The "new" side. In REVIEWER
+mode prefer an **in-memory** data frame: a wrk-rooted path is resolved
+network-first and redirected to the canonical deposit, so a path can
+silently compare the deposit against itself. An empty/0-row `current`
+warns ("nothing loaded to compare").}
 
-\item{reference}{Data frame or character path to a file. The "old" side.}
+\item{reference}{Data frame or character path. The "old" side. A missing or
+unreadable reference (a first producer deposit -- nothing in Teams/Z yet)
+is treated as empty with a warning, not an error.}
 
 \item{by}{Character vector of key columns.}
 
