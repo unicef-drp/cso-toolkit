@@ -19,6 +19,19 @@ is cut, this header is renamed `## v0.4.12 (YYYY-MM-DD)` and a fresh
 - **`test_scripts()` `io-xlsx` rule extended** to also flag `getSheetNames`,
   `excel_sheets`, and `loadWorkbook` (sheet-enumeration that bypasses
   `dw_use`); the suggestion points at `dw_use(sheet = NULL)`.
+- **`dw_compare()` handles degenerate sides gracefully.** A missing/unreadable
+  `reference` (e.g. a first producer deposit with nothing in Teams/Z) is now
+  treated as empty **with a warning** instead of `stop()`ping; an empty/0-row
+  `current` (no data loaded in memory) and an empty `reference` each emit a
+  warning so an all-removed / all-added delta isn't reported silently. Both
+  sides empty still stops. Roxygen documents the reviewer-mode caveat that
+  `current` should be passed in memory (a wrk-rooted path is canonical-redirected).
+- **`dw_save()` confirms before overwriting a producer deposit.** Overwriting an
+  EXISTING producer deposit now requires confirmation: interactively `dw_save()`
+  prompts `[y/N]`; a non-interactive run stops unless `force = TRUE` is passed
+  (a deliberate automated re-deposit). Reviewer-mode sandbox writes are
+  unchanged. **Migration:** non-interactive producer pipelines that re-deposit
+  must add `force = TRUE` (or run interactively).
 
 ## v0.4.11 (2026-06-14)
 
