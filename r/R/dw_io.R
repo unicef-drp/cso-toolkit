@@ -858,6 +858,10 @@ dw_isid <- function(df, keys, where = "<unknown>", verbose = NULL, debug = NULL)
 #' actually be written (primary, Teams mirror, Z: mirror); `dw_save()`
 #' stops if any of them already exists. Pass `TRUE` to replace existing
 #' deposits.
+#' @param force Logical. Default `FALSE`. Overwriting an EXISTING producer
+#' deposit requires confirmation: interactively `dw_save()` prompts `[y/N]`;
+#' non-interactively it stops. Pass `force = TRUE` to skip the prompt for a
+#' deliberate automated re-deposit. Reviewer-mode sandbox writes are unaffected.
 #' @param provenance Logical. Whether to write the `.provenance.json`
 #' sidecar. Default `TRUE` (skipped for `.RData` / `.rda`).
 #' @param vintage Character. Optional vintage tag (e.g. `"2026-05"`)
@@ -904,6 +908,7 @@ dw_save <- function(x,
  compress = FALSE,
  dialect = c("fwrite", "base"),
  overwrite = NULL,
+ force = FALSE,
  provenance = TRUE,
  vintage = NULL,
  allow_canonical_write = FALSE,
@@ -1044,6 +1049,35 @@ dw_save <- function(x,
 				"migration notes.)",
 				call. = FALSE
 			)
+		}
+	}
+
+	# === Producer overwrite confirmation ===
+	# Overwriting an EXISTING producer deposit is destructive, so it requires
+	# explicit confirmation: an interactive [y/N] prompt, or `force = TRUE` for a
+	# deliberate automated re-deposit. A non-interactive run without `force` stops
+	# rather than silently clobbering canonical. Reviewer sandbox writes (which
+	# default overwrite = TRUE) never reach here: is_producer is FALSE for them.
+	if (isTRUE(overwrite) && is_producer && !isTRUE(force)) {
+		overwriting <- character(0)
+		if (file.exists(path)) overwriting <- c(overwriting, path)
+		if (will_fan_out) {
+			if (!is.na(teams_mirror) && file.exists(teams_mirror)) overwriting <- c(overwriting, teams_mirror)
+			if (!is.na(z_mirror) && file.exists(z_mirror)) overwriting <- c(overwriting, z_mirror)
+		}
+		if (length(overwriting) > 0) {
+			if (interactive()) {
+				message("[cso_toolkit.dw_save] About to OVERWRITE existing deposit(s):\n ",
+					paste(overwriting, collapse = "\n "))
+				ans <- tolower(trimws(readline("  Overwrite? [y/N]: ")))
+				if (!ans %in% c("y", "yes")) {
+					stop("[cso_toolkit.dw_save] Overwrite declined at the prompt -- nothing written.", call. = FALSE)
+				}
+			} else {
+				stop(sprintf(
+					"[cso_toolkit.dw_save] Refusing to overwrite an existing producer deposit non-interactively:\n %s\n Fix: run interactively to confirm at the prompt, or pass `force = TRUE` for a deliberate automated re-deposit.",
+					paste(overwriting, collapse = "\n ")), call. = FALSE)
+			}
 		}
 	}
 
