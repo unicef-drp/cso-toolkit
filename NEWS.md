@@ -3,8 +3,10 @@
 ## Unreleased
 
 _Entries land here as PRs merge into `develop`. When the next release
-is cut, this header is renamed `## v0.4.12 (YYYY-MM-DD)` and a fresh
+is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
+
+## v0.5.0 (2026-06-21)
 
 - **`dw_use(sheet = NULL)` reads every sheet of an `.xlsx`** into a named
   list of data frames (read-all-sheets). The default `sheet = 1` is
