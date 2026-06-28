@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.42">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>4&nbsp; Roles and the mode contract – The CSO Toolkit Handbook</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../chapters/22-wiring-the-contract.html" rel="next">
+<link href="../chapters/12-architecture.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-baf7457b58093534c7052efdef5f4d86.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/21-roles-and-modes.html">Part II — The Contract</a></li><li class="breadcrumb-item"><a href="../chapters/21-roles-and-modes.html"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Roles and the mode contract</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">The CSO Toolkit Handbook</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/unicef-drp/cso-toolkit/tree/main/book/" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Welcome</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part I — Why &amp; Architecture</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/11-why.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Why a toolkit</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/12-architecture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Architecture: one contract, three languages, many consumers</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part II — The Contract</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/21-roles-and-modes.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Roles and the mode contract</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/22-wiring-the-contract.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Wiring the contract into a repo</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/23-provenance-and-errors.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Provenance sidecars and the error envelope</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part III — The API (cross-language)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/31-io.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">The IO contract</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/32-external-api.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">The external-API contract</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/33-aggregation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Aggregation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/34-vintage-sync.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Vintage sync</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/35-scaffolding-audit.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Scaffolding and the contract auditor</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part IV — Adoption &amp; Operations</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/41-vendoring.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">The vendoring model</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/42-onboarding-example.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Onboarding a repo: a worked example</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/43-contract-auditor-ci.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">The contract auditor in continuous integration (CI)</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/44-versioning-release.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Versioning and releases</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Appendices</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/a-coverage-matrix.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">A</span>&nbsp; <span class="chapter-title">Cross-language coverage matrix</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/b-provenance-schema.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">B</span>&nbsp; <span class="chapter-title">Provenance sidecar schema</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/c-error-taxonomy.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">C</span>&nbsp; <span class="chapter-title">Error taxonomy</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/d-function-reference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">D</span>&nbsp; <span class="chapter-title">Function reference</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/e-glossary.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">E</span>&nbsp; <span class="chapter-title">Glossary</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#the-three-roles" id="toc-the-three-roles" class="nav-link active" data-scroll-target="#the-three-roles"><span class="header-section-number">4.1</span> The three roles</a></li>
+  <li><a href="#what-each-role-may-read-and-write" id="toc-what-each-role-may-read-and-write" class="nav-link" data-scroll-target="#what-each-role-may-read-and-write"><span class="header-section-number">4.2</span> What each role may read and write</a>
+  <ul class="collapse">
+  <li><a href="#what-each-role-must-not-do" id="toc-what-each-role-must-not-do" class="nav-link" data-scroll-target="#what-each-role-must-not-do"><span class="header-section-number">4.2.1</span> What each role MUST NOT do</a></li>
+  </ul></li>
+  <li><a href="#the-data-flow" id="toc-the-data-flow" class="nav-link" data-scroll-target="#the-data-flow"><span class="header-section-number">4.3</span> The data flow</a></li>
+  <li><a href="#how-dw_mode-enforces-the-boundaries" id="toc-how-dw_mode-enforces-the-boundaries" class="nav-link" data-scroll-target="#how-dw_mode-enforces-the-boundaries"><span class="header-section-number">4.4</span> How <code>dw_mode</code> enforces the boundaries</a>
+  <ul class="collapse">
+  <li><a href="#guard-1-reviewer-mode-forbids-canonical-and-z-writes-dw_save" id="toc-guard-1-reviewer-mode-forbids-canonical-and-z-writes-dw_save" class="nav-link" data-scroll-target="#guard-1-reviewer-mode-forbids-canonical-and-z-writes-dw_save"><span class="header-section-number">4.4.1</span> Guard 1 — reviewer mode forbids canonical and Z: writes (<code>dw_save</code>)</a></li>
+  <li><a href="#guard-2-reviewer-mode-forbids-live-api-calls-dw_require_no_api" id="toc-guard-2-reviewer-mode-forbids-live-api-calls-dw_require_no_api" class="nav-link" data-scroll-target="#guard-2-reviewer-mode-forbids-live-api-calls-dw_require_no_api"><span class="header-section-number">4.4.2</span> Guard 2 — reviewer mode forbids live API calls (<code>dw_require_no_api</code>)</a></li>
+  </ul></li>
+  <li><a href="#the-helper-subset-each-role-uses" id="toc-the-helper-subset-each-role-uses" class="nav-link" data-scroll-target="#the-helper-subset-each-role-uses"><span class="header-section-number">4.5</span> The helper subset each role uses</a></li>
+  <li><a href="#a-note-on-the-publisher-role" id="toc-a-note-on-the-publisher-role" class="nav-link" data-scroll-target="#a-note-on-the-publisher-role"><span class="header-section-number">4.6</span> A note on the PUBLISHER role</a></li>
+  <li><a href="#why-this-matters" id="toc-why-this-matters" class="nav-link" data-scroll-target="#why-this-matters"><span class="header-section-number">4.7</span> Why this matters</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/unicef-drp/cso-toolkit/edit/main/book/chapters/21-roles-and-modes.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/unicef-drp/cso-toolkit/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/21-roles-and-modes.html">Part II — The Contract</a></li><li class="breadcrumb-item"><a href="../chapters/21-roles-and-modes.html"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Roles and the mode contract</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Roles and the mode contract</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>DW-Production is not one job done by one person. It is a relay. Upstream agencies publish their statistics; a Database Manager refreshes caches and produces deposited indicators; an auditor reproduces those outputs and files findings; and a publisher pushes approved data packages out to UNICEF’s data warehouse and the public-facing pages that draw on it. Each runner holds a different baton, touches a different part of the filesystem, and carries a different obligation. The toolkit names these three runners explicitly — <strong>PRODUCER</strong>, <strong>REVIEWER</strong>, and <strong>PUBLISHER</strong> — and it does not rely on discipline alone to keep them apart. The toolkit enforces two of the three in code: a session set to reviewer mode is physically prevented from writing canonical artefacts (the single authoritative copy of the data everyone downstream trusts) or from calling live APIs.</p>
+<p>This chapter sets out the three roles, what each may read and write, and how the <code>dw_mode</code> session setting turns those policies into mechanical guarantees.</p>
+<p>Two terms recur throughout and are worth fixing now. A <strong>deposit</strong> is a finished data package a producer places in the canonical store. A deposit is <strong>blessed</strong> once it has passed the producer’s pre-deposit checklist and the reviewer’s compare report — only blessed deposits may be published.</p>
+<section id="the-three-roles" class="level2" data-number="4.1">
+<h2 data-number="4.1" class="anchored" data-anchor-id="the-three-roles"><span class="header-section-number">4.1</span> The three roles</h2>
+<p>The roles map onto a real organisational lifecycle. Each carries a short acronym used in the repo’s internal documentation; we use the plain role names — PRODUCER, REVIEWER, PUBLISHER — for the rest of this chapter.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Role</th>
+<th>Acronym</th>
+<th>Plain meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>PRODUCER</strong></td>
+<td>DBM (Database Manager)</td>
+<td>Owns the deposit. Refreshes upstream caches and produces the deposited indicator outputs.</td>
+</tr>
+<tr class="even">
+<td><strong>REVIEWER</strong></td>
+<td>DBR (Database Reviewer)</td>
+<td>Reproduces and validates. Audits, finds bugs, gathers sector-lead sign-off.</td>
+</tr>
+<tr class="odd">
+<td><strong>PUBLISHER</strong></td>
+<td>DBP (Database Publisher)</td>
+<td>Pushes blessed deposits into the canonical UNICEF data warehouse and downstream surfaces.</td>
+</tr>
+</tbody>
+</table>
+<p>All three share the same helper functions — <code>dw_save</code>, <code>dw_use</code>, <code>dw_api_fetch</code>, <code>dw_compare</code>, and the rest — and the same path globals derived from the user profile. What differs is the slice of the filesystem each one may read and write, and whether it may reach the network at all.</p>
+</section>
+<section id="what-each-role-may-read-and-write" class="level2" data-number="4.2">
+<h2 data-number="4.2" class="anchored" data-anchor-id="what-each-role-may-read-and-write"><span class="header-section-number">4.2</span> What each role may read and write</h2>
+<p>The read/write/API matrix is the core of this chapter; everything else elaborates it.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Role</th>
+<th>Reads from</th>
+<th>Writes to</th>
+<th>API calls</th>
+<th>Owns</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>PRODUCER</strong></td>
+<td>upstream APIs + the canonical deposit (<code>060.DW-MASTER</code>)</td>
+<td>the canonical deposit (Teams + the Z: mirror, automatically)</td>
+<td><strong>YES</strong></td>
+<td>refreshing cached upstream data; producing the deposited outputs</td>
+</tr>
+<tr class="even">
+<td><strong>REVIEWER</strong></td>
+<td>the canonical deposit (read-only) + own sandbox</td>
+<td>the sandbox only (<code>sandboxRoot</code>, per user)</td>
+<td><strong>NO</strong> — forbidden by the reviewer-mode guard</td>
+<td>reproducibility validation; sector-lead sign-off; finding bugs</td>
+</tr>
+<tr class="odd">
+<td><strong>PUBLISHER</strong></td>
+<td>the blessed work-data deposit (<code>013_wrkdata</code>)</td>
+<td>the data warehouse: Helix, SDMX endpoints, data.unicef.org, SoWC tables</td>
+<td>reads warehouse endpoints only</td>
+<td>publication into the canonical data warehouse and downstream surfaces</td>
+</tr>
+</tbody>
+</table>
+<p>The paths are numbered by lifecycle stage. Everything lives under a single root, <code>060.DW-MASTER</code>: <code>011_rawdata</code> holds upstream pulls (including the <code>_apis/</code> cache), and <code>013_wrkdata</code> holds finished, promoted deposits. The numbering implies a sequence — raw input becomes work data — not a directory count.</p>
+<p>Three things follow from the matrix.</p>
+<ul>
+<li><strong>Only the PRODUCER touches upstream.</strong> Reviewer sessions never call live APIs; they read frozen, producer-deposited caches instead. This is not a convention you are trusted to honour — the reviewer-mode guard asserts it at every network call site.</li>
+<li><strong>The REVIEWER reads canonical but writes sandbox.</strong> Reviewer-mode reads fall back to the canonical deposit (with a Z:-drive integrity check), but reviewer-mode writes are routed to a per-user sandbox; an attempted canonical write hard-fails.</li>
+<li><strong>The PUBLISHER consumes only blessed outputs.</strong> It reads from <code>013_wrkdata</code>, the work-data deposit a producer has explicitly promoted, never from raw or staging paths.</li>
+</ul>
+<section id="what-each-role-must-not-do" class="level3" data-number="4.2.1">
+<h3 data-number="4.2.1" class="anchored" data-anchor-id="what-each-role-must-not-do"><span class="header-section-number">4.2.1</span> What each role MUST NOT do</h3>
+<p>The matrix above says what each role <em>may</em> do; the prohibitions below say what each role <em>must not</em> — the same boundaries seen from the other side. A relay fails when a runner reaches outside their leg.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Role</th>
+<th>Forbidden</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>PRODUCER</strong></td>
+<td>skip the pre-deposit checklist; deposit without a compare-vs-prior-vintage report; deposit without sector-lead sign-off on non-trivial deltas</td>
+</tr>
+<tr class="even">
+<td><strong>REVIEWER</strong></td>
+<td>write to canonical paths; call external APIs; modify caches in the deposit</td>
+</tr>
+<tr class="odd">
+<td><strong>PUBLISHER</strong></td>
+<td>promote outputs that haven’t passed the producer’s checklist and the reviewer’s compare; publish without a provenance chain back to original API fetches; roll back without amending the source</td>
+</tr>
+</tbody>
+</table>
+<p>The producer’s prohibitions are <em>procedural</em> — enforced by checklist and review, not by code. The reviewer’s prohibitions are <em>mechanical</em> — enforced by <code>dw_mode</code>, as the next section shows. The publisher’s prohibitions are mostly procedural today, with one mechanical exception: the R <code>dw_publish</code> helper already refuses reviewer-mode submissions (see the publisher note below).</p>
+</section>
+</section>
+<section id="the-data-flow" class="level2" data-number="4.3">
+<h2 data-number="4.3" class="anchored" data-anchor-id="the-data-flow"><span class="header-section-number">4.3</span> The data flow</h2>
+<p>A single indicator moves through the relay like this:</p>
+<pre><code>External APIs                 (UIS · SDMX · WB · ILO · UNSD)
+  │  PRODUCER: dw_api_fetch(refresh = TRUE)
+  ▼
+API cache  ── 011_rawdata/.../_apis ───────────────────────┐
+  │                                                          │ REVIEWER: dw_api_cached
+  ▼                                                          │ (cache reads only — no live calls)
+Sector pipeline  ◄─────────────────────────────────────────┘
+  │  PRODUCER: dw_save(isid = ...)            REVIEWER: writes routed to sandbox
+  ▼                                                   │
+Canonical deposit ── 013_wrkdata ── carbon copy ──► Z: mirror (integrity check)
+  │  │  ▲                                               ▲
+  │  │  └── REVIEWER: dw_use (read-only) ───────────────┘
+  │  │            │
+  │  │            ▼
+  │  │     Compare report ──► Issues filed to PRODUCER / sector lead
+  │  │
+  └──┴── PUBLISHER ──► Helix · SDMX endpoints · data.unicef.org · SoWC / SI tables</code></pre>
+<p>Read the flow as three lanes. Solid arrows are normal forward flow. The reviewer’s arrows into the pipeline and deposit are read-only. The publisher’s arrows fan out from the blessed <code>013_wrkdata</code> deposit to downstream consumers. The diagram makes plain why mode enforcement matters: the reviewer’s pipeline runs the <em>same scripts</em> as the producer’s, so the only thing standing between an audit run and a corrupted deposit is the mode contract redirecting every write.</p>
+</section>
+<section id="how-dw_mode-enforces-the-boundaries" class="level2" data-number="4.4">
+<h2 data-number="4.4" class="anchored" data-anchor-id="how-dw_mode-enforces-the-boundaries"><span class="header-section-number">4.4</span> How <code>dw_mode</code> enforces the boundaries</h2>
+<p>The PRODUCER / REVIEWER split is a single session-level setting. Each user keeps a personal block in <code>~/.config/user_config.yml</code>:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">jpazevedo</span><span class="kw">:</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">githubFolder</span><span class="kw">:</span><span class="at"> </span><span class="st">"C:/GitHub/mytasks"</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">teamsRoot</span><span class="kw">:</span><span class="at"> </span><span class="st">"C:/Users/jpazevedo/UNICEF/Chief Statistician Office - Documents"</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">dw_mode</span><span class="kw">:</span><span class="at"> </span><span class="st">"reviewer"</span><span class="co">                          # producer | reviewer</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">sandboxRoot</span><span class="kw">:</span><span class="at"> </span><span class="st">"C:/Users/jpazevedo/dw-repro"</span><span class="co">   # only used when dw_mode = reviewer</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><code>dw_mode</code> is <strong>required</strong>. Profile loading hard-fails if it is absent or set to anything other than <code>producer</code> or <code>reviewer</code>, because defaulting to either side is unsafe: defaulting to producer would let an unconfigured session corrupt the deposit, and defaulting to reviewer would surprise a Database Manager mid-deposit.</p>
+<p>From <code>dw_mode</code> the profile derives the path globals — <code>teamsWrkData</code>, the <code>*Canonical</code> read-only aliases, and a <code>dw_apis_allowed</code> flag. That derivation lets the same conductor scripts route to the deposit in producer mode and to the sandbox in reviewer mode without per-script edits. The wiring chapter covers the derivation in full; here we focus on the two enforcement points the contract relies on.</p>
+<p>The contract is enforced by <strong>defence in depth</strong>. The mode setting routes paths at the profile, and then the individual write and fetch helpers check <em>again</em> at the call site. Two guards do the work.</p>
+<section id="guard-1-reviewer-mode-forbids-canonical-and-z-writes-dw_save" class="level3" data-number="4.4.1">
+<h3 data-number="4.4.1" class="anchored" data-anchor-id="guard-1-reviewer-mode-forbids-canonical-and-z-writes-dw_save"><span class="header-section-number">4.4.1</span> Guard 1 — reviewer mode forbids canonical and Z: writes (<code>dw_save</code>)</h3>
+<p>When <code>dw_save</code> is asked to write a path that is canonical (under the Teams deposit) or under the Z: drive mirror, and the session is in reviewer mode, it refuses. The guard broadened in v0.4.0 to cover the Z: mirror as well as the Teams deposit; v0.3.0 refused canonical Teams writes only. The single escape hatch is <code>allow_canonical_write = TRUE</code>, intended for Database Manager bootstraps, never for routine reviewer work. The <code>isid</code> argument shown below names the columns that uniquely identify a row; <code>dw_save</code> checks them before writing so a duplicate key can never reach the deposit.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" aria-current="page">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-3" role="tab" aria-controls="tabset-1-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Reviewer-mode session. This canonical path raises an error.</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># isid = the columns that uniquely identify a row.</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dw_save</span>(df, <span class="fu">file.path</span>(teamsWrkDataCanonical, <span class="st">"dw_im.csv"</span>), <span class="at">isid =</span> <span class="fu">c</span>(<span class="st">"iso3"</span>, <span class="st">"year"</span>))</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Error: [cso_toolkit.dw_save] Reviewer mode forbids writes to</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   canonical (Teams) deposit: .../dw_im.csv</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Reviewer sessions must keep canonical / Z: deposits read-only to</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   preserve vintage permanence; writes go to the local repo sandbox.</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Fix:</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     1. Resolve a sandbox path instead (the profile's `teamsWrkData`</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;        should point there in reviewer mode), OR</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     2. If this is a deliberate Database Manager bootstrap,</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;        pass `allow_canonical_write = TRUE`.</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Producer bootstrap (rare): explicit opt-in bypasses the guard.</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="fu">dw_save</span>(df, canonical_path, <span class="at">isid =</span> <span class="fu">c</span>(<span class="st">"iso3"</span>, <span class="st">"year"</span>), <span class="at">allow_canonical_write =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Reviewer-mode session. This canonical path raises PermissionError.</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"># isid = the columns that uniquely identify a row.</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>dw_save(df, os.path.join(teams_wrk_data_canonical, <span class="st">"dw_im.csv"</span>), isid<span class="op">=</span>[<span class="st">"iso3"</span>, <span class="st">"year"</span>])</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># PermissionError: [cso_toolkit.dw_save] Reviewer mode forbids writes to</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co">#   canonical (Teams) deposit: .../dw_im.csv</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co">#   Reviewer sessions must keep canonical + Z: deposits read-only to</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co">#   preserve vintage permanence; writes go to the sandbox.</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co">#   Fix:</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co">#     1. Resolve a sandbox path instead (the profile's teamsWrkData</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co">#        usually points there in reviewer mode), OR</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="co">#     2. If this is a deliberate Database Manager bootstrap,</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co">#        pass `allow_canonical_write=True` to bypass the guard.</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>dw_save(df, canonical_path, isid<span class="op">=</span>[<span class="st">"iso3"</span>, <span class="st">"year"</span>], allow_canonical_write<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-1-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-3-tab">
+<div class="sourceCode" id="cb5"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>* The Stata dw_save mirrors the same path routing via <span class="ot">$teamsWrkData</span>,</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>* which the profile points <span class="fu">at</span> the sandbox <span class="kw">in</span> reviewer <span class="kw">mode</span>, so writes</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>* land <span class="kw">in</span> the sandbox without a per-call flag. The uniqueness check is</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>* folded <span class="kw">in</span> via idvars() (the Stata equivalent <span class="kw">of</span> the R <span class="kw">isid</span>= argument).</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>dw_save , filename(<span class="st">"dw_im.csv"</span>) path(<span class="st">"$teamsWrkData"</span>) idvars(iso3 <span class="fu">year</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>The same guard also runs a <em>producer-side</em> pre-flight: in producer mode a non-canonical (sandbox) write requires at least one of the Teams or Z: mirrors to be reachable, so a deposit never ends up living only on the producer’s laptop. Producer outputs are redundant by design — every canonical write fans out to both mirrors when available, and the Z: carbon copy is what later lets a reviewer verify Teams equals Z: byte-for-byte.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="guard-2-reviewer-mode-forbids-live-api-calls-dw_require_no_api" class="level3" data-number="4.4.2">
+<h3 data-number="4.4.2" class="anchored" data-anchor-id="guard-2-reviewer-mode-forbids-live-api-calls-dw_require_no_api"><span class="header-section-number">4.4.2</span> Guard 2 — reviewer mode forbids live API calls (<code>dw_require_no_api</code>)</h3>
+<p>The second guard sits at every entry point that would hit the network. <code>dw_api_fetch</code> checks the <code>dw_apis_allowed</code> flag at the very top, before any HTTP request, and any sector-internal script that talks to a remote is expected to call <code>dw_require_no_api</code> too. In reviewer mode the call aborts; in producer mode it returns silently. The frozen cache is read with <code>dw_api_cached</code> instead of fetching live.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-3" role="tab" aria-controls="tabset-2-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<div class="sourceCode" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># At the top of a remote-touching analysis script:</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dw_require_no_api</span>(<span class="at">context =</span> <span class="st">"ed/06_pull_uis"</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Reviewer mode:</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Error: [X] External API access is forbidden in reviewer mode. Context: ed/06_pull_uis</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co"># dw_api_fetch performs the same check internally before any httr::GET;</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co"># in reviewer mode it raises the cso_toolkit.dw_api envelope and stops.</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="co"># To read the frozen cache instead of fetching live:</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="fu">dw_api_cached</span>(<span class="st">"uis"</span>, <span class="at">cache_key =</span> <span class="st">"uis_entrance_age_primary"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Python analogue, raised by dw_api_fetch before any request:</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>_dw_require_no_api(<span class="st">"dw_api_fetch('uis', cache_key='...')"</span>,</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>                   reason<span class="op">=</span><span class="st">"cache missing at .../uis/..."</span>)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># PermissionError: [cso_toolkit.dw_api] Reviewer mode forbids live API calls.</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co">#   Call:   dw_api_fetch('uis', cache_key='...')</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="co">#   Reason: cache missing at .../uis/...</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co">#   Fix:</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="co">#     1. The expected workflow is that a Database Manager has already</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="co">#        populated the cache under teamsRawDataCanonical/_apis/.</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="co">#        Verify the cache file exists at the path above.</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="co">#     2. If you ARE the producer, switch modes:</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="co">#        from cso_toolkit import _state</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="co">#        _state.configure(dw_mode="producer", dw_apis_allowed=True)</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>dw_api_cached(<span class="st">"uis"</span>, cache_key<span class="op">=</span><span class="st">"uis_entrance_age_primary"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-2-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-3-tab">
+<div class="sourceCode" id="cb8"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>* Assert the <span class="kw">contract</span> just before a live network call:</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>dw_require_no_api , context(<span class="st">"ed/06_pull_uis"</span>)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>* Reviewer <span class="kw">mode</span> aborts with Stata <span class="kw">error</span> 459 and the envelope message:</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>*   [cso_toolkit.dw_require_no_api] Reviewer <span class="kw">mode</span> forbids live API calls</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>*     (context: ed/06_pull_uis).</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>*   Why: reviewer sessions must read frozen producer caches to <span class="kw">preserve</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>*     vintage permanence; any live API call breaks provenance.</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>*   Fix: <span class="kw">switch</span> the call to dw_use() against the frozen cache, <span class="kw">or</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>*     re-<span class="kw">run</span> <span class="kw">in</span> producer <span class="kw">mode</span>.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<p>The three guards are the same shape — same intent, same reviewer-blocks/producer-passes logic, same envelope-style message with a <em>Why</em> and a <em>Fix</em>. They differ in their language’s native failure mechanism (an R <code>stop()</code>, a Python <code>PermissionError</code>, a Stata <code>error 459</code>) and in their plumbing. In R the gate is split: <code>dw_api_fetch</code> tests the <code>dw_apis_allowed</code> flag itself and raises the <code>cso_toolkit.dw_api</code> envelope, while the standalone <code>dw_require_no_api(context = ...)</code> helper — defined by the consumer profile, not exported by the package — is what analysis scripts call directly. The Stata side, by contrast, has no API wrapper at all, so <code>dw_require_no_api</code> is the <em>only</em> mechanism a Stata script has; you must call it explicitly before every network operation.</p>
+<div class="callout callout-style-simple callout-warning">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>The Stata helper carries a subtlety: an <strong>unset</strong> mode passes through. It blocks only when <code>$dw_mode == "reviewer"</code>; producer and any empty or unknown value pass silently. This is deliberate — it means a stray script never falsely blocks a producer — but it also means the <em>profile</em> must set <code>dw_mode</code> correctly. The required-field rule in <code>user_config.yml</code> is what closes that gap: an unconfigured session fails at profile load, before it ever reaches a guard.</p>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="the-helper-subset-each-role-uses" class="level2" data-number="4.5">
+<h2 data-number="4.5" class="anchored" data-anchor-id="the-helper-subset-each-role-uses"><span class="header-section-number">4.5</span> The helper subset each role uses</h2>
+<p>The same functions serve all three roles, but each role exercises a different subset and gets different behaviour from the shared helpers.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Helper</th>
+<th>PRODUCER</th>
+<th>REVIEWER</th>
+<th>PUBLISHER</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>dw_save</code></td>
+<td>writes to the deposit (Z: mirror automatic)</td>
+<td>sandbox writes only; canonical/Z: writes hard-fail</td>
+<td>reads only</td>
+</tr>
+<tr class="even">
+<td><code>dw_use</code></td>
+<td>reads anywhere</td>
+<td>reads sandbox with canonical fallback; network-first with Z: integrity check</td>
+<td>reads <code>013_wrkdata</code></td>
+</tr>
+<tr class="odd">
+<td><code>dw_api_fetch</code></td>
+<td>fetches live and caches in the deposit</td>
+<td>blocked in reviewer mode; reads cache instead</td>
+<td>n/a</td>
+</tr>
+<tr class="even">
+<td><code>dw_api_cached</code></td>
+<td>reads cache</td>
+<td>reads cache</td>
+<td>n/a</td>
+</tr>
+<tr class="odd">
+<td><code>dw_api_inventory</code></td>
+<td>audits cache freshness</td>
+<td>audits what is available</td>
+<td>audits provenance pre-publication</td>
+</tr>
+<tr class="even">
+<td><code>dw_compare</code></td>
+<td>runs on every production run</td>
+<td>runs on every reviewer run</td>
+<td>reads compare reports as a publication gate</td>
+</tr>
+<tr class="odd">
+<td><code>dw_verify_z</code></td>
+<td>runs after a canonical write to confirm the mirror landed</td>
+<td>runs on canonical reads to verify integrity</td>
+<td>runs as a final pre-publication check</td>
+</tr>
+<tr class="even">
+<td><code>dw_isid</code></td>
+<td>enforces row uniqueness pre-write</td>
+<td>spot-checks reproduced data</td>
+<td>optional spot-check</td>
+</tr>
+<tr class="odd">
+<td><code>dw_publish</code></td>
+<td>n/a</td>
+<td>refused in reviewer mode</td>
+<td>submits to Helix (R only; dry-run stub today)</td>
+</tr>
+</tbody>
+</table>
+<p>The cross-language coverage of these helpers is uneven, and the chapters on the IO and external-API contracts cover the gaps honestly. Two are worth flagging here because they bear directly on the role split. First, Stata has <strong>no API wrapper</strong> — <code>dw_api_fetch</code> and <code>dw_api_cached</code> exist only in R and Python — so the producer’s cache-refresh leg is an R/Python responsibility, and Stata’s contribution to the reviewer guard is the standalone <code>dw_require_no_api</code> assertion alone. Second, <code>dw_publish</code> exists only in R. The coverage matrix appendix gives the full per-function picture.</p>
+</section>
+<section id="a-note-on-the-publisher-role" class="level2" data-number="4.6">
+<h2 data-number="4.6" class="anchored" data-anchor-id="a-note-on-the-publisher-role"><span class="header-section-number">4.6</span> A note on the PUBLISHER role</h2>
+<p>Of the three roles, PRODUCER and REVIEWER are fully wired into the mode contract; PUBLISHER is only partly so. The role is documented in full — its inputs, its pre-publication gates, its targets (Helix, SDMX endpoints, data.unicef.org, the State of the World’s Children tables), and its rollback procedure — and one piece of it is now code. The R package ships <code>dw_publish(path, indicator, vintage, sector, endpoint = "helix", dry_run = TRUE)</code>, parallel to <code>dw_save</code> and <code>dw_api_fetch</code>. It already enforces the call-site contract a publisher needs: a reviewer-mode call raises before any I/O, required arguments are validated, the artifact must exist on disk, and the endpoint allowlist currently admits only <code>"helix"</code>.</p>
+<p>What <code>dw_publish</code> does <em>not</em> yet do is submit. As of v0.5.0 it is a dry-run-only stub: <code>dry_run = TRUE</code> validates the call site and assembles the exact payload the live branch will POST, while <code>dry_run = FALSE</code> raises an envelope-shaped error pointing at the issue where the Helix endpoint contract is being negotiated with sector leads. There is no Python or Stata equivalent. So the publisher’s <em>transport</em> — the actual push to Helix, SDMX, the data portal, and the SoWC tables — and its remaining boundaries (read only blessed <code>013_wrkdata</code>, require a provenance chain back to original API fetches, never roll back without amending the source) are still enforced by procedure and review rather than by code. Treat the PUBLISHER role as a contract honoured mostly by hand, with the mechanical version arriving one helper at a time.</p>
+</section>
+<section id="why-this-matters" class="level2" data-number="4.7">
+<h2 data-number="4.7" class="anchored" data-anchor-id="why-this-matters"><span class="header-section-number">4.7</span> Why this matters</h2>
+<p>The whole point of the relay is <em>reproducibility with permanence</em>. A reviewer must be able to run the producer’s exact scripts and get the producer’s exact numbers — which means the reviewer must read the same frozen caches the producer deposited, never a fresher pull from a live API that has moved on. Each cache is a <em>vintage</em>: the exact snapshot of the data as it stood when the producer pulled it. And a reviewer must be able to reproduce those numbers without any risk of overwriting the very deposit they are auditing. The two guards deliver exactly this: the API guard keeps the reviewer reading frozen vintages, and the <code>dw_save</code> reviewer guard keeps the reviewer’s output quarantined in a sandbox. Set <code>dw_mode</code> correctly once, and the same code base behaves as a producer or as a reviewer — safely, and without editing a single sector script.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../chapters/12-architecture.html" class="pagination-link" aria-label="Architecture: one contract, three languages, many consumers">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Architecture: one contract, three languages, many consumers</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../chapters/22-wiring-the-contract.html" class="pagination-link" aria-label="Wiring the contract into a repo">
+        <span class="nav-page-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Wiring the contract into a repo</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>UNICEF Chief Statistician Office — Data &amp; Analytics (OSE)</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/unicef-drp/cso-toolkit/edit/main/book/chapters/21-roles-and-modes.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/unicef-drp/cso-toolkit/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>Built with <a href="https://quarto.org">Quarto</a></p>
+</div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

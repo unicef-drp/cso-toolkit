@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.42">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>10&nbsp; Vintage sync – The CSO Toolkit Handbook</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../chapters/35-scaffolding-audit.html" rel="next">
+<link href="../chapters/33-aggregation.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-baf7457b58093534c7052efdef5f4d86.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/31-io.html">Part III — The API (cross-language)</a></li><li class="breadcrumb-item"><a href="../chapters/34-vintage-sync.html"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Vintage sync</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">The CSO Toolkit Handbook</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/unicef-drp/cso-toolkit/tree/main/book/" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Welcome</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part I — Why &amp; Architecture</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/11-why.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Why a toolkit</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/12-architecture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Architecture: one contract, three languages, many consumers</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part II — The Contract</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/21-roles-and-modes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Roles and the mode contract</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/22-wiring-the-contract.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Wiring the contract into a repo</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/23-provenance-and-errors.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Provenance sidecars and the error envelope</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part III — The API (cross-language)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/31-io.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">The IO contract</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/32-external-api.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">The external-API contract</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/33-aggregation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Aggregation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/34-vintage-sync.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Vintage sync</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/35-scaffolding-audit.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Scaffolding and the contract auditor</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part IV — Adoption &amp; Operations</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/41-vendoring.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">The vendoring model</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/42-onboarding-example.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Onboarding a repo: a worked example</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/43-contract-auditor-ci.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">The contract auditor in continuous integration (CI)</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/44-versioning-release.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Versioning and releases</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Appendices</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/a-coverage-matrix.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">A</span>&nbsp; <span class="chapter-title">Cross-language coverage matrix</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/b-provenance-schema.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">B</span>&nbsp; <span class="chapter-title">Provenance sidecar schema</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/c-error-taxonomy.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">C</span>&nbsp; <span class="chapter-title">Error taxonomy</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/d-function-reference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">D</span>&nbsp; <span class="chapter-title">Function reference</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/e-glossary.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">E</span>&nbsp; <span class="chapter-title">Glossary</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#the-pin-.toolkit_manifest.yml" id="toc-the-pin-.toolkit_manifest.yml" class="nav-link active" data-scroll-target="#the-pin-.toolkit_manifest.yml"><span class="header-section-number">10.1</span> The pin: <code>.toolkit_manifest.yml</code></a></li>
+  <li><a href="#cso_toolkit_check-am-i-behind" id="toc-cso_toolkit_check-am-i-behind" class="nav-link" data-scroll-target="#cso_toolkit_check-am-i-behind"><span class="header-section-number">10.2</span> <code>cso_toolkit_check</code> — am I behind?</a>
+  <ul class="collapse">
+  <li><a href="#what-the-check-guards-against" id="toc-what-the-check-guards-against" class="nav-link" data-scroll-target="#what-the-check-guards-against"><span class="header-section-number">10.2.1</span> What the check guards against</a></li>
+  <li><a href="#how-the-upstream-tag-is-resolved" id="toc-how-the-upstream-tag-is-resolved" class="nav-link" data-scroll-target="#how-the-upstream-tag-is-resolved"><span class="header-section-number">10.2.2</span> How the upstream tag is resolved</a></li>
+  </ul></li>
+  <li><a href="#cso_toolkit_diff-what-changed" id="toc-cso_toolkit_diff-what-changed" class="nav-link" data-scroll-target="#cso_toolkit_diff-what-changed"><span class="header-section-number">10.3</span> <code>cso_toolkit_diff</code> — what changed?</a></li>
+  <li><a href="#cso_toolkit_pull-refresh-to-a-tag" id="toc-cso_toolkit_pull-refresh-to-a-tag" class="nav-link" data-scroll-target="#cso_toolkit_pull-refresh-to-a-tag"><span class="header-section-number">10.4</span> <code>cso_toolkit_pull</code> — refresh to a tag</a></li>
+  <li><a href="#the-refresh-flow" id="toc-the-refresh-flow" class="nav-link" data-scroll-target="#the-refresh-flow"><span class="header-section-number">10.5</span> The refresh flow</a>
+  <ul class="collapse">
+  <li><a href="#asserting-a-minimum-vintage-in-a-script" id="toc-asserting-a-minimum-vintage-in-a-script" class="nav-link" data-scroll-target="#asserting-a-minimum-vintage-in-a-script"><span class="header-section-number">10.5.1</span> Asserting a minimum vintage in a script</a></li>
+  </ul></li>
+  <li><a href="#cross-language-coverage-honestly" id="toc-cross-language-coverage-honestly" class="nav-link" data-scroll-target="#cross-language-coverage-honestly"><span class="header-section-number">10.6</span> Cross-language coverage, honestly</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/unicef-drp/cso-toolkit/edit/main/book/chapters/34-vintage-sync.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/unicef-drp/cso-toolkit/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/31-io.html">Part III — The API (cross-language)</a></li><li class="breadcrumb-item"><a href="../chapters/34-vintage-sync.html"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Vintage sync</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Vintage sync</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Every consuming repository carries its own frozen copy of the cso-toolkit’s helper code. That is the central design decision documented in the vendoring chapter: helpers are <em>copied</em> into a repo’s <code>00_functions/</code> directory and tracked in that repo’s git history, never <code>source()</code>’d or <code>pip install</code>’d live from the network. The benefit is reproducibility — a reviewer with no network access re-runs the exact code that was in effect at any commit. The cost is drift: the moment the upstream toolkit cuts a new release, every vendored copy is silently behind, and nothing forces a refresh.</p>
+<p>Vintage sync is the machinery that makes that drift visible and controllable. It answers three questions, in order: <strong>Am I behind?</strong> (<code>cso_toolkit_check</code>), <strong>What changed?</strong> (<code>cso_toolkit_diff</code>), and <strong>Refresh me to a known tag</strong> (<code>cso_toolkit_pull</code>). The pin that anchors all three is <code>.toolkit_manifest.yml</code>, a small YAML file vendored alongside the helpers it tracks. Some parts of this story are implemented today; others are deliberate stubs, flagged as such below.</p>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>As of v0.5.0, only <code>cso_toolkit_check</code> runs end to end. <code>cso_toolkit_diff</code> and <code>cso_toolkit_pull</code> are working stubs: they validate preconditions, respect the mode contract, and log what they will do, but no one has yet implemented the step that fetches files and overwrites the vendored copies. The pin and the check loop are real and in daily use; the automated refresh is the planned completion of the same design.</p>
+</div>
+</div>
+</div>
+<section id="the-pin-.toolkit_manifest.yml" class="level2" data-number="10.1">
+<h2 data-number="10.1" class="anchored" data-anchor-id="the-pin-.toolkit_manifest.yml"><span class="header-section-number">10.1</span> The pin: <code>.toolkit_manifest.yml</code></h2>
+<p>The manifest is the single source of truth for which vintage a repo carries. It lives next to the vendored helpers — by convention in the consumer’s <code>00_functions/</code> — and is committed to that repo’s git history right next to the code it describes. To create one, a consumer copies the template that ships in the toolkit at <code>templates/.toolkit_manifest.yml</code>, fills in the version, and updates it on every re-pull.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span><span class="kw">:</span><span class="at"> </span><span class="st">"unicef-drp/cso-toolkit"</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">pulled_version</span><span class="kw">:</span><span class="at"> </span><span class="st">"v0.4.0"</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">pulled_date</span><span class="kw">:</span><span class="at"> </span><span class="st">"2026-05-26"</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">pulled_by</span><span class="kw">:</span><span class="at"> </span><span class="st">"&lt;your-name&gt;"</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Files vendored from cso-toolkit/r/R/ into consumer's 00_functions/</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">vendored</span><span class="kw">:</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> dw_io.R</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> dw_api.R</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> cso_toolkit_sync.R</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co">  # Optional — copy only the ones your pipeline uses:</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co">  # - aggregate_data.R</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co">  # - dw_nestweight.R</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co">  # - create_sector_script.R</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Local edits applied on top of vendored files. List paths here so that</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="co"># cso_toolkit_pull() skips them on update. (Empty by default.)</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="fu">local_edits</span><span class="kw">:</span><span class="at"> </span><span class="kw">[]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The fields:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>source</code></td>
+<td>GitHub <code>owner/repo</code> slug of the upstream toolkit. The check helper queries this repo’s releases.</td>
+</tr>
+<tr class="even">
+<td><code>pulled_version</code></td>
+<td>The tag in effect at the last pull, e.g.&nbsp;<code>"v0.4.0"</code>. This is the pinned vintage that <code>cso_toolkit_check</code> compares against upstream.</td>
+</tr>
+<tr class="odd">
+<td><code>pulled_date</code></td>
+<td>ISO-8601 date of the pull. Free-form — the helper does <strong>not</strong> parse it; it is a human breadcrumb only.</td>
+</tr>
+<tr class="even">
+<td><code>pulled_by</code></td>
+<td>Who ran the pull. A breadcrumb, not used by any helper.</td>
+</tr>
+<tr class="odd">
+<td><code>vendored</code></td>
+<td>The list of files copied from the toolkit into this repo. The planned <code>cso_toolkit_pull</code> iterates this list.</td>
+</tr>
+<tr class="even">
+<td><code>local_edits</code></td>
+<td>Files in <code>vendored</code> that have intentional local divergence. <code>cso_toolkit_pull</code> will skip these on update so a refresh does not clobber a deliberate patch.</td>
+</tr>
+</tbody>
+</table>
+<p>Two values of <code>pulled_version</code> carry special meaning:</p>
+<ul>
+<li>A tag like <code>"v0.4.0"</code> is a normal pin. The check compares it against the upstream latest tag and flags a newer release.</li>
+<li>The substring <strong><code>inrepo</code></strong> (e.g.&nbsp;<code>"0.0.0-inrepo-2026-05-24"</code>) marks helpers that were edited locally and should never trigger a sync warning. <code>cso_toolkit_check</code> treats any <code>pulled_version</code> containing <code>inrepo</code> as “do not nag me” and reports no updates available regardless of upstream state. This is the escape hatch for the case where the toolkit’s own scaffolding lived inside the consuming repo before the upstream repo existed.</li>
+</ul>
+<div class="callout callout-style-simple callout-warning">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>The helpers compute manifest hashes against working-tree content, so line endings matter. The toolkit pins LF endings via <code>r/.gitattributes</code> for <code>*.R</code>, <code>*.yml</code>, <code>*.md</code>, and friends precisely so that a vendored file’s sha256 is identical on Windows, Linux, and macOS. Without this, a Windows checkout’s CRLF line endings would make every file appear “changed” to a future hash-based diff — the bug fixed in issue #52.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="cso_toolkit_check-am-i-behind" class="level2" data-number="10.2">
+<h2 data-number="10.2" class="anchored" data-anchor-id="cso_toolkit_check-am-i-behind"><span class="header-section-number">10.2</span> <code>cso_toolkit_check</code> — am I behind?</h2>
+<p><code>cso_toolkit_check</code> is the only one of the three helpers that runs end to end today. It is designed to be called quietly at session start: by default it returns a result structure and prints nothing, so a profile can wire it into startup without spamming the console. Pass <code>quiet = FALSE</code> (R) / <code>quiet=False</code> (Python) to log a human-readable verdict.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" aria-current="page">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-3" role="tab" aria-controls="tabset-1-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Silent: returns a list, prints nothing</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>res <span class="ot">&lt;-</span> <span class="fu">cso_toolkit_check</span>()</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Loud: logs the verdict to the console</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>res <span class="ot">&lt;-</span> <span class="fu">cso_toolkit_check</span>(<span class="at">quiet =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.null</span>(res) <span class="sc">&amp;&amp;</span> <span class="fu">isTRUE</span>(res<span class="sc">$</span>updates_available)) {</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cso_toolkit_diff</span>()</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> cso_toolkit <span class="im">import</span> cso_toolkit_check, cso_toolkit_diff</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Silent: returns a dict, logs nothing</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> cso_toolkit_check()</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Loud: logs the verdict</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> cso_toolkit_check(quiet<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> res <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span> <span class="kw">and</span> res[<span class="st">"updates_available"</span>]:</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    cso_toolkit_diff()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-1-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-3-tab">
+<div class="sourceCode" id="cb4"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>* Not available. Stata has no cso_toolkit_check / <span class="fu">diff</span> / pull helpers.</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>* Pin the vintage manually <span class="kw">in</span> .toolkit_manifest.yml and refresh <span class="kw">by</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>* copying stata/src/ from a tagged checkout. See the gap <span class="kw">note</span> below.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<p>The R and Python implementations are deliberate ports of one another. Both return the same structure with the same keys:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Key</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>source</code></td>
+<td>The upstream slug from the manifest.</td>
+</tr>
+<tr class="even">
+<td><code>pinned_version</code></td>
+<td>The manifest’s <code>pulled_version</code>.</td>
+</tr>
+<tr class="odd">
+<td><code>upstream_version</code></td>
+<td>The latest release tag found upstream.</td>
+</tr>
+<tr class="even">
+<td><code>updates_available</code></td>
+<td><code>TRUE</code>/<code>True</code> when pinned and upstream differ <strong>and</strong> the pin is not an <code>inrepo</code> pin.</td>
+</tr>
+<tr class="odd">
+<td><code>updated_files</code></td>
+<td>Always <code>NULL</code>/<code>None</code> here — reserved to be populated by <code>cso_toolkit_diff</code>.</td>
+</tr>
+</tbody>
+</table>
+<section id="what-the-check-guards-against" class="level3" data-number="10.2.1">
+<h3 data-number="10.2.1" class="anchored" data-anchor-id="what-the-check-guards-against"><span class="header-section-number">10.2.1</span> What the check guards against</h3>
+<p>The order of these guards matters. The function returns <code>NULL</code>/<code>None</code> — silently, unless <code>quiet</code> is off — in any of the following cases:</p>
+<ol type="1">
+<li><strong>Reviewer mode.</strong> This is the very first check. Reviewer mode — the offline, no-network role defined in the roles and mode-contract chapter — forbids external network calls, and a GitHub release lookup is exactly such a call. If <code>dw_apis_allowed</code> is not <code>TRUE</code>, the function returns immediately. Reviewers therefore never see sync chatter; they run against whatever vintage the producer pinned.</li>
+<li><strong>Missing or unreadable manifest.</strong> If the <code>yaml</code>/PyYAML package is absent, or no <code>.toolkit_manifest.yml</code> exists next to the helpers, the helper warns and bails. Helpers that are not vendored from any upstream simply have nothing to check.</li>
+<li><strong>Manifest with no <code>source</code>.</strong> A manifest that does not name an upstream repo cannot be checked.</li>
+<li><strong>Upstream unreachable or has no releases.</strong> The release lookup is wrapped so that a blocked proxy, an absent repo, or a repo with zero releases all resolve to “no result” rather than an error.</li>
+</ol>
+<p>Only when all four guards pass does the function compare versions. The comparison is intentionally crude: both the pinned and upstream tags are stripped of a leading <code>v</code> and compared as strings for inequality. There is no semantic-version ordering — a difference is a difference. This is enough for the signal the helper exists to give: you are not on the latest tag. It does not distinguish newer from older, and is not meant to.</p>
+<p>When an update <em>is</em> available and <code>quiet</code> is off, the producer sees a yellow alert (an ANSI escape in R; a log line in Python) naming the pinned and upstream versions and suggesting the next two commands:</p>
+<pre class="text"><code>[cso-toolkit] unicef-drp/cso-toolkit: pinned v0.4.0 -&gt; upstream v0.5.0 (newer tag available)
+              Run cso_toolkit_diff() to see what changed.
+              Run cso_toolkit_pull('v0.5.0') to refresh.</code></pre>
+<p>One rendering quirk distinguishes the two ports. The format string is <code>pinned v%s</code> in both, but the R port interpolates the raw <code>pulled_version</code> while the Python port first strips a leading <code>v</code> (<code>pinned_norm</code>, a Copilot fix on PR #7). Because the shipped manifest pins <code>pulled_version: "v0.4.0"</code>, the R alert actually reads <code>pinned vv0.4.0</code> whereas Python reads <code>pinned v0.4.0</code>. The text above shows the Python form; expect a doubled <code>v</code> from R when the pin carries the <code>v</code> prefix. The comparison logic is unaffected — both strip the <code>v</code> before testing for difference.</p>
+</section>
+<section id="how-the-upstream-tag-is-resolved" class="level3" data-number="10.2.2">
+<h3 data-number="10.2.2" class="anchored" data-anchor-id="how-the-upstream-tag-is-resolved"><span class="header-section-number">10.2.2</span> How the upstream tag is resolved</h3>
+<p>Both ports resolve the latest tag through the same two-tier strategy, in an internal helper named <code>.cso_upstream_latest_tag</code> (R) / <code>_cso_upstream_latest_tag</code> (Python):</p>
+<ol type="1">
+<li><strong>Prefer the <code>gh</code> CLI</strong> when it is on <code>PATH</code>: <code>gh api repos/&lt;source&gt;/releases/latest --jq .tag_name</code>. Using <code>gh</code> avoids an auth flicker when <code>gh auth status</code> is already good.</li>
+<li><strong>Fall back to a raw GitHub API call</strong> — <code>httr::GET</code> in R, <code>requests.get</code> in Python — against <code>https://api.github.com/repos/&lt;source&gt;/releases/latest</code>, reading <code>tag_name</code> from the JSON body on an HTTP 200.</li>
+</ol>
+<p>If neither path yields a tag (no <code>gh</code>, no HTTP client, blocked network, or a repo with no releases), the resolver returns <code>NULL</code>/<code>None</code>, and the check degrades gracefully to “cannot determine — stay silent”.</p>
+</section>
+</section>
+<section id="cso_toolkit_diff-what-changed" class="level2" data-number="10.3">
+<h2 data-number="10.3" class="anchored" data-anchor-id="cso_toolkit_diff-what-changed"><span class="header-section-number">10.3</span> <code>cso_toolkit_diff</code> — what changed?</h2>
+<p><code>cso_toolkit_diff</code> is the bridge step: once the check tells you a newer tag exists, the diff is meant to show you which vendored files actually differ before you overwrite anything. Its signature is implemented and it respects the manifest, but the comparison body is a stub.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-3" role="tab" aria-controls="tabset-2-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<div class="sourceCode" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Diff against the latest upstream tag</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cso_toolkit_diff</span>()</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Diff against a specific tag</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cso_toolkit_diff</span>(<span class="at">target_version =</span> <span class="st">"v0.5.0"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> cso_toolkit <span class="im">import</span> cso_toolkit_diff</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>cso_toolkit_diff()</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>cso_toolkit_diff(target_version<span class="op">=</span><span class="st">"v0.5.0"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-2-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-3-tab">
+<div class="sourceCode" id="cb8"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>* Not available — no Stata <span class="fu">diff</span> helper.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<p>Today, both ports load the manifest, return early if it is missing, and then log:</p>
+<pre class="text"><code>cso_toolkit_diff: not yet implemented.
+  Upstream repo (unicef-drp/cso-toolkit) needs to exist before diff is meaningful.
+  Once it does, this will fetch each file at the target tag
+  and compare sha256 against the vendored copy.</code></pre>
+<p>The planned behavior is to fetch each upstream file at <code>target_version</code> (defaulting to the latest tag) and compare it by sha256 against the vendored copy, with an optional textual diff. That comparison is the mechanism the manifest’s LF-pinning was built to support: a stable working-tree hash on every platform.</p>
+</section>
+<section id="cso_toolkit_pull-refresh-to-a-tag" class="level2" data-number="10.4">
+<h2 data-number="10.4" class="anchored" data-anchor-id="cso_toolkit_pull-refresh-to-a-tag"><span class="header-section-number">10.4</span> <code>cso_toolkit_pull</code> — refresh to a tag</h2>
+<p><code>cso_toolkit_pull</code> is the action step. It is the most heavily guarded of the three because it is the one that would <em>write</em> — overwriting vendored code and rewriting the manifest. The guards are real and enforced today; only the final step — fetching files and overwriting the vendored copies — is stubbed.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-3" role="tab" aria-controls="tabset-3-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
+<div class="sourceCode" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Refresh to a specific tag, prompting per file</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cso_toolkit_pull</span>(<span class="st">"v0.5.0"</span>)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Preview without writing</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cso_toolkit_pull</span>(<span class="st">"v0.5.0"</span>, <span class="at">dry_run =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Refresh without per-file prompts</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="fu">cso_toolkit_pull</span>(<span class="st">"v0.5.0"</span>, <span class="at">confirm =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
+<div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> cso_toolkit <span class="im">import</span> cso_toolkit_pull</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>cso_toolkit_pull(<span class="st">"v0.5.0"</span>)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>cso_toolkit_pull(<span class="st">"v0.5.0"</span>, dry_run<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>cso_toolkit_pull(<span class="st">"v0.5.0"</span>, confirm<span class="op">=</span><span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-3-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-3-tab">
+<div class="sourceCode" id="cb12"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>* Not available — no Stata pull helper. Refresh <span class="kw">by</span> copying the tagged</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>* stata/src/ contents into the consumer's <span class="kw">adopath</span> and editing the</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>* manifest <span class="kw">by</span> hand.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<p>The arguments are parallel across the two implemented ports:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Argument</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>target_version</code></td>
+<td>(required)</td>
+<td>The tag to pull, e.g.&nbsp;<code>"v0.5.0"</code>.</td>
+</tr>
+<tr class="even">
+<td><code>confirm</code></td>
+<td><code>TRUE</code> / <code>True</code></td>
+<td>Prompt per file before overwriting.</td>
+</tr>
+<tr class="odd">
+<td><code>dry_run</code></td>
+<td><code>FALSE</code> / <code>False</code></td>
+<td>Show what would change without writing.</td>
+</tr>
+</tbody>
+</table>
+<p>The guard sequence, in order, is the spine of the function:</p>
+<ol type="1">
+<li><strong>Reviewer mode is a hard stop, not a silent skip.</strong> Unlike <code>cso_toolkit_check</code>, which quietly returns <code>NULL</code> for reviewers, <code>cso_toolkit_pull</code> raises. A pull requires hitting GitHub, which the reviewer-mode contract forbids, and the error explains the fix — switch the profile to producer mode (<code>dw_mode: producer</code> in <code>user_config.yml</code> for R; <code>_state.configure(dw_mode="producer", dw_apis_allowed=True)</code> in Python). A reviewer who wants a different vintage must do it in a separate producer-mode session, never by silently mutating the pin.</li>
+<li><strong>No manifest -&gt; error.</strong> The function names the path it looked under and points at the template schema.</li>
+<li><strong>Manifest with no <code>source</code> -&gt; error.</strong> It cannot pull from an unnamed upstream.</li>
+<li><strong>Upstream unreachable -&gt; error.</strong> Resolved via the same <code>.cso_upstream_latest_tag</code> helper as the check. The error enumerates the likely causes — repo does not exist yet, a UNICEF corporate proxy is blocking <code>api.github.com</code>, or no <code>gh</code>/HTTP client is installed — and the fix.</li>
+</ol>
+<p>These four errors all follow the toolkit’s error-envelope convention with a <code>[cso_toolkit.cso_toolkit_pull]</code> prefix, a reason, and a fix (see the error-taxonomy appendix and the provenance-and-errors chapter). Only after all four pass does the stub log its “implementation TBD” message naming the target version and <code>dry_run</code> setting.</p>
+<p>The planned implementation, documented in the stub’s own roxygen and docstring, runs as follows:</p>
+<ol type="1">
+<li>Read the manifest.</li>
+<li>For each file in <code>vendored</code>, fetch it from <code>source</code> at <code>target_version</code>, then compute its sha256 against the current vendored copy.</li>
+<li>On a difference, prompt the user (overwrite / skip / show-diff), honoring <code>confirm</code> and <code>dry_run</code>, and skip anything listed under <code>local_edits</code>.</li>
+<li>Rewrite the manifest with the new <code>pulled_version</code> and per-file hashes.</li>
+<li>Log a summary.</li>
+</ol>
+</section>
+<section id="the-refresh-flow" class="level2" data-number="10.5">
+<h2 data-number="10.5" class="anchored" data-anchor-id="the-refresh-flow"><span class="header-section-number">10.5</span> The refresh flow</h2>
+<p>The three helpers compose into one producer-driven loop. The toolkit strategy document lays it out as: the producer runs <code>cso_toolkit_check</code> at session start; if a newer tag is detected, a yellow alert names the pinned and upstream versions, points at <code>NEWS.md</code>, and suggests a pull; the producer reads the release notes, decides whether the new vintage is appropriate, and either runs <code>cso_toolkit_pull("&lt;tag&gt;")</code> or does nothing and keeps the pin.</p>
+<pre class="text"><code>cso_toolkit_check()      -&gt;  "pinned v0.4.0 -&gt; upstream v0.5.0 (newer tag available)"
+        |                     (silent if up to date, in reviewer mode, or inrepo-pinned)
+        v
+cso_toolkit_diff()       -&gt;  per-file sha256 comparison (planned) — what actually changed
+        |
+        v
+cso_toolkit_pull("v0.5.0")  -&gt;  fetch, prompt per file, rewrite manifest (planned)</code></pre>
+<p>Three properties make this loop safe by design:</p>
+<ul>
+<li><strong>It is producer-only.</strong> Every step is gated on <code>dw_apis_allowed</code>. Reviewers never poll GitHub and never see the alert; they run the pinned vintage. This is what keeps reviewer reproducibility offline-capable.</li>
+<li><strong>Updates are never automatic.</strong> Nothing pulls without an explicit <code>cso_toolkit_pull</code> call. The producer reviews <code>NEWS.md</code>, judges fitness, and chooses. A repo can sit two releases behind indefinitely, and that is a valid, deliberate state.</li>
+<li><strong>The pin is the audit trail.</strong> Because <code>.toolkit_manifest.yml</code> is committed alongside the vendored code, the consuming repo’s git history shows exactly which toolkit vintage was in effect at every commit. There is no gap between what the pin records and what the code actually is.</li>
+</ul>
+<section id="asserting-a-minimum-vintage-in-a-script" class="level3" data-number="10.5.1">
+<h3 data-number="10.5.1" class="anchored" data-anchor-id="asserting-a-minimum-vintage-in-a-script"><span class="header-section-number">10.5.1</span> Asserting a minimum vintage in a script</h3>
+<p>A complementary, always-available check is <code>dw_toolkit_version</code> (defined in <code>dw_io.R</code> / <code>dw_io.py</code>, new in v0.4.0). It returns the tag the <em>currently vendored</em> helper triplet was lifted from, so a sector script can assert a floor before relying on a feature that only exists in a recent contract. Unlike the sync helpers, this touches no network and works in every mode.</p>
+<div class="callout callout-style-simple callout-warning">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>The R and Python stamps are meant to track each other but can drift between releases: in the version this handbook documents, the R <code>dw_toolkit_version()</code> returns <code>"0.5.0"</code> while the Python port still returns <code>"0.4.0"</code>. The stamp is a hard-coded constant in each port (<code>_TOOLKIT_VERSION</code> in Python), so a release that bumps only one side leaves the other behind. Treat the value as a floor for the language you are calling it from, not as a cross-language equality check.</p>
+</div>
+</div>
+</div>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-3" role="tab" aria-controls="tabset-4-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
+<div class="sourceCode" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (utils<span class="sc">::</span><span class="fu">compareVersion</span>(<span class="fu">dw_toolkit_version</span>(), <span class="st">"0.4.0"</span>) <span class="sc">&lt;</span> <span class="dv">0</span>) {</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stop</span>(<span class="st">"This script requires cso-toolkit &gt;= 0.4.0; "</span>,</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>       <span class="st">"found "</span>, <span class="fu">dw_toolkit_version</span>(), <span class="st">". Run cso_toolkit_pull('v0.4.0')."</span>)</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
+<div class="sourceCode" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> cso_toolkit <span class="im">import</span> dw_toolkit_version</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="co"># dw_toolkit_version() returns a semver string (e.g. "0.4.0").</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co"># No compareVersion built-in; split and compare tuples, or assert equality.</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">tuple</span>(<span class="bu">map</span>(<span class="bu">int</span>, dw_toolkit_version().split(<span class="st">"."</span>))) <span class="op">&lt;</span> (<span class="dv">0</span>, <span class="dv">4</span>, <span class="dv">0</span>):</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">RuntimeError</span>(</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>        <span class="ss">f"This script requires cso-toolkit &gt;= 0.4.0; "</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>        <span class="ss">f"found </span><span class="sc">{</span>dw_toolkit_version()<span class="sc">}</span><span class="ss">."</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>    )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-4-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-3-tab">
+<div class="sourceCode" id="cb16"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>* No dw_toolkit_version equivalent <span class="kw">in</span> Stata. Each .ado carries its own</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>* per-file `version` header (<span class="fu">e</span>.g. dw_save.ado: <span class="st">"*! version 1.1 26MAY2026"</span>).</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>* The header stamps a per-file <span class="kw">version</span> + <span class="fu">date</span>, <span class="kw">not</span> the toolkit <span class="fu">tag</span>.</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>* Record the pinned toolkit <span class="fu">tag</span> <span class="kw">by</span> hand <span class="kw">in</span> .toolkit_manifest.yml.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="cross-language-coverage-honestly" class="level2" data-number="10.6">
+<h2 data-number="10.6" class="anchored" data-anchor-id="cross-language-coverage-honestly"><span class="header-section-number">10.6</span> Cross-language coverage, honestly</h2>
+<p>Cross-language parity is weakest here, and the page would mislead if it implied otherwise:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Capability</th>
+<th>R</th>
+<th>Python</th>
+<th>Stata</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>.toolkit_manifest.yml</code> pin</td>
+<td>yes (read)</td>
+<td>yes (read)</td>
+<td>referenced in README, hand-edited only</td>
+</tr>
+<tr class="even">
+<td><code>cso_toolkit_check</code></td>
+<td>yes (full)</td>
+<td>yes (full, ported)</td>
+<td><strong>none</strong></td>
+</tr>
+<tr class="odd">
+<td><code>cso_toolkit_diff</code></td>
+<td>yes (stub)</td>
+<td>yes (stub)</td>
+<td><strong>none</strong></td>
+</tr>
+<tr class="even">
+<td><code>cso_toolkit_pull</code></td>
+<td>yes (stub)</td>
+<td>yes (stub)</td>
+<td><strong>none</strong></td>
+</tr>
+<tr class="odd">
+<td><code>dw_toolkit_version</code></td>
+<td>yes (<code>"0.5.0"</code>)</td>
+<td>yes (<code>"0.4.0"</code>)</td>
+<td><strong>none</strong> (per-<code>.ado</code> <code>version</code> headers)</td>
+</tr>
+</tbody>
+</table>
+<p>The R and Python ports of the sync helpers are genuine mirrors of each other: same function names, same arguments, same return structure, same guard order, same two-tier <code>gh</code>-then-HTTP tag resolver, even the same <code>inrepo</code> escape hatch. Both also expose <code>dw_toolkit_version</code>, though the two stamps can fall out of step across a release, as the callout above warns.</p>
+<p>Stata has <strong>no sync helpers at all</strong>. Its <code>stata/src/</code> directory ships the IO and config helpers (<code>dw_save</code>, <code>dw_use</code>, <code>dw_compare</code>, <code>dw_load_config</code>, <code>dw_mkdir</code>, <code>dw_require_no_api</code>) but nothing named <code>cso_toolkit_check</code> / <code>_diff</code> / <code>_pull</code>, and no <code>dw_toolkit_version</code> — each <code>.ado</code> instead carries its own per-file <code>version</code> header. The Stata README acknowledges the manifest only as a place to <em>record</em> the pinned version by hand; refreshing a Stata consumer means copying <code>stata/src/</code> from a tagged checkout into the project’s adopath and editing <code>.toolkit_manifest.yml</code> manually. There is no automated drift detection on the Stata side. This is consistent with the broader Stata coverage gaps noted in the cross-language coverage appendix (no API wrapper, no parquet). When you adopt the toolkit in a Stata-only repo, treat vintage management as a manual, documented step rather than a tooled one.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../chapters/33-aggregation.html" class="pagination-link" aria-label="Aggregation">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Aggregation</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../chapters/35-scaffolding-audit.html" class="pagination-link" aria-label="Scaffolding and the contract auditor">
+        <span class="nav-page-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Scaffolding and the contract auditor</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>UNICEF Chief Statistician Office — Data &amp; Analytics (OSE)</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/unicef-drp/cso-toolkit/edit/main/book/chapters/34-vintage-sync.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/unicef-drp/cso-toolkit/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>Built with <a href="https://quarto.org">Quarto</a></p>
+</div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

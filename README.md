@@ -10,6 +10,8 @@
 [![License: MIT (code) + CC BY 4.0 (docs)](https://img.shields.io/badge/license-MIT%20%2B%20CC--BY--4.0-blue)](LICENSE)
 [![Tag](https://img.shields.io/github/v/tag/unicef-drp/cso-toolkit?label=tag)](https://github.com/unicef-drp/cso-toolkit/releases)
 
+📖 **[The CSO Toolkit Handbook](https://unicef-drp.github.io/cso-toolkit/handbook/)** — the cross-language guide to the contract (R · Python · Stata).
+
 ---
 
 ## TL;DR
