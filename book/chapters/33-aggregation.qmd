@@ -1,0 +1,299 @@
+# Aggregation
+
+Aggregation is the step where many country-level observations collapse into a few regional or global numbers. It is also where most reproducibility bugs hide: an unweighted mean where a population-weighted one was intended, a "global" figure built from countries covering a third of the world's children, a regional rate that silently dropped every country missing the denominator. The aggregation *contract* — the fixed set of functions and behaviours every language implementation must honour — exists to make these decisions explicit, auditable, and identical across the languages a sector team happens to use.
+
+The contract has two layers. At the bottom sits `aggregate_data_v2()`, a general-purpose grouped aggregator that computes a value together with the coverage metadata needed to judge whether that value is trustworthy. On top sit a set of convenience helpers, each pairing one recurring problem with one function: `apply_time_window()` (picking the latest observation in a window), `dw_nestweight()` (redistributing weights over missing rows), `dw_pop()` (fetching population denominators), and `dw_regions()` (producing UNICEF regional aggregates). Each feeds its output into the aggregator. A companion helper, `generate_agg_footnote()`, turns the aggregator's coverage numbers into the caption that travels with the result.
+
+::: {.callout-warning}
+Cross-language parity is partial here, and this chapter flags every gap. `aggregate_data_v2`, `apply_time_window`, `generate_agg_footnote`, and `dw_nestweight` ship in **R and Python**. `dw_pop` and `dw_regions` are **R-only**: their source files carry `TODO` markers for the missing Python and Stata siblings (tracked at issues #17 for `dw_pop` and #18 for `dw_regions`), and the README still lists those siblings under the *planned* `v0.5.0` line. **Stata has none of the aggregation helpers** — its `src/` directory stops at file IO (`dw_save`, `dw_use`, and friends). And even where R and Python both ship a function, one method differs: the R aggregator supports a `"total"` method that the Python aggregator does not. See the cross-language coverage matrix appendix for the consolidated picture.
+:::
+
+## The core aggregator: `aggregate_data_v2`
+
+`aggregate_data_v2()` takes a long-format data frame — one observation per row — of country (or unit) observations and returns one row per group, where a *group* is defined by the `by` columns. Each output row carries the aggregated value plus a configurable set of coverage columns.
+
+The signature is the same in both languages, apart from two mechanical differences: R uses `.`-separated logical flags (`pop.coverage`, `country.coverage`) and a positional/named mix, while Python makes everything after `by` keyword-only and renames the handful of arguments whose R spelling collides with Python syntax (`global` becomes `global_`, the dotted flags become underscored).
+
+::: {.panel-tabset}
+## R
+```r
+agg <- aggregate_data_v2(
+  data,
+  value  = "OBS_VALUE",
+  weight = "population",
+  by     = c("INDICATOR", "TIME_PERIOD"),
+  method = "weighted_mean",
+  coverage_threshold = 0.5
+)
+```
+## Python
+```python
+agg = aggregate_data_v2(
+    data,
+    value="OBS_VALUE",
+    weight="population",
+    by=["INDICATOR", "TIME_PERIOD"],
+    method="weighted_mean",
+    coverage_threshold=0.5,
+)
+```
+## Stata
+```stata
+* No Stata sibling. Aggregate with native Stata commands
+* (collapse / egen) and treat this contract as R/Python-only.
+```
+:::
+
+### Arguments
+
+The full argument set, with R and Python spellings side by side:
+
+| Purpose | R | Python | Default |
+|---|---|---|---|
+| Input frame | `data` | `data` | — |
+| Column to aggregate | `value` | `value` | — |
+| Weight column | `weight` | `weight` | — |
+| Grouping columns | `by` | `by` | — |
+| Country identifier (for coverage) | `country_id` | `country_id` | `"REF_AREA"` |
+| Append a global row | `global` | `global_` | `TRUE` / `True` |
+| Aggregation method | `method` | `method` | `"weighted_mean"` |
+| Min population coverage to report | `coverage_threshold` | `coverage_threshold` | `NULL` / `None` |
+| Return population coverage | `pop.coverage` | `pop_coverage` | `TRUE` / `True` |
+| Return country count | `country.coverage` | `country_coverage` | `TRUE` / `True` |
+| Return total population columns | `total.population` | `total_population` | `FALSE` / `False` |
+| Return number affected | `number.affected` | `number_affected` | `FALSE` / `False` |
+| Label for the global row | `global_label` | `global_label` | `"WORLD"` |
+| Run input validation | `validate` | `validate` | `TRUE` / `True` |
+
+The R function additionally accepts `verbose` and `debug`, which inherit from `getOption("dw.verbose")` / `getOption("dw.debug")` when left `NULL` — the standard toolkit verbosity contract described in the roles-and-mode chapter. The Python aggregator does not expose those two arguments.
+
+### Methods
+
+Pick the method to match the *kind* of indicator, because each method encodes a different assumption about what the numbers mean:
+
+| Method | Formula within group | Use for |
+|---|---|---|
+| `weighted_mean` | `weighted.mean(value, weight)` | rates / percentages weighted by population |
+| `mean` | `mean(value)` | simple unweighted average |
+| `sum` | `sum(value) / sum(weight) * 100` **— not an additive total; see note below** | a population-weighted *rate* expressed as a percent |
+| `proportion` | `sum((value/100) * weight) / sum(weight_non_na) * 100` | indicators given as percentages, reweighted to a population proportion |
+| `total` (R only) | `sum(value)` | additive person-count stocks (refugees, displaced persons, births) where the regional value is the sum of country values |
+
+Two method names mislead. `sum` does **not** return a plain additive total; it returns a population-weighted rate, dividing the summed values by the summed weights. If you want a genuine additive count — the regional figure being the literal sum of the country figures — you want `total`, and `total` exists only in the R implementation. The Python aggregator's valid set is `("weighted_mean", "mean", "sum", "proportion")`; passing `"total"` to it raises a `ValueError`. Until the Python sibling gains the method, person-count totals must be aggregated in R (or computed by hand).
+
+`proportion` interprets the value column as a percentage (it divides by 100 internally) and reconstructs the number affected before re-expressing the result as a proportion of the covered population. It is the right choice when each country reports, say, "12.4 % of children stunted" and you want a population-correct regional percentage rather than an average of the country percentages.
+
+### Coverage and the threshold
+
+The reason to prefer this aggregator over a hand-written group-and-summarise (R's `group_by |> summarise`, or pandas' `groupby().agg()`) is the coverage accounting. For every group, the function computes:
+
+- **`Pop_Covered`** — the fraction of the group's total weight that sits on rows with a non-missing value. A region whose reporting countries hold 90 % of its population has `Pop_Covered = 0.9`; the 10 % living in non-reporting countries show up in `Pop_Covered`, rather than vanishing into a falsely confident average.
+- **`Country_Coverage`** and **`Total_Countries`** — the count of distinct countries contributing a non-missing value, and the count of distinct countries in the group. These come from `country_id` (default `REF_AREA`). If that column is absent, the function falls back to a row count and warns that the count may overstate coverage when a country has multiple rows.
+- **`Total_Population`** and **`Data_Population`** — the summed weight over all rows and over non-missing rows respectively (returned only when `total.population` / `total_population` is on).
+- **`Number_Affected`** — the reconstructed count, returned only when `number.affected` is on *and* `method == "proportion"`.
+
+`coverage_threshold` turns `Pop_Covered` into a gate: any group below the threshold has its value suppressed. Set it to a fraction in `[0, 1]`, and the aggregator blanks `Aggregate` to `NA` for any group that falls below the threshold — but it still returns the coverage columns, so the reader can see *why* the value was suppressed. The common UNICEF convention, and the value the error messages suggest, is `0.5` (report a regional figure only when reporting countries cover at least half the population). Passing a value outside `[0, 1]` is a validation error.
+
+The metadata columns are opt-out for the cheap ones (`pop.coverage`, `country.coverage` default on) and opt-in for the rest. The output always begins with the `by` columns and `Aggregate`, then appends whichever metadata columns you requested:
+
+```r
+# Output column order, given default flags:
+#   <by...>, Aggregate, Pop_Covered, Country_Coverage, Total_Countries
+```
+
+### The global row
+
+With `global = TRUE` (the default), the same calculation is run once more over the entire input, ignoring the grouping, and the result is appended as one extra row whose `by` columns are all set to `global_label` (default `"WORLD"`). This is convenient for charts that want a "world" reference line without a second call. Set `global = FALSE` when you are stacking aggregates yourself — which is exactly what `dw_regions()` does internally, so it never asks the aggregator for a global row.
+
+### Validation and the error envelope
+
+When `validate` is on (the default), the function checks that `value`, `weight`, and every `by` column exist, and on failure emits the toolkit's standard error envelope — a structured message carrying the offending columns and a one-line fix hint (`[cso_toolkit.aggregate_data_v2] ...`). This is the same envelope shape described in the provenance-and-error-envelope chapter, and it is identical across R and Python down to the wording. Set `validate = FALSE` to skip the checks on hot paths where you have already verified the schema (again, `dw_regions()` does this and re-implements the checks itself so callers still get a clean envelope).
+
+## Building the standard footnote: `generate_agg_footnote`
+
+Coverage numbers are only useful if they reach the reader. `generate_agg_footnote()` turns the coverage outputs into the canonical one-line caption that sits under aggregated tables and charts: `"N/M countries (P % population coverage)"`, with an optional `"Based on latest estimates from YYYY to YYYY."` prefix and optional `Exemptions:` / `Exclusions:` suffixes. It ships in both R and Python.
+
+::: {.panel-tabset}
+## R
+```r
+note <- generate_agg_footnote(
+  country_coverage = 41,
+  total_countries  = 48,
+  pop_coverage     = 0.87,
+  start_year = 2015, end_year = 2023
+)
+# "Based on latest estimates from 2015 to 2023. 41/48 countries (87 % population coverage)"
+```
+## Python
+```python
+note = generate_agg_footnote(
+    country_coverage=41,
+    total_countries=48,
+    pop_coverage=0.87,
+    start_year=2015, end_year=2023,
+)
+```
+## Stata
+```stata
+* No Stata sibling. Compose the footnote string by hand.
+```
+:::
+
+`pop_coverage` is a fraction in `[0, 1]` and is rendered as an integer percent. The `exemptions` and `exclusions` arguments take vectors of country codes and append human-readable notes — the same codes you would pass to `apply_time_window()`, described next, so a window-filtered aggregate and its footnote stay consistent.
+
+## Picking the latest observation: `apply_time_window`
+
+Most regional aggregates are "latest available estimate per country within a window." `apply_time_window()` performs that selection. Within each country it keeps the single row with the most recent `time_col`, but only if that latest year falls inside the inclusive `[start_year, end_year]` window. The helper ships in both R and Python.
+
+::: {.panel-tabset}
+## R
+```r
+latest <- apply_time_window(
+  data,
+  country_col = "REF_AREA",
+  time_col    = "TIME_PERIOD",
+  start_year  = 2015,
+  end_year    = 2023,
+  exemptions  = c("SOM", "YEM")   # fragile states: keep latest regardless
+)
+```
+## Python
+```python
+latest = apply_time_window(
+    data,
+    country_col="REF_AREA",
+    time_col="TIME_PERIOD",
+    start_year=2015,
+    end_year=2023,
+    exemptions=["SOM", "YEM"],
+)
+```
+## Stata
+```stata
+* No Stata sibling. Replicate with bysort + keep on the max year.
+```
+:::
+
+Two override lists tune the selection. Countries listed in `exemptions` keep their latest observation *even when it predates the window* — the standard treatment for fragile states whose most recent survey is old but still the best available. Countries listed in `exclusions` are dropped entirely before ranking, so they never reach the aggregate. The result is one row per surviving country (or none, for a country that satisfied neither the window nor an exemption), with the internal ranking columns stripped from the output. Feeding the same `exemptions` / `exclusions` into `generate_agg_footnote()` keeps the caption honest about which countries were treated specially.
+
+::: {.callout-note}
+The Python signature makes every argument after `data` keyword-only, so `start_year` and `end_year` must be passed by name. They have no defaults in either language — omitting them is an error.
+:::
+
+## Redistributing weights over missing rows: `dw_nestweight`
+
+When a survey value is missing on some rows and that missingness is not completely at random within a stratum, a naive weighted mean over the non-missing rows under-counts. `dw_nestweight()` corrects this by reweighting: within each stratum (a group defined by the `by` argument) it scales the weights on the *observed* rows up so their sum equals the sum of weights over *all* rows in the stratum. The stratum total is preserved; the mass is concentrated on the rows that actually contribute to the estimate. It ships in **R and Python**.
+
+The scale factor for stratum *l* is the ratio of total stratum weight to eligible stratum weight, and the new weight is the original weight times that scale on observed rows, zero elsewhere:
+
+$$ \text{scale}_l = \frac{\sum_{i \in l} w_i}{\sum_{i \in l,\ v_i \text{ observed}} w_i}, \qquad w'_i = w_i \cdot \text{scale}_l \ \text{ if } v_i \text{ observed, else } 0. $$
+
+(This ports the World Bank EduAnalyticsToolkit's `edukit_nestweight`, by Diana Goldemberg.)
+
+::: {.panel-tabset}
+## R
+```r
+adj <- dw_nestweight(
+  data,
+  value      = "stunting",
+  by         = "stratum_id",
+  weight     = "hh_weight",
+  new_weight = "hh_weight_adj"
+)
+# adj now has hh_weight_adj; sum(hh_weight_adj) == sum(hh_weight) per stratum
+```
+## Python
+```python
+adj = dw_nestweight(
+    data,
+    value="stunting",
+    by="stratum_id",
+    weight="hh_weight",
+    new_weight="hh_weight_adj",
+)
+```
+## Stata
+```stata
+* No Stata sibling. The original lives in the World Bank
+* EduAnalyticsToolkit as `nestweight` / `edukit_nestweight`.
+```
+:::
+
+The function returns the input data frame with one new column, `new_weight` (default `"weight_adj"`), appended; it does not aggregate. That redistributed weight then feeds `aggregate_data_v2(weight = "hh_weight_adj", method = "weighted_mean")`, which produces the actual estimate.
+
+A few behavioral details, identical across the two implementations:
+
+- `weight = NULL` (R) / `weight=None` (Python) uses an implicit unit weight, so the helper degenerates to per-stratum non-missing counts.
+- `only` takes a logical mask of length `nrow(data)` restricting which rows are eligible for the denominator — useful for "only redistribute over respondents who were actually asked the question."
+- Rows with an `NA` stratum get weight 0 and trigger a warning.
+- `verbose` reports the pooled mean of `value` under the original versus redistributed weights, but only when `value` is numeric; for a character or factor value it prints a note and skips the diagnostic rather than erroring.
+
+Note one small interface difference: the R signature carries both `verbose` and `debug` (inheriting from the global options), while the Python signature exposes `verbose` only.
+
+## R-only helpers: `dw_pop` and `dw_regions`
+
+The remaining two helpers wrap the demographics-and-regions workflow. Both are **R-only** in this release. Each file carries a `TODO` marking the missing siblings: a Python port (`python/src/dw_pop.py` / `dw_regions.py`) and a Stata port (`stata/src/dw_pop.ado` / `dw_regions.ado`), tracked at issues #17 (`dw_pop`) and #18 (`dw_regions`). The README schedules both under the planned `v0.5.0` work. There is no Stata equivalent today, and Stata has no API wrapper for either to build on — see the external-API contract chapter for why the Stata side stops at file IO.
+
+### `dw_pop` — population denominators
+
+`dw_pop()` is a thin convenience wrapper over `dw_api_fetch(api = "wb")` for the World Bank total-population indicator `SP.POP.TOTL`. Every sector that wants a population-weighted regional mean needs a denominator; `dw_pop()` hides the indicator code, the cache key, and the work of normalising column names, returning a clean three-column table: `REF_AREA`, `TIME_PERIOD`, `OBS_VALUE`.
+
+```r
+# All countries, latest year per country
+pop <- dw_pop()
+
+# All countries, a specific year
+pop_2023 <- dw_pop(year = 2023)
+
+# A specific country list
+pop_sahel <- dw_pop(countries = c("BFA", "MLI", "NER", "TCD"))
+```
+
+Arguments: `year` (a year or vector of years; `NULL` returns the latest year per country), `indicator` (default `"SP.POP.TOTL"`), `countries` (ISO3/M49 filter; `NULL` keeps all), `refresh` (force a live fetch and overwrite the cache, producer mode only), and `cache_key` (the cache basename forwarded to `dw_api_fetch`, default `"wb_population_sp_pop_totl"`). The function tolerates the fact that the `wbstats` R package has changed its response columns across versions — it probes for `iso3c`/`iso2c`, `date`/`TIME_PERIOD`, and `value`/`OBS_VALUE` columns — and drops rows missing any of the key triplet so sparse regional-aggregate rows from the World Bank do not leak through.
+
+Because it routes through `dw_api_fetch`, `dw_pop` inherits the mode contract exactly: a producer session may hit the network and cache the result, while a reviewer session reads the cached deposit only and never fetches live. The mode mechanics live in the roles-and-mode chapter; the cache layer in the external-API contract chapter.
+
+### `dw_regions` — UNICEF regional aggregates
+
+`dw_regions()` is the highest-level helper in this chapter: hand it a country-level tibble and it returns that tibble with UNICEF regional rows appended — one summary row per UNICEF reporting region (for example `ESA`, `WCA`, `SA`), each carrying the population-weighted aggregate and its coverage metadata. It ties together everything above.
+
+```r
+# Country-level tibble with INDICATOR + TIME_PERIOD + OBS_VALUE
+national <- dw_use(name = "dw_ed_edu.csv", sector = "ed", kind = "wrk")
+
+# Add population-weighted UNICEF region rows
+enriched <- dw_regions(national, value = "OBS_VALUE")
+
+# Or weight by a sector-specific column already in the data
+alt <- dw_regions(national, value = "OBS_VALUE", weight = "births_under5")
+```
+
+It runs a five-step pipeline:
+
+1. **Resolve the country-to-region map** by fetching `"<taxonomy>.csv"` from the public `unicef-drp/Country-and-Region-Metadata` repo via `dw_api_fetch(api = "github_raw")`. The default taxonomy is `UNICEF_REP_REG_GLOBAL`; pass `refresh_metadata = TRUE` to force a re-fetch. The map columns are probed against common spellings (`REF_AREA`/`ISO3`/`iso3c`/`country_code` for the country, `REGION`/`region`/`REGION_CODE`/`UNICEF_REGION` for the region), and rows with a blank or missing region are dropped.
+2. **Attach the weight.** When `weight = "population"` (the default), `dw_pop()` supplies World Bank denominators. It merges them on `REF_AREA` + `TIME_PERIOD` when the data has a `TIME_PERIOD` column, and on `REF_AREA` alone otherwise. (When the World Bank has not yet published a given year, the merge falls back to each country's latest available population.) Any other string is treated as the name of a weight column that must already exist in `data`.
+3. **Join data to the region map**, warning about — and excluding — any country code absent from the taxonomy rather than silently dropping it.
+4. **Aggregate per region** by calling `aggregate_data_v2(by = c("REGION", by), global = FALSE, validate = FALSE, method = method)`. It passes `global = FALSE` because it stacks the rows itself, and `validate = FALSE` because it has already validated the schema up front.
+5. **Concatenate.** The regional rows are reshaped to be schema-compatible with the input (`REGION` renamed to `REF_AREA`, the `Aggregate` column renamed to the caller's `value`, the merged `.pop` weight dropped) and `bind_rows`-ed onto the original country rows. Country rows keep their original columns; regional rows additionally carry the coverage metadata (`Pop_Covered`, `Country_Coverage`, …), NA-filled on the country rows.
+
+Arguments: `data`, `value`, `weight` (default `"population"`), `method` (forwarded to the aggregator, default `"weighted_mean"`), `taxonomy` (CSV basename, default `"UNICEF_REP_REG_GLOBAL"`), `by` (grouping columns surviving inside each region, default `c("INDICATOR", "TIME_PERIOD")`), and `refresh_metadata`.
+
+`dw_regions` adds two guards beyond what the aggregator does. It validates up front that `REF_AREA`, `value`, and every `by` column are present (re-emitting the toolkit envelope, since it disables the aggregator's own validation for speed), and it refuses a `value` argument that collides with one of the aggregator's reserved output column names (`Aggregate`, `Pop_Covered`, `Country_Coverage`, `Total_Countries`, `Total_Population`, `Data_Population`, `Number_Affected`) — a collision that would otherwise surface as an obscure aggregator error. If you hit it, rename the value column on your tibble before calling.
+
+## Putting it together
+
+The helpers are designed to chain. A typical sector regional-aggregate pipeline, in R, reads:
+
+```r
+latest <- apply_time_window(national, start_year = 2015, end_year = 2023,
+                            exemptions = c("SOM", "YEM"))
+adj    <- dw_nestweight(latest, value = "OBS_VALUE", by = "stratum_id",
+                        weight = "hh_weight")
+out    <- dw_regions(adj, value = "OBS_VALUE", weight = "hh_weight_adj")
+note   <- generate_agg_footnote(country_coverage = 41, total_countries = 48,
+                                pop_coverage = 0.87,
+                                start_year = 2015, end_year = 2023,
+                                exemptions = c("SOM", "YEM"))
+```
+
+A Python pipeline can run the first two steps and the footnote identically (`apply_time_window`, `dw_nestweight`, `generate_agg_footnote` all ship in Python), then call `aggregate_data_v2` directly for the grouped aggregate — but it cannot yet call `dw_regions` or `dw_pop`, and it cannot use `method = "total"`. A Stata pipeline has none of these helpers and must perform aggregation with native Stata commands, treating this contract as R/Python-only for now. The function reference and coverage matrix appendices give the authoritative per-language inventory.

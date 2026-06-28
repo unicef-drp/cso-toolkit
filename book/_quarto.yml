@@ -1,0 +1,60 @@
+project:
+  type: book
+  output-dir: _book
+
+book:
+  title: "The CSO Toolkit Handbook"
+  subtitle: "One contract, three languages — reproducible analytics in R, Python, and Stata"
+  reader-mode: true
+  search: true
+  repo-url: https://github.com/unicef-drp/cso-toolkit
+  repo-subdir: book
+  repo-actions: [edit, issue]
+  page-footer:
+    left: "UNICEF Chief Statistician Office — Data & Analytics (OSE)"
+    right: "Built with [Quarto](https://quarto.org)"
+  chapters:
+    - index.qmd
+    - part: "Part I — Why & Architecture"
+      chapters:
+        - chapters/11-why.qmd
+        - chapters/12-architecture.qmd
+    - part: "Part II — The Contract"
+      chapters:
+        - chapters/21-roles-and-modes.qmd
+        - chapters/22-wiring-the-contract.qmd
+        - chapters/23-provenance-and-errors.qmd
+    - part: "Part III — The API (cross-language)"
+      chapters:
+        - chapters/31-io.qmd
+        - chapters/32-external-api.qmd
+        - chapters/33-aggregation.qmd
+        - chapters/34-vintage-sync.qmd
+        - chapters/35-scaffolding-audit.qmd
+    - part: "Part IV — Adoption & Operations"
+      chapters:
+        - chapters/41-vendoring.qmd
+        - chapters/42-onboarding-example.qmd
+        - chapters/43-contract-auditor-ci.qmd
+        - chapters/44-versioning-release.qmd
+  appendices:
+    - appendices/a-coverage-matrix.qmd
+    - appendices/b-provenance-schema.qmd
+    - appendices/c-error-taxonomy.qmd
+    - appendices/d-function-reference.qmd
+    - appendices/e-glossary.qmd
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    code-copy: true
+    code-overflow: wrap
+    callout-appearance: simple
+
+execute:
+  freeze: auto
+  echo: true
+  warning: false
+  message: false

@@ -1,0 +1,243 @@
+# Glossary
+
+This glossary documents `cso-toolkit` as of **v0.5.0** (2026-06-21); version notes mark when a behaviour was added. It defines the load-bearing terms used throughout the handbook. The toolkit's vocabulary is deliberately small, but several of the terms carry precise, contractual meaning — *canonical deposit*, *reviewer mode*, *provenance sidecar* — and the most common misreading is to take one of these in its everyday sense: to treat a *canonical deposit* as merely a file location, say, rather than as a status that depends on which role is acting. Definitions are listed alphabetically. Where a term names a function and the cross-language story is non-trivial, a tabset shows how it appears in R, Python, and Stata; where a sibling does not yet implement a term, the gap is stated explicitly.
+
+For the function-by-function reference, see the function reference appendix; for the on-disk shape of the provenance sidecar, see the provenance sidecar schema appendix; for the full vocabulary of failures, see the error taxonomy appendix.
+
+------------------------------------------------------------------------
+
+## Aggregation contract
+
+The capability family that turns country-level (or finer) observations into regional and global figures with explicit coverage accounting. Its centerpiece is `aggregate_data_v2()`, which computes `weighted_mean` / `mean` / `sum` / `proportion` / `total` while tracking population and country coverage against a coverage threshold (see *coverage threshold*: below it the aggregate is blanked to `NA` rather than published silently). Supporting members are `apply_time_window()` (keep the latest observation per country within an inclusive year window), `generate_agg_footnote()` (assemble the human-readable coverage footnote), and `dw_nestweight()` (redistribute survey weights from missing nested observations so a stratified aggregate stays consistent when missingness is not completely at random within the stratum). The family is R + Python only; Stata has no aggregation sibling. See the aggregation chapter.
+
+## Cache key
+
+The stable, descriptive identifier — snake_case, encoding the parameters that make a response distinct — under which `dw_api_fetch()` stores a cached response. It becomes the filename `<cache_key>.<ext>` in the frozen cache. A well-chosen cache key is what lets a reviewer find the exact frozen response a producer fetched. See *frozen cache*.
+
+## Canonical deposit
+
+The single authoritative copy of a sector's deposited artefacts — the `dw_<sector>.<ext>` files and their provenance sidecars — living under the Teams folder at `060.DW-MASTER/01_dw_prep/`, with `013_wrkdata/` holding the promoted, publication-ready outputs and `011_rawdata/` holding inputs and API caches. Whether a path counts as canonical depends on the role acting on it, not just on where it sits: the **producer** writes it (with automatic mirroring to the Z: drive — see *Z: mirror*), the **reviewer** may only read it, and the **publisher** publishes from it. A reviewer-mode write that targets a canonical path is a hard error. The toolkit recognises a path as canonical via `dw_is_canonical()`, which (since v0.4.6) also understands OneDrive-mounted Teams Documents paths on UNICEF laptops, and (since v0.5.0) the `dwZDrive` (Z:) root.
+
+## Contract auditor
+
+The static-analysis helper, `test_scripts()`, that recursively scans a directory of R or Python scripts and flags any direct call to a raw file-IO or external-API command the toolkit is meant to wrap — for example `read_csv`, `pd.read_csv`, `httr::GET`, `requests.get`, `rsdmx::readSDMX`, or `sdmx.Client`. It exists to keep a vendoring repo from quietly drifting back to un-wrapped IO. A per-line escape hatch, `# cso-allow: <rule-id>`, suppresses an intentional exception; `error_on_violation = TRUE` turns it into a build gate. The auditor is R + Python only; there is no Stata sibling. See the scaffolding and contract auditor chapter and the CI chapter.
+
+::: {.panel-tabset}
+## R
+
+```r
+test_scripts("01_dw_prep/", error_on_violation = TRUE)
+```
+
+## Python
+
+```python
+test_scripts("01_dw_prep/", error_on_violation=True)
+```
+
+## Stata
+
+```stata
+* Not implemented — the contract auditor has no Stata sibling.
+```
+
+:::
+
+## Coverage threshold
+
+The minimum population coverage, expressed as a fraction in `[0, 1]`, that an aggregate must meet to be reported. Passed to `aggregate_data_v2()` as `coverage_threshold` (default `NULL`, meaning no threshold; the common UNICEF default is `0.5`, i.e. 50% of population covered). When the covered population share falls below it, the helper blanks the aggregate to `NA` rather than reporting a figure built on too few countries — under-coverage is suppressed, not published silently.
+
+## Cross-language parity
+
+The toolkit's design commitment that the same operation carries the same function name and the same behaviour across R, Python, and Stata, sharing a single provenance sidecar schema, mode-aware path routing, and one error-envelope shape. Parity is the goal, not yet a completed state: Stata has no external-API wrapper and no Parquet support; `dw_merge` and `dw_verify_z` are R + Python only; the contract auditor and the aggregation family have no Stata siblings; and Python lacks pkgdown-style autodoc. The coverage matrix appendix records the gaps function by function.
+
+## DBM / DBR / DBP
+
+The three role acronyms: **DBM** = Database Manager = **producer**; **DBR** = Database Reviewer = **reviewer**; **DBP** = Database Publisher = **publisher**. The third role was renamed INGESTOR → PUBLISHER in v0.4.6, aligning the label with the verb the code already uses (`dw_publish()`; there is no `dw_ingest()`). For each role's responsibilities, see *producer*, *reviewer*, and *publisher*.
+
+## `dw_apis_allowed`
+
+The session-level boolean that gates every external network call. It is `TRUE` in producer mode and `FALSE` in reviewer mode, derived once from `dw_mode` at profile-load time rather than set per call. `dw_require_no_api()` reads it (via the `dw.apis_allowed` option, falling back to the global) and raises a mode-lock error before any HTTP request when it is false — so the reviewer lockout holds even inside a sector's own scripts, not only at the top-level entry points.
+
+## `dw_mode`
+
+The session property — `"producer"` or `"reviewer"` — that selects which side of the mode contract a session operates under. It is read once at profile-load time from the user's block in `~/.config/user_config.yml`; it is **required**, and profile loading hard-fails if it is absent (defaulting either way is unsafe). From it the profile derives the path globals (`teamsWrkData` and its `*Canonical` aliases) and `dw_apis_allowed`. It is a session property, never a per-call argument. See the roles and mode contract chapter.
+
+::: {.panel-tabset}
+## R
+
+```r
+dw_mode <- "producer"          # normally set by profile_<repo>.R from YAML
+dw_apis_allowed <- TRUE
+```
+
+## Python
+
+```python
+_state.configure(dw_mode="producer", dw_apis_allowed=True)
+```
+
+## Stata
+
+```stata
+global dw_mode "producer"
+```
+
+:::
+
+## Error envelope
+
+The three-part shape every `stop()` / `raise` in the toolkit follows, so a reader can both grep for the failing function and act on it:
+
+```text
+[cso_toolkit.dw_save] Reviewer mode forbids writes under canonical: /path
+  Reviewer sessions must keep canonical deposits read-only to preserve
+  vintage permanence; writes go to the sandbox.
+  Fix:
+    1. Resolve a sandbox path instead, OR
+    2. If this is a deliberate DBM bootstrap, pass `allow_canonical_write = TRUE`.
+```
+
+The leading `[cso_toolkit.<func>]` prefix names the raising function, so a consumer project can be grepped for every site that hits a given error class; the second line says *why*; the `Fix:` block says *what to do*. The R `testthat` suite asserts the shape with `expect_envelope()`. See the error taxonomy appendix.
+
+## External-API contract
+
+The capability family that wraps external data sources behind a single mode-aware interface: `dw_api_fetch()` (producer hits the live API and caches; reviewer reads only the cache), `dw_api_cached()`, and `dw_api_inventory()`. Sources are selected by the `api =` argument, one of ten identifiers — `"uis"`, `"sdmx"`, `"sdmx_codelist"`, `"wb"`, `"wb_indicators"`, `"ilo"`, `"unsd_sdg"`, `"github_raw"`, `"http"`, and `"json_get"`. The family is R + Python only; Stata has no API wrapper. See the external-API contract chapter.
+
+## Frozen cache
+
+The on-disk store of upstream API responses that a reviewer re-runs against without ever touching the network. A producer call to `dw_api_fetch()` hits the live source and persists the response under `<rawdata>/_apis/<api>/<cache_key>.<ext>` alongside a `.provenance.json` sidecar; a reviewer call reads that file, or stops via `dw_require_no_api()` if it is absent. "Frozen" captures the contract guarantee: the cached vintage does not change under a reviewer's feet, so a 2026 publication reproduces identically two years later. This is the canonical sense of *reproduces identically* used elsewhere in this glossary (under *vintage* and *vendoring*). A related `_frozen/<host>/<path>` store holds HTTPS responses that `dw_use()` froze from a URL (see *HTTPS-URL freeze*). See also *cache key*.
+
+## HTTPS-URL freeze
+
+The behaviour, added to `dw_use()` in v0.4.0, by which a producer may pass an HTTPS URL instead of a path: the producer downloads it once and freezes the response under `_frozen/<host>/<path>` with a provenance sidecar, and the reviewer reads only from that frozen copy. The host allowlist is configured per-consumer and is empty by default, so the capability is opt-in.
+
+## IO contract
+
+The capability family that gives every read, write, compare, and merge a single shape: `dw_save`, `dw_use`, `dw_compare`, `dw_merge`, `dw_isid`, and `dw_verify_z`. Dispatch is automatic by file extension (CSV / TSV / XLSX / RDS-or-PKL / DTA / Parquet / JSON / YAML); every write runs the `isid` uniqueness check, emits a provenance sidecar, mirrors to Teams and Z: on canonical writes, and verifies integrity on canonical reads. Coverage is not uniform: `dw_merge` and `dw_verify_z` are R + Python only, and Stata has no Parquet or RDS support (`dw_use.ado` reads `.dta` / `.csv` / `.xlsx` only — pipelines needing other formats route through R or Python and `dw_save()` to `.dta` for Stata consumption). See the IO contract chapter.
+
+::: {.panel-tabset}
+## R
+
+```r
+dw_save(df, name = "dw_ed_edu.csv", sector = "ed", kind = "wrk",
+        isid = "REF_AREA")
+```
+
+## Python
+
+```python
+dw_save(df, name="dw_ed_edu.csv", sector="ed", kind="wrk",
+        isid=["REF_AREA"])
+```
+
+## Stata
+
+```stata
+dw_save using "dw_ed_edu.dta", idvars(REF_AREA INDICATOR)
+```
+
+:::
+
+## `isid`
+
+A uniqueness check named after the Stata command of the same idea: assert that a given set of columns identifies rows uniquely (no duplicate key tuples). The toolkit exposes it both as a standalone helper, `dw_isid(df, keys)`, and as the `isid =` argument to `dw_save()`, which runs the check automatically before writing. A failed `isid` check is a write-blocking error: a non-unique key means the deposit cannot be trusted as a keyed table. In Stata the check is embedded in `dw_save` via `idvars(...)` rather than exposed as a separate command.
+
+::: {.panel-tabset}
+## R
+
+```r
+dw_isid(df, keys = c("REF_AREA", "INDICATOR", "SEX"))
+```
+
+## Python
+
+```python
+dw_isid(df, keys=["REF_AREA", "INDICATOR", "SEX"])
+```
+
+## Stata
+
+```stata
+dw_save using "out.dta", idvars(REF_AREA INDICATOR SEX)
+```
+
+:::
+
+## Manifest (`.toolkit_manifest.yml`)
+
+The small YAML file that records which toolkit vintage a consumer repo has vendored; it lives at `00_functions/.toolkit_manifest.yml`. Its fields are `source` (the upstream `owner/repo`), `pulled_version` (the pinned tag — or the literal `inrepo`, which marks a helper this repo maintains itself and so silences sync warnings on it), `pulled_date`, `pulled_by`, `vendored` (the list of copied files), and `local_edits` (vendored files with local divergence, which `cso_toolkit_pull()` skips on update). It is version-controlled alongside the helpers and updated on every re-pull. The vintage-sync helpers read it. See the vendoring model chapter.
+
+## Mode contract
+
+What each role may and may not do at every wrapped call site, decided by `dw_mode`: producers may call APIs and write canonical; reviewers may do neither — their writes route to the sandbox, and their API calls raise. The contract is enforced by the code, not by convention: every `dw_save`, `dw_use`, and `dw_api_fetch` re-checks. One operational test of whether a sector has adopted the contract is that the canonical deposit's modification time is unchanged before and after a reviewer-mode run. See the roles and mode contract chapter and the wiring chapter.
+
+## Producer
+
+The role (Database Manager, DBM) that owns the deposit: it refreshes upstream API caches, runs the sector pipeline, writes the canonical `dw_<sector>.<ext>` artefacts (with automatic Teams + Z: mirroring — see *Z: mirror*), and completes the pre-deposit checklist. It is the only role permitted live network access (`dw_apis_allowed = TRUE`). Set with `dw_mode: "producer"`.
+
+## Provenance sidecar
+
+The `<path>.provenance.json` file the toolkit writes next to every primary output, recording how that output came to be: `written_at`, `user`, `dw_mode`, the `sha256` of the primary file, a schema block (rows / cols / column names), and any caller-supplied `metadata` (title, sources, vintage, contact, among other caller-chosen fields). Sidecars are on by default (opt out with `provenance = FALSE`); `.RData` / `.rda` writes skip them. Secrets passed as API call arguments are redacted before they reach the sidecar. The sidecar is what makes a deposit auditable and what a publisher's provenance chain links back through to the original API fetches. See the provenance sidecar schema appendix.
+
+## Publisher
+
+The role (Database Publisher, DBP) that takes producer-blessed deposits from `013_wrkdata/` and pushes them into downstream infrastructure — Helix, SDMX endpoints, data.unicef.org, and the State of the World's Children tables. It reads canonical, writes only to infrastructure outside the deposit repo, and is gated on the producer's checklist plus the reviewer's compare report.
+
+::: {.callout-note}
+The publisher role is documented, and `dw_publish()` ships as a deliberate dry-run-only stub: `dry_run = TRUE` validates inputs and assembles a payload (`sha256`, `bytes`, `built_at`, `built_by`, version stamp), while `dry_run = FALSE` raises an envelope-shaped *"Live submission not yet implemented"* error pointing at issue #15. Despite the version number reaching v0.5.0, the live Helix submission branch has not yet landed — it remains gated on the sector leads finalising the submission contract. (Formerly INGESTOR.)
+:::
+
+## Reviewer
+
+The role (Database Reviewer, DBR) that reproduces and validates: it re-runs the same sector pipeline from the canonical deposit, writing only into its own sandbox; compares its output against canonical; and files issues. It is physically prevented from writing canonical and from calling external APIs (`dw_apis_allowed = FALSE`). A reviewer can re-run a full pipeline offline, because the vendored helpers and the frozen cache are local. Set with `dw_mode: "reviewer"` plus a `sandboxRoot`.
+
+## Sandbox / `sandboxRoot`
+
+The per-user, writable directory tree a reviewer session writes into instead of the canonical deposit. `sandboxRoot` is set in the user's `~/.config/user_config.yml` block and is used only in reviewer mode; the profile redirects `teamsFolder`, `teamsRawData`, and `teamsWrkData` under it so that existing pipeline code lands in the sandbox without per-script edits. (That the canonical deposit's modification time is unchanged across a reviewer run is part of the operational definition of adopting the contract — see *mode contract*.)
+
+## Scaffolding
+
+The capability family that generates the standard CSO project building blocks: `create_profile()` writes a `profile_<repo>.R` (or `.py`) with cross-platform user identification, YAML config load, producer / reviewer `dw_mode` resolution, an optional Z: drive advisory (a non-blocking block that warns when the legacy Azure mirror is unavailable but does not stop execution), a packages block, and a sentinel object; `review_profile()` audits an existing profile against the same checklist, reporting `pass` / `warn` / `fail`; `create_sector_script()` scaffolds a sector run-script template with profile verification, logging, runtime tracking, and try/catch. See the scaffolding and contract auditor chapter.
+
+## Sentinel object
+
+The marker a generated profile leaves in the session to signal that the profile loaded successfully and the mode contract is wired. Downstream sector scripts check for it before running, so a script never executes against an un-initialised, mode-ambiguous session.
+
+## Vendoring
+
+The toolkit's production adoption model: a consumer repo **copies** the helper files into its own `00_functions/` and pins the version in `.toolkit_manifest.yml`, rather than installing or `source()`-ing them over the network. Vendoring is what buys vintage permanence (a release re-run uses the helper code as it stood at release — *reproduces identically*, in the sense defined under *frozen cache*), survives UNICEF AppLocker restrictions on script-installable paths, and lets reviewers reproduce offline. Native install paths exist for local development (`devtools::install_local`, `pip install -e`, `adopath ++`), but vendoring stays the production model. See the vendoring model chapter.
+
+## Vintage
+
+A dated snapshot of a data source or of a piece of code. Two senses recur: the **data vintage** carried in a deposit's provenance metadata (for example, `vintage = "2026-05"`), and the **toolkit vintage** pinned in `.toolkit_manifest.yml`. The whole point of freezing caches and vendoring helpers is that a published vintage reproduces identically later (see *frozen cache*).
+
+## Vintage sync
+
+The capability family of consumer-side helpers that keep a vendored copy from silently falling behind upstream: `cso_toolkit_check()` reads the local manifest, queries upstream for the latest tag, and warns when the consumer is behind; `cso_toolkit_diff()` shows what changed; `cso_toolkit_pull()` refreshes vendored files to a target tag and updates the manifest. Only producer mode can run the check — reviewer mode's network lockout (`dw_apis_allowed = FALSE`) blocks the upstream lookup, so reviewers always run against whatever vintage the producer pinned. See the vintage sync chapter.
+
+## Z: mirror
+
+The carbon-copy of the canonical deposit kept on the UNICEF Azure file share (the `Z:` drive). A producer's canonical write is mirrored to Z: automatically and non-blockingly: a failed mirror emits an envelope-shaped warning rather than rolling back the primary write. On canonical reads, the toolkit can verify that the Teams copy and the Z: copy are byte-equal; `dw_verify_z()` exposes this check, and `dw_use()` runs it on canonical reads (`verify_z = "sha256"` for a deep check, `verify_z = FALSE` to skip). The mirror is a redundancy and integrity guarantee, not a separate deposit. `dw_verify_z` is R + Python only.
+
+::: {.panel-tabset}
+## R
+
+```r
+dw_verify_z("013_wrkdata/dw_ed_edu.csv")
+```
+
+## Python
+
+```python
+dw_verify_z("013_wrkdata/dw_ed_edu.csv")
+```
+
+## Stata
+
+```stata
+* Not implemented — dw_verify_z has no Stata sibling.
+* (dw_use does run a non-blocking Z: integrity check on canonical reads.)
+```
+
+:::

@@ -1,0 +1,165 @@
+# Architecture: one contract, three languages, many consumers
+
+The previous chapter argued *why* a toolkit is worth building: a 2026 publication that cites `dw_<sector>.csv` must, two years later, produce identical numbers when re-run by someone who has only the canonical deposit and the vendored helpers — no network access, no upstream package drift, no ambient `dplyr` version skew. This chapter describes the *shape* that delivers on that promise. The shape is layered, and it can be read in one sentence: the toolkit encodes a contract once; three language siblings implement that contract identically; consumer repositories copy ("vendor") the implementations into their own code; and everything they produce lands in a single canonical deposit that the contract keeps reproducible.
+
+The README's "Architecture at a glance" diagram (a Mermaid flowchart in the repository's `README.md`) draws all four layers in one picture: external data sources on the left, the toolkit and its five capability families in the centre, the three language siblings below, the consumer repositories that vendor them, and the canonical deposit on the right. The text that follows walks through each layer in turn.
+
+## The four layers
+
+The layers nest, so name them first:
+
+| Layer | What it is | Where it lives |
+|---|---|---|
+| The toolkit | One contract, expressed as five capability families | `unicef-drp/cso-toolkit` (this repo) |
+| Language siblings | Three idiomatic implementations of that one contract | `r/R/`, `python/src/`, `stata/src/` |
+| Consumer repos | Codebases that vendor the helpers and use the contract | DW-Production, sector pipelines, CCRI (the Children's Climate Risk Index) / geospatial work |
+| Canonical deposit | The frozen store every producer writes and every reviewer reads | Teams `060.DW-MASTER/`, the Z: drive mirror, downstream Helix / SDMX |
+
+The layers have a strict direction of dependence. The toolkit knows nothing about any consumer. The language siblings know nothing about each other — they agree only on the contract, never on shared code. Consumers depend on a pinned version of one language sibling. The canonical deposit depends on nothing; it is the inert artefact at the end of the flow — and that inertness is exactly what we want: a reviewer reads it without re-running anything upstream of it.
+
+A note on the names in that last table column. The **Z: drive** is a network-mapped mirror of the Teams deposit, used so that scripts can address the canonical store through a stable drive letter rather than a synced-folder path. **Helix** is UNICEF's internal data platform, and **SDMX** (Statistical Data and Metadata eXchange) is the statistical-data exchange standard through which blessed artefacts reach `data.unicef.org`. These are downstream of the toolkit, not part of it; the architecture's job ends when the deposit is written.
+
+## Layer one — the toolkit and its five capability families
+
+The toolkit's helpers group into five capability families, and each family is the *single* sanctioned way to do its job inside a CSO analytics product — not a grab-bag of utilities. The families are: IO, external API, vintage sync, aggregation, and scaffolding / audit. The rest of Part III treats each family in full; this section names each one and its public functions, so the architecture reads as a whole.
+
+### IO contract
+
+One way to read, write, compare, and merge data, auto-dispatched by file extension: CSV / TSV / XLSX / RDS-or-PKL (R / Python native) / DTA (Stata) / Parquet / JSON / YAML. Writes emit a `.provenance.json` sidecar by default; canonical writes are carbon-copied to the Z: drive; canonical reads run an integrity check. See the IO contract chapter for the full treatment.
+
+::: {.panel-tabset}
+## R
+```r
+dw_save(df, name = "dw_ed_edu.csv", sector = "ed", kind = "wrk",
+        isid = "REF_AREA",
+        metadata = list(title = "Education indicators", vintage = "2026-05"))
+df <- dw_use(name = "dw_ed_edu.csv", sector = "ed", kind = "wrk")
+```
+## Python
+```python
+dw_save(df, name="dw_ed_edu.csv", sector="ed", kind="wrk",
+        isid=["REF_AREA"],
+        metadata={"title": "Education indicators", "vintage": "2026-05"})
+df = dw_use(name="dw_ed_edu.csv", sector="ed", kind="wrk")
+```
+## Stata
+```stata
+dw_save using "dw_ed_edu.dta",      ///
+    idvars(REF_AREA INDICATOR)      ///
+    title("Education indicators")   ///
+    vintage("2026-05")
+use_result = dw_use using "dw_ed_edu.dta"
+```
+:::
+
+Here `isid` names the columns that uniquely identify a row; the IO family enforces that uniqueness on write. The Stata sibling now ships `dw_use` as well as `dw_save` (the read contract landed in v0.4.0, closing issue #5), so the read / write pair is available in all three languages.
+
+### External-API contract
+
+One mode-aware wrapper around ten external data sources — UNESCO UIS, generic SDMX, the UNICEF SDMX codelist endpoint, World Bank WDI, ILO SDMX, the UNSD SDG API, pinned-commit GitHub-raw, and generic HTTP / JSON. A producer hits the live API and caches the response under `_apis/<api>/<cache_key>.<ext>`; a reviewer reads only from that cache and is physically prevented from reaching the network. Secrets in caller keyword arguments are redacted before they reach the provenance sidecar. See the external-API contract chapter.
+
+::: {.panel-tabset}
+## R
+```r
+df <- dw_api_fetch(api = "wb", indicator = "SE.PRM.NENR", refresh = TRUE)
+df <- dw_api_cached(api = "wb", cache_key = "SE.PRM.NENR")
+dw_api_inventory(api = "wb")
+```
+## Python
+```python
+df = dw_api_fetch(api="wb", indicator="SE.PRM.NENR", refresh=True)
+df = dw_api_cached(api="wb", cache_key="SE.PRM.NENR")
+dw_api_inventory(api="wb")
+```
+## Stata
+```stata
+* No API *fetch* wrapper exists in the Stata sibling.
+* Stata producers fetch upstream data through the R or Python sibling,
+* then read the resulting cache or canonical artefact.
+* The Stata sibling DOES enforce the reviewer-mode no-API guard:
+dw_require_no_api , context("ed/06_pull_uis")
+```
+:::
+
+::: {.callout-warning}
+The external-API *fetch* family is an R-and-Python capability only. The Stata sibling has no `dw_api_fetch` / `dw_api_cached` / `dw_api_inventory`; a Stata-only producer cannot refresh an upstream cache, and that step runs in R or Python. What Stata does provide is the *enforcement* half of the contract — `dw_require_no_api` aborts a reviewer-mode session that is about to make a live network call. The cross-language coverage matrix appendix records the gap explicitly.
+:::
+
+### Vintage sync
+
+Consumer-side helpers — `cso_toolkit_check`, `cso_toolkit_diff`, and `cso_toolkit_pull` — that read the local `.toolkit_manifest.yml`, query upstream for the latest tag, and warn or refresh when the consumer is behind the pinned version. The network call these make is itself gated by the mode contract: reviewer mode forbids it. See the vintage-sync chapter.
+
+### Aggregation and survey weights
+
+`aggregate_data_v2()` computes `weighted_mean` / `mean` / `sum` / `proportion` with population and country coverage and a coverage threshold; `apply_time_window()` filters to the latest observation per country within an inclusive year window; `generate_agg_footnote()` produces the matching coverage footnote; and `dw_nestweight()` is an R port of the World Bank EduAnalyticsToolkit `edukit_nestweight` (Diana Goldemberg), which redistributes survey weights from missing nested observations so per-stratum totals are preserved. See the aggregation chapter.
+
+### Scaffolding and contract audit
+
+`create_profile()` scaffolds a `profile_<repo>.R` (or `.py`) with the standard CSO building blocks — cross-platform user identification, YAML config load, producer / reviewer `dw_mode` resolution, an optional Z: drive advisory, a packages block, and a sentinel object. `review_profile()` audits an existing profile against the same building blocks and reports `pass` / `warn` / `fail` per check. `create_sector_script()` scaffolds a sector run-script template with profile verification, logging, runtime tracking, and try/catch. `test_scripts()` is the contract auditor: it recursively scans a directory of scripts and flags any direct call to a raw file-IO or external-API command that the toolkit wraps — `read_csv`, `pd.read_csv`, `httr::GET`, `requests.get`, `rsdmx::readSDMX`, `sdmx.Client`, and so on — with a per-line escape hatch (`# cso-allow: <rule-id>`) and a CI mode (`error_on_violation = TRUE`) that fails the build on any violation. See the scaffolding and contract-auditor chapter.
+
+### The error envelope is not a sixth family
+
+One behaviour cuts across all five families rather than forming its own: the graceful error envelope. Because a consumer needs to grep for and act on library errors, every `stop()` in R, every `raise` in Python, and every abort in Stata follows a three-part shape:
+
+```text
+[cso_toolkit.dw_save] Reviewer mode forbids writes under canonical: /path
+  Reviewer sessions must keep canonical deposits read-only to preserve
+  vintage permanence; writes go to the sandbox.
+  Fix:
+    1. Resolve a sandbox path instead, OR
+    2. If this is a deliberate DBM bootstrap, pass `allow_canonical_write = TRUE`.
+```
+
+The leading `[cso_toolkit.<func>]` prefix lets a consumer project grep for every site that hits a given error class. The shape is `[cso_toolkit.<func>] WHAT / Why / Fix`. The roles chapter and the error taxonomy appendix return to this.
+
+## Layer two — three language siblings of one contract
+
+The toolkit ships three implementations: R under `r/R/`, Python under `python/src/`, and Stata under `stata/src/`. The word that matters is *siblings*, not *ports* and not *bindings*. They are not generated from a common source, and they do not call into one another at runtime. They are independent code that agrees on a contract. The README states the agreement precisely: same function names, same `.provenance.json` schema, same mode-aware path routing, same error-envelope shape.
+
+This works only because the contract is defined behaviourally, not as shared code. A `dw_save` in any sibling dispatches on file extension, enforces an `isid` uniqueness check, writes a sidecar with the same JSON schema, mirrors canonical writes to Z:, and honours the session-level producer / reviewer mode — and it produces the *same numbers* given the same inputs. The compatibility is in the observable behaviour, which is exactly what reproducibility cares about.
+
+::: {.callout-note}
+Cross-language parity is the design goal, not a finished fact. The gaps worth naming up front, all recorded in the coverage matrix appendix, are:
+
+- **No Stata API *fetch* wrapper.** `dw_api_fetch` / `dw_api_cached` / `dw_api_inventory` are R and Python only. Stata ships the enforcement half (`dw_require_no_api`) but not the fetch half.
+- **No Stata parquet or RDS, and `dw_merge` / `dw_verify_z` are not in the Stata sibling.** `dw_isid` in Stata is embedded inside `dw_save` rather than exposed as its own command. (The read contract, `dw_use`, *is* now in Stata as of v0.4.0; issue #5 is closed.)
+- **No Python autodoc.** R has Roxygen-complete reference documentation (34 `.Rd` files plus a pkgdown site configured in `r/_pkgdown.yml`); Python has no equivalent pkgdown-style generated reference, only hand-written references and module READMEs.
+
+Treat the parity claim as "same names, same behaviour where a function exists in both," not "every function exists everywhere."
+:::
+
+Maturity differs by sibling as well as by function. The R sibling was feature-complete first; the Python sibling followed as a full port (nine functional modules and twenty-seven public entries); the Stata sibling shipped a focused subset and is still filling in. As of v0.4.0 the Stata sibling exposes six commands — `dw_save`, `dw_use`, `dw_compare`, `dw_mkdir`, `dw_load_config`, and `dw_require_no_api`. The versioning-and-releases chapter traces this timeline; the point for the architecture is that a consumer chooses *one* sibling and gets whatever that sibling implements, so the choice of language is also a choice of current coverage.
+
+## Layer three — consumer repositories vendor the helpers
+
+A consumer repository does not install the toolkit over the network. It *vendors* it: it copies the helpers for its chosen language into its own `00_functions/` directory and pins a version in a one-line manifest, `.toolkit_manifest.yml`. DW-Production is the first consumer; the sector pipelines are consumers through it — education, water and sanitation, nutrition, HIV/AIDS, child poverty, immunisation, and the rest; the CCRI / geospatial work consumes the Python sibling directly. Future repositories — UNPD-Population, datalib — are expected to vendor the same way.
+
+Vendoring rather than network-installing is deliberate. The reasons:
+
+- **Vintage permanence.** A 2026-05 release re-run must use the helper code as it stood in 2026-05. Network `source()` / `pip install` / `net install` would silently pull whatever the latest code is, breaking the freeze.
+- **AppLocker reality.** UNICEF laptops block many script-installable paths; copying files into `00_functions/` always works where a network install may not.
+- **Offline reproducibility.** Reviewers on planes, behind customs firewalls, or on locked-down corporate networks need the helpers present locally.
+
+Each language does still offer a native install path for local development — `devtools::install_local("r/")`, `pip install -e python/`, `adopath ++ "stata/src"` — but vendoring stays the production model. The vendoring chapter and the onboarding worked example in Part IV cover the mechanics; the architectural fact is simply that the dependency from consumer to toolkit is a *copy plus a pin*, not a live link. That is what lets a consumer be re-run identically years later, and it is what lets the vintage-sync family detect, without ever forcing, when a consumer has drifted behind the upstream tag.
+
+## Layer four — the canonical deposit
+
+Everything the consumers produce in producer mode flows into one place: the canonical deposit. Physically it is the Teams folder `060.DW-MASTER/`, carbon-copied to a Z: drive mirror, and from there published downstream to Helix, the SDMX endpoints, and `data.unicef.org`. Architecturally it is the immutable record that closes the reproducibility loop. The producer writes it; the reviewer reads it, frozen, and never re-runs anything upstream of it; the publisher pushes blessed copies of it to the outside world.
+
+The deposit is where the contract's two halves meet. The IO family writes artefacts here with provenance sidecars and a Z: mirror; the external-API family caches upstream pulls here so they too become part of the frozen record; the mode contract draws its hard line right at this boundary, allowing a producer to write canonical paths and forcing a reviewer's writes into a per-user sandbox instead. The roles-and-mode-contract chapter develops the producer / reviewer / publisher split in full; for the architecture, the deposit is best understood as the inert artefact that makes the whole layered design pay off — because it can be read without being recomputed, the numbers it holds stay reproducible.
+
+## Reading the architecture diagram
+
+The README's "Architecture at a glance" Mermaid flowchart encodes the same four layers and the direction of flow between them. The diagram uses exactly two line styles — solid arrows (`-->`) and dashed arrows (`-.->`) — and three reading aids unlock it:
+
+- **Solid versus dashed arrows.** Solid arrows are normal producing flow: external sources into the API family, the toolkit into the consumers (via the siblings), and consumers depositing into the canonical store. Dashed arrows are the two reproducibility-and-parity relationships, and they are the *only* non-solid lines in the picture.
+- **The dashed line into the language siblings** (`TK -.-> LANG`, labelled "language-parallel implementations") marks the "same contract, three idiomatic implementations" relationship — independent code that agrees behaviourally, not generated bindings.
+- **The dashed line from the deposit back to the consumers** (`CANON -.-> CONS`, labelled "reviewer reads (frozen)") is the reviewer path: reading the frozen deposit without recomputation.
+
+The one edge that carries a version number is the **vendoring edge** (`LANG --> CONS`), a *solid* arrow labelled `.toolkit_manifest.yml` — the file that records the pinned version. It is the copy-plus-pin dependency from each consumer back to a sibling, and the vintage-sync family is the machinery that watches it.
+
+::: {.callout-note}
+If you are matching the prose to the rendered picture: there is no dotted style in this diagram. Every non-solid arrow is the same Mermaid dashed style (`-.->`), and there are exactly two of them — the language-parallel edge and the reviewer-reads edge.
+:::
+
+The four layers — toolkit, siblings, consumers, deposit — are the frame to hold for the rest of the book. From here, Part II elaborates the contract those layers carry; Part III gives each capability family its own chapter; and Part IV covers how a repository joins the architecture as a new consumer and stays in sync over time.
