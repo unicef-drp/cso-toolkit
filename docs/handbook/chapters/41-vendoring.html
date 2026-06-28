@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.42">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>12&nbsp; The vendoring model – The CSO Toolkit Handbook</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../chapters/42-onboarding-example.html" rel="next">
+<link href="../chapters/35-scaffolding-audit.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-baf7457b58093534c7052efdef5f4d86.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/41-vendoring.html">Part IV — Adoption &amp; Operations</a></li><li class="breadcrumb-item"><a href="../chapters/41-vendoring.html"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">The vendoring model</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">The CSO Toolkit Handbook</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/unicef-drp/cso-toolkit/tree/main/book/" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Welcome</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part I — Why &amp; Architecture</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/11-why.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Why a toolkit</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/12-architecture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Architecture: one contract, three languages, many consumers</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part II — The Contract</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/21-roles-and-modes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Roles and the mode contract</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/22-wiring-the-contract.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Wiring the contract into a repo</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/23-provenance-and-errors.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Provenance sidecars and the error envelope</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part III — The API (cross-language)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/31-io.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">The IO contract</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/32-external-api.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">The external-API contract</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/33-aggregation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Aggregation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/34-vintage-sync.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Vintage sync</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/35-scaffolding-audit.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Scaffolding and the contract auditor</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part IV — Adoption &amp; Operations</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/41-vendoring.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">The vendoring model</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/42-onboarding-example.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Onboarding a repo: a worked example</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/43-contract-auditor-ci.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">The contract auditor in continuous integration (CI)</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/44-versioning-release.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Versioning and releases</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Appendices</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/a-coverage-matrix.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">A</span>&nbsp; <span class="chapter-title">Cross-language coverage matrix</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/b-provenance-schema.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">B</span>&nbsp; <span class="chapter-title">Provenance sidecar schema</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/c-error-taxonomy.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">C</span>&nbsp; <span class="chapter-title">Error taxonomy</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/d-function-reference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">D</span>&nbsp; <span class="chapter-title">Function reference</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/e-glossary.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">E</span>&nbsp; <span class="chapter-title">Glossary</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#what-vendoring-means-here" id="toc-what-vendoring-means-here" class="nav-link active" data-scroll-target="#what-vendoring-means-here"><span class="header-section-number">12.1</span> What “vendoring” means here</a></li>
+  <li><a href="#why-vendor-instead-of-install" id="toc-why-vendor-instead-of-install" class="nav-link" data-scroll-target="#why-vendor-instead-of-install"><span class="header-section-number">12.2</span> Why vendor instead of install</a>
+  <ul class="collapse">
+  <li><a href="#reproducibility-vintage-permanence" id="toc-reproducibility-vintage-permanence" class="nav-link" data-scroll-target="#reproducibility-vintage-permanence"><span class="header-section-number">12.2.1</span> 1. Reproducibility — vintage permanence</a></li>
+  <li><a href="#producer-controlled-refresh" id="toc-producer-controlled-refresh" class="nav-link" data-scroll-target="#producer-controlled-refresh"><span class="header-section-number">12.2.2</span> 2. Producer-controlled refresh</a></li>
+  <li><a href="#offline-reviewer-reproducibility" id="toc-offline-reviewer-reproducibility" class="nav-link" data-scroll-target="#offline-reviewer-reproducibility"><span class="header-section-number">12.2.3</span> 3. Offline reviewer reproducibility</a></li>
+  <li><a href="#cross-language-symmetry" id="toc-cross-language-symmetry" class="nav-link" data-scroll-target="#cross-language-symmetry"><span class="header-section-number">12.2.4</span> 4. Cross-language symmetry</a></li>
+  </ul></li>
+  <li><a href="#vendoring-is-the-production-model-not-the-only-path" id="toc-vendoring-is-the-production-model-not-the-only-path" class="nav-link" data-scroll-target="#vendoring-is-the-production-model-not-the-only-path"><span class="header-section-number">12.3</span> Vendoring is the production model — not the only path</a></li>
+  <li><a href="#what-lives-in-cso-toolkit-vs.-the-consumer" id="toc-what-lives-in-cso-toolkit-vs.-the-consumer" class="nav-link" data-scroll-target="#what-lives-in-cso-toolkit-vs.-the-consumer"><span class="header-section-number">12.4</span> What lives in cso-toolkit vs.&nbsp;the consumer</a></li>
+  <li><a href="#the-refresh-decision-flow" id="toc-the-refresh-decision-flow" class="nav-link" data-scroll-target="#the-refresh-decision-flow"><span class="header-section-number">12.5</span> The refresh decision flow</a></li>
+  <li><a href="#why-not-a-package-in-one-sentence" id="toc-why-not-a-package-in-one-sentence" class="nav-link" data-scroll-target="#why-not-a-package-in-one-sentence"><span class="header-section-number">12.6</span> Why not a package, in one sentence</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/unicef-drp/cso-toolkit/edit/main/book/chapters/41-vendoring.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/unicef-drp/cso-toolkit/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/41-vendoring.html">Part IV — Adoption &amp; Operations</a></li><li class="breadcrumb-item"><a href="../chapters/41-vendoring.html"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">The vendoring model</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">The vendoring model</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>The most consequential design decision in <code>cso-toolkit</code> — the shared helper library behind DW-Production and its sibling analytics pipelines — is not in any of its functions. It is in how those functions reach the repositories that use them. The toolkit is <strong>vendored, not installed</strong>: a consuming repository copies the helper files into its own tree, commits them to its own git history, and pins the version it copied in a small manifest file. There is no live <code>source()</code>, no <code>pip install</code> at session start, no <code>net install</code> from a network location. Why the project chose vendoring, where the line falls between toolkit and consumer, and how the refresh flow keeps a vendored copy current without surprising a reviewer — those are the subjects of this chapter.</p>
+<section id="what-vendoring-means-here" class="level2" data-number="12.1">
+<h2 data-number="12.1" class="anchored" data-anchor-id="what-vendoring-means-here"><span class="header-section-number">12.1</span> What “vendoring” means here</h2>
+<p>Vendoring is the practice of copying a dependency’s source code directly into your project rather than referencing it from an external package registry. When DW-Production (a consuming pipeline repository) adopts <code>cso-toolkit</code>, it does not declare a dependency that some installer resolves later. Instead, the canonical helper files — <code>dw_io.R</code>, <code>dw_api.R</code>, <code>cso_toolkit_sync.R</code>, and any siblings the pipeline actually uses — are copied from the toolkit’s <code>r/R/</code> directory into DW-Production’s own <code>00_functions/</code> directory and tracked in DW-Production’s git. The copies freeze the vintage: every commit in the consuming repo records exactly which helper code was in effect at that point in history.</p>
+<p>A single small file records what was copied and from where. The <code>.toolkit_manifest.yml</code> (its schema lives in the toolkit’s <code>templates/.toolkit_manifest.yml</code>) sits next to the vendored helpers and pins the version:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span><span class="kw">:</span><span class="at"> </span><span class="st">"unicef-drp/cso-toolkit"</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">pulled_version</span><span class="kw">:</span><span class="at"> </span><span class="st">"v0.4.0"</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">pulled_date</span><span class="kw">:</span><span class="at"> </span><span class="st">"2026-05-26"</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">pulled_by</span><span class="kw">:</span><span class="at"> </span><span class="st">"&lt;your-name&gt;"</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">vendored</span><span class="kw">:</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> dw_io.R</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> dw_api.R</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> cso_toolkit_sync.R</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">local_edits</span><span class="kw">:</span><span class="at"> </span><span class="kw">[]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The <code>source</code> field names the upstream repository; <code>pulled_version</code> is the tag that was in effect at the most recent copy; <code>vendored</code> lists the files that were copied; and <code>local_edits</code> lists any vendored files the consumer has since modified, so the refresh workflow knows to leave them alone. The manifest is committed alongside the helpers and updated every time the toolkit is re-pulled. (See the provenance sidecars chapter for the related sidecar manifests that travel with data deposits, and the appendix on the sidecar schema for field-level detail.)</p>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>The same manifest schema applies to every language. R and Python consumers vendor into <code>00_functions/</code>; Stata consumers copy <code>.ado</code> and <code>.sthlp</code> files into the project’s <code>ado/</code> directory (or <code>PERSONAL</code> adopath) and pin the same <code>pulled_version</code>. The contract is identical; only the destination directory differs by language idiom.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="why-vendor-instead-of-install" class="level2" data-number="12.2">
+<h2 data-number="12.2" class="anchored" data-anchor-id="why-vendor-instead-of-install"><span class="header-section-number">12.2</span> Why vendor instead of install</h2>
+<p>Four reasons drive the choice, and they reinforce one another. The toolkit’s strategy document and README make the same case; the four points below restate what the project says explicitly.</p>
+<section id="reproducibility-vintage-permanence" class="level3" data-number="12.2.1">
+<h3 data-number="12.2.1" class="anchored" data-anchor-id="reproducibility-vintage-permanence"><span class="header-section-number">12.2.1</span> 1. Reproducibility — vintage permanence</h3>
+<p>A publication that cites a <code>dw_&lt;sector&gt;.csv</code> deposit in 2026 must, two years later, produce identical numbers when someone re-runs the pipeline. That guarantee fails the moment the helper code can drift out from under the analysis. With vendoring, every consuming repo’s git history shows exactly which helper code was in effect at any commit — there is no situation where “the repo’s pinned version was X but the running R session installed Y.” A 2026-05 release that needs re-running uses the helper code as it stood in 2026-05, because that code is physically in the repo at that commit. Network sourcing, by contrast, resolves to <em>whatever is current at run time</em>, which is precisely the drift the toolkit exists to prevent.</p>
+</section>
+<section id="producer-controlled-refresh" class="level3" data-number="12.2.2">
+<h3 data-number="12.2.2" class="anchored" data-anchor-id="producer-controlled-refresh"><span class="header-section-number">12.2.2</span> 2. Producer-controlled refresh</h3>
+<p>Toolkit updates are not pulled automatically. The producer reviews the release notes, decides whether the new vintage is appropriate for the current work, and explicitly refreshes. This deliberately reverses the usual package-manager default, where dependencies creep forward on their own. Here the producer holds the upgrade decision, and a vendored copy never changes until someone chooses to change it and commits the result. (See the versioning and releases chapter for how the toolkit signals what changed between versions.)</p>
+</section>
+<section id="offline-reviewer-reproducibility" class="level3" data-number="12.2.3">
+<h3 data-number="12.2.3" class="anchored" data-anchor-id="offline-reviewer-reproducibility"><span class="header-section-number">12.2.3</span> 3. Offline reviewer reproducibility</h3>
+<p>A reviewer with no network access — on a plane, behind a corporate proxy, sitting in customs — can still re-run the full pipeline, because the vendored helpers are right there in the repo. This dovetails with the mode contract (see the roles and mode contract chapter): reviewer mode physically forbids external network calls, so a reviewer could not fetch helpers over the network even if the design allowed it. Vendoring is what makes the offline reviewer path coherent: the frozen canonical deposit, the frozen API cache, and the frozen helper code all travel with the repo.</p>
+</section>
+<section id="cross-language-symmetry" class="level3" data-number="12.2.4">
+<h3 data-number="12.2.4" class="anchored" data-anchor-id="cross-language-symmetry"><span class="header-section-number">12.2.4</span> 4. Cross-language symmetry</h3>
+<p>A package model fits R and Python tolerably but fits Stata poorly. Stata has no native package-install path that matters for this workflow. Vendoring works uniformly across all three languages: copy the files in, pin the vintage, done. The R helpers copy into <code>00_functions/</code>, the Python modules into the same place, and the Stata <code>.ado</code>/<code>.sthlp</code> files into <code>ado/</code>. One model, three languages, no special case.</p>
+<p>A practical fifth consideration reinforces the rest: <strong>AppLocker reality.</strong> UNICEF laptops block many script-installable paths outright. Copying files into a project directory always works where a network installer might be silently denied.</p>
+</section>
+</section>
+<section id="vendoring-is-the-production-model-not-the-only-path" class="level2" data-number="12.3">
+<h2 data-number="12.3" class="anchored" data-anchor-id="vendoring-is-the-production-model-not-the-only-path"><span class="header-section-number">12.3</span> Vendoring is the production model — not the only path</h2>
+<p>For day-to-day local development, each language <em>also</em> supports a native install path. This is a convenience for working on the toolkit itself or experimenting, not the model that consuming repositories ship with.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" aria-current="page">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-3" role="tab" aria-controls="tabset-1-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Development convenience — install the package locally</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>devtools<span class="sc">::</span><span class="fu">install_local</span>(<span class="st">"r/"</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Production: vendored copies are sourced from 00_functions/</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"00_functions/dw_io.R"</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"00_functions/dw_api.R"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Development convenience — editable install</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># pip install -e python/</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Production: import the vendored package after configuring the session</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> cso_toolkit <span class="im">import</span> _state, dw_save, dw_use</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-1-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-3-tab">
+<div class="sourceCode" id="cb4"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>* Development convenience — extend the <span class="kw">adopath</span> to the toolkit source</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">adopath</span> ++ <span class="st">"C:/Github/myados/cso-toolkit/stata/src"</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>* Production: copy src/ into the project's ado/ (<span class="kw">or</span> <span class="ot">PERSONAL</span> <span class="kw">adopath</span>);</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>* Stata picks them up automatically once they are <span class="kw">on</span> the path.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<p>In every language, the development install path is the exception and vendoring is the rule. The reproducibility, offline, and producer-control guarantees above all depend on the production path being vendored.</p>
+</section>
+<section id="what-lives-in-cso-toolkit-vs.-the-consumer" class="level2" data-number="12.4">
+<h2 data-number="12.4" class="anchored" data-anchor-id="what-lives-in-cso-toolkit-vs.-the-consumer"><span class="header-section-number">12.4</span> What lives in cso-toolkit vs.&nbsp;the consumer</h2>
+<p>The boundary between the toolkit and its consumers is sharp, and keeping it sharp is what lets many repositories share one contract without leaking sector-specific detail upstream. The operative rule is simple: <strong>if a helper would need to mention a specific sector to do its job, it does not belong in the toolkit.</strong> The toolkit supplies the reproducibility floor — uniform IO, mode-aware API caching, provenance sidecars, the aggregation and scaffolding families — and the consumer supplies the domain logic that sits on top of it. The two tables below are the evidence for that rule.</p>
+<p><strong>Lives in <code>cso-toolkit</code></strong> — anything repo-neutral and reusable:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Subtree</th>
+<th>Content</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>r/R/</code></td>
+<td>Canonical R helper source (<code>dw_io.R</code>, <code>dw_api.R</code>, <code>cso_toolkit_sync.R</code>, aggregation, scaffolding, demographics)</td>
+</tr>
+<tr class="even">
+<td><code>python/src/</code></td>
+<td>Python siblings of the same helpers, plus <code>_state.py</code> for session configuration</td>
+</tr>
+<tr class="odd">
+<td><code>stata/src/</code></td>
+<td>Stata <code>.ado</code> + <code>.sthlp</code> equivalents for the subset of helpers that fit Stata idioms</td>
+</tr>
+<tr class="even">
+<td><code>templates/</code></td>
+<td>Repo-neutral templates: <code>.toolkit_manifest.yml</code>, <code>dbm_submission_template.md</code></td>
+</tr>
+<tr class="odd">
+<td><code>docs/</code></td>
+<td>Canonical operational docs: roles and workflow, mode-contract integration, per-function references</td>
+</tr>
+<tr class="even">
+<td><code>tests/</code></td>
+<td>Unit and regression tests for the helpers</td>
+</tr>
+<tr class="odd">
+<td><code>NEWS.md</code> + git tags</td>
+<td>Per-version release notes and semantic-version tags</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Lives in the consumer, never in the toolkit</strong> — anything sector- or repo-specific:</p>
+<ul>
+<li>A consumer’s profile script and its sector code</li>
+<li>A consumer’s <code>user_config.yml</code> (the producer/reviewer mode setting, paths, and the like)</li>
+<li>Sector-specific data, indicator lists, and pipeline conductors</li>
+<li>Anything that references a particular sector’s domain</li>
+</ul>
+<p>This division is why new sectors and repositories — UNPD-Population, datalib, future deposit-bearing repos — inherit the floor for free instead of reinventing it. It is also why a drift problem the project hit early — four regional-metadata CSVs read independently across five sectors, with no shared vintage record — does not recur once everyone vendors the same helpers and pins them through one manifest.</p>
+</section>
+<section id="the-refresh-decision-flow" class="level2" data-number="12.5">
+<h2 data-number="12.5" class="anchored" data-anchor-id="the-refresh-decision-flow"><span class="header-section-number">12.5</span> The refresh decision flow</h2>
+<p>A vendored copy goes stale the moment the toolkit tags a newer version. The sync helpers exist to surface that gap and to drive the upgrade — but only on the producer’s terms. Three functions implement the flow, and they carry the same names across the languages that support them.</p>
+<div class="callout callout-style-simple callout-warning">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p><strong>Two of the three sync helpers are stubs today.</strong> <code>cso_toolkit_check</code> is fully implemented: it queries the upstream tag and reports whether you are behind. <code>cso_toolkit_diff</code> and <code>cso_toolkit_pull</code> are deliberate no-op stubs that validate state and explain themselves, but do not yet fetch or overwrite files; they will be wired once the upstream refresh path is finalized. The design intent below is fixed, so read Steps 3 and 4 as the contract those stubs will honor.</p>
+</div>
+</div>
+</div>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-3" role="tab" aria-controls="tabset-2-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<div class="sourceCode" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># At session start (producer mode), quietly check for a newer upstream tag</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>res <span class="ot">&lt;-</span> <span class="fu">cso_toolkit_check</span>(<span class="at">quiet =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Inspect what would change before overwriting anything (stub today)</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cso_toolkit_diff</span>()</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Refresh the vendored copies to a target tag, prompting per file (stub today)</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="fu">cso_toolkit_pull</span>(<span class="st">"v0.5.0"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> cso_toolkit <span class="im">import</span> cso_toolkit_check, cso_toolkit_diff, cso_toolkit_pull</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> cso_toolkit_check(quiet<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>cso_toolkit_diff()           <span class="co"># stub today</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>cso_toolkit_pull(<span class="st">"v0.5.0"</span>)   <span class="co"># stub today</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-2-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-3-tab">
+<div class="sourceCode" id="cb7"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>* No Stata sibling <span class="kw">of</span> the sync helpers exists.</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>* Stata consumers refresh manually: re-copy stata/src<span class="co">/*.ado into ado/</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co">* and bump pulled_version in .toolkit_manifest.yml by hand.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-warning">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p><strong>Coverage gap — Stata has no sync helper.</strong> <code>cso_toolkit_check</code>, <code>cso_toolkit_diff</code>, and <code>cso_toolkit_pull</code> exist in R and Python only. The <code>stata/src/</code> directory ships <code>dw_save</code>, <code>dw_use</code>, <code>dw_compare</code>, <code>dw_mkdir</code>, <code>dw_require_no_api</code>, and <code>dw_load_config</code> — but no <code>cso_toolkit_sync</code> equivalent. A Stata consumer keeps its vendored vintage current by hand: re-copy the <code>.ado</code>/<code>.sthlp</code> files and edit <code>pulled_version</code> in the manifest. (See the cross-language coverage matrix appendix for the full parity picture.)</p>
+</div>
+</div>
+</div>
+<p>The decision flow runs as follows.</p>
+<p><strong>Step 1 — Check (producer only, quiet by default).</strong> At session start the producer runs <code>cso_toolkit_check()</code>. It reads the local <code>.toolkit_manifest.yml</code>, queries the upstream repository for its latest release tag, and compares that tag against the pinned <code>pulled_version</code>. The check is gated by the mode contract: if the session’s <code>dw_apis_allowed</code> flag is not <code>TRUE</code> — that is, in reviewer mode — it returns immediately and silently. Reviewers never see this branch, because the contract forbids the GitHub lookup. The lookup itself prefers the <code>gh</code> CLI (<code>gh api repos/&lt;source&gt;/releases/latest --jq .tag_name</code>) and falls back to a raw <code>api.github.com</code> request — via <code>httr</code> in R, <code>requests</code> in Python — when <code>gh</code> is absent. If neither path reaches the network, the check returns <code>NULL</code> (R) or <code>None</code> (Python) and stays quiet.</p>
+<p><strong>Step 2 — Decide.</strong> If a newer tag is detected, <code>cso_toolkit_check(quiet = FALSE)</code> logs a yellow alert: it names the pinned and upstream versions, points at the release notes, and suggests the exact <code>cso_toolkit_pull()</code> call to run. If the pinned version is current — or if <code>pulled_version</code> is set to <code>inrepo</code>, the convention for a copy whose helpers have been edited locally and should never trigger sync warnings — the check reports no update and stays quiet. Note how this differs from the <code>local_edits</code> list: <code>inrepo</code> is a manifest-wide switch on <code>pulled_version</code> that silences the whole comparison (the check skips any tag whose pinned value contains the string <code>inrepo</code>), whereas <code>local_edits</code> is a per-file skip list that lets the check still run but tells a future <code>cso_toolkit_pull()</code> which individual files to leave untouched. The producer now chooses: refresh, or keep the pinned vintage. Nothing changes unless the producer acts.</p>
+<p><strong>Step 3 — Diff (look before you leap).</strong> <code>cso_toolkit_diff()</code> is the inspection step: by design it fetches each upstream file at the target tag and compares it against the vendored copy by <code>sha256</code>, so the producer can see exactly what would change before committing to an overwrite. Today it is a stub that explains itself and no-ops; the comparison logic lands once the upstream refresh path is wired.</p>
+<p><strong>Step 4 — Pull.</strong> <code>cso_toolkit_pull("v0.5.0")</code> performs the refresh: for each file in the manifest it fetches the upstream version at the target tag, computes a <code>sha256</code> against the current vendored copy, and — when they differ — prompts per file (overwrite, skip, or show diff). Files listed under <code>local_edits</code> are skipped so a consumer’s deliberate local divergence is never clobbered. It then updates the manifest’s <code>pulled_version</code>, <code>pulled_date</code>, and hashes, and logs a summary. Like <code>check</code>, <code>pull</code> is producer-only: in reviewer mode it raises a mode-lock error rather than touching the network, with the standard three-part error message — what failed, why, and how to fix it — directing the user to switch to producer mode (see the error taxonomy appendix). This too is a stub today; before it does anything, it validates the manifest, the <code>source</code> key, and upstream reachability, and refuses loudly if any are missing.</p>
+<p>The decision flow, in outline:</p>
+<pre class="text"><code>                  cso-toolkit (upstream)
+                  v0.1.0  v0.2.0  v0.3.0 ...
+                             |
+        (producer runs cso_toolkit_check() at session start)
+                             |
+                             v
+                  Newer tag detected?
+                  -----------------------------------
+                  YES: log a yellow alert with
+                       pinned version, upstream
+                       version, pointer to NEWS.md,
+                       and a suggested pull command
+                  NO:  stay silent
+                             |
+        (producer decides; reviewer never reaches this branch
+         because the check is gated by dw_apis_allowed)
+                             |
+                +------------+------------+
+                v                         v
+      cso_toolkit_pull("v0.2.0")    do nothing (keep pinned)
+       * fetch files at the tag      * vendored vintage is
+       * sha256-diff vs vendored       frozen until the next
+       * prompt per file               explicit pull
+       * update the manifest
+       * log a summary</code></pre>
+<p>Reviewers always run against whatever vintage the producer has pinned. If a reviewer wants to validate against a <em>different</em> vintage, they cannot do it from a reviewer-mode session — they do it through a separate producer-mode session, refresh the pin there, and commit. The mode contract and the vendoring model are two halves of the same guarantee: the reviewer’s environment is frozen, and freezing the helper code is what makes the rest of the freeze meaningful.</p>
+</section>
+<section id="why-not-a-package-in-one-sentence" class="level2" data-number="12.6">
+<h2 data-number="12.6" class="anchored" data-anchor-id="why-not-a-package-in-one-sentence"><span class="header-section-number">12.6</span> Why not a package, in one sentence</h2>
+<p>A package model would let a consuming repo’s helper code drift independently of its git history, would fail offline, would surrender the upgrade decision to an installer, and would not fit Stata at all. Vendoring trades the small cost of an explicit refresh step for vintage permanence across three languages and any number of consumers — which is exactly the bargain a reproducibility-first toolkit should make.</p>
+<hr>
+<p>The vendoring model is the connective tissue of everything else in this book. The IO and API contracts are only reproducible because the code that enforces them is frozen in the consumer’s history; the mode contract’s offline reviewer path is only coherent because the helpers travel with the repo. The next chapter walks through onboarding a repository end to end — copying the helpers, writing the manifest, wiring the profile — as a concrete worked example of this model in practice.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../chapters/35-scaffolding-audit.html" class="pagination-link" aria-label="Scaffolding and the contract auditor">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Scaffolding and the contract auditor</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../chapters/42-onboarding-example.html" class="pagination-link" aria-label="Onboarding a repo: a worked example">
+        <span class="nav-page-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Onboarding a repo: a worked example</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>UNICEF Chief Statistician Office — Data &amp; Analytics (OSE)</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/unicef-drp/cso-toolkit/edit/main/book/chapters/41-vendoring.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/unicef-drp/cso-toolkit/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>Built with <a href="https://quarto.org">Quarto</a></p>
+</div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

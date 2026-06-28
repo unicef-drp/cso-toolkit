@@ -1,0 +1,491 @@
+# The IO contract
+
+Every analytics pipeline begins and ends with reading and writing files. In the DW-Production world, however, an unguarded `read_csv` or `to_csv` is a liability: it can silently overwrite a published deposit, leave a producer's only copy on a laptop, read a stale cached file with no provenance, or let a duplicate-keyed table into the warehouse. The IO contract is `cso-toolkit`'s answer to all of these. It is a small family of paired read and write helpers — chiefly `dw_save` and `dw_use` — that wrap ordinary language-native IO with three layers of discipline: auto-dispatch on the file extension, mode-aware path routing, and a uniqueness and integrity contract enforced at the call site.
+
+The toolkit promises parity — but not *full* parity. The same function names, the same arguments, and the same behaviour hold across R, Python, and Stata, so a sector that runs partly in R and partly in Stata uses one mental model on both sides. Where the languages must diverge, this chapter says where. Stata reads and writes only `.dta`, `.csv`, and `.xlsx`; it has no parquet, no RDS, no remote-URL fetch, and a few of the helpers below have no Stata sibling at all.
+
+## Orientation: five terms this chapter leans on
+
+Before the mechanics, five load-bearing terms. The whole argument of the chapter — every guard, every mirror, every warning — rests on them, so they are worth fixing in place first.
+
+- A **canonical deposit** is the permanent, published copy of a dataset. It is the version downstream work and external consumers depend on; once written for a given vintage it must never change.
+- Deposits live in two shared network stores. **Teams** is the SharePoint-synced document library that holds the canonical area; **Z:** is a network drive that mirrors it byte-for-byte. The toolkit treats a path under either store as canonical.
+- The **producer/reviewer mode** is a session-wide switch. In *producer* mode you write new deposits; in *reviewer* mode you may only read them, never overwrite canonical. Mode is a **session property**, never a per-call argument: it is set once by `dw_mode` in `~/.config/user_config.yml` and read by the consumer's profile at startup (see the chapter on wiring the contract into a repo). The profile makes the path globals (`teamsWrkData`, `teamsRawData`, and the `*Canonical` roots) mode-aware, and the helpers below resolve through them.
+- An **error envelope** is the toolkit's structured failure message: it always states WHAT failed, WHY, and HOW to fix it. The same shape is used for hard stops and for non-blocking warnings (see the error-taxonomy appendix).
+- **AppLocker** is the Windows policy on locked-down UNICEF laptops that blocks unsigned executables. It is why the Stata side never shells out to an external binary — a constraint that shapes two of the design boundaries below.
+
+The `kind` argument that appears throughout selects which of three data roots a path resolves against: `raw` (inputs), `wrk` (working outputs), or `meta` (metadata). The functions covered here are `dw_save`, `dw_use`, `dw_compare`, `dw_merge`, `dw_isid`, `dw_verify_z`, `dw_stage`, and `dw_root`. They live in `r/R/dw_io.R`, `python/src/dw_io.py`, and the `.ado` files under `stata/src/`.
+
+## Auto-dispatch by extension
+
+Both `dw_save` and `dw_use` choose their underlying reader or writer from the file extension. The caller never names a format; the path's suffix decides. This keeps call sites uniform: switching an output from CSV to parquet is a one-character edit to the filename, not a rewrite.
+
+Read the dispatch table below as three columns of parity — R and Python mirror each other almost exactly; Stata is the deliberate exception, and the first coverage gap.
+
+| Extension | R writer / reader | Python writer / reader | Stata |
+| --- | --- | --- | --- |
+| `.csv` / `.tsv` / `.txt` | `data.table::fwrite` / `fread` | `pandas.to_csv` / `read_csv` | yes (`.csv` only) |
+| `.csv.gz` / `.tsv.gz` | `fwrite(compress="gzip")` | `to_csv(compression="gzip")` | — |
+| `.xlsx` | `writexl` / `openxlsx`; `readxl` | `openpyxl` via pandas | yes |
+| `.dta` | `haven::write_dta` / `read_dta` | `pandas.to_stata` / `read_stata` | yes (native) |
+| `.rds` (R) / `.pkl` (Py) | `saveRDS` / `readRDS` | `pickle.dump` / `load` | — |
+| `.RData` / `.rda` | `save()` / `load()` | — | — |
+| `.parquet` | `arrow::write_parquet` / `read_parquet` | `pandas.to_parquet` / `read_parquet` | — |
+| `.json` | `jsonlite` | `json` / `to_json` | — |
+| `.yml` / `.yaml` | `yaml` | `PyYAML` | — |
+
+The R and Python rows are near-complete mirrors. The only deliberate split is the in-language binary format: R's `.rds` versus Python's `.pkl`, both serving the same "fast native object dump" role. Stata covers `.dta`, `.csv`, and `.xlsx`, and nothing else.
+
+::: {.callout-warning}
+## Stata format limits
+Parquet, RDS, and JSON reads and writes will not dispatch on the Stata side. A pipeline that needs a binary or columnar format in Stata routes the heavy step through R or Python and hands back a `.dta` (or `.csv`) that Stata can `use`. This is a permanent design boundary, not a missing feature: keeping Stata free of shell-outs and external binaries is what keeps the `.ado` helpers AppLocker-safe.
+:::
+
+## Writing: `dw_save`
+
+`dw_save` is the uniform writer. It resolves a path, optionally asserts row uniqueness, writes atomically, emits a provenance sidecar — a companion JSON recording who wrote the file, when, and how — and, in producer mode, fans the write out to redundant mirrors. In its simplest form it takes an object and a path:
+
+::: {.panel-tabset}
+## R
+```r
+dw_save(df, path = "out.csv")
+```
+## Python
+```python
+dw_save(df, path="out.csv")
+```
+## Stata
+```stata
+dw_save , filename("out") path("out") idvars(REF_AREA)
+```
+:::
+
+In practice you rarely pass a literal path. The structured call style lets the helper resolve the path through the mode-aware roots, so the same script lands in the canonical deposit in producer mode and in the local sandbox in reviewer mode with no change to the call. Three arguments do the work: `name` is the file basename, `sector` is the sector folder (`"ed"`, `"nt"`, ...), and `kind` selects the data root (`raw`, `wrk`, or `meta`, defaulting to `wrk`).
+
+::: {.panel-tabset}
+## R
+```r
+dw_save(df, name = "dw_ed_edu.csv", sector = "ed", kind = "wrk")
+```
+## Python
+```python
+dw_save(df, name="dw_ed_edu.csv", sector="ed", kind="wrk")
+```
+## Stata
+```stata
+dw_save , filename("dw_ed_edu") path("$teamsWrkData/ed") idvars(REF_AREA INDICATOR)
+```
+:::
+
+Note the Stata divergence in calling convention. R and Python accept the `name` / `sector` / `kind` triple, which resolves against the profile roots via `dw_resolve_path`; Stata's `dw_save` takes an explicit `path()` and `filename()`, with `idvars()` mandatory (the uniqueness check is not optional in Stata). The structured resolver — `name` / `sector` / `kind` plus the `dw_resolve_path` / `dw_root` machinery behind it — is an R and Python feature.
+
+### The uniqueness contract: `isid`
+
+Pass a key tuple and `dw_save` runs an `isid` check — asserting that the declared key columns uniquely identify every row — *before* writing a single byte. If any rows duplicate on the declared keys, the call stops with the duplicate count and a sample of the offending rows; the table never reaches disk. This is the toolkit's main guard against the classic warehouse defect of a silently double-counted series.
+
+::: {.panel-tabset}
+## R
+```r
+dw_save(df, name = "dw_ed_edu.csv", sector = "ed", kind = "wrk",
+        isid = c("DATAFLOW", "REF_AREA", "INDICATOR", "SEX",
+                 "WEALTH_QUINTILE", "RESIDENCE", "TIME_PERIOD"))
+```
+## Python
+```python
+dw_save(df, name="dw_ed_edu.csv", sector="ed", kind="wrk",
+        isid=["DATAFLOW", "REF_AREA", "INDICATOR", "SEX",
+              "WEALTH_QUINTILE", "RESIDENCE", "TIME_PERIOD"])
+```
+## Stata
+```stata
+dw_save , filename("dw_ed_edu") path("$teamsWrkData/ed") ///
+    idvars(DATAFLOW REF_AREA INDICATOR SEX WEALTH_QUINTILE RESIDENCE TIME_PERIOD)
+```
+:::
+
+In R and Python `isid` is an optional argument; in Stata `idvars()` is required. The same check is also exposed standalone as `dw_isid` (see below).
+
+### The provenance sidecar
+
+Every successful write (except R's `.RData` / `.rda`) emits a companion `<path>.provenance.json` next to the file. It records when the file was written, by whom, in which mode, the content hash, the schema (rows, columns, column names), the `isid` keys used, and any free-form metadata you supply. Pass `metadata` to make the sidecar self-describing:
+
+::: {.panel-tabset}
+## R
+```r
+dw_save(df, name = "dw_ed_edu.csv", sector = "ed", kind = "wrk",
+        metadata = list(
+          title    = "Education indicators — UNICEF DW format",
+          producer = "01_dw_prep/012_codes/ed/02_aggregate_uis_sdg.R",
+          sources  = c("UIS bulk SDG_092025", "WPP 2024"),
+          contact  = "@karavan88",
+          vintage  = "2026-05"
+        ))
+```
+## Python
+```python
+dw_save(df, name="dw_ed_edu.csv", sector="ed", kind="wrk",
+        metadata={
+          "title": "Education indicators — UNICEF DW format",
+          "producer": "01_dw_prep/012_codes/ed/02_aggregate_uis_sdg.py",
+          "sources": ["UIS bulk SDG_092025", "WPP 2024"],
+          "vintage": "2026-05",
+        })
+```
+## Stata
+```stata
+dw_save , filename("dw_ed_edu") path("$teamsWrkData/ed") ///
+    idvars(REF_AREA INDICATOR)                          ///
+    title("Education indicators")                       ///
+    producer("01_dw_prep/012_codes/ed/example.do")      ///
+    sources("UIS bulk SDG_092025")                      ///
+    contact("@karavan88")                               ///
+    vintage("2026-05")
+```
+:::
+
+On the Stata side, `title()`, `producer()`, `sources()`, `contact()`, and `vintage()` are dedicated options; arbitrary extra fields go through a semicolon-separated `metadata("key1 value1; key2 value2")` option. Stata also offers `nosidecar` to skip the sidecar entirely and `nocompress` to skip the `compress` step.
+
+The sidecar schema is shared across all three languages, with one deliberate substitution: R and Python record a file-level **SHA-256**, while Stata records its native `datasignature` (a content hash of the dataset's values, not a hash of the file's bytes). The reason is the same AppLocker constraint that excludes the binary formats — computing SHA-256 in Stata would mean shelling out to an external binary. The practical consequence is that cross-tool integrity comparisons must compare *content* hashes, not *file* hashes. The full schema is documented in the provenance-sidecar appendix.
+
+In R and Python, the sidecar write is wrapped so that a non-serialisable metadata value (a `Date` object or a numpy scalar, say) emits a warning rather than rolling back the primary write — the asset is what matters; the sidecar is metadata about it.
+
+### Mode-aware write routing
+
+Mode-aware routing is the contract's central feature, and it does two opposite jobs depending on the session mode: it *blocks* unsafe writes in reviewer mode, and it *duplicates* safe writes in producer mode.
+
+**Reviewer mode refuses to write to a canonical deposit.** Any write whose resolved path lands under a canonical Teams root or under the configured Z: drive root stops with the error envelope. Reviewer sessions must keep canonical deposits read-only so that a published vintage stays permanent. The Z: branch is the v0.4.0 broadening of the guard; earlier versions refused only canonical writes. For a deliberate Database Manager bootstrap, pass the bypass flag:
+
+::: {.panel-tabset}
+## R
+```r
+dw_save(df, path = canonical_path, allow_canonical_write = TRUE)
+```
+## Python
+```python
+dw_save(df, path=canonical_path, allow_canonical_write=True)
+```
+## Stata
+```stata
+dw_save , filename("dw_ed_edu") path("$teamsWrkDataCanonical/ed") ///
+    idvars(REF_AREA) allow_canonical_write
+```
+:::
+
+In R the guard raises `stop()`; in Python it raises `PermissionError`; in Stata it raises error 459. All three carry the same WHAT / WHY / HOW envelope (see the error-taxonomy appendix).
+
+**Producer mode mirrors redundantly.** A producer's output must never live only on the producer's laptop. So in producer mode each successful primary write is carbon-copied — along with its sidecar — to both its Teams canonical equivalent and its Z: drive equivalent, whichever are configured. The helper performs a pre-flight check: if *neither* mirror is reachable, `dw_save` hard-stops before writing, because the deposit would not be recoverable. Each mirror copy is non-blocking: a failure to reach Teams or Z: after the primary write emits an envelope-shaped warning (tagged "Teams mirror" or "Z: mirror") but does not roll back the primary.
+
+::: {.callout-note}
+## `mirror_to_z` is gone
+In v0.3.0 you chose mirroring per call with a `mirror_to_z` argument. From v0.4.0 mirroring is automatic and paired, driven entirely by which remote roots the profile makes available. `dw_save` still accepts the old argument but ignores it, with a deprecation warning.
+:::
+
+The Z: drive matters here because it is a carbon copy of the Teams canonical deposit. A path under Z: is therefore *also* a canonical artifact: reviewer writes to it are barred, and reviewer reads of an explicit Z: path run the integrity check described below.
+
+### The overwrite gate
+
+`dw_save` will not silently clobber an existing deposit, and the default behaviour is mode-aware. The `overwrite` argument is a sentinel: when left at its default it resolves to *permissive* in reviewer mode (the local sandbox is gitignored and safe to re-run) and *strict* in producer mode (re-running against the canonical deposit demands a deliberate decision). When the check runs strict, it examines **every** destination that will actually be written — primary, Teams mirror, and Z: mirror — and stops if any of them already exists.
+
+::: {.panel-tabset}
+## R
+```r
+# overwrite defaults to a mode-aware sentinel (NULL); pass TRUE to replace.
+dw_save(df, name = "dw_ed_edu.csv", sector = "ed", kind = "wrk",
+        overwrite = TRUE)
+```
+## Python
+```python
+# In Python the default is the strict value (overwrite=False); pass True to replace.
+dw_save(df, name="dw_ed_edu.csv", sector="ed", kind="wrk",
+        overwrite=True)
+```
+## Stata
+```stata
+* Stata always writes with `save, replace`; the canonical / Z: write barrier
+* is enforced by the reviewer-mode guard above, not by an overwrite flag.
+dw_save , filename("dw_ed_edu") path("$teamsWrkData/ed") idvars(REF_AREA)
+```
+:::
+
+The mode-aware sentinel is an R refinement. In R, `overwrite = NULL` resolves to `TRUE` in reviewer mode and `FALSE` in producer mode; Python's `overwrite` defaults to a plain `False` in every mode. Stata has no `overwrite` option at all: its `save, replace` always replaces the primary, and the canonical and Z: deposits are protected by the reviewer-mode guard rather than by an existence check.
+
+In R there is one further safety stage: overwriting an *existing producer deposit* is treated as destructive even when `overwrite` is true. Interactively `dw_save` prompts `[y/N]`; non-interactively it stops unless you also pass `force = TRUE` for a deliberate automated re-deposit.
+
+### Other writing behaviours
+
+- **Atomic writes.** R and Python both write to a `.tmp` sibling and rename into place, so a crash mid-write never leaves a half-written deposit at the canonical name. Stata writes via `save, replace`.
+- **Compression.** For CSV / TSV / TXT, `compress = TRUE` appends `.gz` and gzips. If the path already ends in `.gz`, compression auto-enables — there is no foot-gun where you ask for `.gz` but get an uncompressed file.
+- **CSV dialect (R only).** A `dialect` argument selects between `data.table::fwrite` (the default) and a `utils::write.table` path that preserves byte-parity with legacy `utils::write.csv()` output, for sector scripts that depend on the old bytes. The `base` dialect is incompatible with `compress = TRUE` and raises an explanatory error rather than failing silently.
+
+## Reading: `dw_use`
+
+`dw_use` is the read counterpart: same path resolution, same extension dispatch. By default R returns a tibble; pass `as = "data.frame"` or `as = "data.table"` to change the shape. Python returns a pandas `DataFrame` for tabular formats. Stata loads the dataset into memory.
+
+::: {.panel-tabset}
+## R
+```r
+edu <- dw_use(name = "dw_ed_edu.csv", sector = "ed", kind = "wrk")
+edu <- dw_use(path = "C:/path/to/file.parquet")
+```
+## Python
+```python
+edu = dw_use(name="dw_ed_edu.csv", sector="ed", kind="wrk")
+edu = dw_use(path="/path/to/file.parquet")
+```
+## Stata
+```stata
+dw_use , filename("dw_ed_edu.dta") path("$teamsWrkData/ed")
+```
+:::
+
+### Mode-aware read routing
+
+Reads, like writes, branch on the session mode — but in the *opposite* direction, because the goal here is provenance, not protection.
+
+- **Producer / unknown mode (local-first).** Try the literal path; if it is missing and `fallback_canonical` is on (the default), walk the `teams*Data → teams*DataCanonical` prefix map and read the canonical copy.
+- **Reviewer mode (network-first).** Try the Teams canonical equivalent first, then the Z: mirror, then fall back to the repo-local copy — but that last step emits an envelope-shaped warning, because a reviewer reading a local copy is reading bytes of unverified provenance. If the file is absent in all three places, `dw_use` raises an error pointing the reviewer at the sector producer. Disable the local fallback with `fallback_canonical = FALSE` (in Stata, the `nofallback_canonical` option) to fail fast instead.
+
+The reviewer warning is the auditable signal of a provenance gap; it is meant to be noisy.
+
+### Column subsetting: strict and lenient
+
+`dw_use` accepts a `cols` vector to restrict the read. The default is **strict**: every requested column must exist in the file's schema, matching the contract of the underlying readers (`fread(select=)`, `read_parquet(col_select=)`, `read_dta(col_select=)`, pandas `usecols`). On the Stata side, `cols()` is a column subset on the dispatched `.dta` / `.csv` / `.xlsx`.
+
+R adds a `cols_lenient = TRUE` flag that flips to "select if present" semantics: it introspects the file's schema cheaply (parquet metadata, or a header-only read for dta / csv / xlsx), intersects the request with the actual columns, silently drops the missing ones, and — on an empty intersection — warns and reads all columns. The point is to give sector scripts the `dplyr::any_of()` intent *inside* `dw_use`, because calling `any_of()` at the top level errors fatally under tidyselect ≥ 1.2.0.
+
+::: {.panel-tabset}
+## R
+```r
+# Strict (default): errors if a requested col is missing from the schema
+df <- dw_use(path = parquet_path, cols = c("REF_AREA", "OBS_VALUE"))
+
+# Lenient: intersect with the file's actual schema; missing cols dropped
+df <- dw_use(path = parquet_path,
+             cols = c("REF_AREA", "OBS_VALUE", "MAYBE_PRESENT_COL"),
+             cols_lenient = TRUE)
+```
+## Python
+```python
+# Strict column subset (pandas usecols / columns= semantics)
+df = dw_use(path=parquet_path, cols=["REF_AREA", "OBS_VALUE"])
+```
+## Stata
+```stata
+* Stata cols() subsets the dispatched .dta / .csv / .xlsx
+dw_use , filename("dw_ed_edu.dta") path("$teamsWrkData/ed") ///
+    cols(REF_AREA OBS_VALUE)
+```
+:::
+
+The `cols_lenient` flag and its metadata-only schema introspection are an R-side feature; Python and Stata offer the strict subset only.
+
+::: {.callout-note}
+## A read bug worth remembering
+Before v0.4.3, R's `dw_use(parquet_path)` with no `cols` passed `col_select = NULL` to Arrow, which Arrow read as "select zero columns" — returning an empty-column tibble. The dta branch had the same defect. From v0.4.3 the helper passes `col_select` only when `cols` is non-NULL, so a bare `dw_use(path)` reliably returns all columns. If you see a zero-column read from an old vendored copy, this is why; bump the vendored version.
+:::
+
+### The Z: integrity check
+
+When a read resolves to a *canonical* file and Z: is available, `dw_use` automatically compares the Teams copy against its Z: mirror. By default this is a fast file-size check; a mismatch emits a warning but the read still completes (with the Teams data). Pass `verify_z = "sha256"` for a deep hash comparison, or `verify_z = FALSE` (in Stata, `verify_z(off)`) to skip it. On the Stata side the deep comparison uses `datasignature` and only applies to the `.dta` path. The check is exposed standalone as `dw_verify_z`.
+
+## The lower-level and resolver helpers
+
+### `dw_isid` — standalone uniqueness check
+
+The uniqueness assertion `dw_save` runs internally is also callable on its own, for validating an in-memory frame mid-pipeline:
+
+::: {.panel-tabset}
+## R
+```r
+dw_isid(df, keys = c("REF_AREA", "TIME_PERIOD"))
+```
+## Python
+```python
+dw_isid(df, keys=["REF_AREA", "TIME_PERIOD"])
+```
+## Stata
+```stata
+* Stata uses the built-in isid; dw_save enforces it via idvars()
+isid REF_AREA TIME_PERIOD
+```
+:::
+
+It stops with the duplicate count and a sample of offending rows on failure, and it also catches the easy mistake of naming a key column that does not exist in the data.
+
+### `dw_verify_z` — Z: mirror integrity
+
+`dw_verify_z` returns a status list (`match_size`, `size_mismatch`, `match_sha256`, `sha256_mismatch`, `z_missing`, `no_z_mirror`, ...) rather than stopping, so callers decide what to do with a mismatch. It is the building block behind `dw_use`'s automatic check. This is an R and Python helper; on the Stata side the equivalent check is folded into `dw_use` (size by default, `datasignature` deep check on request) and is not separately exposed.
+
+### `dw_root` — mode-aware data root
+
+`dw_root("wrk" | "raw" | "meta")` returns the absolute path to one of the three vendored data roots, already resolved for the current mode. Sector scripts use it to build paths without knowing whether they are in producer or reviewer mode:
+
+```r
+final_path <- file.path(dw_root("wrk"), "nt", "2025", "dw_nut.csv")
+```
+
+This is an R helper. The richer structured resolver, `dw_resolve_path(name=, sector=, kind=, vintage=)`, is the full path-builder that `dw_save` and `dw_use` call internally; it is available in both R and Python.
+
+### `dw_stage` — reviewer-mode sandbox staging
+
+`dw_stage` (R only) is an opt-in reviewer helper that copies a canonical input from Z: (preferred) or Teams into the local sandbox the first time a script needs it, verifies the copy's hash against the source, and archives that hash in a `<path>.staged.json` sidecar. On every later run it re-checks the sandbox copy against the archived hash before letting the read proceed. It is a no-op outside reviewer mode.
+
+The lifecycle has five states:
+
+- **First stage** — the sandbox copy is missing, so copy from the first available source (Z: before Teams), re-hash the copy against the source, and archive the hash.
+- **Clean later run** — the sandbox copy still matches its archived hash; skip the copy and return the sandbox path.
+- **Sandbox drift** — the staged copy was modified out of band; stop with the SANDBOX DRIFT envelope.
+- **Forced re-stage** — `overwrite = TRUE` unconditionally re-copies, re-verifies, and re-archives.
+- **Upstream changed** — the canonical source moved on; warn, but do not auto-refresh, because rolling canonical inputs forward is the reviewer's explicit decision.
+
+When both Z: and Teams hold the file, the two are hash-compared before either is used; disagreement is a canonical-integrity stop.
+
+You rarely call `dw_stage` directly. The usual path is to let `dw_use` invoke it, per call or globally:
+
+::: {.panel-tabset}
+## R
+```r
+# Per-call opt-in: stage the canonical input into the sandbox, then read it
+df <- dw_use(name = "dw_nut.csv", sector = "nt", kind = "wrk", stage = TRUE)
+
+# Or globally, in the profile:
+#   dw_autostage <- TRUE
+```
+## Python
+```python
+# Not available — dw_stage is an R-only helper.
+df = dw_use(name="dw_nut.csv", sector="nt", kind="wrk")
+```
+## Stata
+```stata
+* Not available — dw_stage is an R-only helper.
+dw_use , filename("dw_nut.dta") path("$teamsWrkData/nt")
+```
+:::
+
+`dw_stage` and `dw_use`'s `stage =` integration are R-only. The `.staged.json` sidecar is deliberately distinct from `dw_save`'s `.provenance.json`, so a file that is both written by `dw_save` and staged by `dw_stage` carries both metadata blocks side by side; each reader refuses to misread the other's schema by checking a `type` discriminator.
+
+## Comparing and joining
+
+### `dw_compare` — three-way diff against a reference
+
+`dw_compare` answers "what changed since the last deposit?" It keys two data frames on `by`, then classifies rows as **added** (present in current, absent in reference), **removed** (the reverse), and **changed** (present in both, with a differing value column). Numeric columns can compare within a tolerance; string columns normalise missing-equivalents (`""`, `"NA"`, `"N/A"`, `"NULL"`, `"."`) to equal. In R and Python it returns a list with a one-row `summary` plus the `added`, `removed`, and `changed` frames, and can optionally write per-segment CSV reports.
+
+::: {.panel-tabset}
+## R
+```r
+report <- dw_compare(
+  current   = dw_use(name = "dw_ed_edu.csv", sector = "ed", kind = "wrk"),
+  reference = dw_use(path = file.path(teamsWrkDataCanonical, "ed/dw_ed_edu.csv")),
+  by         = c("DATAFLOW", "REF_AREA", "INDICATOR", "SEX",
+                 "WEALTH_QUINTILE", "TIME_PERIOD"),
+  value_cols = c("OBS_VALUE", "DATA_SOURCE"),
+  numeric_value_cols = "OBS_VALUE",
+  tol        = 1e-5,
+  label      = "ed_dw_edu",
+  write_report_to = file.path(tempdir(), "ed_compare")
+)
+report$summary
+```
+## Python
+```python
+report = dw_compare(
+    current=dw_use(name="dw_ed_edu.csv", sector="ed", kind="wrk"),
+    reference=dw_use(path=ref_path),
+    by=["DATAFLOW", "REF_AREA", "INDICATOR", "SEX",
+        "WEALTH_QUINTILE", "TIME_PERIOD"],
+    value_cols=["OBS_VALUE", "DATA_SOURCE"],
+    numeric_value_cols=["OBS_VALUE"],
+    tol=1e-5,
+    label="ed_dw_edu",
+)
+report["summary"]
+```
+## Stata
+```stata
+* idvars / valuevars / tol / report / label; compares two .dta files
+dw_compare , current("dw_ed_edu.dta") reference("ref_dw_ed_edu.dta") ///
+    idvars(DATAFLOW REF_AREA INDICATOR SEX WEALTH_QUINTILE TIME_PERIOD) ///
+    valuevars(OBS_VALUE) tol(0.00001) label("ed_dw_edu")
+```
+:::
+
+`dw_compare` tolerates a degenerate first deposit gracefully: in R and Python a missing or unreadable reference is treated as empty (with a warning), so every current row reports as added rather than crashing the run. Note the divergences. R and Python name the arguments `value_cols` / `numeric_value_cols`; Stata uses `valuevars` and infers numeric-versus-string comparison from each variable's storage type. The numeric tolerance defaults differ too — `1e-5` in R and Python, `1e-8` in Stata — so set `tol` explicitly when it matters. The Stata `dw_compare` prints a console summary and, via `report()`, an optional Markdown file of row counts and per-column change counts; it is sized for a publication-gate diff, not the rich row-level Markdown of its upstream `comparefiles` ancestor.
+
+### `dw_merge` — Stata-style join with cardinality assertion
+
+`dw_merge` is a join that *asserts its cardinality*. You declare `how` as one of `m:1`, `1:1`, `1:m`, or `m:m`, and the helper warns when the actual duplication of the keys on either side disagrees with what you declared — catching the silent fan-out that turns a clean join into a row explosion. The `using` side can be a data frame already in memory or a path string, which is auto-read through `dw_use`.
+
+::: {.panel-tabset}
+## R
+```r
+enriched <- dw_merge(
+  edu_sdg_uis,
+  using = file.path(teamsRawData, "ed/metadata/regions.csv"),
+  by    = "ISO3",
+  how   = "m:1"
+)
+```
+## Python
+```python
+enriched = dw_merge(
+    edu_sdg_uis,
+    using=os.path.join(teamsRawData, "ed/metadata/regions.csv"),
+    by="ISO3",
+    how="m:1",
+)
+```
+## Stata
+```stata
+* Stata has the native `merge`, which already takes the cardinality;
+* dw_merge is an R / Python helper.
+merge m:1 ISO3 using "regions.dta"
+```
+:::
+
+Under the hood `dw_merge` is a left join; the value it adds over a bare join is the cardinality warning. It is an R and Python helper — Stata's built-in `merge m:1 / 1:1 / ...` already carries the cardinality declaration natively, so no wrapper is shipped.
+
+## Putting it together
+
+A typical producer step reads its inputs, prepares the data, asserts uniqueness, and deposits the result with provenance — all through the contract, so the same script runs unmodified in reviewer mode (reading network-first, writing only to the sandbox) and in producer mode (reading local-first, writing redundantly to Teams and Z:):
+
+::: {.panel-tabset}
+## R
+```r
+raw <- dw_use(name = "uis_sdg.parquet", sector = "ed", kind = "raw")
+edu <- aggregate_indicators(raw)          # ... your prep ...
+
+dw_save(edu, name = "dw_ed_edu.csv", sector = "ed", kind = "wrk",
+        isid = c("REF_AREA", "INDICATOR", "TIME_PERIOD"),
+        metadata = list(title = "Education indicators",
+                        producer = "ed/02_aggregate.R",
+                        sources = c("UIS bulk SDG_092025"),
+                        vintage = "2026-05"))
+```
+## Python
+```python
+raw = dw_use(name="uis_sdg.parquet", sector="ed", kind="raw")
+edu = aggregate_indicators(raw)           # ... your prep ...
+
+dw_save(edu, name="dw_ed_edu.csv", sector="ed", kind="wrk",
+        isid=["REF_AREA", "INDICATOR", "TIME_PERIOD"],
+        metadata={"title": "Education indicators",
+                  "producer": "ed/02_aggregate.py",
+                  "sources": ["UIS bulk SDG_092025"],
+                  "vintage": "2026-05"})
+```
+## Stata
+```stata
+* uis_sdg is .parquet upstream; the producer hands Stata a .dta to consume.
+dw_use , filename("uis_sdg.dta") path("$teamsRawData/ed")
+* ... your prep ...
+dw_save , filename("dw_ed_edu") path("$teamsWrkData/ed") ///
+    idvars(REF_AREA INDICATOR TIME_PERIOD)              ///
+    title("Education indicators")                       ///
+    producer("ed/02_aggregate.do")                      ///
+    sources("UIS bulk SDG_092025")                      ///
+    vintage("2026-05")
+```
+:::
+
+The roles and mode-contract chapter explains how the producer/reviewer switch is set and what each role may do; the external-API chapter covers the remote-fetch side of IO (which, on the Stata side, must route through R or Python — Stata has no API wrapper); and the provenance-sidecars chapter and the appendices give the sidecar schema, the error taxonomy, the full function reference, and the cross-language coverage matrix that this chapter has summarised in prose.

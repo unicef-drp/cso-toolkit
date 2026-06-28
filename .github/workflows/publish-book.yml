@@ -1,0 +1,57 @@
+name: Handbook (Quarto book)
+
+# Builds the handbook (book/) and publishes it into docs/handbook/. The
+# `dashboard` workflow is the single GitHub Pages deployer (it uploads the whole
+# docs/ tree), so this workflow does NOT deploy — it only renders + commits
+# docs/handbook/, which dashboard.yml then ships to Pages. See the coexistence
+# note in dashboard.yml. On pull requests it render-validates only.
+
+on:
+  push:
+    branches: [develop]
+    paths: ['book/**', '.github/workflows/publish-book.yml']
+  pull_request:
+    paths: ['book/**', '.github/workflows/publish-book.yml']
+  workflow_dispatch:
+
+concurrency:
+  group: handbook-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: quarto-dev/quarto-actions/setup@v2
+      - name: Render handbook
+        run: quarto render book
+
+      - name: Sync into docs/handbook (PR = validate only)
+        if: github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+          rm -rf docs/handbook
+          mkdir -p docs/handbook
+          cp -r book/_book/. docs/handbook/
+        shell: bash
+
+      - name: Commit refreshed handbook
+        if: github.event_name != 'pull_request'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/handbook
+          if git diff --cached --quiet; then
+            echo "No handbook changes to commit."
+          else
+            git commit -m "chore(handbook): rebuild docs/handbook [skip ci]"
+            # Protected-branch pushes by the bot may be rejected; that must not
+            # fail the job. dashboard.yml redeploys docs/ on its own cadence.
+            git push || echo "::warning::commit-back rejected (protected branch); re-render docs/handbook locally and commit"
+          fi
+        shell: bash

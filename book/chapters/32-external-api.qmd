@@ -1,0 +1,301 @@
+# The external-API contract
+
+A reproducible analysis must be able to re-run today and produce the same numbers it produced last month — even if a remote statistical agency has since revised its figures, renamed an indicator, or simply gone down for maintenance. Yet most analytics code reaches for live data with bare calls to `fromJSON()`, `rsdmx::readSDMX()`, `wbstats::wb_data()`, `httr::GET`, `requests.get()`, or `wbgapi`. Each such call is a silent dependency on the network and on whatever the upstream server happens to be serving at that instant. The external-API contract removes that fragility. It gives every consumer of `cso-toolkit` a single, mode-aware wrapper that fetches once, freezes the result to a provenance-stamped cache, and thereafter reads from the frozen copy.
+
+Three roles govern who may touch the network. A *producer* (a session running in producer mode) hits the live API and populates the cache; a *reviewer* (a session running in reviewer mode) reads the frozen cache and is forbidden from touching the network at all; and the *Database Manager* — the team member who owns the deposit — is the producer who decides when each cache is refreshed. These are session modes and a stewardship role, not three separate job titles: the same person is a producer one day and a reviewer the next, depending on how their session is configured. The roles-and-mode contract chapter defines all three in full; this chapter shows how the API wrapper enforces them.
+
+This chapter documents the three public entry points of the contract — `dw_api_fetch`, `dw_api_cached`, and `dw_api_inventory` — the ten external sources they cover, the cache layout and provenance sidecars they emit, and the producer/reviewer behaviour that makes the whole thing reproducible. It builds on the roles-and-mode contract (the chapter on roles and the mode contract), on the IO contract (the wrapper writes and reads its cache through `dw_save` and `dw_use`, covered in the IO contract chapter), and on the provenance-sidecar and error-envelope conventions (the provenance-sidecars chapter and the error-taxonomy chapter).
+
+## Why a wrapper at all
+
+Calling a remote API directly couples three concerns that ought to be separate: *what* you want (an indicator, a codelist, a flow), *how* you reach it (the package, the URL shape, the auth), and *when* it was last retrieved. The wrapper separates them. You name the source with a short `api =` string, you name the result with a stable `cache_key`, and the wrapper dispatches to the right package, builds the URL, retries or fails with a readable error, writes the result to disk, and records the provenance of the fetch. A sector script stops being a tangle of bespoke HTTP and becomes a manifest of named fetches.
+
+The reference material records one migration in which fourteen hand-coded SDMX codelist GETs — about 290 lines of repeated `httr::GET` / `stop_for_status` / JSON-unwrap boilerplate — collapsed into roughly fifty lines: a small manifest tibble and a loop over `dw_api_fetch(api = "sdmx_codelist", ...)`.
+
+## The three entry points
+
+The contract exposes exactly three public functions. They share names across R and Python. Stata, as noted below, ships only the enforcement half of the contract and has no fetch functions of its own.
+
+`dw_api_fetch(api, cache_key, ...)` is the workhorse. It checks the cache first; on a miss it either fetches live (producer) or stops (reviewer). Its signature also accepts `refresh`, `ext`, and `metadata` keywords, described in the sections that follow, plus per-source arguments that flow through `...` to the internal fetcher. `dw_api_cached(api, cache_key)` is the explicit cache-only reader — it never touches the network under any mode, and raises if the cache is absent. `dw_api_inventory(api = NULL)` lists what has already been cached, reading the provenance sidecars so the Database Manager can audit freshness.
+
+::: {.panel-tabset}
+## R
+```r
+# Fetch (or read cache): one named source, one stable cache key.
+entrance_age_primary <- dw_api_fetch(
+  api       = "uis",
+  endpoint  = "indicators",
+  params    = list(indicator = "299905"),
+  cache_key = "uis_entrance_age_primary"
+)
+
+# Cache-only read; never hits the network, stops if absent.
+lp <- dw_api_cached(api = "wb", cache_key = "wb_learning_poverty_primary")
+
+# What is already cached?
+dw_api_inventory("wb")
+```
+
+## Python
+```python
+from cso_toolkit import dw_api_fetch, dw_api_cached, dw_api_inventory
+
+entrance_age_primary = dw_api_fetch(
+    api="uis",
+    endpoint="indicators",
+    params={"indicator": "299905"},
+    cache_key="uis_entrance_age_primary",
+)
+
+# Raises FileNotFoundError if no cache exists.
+lp = dw_api_cached(api="wb", cache_key="wb_learning_poverty_primary")
+
+dw_api_inventory("wb")
+```
+
+## Stata
+```stata
+* Stata has no API fetcher. There is no dw_api_fetch / dw_api_cached /
+* dw_api_inventory in the Stata package. A Stata sector script that needs
+* external data either reads a frozen cache that an R or Python producer
+* already deposited (via dw_use), or asserts the no-API contract before any
+* live network call it might make of its own:
+dw_require_no_api , context("ed/06_pull_uis")
+```
+:::
+
+::: {.callout-note}
+## Stata coverage is partial by design
+The Stata package ships `dw_require_no_api` — the reviewer-mode gate that aborts a live network call with Stata error 459 (a generic assertion failure) — but it ships **no** `dw_api_fetch`, `dw_api_cached`, or `dw_api_inventory`. There is no Stata API wrapper. The intended pattern is to let an R or Python producer populate the `_apis/` cache and have Stata read the frozen result through `dw_use`. Treat the Stata tab in this chapter as "route via R/Python," not as parity. The cross-language coverage matrix appendix records the full picture.
+:::
+
+## The mode contract, applied to the network
+
+The *session mode* — not an argument — controls how `dw_api_fetch` behaves. There is deliberately no `mode =` parameter on the fetch function. Mode is a session property: it is set in `user_config.yml` as `dw_mode` and read by the repo's profile; in Python it lives on the shared `_state` module. The profile derives a second switch from it, `dw_apis_allowed`, which is set to `True` exactly when `dw_mode == "producer"`. That boolean is the operative gate the wrapper actually tests before it reaches the network, so the two switches are not independent: `dw_apis_allowed` is the wrapper-facing spelling of producer mode. The Python examples in this chapter configure `dw_apis_allowed=True` directly because they stand alone without a profile; in a real consumer, the profile sets it for you when the mode is `producer`.
+
+The full matrix:
+
+| Session  | Cache state                              | Action |
+|----------|-------------------------------------------|--------|
+| Producer | cache present, `refresh = FALSE`          | reads the cache |
+| Producer | cache missing **or** `refresh = TRUE`     | hits the live API, writes the cache (via `dw_save`), returns the result |
+| Reviewer | cache present (canonical)                  | reads the cache |
+| Reviewer | cache missing                              | **STOPS** — `dw_require_no_api()` in R, `PermissionError` in Python |
+
+Two refinements matter. First, the cache lookup is two-tiered: on a non-refresh call the wrapper looks in the producer sandbox path (`teamsRawData`) first and then falls back to the canonical read-only path (`teamsRawDataCanonical`). A reviewer therefore reads from the frozen canonical deposit even when no sandbox copy exists. (Both roots are introduced in the IO contract chapter; here they serve only as the two tiers of the cache lookup.) Second, `refresh = TRUE` is a producer-only escape hatch: it forces a live fetch even when a cache is present, and is how the Database Manager deliberately re-pulls a source on a schedule the team owns.
+
+The reviewer lockout is loud and instructive rather than a bare error. In Python, a missing cache under reviewer mode raises `PermissionError` naming the offending call, the path it expected, and a two-step fix (verify the Database Manager populated the canonical cache, or switch to producer mode via `_state.configure(...)`). In R the equivalent stop comes from `dw_require_no_api()`, the profile-defined guard that aborts with `[X] External API access is forbidden in reviewer mode.` The Stata sibling, for any live call a Stata script makes directly, aborts with the same envelope shape and Stata error 459.
+
+## The supported sources
+
+The wrapper dispatches on the `api =` string. Both the R implementation and the Python port support the same ten values. Each maps to a thin internal fetcher that knows the URL shape for that source and imports its package lazily — that is, the package is loaded only when that source is actually fetched, so a consumer that never touches SDMX need not have `rsdmx` or `sdmx1` installed.
+
+| `api =` value     | Source / what it replaces                                              | R package        | Python package | Key arguments |
+|-------------------|------------------------------------------------------------------------|------------------|----------------|---------------|
+| `"uis"`           | UNESCO UIS REST (`fromJSON("https://api.uis.unesco.org/...")`)         | `jsonlite`       | `requests`     | `endpoint`, `params` |
+| `"sdmx"`          | Generic SDMX data, any provider (`rsdmx::readSDMX`)                    | `rsdmx`          | `sdmx1`        | `providerId`, `flowRef`, `key`, `version`, `start`, `end` |
+| `"sdmx_codelist"` | UNICEF SDMX codelist → `(code, name, description)` (`httr::GET` + JSON)| `httr`, `tibble` | `requests`     | `agency`, `codelist`, `version` |
+| `"wb"`            | World Bank WDI (`wbstats::wb_data` / `wbgapi.data`)                    | `wbstats`        | `wbgapi`       | `indicator`, `start_date`, `end_date` |
+| `"wb_indicators"` | World Bank indicator catalogue                                        | `wbstats`        | `wbgapi`       | (catalogue query) |
+| `"ilo"`           | ILO SDMX (`rsdmx::readSDMX(providerId = "ILO")`)                       | `rsdmx`          | `sdmx1`        | `flowRef`, `key`, `start`, `end` |
+| `"unsd_sdg"`      | UNSD SDG API (`httr::POST .../Series/DataCSV`, form-encoded)           | `httr`, `readr`  | `requests`     | `series_codes`, `endpoint` |
+| `"github_raw"`    | Pinned-commit `raw.githubusercontent.com` fetch                       | `readr`          | `requests`     | `owner_repo`, `ref`, `path` |
+| `"http"`          | Generic HTTP GET returning text (`httr::GET`)                         | `httr`           | `requests`     | `url`, `headers` |
+| `"json_get"`      | Generic JSON GET → parsed object (`jsonlite::fromJSON`)               | `jsonlite`       | `requests`     | `url` |
+
+One serialisation default is worth calling out. Several sources return shapes that do not flatten cleanly into CSV — a nested JSON tree, plain text, the World Bank catalogue's list-columns, or arbitrary content fetched by `github_raw`. Both languages therefore default those four sources — `wb_indicators`, `json_get`, `http`, and `github_raw` — to a non-tabular serialisation: RDS in R, pickle (`pkl`) in Python. The remaining six default to CSV. The `ext =` argument lets a caller override the per-API default when needed, for example to force a UIS response into a non-tabular cache:
+
+::: {.panel-tabset}
+## R
+```r
+# Force a non-tabular cache when the response isn't flat-rectangular.
+raw_tree <- dw_api_fetch(
+  api       = "uis",
+  endpoint  = "indicators",
+  params    = list(indicator = "299905"),
+  cache_key = "uis_entrance_age_primary_raw",
+  ext       = "rds"
+)
+```
+
+## Python
+```python
+raw_tree = dw_api_fetch(
+    api="uis",
+    endpoint="indicators",
+    params={"indicator": "299905"},
+    cache_key="uis_entrance_age_primary_raw",
+    ext="pkl",
+)
+```
+
+## Stata
+```stata
+* n/a — no Stata fetcher; the producer chooses ext on the R/Python side.
+```
+:::
+
+A few worked calls, side by side:
+
+::: {.panel-tabset}
+## R
+```r
+# UNICEF SDMX codelist (one of the 14 collapsed into a loop)
+codebook_residence <- dw_api_fetch(
+  api       = "sdmx_codelist",
+  agency    = "UNICEF",
+  codelist  = "CL_RESIDENCE",
+  version   = "1.0",
+  cache_key = "sdmx_codelist_UNICEF_CL_RESIDENCE_1_0"
+)
+
+# World Bank Learning Poverty
+lp_data <- dw_api_fetch(
+  api        = "wb",
+  indicator  = c("SE.LPV.PRIM", "SE.LPV.PRIM.FE", "SE.LPV.PRIM.MA"),
+  start_date = 2000,
+  end_date   = 2025,
+  cache_key  = "wb_learning_poverty_primary"
+)
+
+# Pinned-commit GitHub metadata (ref pins reproducibility)
+regions <- dw_api_fetch(
+  api        = "github_raw",
+  owner_repo = "unicef-drp/Country-and-Region-Metadata",
+  ref        = "main",
+  path       = "UNICEF_REP_REG_GLOBAL.csv",
+  cache_key  = "github_unicef_regions_global"
+)
+```
+
+## Python
+```python
+from cso_toolkit import _state, dw_api_fetch
+
+# Standalone configuration (a real consumer's profile does this for you,
+# deriving dw_apis_allowed=True from dw_mode == "producer").
+_state.configure(
+    teamsRawData="/data/raw",
+    teamsRawDataCanonical="/data/raw-canonical",
+    dw_mode="producer",
+    dw_apis_allowed=True,
+)
+
+codebook_residence = dw_api_fetch(
+    api="sdmx_codelist",
+    agency="UNICEF",
+    codelist="CL_RESIDENCE",
+    version="1.0",
+    cache_key="sdmx_codelist_UNICEF_CL_RESIDENCE_1_0",
+)
+
+lp_data = dw_api_fetch(
+    api="wb",
+    indicator=["SE.LPV.PRIM"],
+    start_date=2000,
+    end_date=2025,
+    cache_key="wb_learning_poverty_primary",
+)
+```
+
+## Stata
+```stata
+* No Stata fetcher. Read the frozen cache an R/Python producer deposited:
+dw_use, filename("wb_learning_poverty_primary.csv") path("$teamsRawData/_apis/wb")
+```
+:::
+
+## The cache and its provenance
+
+Every fetch writes two files into the deposit, under a fixed layout keyed by `api` and `cache_key`:
+
+```text
+<rawdata>/_apis/<api>/<cache_key>.<ext>
+<rawdata>/_apis/<api>/<cache_key>.<ext>.provenance.json
+```
+
+The `cache_key` *is* the filename basename, so it should be human-readable snake_case carrying the distinguishing parameters — prefer `wb_learning_poverty_primary` or `sdmx_codelist_UNICEF_CL_RESIDENCE_1_0` over a hash. The wrapper does not invent the cache write: it delegates to `dw_save`. Three things follow from that delegation. The cache inherits the mode-aware write path; it inherits the Z: mirror when the drive is mapped; and it inherits the standard `.provenance.json` sidecar described in the provenance-sidecars chapter. Reads go back through `dw_use`.
+
+The sidecar records both *what* the cache contains and *how* the wrapper obtained it. Beyond the IO contract's base fields (`path`, `format`, `written_at`, `user`, `dw_mode`, `sha256`, `schema`), `dw_api_fetch` merges an API-specific `metadata` block:
+
+```json
+{
+  "path": ".../sdmx_codelist_UNICEF_CL_RESIDENCE_1_0.csv",
+  "format": "csv",
+  "written_at": "2026-05-25T14:23:11+0000",
+  "user": "jpazvd",
+  "dw_mode": "producer",
+  "sha256": "...",
+  "schema": {"rows": 4, "cols": 3, "columns": ["code", "name", "description"]},
+  "metadata": {
+    "api": "sdmx_codelist",
+    "cache_key": "sdmx_codelist_UNICEF_CL_RESIDENCE_1_0",
+    "fetched_at": "2026-05-25T14:23:11+0000",
+    "elapsed_secs": 0.412,
+    "refresh_flag": false,
+    "fetch_args": {"agency": "UNICEF", "codelist": "CL_RESIDENCE", "version": "1.0"}
+  }
+}
+```
+
+The `fetch_args` capture is what lets a reviewer (or a future producer) see exactly which parameters produced the frozen result, and `fetched_at` plus `elapsed_secs` give the freshness and cost of the fetch. The `refresh_flag` records whether the fetch was a routine populate or an explicit re-pull. A caller's own `metadata =` argument is merged on top of these auto-recorded fields, which is how a load-bearing fetch carries a reason, a ticket, or a vintage into the sidecar alongside the parameters.
+
+::: {.callout-note}
+## Sensitive keys are redacted before they reach disk — in Python
+The Python wrapper redacts the values of `fetch_args` whose key names look sensitive — anything containing `token`, `auth`, `password`, `secret`, `api_key`, `headers`, `cookie`, `bearer`, and similar substrings — replacing them with `"<redacted>"` in the persisted sidecar, so credentials passed by the caller never land in `.provenance.json`. The R wrapper does **not** redact: it stores `fetch_args` verbatim, so an R producer who passes a credential through `...` will see it in the sidecar. This redaction parity is currently a Python-only feature; the cross-language coverage matrix appendix records it.
+:::
+
+Caches **never expire automatically**. Refresh is always an explicit `refresh = TRUE`, and the Database Manager owns the refresh cadence per cache.
+
+## Auditing what is cached
+
+`dw_api_inventory` walks `teamsRawDataCanonical/_apis/`, skips the `.provenance.json` sidecars, and returns one row per cache file. When a sidecar is present it pulls `metadata$fetched_at` (falling back to `written_at`) into the result, so the Database Manager can spot stale caches at a glance. The result frame carries `api`, `cache_key`, `ext`, `size_bytes`, `mtime`, and `fetched_at`; it returns an empty frame when nothing is cached.
+
+::: {.panel-tabset}
+## R
+```r
+dw_api_inventory()
+#   api  cache_key                     ext  size_bytes  mtime             fetched_at
+# 1 wb   wb_learning_poverty_primary   csv  142136      2026-05-23 16:42  2026-05-23T16:42:31+0000
+```
+
+## Python
+```python
+inv = dw_api_inventory()
+# DataFrame columns: api / cache_key / ext / size_bytes / mtime / fetched_at
+```
+
+## Stata
+```stata
+* No Stata inventory function. Inspect the deposit directly, e.g.:
+dir "_apis/"
+```
+:::
+
+## The HTTP error envelope
+
+Every Python fetcher routes its network call through a single helper, `_http_call`, which wraps `requests.{get,post}` and translates the `requests.RequestException` family into the toolkit's uniform "what / why / how" envelope. The three cases are distinct and each ends in a concrete fix:
+
+- **Timeout** → `TimeoutError`, with a hint to extend `timeout=` or retry, and a specific note that a corporate (UNICEF-laptop) proxy can silently block long-lived calls — try a different network.
+- **Connection failure** → `ConnectionError`, suggesting a hotspot or VPN when the corporate proxy may be blocking the host.
+- **HTTP status error** → `RuntimeError`, carrying the status code, a 300-character body snippet, and a decode of common causes (400 bad params, 401/403 auth, 404 missing, 429 rate-limited).
+
+This is the same "what / why / how" envelope used elsewhere in the toolkit; the error-taxonomy chapter covers the full classification. The R fetchers raise the underlying package errors (for example, `httr::stop_for_status`) rather than routing through a single shared envelope, so the error-envelope parity is currently a Python feature. This is a coverage gap; the cross-language coverage matrix appendix records it.
+
+::: {.callout-warning}
+## API failures are about the network, not your cache_key
+A timeout or 403 surfaces only on a live fetch — that is, in producer mode on a cache miss or an explicit `refresh = TRUE`. A reviewer never sees these because a reviewer never reaches the network. If you hit a recurring 403 burst against the UNICEF SDMX endpoint, that is an upstream rate-limit pattern, not a wrapper bug; the cure is to retry later or fetch from a different network, then commit the resulting frozen cache.
+:::
+
+## Migrating a sector script
+
+The contract is adopted one call at a time. The checklist is the same in both languages:
+
+1. Find each raw API call — `fromJSON`, `readSDMX`, `wbstats::wb_data`, `httr::GET`/`POST` in R; `requests.get`, `httpx.get`, `sdmx.Client`, `wbgapi.data.fetch` in Python.
+2. Pick the matching `api =` value from the table above.
+3. Choose a stable, descriptive snake_case `cache_key` that embeds the distinguishing parameters — it becomes the cache filename.
+4. Replace the call with `dw_api_fetch(api = ..., cache_key = ..., ...)`, and stamp load-bearing fetches with the `metadata =` argument (a reason, a ticket, a vintage) so that context flows into the sidecar.
+5. Run once in producer mode to populate the cache.
+6. Open a PR. The smoke test passes when reviewer mode can run the script end-to-end from the cached result with **no** network access.
+
+Step 6 is where the scaffolding-and-contract-auditor tooling earns its keep: in Python, `cso_toolkit.test_scripts(<sector_folder>, error_on_violation=True)` confirms that no raw network calls remain. The contract auditor and its CI integration are covered in the scaffolding-and-contract-auditor chapter and the auditor-in-CI chapter; the function reference appendix lists every signature in one place, and the cross-language coverage matrix appendix summarises exactly where R, Python, and Stata diverge — including the Stata gaps this chapter has flagged.
