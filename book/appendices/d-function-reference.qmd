@@ -71,8 +71,8 @@ df = dw_use(name="dw_ed_edu.csv", sector="ed", kind="wrk")
 ```
 ## Stata
 ```stata
-dw_save using "dw_ed_edu.dta", sector(ed) kind(wrk)
-dw_use using "dw_ed_edu.dta", clear
+dw_save, filename("dw_ed_edu.dta") path("$teamsWrkData/ed") idvars(REF_AREA)
+dw_use, filename("dw_ed_edu.dta") path("$teamsWrkData/ed")
 ```
 :::
 

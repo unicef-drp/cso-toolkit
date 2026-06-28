@@ -44,11 +44,12 @@ df = dw_use(name="dw_ed_edu.csv", sector="ed", kind="wrk")
 ```
 ## Stata
 ```stata
-dw_save using "dw_ed_edu.dta",      ///
+dw_save, filename("dw_ed_edu.dta")  ///
+    path("$teamsWrkData/ed")        ///
     idvars(REF_AREA INDICATOR)      ///
     title("Education indicators")   ///
     vintage("2026-05")
-use_result = dw_use using "dw_ed_edu.dta"
+dw_use, filename("dw_ed_edu.dta") path("$teamsWrkData/ed")
 ```
 :::
 

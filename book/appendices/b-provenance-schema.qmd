@@ -24,7 +24,7 @@ dw_save(df, name="dw_ed_edu.csv", sector="ed", kind="wrk",
 ## Stata
 ```stata
 * stata/src/dw_save.ado — sidecar emitted unless `nosidecar` is passed
-dw_save, filename("dw_ed_edu.dta") path("`teamsWrkData'/ed") ///
+dw_save, filename("dw_ed_edu.dta") path("$teamsWrkData/ed") ///
          idvars(REF_AREA INDICATOR TIME_PERIOD)
 * pass the `nosidecar` option to suppress
 ```

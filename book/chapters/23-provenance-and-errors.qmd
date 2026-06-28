@@ -68,7 +68,8 @@ dw_save(df, name="dw_ed_edu.csv", sector="ed", kind="wrk",
 ## Stata
 
 ```stata
-dw_save using "dw_ed_edu.dta",                          ///
+dw_save, filename("dw_ed_edu.dta")                     ///
+    path("$teamsWrkData/ed")                           ///
     idvars(REF_AREA INDICATOR TIME_PERIOD)             ///
     title("Education indicators — UNICEF DW format")   ///
     producer("01_dw_prep/.../02_aggregate_uis_sdg.do") ///

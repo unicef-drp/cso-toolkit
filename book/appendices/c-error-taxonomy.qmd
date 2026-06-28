@@ -71,7 +71,8 @@ dw_save(df, name="dw_ed_edu.csv", sector="ed", kind="wrk",
 ```stata
 * Stata's dw_save guards canonical + Z: writes via $dw_mode and accepts
 * the same escape hatch as a flag (DBM bootstraps only):
-dw_save using "dw_ed_edu.dta", idvars(...) allow_canonical_write
+dw_save, filename("dw_ed_edu.dta") path("$teamsWrkDataCanonical/ed") ///
+    idvars(REF_AREA INDICATOR) allow_canonical_write
 ```
 :::
 
@@ -238,7 +239,7 @@ dw_save(df, name="dw_ed_edu.csv", sector="ed", kind="wrk",
 ## Stata
 
 ```stata
-dw_save using "dw_ed_edu.dta", ///
+dw_save, filename("dw_ed_edu.dta") path("$teamsWrkData/ed") ///
     idvars(DATAFLOW REF_AREA INDICATOR SEX WEALTH_QUINTILE RESIDENCE TIME_PERIOD)
 ```
 :::
