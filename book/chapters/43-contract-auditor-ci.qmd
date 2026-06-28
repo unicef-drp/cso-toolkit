@@ -1,0 +1,328 @@
+# The contract auditor in continuous integration (CI)
+
+Earlier chapters describe a contract — the rule that all file and network access goes through a small set of toolkit wrappers rather than raw library calls. File IO flows through `dw_save` / `dw_use` / `dw_compare` / `dw_merge`, and external-API access flows through `dw_api_fetch` / `dw_api_cached`. But a contract that is only documented decays. New scripts reach for `read_csv()` out of habit; a quick `httr::GET()` slips into a one-off fetch; a reviewer approves a pull request without noticing either. The contract auditor closes that gap. It is a single function — `test_scripts()` — that recursively scans a directory of analysis scripts and flags every line that calls a raw IO or HTTP command the toolkit is meant to wrap. Run interactively it is a code-review aid; run in continuous integration with `error_on_violation = TRUE` it becomes a build gate that fails the moment a bypass lands.
+
+What follows shows the auditor working: what it checks, how it reports, how to silence the rare legitimate exception with `# cso-allow`, and how to wire it into a GitHub Actions job. The cross-language coverage matrix (Appendix A) and the scaffolding chapter give the wider picture; here the focus is narrow and operational.
+
+## What the auditor does
+
+`test_scripts()` walks a directory tree, reads each source file line by line, and matches every line against a registry of regular-expression rules. Each rule describes one *raw* call that the toolkit wraps — a direct CSV read, a direct HTTP request, a direct SDMX fetch (SDMX is the statistical-data-exchange format used by agencies like the World Bank and ILO) — together with the toolkit function the author should have used instead. A match is a *violation*. The function returns one row per violation as a data frame and, optionally, prints a human-readable summary and stops the process.
+
+The auditor is a *lexical* check, not a parser. It strips string literals and trailing comments from each line and then applies its patterns, so it is fast, dependency-light, and would work the same way for any language, since it only matches text — but it sees text, not an abstract syntax tree. Because it sees only text, the auditor sometimes misfires on a call that is genuinely correct; the `# cso-allow` escape hatch (below) handles those cases.
+
+The signatures are deliberately parallel across the two languages that ship an auditor:
+
+::: {.panel-tabset}
+
+## R
+
+```r
+test_scripts(
+  path,
+  pattern            = "\\.R$",
+  recursive          = TRUE,
+  ignore_files       = c("dw_io.R", "dw_api.R", "cso_toolkit_sync.R",
+                         "profile_helpers.R", "test_scripts.R"),
+  ignore_dirs        = c(".git", "renv", "packrat",
+                         "node_modules", ".Rproj.user"),
+  custom_rules       = NULL,
+  error_on_violation = FALSE,
+  verbose            = TRUE,
+  debug              = NULL
+)
+```
+
+## Python
+
+```python
+test_scripts(
+    path,
+    pattern="\\.py$",
+    *,
+    recursive=True,
+    ignore_files=("dw_io.py", "dw_api.py", "cso_toolkit_sync.py",
+                  "profile_helpers.py", "test_scripts.py", "_state.py",
+                  "__init__.py"),
+    ignore_dirs=(".git", ".venv", "venv", "env", "__pycache__",
+                 ".tox", ".pytest_cache", "node_modules"),
+    custom_rules=None,
+    error_on_violation=False,
+    verbose=True,
+)
+```
+
+## Stata
+
+```stata
+* No Stata auditor.
+* cso-toolkit ships test_scripts() in R and Python only.
+* Stata sector code is audited by code review against the same
+* contract; see the coverage note below.
+```
+
+:::
+
+The two signatures match except for one R-only argument. R's `debug` (default `NULL`) is an internal diagnostics switch: when `TRUE` it prints the file count, rule count, and per-family violation tallies, and otherwise it inherits `options(dw.debug)`. It tunes the toolkit's own verbosity machinery and does not change what the auditor flags. Python has no equivalent; the asymmetry is cosmetic, not a coverage gap.
+
+::: {.callout-warning}
+## Coverage gap: Stata has no auditor
+The contract auditor exists in R (`r/R/test_scripts.R`) and Python (`python/src/test_scripts.py`) only. There is no Stata implementation — the Stata source tree (`stata/src/`) ships `dw_save.ado`, `dw_use.ado`, `dw_compare.ado`, `dw_load_config.ado`, `dw_mkdir.ado`, and `dw_require_no_api.ado`, but nothing named `test_scripts.ado`. Stata consumers must enforce the contract by reading each other's code, since there is no automated scan to wire into a Stata build. Treat the R/Python parity below as the limit of automated coverage, not a claim about Stata.
+:::
+
+In both languages the return value is a data frame (an R `data.frame`, a pandas `DataFrame`) with the same seven columns: `file`, `line`, `rule`, `family`, `message`, `suggest`, and `snippet`. An empty frame means a clean scan. The columns are stable, which matters for CI: a downstream step can read them to post annotations or build a report.
+
+## The rule set
+
+Every rule has five fields — `id`, `family`, `pattern`, `message`, and `suggest`. The `family` is either `"io"` or `"api"`, and only those two families can fail a build (see `error_on_violation` below). The `pattern` is a PCRE regular expression matched against the line after string literals and the trailing comment are scrubbed. The patterns deliberately match both the unqualified and the namespaced form of a call, so `read_csv(` and `readr::read_csv(` are both caught, as are `pd.read_csv(` and `pandas.read_csv(`.
+
+The two registries are not identical, because the raw calls differ by language ecosystem. The R registry targets the tidyverse / data.table / haven / arrow / rsdmx / wbstats / Rilostat surface; the Python registry targets the pandas / requests / httpx / sdmx / wbgapi / wbdata surface. The table below pairs them by intent.
+
+| Intent | R rule id | R catches (examples) | Python rule id | Python catches (examples) |
+|---|---|---|---|---|
+| CSV read | `io-read-csv` | `read.csv`, `read_csv`, `read_tsv`, `read_delim` | `io-read-csv` | `pd.read_csv`, `read_csv` |
+| CSV write | `io-write-csv` | `write.csv`, `write_csv`, `write_tsv`, `write_delim` | `io-to-csv` | `.to_csv(` |
+| data.table | `io-fread` | `fread`, `fwrite` | — | (covered by pandas rules) |
+| RDS / pickle | `io-rds` | `saveRDS`, `readRDS` | `io-pickle` | `pickle.dump`, `pickle.load` |
+| `.RData` | `io-load-save` | `save`, `load` | — | — |
+| Stata `.dta` | `io-dta` | `read_dta`, `write_dta`, `read_stata`, `write_stata` | `io-read-stata` / `io-to-stata` | `pd.read_stata`, `.to_stata(` |
+| Excel | `io-xlsx` | `read_excel`, `read_xlsx`, `write_xlsx`, `read.xlsx`, `write.xlsx`, `getSheetNames`, `excel_sheets`, `loadWorkbook` | `io-read-excel` / `io-to-excel` | `pd.read_excel`, `.to_excel(` |
+| Parquet | `io-parquet` | `read_parquet`, `write_parquet` | `io-read-parquet` / `io-to-parquet` | `pd.read_parquet`, `.to_parquet(` |
+| JSON file | `io-json-file` | `read_json`, `write_json` | `io-json` | `json.dump`, `json.load` |
+| YAML | `io-yaml` | `read_yaml`, `write_yaml`, `yaml.load_file` | `io-yaml` | `yaml.safe_load`, `yaml.load`, `yaml.safe_dump`, `yaml.dump` |
+| Raw file handle | — | — | `io-open-write` | `open(..., "w")` and other write/append/binary modes |
+| HTTP | `api-httr` | `httr::GET`/`POST`/`PUT`/`PATCH`/`DELETE`, `httr2::request` | `api-requests` / `api-httpx` / `api-urllib` | `requests.get`, `httpx.get`, `urllib.request.urlopen` |
+| JSON-from-URL | `api-fromjson-url` | `fromJSON("https://…")` | — | (covered by HTTP rules) |
+| SDMX | `api-sdmx` | `readSDMX` | `api-sdmx` | `sdmx.Client(` |
+| World Bank | `api-wbstats` | `wb_data`, `wb_indicators`, `wb_countries` | `api-wbgapi` / `api-wbdata` | `wbgapi.data.…`, `wbgapi.series.…`, `wbdata.get_data`, `wbdata.get_dataframe` |
+| ILO | `api-ilostat` | `get_ilostat` | — | — |
+| File download | `api-download` | `download.file`, `curl::curl_download`, `curl::curl_fetch_memory`, `curl::curl_fetch_disk` | `api-urlretrieve` | `urllib.request.urlretrieve` |
+
+The `message` and `suggest` fields are what make a violation actionable. A caught `read_csv` does not just say "rule io-read-csv matched"; it says *Direct CSV read* and points to `dw_use(name = ..., sector = ..., kind = ...)`. The auditor's job is not only to catch the bypass but to name the wrapper that should replace it.
+
+### Files and directories the auditor skips
+
+The toolkit's own implementation files *must* call the raw commands — that is their whole purpose — so they are excluded by default through `ignore_files` (`dw_io`, `dw_api`, the sync helper, the profile helpers, and `test_scripts` itself; the Python list also skips `_state.py` and `__init__.py`). Common machinery directories are excluded through `ignore_dirs`: `.git`, the R dependency caches (`renv`, `packrat`), and the Python equivalents (`.venv`, `venv`, `__pycache__`, `.tox`, `.pytest_cache`), among others. When you point the auditor at a sector folder you are scanning *analysis* code, not library code or vendored dependencies.
+
+### Extending the rule set
+
+Both implementations accept `custom_rules`, merged with the built-in registry. A consumer repo that wraps an additional data source can add a rule for it without editing the toolkit. Each custom rule must supply the same five fields.
+
+::: {.panel-tabset}
+
+## R
+
+```r
+my_rules <- list(
+  list(id      = "api-mysource",
+       family  = "api",
+       pattern = "(?<![a-zA-Z0-9_.])mysource_fetch\\s*\\(",
+       message = "Direct mysource_fetch call bypasses the cache.",
+       suggest = "dw_api_fetch(api = 'mysource', cache_key = ...)")
+)
+test_scripts("01_dw_prep", custom_rules = my_rules)
+```
+
+## Python
+
+```python
+from cso_toolkit.test_scripts import _Rule, test_scripts
+
+my_rules = [
+    _Rule(
+        id="api-mysource", family="api",
+        pattern=r"\bmysource_fetch\s*\(",
+        message="Direct mysource_fetch call bypasses the cache.",
+        suggest="dw_api_fetch(api='mysource', cache_key=...)",
+    )
+]
+test_scripts("01_dw_prep", custom_rules=my_rules)
+```
+
+## Stata
+
+```stata
+* No auditor in Stata; custom rules are an R / Python concept.
+```
+
+:::
+
+## Reporting and the build gate
+
+With the default `verbose = TRUE`, the auditor prints a fixed-format block: a header rule, the file count, the violation count, then one stanza per violation showing the rule id, the file and line, the message, the offending snippet, and the suggested replacement. (The printed block shows every column except `family`, which only governs the build gate.) A clean run prints `[OK] Clean.`. The format is identical in both languages, by design, so a reader who has seen one has seen both.
+
+```text
+cso-toolkit contract audit
+------------------------------------------------------------------------
+Files scanned : 14
+Violations    : 1
+
+[io-read-csv] 01_dw_prep/012_codes/nt/build.R:42
+  Direct CSV read.
+  > df <- read_csv("raw/nt.csv")
+  -> dw_use(name = ..., sector = ..., kind = ...)
+------------------------------------------------------------------------
+```
+
+By default the function only *reports* — it returns the violations frame and lets you decide. The CI gate is `error_on_violation`. When it is `TRUE` **and** at least one violation belongs to the `io` or `api` family, the function raises after printing, with the toolkit's standard three-part error envelope (the `[cso_toolkit.test_scripts]` prefix, the count of violations and offending files, and a `Fix:` line). In R this is a `stop(call. = FALSE)`; in Python it is a `RuntimeError`. Either way the process exits non-zero, which is exactly what a CI runner needs to mark the step failed.
+
+::: {.panel-tabset}
+
+## R
+
+```r
+# Interactive: report only, inspect the frame.
+v <- test_scripts("01_dw_prep/012_codes")
+
+# CI gate: stop (non-zero exit) on any io/api violation.
+test_scripts("01_dw_prep/012_codes", error_on_violation = TRUE)
+```
+
+## Python
+
+```python
+# Interactive: report only, inspect the frame.
+v = test_scripts("01_dw_prep/012_codes")
+
+# CI gate: raise RuntimeError (non-zero exit) on any io/api violation.
+test_scripts("01_dw_prep/012_codes", error_on_violation=True)
+```
+
+## Stata
+
+```stata
+* No auditor in Stata.
+```
+
+:::
+
+The family restriction is deliberate. Only `io` and `api` violations break the build, because those are the two families the contract actually governs. If you add a custom rule under some other family for advisory purposes, it will be reported but will not fail CI.
+
+::: {.callout-note}
+## In R, `test_scripts` returns invisibly
+The R function returns its violations frame *invisibly*, so assign it (`v <- test_scripts(...)`) when you want to inspect it; a bare call at the console prints the summary but not the frame. The R alias `dw_test_scripts()` is identical — it exists so the name carries the `dw_` family prefix, and a future release may rename the canonical function to `dw_audit_scripts` to make clear that this audits call sites and is *not* a unit-test runner despite the `test_` prefix. The Python function returns its frame normally.
+:::
+
+## Managing false positives with `# cso-allow`
+
+Because the auditor is lexical, it occasionally flags a call that is genuinely correct. The canonical example is the profile loader: every CSO profile reads its own YAML config with a raw `read_yaml` / `yaml.safe_load`, and that read is *supposed* to be raw — it bootstraps the configuration before any toolkit path resolution exists. Forcing it through `dw_use` would be circular. The toolkit's own `profile_helpers.py` carries exactly such an allow on its `yaml.safe_load` config read.
+
+The escape hatch is a trailing comment, `# cso-allow: <rule-id>`, on the offending line. The auditor reads the comment, parses the rule ids out of it, and skips exactly those rules for that one line. Every other rule still applies to the line, and every other line is still scanned. You can silence several rules at once by listing their ids comma-separated.
+
+::: {.panel-tabset}
+
+## R
+
+```r
+# Profile bootstrap — the one legitimate raw YAML read:
+config <- yaml::read_yaml(config_path)  # cso-allow: io-yaml
+
+# Silence two rules on one line:
+x <- read_csv(p)  # cso-allow: io-read-csv, io-write-csv
+```
+
+## Python
+
+```python
+# Profile bootstrap — the one legitimate raw YAML read:
+config = yaml.safe_load(open(config_path))  # cso-allow: io-yaml
+
+# Silence two rules on one line:
+x = pd.read_csv(p)  # cso-allow: io-read-csv, io-to-csv
+```
+
+## Stata
+
+```stata
+* No auditor, hence no escape-hatch comment in Stata.
+```
+
+:::
+
+Two discipline points. First, `# cso-allow` is line-scoped and rule-scoped: it never silences a whole file or a whole rule globally, so a stray allow comment cannot quietly disable the contract for a directory. Second, an allow is a documented exception, not a convenience — it should mark a call that genuinely cannot go through a wrapper (the profile bootstrap is essentially the only routine case), and it asks for the reviewer's attention rather than dodging it. The toolkit's own `generate_markdown_report.py` uses one such allow, on its descriptive-stats CSV read.
+
+## Wiring the auditor into a GitHub Actions job
+
+Today the toolkit's own repository ships one R workflow, `.github/workflows/r-check.yml`, which runs `R CMD check` across a four-way matrix (Ubuntu release and devel, macOS release, Windows release). That `R CMD check` run exercises the toolkit's testthat suite, and the suite includes `test-test_scripts.R`, which asserts that the auditor returns a clean frame on conforming code, catches a direct `read_csv`, catches a direct `httr::GET`, honors the `# cso-allow` escape hatch, raises the proper error envelope under `error_on_violation = TRUE`, and raises the envelope on a missing path. CI today proves the *auditor itself* works; it does not yet run the auditor against a consumer's analysis scripts, because the toolkit repository has no consumer scripts to scan.
+
+A consumer repo — DW-Production, UNPD-Population, a datalib analysis project — is where the auditor becomes a contract gate. The pattern is a small dedicated job that installs the toolkit, runs `test_scripts(..., error_on_violation = TRUE)` over the analysis tree, and lets the non-zero exit fail the build. The two language variants:
+
+::: {.panel-tabset}
+
+## R
+
+```yaml
+name: contract-audit
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+      - name: Install cso-toolkit
+        run: Rscript -e 'install.packages("remotes"); remotes::install_github("unicef-drp/cso-toolkit", subdir = "r")'
+      - name: Run contract auditor
+        run: |
+          Rscript -e 'csotoolkit::test_scripts("01_dw_prep", error_on_violation = TRUE)'
+```
+
+## Python
+
+```yaml
+name: contract-audit
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install cso-toolkit
+        run: pip install "cso-toolkit @ git+https://github.com/unicef-drp/cso-toolkit#subdirectory=python"
+      - name: Run contract auditor
+        run: |
+          python -c "from cso_toolkit import test_scripts; test_scripts('01_dw_prep', error_on_violation=True)"
+```
+
+## Stata
+
+```yaml
+# No auditor in Stata; there is no contract-audit job to add for
+# a Stata-only consumer. Enforce the contract by code review.
+```
+
+:::
+
+The R package installs under the name `csotoolkit` (note: no hyphen, no underscore), so the call is `csotoolkit::test_scripts(...)`. The Python distribution is named `cso-toolkit` but imports as `cso_toolkit`, so the install line uses the hyphen and the call uses the underscore.
+
+::: {.callout-warning}
+## Version skew between the two packages
+As of writing, the Python package trails the R package — `python/pyproject.toml` declares `0.4.0` while `r/DESCRIPTION` declares `0.5.0`. If rule-set parity matters to you, pin the version you install and check that the Python registry carries the rules your contract relies on, rather than assuming the two languages catch exactly the same calls. The versioning-and-releases chapter explains how the two version lines are reconciled.
+:::
+
+A few practical notes, each worth keeping distinct:
+
+- **Keep the audit job separate** from the test or build job, so a contract violation produces a clearly labelled red check rather than hiding inside a larger failure.
+- **No credentials needed.** The job needs neither network access nor a database connection: the auditor only reads source text, so it runs fast and is safe to trigger on every pull request.
+- **Scope the `path` tightly.** Point it at the directory that actually holds analysis scripts (often the sector or prep folder), not the repository root, so vendored code and generated files stay out of scope on top of the built-in `ignore_dirs`.
+- **The gate fires narrowly.** Because `error_on_violation` fires only on the `io` and `api` families, the build fails on exactly the bypasses the contract forbids and nothing else.
+
+For richer feedback than a pass/fail, capture the returned frame before the gate: run the auditor once with `error_on_violation = FALSE` to write the violations frame to an artifact (a CSV, or a Markdown table built the same way `generate_markdown_report` builds its tables), then run the gate. The first run gives a reviewer the full list with file, line, message, and suggested fix; the second turns the build red.
+
+## How this fits the rest of the contract
+
+The auditor is the enforcement arm of the contract the IO and external-API chapters define and the vendoring chapter distributes. It does not replace human review — a lexical scan cannot judge whether a `dw_save` call uses the right `sector` or `isid` — but it removes the most common and most mechanical failure: a raw call that should never have been written by hand. Pair it with `review_profile()` from the scaffolding chapter, which audits a repo's *profile* for the standard building blocks, and the two together cover both halves of conformance: `review_profile` checks that the repo is wired to the contract, and `test_scripts` checks that the analysis code honors it. The versioning-and-releases chapter explains how the rule set itself evolves across toolkit versions — adding a rule can newly fail a previously green build, so rule-set changes follow the same semantic-versioning discipline as the rest of the API.
