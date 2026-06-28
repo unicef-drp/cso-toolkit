@@ -201,7 +201,7 @@ lp_data = dw_api_fetch(
 ## Stata
 ```stata
 * No Stata fetcher. Read the frozen cache an R/Python producer deposited:
-dw_use using "_apis/wb/wb_learning_poverty_primary.csv", clear
+dw_use, filename("wb_learning_poverty_primary.csv") path("$teamsRawData/_apis/wb")
 ```
 :::
 

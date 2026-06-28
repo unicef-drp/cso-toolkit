@@ -83,7 +83,8 @@ dw_save(df, name="dw_ed_edu.csv", sector="ed", kind="wrk",
 ```
 ## Stata
 ```stata
-dw_save using "dw_ed_edu.dta",       ///
+dw_save, filename("dw_ed_edu.dta")   ///
+    path("$teamsWrkData/ed")         ///
     idvars(REF_AREA)                 ///
     title("Education indicators")    ///
     vintage("2026-05")

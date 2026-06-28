@@ -134,7 +134,7 @@ dw_save(df, name="dw_ed_edu.csv", sector="ed", kind="wrk",
 ## Stata
 
 ```stata
-dw_save using "dw_ed_edu.dta", idvars(REF_AREA INDICATOR)
+dw_save, filename("dw_ed_edu.dta") path("$teamsWrkData/ed") idvars(REF_AREA INDICATOR)
 ```
 
 :::
@@ -159,7 +159,7 @@ dw_isid(df, keys=["REF_AREA", "INDICATOR", "SEX"])
 ## Stata
 
 ```stata
-dw_save using "out.dta", idvars(REF_AREA INDICATOR SEX)
+dw_save, filename("out.dta") path("$teamsWrkData/ed") idvars(REF_AREA INDICATOR SEX)
 ```
 
 :::
