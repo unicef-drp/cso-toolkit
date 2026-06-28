@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.42">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>3&nbsp; Architecture: one contract, three languages, many consumers – The CSO Toolkit Handbook</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../chapters/21-roles-and-modes.html" rel="next">
+<link href="../chapters/11-why.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-baf7457b58093534c7052efdef5f4d86.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/11-why.html">Part I — Why &amp; Architecture</a></li><li class="breadcrumb-item"><a href="../chapters/12-architecture.html"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Architecture: one contract, three languages, many consumers</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">The CSO Toolkit Handbook</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/unicef-drp/cso-toolkit/tree/main/book/" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Welcome</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part I — Why &amp; Architecture</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/11-why.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Why a toolkit</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/12-architecture.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Architecture: one contract, three languages, many consumers</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part II — The Contract</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/21-roles-and-modes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Roles and the mode contract</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/22-wiring-the-contract.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Wiring the contract into a repo</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/23-provenance-and-errors.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Provenance sidecars and the error envelope</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part III — The API (cross-language)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/31-io.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">The IO contract</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/32-external-api.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">The external-API contract</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/33-aggregation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Aggregation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/34-vintage-sync.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Vintage sync</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/35-scaffolding-audit.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Scaffolding and the contract auditor</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part IV — Adoption &amp; Operations</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/41-vendoring.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">The vendoring model</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/42-onboarding-example.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Onboarding a repo: a worked example</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/43-contract-auditor-ci.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">The contract auditor in continuous integration (CI)</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/44-versioning-release.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Versioning and releases</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Appendices</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/a-coverage-matrix.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">A</span>&nbsp; <span class="chapter-title">Cross-language coverage matrix</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/b-provenance-schema.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">B</span>&nbsp; <span class="chapter-title">Provenance sidecar schema</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/c-error-taxonomy.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">C</span>&nbsp; <span class="chapter-title">Error taxonomy</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/d-function-reference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">D</span>&nbsp; <span class="chapter-title">Function reference</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/e-glossary.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">E</span>&nbsp; <span class="chapter-title">Glossary</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#the-four-layers" id="toc-the-four-layers" class="nav-link active" data-scroll-target="#the-four-layers"><span class="header-section-number">3.1</span> The four layers</a></li>
+  <li><a href="#layer-one-the-toolkit-and-its-five-capability-families" id="toc-layer-one-the-toolkit-and-its-five-capability-families" class="nav-link" data-scroll-target="#layer-one-the-toolkit-and-its-five-capability-families"><span class="header-section-number">3.2</span> Layer one — the toolkit and its five capability families</a>
+  <ul class="collapse">
+  <li><a href="#io-contract" id="toc-io-contract" class="nav-link" data-scroll-target="#io-contract"><span class="header-section-number">3.2.1</span> IO contract</a></li>
+  <li><a href="#external-api-contract" id="toc-external-api-contract" class="nav-link" data-scroll-target="#external-api-contract"><span class="header-section-number">3.2.2</span> External-API contract</a></li>
+  <li><a href="#vintage-sync" id="toc-vintage-sync" class="nav-link" data-scroll-target="#vintage-sync"><span class="header-section-number">3.2.3</span> Vintage sync</a></li>
+  <li><a href="#aggregation-and-survey-weights" id="toc-aggregation-and-survey-weights" class="nav-link" data-scroll-target="#aggregation-and-survey-weights"><span class="header-section-number">3.2.4</span> Aggregation and survey weights</a></li>
+  <li><a href="#scaffolding-and-contract-audit" id="toc-scaffolding-and-contract-audit" class="nav-link" data-scroll-target="#scaffolding-and-contract-audit"><span class="header-section-number">3.2.5</span> Scaffolding and contract audit</a></li>
+  <li><a href="#the-error-envelope-is-not-a-sixth-family" id="toc-the-error-envelope-is-not-a-sixth-family" class="nav-link" data-scroll-target="#the-error-envelope-is-not-a-sixth-family"><span class="header-section-number">3.2.6</span> The error envelope is not a sixth family</a></li>
+  </ul></li>
+  <li><a href="#layer-two-three-language-siblings-of-one-contract" id="toc-layer-two-three-language-siblings-of-one-contract" class="nav-link" data-scroll-target="#layer-two-three-language-siblings-of-one-contract"><span class="header-section-number">3.3</span> Layer two — three language siblings of one contract</a></li>
+  <li><a href="#layer-three-consumer-repositories-vendor-the-helpers" id="toc-layer-three-consumer-repositories-vendor-the-helpers" class="nav-link" data-scroll-target="#layer-three-consumer-repositories-vendor-the-helpers"><span class="header-section-number">3.4</span> Layer three — consumer repositories vendor the helpers</a></li>
+  <li><a href="#layer-four-the-canonical-deposit" id="toc-layer-four-the-canonical-deposit" class="nav-link" data-scroll-target="#layer-four-the-canonical-deposit"><span class="header-section-number">3.5</span> Layer four — the canonical deposit</a></li>
+  <li><a href="#reading-the-architecture-diagram" id="toc-reading-the-architecture-diagram" class="nav-link" data-scroll-target="#reading-the-architecture-diagram"><span class="header-section-number">3.6</span> Reading the architecture diagram</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/unicef-drp/cso-toolkit/edit/main/book/chapters/12-architecture.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/unicef-drp/cso-toolkit/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/11-why.html">Part I — Why &amp; Architecture</a></li><li class="breadcrumb-item"><a href="../chapters/12-architecture.html"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Architecture: one contract, three languages, many consumers</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Architecture: one contract, three languages, many consumers</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>The previous chapter argued <em>why</em> a toolkit is worth building: a 2026 publication that cites <code>dw_&lt;sector&gt;.csv</code> must, two years later, produce identical numbers when re-run by someone who has only the canonical deposit and the vendored helpers — no network access, no upstream package drift, no ambient <code>dplyr</code> version skew. This chapter describes the <em>shape</em> that delivers on that promise. The shape is layered, and it can be read in one sentence: the toolkit encodes a contract once; three language siblings implement that contract identically; consumer repositories copy (“vendor”) the implementations into their own code; and everything they produce lands in a single canonical deposit that the contract keeps reproducible.</p>
+<p>The README’s “Architecture at a glance” diagram (a Mermaid flowchart in the repository’s <code>README.md</code>) draws all four layers in one picture: external data sources on the left, the toolkit and its five capability families in the centre, the three language siblings below, the consumer repositories that vendor them, and the canonical deposit on the right. The text that follows walks through each layer in turn.</p>
+<section id="the-four-layers" class="level2" data-number="3.1">
+<h2 data-number="3.1" class="anchored" data-anchor-id="the-four-layers"><span class="header-section-number">3.1</span> The four layers</h2>
+<p>The layers nest, so name them first:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Layer</th>
+<th>What it is</th>
+<th>Where it lives</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>The toolkit</td>
+<td>One contract, expressed as five capability families</td>
+<td><code>unicef-drp/cso-toolkit</code> (this repo)</td>
+</tr>
+<tr class="even">
+<td>Language siblings</td>
+<td>Three idiomatic implementations of that one contract</td>
+<td><code>r/R/</code>, <code>python/src/</code>, <code>stata/src/</code></td>
+</tr>
+<tr class="odd">
+<td>Consumer repos</td>
+<td>Codebases that vendor the helpers and use the contract</td>
+<td>DW-Production, sector pipelines, CCRI (the Children’s Climate Risk Index) / geospatial work</td>
+</tr>
+<tr class="even">
+<td>Canonical deposit</td>
+<td>The frozen store every producer writes and every reviewer reads</td>
+<td>Teams <code>060.DW-MASTER/</code>, the Z: drive mirror, downstream Helix / SDMX</td>
+</tr>
+</tbody>
+</table>
+<p>The layers have a strict direction of dependence. The toolkit knows nothing about any consumer. The language siblings know nothing about each other — they agree only on the contract, never on shared code. Consumers depend on a pinned version of one language sibling. The canonical deposit depends on nothing; it is the inert artefact at the end of the flow — and that inertness is exactly what we want: a reviewer reads it without re-running anything upstream of it.</p>
+<p>A note on the names in that last table column. The <strong>Z: drive</strong> is a network-mapped mirror of the Teams deposit, used so that scripts can address the canonical store through a stable drive letter rather than a synced-folder path. <strong>Helix</strong> is UNICEF’s internal data platform, and <strong>SDMX</strong> (Statistical Data and Metadata eXchange) is the statistical-data exchange standard through which blessed artefacts reach <code>data.unicef.org</code>. These are downstream of the toolkit, not part of it; the architecture’s job ends when the deposit is written.</p>
+</section>
+<section id="layer-one-the-toolkit-and-its-five-capability-families" class="level2" data-number="3.2">
+<h2 data-number="3.2" class="anchored" data-anchor-id="layer-one-the-toolkit-and-its-five-capability-families"><span class="header-section-number">3.2</span> Layer one — the toolkit and its five capability families</h2>
+<p>The toolkit’s helpers group into five capability families, and each family is the <em>single</em> sanctioned way to do its job inside a CSO analytics product — not a grab-bag of utilities. The families are: IO, external API, vintage sync, aggregation, and scaffolding / audit. The rest of Part III treats each family in full; this section names each one and its public functions, so the architecture reads as a whole.</p>
+<section id="io-contract" class="level3" data-number="3.2.1">
+<h3 data-number="3.2.1" class="anchored" data-anchor-id="io-contract"><span class="header-section-number">3.2.1</span> IO contract</h3>
+<p>One way to read, write, compare, and merge data, auto-dispatched by file extension: CSV / TSV / XLSX / RDS-or-PKL (R / Python native) / DTA (Stata) / Parquet / JSON / YAML. The family’s public functions are <code>dw_save</code>, <code>dw_use</code>, <code>dw_compare</code>, <code>dw_merge</code>, <code>dw_isid</code>, <code>dw_verify_z</code>, <code>dw_stage</code>, and <code>dw_root</code>: the first four read, write, diff, and join; <code>dw_isid</code> enforces row uniqueness; <code>dw_verify_z</code> checks the Z: mirror byte-for-byte; <code>dw_stage</code> copies a canonical input into the reviewer sandbox under a hash guard; and <code>dw_root</code> resolves a logical store (<code>wrk</code> / <code>raw</code> / <code>meta</code>) to its filesystem path. Writes emit a <code>.provenance.json</code> sidecar by default; canonical writes are carbon-copied to the Z: drive; canonical reads run an integrity check. See the IO contract chapter for the full treatment.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" aria-current="page">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-3" role="tab" aria-controls="tabset-1-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dw_save</span>(df, <span class="at">name =</span> <span class="st">"dw_ed_edu.csv"</span>, <span class="at">sector =</span> <span class="st">"ed"</span>, <span class="at">kind =</span> <span class="st">"wrk"</span>,</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>        <span class="at">isid =</span> <span class="st">"REF_AREA"</span>,</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>        <span class="at">metadata =</span> <span class="fu">list</span>(<span class="at">title =</span> <span class="st">"Education indicators"</span>, <span class="at">vintage =</span> <span class="st">"2026-05"</span>))</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">dw_use</span>(<span class="at">name =</span> <span class="st">"dw_ed_edu.csv"</span>, <span class="at">sector =</span> <span class="st">"ed"</span>, <span class="at">kind =</span> <span class="st">"wrk"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>dw_save(df, name<span class="op">=</span><span class="st">"dw_ed_edu.csv"</span>, sector<span class="op">=</span><span class="st">"ed"</span>, kind<span class="op">=</span><span class="st">"wrk"</span>,</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>        isid<span class="op">=</span>[<span class="st">"REF_AREA"</span>],</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>        metadata<span class="op">=</span>{<span class="st">"title"</span>: <span class="st">"Education indicators"</span>, <span class="st">"vintage"</span>: <span class="st">"2026-05"</span>})</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> dw_use(name<span class="op">=</span><span class="st">"dw_ed_edu.csv"</span>, sector<span class="op">=</span><span class="st">"ed"</span>, kind<span class="op">=</span><span class="st">"wrk"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-1-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-3-tab">
+<div class="sourceCode" id="cb3"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>dw_save, filename(<span class="st">"dw_ed_edu.dta"</span>)  <span class="co">///</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    path(<span class="st">"$teamsWrkData/ed"</span>)        <span class="co">///</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    idvars(REF_AREA INDICATOR)      <span class="co">///</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"Education indicators"</span>)   <span class="co">///</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    vintage(<span class="st">"2026-05"</span>)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>dw_use, filename(<span class="st">"dw_ed_edu.dta"</span>) path(<span class="st">"$teamsWrkData/ed"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<p>Here <code>isid</code> names the columns that uniquely identify a row; the IO family enforces that uniqueness on write. The Stata sibling now ships <code>dw_use</code> as well as <code>dw_save</code> (the read contract landed in v0.4.0, closing issue #5), so the read / write pair is available in all three languages.</p>
+</section>
+<section id="external-api-contract" class="level3" data-number="3.2.2">
+<h3 data-number="3.2.2" class="anchored" data-anchor-id="external-api-contract"><span class="header-section-number">3.2.2</span> External-API contract</h3>
+<p>One mode-aware wrapper around ten external data sources — UNESCO UIS, generic SDMX, the UNICEF SDMX codelist endpoint, World Bank WDI, ILO SDMX, the UNSD SDG API, pinned-commit GitHub-raw, and generic HTTP / JSON. A producer hits the live API and caches the response under <code>_apis/&lt;api&gt;/&lt;cache_key&gt;.&lt;ext&gt;</code>; a reviewer reads only from that cache and is physically prevented from reaching the network. Secrets in caller keyword arguments are redacted before they reach the provenance sidecar. See the external-API contract chapter.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-3" role="tab" aria-controls="tabset-2-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<div class="sourceCode" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">dw_api_fetch</span>(<span class="at">api =</span> <span class="st">"wb"</span>, <span class="at">indicator =</span> <span class="st">"SE.PRM.NENR"</span>, <span class="at">refresh =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">dw_api_cached</span>(<span class="at">api =</span> <span class="st">"wb"</span>, <span class="at">cache_key =</span> <span class="st">"SE.PRM.NENR"</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dw_api_inventory</span>(<span class="at">api =</span> <span class="st">"wb"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> dw_api_fetch(api<span class="op">=</span><span class="st">"wb"</span>, indicator<span class="op">=</span><span class="st">"SE.PRM.NENR"</span>, refresh<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> dw_api_cached(api<span class="op">=</span><span class="st">"wb"</span>, cache_key<span class="op">=</span><span class="st">"SE.PRM.NENR"</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>dw_api_inventory(api<span class="op">=</span><span class="st">"wb"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-2-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-3-tab">
+<div class="sourceCode" id="cb6"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>* No API *fetch* wrapper exists <span class="kw">in</span> the Stata sibling.</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>* Stata producers fetch upstream <span class="kw">data</span> through the R <span class="kw">or</span> Python sibling,</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>* then read the resulting cache <span class="kw">or</span> canonical artefact.</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>* The Stata sibling DOES enforce the reviewer-<span class="kw">mode</span> no-API guard:</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>dw_require_no_api , context(<span class="st">"ed/06_pull_uis"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-warning">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>The external-API <em>fetch</em> family is an R-and-Python capability only. The Stata sibling has no <code>dw_api_fetch</code> / <code>dw_api_cached</code> / <code>dw_api_inventory</code>; a Stata-only producer cannot refresh an upstream cache, and that step runs in R or Python. What Stata does provide is the <em>enforcement</em> half of the contract — <code>dw_require_no_api</code> aborts a reviewer-mode session that is about to make a live network call. The cross-language coverage matrix appendix records the gap explicitly.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="vintage-sync" class="level3" data-number="3.2.3">
+<h3 data-number="3.2.3" class="anchored" data-anchor-id="vintage-sync"><span class="header-section-number">3.2.3</span> Vintage sync</h3>
+<p>Consumer-side helpers — <code>cso_toolkit_check</code>, <code>cso_toolkit_diff</code>, and <code>cso_toolkit_pull</code> — that read the local <code>.toolkit_manifest.yml</code>, query upstream for the latest tag, and warn or refresh when the consumer is behind the pinned version. The network call these make is itself gated by the mode contract: reviewer mode forbids it. See the vintage-sync chapter.</p>
+</section>
+<section id="aggregation-and-survey-weights" class="level3" data-number="3.2.4">
+<h3 data-number="3.2.4" class="anchored" data-anchor-id="aggregation-and-survey-weights"><span class="header-section-number">3.2.4</span> Aggregation and survey weights</h3>
+<p><code>aggregate_data_v2()</code> computes <code>weighted_mean</code> / <code>mean</code> / <code>sum</code> / <code>proportion</code> with population and country coverage and a coverage threshold (the original <code>aggregate_data()</code> is retained for back-compatibility); <code>apply_time_window()</code> filters to the latest observation per country within an inclusive year window; <code>generate_agg_footnote()</code> produces the matching coverage footnote; <code>dw_nestweight()</code> is an R port of the World Bank EduAnalyticsToolkit <code>edukit_nestweight</code> (Diana Goldemberg), which redistributes survey weights from missing nested observations so per-stratum totals are preserved; and <code>dw_pop()</code> and <code>dw_regions()</code> supply the population denominators and regional groupings the aggregators consume. The two demographics helpers are R-only for now (no Python or Stata sibling yet). See the aggregation chapter.</p>
+</section>
+<section id="scaffolding-and-contract-audit" class="level3" data-number="3.2.5">
+<h3 data-number="3.2.5" class="anchored" data-anchor-id="scaffolding-and-contract-audit"><span class="header-section-number">3.2.5</span> Scaffolding and contract audit</h3>
+<p><code>create_profile()</code> scaffolds a <code>profile_&lt;repo&gt;.R</code> (or <code>.py</code>) with the standard CSO building blocks — cross-platform user identification, YAML config load, producer / reviewer <code>dw_mode</code> resolution, an optional Z: drive advisory, a packages block, and a sentinel object. <code>review_profile()</code> audits an existing profile against the same building blocks and reports <code>pass</code> / <code>warn</code> / <code>fail</code> per check. <code>create_sector_script()</code> scaffolds a sector run-script template with profile verification, logging, runtime tracking, and try/catch. <code>test_scripts()</code> is the contract auditor: it recursively scans a directory of scripts and flags any direct call to a raw file-IO or external-API command that the toolkit wraps — <code>read_csv</code>, <code>pd.read_csv</code>, <code>httr::GET</code>, <code>requests.get</code>, <code>rsdmx::readSDMX</code>, <code>sdmx.Client</code>, and so on — with a per-line escape hatch (<code># cso-allow: &lt;rule-id&gt;</code>) and a CI mode (<code>error_on_violation = TRUE</code>) that fails the build on any violation. See the scaffolding and contract-auditor chapter.</p>
+</section>
+<section id="the-error-envelope-is-not-a-sixth-family" class="level3" data-number="3.2.6">
+<h3 data-number="3.2.6" class="anchored" data-anchor-id="the-error-envelope-is-not-a-sixth-family"><span class="header-section-number">3.2.6</span> The error envelope is not a sixth family</h3>
+<p>One behaviour cuts across all five families rather than forming its own: the graceful error envelope. Because a consumer needs to grep for and act on library errors, every <code>stop()</code> in R, every <code>raise</code> in Python, and every abort in Stata follows a three-part shape:</p>
+<pre class="text"><code>[cso_toolkit.dw_save] Reviewer mode forbids writes under canonical: /path
+  Reviewer sessions must keep canonical deposits read-only to preserve
+  vintage permanence; writes go to the sandbox.
+  Fix:
+    1. Resolve a sandbox path instead, OR
+    2. If this is a deliberate DBM bootstrap, pass `allow_canonical_write = TRUE`.</code></pre>
+<p>The leading <code>[cso_toolkit.&lt;func&gt;]</code> prefix lets a consumer project grep for every site that hits a given error class. The shape is <code>[cso_toolkit.&lt;func&gt;] WHAT / Why / Fix</code>. The roles chapter and the error taxonomy appendix return to this.</p>
+</section>
+</section>
+<section id="layer-two-three-language-siblings-of-one-contract" class="level2" data-number="3.3">
+<h2 data-number="3.3" class="anchored" data-anchor-id="layer-two-three-language-siblings-of-one-contract"><span class="header-section-number">3.3</span> Layer two — three language siblings of one contract</h2>
+<p>The toolkit ships three implementations: R under <code>r/R/</code>, Python under <code>python/src/</code>, and Stata under <code>stata/src/</code>. The word that matters is <em>siblings</em>, not <em>ports</em> and not <em>bindings</em>. They are not generated from a common source, and they do not call into one another at runtime. They are independent code that agrees on a contract. The README states the agreement precisely: same function names, same <code>.provenance.json</code> schema, same mode-aware path routing, same error-envelope shape.</p>
+<p>This works only because the contract is defined behaviourally, not as shared code. A <code>dw_save</code> in any sibling dispatches on file extension, enforces an <code>isid</code> uniqueness check, writes a sidecar with the same JSON schema, mirrors canonical writes to Z:, and honours the session-level producer / reviewer mode — and it produces the <em>same numbers</em> given the same inputs. The compatibility is in the observable behaviour, which is exactly what reproducibility cares about.</p>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>Cross-language parity is the design goal, not a finished fact. The gaps worth naming up front, all recorded in the coverage matrix appendix, are:</p>
+<ul>
+<li><strong>No Stata API <em>fetch</em> wrapper.</strong> <code>dw_api_fetch</code> / <code>dw_api_cached</code> / <code>dw_api_inventory</code> are R and Python only. Stata ships the enforcement half (<code>dw_require_no_api</code>) but not the fetch half.</li>
+<li><strong>No Stata parquet or RDS, and <code>dw_merge</code> / <code>dw_verify_z</code> are not in the Stata sibling.</strong> <code>dw_isid</code> in Stata is embedded inside <code>dw_save</code> (the <code>idvars()</code> option) rather than exposed as its own command. (The read contract, <code>dw_use</code>, <em>is</em> now in Stata as of v0.4.0; issue #5 is closed.)</li>
+<li><strong>The demographics helpers <code>dw_pop</code> / <code>dw_regions</code> are R-only.</strong> Neither has a Python or Stata sibling yet; a non-R consumer that needs population denominators or regional groupings routes through the R sibling or a pre-computed artefact.</li>
+<li><strong>No Python autodoc.</strong> R has Roxygen-complete reference documentation (34 <code>.Rd</code> files plus a pkgdown site configured in <code>r/_pkgdown.yml</code>); Python has no equivalent pkgdown-style generated reference, only hand-written references and module READMEs, and the Python sibling trails the R release.</li>
+</ul>
+<p>Treat the parity claim as “same names, same behaviour where a function exists in both,” not “every function exists everywhere.”</p>
+</div>
+</div>
+</div>
+<p>Maturity differs by sibling as well as by function. The R sibling was feature-complete first and leads the release line; the Python sibling followed as a full port (nine functional modules and twenty-eight public entries) but trails the current R release; the Stata sibling shipped a focused subset and is still filling in. As of v0.5.0 the Stata sibling exposes six commands — <code>dw_save</code>, <code>dw_use</code>, <code>dw_compare</code>, <code>dw_mkdir</code>, <code>dw_load_config</code>, and <code>dw_require_no_api</code>. The versioning-and-releases chapter traces this timeline; the point for the architecture is that a consumer chooses <em>one</em> sibling and gets whatever that sibling implements, so the choice of language is also a choice of current coverage.</p>
+</section>
+<section id="layer-three-consumer-repositories-vendor-the-helpers" class="level2" data-number="3.4">
+<h2 data-number="3.4" class="anchored" data-anchor-id="layer-three-consumer-repositories-vendor-the-helpers"><span class="header-section-number">3.4</span> Layer three — consumer repositories vendor the helpers</h2>
+<p>A consumer repository does not install the toolkit over the network. It <em>vendors</em> it: it copies the helpers for its chosen language into its own <code>00_functions/</code> directory and pins a version in a one-line manifest, <code>.toolkit_manifest.yml</code>. DW-Production is the first consumer; the sector pipelines are consumers through it — education, water and sanitation, nutrition, HIV/AIDS, child poverty, immunisation, and the rest; the CCRI / geospatial work consumes the Python sibling directly. Future repositories — UNPD-Population, datalib — are expected to vendor the same way.</p>
+<p>Vendoring rather than network-installing is deliberate. The reasons:</p>
+<ul>
+<li><strong>Vintage permanence.</strong> A 2026-05 release re-run must use the helper code as it stood in 2026-05. Network <code>source()</code> / <code>pip install</code> / <code>net install</code> would silently pull whatever the latest code is, breaking the freeze.</li>
+<li><strong>AppLocker reality.</strong> UNICEF laptops block many script-installable paths; copying files into <code>00_functions/</code> always works where a network install may not.</li>
+<li><strong>Offline reproducibility.</strong> Reviewers on planes, behind customs firewalls, or on locked-down corporate networks need the helpers present locally.</li>
+</ul>
+<p>Each language does still offer a native install path for local development — <code>devtools::install_local("r/")</code>, <code>pip install -e python/</code>, <code>adopath ++ "stata/src"</code> — but vendoring stays the production model. The vendoring chapter and the onboarding worked example in Part IV cover the mechanics; the architectural fact is simply that the dependency from consumer to toolkit is a <em>copy plus a pin</em>, not a live link. That is what lets a consumer be re-run identically years later, and it is what lets the vintage-sync family detect, without ever forcing, when a consumer has drifted behind the upstream tag.</p>
+</section>
+<section id="layer-four-the-canonical-deposit" class="level2" data-number="3.5">
+<h2 data-number="3.5" class="anchored" data-anchor-id="layer-four-the-canonical-deposit"><span class="header-section-number">3.5</span> Layer four — the canonical deposit</h2>
+<p>Everything the consumers produce in producer mode flows into one place: the canonical deposit. Physically it is the Teams folder <code>060.DW-MASTER/</code>, carbon-copied to a Z: drive mirror, and from there published downstream to Helix, the SDMX endpoints, and <code>data.unicef.org</code>. Architecturally it is the immutable record that closes the reproducibility loop. The producer writes it; the reviewer reads it, frozen, and never re-runs anything upstream of it; the publisher pushes blessed copies of it to the outside world.</p>
+<p>The deposit is where the contract’s two halves meet. The IO family writes artefacts here with provenance sidecars and a Z: mirror; the external-API family caches upstream pulls here so they too become part of the frozen record; the mode contract draws its hard line right at this boundary, allowing a producer to write canonical paths and forcing a reviewer’s writes into a per-user sandbox instead. The roles-and-mode-contract chapter develops the producer / reviewer / publisher split in full; for the architecture, the deposit is best understood as the inert artefact that makes the whole layered design pay off — because it can be read without being recomputed, the numbers it holds stay reproducible.</p>
+</section>
+<section id="reading-the-architecture-diagram" class="level2" data-number="3.6">
+<h2 data-number="3.6" class="anchored" data-anchor-id="reading-the-architecture-diagram"><span class="header-section-number">3.6</span> Reading the architecture diagram</h2>
+<p>The README’s “Architecture at a glance” Mermaid flowchart encodes the same four layers and the direction of flow between them. The diagram uses exactly two line styles — solid arrows (<code>--&gt;</code>) and dashed arrows (<code>-.-&gt;</code>) — and three reading aids unlock it:</p>
+<ul>
+<li><strong>Solid versus dashed arrows.</strong> Solid arrows are normal producing flow: external sources into the API family, the toolkit into the consumers (via the siblings), and consumers depositing into the canonical store. Dashed arrows are the two reproducibility-and-parity relationships, and they are the <em>only</em> non-solid lines in the picture.</li>
+<li><strong>The dashed line into the language siblings</strong> (<code>TK -.-&gt; LANG</code>, labelled “language-parallel implementations”) marks the “same contract, three idiomatic implementations” relationship — independent code that agrees behaviourally, not generated bindings.</li>
+<li><strong>The dashed line from the deposit back to the consumers</strong> (<code>CANON -.-&gt; CONS</code>, labelled “reviewer reads (frozen)”) is the reviewer path: reading the frozen deposit without recomputation.</li>
+</ul>
+<p>The one edge that carries a version number is the <strong>vendoring edge</strong> (<code>LANG --&gt; CONS</code>), a <em>solid</em> arrow labelled <code>.toolkit_manifest.yml</code> — the file that records the pinned version. It is the copy-plus-pin dependency from each consumer back to a sibling, and the vintage-sync family is the machinery that watches it.</p>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>If you are matching the prose to the rendered picture: there is no dotted style in this diagram. Every non-solid arrow is the same Mermaid dashed style (<code>-.-&gt;</code>), and there are exactly two of them — the language-parallel edge and the reviewer-reads edge.</p>
+</div>
+</div>
+</div>
+<p>The four layers — toolkit, siblings, consumers, deposit — are the frame to hold for the rest of the book. From here, Part II elaborates the contract those layers carry; Part III gives each capability family its own chapter; and Part IV covers how a repository joins the architecture as a new consumer and stays in sync over time.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../chapters/11-why.html" class="pagination-link" aria-label="Why a toolkit">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Why a toolkit</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../chapters/21-roles-and-modes.html" class="pagination-link" aria-label="Roles and the mode contract">
+        <span class="nav-page-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Roles and the mode contract</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>UNICEF Chief Statistician Office — Data &amp; Analytics (OSE)</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/unicef-drp/cso-toolkit/edit/main/book/chapters/12-architecture.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/unicef-drp/cso-toolkit/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>Built with <a href="https://quarto.org">Quarto</a></p>
+</div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

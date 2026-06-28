@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.42">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>11&nbsp; Scaffolding and the contract auditor – The CSO Toolkit Handbook</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../chapters/41-vendoring.html" rel="next">
+<link href="../chapters/34-vintage-sync.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-baf7457b58093534c7052efdef5f4d86.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/31-io.html">Part III — The API (cross-language)</a></li><li class="breadcrumb-item"><a href="../chapters/35-scaffolding-audit.html"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Scaffolding and the contract auditor</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">The CSO Toolkit Handbook</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/unicef-drp/cso-toolkit/tree/main/book/" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Welcome</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part I — Why &amp; Architecture</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/11-why.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Why a toolkit</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/12-architecture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Architecture: one contract, three languages, many consumers</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part II — The Contract</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/21-roles-and-modes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Roles and the mode contract</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/22-wiring-the-contract.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Wiring the contract into a repo</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/23-provenance-and-errors.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Provenance sidecars and the error envelope</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part III — The API (cross-language)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/31-io.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">The IO contract</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/32-external-api.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">The external-API contract</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/33-aggregation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Aggregation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/34-vintage-sync.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Vintage sync</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/35-scaffolding-audit.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Scaffolding and the contract auditor</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part IV — Adoption &amp; Operations</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/41-vendoring.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">The vendoring model</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/42-onboarding-example.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Onboarding a repo: a worked example</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/43-contract-auditor-ci.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">The contract auditor in continuous integration (CI)</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/44-versioning-release.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Versioning and releases</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Appendices</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/a-coverage-matrix.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">A</span>&nbsp; <span class="chapter-title">Cross-language coverage matrix</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/b-provenance-schema.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">B</span>&nbsp; <span class="chapter-title">Provenance sidecar schema</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/c-error-taxonomy.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">C</span>&nbsp; <span class="chapter-title">Error taxonomy</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/d-function-reference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">D</span>&nbsp; <span class="chapter-title">Function reference</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/e-glossary.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">E</span>&nbsp; <span class="chapter-title">Glossary</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#the-scaffolding-model" id="toc-the-scaffolding-model" class="nav-link active" data-scroll-target="#the-scaffolding-model"><span class="header-section-number">11.1</span> The scaffolding model</a></li>
+  <li><a href="#generating-a-profile-create_profile" id="toc-generating-a-profile-create_profile" class="nav-link" data-scroll-target="#generating-a-profile-create_profile"><span class="header-section-number">11.2</span> Generating a profile: <code>create_profile</code></a></li>
+  <li><a href="#generating-a-sector-driver-create_sector_script" id="toc-generating-a-sector-driver-create_sector_script" class="nav-link" data-scroll-target="#generating-a-sector-driver-create_sector_script"><span class="header-section-number">11.3</span> Generating a sector driver: <code>create_sector_script</code></a></li>
+  <li><a href="#auditing-a-profile-review_profile" id="toc-auditing-a-profile-review_profile" class="nav-link" data-scroll-target="#auditing-a-profile-review_profile"><span class="header-section-number">11.4</span> Auditing a profile: <code>review_profile</code></a></li>
+  <li><a href="#the-contract-auditor-test_scripts" id="toc-the-contract-auditor-test_scripts" class="nav-link" data-scroll-target="#the-contract-auditor-test_scripts"><span class="header-section-number">11.5</span> The contract auditor: <code>test_scripts</code></a>
+  <ul class="collapse">
+  <li><a href="#how-it-works" id="toc-how-it-works" class="nav-link" data-scroll-target="#how-it-works"><span class="header-section-number">11.5.1</span> How it works</a></li>
+  <li><a href="#what-it-flags" id="toc-what-it-flags" class="nav-link" data-scroll-target="#what-it-flags"><span class="header-section-number">11.5.2</span> What it flags</a></li>
+  <li><a href="#the-escape-hatch-cso-allow" id="toc-the-escape-hatch-cso-allow" class="nav-link" data-scroll-target="#the-escape-hatch-cso-allow"><span class="header-section-number">11.5.3</span> The escape hatch: <code># cso-allow:</code></a></li>
+  <li><a href="#running-it-in-ci" id="toc-running-it-in-ci" class="nav-link" data-scroll-target="#running-it-in-ci"><span class="header-section-number">11.5.4</span> Running it in CI</a></li>
+  </ul></li>
+  <li><a href="#a-note-on-naming" id="toc-a-note-on-naming" class="nav-link" data-scroll-target="#a-note-on-naming"><span class="header-section-number">11.6</span> A note on naming</a></li>
+  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary"><span class="header-section-number">11.7</span> Summary</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/unicef-drp/cso-toolkit/edit/main/book/chapters/35-scaffolding-audit.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/unicef-drp/cso-toolkit/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/31-io.html">Part III — The API (cross-language)</a></li><li class="breadcrumb-item"><a href="../chapters/35-scaffolding-audit.html"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Scaffolding and the contract auditor</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Scaffolding and the contract auditor</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>A contract is only as good as a team’s willingness to honour it, and two costs erode that willingness over time. The first is the cost of <em>adoption</em>: if wiring a new repository into the toolkit means hand-copying a profile, remembering the sentinel convention, and recreating the producer/reviewer plumbing from scratch, people will cut corners and the contract will fray at the edges. The second is the cost of <em>enforcement</em>: once a repository is wired, nothing stops a contributor from quietly writing <code>read_csv()</code> or <code>httr::GET()</code> in a new script, bypassing the IO and external-API contracts the rest of the codebase observes.</p>
+<p>This chapter covers four helpers that attack those two costs. Three are <em>scaffolders</em> — <code>create_profile</code>, <code>create_sector_script</code>, and <code>review_profile</code> — that generate and verify the boilerplate a contract-compliant repository needs. The fourth is the <em>contract auditor</em>, <code>test_scripts</code>, which reads a directory of source files and flags every raw IO or HTTP call that should have gone through a toolkit wrapper. Together they make the right thing the easy thing on the way in, and make the wrong thing visible on the way out.</p>
+<p>One coverage caveat. The scaffolders and the auditor are implemented in R and Python only. Stata has no <code>create_profile</code>, no <code>create_sector_script</code>, no <code>review_profile</code>, and no <code>test_scripts</code>. The Stata side of the toolkit ships the runtime helpers (<code>dw_save</code>, <code>dw_use</code>, <code>dw_compare</code>, <code>dw_require_no_api</code>, <code>dw_load_config</code>) but leaves profile setup and contract auditing to convention rather than code. This is an honest gap, not an oversight to gloss over; where a Stata equivalent is missing, the tabsets below say so plainly. Throughout, the worked examples lean on DW-Production (the UNICEF Data Warehouse production repository, the toolkit’s reference deployment), because that is the codebase these helpers were lifted from and generalised away from.</p>
+<section id="the-scaffolding-model" class="level2" data-number="11.1">
+<h2 data-number="11.1" class="anchored" data-anchor-id="the-scaffolding-model"><span class="header-section-number">11.1</span> The scaffolding model</h2>
+<p>The three scaffolders form a small dependency chain that mirrors how a repository is actually built:</p>
+<ol type="1">
+<li><code>create_profile()</code> writes a <code>profile_&lt;repo&gt;.R</code> (or <code>.py</code>) — the script every session sources first. It establishes the user’s identity, loads configuration, resolves the producer/reviewer mode, loads packages, and finally sets a <strong>sentinel</strong>: a single object whose existence proves the whole profile ran to completion.</li>
+<li><code>create_sector_script()</code> writes a <code>00_run_&lt;sector&gt;.R</code> (or <code>.py</code>) — a per-sector pipeline driver that <em>refuses to run</em> unless that sentinel is present, then wraps the sector’s work in logging and error handling.</li>
+<li><code>review_profile()</code> audits a profile after the fact, reporting <code>pass</code> / <code>warn</code> / <code>fail</code> for each block the contract depends on — useful for profiles that predate the scaffolder, or that someone hand-edited.</li>
+</ol>
+<p>The sentinel is the linchpin. <code>create_profile()</code> ends by setting <code>profile_&lt;repo&gt; &lt;- TRUE</code>, and <code>create_sector_script()</code> generates code that checks for the profile being loaded. The two helpers therefore share one convention: if the profile loaded, the whole profile (config, mode, packages) ran to completion. The roles, the mode contract, and the sentinel are described in the roles-and-mode-contract chapter; here we look at how the scaffolders produce them.</p>
+</section>
+<section id="generating-a-profile-create_profile" class="level2" data-number="11.2">
+<h2 data-number="11.2" class="anchored" data-anchor-id="generating-a-profile-create_profile"><span class="header-section-number">11.2</span> Generating a profile: <code>create_profile</code></h2>
+<p><code>create_profile()</code> is a code generator, not a runtime helper — it writes a template to disk and returns the path. The generated profile is patterned on DW-Production’s <code>profile_DW-Production.R</code>: it reads the username under whichever convention the OS uses (Windows, Mac, or Linux), loads a YAML user config, resolves <code>dw_mode</code>, loads packages, and sets the sentinel.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" aria-current="page">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-3" role="tab" aria-controls="tabset-1-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Generic project:</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">create_profile</span>(<span class="st">"My-Sector-Project"</span>, <span class="at">project_title =</span> <span class="st">"My Sector Project"</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># DW-Production, with the Z: drive advisory and overwrite:</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">create_profile</span>(<span class="st">"DW-Production"</span>,</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>               <span class="at">project_title         =</span> <span class="st">"UNICEF DW Production"</span>,</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>               <span class="at">include_z_drive_check =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>               <span class="at">overwrite             =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Generic project:</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>create_profile(<span class="st">"My-Sector-Project"</span>, project_title<span class="op">=</span><span class="st">"My Sector Project"</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># DW-Production, with the Z: drive advisory and overwrite:</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>create_profile(<span class="st">"DW-Production"</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>               project_title<span class="op">=</span><span class="st">"UNICEF DW Production"</span>,</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>               include_z_drive_check<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>               overwrite<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-1-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-3-tab">
+<div class="sourceCode" id="cb3"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>* No equivalent. Stata has no create_profile scaffolder.</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>* Author the profile <span class="kw">do</span>-file <span class="kw">by</span> hand and call dw_load_config inside it</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>* to read ~/.config/user_config.yml and <span class="kw">set</span> <span class="ot">$dw_mode</span> + team globals.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<p>The arguments are the same across R and Python:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Argument</th>
+<th>Default</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>repo_name</code></td>
+<td>(required)</td>
+<td>Repository folder name. Drives the sentinel name (<code>profile_&lt;repo&gt;</code>, with <code>-</code> and <code>.</code> mapped to <code>_</code>) and the filename (<code>profile_&lt;repo&gt;.R</code> / <code>.py</code>).</td>
+</tr>
+<tr class="even">
+<td><code>project_title</code></td>
+<td><code>repo_name</code></td>
+<td>Human-readable title for the header block.</td>
+</tr>
+<tr class="odd">
+<td><code>output_path</code></td>
+<td><code>"."</code></td>
+<td>Directory the file is written to.</td>
+</tr>
+<tr class="even">
+<td><code>include_dw_mode</code></td>
+<td><code>TRUE</code></td>
+<td>Emit the producer/reviewer <code>dw_mode</code> block and the <code>dw_require_no_api</code> guard.</td>
+</tr>
+<tr class="odd">
+<td><code>include_z_drive_check</code></td>
+<td><code>FALSE</code></td>
+<td>Emit the Z: drive availability advisory. The Z: drive is the legacy Azure file-share mirror of canonical deposits, so this block is DW-Production-specific.</td>
+</tr>
+<tr class="even">
+<td><code>author</code></td>
+<td>system user</td>
+<td>Author name in the header.</td>
+</tr>
+<tr class="odd">
+<td><code>overwrite</code></td>
+<td><code>FALSE</code></td>
+<td>Stop if the file already exists, unless <code>TRUE</code>.</td>
+</tr>
+</tbody>
+</table>
+<p>The generated profile opens with a <strong>header</strong> — title, filename, author, timestamp, and a pointer to the toolkit repository, followed by a reproducibility seed (<code>set.seed(12345)</code> / <code>random.seed(12345)</code>). After it come eight numbered blocks, assembled in order:</p>
+<ol type="1">
+<li><strong>User identification</strong> — reads <code>USERNAME</code> / <code>USER</code> and <code>USERPROFILE</code>, falling back across Windows / Mac / Linux conventions.</li>
+<li><strong>Flags and controls</strong> — e.g.&nbsp;<code>create_missing_folders &lt;- FALSE</code>.</li>
+<li><strong>Repository name</strong> — records the repo as a literal, e.g.&nbsp;<code>repo_name &lt;- "DW-Production"</code>.</li>
+<li><strong>Z: drive advisory</strong> (only when <code>include_z_drive_check = TRUE</code>) — a <em>non-blocking</em> check; the absence of the legacy mirror prints a warning rather than stopping execution.</li>
+<li><strong>Config load</strong> — reads <code>~/.config/user_config.yml</code> via <code>yaml::read_yaml()</code> / <code>yaml.safe_load()</code>, hard-failing if the file is missing.</li>
+<li><strong>Producer/reviewer mode</strong> (only when <code>include_dw_mode = TRUE</code>) — reads <code>dw_mode</code> from the config, refuses any value other than <code>"producer"</code> or <code>"reviewer"</code>, and defines the <code>dw_require_no_api()</code> guard that reviewer-mode analysis code calls to forbid network access.</li>
+<li><strong>Packages / imports</strong> — a placeholder block listing the pipeline’s dependencies.</li>
+<li><strong>Profile sentinel</strong> — sets <code>profile_&lt;repo&gt; &lt;- TRUE</code> (R) or <code>profile_&lt;repo&gt; = True</code> (Python) and prints a confirmation.</li>
+</ol>
+<p>Block 6 hides a meaningful cross-language difference. The Python profile wires the resolved mode into the toolkit’s shared state, so <code>dw_save</code> / <code>dw_use</code> / <code>dw_api_fetch</code> route by mode automatically — it imports <code>cso_toolkit._state</code> and calls <code>_cso_state.configure(dw_mode=..., dw_apis_allowed=(dw_mode == "producer"))</code>. The R profile does no such wiring; its generated <code>dw_require_no_api()</code> simply inspects <code>dw_mode</code> and <code>stop()</code>s in reviewer mode. There is a second asymmetry in block 8: the Python profile also defines a <code>log_message()</code> helper there, so that sector scripts have a logger to import. These differences reflect each language’s idioms; the contract they implement is identical.</p>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>The YAML config load in block 5 is the one place a profile <em>must</em> read a file directly — it bootstraps the very configuration the toolkit needs before any toolkit helper is available. The auditor knows this: the generated Python profile annotates the line <code>yaml.safe_load(_f)  # cso-allow: io-yaml</code>, exempting it from the auditor’s IO rule. See “The escape hatch” below.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="generating-a-sector-driver-create_sector_script" class="level2" data-number="11.3">
+<h2 data-number="11.3" class="anchored" data-anchor-id="generating-a-sector-driver-create_sector_script"><span class="header-section-number">11.3</span> Generating a sector driver: <code>create_sector_script</code></h2>
+<p>Where <code>create_profile()</code> scaffolds the once-per-repository profile, <code>create_sector_script()</code> scaffolds a once-per-sector run script: <code>&lt;base_dir&gt;/&lt;sector_code&gt;/00_run_&lt;sector_code&gt;.R</code> (or <code>.py</code>). The template it writes is deliberately runnable out of the box — it verifies the profile, sets up logging and runtime tracking, builds input/output paths, and wraps the (placeholder) work in error handling.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-3" role="tab" aria-controls="tabset-2-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<div class="sourceCode" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Generic — writes ./ws/00_run_ws.R relative to cwd:</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">create_sector_script</span>(<span class="st">"WASH"</span>, <span class="st">"ws"</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Into a chosen subtree:</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fu">create_sector_script</span>(<span class="st">"Nutrition"</span>, <span class="st">"nt"</span>, <span class="at">base_dir =</span> <span class="st">"pipelines/sectors"</span>)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co"># DW-Production conventions wrapper (writes under 01_dw_prep/012_codes/):</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="fu">create_dw_sector_script</span>(<span class="st">"WASH"</span>, <span class="st">"ws"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Generic — writes ./ws/00_run_ws.py relative to cwd:</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>create_sector_script(<span class="st">"WASH"</span>, <span class="st">"ws"</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Into a chosen subtree:</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>create_sector_script(<span class="st">"Nutrition"</span>, <span class="st">"nt"</span>, base_dir<span class="op">=</span><span class="st">"pipelines/sectors"</span>)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co"># DW-Production conventions wrapper (writes under 01_dw_prep/012_codes/):</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>create_dw_sector_script(<span class="st">"WASH"</span>, <span class="st">"ws"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-2-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-3-tab">
+<div class="sourceCode" id="cb6"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>* No equivalent. Stata has no create_sector_script scaffolder.</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>* Author 00_run_&lt;sector&gt;.<span class="kw">do</span> <span class="kw">by</span> hand; guard it <span class="kw">on</span> <span class="ot">$dw_mode</span> being <span class="kw">set</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>* (dw_load_config must have <span class="kw">run</span>) before doing the sector's work.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<p>The key arguments (R and Python share names and meaning, with one default that differs — flagged below):</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Argument</th>
+<th>Default (R)</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>sector_name</code></td>
+<td>(required)</td>
+<td>Full name, e.g.&nbsp;<code>"Nutrition"</code>. Used in headers and log lines.</td>
+</tr>
+<tr class="even">
+<td><code>sector_code</code></td>
+<td>(required)</td>
+<td>Short code, e.g.&nbsp;<code>"nt"</code>. Drives the folder and filename.</td>
+</tr>
+<tr class="odd">
+<td><code>base_dir</code></td>
+<td><code>"."</code></td>
+<td>Parent directory under which <code>&lt;sector_code&gt;/00_run_&lt;sector_code&gt;.*</code> is created.</td>
+</tr>
+<tr class="even">
+<td><code>profile_name</code></td>
+<td><code>"projectFolder"</code></td>
+<td>The variable the sector script asserts must exist before it will run. (Python defaults this to the sentinel <code>"profile_DW_Production"</code> instead — see below.)</td>
+</tr>
+<tr class="odd">
+<td><code>profile_file</code></td>
+<td><code>"profile_DW-Production.R"</code></td>
+<td>Profile the script tells the user to source on failure.</td>
+</tr>
+<tr class="even">
+<td><code>input_subpath</code> / <code>output_subpath</code></td>
+<td><code>c("01_dw_prep", "011_rawdata")</code> / <code>c("01_dw_prep", "013_wrkdata")</code></td>
+<td>Path components, relative to <code>projectFolder</code>, for the sector’s input and output folders.</td>
+</tr>
+<tr class="odd">
+<td><code>overwrite</code></td>
+<td><code>FALSE</code></td>
+<td>Stop if the target exists, unless <code>TRUE</code>.</td>
+</tr>
+</tbody>
+</table>
+<p>The generated R template contains five sections:</p>
+<ul>
+<li><strong>0. Profile Verification</strong> — <code>if (!exists(profile_name) || is.null(profile_name)) stop(...)</code>. The check is satisfied by any non-null value, so the sentinel can be a character, numeric, or logical. Note this default differs from the profile sentinel <code>profile_&lt;repo&gt;</code> introduced in the scaffolding-model section: the R template defaults <code>profile_name</code> to <code>"projectFolder"</code> rather than the sentinel, because <code>projectFolder</code> is the variable the template <em>also</em> uses to build paths — so the guard and the path construction share one source of truth. (The Python template makes the opposite choice; see the cross-language note below.)</li>
+<li>A <strong><code>log_message</code> fallback</strong> — if the profile did not define one, the template installs a minimal timestamped logger so the script runs out of the box.</li>
+<li>An <strong><code>errorOccurred</code> flag</strong> — initialised to <code>FALSE</code> so the <code>tryCatch</code> handler can set it with <code>&lt;&lt;-</code> without the caller pre-declaring the global. The top-level runner consumes this flag.</li>
+<li><strong>1. Logging</strong> — emits a “Starting <sector> module” line and records <code>start_time</code>.</sector></li>
+<li><strong>2. Sector Execution Block</strong> — a <code>tryCatch({...}, error = ...)</code> wrapper that defines <code>input_folder</code> / <code>output_folder</code> from <code>projectFolder</code>, creates the output folder, leaves commented placeholders for load/process/export, and finishes by logging the duration. On error it sets <code>errorOccurred &lt;&lt;- TRUE</code> and logs the message.</li>
+</ul>
+<p>The Python template covers the same five sections with idiomatic equivalents — a <code>try/except</code> block instead of <code>tryCatch</code>, <code>pathlib.Path</code> for path building. Verifying the profile takes more work in Python. A profile filename like <code>profile_DW-Production.py</code> contains a hyphen, so it is not a legal Python module name. The template therefore loads it via <code>importlib.util.spec_from_file_location</code> — walking up the ancestor directories to find it — then pulls the sentinel, <code>log_message</code>, and <code>projectFolder</code> from the loaded module. This is the Python answer to R’s <code>source()</code>, and it is worth knowing about when a sector script cannot find its profile. Because the Python template reads the sentinel out of the loaded module, it defaults <code>profile_name</code> to the sentinel <code>"profile_DW_Production"</code> (note the underscores) rather than to <code>"projectFolder"</code>.</p>
+<div class="callout callout-style-simple callout-warning">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>The default <code>input_subpath</code> / <code>output_subpath</code> differ between languages. R defaults to <code>011_rawdata</code> / <code>013_wrkdata</code>; the Python port defaults to <code>011_input</code> / <code>013_output</code>. If you scaffold the same sector in both languages, set the paths explicitly so the two drivers agree.</p>
+</div>
+</div>
+</div>
+<p>Both languages provide a <code>create_dw_sector_script()</code> — a thin wrapper that fills in the DW-Production layout: scripts land at <code>01_dw_prep/012_codes/&lt;sector&gt;/</code>, with inputs and outputs under the canonical sibling folders. Reach for the wrapper inside DW-Production; reach for the generic <code>create_sector_script()</code> everywhere else. (The R package additionally exports <code>dw_create_sector_script</code> as a <code>dw_</code>-prefixed alias of the generic helper — see “A note on naming”; the Python package does not.)</p>
+</section>
+<section id="auditing-a-profile-review_profile" class="level2" data-number="11.4">
+<h2 data-number="11.4" class="anchored" data-anchor-id="auditing-a-profile-review_profile"><span class="header-section-number">11.4</span> Auditing a profile: <code>review_profile</code></h2>
+<p><code>create_profile()</code> produces a profile that passes every check by construction. <code>review_profile()</code> is for the other case: a profile that someone wrote by hand, hand-edited, or inherited from before the scaffolder existed. It reads the file and runs eight presence checks, reporting <code>pass</code>, <code>warn</code>, or <code>fail</code> for each.</p>
+<p>The audit is deliberately <strong>pattern-based, not parse-based</strong> — it greps for the load-bearing lines rather than parsing the script, so it tolerates the stylistic variation found across older profiles. It does not execute the profile.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-3" role="tab" aria-controls="tabset-3-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
+<div class="sourceCode" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">review_profile</span>(<span class="st">"profile_DW-Production.R"</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Profile that does not touch dw_io/dw_api — downgrade dw_mode to a warning:</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="fu">review_profile</span>(<span class="st">"profile_my-project.R"</span>, <span class="at">require_dw_mode =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
+<div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>review_profile(<span class="st">"profile_DW-Production.py"</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Profile that does not touch dw_io/dw_api — downgrade dw_mode to a warning:</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>review_profile(<span class="st">"profile_my-project.py"</span>, require_dw_mode<span class="op">=</span><span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-3-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-3-tab">
+<div class="sourceCode" id="cb9"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>* No equivalent. Stata has no review_profile auditor.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<p>The eight checks, and the level each fails at:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>#</th>
+<th>Check</th>
+<th>Fails at</th>
+<th>What it looks for</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>Profile sentinel object</td>
+<td><code>fail</code></td>
+<td><code>profile_&lt;repo&gt; &lt;- TRUE</code> / <code>= True</code> — without it, sector scripts cannot verify the profile ran.</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>Cross-platform user identification</td>
+<td><code>fail</code></td>
+<td><code>Sys.getenv("USERNAME"/"USER")</code> / <code>os.environ.get(...)</code>.</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>Reproducibility seed</td>
+<td><code>warn</code></td>
+<td><code>set.seed(</code> (R); <code>random.seed(</code> / <code>np.random.seed(</code> (Python).</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td><code>user_config.yml</code> load</td>
+<td><code>fail</code></td>
+<td>A reference to <code>user_config.yml</code> <em>and</em> a <code>yaml::read_yaml</code> / <code>yaml.safe_load</code> call.</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td><code>dw_mode</code> resolution</td>
+<td><code>fail</code>*</td>
+<td>The strings <code>dw_mode</code>, <code>producer</code>, and <code>reviewer</code> all present.</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td><code>dw_require_no_api</code> guard</td>
+<td><code>fail</code>*</td>
+<td><code>dw_require_no_api</code> defined or invoked.</td>
+</tr>
+<tr class="odd">
+<td>7</td>
+<td>Z: drive advisory</td>
+<td><code>warn</code>†</td>
+<td><code>dw_z_available</code> or <code>network_root &lt;- "Z:</code> / <code>network_root = "Z:</code>.</td>
+</tr>
+<tr class="even">
+<td>8</td>
+<td>Packages / imports block</td>
+<td><code>warn</code></td>
+<td><code>requireNamespace</code> / <code>install.packages</code> / <code>library(</code> (R); an <code>import</code> / <code>from</code> statement (Python).</td>
+</tr>
+</tbody>
+</table>
+<p>* Checks 5 and 6 drop from <code>fail</code> to <code>warn</code> when <code>require_dw_mode = FALSE</code> — appropriate for a profile that never touches the IO or API wrappers. † Check 7 is a <code>warn</code> by default and rises to <code>fail</code> only when <code>require_z_drive_check = TRUE</code>.</p>
+<p>Both functions return a data frame (<code>check</code>, <code>status</code>, <code>detail</code>) — invisibly in R, directly in Python — and print a formatted summary with <code>[OK]</code> / <code>[!]</code> / <code>[X]</code> markers and a tally. Use the returned frame in CI to gate on <code>status == "fail"</code>.</p>
+</section>
+<section id="the-contract-auditor-test_scripts" class="level2" data-number="11.5">
+<h2 data-number="11.5" class="anchored" data-anchor-id="the-contract-auditor-test_scripts"><span class="header-section-number">11.5</span> The contract auditor: <code>test_scripts</code></h2>
+<p><code>test_scripts()</code> is the enforcement half of the chapter — the answer to the <em>second</em> cost named at the start. It recursively scans a directory of source files and flags every line that calls a raw file-IO or external-API function the toolkit is meant to wrap. The contract it enforces is exactly the one described in the IO-contract and external-API-contract chapters:</p>
+<ul>
+<li><strong>File IO</strong> must go through <code>dw_save</code> / <code>dw_use</code> / <code>dw_compare</code> / <code>dw_merge</code> — never <code>read_csv()</code>, <code>write_xlsx()</code>, <code>saveRDS()</code>, <code>pd.read_csv</code>, <code>df.to_excel</code>, <code>pickle.dump</code>, and so on.</li>
+<li><strong>External APIs</strong> must go through <code>dw_api_fetch</code> / <code>dw_api_cached</code> — never <code>httr::GET()</code>, <code>rsdmx::readSDMX()</code>, <code>wbstats::wb_data()</code>, <code>requests.get</code>, <code>sdmx.Client</code>, <code>wbgapi</code>, and so on.</li>
+</ul>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-3" role="tab" aria-controls="tabset-4-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
+<div class="sourceCode" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Audit a sector codebase:</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">test_scripts</span>(<span class="st">"01_dw_prep/012_codes/nt"</span>)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># CI mode — stop with a non-zero exit on any io/api violation:</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="fu">test_scripts</span>(<span class="st">"01_dw_prep/012_codes"</span>, <span class="at">error_on_violation =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co"># dw_-prefixed alias (identical behaviour):</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="fu">dw_test_scripts</span>(<span class="st">"01_dw_prep/012_codes"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
+<div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Audit a sector codebase:</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>test_scripts(<span class="st">"01_dw_prep/012_codes/nt"</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># CI mode — raise RuntimeError on any io/api violation:</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>test_scripts(<span class="st">"01_dw_prep/012_codes"</span>, error_on_violation<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-4-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-3-tab">
+<div class="sourceCode" id="cb12"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>* No equivalent. Stata has no <span class="kw">contract</span> auditor.</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>* The Stata wrappers (dw_save / dw_use / dw_require_no_api) enforce the</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>* <span class="kw">contract</span> <span class="fu">at</span> the call site, but nothing scans .<span class="kw">do</span> files <span class="kw">for</span> raw imports.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<section id="how-it-works" class="level3" data-number="11.5.1">
+<h3 data-number="11.5.1" class="anchored" data-anchor-id="how-it-works"><span class="header-section-number">11.5.1</span> How it works</h3>
+<p>For each matching file (default filename pattern <code>\.R$</code> / <code>\.py$</code>), the auditor reads it line by line. Before matching, it scrubs string literals (so a URL inside a quoted string does not trigger a rule) and strips trailing comments (so commented-out code is not flagged) — while preserving any <code># cso-allow:</code> directive on the line. It then tests each line against a registry of rules. A rule carries an <code>id</code>, a <code>family</code> (<code>"io"</code> or <code>"api"</code>), a <code>pattern</code>, a <code>message</code>, and a <code>suggest</code>ion. The R patterns are written to catch both unqualified and namespaced calls — <code>read_csv(</code> and <code>readr::read_csv(</code> both match — using a negative lookbehind so that <code>my_read_csv(</code> does not.</p>
+<p>Each violation becomes a row with <code>file</code>, <code>line</code>, <code>rule</code>, <code>family</code>, <code>message</code>, <code>suggest</code>, and <code>snippet</code>. The function returns the full data frame (invisibly in R) and, when <code>verbose</code>, prints a per-violation report:</p>
+<pre><code>[api-sdmx] 01_dw_prep/012_codes/nt/01_fetch.R:42
+  Direct rsdmx::readSDMX call.
+  &gt; dat &lt;- rsdmx::readSDMX(providerId = "UNICEF", ...)
+  -&gt; dw_api_fetch(api = 'sdmx', providerId = ..., flowRef = ..., key = ..., cache_key = ...)</code></pre>
+<p>The auditor ignores its own implementation files by default (<code>dw_io</code>, <code>dw_api</code>, <code>cso_toolkit_sync</code>, <code>profile_helpers</code>, <code>test_scripts</code>, plus <code>_state.py</code> and <code>__init__.py</code> on the Python side) — those <em>must</em> call the wrapped commands — and skips noise directories (<code>.git</code>, <code>renv</code>, <code>packrat</code>, <code>.venv</code>, <code>__pycache__</code>, and so on). Both lists are overridable via <code>ignore_files</code> / <code>ignore_dirs</code>, and you can extend the registry with <code>custom_rules</code>.</p>
+</section>
+<section id="what-it-flags" class="level3" data-number="11.5.2">
+<h3 data-number="11.5.2" class="anchored" data-anchor-id="what-it-flags"><span class="header-section-number">11.5.2</span> What it flags</h3>
+<p>The R registry (in <code>test_scripts.R</code>) covers ten IO rules and six API rules:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>family</th>
+<th>rule id</th>
+<th>Flags</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>io</td>
+<td><code>io-read-csv</code> / <code>io-write-csv</code></td>
+<td><code>read.csv</code>/<code>read_csv</code>/<code>read_tsv</code>/<code>read_delim</code> and the write counterparts.</td>
+</tr>
+<tr class="even">
+<td>io</td>
+<td><code>io-fread</code></td>
+<td><code>data.table::fread</code> / <code>fwrite</code>.</td>
+</tr>
+<tr class="odd">
+<td>io</td>
+<td><code>io-rds</code></td>
+<td><code>saveRDS</code> / <code>readRDS</code>.</td>
+</tr>
+<tr class="even">
+<td>io</td>
+<td><code>io-load-save</code></td>
+<td><code>save()</code> / <code>load()</code> for <code>.RData</code>.</td>
+</tr>
+<tr class="odd">
+<td>io</td>
+<td><code>io-dta</code></td>
+<td><code>read_dta</code> / <code>write_dta</code> / <code>read_stata</code> / <code>write_stata</code> (haven).</td>
+</tr>
+<tr class="even">
+<td>io</td>
+<td><code>io-xlsx</code></td>
+<td><code>read_excel</code>/<code>read_xlsx</code>/<code>write_xlsx</code>/<code>read.xlsx</code>/<code>getSheetNames</code>/<code>excel_sheets</code>/<code>loadWorkbook</code>.</td>
+</tr>
+<tr class="odd">
+<td>io</td>
+<td><code>io-parquet</code></td>
+<td><code>read_parquet</code> / <code>write_parquet</code> (arrow).</td>
+</tr>
+<tr class="even">
+<td>io</td>
+<td><code>io-json-file</code></td>
+<td><code>read_json</code> / <code>write_json</code> (jsonlite).</td>
+</tr>
+<tr class="odd">
+<td>io</td>
+<td><code>io-yaml</code></td>
+<td><code>read_yaml</code> / <code>write_yaml</code> / <code>yaml.load_file</code>.</td>
+</tr>
+<tr class="even">
+<td>api</td>
+<td><code>api-httr</code></td>
+<td><code>GET</code>/<code>POST</code>/<code>PUT</code>/<code>PATCH</code>/<code>DELETE</code>/<code>request</code> (httr / httr2).</td>
+</tr>
+<tr class="odd">
+<td>api</td>
+<td><code>api-fromjson-url</code></td>
+<td><code>fromJSON()</code> called on a <code>http(s)://</code> / <code>ftp://</code> URL string.</td>
+</tr>
+<tr class="even">
+<td>api</td>
+<td><code>api-sdmx</code></td>
+<td><code>rsdmx::readSDMX</code>.</td>
+</tr>
+<tr class="odd">
+<td>api</td>
+<td><code>api-wbstats</code></td>
+<td><code>wb_data</code> / <code>wb_indicators</code> / <code>wb_countries</code>.</td>
+</tr>
+<tr class="even">
+<td>api</td>
+<td><code>api-ilostat</code></td>
+<td><code>get_ilostat</code> (Rilostat).</td>
+</tr>
+<tr class="odd">
+<td>api</td>
+<td><code>api-download</code></td>
+<td><code>download.file</code> / <code>curl::curl_download</code> / <code>curl::curl_fetch_*</code> — bypass the cache.</td>
+</tr>
+</tbody>
+</table>
+<p>The Python registry (in <code>test_scripts.py</code>) is the language-appropriate mirror: twelve IO rules covering <code>pd.read_csv</code> / <code>.to_csv</code>, <code>read_excel</code> / <code>.to_excel</code>, <code>read_stata</code> / <code>.to_stata</code>, <code>read_parquet</code> / <code>.to_parquet</code>, <code>pickle.dump</code>/<code>load</code>, <code>json.dump</code>/<code>load</code>, <code>yaml</code> read/write, and a heuristic <code>io-open-write</code> rule that flags <code>open(..., "w")</code>-style calls; plus seven API rules covering <code>requests</code>, <code>httpx</code>, <code>urllib.request.urlopen</code>, <code>sdmx.Client</code>, <code>wbgapi</code>, <code>wbdata</code>, and <code>urllib.request.urlretrieve</code>. The rule <em>ids</em> are intentionally close across languages (<code>io-yaml</code> exists in both, for instance) so a <code># cso-allow:</code> directive reads the same regardless of language.</p>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>The auditor and the wrappers are two layers of the same defence. The wrappers enforce the contract <em>at the call site</em> — once you call <code>dw_save</code>, mode-routing and provenance happen whether you like it or not. The auditor enforces it <em>at review time</em> — it catches the calls that never reached a wrapper at all. The wrappers cannot see a <code>read_csv()</code> that bypasses them; the auditor exists precisely to surface it.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="the-escape-hatch-cso-allow" class="level3" data-number="11.5.3">
+<h3 data-number="11.5.3" class="anchored" data-anchor-id="the-escape-hatch-cso-allow"><span class="header-section-number">11.5.3</span> The escape hatch: <code># cso-allow:</code></h3>
+<p>The contract has principled exceptions — the YAML config bootstrap in a profile being the canonical one. For those, append a <code># cso-allow: &lt;rule-id&gt;</code> comment to the offending line and the auditor will skip that one rule on that one line:</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-5-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-1" role="tab" aria-controls="tabset-5-1" aria-selected="true">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-5-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-2" role="tab" aria-controls="tabset-5-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-5-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-3" role="tab" aria-controls="tabset-5-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-5-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-5-1-tab">
+<div class="sourceCode" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>config <span class="ot">&lt;-</span> yaml<span class="sc">::</span><span class="fu">read_yaml</span>(config_path)  <span class="co"># cso-allow: io-yaml</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-5-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-2-tab">
+<div class="sourceCode" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> <span class="bu">open</span>(config_path, encoding<span class="op">=</span><span class="st">"utf-8"</span>) <span class="im">as</span> _f:</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    user_config <span class="op">=</span> yaml.safe_load(_f)  <span class="co"># cso-allow: io-yaml</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-5-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-3-tab">
+<div class="sourceCode" id="cb16"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>* No auditor, so no escape hatch. Document intentional raw IO <span class="kw">in</span> a comment.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<p>Multiple rules can be silenced on one line as a comma-separated list — <code># cso-allow: io-yaml, io-json</code>. The directive is read from the <em>raw</em> line (not the string-scrubbed copy), so it survives the comment-stripping the matcher applies. Use it sparingly: every allow comment is a documented, reviewable decision that this particular raw call is genuinely intended.</p>
+</section>
+<section id="running-it-in-ci" class="level3" data-number="11.5.4">
+<h3 data-number="11.5.4" class="anchored" data-anchor-id="running-it-in-ci"><span class="header-section-number">11.5.4</span> Running it in CI</h3>
+<p><code>test_scripts()</code> returns clean by default — it reports and moves on. To make it gate a build, pass <code>error_on_violation = TRUE</code> (R) / <code>error_on_violation=True</code> (Python). When set, the function <code>stop()</code>s (R) or raises <code>RuntimeError</code> (Python) after printing the report, but only if at least one violation is in the <code>io</code> or <code>api</code> family. The error message lists up to five offending files (with an “and N more” suffix) and restates the fix: replace the raw call with its toolkit equivalent, or annotate it with <code># cso-allow:</code>. This is the form to wire into a pre-merge check; the contract-auditor-in-CI chapter covers the GitHub Actions plumbing in detail.</p>
+</section>
+</section>
+<section id="a-note-on-naming" class="level2" data-number="11.6">
+<h2 data-number="11.6" class="anchored" data-anchor-id="a-note-on-naming"><span class="header-section-number">11.6</span> A note on naming</h2>
+<p>The auditor predates a naming cleanup. Its canonical name is <code>test_scripts</code>, but the <code>test_</code> prefix collides cosmetically with <code>testthat::test_*</code> unit-test naming — and the function is <em>not</em> a unit-test runner; it audits call sites against the contract. The R package therefore also exports <code>dw_test_scripts</code> as a <code>dw_</code>-prefixed alias, and applies the same treatment to the other R scaffolders: <code>dw_create_profile</code>, <code>dw_create_sector_script</code>, and <code>dw_review_profile</code>. (These aliases are R-only; the Python package exports the un-prefixed names alone.) A future release may rename <code>test_scripts</code> to something like <code>dw_audit_scripts</code> to make the intent unmistakable; until then the alias keeps the change additive and back-compatible. Prefer the <code>dw_</code>-prefixed names in new R code. See the function-reference appendix for the full alias map.</p>
+</section>
+<section id="summary" class="level2" data-number="11.7">
+<h2 data-number="11.7" class="anchored" data-anchor-id="summary"><span class="header-section-number">11.7</span> Summary</h2>
+<p>The scaffolders lower the cost of <em>adopting</em> the contract; the auditor raises the cost of <em>violating</em> it. <code>create_profile</code> and <code>create_sector_script</code> generate boilerplate that is correct by construction — sentinel, mode block, logging, error handling all wired the same way every time. <code>review_profile</code> verifies that wiring after the fact. <code>test_scripts</code> reads the codebase and names every raw IO or HTTP call that slipped past a wrapper, with a per-line escape hatch for the rare legitimate exception and a CI mode that fails the build. All four live in R and Python with shared argument names and shared rule ids; none exist in Stata, where the contract is enforced at the call site by the wrappers alone. For the vendoring mechanics that put these helpers into a consumer repository, see the vendoring-model and onboarding chapters.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../chapters/34-vintage-sync.html" class="pagination-link" aria-label="Vintage sync">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Vintage sync</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../chapters/41-vendoring.html" class="pagination-link" aria-label="The vendoring model">
+        <span class="nav-page-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">The vendoring model</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>UNICEF Chief Statistician Office — Data &amp; Analytics (OSE)</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/unicef-drp/cso-toolkit/edit/main/book/chapters/35-scaffolding-audit.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/unicef-drp/cso-toolkit/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>Built with <a href="https://quarto.org">Quarto</a></p>
+</div>
+  </div>
+</footer>
+
+
+
+
+</body></html>
