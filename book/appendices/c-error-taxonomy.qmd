@@ -187,7 +187,7 @@ dw_api_inventory("wb")    # what's cached for the World Bank source?
 ## Python
 
 ```python
-dw_api_inventory("wb")    # DataFrame: api / cache_key / ext / size / mtime / fetched_at
+dw_api_inventory("wb")    # DataFrame: api / cache_key / ext / size_bytes / mtime / fetched_at
 ```
 
 ## Stata

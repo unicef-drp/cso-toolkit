@@ -10,14 +10,13 @@ Throughout, the load-bearing idea is *single-switch routing*. A user sets `dw_mo
 
 ## The single switch: `dw_mode` in `user_config.yml`
 
-Every user of a CSO pipeline keeps a personal configuration block in a YAML file at `~/.config/user_config.yml` (on Windows, `%USERPROFILE%/.config/user_config.yml`). This file is per-machine and per-user; it is never committed to the repository. A minimal block looks like this:
+Every user of a CSO pipeline keeps a personal configuration file at `~/.config/user_config.yml` (on Windows, `%USERPROFILE%/.config/user_config.yml`). This file is per-machine and per-user; it is never committed to the repository. The keys sit at the top level — the profile that `create_profile` scaffolds reads `user_config$dw_mode` (R) or `user_config.get("dw_mode")` (Python) directly, with no per-user wrapping mapping. A minimal file looks like this:
 
 ```yaml
-jpazevedo:
-  githubFolder: "C:/GitHub/mytasks"
-  teamsRoot: "C:/Users/jpazevedo/UNICEF/Chief Statistician Office - Documents"
-  dw_mode: "reviewer"                                  # producer | reviewer
-  sandboxRoot: "C:/Users/jpazevedo/dw-repro"           # used only when dw_mode = reviewer
+githubFolder: "C:/GitHub/mytasks"
+teamsRoot: "C:/Users/jpazevedo/UNICEF/Chief Statistician Office - Documents"
+dw_mode: "reviewer"                                  # producer | reviewer
+sandboxRoot: "C:/Users/jpazevedo/dw-repro"           # used only when dw_mode = reviewer
 ```
 
 The one required key is `dw_mode`. It takes exactly one of two values, `"producer"` or `"reviewer"`. Loading the profile must hard-fail if `dw_mode` is missing or set to anything else. Defaulting either way is unsafe. Defaulting to `producer` would let a reviewer corrupt the canonical deposit the first time they forget to set the key; defaulting to `reviewer` would surprise a database manager in the middle of a legitimate deposit by silently diverting their writes into a sandbox. There is no safe default, so the loader refuses to guess.
@@ -51,7 +50,7 @@ dw_load_config
 ```
 :::
 
-A note on the Stata path. Stata cannot link an external YAML library on AppLocker-locked corporate Windows installs, so `dw_load_config.ado` ships a minimal hand-rolled `key: value` parser. It handles the documented subset of the config schema — one pair per line, optional quoting, inline `#` comments stripped — but not nested mappings, lists, anchors, or multi-line strings. It also keys off a flat top-level file rather than the per-user nested block shown above for R and Python. This is a real parity gap. The Stata loader reads exactly the keys the YAML provides into `$`-globals and validates `dw_mode` (hard-stopping with error 459 if it is missing or out of range), but it does not parse the richer nested structure the R and Python profiles consume.
+A note on the Stata path. Stata cannot link an external YAML library on AppLocker-locked corporate Windows installs, so `dw_load_config.ado` ships a minimal hand-rolled `key: value` parser. It handles the documented subset of the config schema — one pair per line, optional quoting, inline `#` comments stripped — but not nested mappings, lists, anchors, or multi-line strings. (The R and Python profiles lean on a real YAML library and so could parse a richer file, but in practice all three ports read the same flat top-level keys.) The Stata loader reads exactly the keys the YAML provides into `$`-globals and validates `dw_mode` (hard-stopping with error 459 if it is missing or out of range). Unknown keys are silently ignored, since the file may hold entries other helpers consume.
 
 ::: {.callout-note}
 One key the loaders do *not* validate is `sandboxRoot`, even though it is mandatory in reviewer mode (it is the base the reviewer's write globals are derived from). If `dw_mode: reviewer` is set but `sandboxRoot` is absent, the derivation below produces empty or malformed paths rather than a clean error at load time. Until the loaders gain an explicit check, a profile author should validate `sandboxRoot` themselves alongside `dw_mode`.
@@ -263,7 +262,7 @@ A sector is not "wired" until it passes a short, mechanical checklist. Steps fou
 5. **Producer run reaches canonical.** A producer-mode end-to-end run produces every artifact under the canonical deposit, exactly as before adoption.
 6. **Compare step works in reviewer mode.** The sector's compare-against-warehouse script runs in reviewer mode and writes a per-segment report under the sandbox's `output/temp/` directory.
 
-The contract auditor (described in the scaffolding chapter, and its CI use in a later chapter) automates much of steps one through three. The `review_profile` helper audits a profile for exactly these blocks — the profile sentinel object (the `profile_<repo> <- TRUE` marker that sector scripts assert was sourced), cross-platform user identification, the YAML config load, the `dw_mode` resolution, the `dw_require_no_api` guard, a reproducibility seed, and a packages block — and reports each as `pass`, `warn`, or `fail`. Steps four through six remain manual, because only an actual end-to-end run can prove that writes land where the contract says they should.
+The contract auditor (described in the scaffolding chapter, and its CI use in a later chapter) automates much of steps one through three. The `review_profile` helper audits a profile for exactly these blocks — the profile sentinel object (the `profile_<repo> <- TRUE` marker that sector scripts assert was sourced), cross-platform user identification, the YAML config load, the `dw_mode` resolution, the `dw_require_no_api` guard, a reproducibility seed, an optional Z:-drive advisory, and a packages block — and reports each as `pass`, `warn`, or `fail`. Steps four through six remain manual, because only an actual end-to-end run can prove that writes land where the contract says they should.
 
 ::: {.callout-warning}
 Step four's mtime check is not optional ceremony. It is the only test that catches a script which *reads* a canonical global correctly but *writes* through a stale, un-shadowed handle it captured before the conductor shadow ran. The contract auditor cannot see this; only an end-to-end run with a before/after mtime comparison can.

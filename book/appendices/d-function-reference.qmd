@@ -10,14 +10,14 @@ A note on terms used throughout the tables. The toolkit routes paths and gates t
 
 The three language siblings document themselves in three different idioms, and coverage is uneven — complete in R, site-less in Python, partial in Stata.
 
-**R — pkgdown site (complete).** The R package is fully documented with roxygen2 and rendered to a pkgdown site published at `https://unicef-drp.github.io/cso-toolkit`. Every exported function has a generated `.Rd` help page; open it in R with `?dw_save`, or browse the site's *Reference* tab. The *Reference* index is organised into the same capability families used below. That grouping is driven by `r/_pkgdown.yml`, which assigns each function to a family through roxygen `@concept` tags (`io`, `api`, `sync`, `aggregate`, `demographics`, `survey-weights`, `reporting`, `scaffolding`, `audit`). The R site is the most complete reference of the three and is the recommended starting point even for Python and Stata users, because the behaviour contract is shared.
+**R — pkgdown site (complete).** The R package is fully documented with roxygen2 and rendered to a pkgdown site published at `https://unicef-drp.github.io/cso-toolkit`. Every exported function has a generated `.Rd` help page; open it in R with `?dw_save`, or browse the site's *Reference* tab. The *Reference* index is organised into the same capability families used below. That grouping is driven by `r/_pkgdown.yml`, which assigns each function to a family through roxygen `@family` tags (`io`, `api`, `sync`, `aggregate`, `demographics`, `survey-weights`, `reporting`, `scaffolding`, `audit`). roxygen2 renders each `@family` tag as a `\concept{}` entry in the `.Rd`, which is what the `has_concept()` selectors in `_pkgdown.yml` match. The R site is the most complete reference of the three and is the recommended starting point even for Python and Stata users, because the behaviour contract is shared.
 
 **Python — module docstrings only (no autodoc site).** The Python package carries full type hints (it ships `src/py.typed` per PEP 561) and per-function docstrings, but there is **no generated documentation site** — no Sphinx, no pkgdown equivalent. To read the Python reference, either introspect in a session (`help(dw_save)` after `from cso_toolkit import dw_save`) or read the hand-written Markdown references in the repo: `docs/dw_io_python_reference.md` and `docs/dw_api_python_reference.md`. These two files cover the IO and external-API families; the remaining Python families are documented only by their docstrings.
 
 **Stata — native `.sthlp` help files (partial coverage).** Each shipped Stata command has a companion `.sthlp` help file next to its `.ado` in `stata/src/`, viewable with the usual `help dw_save`. Stata implements only the subset of the contract that fits its idioms, so its reference covers far fewer functions than R or Python (see the per-family coverage notes and the coverage-matrix appendix).
 
 ::: {.callout-note}
-The pkgdown *Reference* index is generated from the roxygen `@concept` tags, not hand-maintained. If you add an exported R function, tag it with the right `@concept` so it lands in the correct family on the site; an untagged export is still exported but is orphaned from the reference index.
+The pkgdown *Reference* index is generated from the roxygen `@family` tags (which roxygen2 emits as `\concept{}` entries the `has_concept()` selectors match), not hand-maintained. If you add an exported R function, tag it with the right `@family` so it lands in the correct family on the site; an untagged export is still exported but is orphaned from the reference index.
 :::
 
 ## Reading the family tables
@@ -207,7 +207,7 @@ The full set of files under `stata/src/` is: `dw_save`, `dw_use`, `dw_compare`, 
 The lists on this page are generated from, and should be reconciled against, these files in the repository. When the exports drift from this page, the files below win — this appendix is a finding aid, not the contract.
 
 - `r/NAMESPACE` — the complete list of R exports (the source of truth for the R column).
-- `r/_pkgdown.yml` — the family grouping rendered on the pkgdown site, driven by roxygen `@concept` tags.
+- `r/_pkgdown.yml` — the family grouping rendered on the pkgdown site, driven by roxygen `@family` tags (which roxygen2 emits as `\concept{}` entries the `has_concept()` selectors match).
 - `python/src/__init__.py` — the Python `__all__` export list and the per-module import map.
 - `stata/src/` — one `.ado` plus one `.sthlp` per Stata command.
 - `docs/dw_io_python_reference.md`, `docs/dw_api_python_reference.md` — the hand-written Python IO and API references.

@@ -63,11 +63,11 @@ The arguments are the same across R and Python:
 | `author` | system user | Author name in the header. |
 | `overwrite` | `FALSE` | Stop if the file already exists, unless `TRUE`. |
 
-The generated profile is built from eight numbered blocks, assembled in order:
+The generated profile opens with a **header** — title, filename, author, timestamp, and a pointer to the toolkit repository, followed by a reproducibility seed (`set.seed(12345)` / `random.seed(12345)`). After it come eight numbered blocks, assembled in order:
 
-1. **Header** — title, filename, author, timestamp, and a pointer to the toolkit repository, followed by a reproducibility seed (`set.seed(12345)` / `random.seed(12345)`).
-2. **User identification** — reads `USERNAME` / `USER` and `USERPROFILE`, falling back across Windows / Mac / Linux conventions.
-3. **Flags and controls** — e.g. `create_missing_folders <- FALSE`.
+1. **User identification** — reads `USERNAME` / `USER` and `USERPROFILE`, falling back across Windows / Mac / Linux conventions.
+2. **Flags and controls** — e.g. `create_missing_folders <- FALSE`.
+3. **Repository name** — records the repo as a literal, e.g. `repo_name <- "DW-Production"`.
 4. **Z: drive advisory** (only when `include_z_drive_check = TRUE`) — a *non-blocking* check; the absence of the legacy mirror prints a warning rather than stopping execution.
 5. **Config load** — reads `~/.config/user_config.yml` via `yaml::read_yaml()` / `yaml.safe_load()`, hard-failing if the file is missing.
 6. **Producer/reviewer mode** (only when `include_dw_mode = TRUE`) — reads `dw_mode` from the config, refuses any value other than `"producer"` or `"reviewer"`, and defines the `dw_require_no_api()` guard that reviewer-mode analysis code calls to forbid network access.
@@ -259,7 +259,7 @@ The R registry (in `test_scripts.R`) covers ten IO rules and six API rules:
 | api | `api-ilostat` | `get_ilostat` (Rilostat). |
 | api | `api-download` | `download.file` / `curl::curl_download` / `curl::curl_fetch_*` — bypass the cache. |
 
-The Python registry (in `test_scripts.py`) is the language-appropriate mirror: eleven IO rules covering `pd.read_csv` / `.to_csv`, `read_excel` / `.to_excel`, `read_stata` / `.to_stata`, `read_parquet` / `.to_parquet`, `pickle.dump`/`load`, `json.dump`/`load`, `yaml` read/write, and a heuristic `io-open-write` rule that flags `open(..., "w")`-style calls; plus seven API rules covering `requests`, `httpx`, `urllib.request.urlopen`, `sdmx.Client`, `wbgapi`, `wbdata`, and `urllib.request.urlretrieve`. The rule *ids* are intentionally close across languages (`io-yaml` exists in both, for instance) so a `# cso-allow:` directive reads the same regardless of language.
+The Python registry (in `test_scripts.py`) is the language-appropriate mirror: twelve IO rules covering `pd.read_csv` / `.to_csv`, `read_excel` / `.to_excel`, `read_stata` / `.to_stata`, `read_parquet` / `.to_parquet`, `pickle.dump`/`load`, `json.dump`/`load`, `yaml` read/write, and a heuristic `io-open-write` rule that flags `open(..., "w")`-style calls; plus seven API rules covering `requests`, `httpx`, `urllib.request.urlopen`, `sdmx.Client`, `wbgapi`, `wbdata`, and `urllib.request.urlretrieve`. The rule *ids* are intentionally close across languages (`io-yaml` exists in both, for instance) so a `# cso-allow:` directive reads the same regardless of language.
 
 ::: {.callout-note}
 The auditor and the wrappers are two layers of the same defence. The wrappers enforce the contract *at the call site* — once you call `dw_save`, mode-routing and provenance happen whether you like it or not. The auditor enforces it *at review time* — it catches the calls that never reached a wrapper at all. The wrappers cannot see a `read_csv()` that bypasses them; the auditor exists precisely to surface it.

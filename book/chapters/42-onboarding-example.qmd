@@ -119,7 +119,7 @@ The fields, from the template's own header:
 Commit the manifest in version control alongside the vendored helpers, and update it every time you re-pull. Keep `vendored:` honest: list a file only if it is actually present in `00_functions/`.
 
 ::: {.callout-warning}
-`pulled_version` must be a real tag once the upstream repo has releases. The Database Manager (DBM) pre-deposit checklist (the submission template referenced in the roles chapter) gates a deposit on the manifest being on a tagged version — no `inrepo` or `unreleased` suffixes. Use `inrepo` only during local development of the helpers themselves, never for a deposit run. Note that `cso_toolkit_check()` skips the upstream comparison entirely when `pulled_version` contains `inrepo`, so a stray `inrepo` also silently suppresses drift warnings.
+`pulled_version` must be a real tag once the upstream repo has releases. The Database Manager (DBM) pre-deposit checklist (the submission template referenced in the roles chapter) gates a deposit on the manifest being on a tagged version — no `inrepo` or `unreleased` suffixes. Use `inrepo` only during local development of the helpers themselves, never for a deposit run. Note that `cso_toolkit_check()` still queries upstream when `pulled_version` contains `inrepo` but forces `updates_available` to `FALSE`, so a stray `inrepo` silently suppresses drift warnings.
 :::
 
 You can confirm at any point that the helper sees your manifest by running the sync check. In producer mode it queries the GitHub API for the latest upstream tag and warns if you are behind; in reviewer mode it quietly returns `NULL` because the mode contract forbids network calls.
@@ -322,7 +322,7 @@ If you run this in reviewer mode and the cache is missing, `dw_api_fetch` does n
 
 ### 4b. Write a deposit output
 
-Write your processed output with `dw_save`. The R and Python helpers take a `name` + `sector` + `kind` shorthand that resolves the canonical path for you; pass `isid` to enforce row uniqueness on the key columns. In producer mode the write lands in the deposit, and is carbon-copied automatically to both the Teams canonical equivalent and the Z: drive when the profile makes those roots available. (The per-call `mirror_to_z` flag is gone — deprecated in v0.4.0, removed in v0.5.0; mirroring is now automatic and paired.) A provenance sidecar is written alongside the file.
+Write your processed output with `dw_save`. The R and Python helpers take a `name` + `sector` + `kind` shorthand that resolves the canonical path for you; pass `isid` to enforce row uniqueness on the key columns. In producer mode the write lands in the deposit, and is carbon-copied automatically to both the Teams canonical equivalent and the Z: drive when the profile makes those roots available. (The per-call `mirror_to_z` flag is deprecated — pass it and `dw_save` warns and ignores it; mirroring is now automatic and paired, controlled by which remote roots the profile makes available.) A provenance sidecar is written alongside the file.
 
 ::: {.panel-tabset}
 ## R

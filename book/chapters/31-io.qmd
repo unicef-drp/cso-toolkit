@@ -56,7 +56,7 @@ dw_save(df, path="out.csv")
 ```
 ## Stata
 ```stata
-dw_save using "out", path("out") filename("out") idvars(REF_AREA)
+dw_save , filename("out") path("out") idvars(REF_AREA)
 ```
 :::
 
