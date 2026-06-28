@@ -138,8 +138,9 @@ dw_save(df, canonical_path, isid=["iso3", "year"], allow_canonical_write=True)
 ```stata
 * The Stata dw_save mirrors the same path routing via $teamsWrkData,
 * which the profile points at the sandbox in reviewer mode, so writes
-* land in the sandbox without a per-call flag.
-dw_save using "$teamsWrkData/dw_im.csv", isid(iso3 year)
+* land in the sandbox without a per-call flag. The uniqueness check is
+* folded in via idvars() (the Stata equivalent of the R isid= argument).
+dw_save , filename("dw_im.csv") path("$teamsWrkData") idvars(iso3 year)
 ```
 :::
 

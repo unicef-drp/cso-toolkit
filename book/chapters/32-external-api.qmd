@@ -241,8 +241,8 @@ The sidecar records both *what* the cache contains and *how* the wrapper obtaine
 The `fetch_args` capture is what lets a reviewer (or a future producer) see exactly which parameters produced the frozen result, and `fetched_at` plus `elapsed_secs` give the freshness and cost of the fetch. The `refresh_flag` records whether the fetch was a routine populate or an explicit re-pull. A caller's own `metadata =` argument is merged on top of these auto-recorded fields, which is how a load-bearing fetch carries a reason, a ticket, or a vintage into the sidecar alongside the parameters.
 
 ::: {.callout-note}
-## Sensitive keys are redacted before they reach disk
-The wrapper redacts the values of `fetch_args` whose key names look sensitive — anything containing `token`, `auth`, `password`, `secret`, `api_key`, `headers`, `cookie`, `bearer`, and similar substrings — replacing them with `"<redacted>"` in the persisted sidecar. Credentials passed by the caller therefore never land in `.provenance.json`.
+## Sensitive keys are redacted before they reach disk — in Python
+The Python wrapper redacts the values of `fetch_args` whose key names look sensitive — anything containing `token`, `auth`, `password`, `secret`, `api_key`, `headers`, `cookie`, `bearer`, and similar substrings — replacing them with `"<redacted>"` in the persisted sidecar, so credentials passed by the caller never land in `.provenance.json`. The R wrapper does **not** redact: it stores `fetch_args` verbatim, so an R producer who passes a credential through `...` will see it in the sidecar. This redaction parity is currently a Python-only feature; the cross-language coverage matrix appendix records it.
 :::
 
 Caches **never expire automatically**. Refresh is always an explicit `refresh = TRUE`, and the Database Manager owns the refresh cadence per cache.

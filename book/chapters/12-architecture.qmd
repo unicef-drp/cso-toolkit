@@ -25,7 +25,7 @@ The toolkit's helpers group into five capability families, and each family is th
 
 ### IO contract
 
-One way to read, write, compare, and merge data, auto-dispatched by file extension: CSV / TSV / XLSX / RDS-or-PKL (R / Python native) / DTA (Stata) / Parquet / JSON / YAML. Writes emit a `.provenance.json` sidecar by default; canonical writes are carbon-copied to the Z: drive; canonical reads run an integrity check. See the IO contract chapter for the full treatment.
+One way to read, write, compare, and merge data, auto-dispatched by file extension: CSV / TSV / XLSX / RDS-or-PKL (R / Python native) / DTA (Stata) / Parquet / JSON / YAML. The family's public functions are `dw_save`, `dw_use`, `dw_compare`, `dw_merge`, `dw_isid`, `dw_verify_z`, `dw_stage`, and `dw_root`: the first four read, write, diff, and join; `dw_isid` enforces row uniqueness; `dw_verify_z` checks the Z: mirror byte-for-byte; `dw_stage` copies a canonical input into the reviewer sandbox under a hash guard; and `dw_root` resolves a logical store (`wrk` / `raw` / `meta`) to its filesystem path. Writes emit a `.provenance.json` sidecar by default; canonical writes are carbon-copied to the Z: drive; canonical reads run an integrity check. See the IO contract chapter for the full treatment.
 
 ::: {.panel-tabset}
 ## R
@@ -91,7 +91,7 @@ Consumer-side helpers — `cso_toolkit_check`, `cso_toolkit_diff`, and `cso_tool
 
 ### Aggregation and survey weights
 
-`aggregate_data_v2()` computes `weighted_mean` / `mean` / `sum` / `proportion` with population and country coverage and a coverage threshold; `apply_time_window()` filters to the latest observation per country within an inclusive year window; `generate_agg_footnote()` produces the matching coverage footnote; and `dw_nestweight()` is an R port of the World Bank EduAnalyticsToolkit `edukit_nestweight` (Diana Goldemberg), which redistributes survey weights from missing nested observations so per-stratum totals are preserved. See the aggregation chapter.
+`aggregate_data_v2()` computes `weighted_mean` / `mean` / `sum` / `proportion` with population and country coverage and a coverage threshold (the original `aggregate_data()` is retained for back-compatibility); `apply_time_window()` filters to the latest observation per country within an inclusive year window; `generate_agg_footnote()` produces the matching coverage footnote; `dw_nestweight()` is an R port of the World Bank EduAnalyticsToolkit `edukit_nestweight` (Diana Goldemberg), which redistributes survey weights from missing nested observations so per-stratum totals are preserved; and `dw_pop()` and `dw_regions()` supply the population denominators and regional groupings the aggregators consume. The two demographics helpers are R-only for now (no Python or Stata sibling yet). See the aggregation chapter.
 
 ### Scaffolding and contract audit
 
@@ -122,13 +122,14 @@ This works only because the contract is defined behaviourally, not as shared cod
 Cross-language parity is the design goal, not a finished fact. The gaps worth naming up front, all recorded in the coverage matrix appendix, are:
 
 - **No Stata API *fetch* wrapper.** `dw_api_fetch` / `dw_api_cached` / `dw_api_inventory` are R and Python only. Stata ships the enforcement half (`dw_require_no_api`) but not the fetch half.
-- **No Stata parquet or RDS, and `dw_merge` / `dw_verify_z` are not in the Stata sibling.** `dw_isid` in Stata is embedded inside `dw_save` rather than exposed as its own command. (The read contract, `dw_use`, *is* now in Stata as of v0.4.0; issue #5 is closed.)
-- **No Python autodoc.** R has Roxygen-complete reference documentation (34 `.Rd` files plus a pkgdown site configured in `r/_pkgdown.yml`); Python has no equivalent pkgdown-style generated reference, only hand-written references and module READMEs.
+- **No Stata parquet or RDS, and `dw_merge` / `dw_verify_z` are not in the Stata sibling.** `dw_isid` in Stata is embedded inside `dw_save` (the `idvars()` option) rather than exposed as its own command. (The read contract, `dw_use`, *is* now in Stata as of v0.4.0; issue #5 is closed.)
+- **The demographics helpers `dw_pop` / `dw_regions` are R-only.** Neither has a Python or Stata sibling yet; a non-R consumer that needs population denominators or regional groupings routes through the R sibling or a pre-computed artefact.
+- **No Python autodoc.** R has Roxygen-complete reference documentation (34 `.Rd` files plus a pkgdown site configured in `r/_pkgdown.yml`); Python has no equivalent pkgdown-style generated reference, only hand-written references and module READMEs, and the Python sibling trails the R release.
 
 Treat the parity claim as "same names, same behaviour where a function exists in both," not "every function exists everywhere."
 :::
 
-Maturity differs by sibling as well as by function. The R sibling was feature-complete first; the Python sibling followed as a full port (nine functional modules and twenty-seven public entries); the Stata sibling shipped a focused subset and is still filling in. As of v0.4.0 the Stata sibling exposes six commands — `dw_save`, `dw_use`, `dw_compare`, `dw_mkdir`, `dw_load_config`, and `dw_require_no_api`. The versioning-and-releases chapter traces this timeline; the point for the architecture is that a consumer chooses *one* sibling and gets whatever that sibling implements, so the choice of language is also a choice of current coverage.
+Maturity differs by sibling as well as by function. The R sibling was feature-complete first and leads the release line; the Python sibling followed as a full port (nine functional modules and twenty-eight public entries) but trails the current R release; the Stata sibling shipped a focused subset and is still filling in. As of v0.5.0 the Stata sibling exposes six commands — `dw_save`, `dw_use`, `dw_compare`, `dw_mkdir`, `dw_load_config`, and `dw_require_no_api`. The versioning-and-releases chapter traces this timeline; the point for the architecture is that a consumer chooses *one* sibling and gets whatever that sibling implements, so the choice of language is also a choice of current coverage.
 
 ## Layer three — consumer repositories vendor the helpers
 

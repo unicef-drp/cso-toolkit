@@ -118,6 +118,8 @@ When an update *is* available and `quiet` is off, the producer sees a yellow ale
               Run cso_toolkit_pull('v0.5.0') to refresh.
 ```
 
+One rendering quirk distinguishes the two ports. The format string is `pinned v%s` in both, but the R port interpolates the raw `pulled_version` while the Python port first strips a leading `v` (`pinned_norm`, a Copilot fix on PR #7). Because the shipped manifest pins `pulled_version: "v0.4.0"`, the R alert actually reads `pinned vv0.4.0` whereas Python reads `pinned v0.4.0`. The text above shows the Python form; expect a doubled `v` from R when the pin carries the `v` prefix. The comparison logic is unaffected — both strip the `v` before testing for difference.
+
 ### How the upstream tag is resolved
 
 Both ports resolve the latest tag through the same two-tier strategy, in an internal helper named `.cso_upstream_latest_tag` (R) / `_cso_upstream_latest_tag` (Python):
@@ -272,7 +274,8 @@ if tuple(map(int, dw_toolkit_version().split("."))) < (0, 4, 0):
 ## Stata
 ```stata
 * No dw_toolkit_version equivalent in Stata. Each .ado carries its own
-* per-file `version` header (e.g. dw_save.ado is "version 1.1 (v0.4.0)").
+* per-file `version` header (e.g. dw_save.ado: "*! version 1.1 26MAY2026").
+* The header stamps a per-file version + date, not the toolkit tag.
 * Record the pinned toolkit tag by hand in .toolkit_manifest.yml.
 ```
 :::
@@ -291,4 +294,4 @@ Cross-language parity is weakest here, and the page would mislead if it implied 
 
 The R and Python ports of the sync helpers are genuine mirrors of each other: same function names, same arguments, same return structure, same guard order, same two-tier `gh`-then-HTTP tag resolver, even the same `inrepo` escape hatch. Both also expose `dw_toolkit_version`, though the two stamps can fall out of step across a release, as the callout above warns.
 
-Stata has **no sync helpers at all**. Its `stata/src/` directory ships the IO and aggregation helpers (`dw_save`, `dw_use`, `dw_compare`, `dw_load_config`, `dw_mkdir`, `dw_require_no_api`) but nothing named `cso_toolkit_check` / `_diff` / `_pull`, and no `dw_toolkit_version` — each `.ado` instead carries its own per-file `version` header. The Stata README acknowledges the manifest only as a place to *record* the pinned version by hand; refreshing a Stata consumer means copying `stata/src/` from a tagged checkout into the project's adopath and editing `.toolkit_manifest.yml` manually. There is no automated drift detection on the Stata side. This is consistent with the broader Stata coverage gaps noted in the cross-language coverage appendix (no API wrapper, no parquet). When you adopt the toolkit in a Stata-only repo, treat vintage management as a manual, documented step rather than a tooled one.
+Stata has **no sync helpers at all**. Its `stata/src/` directory ships the IO and config helpers (`dw_save`, `dw_use`, `dw_compare`, `dw_load_config`, `dw_mkdir`, `dw_require_no_api`) but nothing named `cso_toolkit_check` / `_diff` / `_pull`, and no `dw_toolkit_version` — each `.ado` instead carries its own per-file `version` header. The Stata README acknowledges the manifest only as a place to *record* the pinned version by hand; refreshing a Stata consumer means copying `stata/src/` from a tagged checkout into the project's adopath and editing `.toolkit_manifest.yml` manually. There is no automated drift detection on the Stata side. This is consistent with the broader Stata coverage gaps noted in the cross-language coverage appendix (no API wrapper, no parquet). When you adopt the toolkit in a Stata-only repo, treat vintage management as a manual, documented step rather than a tooled one.
