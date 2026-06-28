@@ -16,6 +16,7 @@ book:
     right: "Built with [Quarto](https://quarto.org)"
   chapters:
     - index.qmd
+    - front-matter/how-to-cite.qmd
     - part: "Part I — Why & Architecture"
       chapters:
         - chapters/11-why.qmd

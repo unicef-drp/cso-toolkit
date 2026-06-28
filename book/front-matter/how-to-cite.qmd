@@ -1,0 +1,66 @@
+---
+number-sections: false
+number-depth: 0
+order: 0
+audience: [external_researcher]
+status: stub
+last_reviewed: 2026-06-28
+---
+
+# How to cite this work {#sec-how-to-cite .unnumbered}
+
+::: {.callout-note appearance="simple"}
+**Stub.** A Zenodo DOI will be reserved when this handbook is first archived to Zenodo on a tagged release; the placeholder `10.5281/zenodo.XXXXXXX` below is replaced then. Zenodo mints two DOIs: a **concept DOI** that always resolves to the latest version, and a **version DOI** unique to each tagged release. Cite the concept DOI for "this work in general"; cite a version DOI to pin a specific edition.
+:::
+
+Authors are listed alphabetically by surname. Editors are the Chief Statistician (chair) and the unit chiefs of UNICEF Data & Analytics; they are acknowledged in that editorial capacity rather than as authors.
+
+## Suggested citation (APA)
+
+> Avanesian, G., Brar, S., Conkle, J., Coskun, Y., Donmez, A., Francis, L., Jugder, M., Liu, Y., Mehra, V., Nacuka, G. B. B., Olivotti, D., & Zandinia, S. (2026). *The CSO Toolkit Handbook: One contract, three languages — reproducible analytics in R, Python, and Stata* (J. P. Azevedo, C. Cappa, E. Delamónica, C. Hayashi, Y. Jaques, M. Muniz, A. Rossi, T. Slaymaker, & D. You, Eds.). UNICEF Chief Statistician Office. https://doi.org/10.5281/zenodo.XXXXXXX
+
+## BibTeX
+
+```bibtex
+@book{csotoolkithandbook2026,
+  title     = {The CSO Toolkit Handbook: One contract, three languages ---
+               reproducible analytics in R, Python, and Stata},
+  author    = {Avanesian, Garen and Brar, Sukhdeep and Conkle, Joel and
+               Coskun, Yadigar and Donmez, Ayca and Francis, Lauren and
+               Jugder, Munkhbadar and Liu, Yang and Mehra, Vrinda and
+               Nacuka, Gladys Babirye Bagandanswa and
+               Olivotti, Daniele and Zandinia, Sahar},
+  editor    = {Azevedo, Jo{\~a}o Pedro and Cappa, Claudia and
+               Delam{\'o}nica, Enrique and Hayashi, Chika and
+               Jaques, Yves and Muniz, Maria and Rossi, Andrea and
+               Slaymaker, Tom and You, Danzhen},
+  year      = {2026},
+  publisher = {UNICEF Chief Statistician Office},
+  url       = {https://unicef-drp.github.io/cso-toolkit/handbook/},
+  doi       = {10.5281/zenodo.XXXXXXX},
+  edition   = {First},
+  note      = {The book documents the {\tt cso-toolkit} codebase at
+                {\tt github.com/unicef-drp/cso-toolkit}.
+                Edited by Jo{\~a}o Pedro Azevedo (Chief Statistician,
+                UNICEF Data \& Analytics) as chair, with the unit chiefs
+                of UNICEF Data \& Analytics as co-editors.}
+}
+```
+
+## Chicago author-date
+
+> Avanesian, Garen, Sukhdeep Brar, Joel Conkle, Yadigar Coskun, Ayca Donmez, Lauren Francis, Munkhbadar Jugder, Yang Liu, Vrinda Mehra, Gladys Babirye Bagandanswa Nacuka, Daniele Olivotti, and Sahar Zandinia. 2026. *The CSO Toolkit Handbook: One contract, three languages — reproducible analytics in R, Python, and Stata*. Edited by João Pedro Azevedo, Claudia Cappa, Enrique Delamónica, Chika Hayashi, Yves Jaques, Maria Muniz, Andrea Rossi, Tom Slaymaker, and Danzhen You. UNICEF Chief Statistician Office. https://doi.org/10.5281/zenodo.XXXXXXX.
+
+## Versioned citation
+
+To cite a specific edition, append the version tag (e.g., `v0.5.0`) and use that release's **version DOI** rather than the always-latest **concept DOI**. Each tagged release has its own version DOI; the concept DOI always resolves to the most recent version.
+
+## License
+
+The handbook text is released under [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/). You are free to share and adapt the material with appropriate attribution.
+
+This repository is **dual-licensed**. The handbook prose (the built book under `docs/handbook/`, and the documentation it is sourced from) is CC BY 4.0; the toolkit source code under `r/`, `python/`, and `stata/` is released under the [MIT License](https://github.com/unicef-drp/cso-toolkit/blob/develop/LICENSE). A whole-repository Zenodo archive therefore contains both the CC BY 4.0 handbook and the MIT-licensed code — attribute each part under its own license.
+
+## Acknowledgement of the use of AI tools
+
+Parts of this handbook were drafted with generative-AI assistance. AI tools did not author the book — they generated drafts that the named authors and editors are reviewing, editing, and fact-checking against the `cso-toolkit` codebase. On release, the named authors and editors take full responsibility for the methodological claims, factual statements, worked examples, and verbatim code snippets reproduced here.
