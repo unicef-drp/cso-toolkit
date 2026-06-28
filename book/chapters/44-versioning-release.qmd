@@ -1,0 +1,165 @@
+# Versioning and releases
+
+The toolkit makes a promise: a 2026 analytics product that cites `dw_<sector>.csv` must, two years on, re-run to identical numbers from the canonical deposit (the immutable data file the product cites, deposited to the Teams folder and its Z: mirror) and the vendored helper code (the helper files copied into the consumer's own project) as it stood at release time. That promise holds only if every consumer can point at one exact, immutable version of the toolkit. Versions must therefore be meaningful, immutable, and documented.
+
+Two roles run through this chapter, and the whole reproducibility argument rests on the distinction between them. A **producer** (the Database Manager) runs a sector pipeline, pulls live APIs, and deposits canonical artefacts; a **reviewer** re-runs the pipeline from those frozen artefacts to reproduce the numbers and is physically prevented from touching the network. Mode is a session property, not a per-call argument (see the roles and mode-contract chapter). The producer chooses when to refresh the toolkit; the reviewer always runs against whatever vintage the producer has pinned. A **consumer** is a downstream analytics project that vendors the toolkit; the three **siblings** are the R, Python, and Stata implementations of the same contract.
+
+A handful of public verbs recur below. `dw_use()` reads a deposit, `dw_save()` writes one, and `dw_publish()` submits an artefact to the Helix registry (the `dw_save` / `dw_publish` split — filesystem versus API — is the subject of the IO and external-API contract chapters). The `cso_toolkit_*` family is different in kind: it manages versions of the toolkit *itself* — checking, diffing, and pulling the vendored copy.
+
+## Semantic versioning
+
+The toolkit follows Semantic Versioning — `MAJOR.MINOR.PATCH`. The three components carry their conventional meanings, interpreted against the toolkit's public surface: the exported function names, their signatures, the `.provenance.json` sidecar schema (see the provenance sidecars chapter), and the error-envelope shape — the structure of the object a failing call returns (see the error taxonomy appendix).
+
+| Component | Bump when | Example from history |
+|---|---|---|
+| **MAJOR** | A change breaks source compatibility for an existing consumer — a removed function, a renamed or reordered required argument, a default that flips in a way that changes results, a sidecar-schema change a reviewer would notice. While the toolkit is pre-1.0, breaking changes are still permitted within the `0.x` line (see "The road to v1.0.0"). | The `0.x` line has shipped breaking changes inside MINOR bumps. `v0.4.0` flipped `dw_save(overwrite = ...)` from `TRUE` to `FALSE`, explicitly tagged **BREAKING** — a change a stable `1.x` line would have made a MAJOR. |
+| **MINOR** | New capability, backward-compatible: a new exported function, a new optional (trailing) argument, a new `api =` value, or behaviour that broadens what the function accepts without breaking existing calls. | `v0.4.10` added the `"total"` aggregation method and the toolkit-wide `verbose` / `debug` convention — all new, trailing, optional arguments. `v0.5.0` added `dw_use(sheet = NULL)` to read every sheet of a workbook while leaving the `sheet = 1` default untouched. |
+| **PATCH** | A bug fix or correctness change with no public-API change. The signature is unchanged; the fix makes the function do what it already promised. | `v0.4.2` fixed `dw_save(dialect = "base")` silently writing comma-separated content to a `.tsv` file. The signature did not move; callers passing `.tsv` / `.txt` with `dialect = "base"` got correct tab output instead of the silent comma output that was the bug. |
+
+The toolkit has also used a **four-segment** patch (`v0.4.3.1`) to fix a freshly cut release the same day. `v0.4.3` had bumped `r/DESCRIPTION`'s `Version` and `NEWS.md` but missed three hard-coded version stamps inside `r/R/dw_io.R`: the header banner, the `dw_toolkit_version()` docstring, and its return value. Because `dw_toolkit_version()` is stamped into provenance sidecars, the stale `"0.4.2"` return would have polluted `dw_publish()` provenance with the wrong toolkit version. The `.1` segment corrected the stamps without claiming a new behavioural release.
+
+::: {.callout-note}
+The pre-1.0 `0.x` line is deliberately permissive about breaking changes: under SemVer, anything goes below `1.0.0`, and the toolkit has used that latitude to tighten the mode contract (`v0.4.0`) while the consumer set was small and well-known. The compatibility promise hardens at `v1.0.0`. Until then, **migration notes in `NEWS.md`** — not the version number alone — are how a consumer learns a release will require code changes.
+:::
+
+### What "public API" means across the three languages
+
+A change is breaking only if it breaks a *documented, exported* entry point. The cross-language coverage matrix appendix is the authoritative list, but the rule of thumb is symmetric across siblings: the exported `dw_*` functions, their required arguments, the sidecar schema, and the envelope shape. Internal helpers (the `.dw_*` family in R) are not part of the contract and can change in a PATCH.
+
+The siblings are versioned **in lock-step under a single tag** — there is one `v0.5.0`, not an `r-v0.5.0` and a `py-v0.5.0`. A release may, however, advance one sibling's *coverage* while leaving another untouched. `v0.4.0` shipped `dw_pop()` and `dw_regions()` **R-only**, with Python and Stata parity tracked at the same GitHub issues for a future minor. That is a MINOR bump — new capability, nothing broken — even though parity is incomplete. The honest reading of the version number is "the contract gained a function in at least one language," not "every language gained it." Consumers must consult the coverage matrix, not the tag, to learn whether *their* language has a given helper.
+
+## The NEWS.md discipline
+
+The toolkit keeps a single changelog, `NEWS.md`, following the R-ecosystem convention. Per-release notes — including breaking-change migration notes and per-PR provenance — live there; there is no separate `CHANGELOG.md`. There is exactly one changelog, and a second must not be added.
+
+### The Unreleased → released lifecycle
+
+`NEWS.md` opens with an `## Unreleased` section whose own header documents the discipline:
+
+```
+## Unreleased
+
+_Entries land here as PRs merge into `develop`. When the next release
+is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
+`## Unreleased` section is added back._
+```
+
+The flow follows three steps:
+
+1. A PR merges into `develop` and adds its entry under `## Unreleased`.
+2. Entries accumulate as more PRs land in the cycle.
+3. At release time, `## Unreleased` is renamed to `## vX.Y.Z (YYYY-MM-DD)` and a fresh empty `## Unreleased` is opened above it.
+
+This makes the changelog **per-PR** rather than reconstructed per-release as an afterthought. Each entry is written at the moment the change is understood, by the person who made it, not pieced together from `git log` weeks later.
+
+### What a good entry contains
+
+The historical entries set a high bar. A strong `NEWS.md` entry carries, in order:
+
+- **A bold headline** naming the user-visible change — for example, "**`dw_save()` confirms before overwriting a producer deposit.**"
+- **Per-PR / per-issue provenance** — the issue and PR numbers, linked, so a reader can trace the change to its discussion. Most entries cite both (for example, issue #25 and PR #75).
+- **The empirical origin**, where there is one. Many fixes were surfaced by a specific audit run, and the entry says so: the `v0.4.3` parquet fix records that it was "surfaced empirically by DW-Production Run #6 (NT pipeline): 13+ stages downstream … failed with 'object COLUMN not found'." This is provenance for *why the bug mattered*, not merely that it existed.
+- **A `Migration:` note** whenever a consumer must change code. These are explicit and actionable.
+
+The migration notes are the load-bearing part of the discipline. The `v0.5.0` overwrite-confirmation change states the action a consumer must take:
+
+> **Migration:** non-interactive producer pipelines that re-deposit must add `force = TRUE` (or run interactively).
+
+The `v0.4.3` `cols_lenient` change spelled out the before/after for each affected call form:
+
+```
+Migration:
+- dw_use(cols = dplyr::any_of(c(...)))  ->  dw_use(cols = c(...), cols_lenient = TRUE)
+- dw_use(cols = dplyr::all_of(c(...)))  ->  dw_use(cols = c(...))  (strict)
+```
+
+And the headline `v0.4.0` breaking change carried a full **Migration guide** offering two routes — pass `overwrite = TRUE` for daily re-runs of the same vintage, or sequence writes under a fresh vintage subfolder for archival work — plus an explicit "Reviewer-mode callers do not need changes" reassurance, so a consumer can tell at a glance whether the change touches them.
+
+::: {.callout-warning}
+A breaking change with no migration note is a contract violation, not a tidiness lapse. The version number tells a consumer *that* something broke; the migration note is the only thing that tells them *how to fix it*. Every entry flagged **BREAKING** in the history is paired with a migration note — keep it that way.
+:::
+
+### Entries are language-agnostic but coverage-honest
+
+Because the siblings share one tag, one `NEWS.md` covers all three. Entries name which languages a change touches when coverage is uneven — "(R only)", "R + Python siblings ship in lock-step", "Stata-side `dw_api_fetch` and Parquet / RDS read support remain out of scope by design." This keeps the changelog from implying parity the code does not have — the same honesty the coverage matrix appendix enforces.
+
+## Tags and the release cut
+
+Releases are Git tags of the form `vX.Y.Z` (and `vX.Y.Z-rcN` for release candidates). The first cut, `v0.1.0-rc1`, followed the workspace convention of tagging a release candidate before the real release so the untested release flow could be exercised reversibly; `v0.1.0` was tagged only once the candidate's `cso_toolkit_pull()` flow smoke-tested cleanly. The README's version table is the human-readable index of tags, each row dated and summarised.
+
+### The version is stamped in more than one place
+
+A version stamp that disagrees with the tag silently mislabels the provenance of every artefact written under that release, because `dw_toolkit_version()` is recorded into `.provenance.json` sidecars and into `dw_publish()` payloads. A release cut must therefore keep several stamps in agreement; they are read by different consumers:
+
+```
+r/DESCRIPTION            Version: 0.5.0                   # R package metadata, R CMD check
+r/R/dw_io.R              # Toolkit version: 0.5.0         # header banner
+r/R/dw_io.R              dw_toolkit_version() -> "0.5.0"  # docstring + return value
+NEWS.md                  ## v0.5.0 (2026-06-21)          # changelog header
+README.md                version table row
+python/pyproject.toml    Python package version
+```
+
+The `v0.4.3.1` incident — three `dw_io.R` stamps left at `"0.4.2"` while `DESCRIPTION` said `v0.4.3` — produced a concrete release-cut checklist item that should run before every tag:
+
+> The release-cut checklist for the next minor (v0.5.0) should include a `grep -rn '0\.[0-9]\.[0-9]' r/R/` step to catch any future stamp drift before tagging.
+
+### The tag is immutable; consumers pin to it
+
+A published tag is never moved. Consumers vendor the helper *files* into their own `00_functions/` and record the tag in `00_functions/.toolkit_manifest.yml` (see the vendoring model chapter). The manifest's `pulled_version` field is the consumer's pin:
+
+```yaml
+source: "unicef-drp/cso-toolkit"
+pulled_version: "v0.4.0"
+pulled_date: "2026-05-26"
+pulled_by: "<your-name>"
+```
+
+`cso_toolkit_check()` reads this file, queries the GitHub API for the latest tag on `source:`, and warns when the consumer is behind. Refreshing to a newer tag is a **producer-controlled, explicit** act: the producer reads the release notes, decides the new vintage is appropriate, and runs `cso_toolkit_pull(target_version = "vX.Y.Z")`. Nothing is pulled automatically.
+
+This is what makes a tag's immutability load-bearing. Reviewer mode forbids the network lookup entirely (`cso_toolkit_check()` and `cso_toolkit_pull()` both refuse in reviewer mode), so a reviewer always runs against whatever vintage the producer has pinned, never a silently newer one. The whole reproducibility argument rests on a pinned tag meaning the same bytes forever.
+
+The check / pull surface is itself part of the contract, but it is **R-first**: the vintage-sync helpers (`cso_toolkit_check` / `cso_toolkit_diff` / `cso_toolkit_pull`) are exercised through the R sibling, and `cso_toolkit_pull()`'s file-refresh body is still being finished. A Stata consumer has no automated check or pull at all and edits `.toolkit_manifest.yml` by hand.
+
+::: {.panel-tabset}
+## R
+```r
+# Producer-mode: is the pinned vintage behind upstream?
+cso_toolkit_check()
+
+# Refresh the vendored files to a chosen tag (explicit, producer-only)
+cso_toolkit_pull(target_version = "v0.5.0")
+```
+## Python
+```python
+# Coverage gap: the cso_toolkit_* vintage-sync helpers are R-first.
+# A Python consumer pins .toolkit_manifest.yml and refreshes the
+# vendored python/src/ files by hand, then records the new tag in
+# pulled_version. See the vintage sync chapter and the coverage
+# matrix appendix.
+```
+## Stata
+```stata
+* Coverage gap: no Stata sibling of the vintage-sync helpers ships.
+* Stata consumers pin .toolkit_manifest.yml by hand and refresh the
+* vendored .ado files manually. See the vintage sync chapter and the
+* coverage matrix appendix.
+```
+:::
+
+## The road to v1.0.0
+
+The toolkit is deliberately still in its `0.x` line. The README's version table records the gate for `v1.0.0` precisely:
+
+> `v1.0.0` — _committed API_ — After the `ed` sector pilot lands and a second sector vendors the helpers without modification.
+
+Two conditions must both hold.
+
+1. **The education (`ed`) sector pilot lands.** The education sector is the first-party proving ground for the full contract.
+2. **A second sector vendors the helpers without modification.** This is the real test. A second, independent consumer must be able to adopt the toolkit *as published* — with an empty `local_edits: []` in its manifest — rather than carrying local patches.
+
+The second condition is exacting on purpose. Much of the `0.4.x` history is fixes that were *first applied as local edits inside DW-Production* and only later upstreamed: the `v0.4.3` `dw_use()` fixes "landed first on the DW-Production vendored copy as `local_edits`; this release lets the next `cso_toolkit_pull(target_version = "v0.4.3")` drop those local edits." The manifest's `local_edits:` field exists precisely to record such divergence so that a later pull skips those files — but every entry in it is a small breach of the vendoring model, because it means the published toolkit was not, on its own, sufficient. A clean second adoption — no `local_edits` — is the empirical signal that the contract has stabilised enough to commit to. The candidate downstream consumers named in the strategy docs are other repositories in the same programme: `unicef-drp/UNPD-Population` and `unicef-drp/datalib-dev`.
+
+`v0.5.0` cleared a prerequisite by landing the live `dw_publish()` submission branch that had shipped as a deliberate dry-run-only STUB in `v0.4.0` (the STUB existed so sector scripts could wire the canonical call site early and have it "light up automatically when v0.5.0 lands"). What remains before `1.0.0` is the same two-part adoption gate — pilot in, second consumer clean — not a list of features.
+
+Once `v1.0.0` is cut, the SemVer contract hardens: breaking changes can no longer ride inside MINOR bumps as they have through the `0.4.x` line; they require a MAJOR bump and a migration note. Until then, read the migration notes, not just the digits.

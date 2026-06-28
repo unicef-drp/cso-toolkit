@@ -1,0 +1,513 @@
+# Onboarding a repo: a worked example
+
+This chapter walks the producer/reviewer deposit contract into a real repository, step by step, with the exact commands you would run. (The preceding chapters set out the pieces in the abstract: the producer/reviewer mode contract in the roles chapter, the IO and external-API contracts in Part III, and the vendoring model in Part IV.) The running example is a hypothetical new deposit-bearing repo — call it `unicef-drp/UNPD-Population`, one of the DW-Production-style repos that publish curated data to a shared Teams/Z: warehouse — but every step is repo-neutral; substitute your own owner, repo, and sector codes.
+
+The walkthrough has six steps:
+
+1. Vendor the helpers into `00_functions/`.
+2. Pin the vintage in `.toolkit_manifest.yml`.
+3. Wire the mode contract into the profile.
+4. Make a first producer run: cache an API source, deposit an output.
+5. Re-run as a reviewer and compare against the deposit.
+6. Add the contract auditor to CI.
+
+By the end you will have a repo whose pipeline writes to the canonical deposit only in producer mode, isolates reviewer runs into a sandbox, and proves on every push that the deposit stays write-protected in reviewer mode and that no script bypasses the API contract.
+
+::: {.callout-note}
+The toolkit ships three language implementations that share command names and function signatures: R (`r/R/*.R`), Python (`python/src/*.py`), and Stata (`stata/src/*.ado`). Where a step involves code, all three are shown together in a tabset. The three languages do not cover the same features, and we flag each gap where it bites — see also the cross-language coverage matrix in the appendices.
+:::
+
+## Step 0: Decide what you are adopting
+
+Before copying any files, settle two questions.
+
+**Which helpers does your pipeline actually need?** The toolkit is modular. A repo that only reads and writes deposit files needs the IO contract (`dw_save` / `dw_use` / `dw_compare`) and the sync helper. A repo that also fetches from upstream APIs needs the external-API contract (`dw_api_fetch` / `dw_api_cached` / `dw_api_inventory`). The vendoring manifest's `vendored:` list is meant to be trimmed to exactly what you use — do not copy files your pipeline never calls.
+
+**Which languages?** R and Python are at near-parity. Stata covers the producer/reviewer IO and config contract (`dw_save`, `dw_use`, `dw_compare`, `dw_load_config`, `dw_mkdir`, `dw_require_no_api`) but has **no API wrapper** (`dw_api_fetch` and friends are R+Python only) and **no sync helper** (`cso_toolkit_check` / `_pull` are R+Python only), and Parquet output is R+Python-only (Stata writes `.dta`; R adds `.rds`, Python adds `.pkl`). If your Stata code needs a remote source, it cannot route through `dw_api_fetch`; you must keep API fetching in R or Python and have Stata read the cached deposit with `dw_use`. Plan around that gap now rather than discovering it mid-onboarding.
+
+## Step 1: Vendor the helpers
+
+The toolkit is **vendored, not installed** (see the vendoring chapter for the rationale). You copy the source files into your repo and commit them. There is no live `source()` or `install_github` from the network at session start; the committed copies freeze the vintage in your git history, so a reviewer with no network access can still re-run the pipeline.
+
+Create the conventional `00_functions/` directory and copy in the helpers you settled on in Step 0.
+
+::: {.panel-tabset}
+## R
+
+```bash
+# From the root of your consumer repo
+mkdir -p 00_functions
+cp /path/to/cso-toolkit/r/R/dw_io.R            00_functions/
+cp /path/to/cso-toolkit/r/R/dw_api.R           00_functions/
+cp /path/to/cso-toolkit/r/R/cso_toolkit_sync.R 00_functions/
+```
+
+Source them at the top of your profile (Step 3 wires this in):
+
+```r
+for (f in list.files("00_functions", pattern = "\\.R$", full.names = TRUE)) {
+  source(f)
+}
+```
+
+## Python
+
+The Python implementation lives under `python/src/`. For the vendoring model, copy the modules alongside your pipeline code:
+
+```bash
+mkdir -p 00_functions
+cp /path/to/cso-toolkit/python/src/dw_io.py            00_functions/
+cp /path/to/cso-toolkit/python/src/dw_api.py           00_functions/
+cp /path/to/cso-toolkit/python/src/cso_toolkit_sync.py 00_functions/
+```
+
+```python
+import sys
+sys.path.insert(0, "00_functions")
+from dw_io import dw_save, dw_use, dw_compare
+from dw_api import dw_api_fetch, dw_api_inventory
+```
+
+## Stata
+
+Stata has no native package install path that matters here; vendoring is the production model. Either extend the adopath during development or copy the `.ado` / `.sthlp` files into the consumer's `ado/` (or `PERSONAL` adopath) for production.
+
+```stata
+* Option A -- extend the adopath (development)
+adopath ++ "C:/path/to/cso-toolkit/stata/src"
+which dw_save
+
+* Option B -- copy into the project ado/ (production)
+* (shell: cp cso-toolkit/stata/src/*.ado  ado/ ; cp cso-toolkit/stata/src/*.sthlp ado/)
+```
+
+There is no `dw_api.ado` and no `cso_toolkit_sync.ado` to copy — those contracts are R+Python only.
+:::
+
+## Step 2: Pin the vintage in `.toolkit_manifest.yml`
+
+The manifest records which upstream vintage you vendored, so the sync helper can tell you later when you have fallen behind. It lives **inside `00_functions/`, next to the helpers it tracks** — that is exactly where `cso_toolkit_check()` looks for it (it resolves the directory from the `dwFunct` global the profile sets, falling back to `<getwd()>/00_functions`). Vendor the template into `00_functions/.toolkit_manifest.yml` and edit it to match what you actually copied.
+
+```yaml
+source: "unicef-drp/cso-toolkit"
+pulled_version: "v0.5.0"
+pulled_date: "2026-06-28"
+pulled_by: "<your-name>"
+
+# Files vendored from cso-toolkit/r/R/ into consumer's 00_functions/
+vendored:
+  - dw_io.R
+  - dw_api.R
+  - cso_toolkit_sync.R
+
+# Local edits applied on top of vendored files. List paths here so that
+# cso_toolkit_pull() skips them on update. (Empty by default.)
+local_edits: []
+```
+
+The fields, from the template's own header:
+
+| Field | Meaning |
+|---|---|
+| `source` | GitHub `owner/repo` of the upstream toolkit. |
+| `pulled_version` | The tag at the time of the most recent pull (e.g. `v0.5.0`). Use `inrepo` if you edited the helpers locally and do not want sync warnings. |
+| `pulled_date` | ISO-8601 date of the pull. Free-form; the helper does not parse it. |
+| `pulled_by` | Human breadcrumb for who ran the pull. |
+| `vendored` | List of files copied from the toolkit into your `00_functions/`. Trim to what you use. |
+| `local_edits` | Files in `vendored:` that you have diverged locally; `cso_toolkit_pull()` skips these on update. Empty by default. |
+
+Commit the manifest in version control alongside the vendored helpers, and update it every time you re-pull. Keep `vendored:` honest: list a file only if it is actually present in `00_functions/`.
+
+::: {.callout-warning}
+`pulled_version` must be a real tag once the upstream repo has releases. The Database Manager (DBM) pre-deposit checklist (the submission template referenced in the roles chapter) gates a deposit on the manifest being on a tagged version — no `inrepo` or `unreleased` suffixes. Use `inrepo` only during local development of the helpers themselves, never for a deposit run. Note that `cso_toolkit_check()` skips the upstream comparison entirely when `pulled_version` contains `inrepo`, so a stray `inrepo` also silently suppresses drift warnings.
+:::
+
+You can confirm at any point that the helper sees your manifest by running the sync check. In producer mode it queries the GitHub API for the latest upstream tag and warns if you are behind; in reviewer mode it quietly returns `NULL` because the mode contract forbids network calls.
+
+::: {.panel-tabset}
+## R
+
+```r
+res <- cso_toolkit_check(quiet = FALSE)
+# res$pinned_version / res$upstream_version / res$updates_available
+```
+
+## Python
+
+```python
+res = cso_toolkit_check(quiet=False)
+# res["pinned_version"] / res["upstream_version"] / res["updates_available"]
+```
+
+## Stata
+
+```stata
+* No Stata sync helper. Inspect .toolkit_manifest.yml by hand,
+* or run cso_toolkit_check() from the R/Python side of the same repo.
+```
+:::
+
+## Step 3: Wire the mode contract into the profile
+
+This is the load-bearing step. Everything downstream — which directory a `dw_save` lands in, whether an API fetch is allowed — flows from the `dw_mode` setting and the globals the profile derives from it.
+
+### 3a. The `user_config.yml` contract
+
+Each user keeps a personal block in their config file. In R and Python the profile reads it from `file.path(USERPROFILE, ".config", "user_config.yml")` — that is `~/.config/user_config.yml` on macOS/Linux and `%USERPROFILE%\.config\user_config.yml` on Windows. The Stata helper resolves the same location via `$HOME` then `%USERPROFILE%`.
+
+```yaml
+jpazevedo:
+  githubFolder: "C:/GitHub/mytasks"
+  teamsRoot: "C:/Users/jpazevedo/UNICEF/Chief Statistician Office - Documents"
+  dw_mode: "reviewer"                            # producer | reviewer
+  sandboxRoot: "C:/Users/jpazevedo/dw-repro"     # only used when dw_mode = reviewer
+```
+
+`dw_mode` is **required**, and it must be exactly `producer` or `reviewer`. The profile loader must hard-fail if `dw_mode` is absent or holds any other value — defaulting to either side is unsafe. Defaulting to producer corrupts the deposit; defaulting to reviewer surprises a DBM mid-deposit.
+
+### 3b. Load the config and derive the path globals
+
+There is no single `dw_load_config()` helper in R or Python: the profile loads the YAML itself with `yaml::read_yaml()` (R) and validates `dw_mode` directly, exactly as the toolkit's `create_profile()` scaffold generates. Stata is the exception — it ships `dw_load_config`, a hand-rolled `key: value` parser, because Stata cannot link an external YAML package on AppLocker-locked corporate Windows.
+
+After loading the config, the profile derives the routing globals from `dw_mode`. The `*Canonical` aliases let reviewer-mode code *read* the deposit without ever *writing* to it (you will use exactly these aliases in Step 5's compare); producer mode collapses them to the same path.
+
+| Global | Producer mode | Reviewer mode |
+|---|---|---|
+| `teamsFolder` | user's actual Teams sync root | `sandboxRoot` |
+| `teamsRawData` | `teamsFolder/01_dw_prep/011_rawdata` | `sandboxRoot/01_dw_prep/011_rawdata` |
+| `teamsWrkData` | `teamsFolder/01_dw_prep/013_wrkdata` | `sandboxRoot/01_dw_prep/013_wrkdata` |
+| `teamsFolderCanonical` | identical to `teamsFolder` | user's actual Teams sync root (read-only) |
+| `teamsRawDataCanonical` | identical to `teamsRawData` | `teamsFolderCanonical/01_dw_prep/011_rawdata` |
+| `teamsWrkDataCanonical` | identical to `teamsWrkData` | `teamsFolderCanonical/01_dw_prep/013_wrkdata` |
+| `dw_apis_allowed` | `TRUE` | `FALSE` |
+
+The toolkit's IO and API helpers read these globals through a safe accessor: `dw_save` resolves its destination through `teamsWrkData` / `teamsRawData`, `dw_api_fetch` checks `dw_apis_allowed` before any network call, and `dw_is_canonical()` tests a path against the `*Canonical` roots (plus the OneDrive `060.DW-MASTER` pattern and the Z: drive) to gate reviewer writes. Set the globals correctly here and the rest of the contract follows for free.
+
+Load the config and emit a prominent mode banner so the operator can never mistake which mode the session is in.
+
+::: {.panel-tabset}
+## R
+
+```r
+USERPROFILE <- Sys.getenv("USERPROFILE", unset = "~")
+config_path <- file.path(USERPROFILE, ".config", "user_config.yml")
+user_config <- yaml::read_yaml(config_path)        # stops if file missing
+
+dw_mode <- user_config[[USERNAME]]$dw_mode
+if (is.null(dw_mode) || !dw_mode %in% c("producer", "reviewer")) {
+  stop("user_config.yml must set dw_mode to 'producer' or 'reviewer'.")
+}
+# ... derive teamsFolder, teamsRawData, teamsWrkData, the *Canonical aliases,
+#     and dw_apis_allowed from dw_mode per the table above ...
+
+if (isTRUE(dw_apis_allowed)) {
+  message("PRODUCER mode -- writes will land in the Teams deposit.")
+} else {
+  message("REVIEWER mode -- writes isolated to ", sandboxRoot,
+          "; canonical deposit read but never written.")
+}
+```
+
+## Python
+
+```python
+import os, yaml
+config_path = os.path.join(os.environ.get("USERPROFILE", os.path.expanduser("~")),
+                           ".config", "user_config.yml")
+with open(config_path) as fh:
+    user_config = yaml.safe_load(fh)
+
+dw_mode = user_config[username]["dw_mode"]
+if dw_mode not in ("producer", "reviewer"):
+    raise SystemExit("user_config.yml must set dw_mode to 'producer' or 'reviewer'.")
+# derive the same globals from dw_mode; set dw_apis_allowed accordingly
+```
+
+## Stata
+
+```stata
+dw_load_config                   // reads ~/.config/user_config.yml (HOME/USERPROFILE)
+* Sets $dw_mode plus exactly the path globals the YAML provides
+* ($teamsWrkData, $teamsRawData, the *Canonical keys, $dwZDrive, $sandboxRoot).
+* dw_load_config does NOT derive mode-aware globals; the profile then swaps
+* $teamsWrkData / $teamsRawData to canonical (producer) or sandbox (reviewer)
+* itself after the call, exactly as the R profile does.
+```
+:::
+
+`dw_load_config` (Stata) errors clearly if neither `HOME` nor `USERPROFILE` is set, errors if the file is missing, and hard-stops with error 459 when `dw_mode` is missing or invalid. The R and Python profiles raise equivalently — because the toolkit needs `dw_mode` and the path globals before any other helper call.
+
+::: {.callout-note}
+A real divergence to plan around: Stata's `dw_load_config` sets only the keys present in the YAML and leaves the producer/reviewer path swap to the profile, whereas the R/Python profiles do the parse and the swap in one place. The contract is the same — `dw_mode` plus the derived path globals — but the seam between "parse" and "derive" sits in different files across languages.
+:::
+
+### 3c. Shadow the globals at the conductor
+
+The profile sets *defaults*; the conductor *redirects* them for this run. The conductor here means each sector's `0_execute_conductor.R` — the top-level script that drives a run end to end. At the top of it, after sourcing the profile, shadow the globals so every downstream script gets mode-correct paths without per-script edits.
+
+```r
+# After computing outputdir for this run (with branch-slug isolation):
+finaldir <- file.path(outputdir, "final")
+
+# Conductor-level shadow: redirect downstream reads/writes without per-script edits
+teamsRawData <- teamsRawDataCanonical   # reviewer-mode: read canonical inputs
+teamsWrkData <- finaldir                # reviewer-mode: writes go to sandbox final
+dwWrkData    <- finaldir                # same
+```
+
+Why shadow at the conductor and not per-script: a sector codebase has 10–40 scripts that reference the path globals (`teamsRawData`, `teamsWrkData`, and the rest). Editing each one breaks the diff audit. Shadowing once lets every downstream script keep its existing code and still get mode-correct paths. The Stata side uses the same trick — once the profile mode-routes `$teamsFolder`, existing `save` calls that reference it automatically land in the sandbox in reviewer mode, with no per-call edits.
+
+Optionally compose this with branch-slug isolation so feature-branch outputs land under `.../sector/output/branches/<slug>/` rather than the canonical deposit, even when a reviewer is on a feature branch:
+
+```r
+branch <- tryCatch(
+  system("git rev-parse --abbrev-ref HEAD", intern = TRUE),
+  error = function(e) "main"
+)
+branch_slug <- gsub("[^A-Za-z0-9._-]", "-", branch)
+
+canonical_outputdir <- file.path(teamsRawData, sector, "output")
+outputdir <- if (branch %in% c("main", "dev", "master")) {
+  canonical_outputdir
+} else {
+  file.path(canonical_outputdir, "branches", branch_slug)
+}
+```
+
+## Step 4: First producer run — cache an API source and deposit an output
+
+Switch your `user_config.yml` to `dw_mode: "producer"` and confirm the load banner reads PRODUCER. Now run the pipeline for the first time. Two things happen on a first producer run that never happen again — and both are one-time precisely because the run populates state that later runs reuse: an API source is fetched live and cached (later runs hit the cache), and an output file is written to the deposit where no prior vintage exists (later runs find one already there).
+
+### 4a. Fetch and cache an upstream source
+
+`dw_api_fetch` tries the cache first (sandbox, then canonical fallback) and only fetches live when there is no hit and the session is in producer mode. On a first run the cache is empty, so it fetches, writes the cache via `dw_save` (mode-aware path plus Z: mirror), and emits a provenance sidecar recording endpoint, params, `fetched_at`, user, mode, and sha256 (see the provenance-sidecars chapter for the sidecar's shape). Caches never expire automatically; refresh is explicit (`refresh = TRUE`), and the DBM owns refresh cadence.
+
+::: {.panel-tabset}
+## R
+
+```r
+wb <- dw_api_fetch(
+  api        = "wb",
+  cache_key  = "wb_lp_primary_2000_2024",
+  indicator  = c("SE.LPV.PRIM"),
+  start_date = 2000,
+  end_date   = 2024
+)
+```
+
+## Python
+
+```python
+wb = dw_api_fetch(
+    api="wb",
+    cache_key="wb_lp_primary_2000_2024",
+    indicator=["SE.LPV.PRIM"],
+    start_date=2000,
+    end_date=2024,
+)
+```
+
+## Stata
+
+```stata
+* No dw_api_fetch in Stata. Fetch + cache the source from the R or
+* Python side of the repo (producer mode), then have Stata read the
+* cached deposit file with dw_use.
+```
+:::
+
+The supported `api` values are `uis`, `sdmx`, `sdmx_codelist`, `wb`, `wb_indicators`, `ilo`, `unsd_sdg`, `github_raw`, `http`, and `json_get`; the API-specific arguments (`indicator`, `flowRef`, `series_codes`, and so on) pass straight through to the per-API fetcher.
+
+If you run this in reviewer mode and the cache is missing, `dw_api_fetch` does not fall back to the network — it raises through the `dw_require_no_api` guard, telling you the input must be pre-deposited and to escalate to the sector DBM rather than calling the API. That is the contract working as designed.
+
+### 4b. Write a deposit output
+
+Write your processed output with `dw_save`. The R and Python helpers take a `name` + `sector` + `kind` shorthand that resolves the canonical path for you; pass `isid` to enforce row uniqueness on the key columns. In producer mode the write lands in the deposit, and is carbon-copied automatically to both the Teams canonical equivalent and the Z: drive when the profile makes those roots available. (The per-call `mirror_to_z` flag is gone — deprecated in v0.4.0, removed in v0.5.0; mirroring is now automatic and paired.) A provenance sidecar is written alongside the file.
+
+::: {.panel-tabset}
+## R
+
+```r
+dw_save(
+  df,
+  name     = "dw_pop_tot.csv",
+  sector   = "pop",
+  kind     = "wrk",
+  isid     = c("REF_AREA", "TIME_PERIOD"),
+  metadata = list(title = "Total population, by area and year")
+)
+```
+
+## Python
+
+```python
+dw_save(
+    df,
+    name="dw_pop_tot.csv",
+    sector="pop",
+    kind="wrk",
+    isid=["REF_AREA", "TIME_PERIOD"],
+    metadata={"title": "Total population, by area and year"},
+)
+```
+
+## Stata
+
+```stata
+dw_save , filename("dw_pop_tot.dta")    ///
+          path("$teamsWrkData/pop")     ///
+          idvars("REF_AREA TIME_PERIOD") ///
+          title("Total population, by area and year")
+```
+:::
+
+::: {.callout-note}
+Two cross-language gaps in `dw_save`. First, the Stata helper takes an explicit `path()` and `filename()` rather than the `name` / `sector` / `kind` shorthand, and writes `.dta`. Second, the overwrite gate differs: R uses an `overwrite = NULL` sentinel (resolving to `TRUE` in reviewer mode, `FALSE` in producer mode) plus a `force` confirmation prompt on existing producer deposits; Python's `overwrite` defaults to a plain `False` and has no `force` parameter. In all three languages the provenance sidecar has the same shape, so reviewer-mode integrity checks work across languages. There is no Parquet output on the Stata side.
+:::
+
+After the run, inventory what you cached so you have a record for the deposit checklist:
+
+::: {.panel-tabset}
+## R
+
+```r
+dw_api_inventory()       # all caches, with size, mtime, and fetched_at
+```
+
+## Python
+
+```python
+dw_api_inventory()
+```
+
+## Stata
+
+```stata
+* No dw_api_inventory in Stata; inspect the _apis/ cache dir directly
+* or run the inventory from R/Python.
+```
+:::
+
+## Step 5: Reviewer re-run and compare
+
+Now prove the deposit is reproducible. Switch a second user (or your own config) to `dw_mode: "reviewer"`, set a `sandboxRoot`, and confirm the load banner reads REVIEWER. Run the same conductor. Every artifact lands in the sandbox, and the canonical deposit's modification time is unchanged before and after the run — because the profile routes `teamsRawData` / `teamsWrkData` under `sandboxRoot` and the conductor shadow sends writes to `finaldir`. Any stray API call raises through the `dw_require_no_api` guard instead of hitting the network.
+
+Then compare the reviewer's freshly produced file against the canonical deposit with `dw_compare`. The `reference` (the deposited "old" side) is read through the canonical alias, which reviewer-mode code may read but never write. `dw_compare` is tolerant of a missing reference — on a genuine first deposit it warns rather than stopping — but here the reference exists from Step 4.
+
+::: {.panel-tabset}
+## R
+
+```r
+report <- dw_compare(
+  current            = file.path(finaldir, "pop", "dw_pop_tot.csv"),
+  reference          = file.path(teamsWrkDataCanonical, "pop", "dw_pop_tot.csv"),
+  by                 = c("REF_AREA", "TIME_PERIOD"),
+  value_cols         = c("OBS_VALUE", "DATA_SOURCE"),
+  numeric_value_cols = c("OBS_VALUE"),
+  tol                = 1e-5,
+  label              = "dw_pop_tot",
+  write_report_to    = file.path(tempdir(), "pop_compare_warehouse")
+)
+report$summary
+```
+
+## Python
+
+```python
+import os, tempfile
+report = dw_compare(
+    current=os.path.join(finaldir, "pop", "dw_pop_tot.csv"),
+    reference=os.path.join(teamsWrkDataCanonical, "pop", "dw_pop_tot.csv"),
+    by=["REF_AREA", "TIME_PERIOD"],
+    value_cols=["OBS_VALUE", "DATA_SOURCE"],
+    numeric_value_cols=["OBS_VALUE"],
+    tol=1e-5,
+    label="dw_pop_tot",
+    write_report_to=os.path.join(tempfile.gettempdir(), "pop_compare_warehouse"),
+)
+report["summary"]
+```
+
+## Stata
+
+```stata
+dw_compare , current("`finaldir'/pop/dw_pop_tot.dta")            ///
+             reference("$teamsWrkDataCanonical/pop/dw_pop_tot.dta") ///
+             idvars("REF_AREA TIME_PERIOD")                        ///
+             valuevars("OBS_VALUE DATA_SOURCE")                    ///
+             tol(1e-5) label("dw_pop_tot")                         ///
+             report("`c(tmpdir)'/pop_compare.md")
+```
+:::
+
+::: {.callout-warning}
+The Stata `dw_compare` option names differ from R/Python: the join key is `idvars()` (not `by`), the columns to compare are `valuevars()` (not `value_cols` / `numeric_value_cols`), and the Markdown summary path is `report()` (not `write_report_to`). The diff logic and the added/removed/changed classification are the same; only the keyword spellings diverge. For a full editorial diff with per-row tables, the Stata port points you at the upstream `comparefiles` command instead.
+:::
+
+The summary reports `added`, `removed`, and `changed` row counts (per the comparison reporting in the aggregation chapter). On a clean reproduction those are all zero. When they are not, the DBM submission template's triage taxonomy classifies each non-zero result — `stale-cache`, `retired-upstream-indicator`, `methodology-change`, `rounding`, `bug`, or `uninvestigated` — and a deposit cannot be signed off while any row remains `uninvestigated`.
+
+This reviewer re-run plus the compare report is what it means, operationally, for a repo to have adopted the mode contract: a reviewer-mode end-to-end run produces every artifact under `sandboxRoot`, the canonical deposit is byte-unchanged, and the compare report exists.
+
+## Step 6: Add the contract auditor to CI
+
+The final step makes the guarantees enforceable on every push rather than dependent on the operator remembering to run them. The toolkit's own CI is a useful reference: `r-check.yml` runs `R CMD check` across a Linux/macOS/Windows matrix, and because the helper tests live in `tests/testthat`, the check runs them automatically — no separate test step. The workflow deliberately does not set `dw_mode` at the job level; the mode is a session-level concept that each test sets explicitly, so a test never leaks producer-mode behaviour into another.
+
+For your consumer repo, add a workflow that (a) runs your pipeline's unit tests under both modes and (b) runs the contract auditor — the scaffolding check that verifies no script bypasses the contract (see the scaffolding and contract-auditor chapter for what the auditor inspects). The auditor's job mirrors the verification checklist from the mode-contract integration doc:
+
+- Sourcing the profile with `dw_mode: "reviewer"` produces the green banner.
+- The conductor writes `finaldir` and shadows the path globals before any other script is sourced.
+- No script inside the sector calls a remote without going through `dw_api_fetch` (grep for `httr::GET`, `httr::POST`, `RETRY`, `read.csv("http`, and the like).
+- A reviewer-mode run leaves the canonical deposit's `mtime` unchanged.
+
+A minimal addition to `.github/workflows/`:
+
+```yaml
+name: contract-audit
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    env:
+      # Mode is set per-test inside the suite; do not set it job-wide.
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          working-directory: ./00_functions
+          extra-packages: any::testthat
+      - name: Run pipeline tests + contract auditor
+        run: Rscript -e 'testthat::test_dir("tests/testthat")'
+```
+
+::: {.callout-warning}
+CI cannot fetch from the corporate-net-only upstream APIs, and it must never run in producer mode against a real deposit. Audit the *contract* — banner, shadow, no-bypass, deposit-mtime-unchanged — using the cached fixtures and reviewer mode. Live API fetching belongs in a producer-mode session on a machine with network access, not in CI. This is the same reason `cso_toolkit_check` is a producer-mode-only operation: reviewers, and CI by extension, run against whatever vintage the producer has pinned.
+:::
+
+## Recap: the adoption checklist
+
+A repo has fully adopted the contract when all of the following hold. These map directly onto the verification checklist in the mode-contract integration doc and the sign-off section of the DBM submission template.
+
+| # | Check | How to confirm |
+|---|---|---|
+| 1 | Helpers vendored into `00_functions/` | files present and committed |
+| 2 | Manifest pins a real tag | `.toolkit_manifest.yml` `pulled_version` is `vX.Y.Z`, not `inrepo` |
+| 3 | Profile hard-fails without `dw_mode` | load with the key absent errors out |
+| 4 | Mode banner is unmistakable | reviewer load prints the sandbox-isolation banner |
+| 5 | Conductor shadows the path globals | `finaldir` set and globals reassigned before other scripts source |
+| 6 | First producer run caches + deposits | `dw_api_inventory()` shows the cache; deposit file + sidecar exist |
+| 7 | Reviewer run is deposit-safe | every artifact under `sandboxRoot`; canonical `mtime` unchanged |
+| 8 | Compare report exists | `dw_compare` summary written under the sandbox temp dir |
+| 9 | No script bypasses the API contract | grep for raw `httr` / `read.csv("http` returns nothing |
+| 10 | CI audits the contract on every push | `contract-audit` workflow green |
+
+Steps 7, 8, and the underlying reviewer run are the operational test that the contract is real and not merely declared. Once they pass and CI enforces them, the repo joins DW-Production as a deposit-bearing consumer of the same contract. To keep it in sync as the toolkit releases new vintages, see the vendoring and versioning chapters in Part IV.

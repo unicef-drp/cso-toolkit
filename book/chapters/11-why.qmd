@@ -1,0 +1,125 @@
+# Why a toolkit
+
+A 2026 analysis must re-run identically in 2028. That single requirement — call it the *reproducibility floor* — is the reason `cso-toolkit` exists. Everything else in this book follows from it.
+
+The toolkit is the shared, cross-language contract that the UNICEF Chief Statistician Office (CSO), within the Office of Strategy and Evidence (OSE), uses to read, write, compare, and merge data; to call external APIs; to aggregate; and to keep copied-in ("vendored") helper code in sync. Concretely, it is one input/output (IO) contract, one external-API contract, one *mode contract* — a session-level switch that governs whether a run may touch the network — three implementations (R, Python, Stata), and one vendoring model. This chapter sets out the problem the toolkit solves and motivates the design choices the rest of the book documents.
+
+## The problem: analytics that cannot be re-run
+
+A statistical office publishes numbers, and those numbers carry a promise: that they are not an accident of the machine, the week, or the analyst who happened to produce them. A figure cited in a 2026 publication — say, an education indicator deposited as `dw_ed.csv` — must, two years later, produce the *same* number when a different person re-runs the pipeline.
+
+That promise is surprisingly hard to keep. Three things routinely break it:
+
+- **Upstream drift.** The external data source changes between the original run and the re-run. An SDMX (the statistical data-exchange standard) dataflow gets revised, a World Bank indicator is re-based, a UIS (UNESCO statistics) endpoint returns a slightly different shape. The re-run pulls "live" data and quietly produces different numbers.
+- **Ambient version skew.** The original analyst had one version of `dplyr` (or `pandas`, or a Stata `.ado`); the reviewer has another. A default changes, a sort becomes unstable, a join behaves differently. Nothing errors — the answer just shifts.
+- **Untracked provenance.** Nobody recorded what was read, from where, with what schema, by whom, and when. When the numbers disagree, there is no artefact to point at and no way to tell which run is wrong.
+
+These are not hypothetical. For instance, an internal cross-sector audit (23 May 2026) found four regional-metadata CSV files being read independently across five sectors, each with no shared vintage record — four chances for the same kind of file to disagree, with nothing recording which copy any run actually used. That is exactly the failure mode the toolkit is built to remove.
+
+The toolkit's answer is to make every data touch-point go through a wrapper that enforces the same discipline everywhere: a single way to read and write that records provenance automatically, a single way to call an external API that can be frozen and replayed, and a session-level contract that decides whether the network may be touched at all. The repository README states the goal directly: the toolkit exists "to facilitate the reproducibility and scalability of analytics developed by the UNICEF Chief Statistician Office."
+
+## The reproducibility floor
+
+A floor is a guarantee you inherit for free, not a feature you opt into. The toolkit's ambition is that any sector codebase that vendors the helpers gets the floor automatically — the analyst does not have to remember to record provenance, does not have to wire up a cache, does not have to police whether a reviewer accidentally hit the network. The wrappers do it.
+
+Concretely, the floor is built from a few primitives that recur throughout the book:
+
+- **Provenance sidecars.** Every write through `dw_save()` — the toolkit's write wrapper — emits a `.provenance.json` sidecar by default, recording a `sha256` of the artefact, its schema, the user, a timestamp, and caller-supplied metadata. (You can opt out with `provenance = FALSE`; `.RData` / `.rda` writes skip the sidecar.) When two runs disagree, the sidecars tell you which input changed. The provenance-sidecars-and-error-envelope chapter, and the sidecar-schema appendix, document the format.
+- **A frozen deposit you can replay.** External API calls route through `dw_api_fetch()` and its companions, which cache responses under a deposit directory. A re-run reads the cache rather than the live source, so upstream drift cannot leak into a reviewer's numbers. The external-API contract chapter covers this.
+- **Uniqueness and integrity checks.** `dw_isid()` asserts that an identifier set is unique; canonical reads verify integrity. Silent duplication and silent corruption are caught at the call site, not three steps downstream.
+
+The point of routing every call through a wrapper is not ceremony. It is that the contract is enforced "at every wrapped call site, not by convention" — the README is emphatic on this. Convention is what fails when someone is in a hurry; an enforced contract does not.
+
+## Vendoring, not installing
+
+The second pillar follows from the first. If a 2026 analysis must re-run identically in 2028, then the *helper code itself* must be the same in 2028 as it was in 2026. A toolkit that is installed over the network — `devtools::install_github(...)`, `pip install`, `net install` — does not give you that. At session start you get whatever version the network happens to serve, and that is precisely the upstream-drift problem applied to your own tools.
+
+So consumers do not install the toolkit. They **vendor** it: they copy the helper files into their own `00_functions/` directory, commit those copies to their own git history, and pin the vendored vintage in a one-line manifest. The toolkit-strategy document gives four reasons for this choice:
+
+1. **Reproducibility / vintage permanence.** Every consuming repo's git history shows exactly which helper code was in effect at any commit. There is no gap between "the repo's pinned version was X" and "the running session installed Y." A 2026-05 release re-run uses the helper code as it stood in 2026-05.
+2. **Producer-controlled refresh.** Toolkit updates are not pulled automatically. The producer reads the release notes, decides whether the new vintage is appropriate, and refreshes explicitly. Upgrades are a deliberate act, not a side effect of opening a session.
+3. **Reviewer offline reproducibility.** A reviewer with no network access can still re-run the full pipeline — on a plane, behind a corporate firewall, at a customs desk — because the vendored helpers are right there in the repo.
+4. **Cross-language symmetry.** Stata equivalents follow the same model (the ado-files are copied into the consumer's repo), and a package-install model would not fit Stata well in the first place. Vendoring is the one model that works for all three languages.
+
+There is a fifth, blunt reason specific to the operating environment: **AppLocker reality.** UNICEF laptops block many script-installable paths. Copying files into `00_functions/` always works where a network install may not.
+
+The vendored vintage is recorded in a small manifest, `.toolkit_manifest.yml`, that names the upstream source, the pinned tag, when and by whom it was pulled, and which files were vendored:
+
+```yaml
+source: "unicef-drp/cso-toolkit"
+pulled_version: "v0.5.0"
+pulled_date: "2026-06-21"
+pulled_by: "<your-name>"
+vendored:
+  - dw_io.R
+  - dw_api.R
+  - cso_toolkit_sync.R
+local_edits: []
+```
+
+For local development each language still offers a native install path (`devtools::install_local("r/")`, `pip install -e python/`, `adopath ++ "stata/src"`), but vendoring stays the production model. The vendoring-model chapter and the manifest material in Part IV cover the mechanics and the upgrade flow; here the point is only *why* the toolkit is copied rather than installed.
+
+::: {.callout-note}
+Vendoring trades a little convenience for a hard guarantee. You take on the small chore of an explicit refresh; in return, the helper code can never drift out from under a published result. For a statistical office, that trade is the whole point.
+:::
+
+## Scaling across sectors and projects
+
+The third pillar is scale. The CSO is not one pipeline; it is many — education, water and sanitation, nutrition, health, poverty, immunisation, and more — and the toolkit's consumers extend beyond DW-Production (the cross-sector deposit pipeline) to other repositories that will deposit canonical data, such as `UNPD-Population` and `datalib`. Without a shared contract, each of these would re-invent the same primitives, and each re-invention is a new chance to drift, as the five-sector regional-metadata duplication showed.
+
+A single vendored toolkit changes the economics. The same helpers, the same templates, and the same audit functions are vendored into every codebase, so a new sector or a new project "inherits the reproducibility floor for free instead of re-inventing it." Adding the next sector is a vendoring step, not a re-implementation. This idea explicitly gates the toolkit's `v1.0.0`: the toolkit reserves that release for after the education pilot lands *and a second sector vendors the helpers without modification* — proof that the contract generalises rather than being bent to one team's habits.
+
+Scale is one reason the contract is cross-language. Sectors work in R, Python, and Stata, and the toolkit's core principle is parity: the commands share the same names and the same behaviour across all three. The same write call looks like this in each:
+
+::: {.panel-tabset}
+
+## R
+
+```r
+dw_save(df, name = "dw_ed.csv", sector = "ed", kind = "wrk",
+        isid = "REF_AREA",
+        metadata = list(title = "Education indicators", vintage = "2026-05"))
+```
+
+## Python
+
+```python
+dw_save(df, name="dw_ed.csv", sector="ed", kind="wrk",
+        isid=["REF_AREA"],
+        metadata={"title": "Education indicators", "vintage": "2026-05"})
+```
+
+## Stata
+
+```stata
+dw_save, filename("dw_ed") path("$teamsWrkData/ed") ///
+    idvars(REF_AREA INDICATOR)                       ///
+    title("Education indicators")                    ///
+    vintage("2026-05")
+```
+
+:::
+
+::: {.callout-warning}
+Parity is the goal, not yet the whole reality, and the book is honest about the gaps. As of v0.5.0 the external-API wrapper exists only in R and Python — Stata has no API wrapper — and the Stata side has no parquet support (`.parquet` reads are explicitly out of scope; route them through R or Python and `dw_save()` to `.dta`). Several IO helpers — `dw_merge` and `dw_verify_z` — are R + Python only. Note too that the Stata commands take comma-separated options (`dw_save, filename(...) path(...)`), not the `using` form some R-flavoured examples might lead you to expect. The cross-language coverage matrix appendix records exactly which function exists in which language and in which shape; treat it as the source of truth rather than assuming every name works everywhere.
+:::
+
+## The producer / reviewer split, at a high level
+
+The reproducibility floor needs one more idea to hold: someone has to be allowed to touch the live network, and someone has to be forbidden from it — and the toolkit has to *enforce* the difference rather than trust people to remember it.
+
+The toolkit therefore distinguishes roles by what they are permitted to do, and it makes the distinction a session-level mode — `dw_mode`, read once when the profile loads from `~/.config/user_config.yml` — not a per-call argument an analyst can forget or override. At a high level:
+
+- **Producer** (the Database Manager) runs the sector pipeline, pulls upstream APIs — with caching — and deposits the canonical artefacts. *Canonical* here means the official, signed-off version of record: the deposit other people read and trust. The producer is the one role with network access.
+- **Reviewer** re-runs the pipeline from the frozen canonical deposit, compares against it, and files issues. The reviewer is *physically prevented* from calling the network: with `dw_apis_allowed = FALSE`, every API call site raises a mode-lock error rather than reaching out. A reviewer who is forced offline cannot accidentally "fix" a discrepancy by pulling fresh data — which is exactly what makes their re-run a real check.
+- **Publisher** (a downstream role) takes signed-off deposits into `data.unicef.org`, SDMX, and other products. This role lives largely outside the toolkit's own boundary.
+
+This split is what closes the loop on the reproducibility floor. The producer's run is the run of record; the reviewer's run, executed against frozen inputs with the network sealed off, is the proof that the run of record reproduces. Because the boundary is enforced at every wrapped call site, the guarantee does not depend on anyone behaving well on a busy day.
+
+The roles and the mode contract are the subject of the next part of the book — the roles-and-mode-contract chapter defines each role precisely, and the wiring chapter shows how `dw_mode` is set in a sector profile. Hold the shape in mind: *one contract, two enforced postures toward the network, one direction of trust from producer to reviewer.*
+
+## What this buys you
+
+Pulling the three pillars together: the toolkit gives the CSO a reproducibility floor (provenance, frozen replay, integrity checks, enforced at the call site), a vendoring model that pins helper code to a vintage so published results never drift, and a single cross-language contract that lets new sectors and new repositories inherit all of it instead of rebuilding it. The producer / reviewer split is the mechanism that turns "we wrote it down" into "we can prove it re-runs."
+
+The architecture chapter that follows makes this concrete — one contract, three languages, many consumers — and the rest of the book documents each capability family in turn.

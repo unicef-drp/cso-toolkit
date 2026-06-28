@@ -1,0 +1,274 @@
+# Wiring the contract into a repo
+
+The roles chapter described *who* the producer and reviewer are and *what* obligations the `dw_mode` contract places on each. This chapter is the operational counterpart: how a repository makes its own code enforce that contract.
+
+A word of orientation first, so this chapter stands on its own. The CSO toolkit is the shared R, Python, and Stata library — vendored into DW-Production and other Chief Statistician Office (CSO) pipelines — that helper functions such as `dw_save`, `dw_use`, and `dw_api_fetch` are built on. `dw_mode` is the toolkit's master switch: a session property, set once per user, that takes the value `"producer"` or `"reviewer"`. A *producer* (the sector's database manager) is entitled to write the **canonical deposit** — the authoritative directory of frozen data artefacts synced through Teams. A *reviewer* may reproduce and check those artefacts but must never overwrite them, and must never reach a live external API, because every input a reviewer consumes has to come from a snapshot the producer already froze. Wiring the contract means making the repository's own code honour that division automatically.
+
+The work is concrete and mostly mechanical: set one value in a configuration file, derive a handful of path globals from it, shadow those globals at the top of each pipeline run, and verify the result with a short checklist. Each step has a reason, and getting any one wrong silently re-introduces the failure the contract exists to prevent — a reviewer overwriting the canonical deposit, or a reviewer-mode run quietly hitting a live API and breaking provenance, the guarantee that every input traces back to a specific frozen snapshot.
+
+Throughout, the load-bearing idea is *single-switch routing*. A user sets `dw_mode` once, in one place. Everything downstream — where writes land, whether external API calls are permitted, which directory reads fall back to — is *derived* from that one value. No per-script edits, no per-call flags. The contract is wired once and inherited everywhere.
+
+## The single switch: `dw_mode` in `user_config.yml`
+
+Every user of a CSO pipeline keeps a personal configuration block in a YAML file at `~/.config/user_config.yml` (on Windows, `%USERPROFILE%/.config/user_config.yml`). This file is per-machine and per-user; it is never committed to the repository. A minimal block looks like this:
+
+```yaml
+jpazevedo:
+  githubFolder: "C:/GitHub/mytasks"
+  teamsRoot: "C:/Users/jpazevedo/UNICEF/Chief Statistician Office - Documents"
+  dw_mode: "reviewer"                                  # producer | reviewer
+  sandboxRoot: "C:/Users/jpazevedo/dw-repro"           # used only when dw_mode = reviewer
+```
+
+The one required key is `dw_mode`. It takes exactly one of two values, `"producer"` or `"reviewer"`. Loading the profile must hard-fail if `dw_mode` is missing or set to anything else. Defaulting either way is unsafe. Defaulting to `producer` would let a reviewer corrupt the canonical deposit the first time they forget to set the key; defaulting to `reviewer` would surprise a database manager in the middle of a legitimate deposit by silently diverting their writes into a sandbox. There is no safe default, so the loader refuses to guess.
+
+All three language ports enforce this identically. The `create_profile` scaffolder (covered in the scaffolding chapter) emits a `dw_mode` block that validates the value at load time and stops the session otherwise:
+
+::: {.panel-tabset}
+## R
+```r
+dw_mode <- user_config$dw_mode
+if (is.null(dw_mode) || !dw_mode %in% c("producer", "reviewer")) {
+  stop("[X] user_config.yml must set dw_mode to 'producer' or 'reviewer'.")
+}
+```
+
+## Python
+```python
+dw_mode = user_config.get("dw_mode")
+if dw_mode not in ("producer", "reviewer"):
+    raise ValueError(
+        "[X] user_config.yml must set dw_mode to 'producer' or 'reviewer'."
+    )
+```
+
+## Stata
+```stata
+* dw_load_config validates dw_mode while parsing the YAML and
+* hard-stops with error 459 if it is missing or out of range.
+dw_load_config
+* -> sets the global $dw_mode
+```
+:::
+
+A note on the Stata path. Stata cannot link an external YAML library on AppLocker-locked corporate Windows installs, so `dw_load_config.ado` ships a minimal hand-rolled `key: value` parser. It handles the documented subset of the config schema — one pair per line, optional quoting, inline `#` comments stripped — but not nested mappings, lists, anchors, or multi-line strings. It also keys off a flat top-level file rather than the per-user nested block shown above for R and Python. This is a real parity gap. The Stata loader reads exactly the keys the YAML provides into `$`-globals and validates `dw_mode` (hard-stopping with error 459 if it is missing or out of range), but it does not parse the richer nested structure the R and Python profiles consume.
+
+::: {.callout-note}
+One key the loaders do *not* validate is `sandboxRoot`, even though it is mandatory in reviewer mode (it is the base the reviewer's write globals are derived from). If `dw_mode: reviewer` is set but `sandboxRoot` is absent, the derivation below produces empty or malformed paths rather than a clean error at load time. Until the loaders gain an explicit check, a profile author should validate `sandboxRoot` themselves alongside `dw_mode`.
+:::
+
+## Deriving the producer/reviewer globals
+
+Once `dw_mode` is known, the profile derives a small set of path globals from it. Deriving these globals is the heart of the wiring. In producer mode the globals point at the real Teams deposit; in reviewer mode they point at the user's private sandbox, while a parallel set of `*Canonical` aliases preserve a *read-only* view of the real deposit so that reviewer code can still compare its outputs against canonical.
+
+The reference derivation (patterned on `profile_DW-Production.R`) computes the following from `dw_mode`:
+
+| Global | Producer mode | Reviewer mode |
+|---|---|---|
+| `teamsFolder` | user's actual Teams sync root | `sandboxRoot` |
+| `teamsRawData` | `teamsFolder/01_dw_prep/011_rawdata` | `sandboxRoot/01_dw_prep/011_rawdata` |
+| `teamsWrkData` | `teamsFolder/01_dw_prep/013_wrkdata` | `sandboxRoot/01_dw_prep/013_wrkdata` |
+| `teamsFolderCanonical` | identical to `teamsFolder` | user's actual Teams sync root (read-only) |
+| `teamsRawDataCanonical` | identical to `teamsRawData` | `teamsFolderCanonical/01_dw_prep/011_rawdata` |
+| `teamsWrkDataCanonical` | identical to `teamsWrkData` | `teamsFolderCanonical/01_dw_prep/013_wrkdata` |
+| `dw_apis_allowed` | `TRUE` | `FALSE` |
+
+Two patterns deserve attention. The `*Canonical` aliases come first. In reviewer mode the working globals (`teamsRawData`, `teamsWrkData`) are diverted into the sandbox, but the `*Canonical` aliases continue to point at the real deposit. This split — diverted write globals, preserved read aliases — lets reviewer-mode code *read* the canonical inputs and outputs for a compare-against-warehouse step (checking reviewer outputs against the canonical deposit) without ever being able to *write* over them; the write globals simply do not reach the deposit. In producer mode the aliases collapse onto the same paths as the working globals, because the producer reads and writes the same canonical location.
+
+Second is `dw_apis_allowed`. This single boolean is `TRUE` only in producer mode. It is the value the no-API guard consults (described below), and it is the one place the "reviewers never touch live APIs" rule is encoded.
+
+How each language holds this derived state differs:
+
+::: {.panel-tabset}
+## R
+```r
+# The R profile sets the derived globals directly in .GlobalEnv.
+# Downstream helpers read them from there (via an internal .try_get).
+teamsRawData          <- file.path(teamsFolder, "01_dw_prep", "011_rawdata")
+teamsRawDataCanonical <- file.path(teamsFolderCanonical, "01_dw_prep", "011_rawdata")
+dw_apis_allowed       <- identical(dw_mode, "producer")
+```
+
+## Python
+```python
+# The Python profile pushes the derived state into the shared
+# cso_toolkit._state module via configure(); helpers read it back
+# through _state._get(...).
+from cso_toolkit import _state as _cso_state
+
+_cso_state.configure(
+    dw_mode=dw_mode,
+    dw_apis_allowed=(dw_mode == "producer"),
+    teamsRawData="/path/to/raw",
+    teamsRawDataCanonical="/path/to/raw-canonical",
+)
+```
+
+## Stata
+```stata
+* dw_load_config sets $dw_mode and any team* / canonical / sandboxRoot
+* keys it finds in the YAML, but it does NOT derive the mode-aware
+* paths for you. The profile .do must do the producer/reviewer swap
+* itself after the loader returns -- e.g. point $teamsWrkData at the
+* canonical root in producer mode, the sandbox root in reviewer mode.
+```
+:::
+
+The Python `_state` module is the explicit equivalent of R's `.GlobalEnv`: where the R helpers read mode-aware globals straight out of the global environment, the Python helpers read them from a single shared module configured by `_state.configure(...)`. Its `configure()` accepts only a fixed allow-list of keys and raises `AttributeError` on any unknown key, so a typo such as a lowercase `teamswrkdata` surfaces immediately rather than silently creating a dead attribute. The accessor `_state._get()` returns `None` only for genuinely unset names — it deliberately returns falsy-but-set values like `False` or `""` as-is, so that `dw_apis_allowed = False` is observable as `False` and not silently coerced to a default.
+
+The Stata side leaves the producer/reviewer path derivation to the profile author. `dw_load_config` populates exactly the globals the YAML names and validates `dw_mode`, but there is no Stata equivalent of the R/Python derivation table baked into the loader. The profile `.do` must perform the swap itself after the loader returns.
+
+### The mode banner
+
+A profile should announce its mode prominently at load time, so that a user can never be unsure which side of the contract they are on. The reference profiles emit one of two banners:
+
+```
+PRODUCER mode — writes will land in the Teams deposit.
+   Use this mode only when you intend to promote outputs to canonical.
+```
+
+```
+REVIEWER mode — writes isolated to <sandboxRoot>.
+   Canonical deposit at <teamsFolderCanonical> is read by code but never written.
+```
+
+The banner is cheap and high-value. Most accidental cross-mode writes are caught simply by a user noticing the wrong banner scroll past at session start.
+
+::: {.callout-note}
+The reference profiles prefix these banners with warning and check-mark emoji (a yellow triangle for producer, a green check for reviewer), whereas the toolkit's error strings use a plain-text `[X]` sentinel. The signalling vocabulary is therefore inconsistent between banners and errors. A consumer that wants uniform output across terminals that render emoji poorly may prefer to standardise on the `[X]` / `[OK]` / `[!]` plain-text markers the helpers already use elsewhere.
+:::
+
+## The conductor shadow pattern
+
+The conductor shadow pattern re-binds the path globals once, at the top of the run driver, so that no sector script needs editing. It is the most error-prone step in the whole wiring, and the place where adoption most often succeeds or fails.
+
+The problem it solves is one of scale. A sector codebase typically contains ten to forty scripts, each of which references the path globals — `teamsRawData`, `teamsWrkData`, and the other working roots — directly. The naive way to make those scripts mode-aware would be to edit every one of them. Editing every script is exactly wrong: it multiplies the change surface, and it breaks the diff audit reviewers rely on, since every script would show churn unrelated to the analysis. And it guarantees that someone, someday, edits thirty-nine scripts and forgets the fortieth.
+
+The shadow pattern solves this once. At the top of each sector's run driver (`0_execute_conductor.R`), *after* sourcing the profile, the conductor re-binds the working globals to mode-correct values. Because R, Python, and Stata all resolve those names dynamically when each downstream script runs, every script keeps its existing code unchanged and still gets the right paths:
+
+::: {.panel-tabset}
+## R
+```r
+# After computing outputdir for this run (with branch-slug isolation):
+finaldir <- file.path(outputdir, "final")
+
+# Conductor-level shadow: redirect downstream reads/writes without
+# editing any sector script.
+teamsRawData <- teamsRawDataCanonical   # reviewer-mode: read canonical inputs
+teamsWrkData <- finaldir                # reviewer-mode: writes go to sandbox final
+dwWrkData    <- finaldir                # same
+```
+
+## Python
+```python
+# After computing outputdir for this run (with branch-slug isolation):
+finaldir = os.path.join(outputdir, "final")
+
+# Conductor-level shadow: re-point the shared state so every helper
+# call downstream resolves the mode-correct paths.
+from cso_toolkit import _state
+_state.configure(
+    teamsRawData=_state.teamsRawDataCanonical,  # read canonical inputs
+    teamsWrkData=finaldir,                       # writes go to sandbox final
+)
+```
+
+## Stata
+```stata
+* After computing $outputdir for this run:
+global finaldir "$outputdir/final"
+
+* Conductor-level shadow: re-point the globals once; every later
+* `save'/`dw_save' against $teamsWrkData lands in the sandbox
+* without per-call edits -- the same trick as R/Python.
+global teamsRawData "$teamsRawDataCanonical"
+global teamsWrkData "$finaldir"
+```
+:::
+
+The shadow reads *from* the canonical alias and writes *to* the sandbox-derived `finaldir`. In reviewer mode this means inputs come from the read-only canonical deposit while every output is confined to the sandbox. In producer mode the canonical alias is identical to the working global, so the same line is a harmless identity and outputs flow to the real deposit as before. One pattern, both modes, no branching in the sector scripts themselves.
+
+::: {.callout-note}
+The shadow must run *before any other script is sourced* by the conductor. A script that is sourced before the shadow re-binds the globals will capture the pre-shadow values. Order matters: source profile, compute `outputdir` and `finaldir`, shadow the globals, *then* source the pipeline.
+:::
+
+## Branch-slug isolation
+
+Branch-slug isolation keys output directories to the current Git branch, so that two feature branches — or a feature branch and the canonical line — never write to the same output directory, even within a single user's sandbox. The shadow pattern composes with this second, optional but recommended, layer. The documented pattern reads the current branch, slugifies it into a filesystem-safe token, and routes non-canonical branches into a `branches/<slug>/` subdirectory:
+
+```r
+branch <- tryCatch(
+  system("git rev-parse --abbrev-ref HEAD", intern = TRUE),
+  error = function(e) "main"
+)
+branch_slug <- gsub("[^A-Za-z0-9._-]", "-", branch)
+
+canonical_outputdir <- file.path(teamsRawData, sector, "output")
+outputdir <- if (branch %in% c("main", "dev", "master")) {
+  canonical_outputdir
+} else {
+  file.path(canonical_outputdir, "branches", branch_slug)
+}
+```
+
+This is a conductor-side convention demonstrated in the integration documentation, not a function shipped by the toolkit; each sector's conductor implements it (or its Python/Stata equivalent) inline. It layers cleanly on top of the mode contract. In reviewer mode `teamsRawData` is already rooted under `sandboxRoot`, so a feature-branch run lands at `<sandboxRoot>/.../<sector>/output/branches/<slug>/` and the canonical deposit is untouched even when the reviewer is working on a branch. Only the canonical branches (`main`, `dev`, `master`) write to the un-suffixed output directory — and in reviewer mode even those are inside the sandbox.
+
+## Defence in depth: the no-API guard
+
+A guard enforces the other half of the contract: every network entry point calls it before touching a remote. Reviewer-mode sessions never make live external API calls, because every upstream input must already be frozen in a producer-deposited cache. The profile enforces the mode at load time, but each API helper checks again at the call site — deliberate redundancy, because a single guard at the profile could be bypassed by a sector script that reaches for `httr::GET` directly. So the guard is invoked at every place a live call could originate.
+
+::: {.panel-tabset}
+## R
+```r
+dw_require_no_api <- function(context = NULL) {
+  if (identical(dw_mode, "reviewer")) {
+    msg <- "[X] External API access is forbidden in reviewer mode."
+    if (!is.null(context)) msg <- paste0(msg, " Context: ", context)
+    stop(msg, call. = FALSE)
+  }
+}
+```
+
+## Python
+```python
+def dw_require_no_api(context: str | None = None) -> None:
+    if dw_mode == "reviewer":
+        msg = "[X] External API access is forbidden in reviewer mode."
+        if context:
+            msg += f" Context: {context}"
+        raise PermissionError(msg)
+```
+
+## Stata
+```stata
+dw_require_no_api , context("ed/06_pull_uis")
+* On $dw_mode == "reviewer" this aborts with error 459 and the
+* standard guard message; producer and any non-reviewer value pass
+* through silently.
+```
+:::
+
+All three share the same shape: the guard blocks only when the mode is `reviewer`, and passes silently for producer (and, on the Stata side, for any value other than `reviewer`). The reviewer-mode message points the user at the right remedy — read the frozen cache through `dw_use`, or escalate a missing input to the sector database manager — rather than at the API.
+
+The block above shows the lightweight guard the profile *emits* for sector scripts to call. The toolkit's own `dw_api_fetch` (in R and Python; see the external-API contract chapter) carries a stricter internal variant of the same guard, which it consults against `dw_apis_allowed` at the very top of every fetch, before any HTTP request. Note one further parity gap, surfaced in the cross-language coverage appendix: Stata ships the guard but has *no* API-fetch wrapper of its own, so on the Stata side the guard is the whole of the API contract.
+
+## Verification checklist
+
+A sector is not "wired" until it passes a short, mechanical checklist. Steps four through six are the operational definition of adoption — they are what actually proves the contract holds, as opposed to merely appearing in the code.
+
+1. **Profile loads green.** Sourcing the profile with `dw_mode: "reviewer"` produces the green reviewer banner naming the sandbox.
+2. **Conductor shadows the globals.** The sector's run driver writes `finaldir` and shadows the working globals before any other script is sourced.
+3. **No back-door network calls.** No script inside the sector calls a remote without going through the API fetch helper. Grep for the obvious culprits — `httr::GET`, `httr::POST`, `httr::request`, `RETRY`, and `read.csv("http` in R, and the corresponding patterns in Python/Stata.
+4. **Reviewer run is sandboxed.** A reviewer-mode end-to-end run produces every artifact under `sandboxRoot`, and the modification time of the canonical deposit is unchanged before and after the run.
+5. **Producer run reaches canonical.** A producer-mode end-to-end run produces every artifact under the canonical deposit, exactly as before adoption.
+6. **Compare step works in reviewer mode.** The sector's compare-against-warehouse script runs in reviewer mode and writes a per-segment report under the sandbox's `output/temp/` directory.
+
+The contract auditor (described in the scaffolding chapter, and its CI use in a later chapter) automates much of steps one through three. The `review_profile` helper audits a profile for exactly these blocks — the profile sentinel object (the `profile_<repo> <- TRUE` marker that sector scripts assert was sourced), cross-platform user identification, the YAML config load, the `dw_mode` resolution, the `dw_require_no_api` guard, a reproducibility seed, and a packages block — and reports each as `pass`, `warn`, or `fail`. Steps four through six remain manual, because only an actual end-to-end run can prove that writes land where the contract says they should.
+
+::: {.callout-warning}
+Step four's mtime check is not optional ceremony. It is the only test that catches a script which *reads* a canonical global correctly but *writes* through a stale, un-shadowed handle it captured before the conductor shadow ran. The contract auditor cannot see this; only an end-to-end run with a before/after mtime comparison can.
+:::
+
+## Where this fits
+
+Wiring the contract is the bridge between policy and enforcement. The roles chapter sets the obligations; the IO, external-API, aggregation, and vintage-sync chapters describe the helpers whose behaviour this wiring routes; the scaffolding chapter provides `create_profile` and `review_profile`, which generate a profile that passes the checklist by construction and audit one that was hand-written before the helpers existed. Once a repository has done the work in this chapter — one switch in `user_config.yml`, the derived globals, the conductor shadow, optional branch-slug isolation, and a passing checklist — every helper call it makes is mode-correct without any further per-call thought. That is the whole point: wire it once, inherit it everywhere.

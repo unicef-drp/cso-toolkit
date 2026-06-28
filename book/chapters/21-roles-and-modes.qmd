@@ -1,0 +1,234 @@
+# Roles and the mode contract
+
+DW-Production is not one job done by one person. It is a relay. Upstream agencies publish their statistics; a Database Manager refreshes caches and produces deposited indicators; an auditor reproduces those outputs and files findings; and a publisher pushes approved data packages out to UNICEF's data warehouse and the public-facing pages that draw on it. Each runner holds a different baton, touches a different part of the filesystem, and carries a different obligation. The toolkit names these three runners explicitly — **PRODUCER**, **REVIEWER**, and **PUBLISHER** — and it does not rely on discipline alone to keep them apart. The toolkit enforces two of the three in code: a session set to reviewer mode is physically prevented from writing canonical artefacts (the single authoritative copy of the data everyone downstream trusts) or from calling live APIs.
+
+This chapter sets out the three roles, what each may read and write, and how the `dw_mode` session setting turns those policies into mechanical guarantees.
+
+Two terms recur throughout and are worth fixing now. A **deposit** is a finished data package a producer places in the canonical store. A deposit is **blessed** once it has passed the producer's pre-deposit checklist and the reviewer's compare report — only blessed deposits may be published.
+
+## The three roles
+
+The roles map onto a real organisational lifecycle. Each carries a short acronym used in the repo's internal documentation; we use the plain role names — PRODUCER, REVIEWER, PUBLISHER — for the rest of this chapter.
+
+| Role | Acronym | Plain meaning |
+|---|---|---|
+| **PRODUCER** | DBM (Database Manager) | Owns the deposit. Refreshes upstream caches and produces the deposited indicator outputs. |
+| **REVIEWER** | DBR (Database Reviewer) | Reproduces and validates. Audits, finds bugs, gathers sector-lead sign-off. |
+| **PUBLISHER** | DBP (Database Publisher) | Pushes blessed deposits into the canonical UNICEF data warehouse and downstream surfaces. |
+
+All three share the same helper functions — `dw_save`, `dw_use`, `dw_api_fetch`, `dw_compare`, and the rest — and the same path globals derived from the user profile. What differs is the slice of the filesystem each one may read and write, and whether it may reach the network at all.
+
+## What each role may read and write
+
+The read/write/API matrix is the core of this chapter; everything else elaborates it.
+
+| Role | Reads from | Writes to | API calls | Owns |
+|---|---|---|---|---|
+| **PRODUCER** | upstream APIs + the canonical deposit (`060.DW-MASTER`) | the canonical deposit (Teams + the Z: mirror, automatically) | **YES** | refreshing cached upstream data; producing the deposited outputs |
+| **REVIEWER** | the canonical deposit (read-only) + own sandbox | the sandbox only (`sandboxRoot`, per user) | **NO** — forbidden by the reviewer-mode guard | reproducibility validation; sector-lead sign-off; finding bugs |
+| **PUBLISHER** | the blessed work-data deposit (`013_wrkdata`) | the data warehouse: Helix, SDMX endpoints, data.unicef.org, SoWC tables | reads warehouse endpoints only | publication into the canonical data warehouse and downstream surfaces |
+
+The paths are numbered by lifecycle stage. Everything lives under a single root, `060.DW-MASTER`: `011_rawdata` holds upstream pulls (including the `_apis/` cache), and `013_wrkdata` holds finished, promoted deposits. The numbering implies a sequence — raw input becomes work data — not a directory count.
+
+Three things follow from the matrix.
+
+- **Only the PRODUCER touches upstream.** Reviewer sessions never call live APIs; they read frozen, producer-deposited caches instead. This is not a convention you are trusted to honour — the reviewer-mode guard asserts it at every network call site.
+- **The REVIEWER reads canonical but writes sandbox.** Reviewer-mode reads fall back to the canonical deposit (with a Z:-drive integrity check), but reviewer-mode writes are routed to a per-user sandbox; an attempted canonical write hard-fails.
+- **The PUBLISHER consumes only blessed outputs.** It reads from `013_wrkdata`, the work-data deposit a producer has explicitly promoted, never from raw or staging paths.
+
+### What each role MUST NOT do
+
+The matrix above says what each role *may* do; the prohibitions below say what each role *must not* — the same boundaries seen from the other side. A relay fails when a runner reaches outside their leg.
+
+| Role | Forbidden |
+|---|---|
+| **PRODUCER** | skip the pre-deposit checklist; deposit without a compare-vs-prior-vintage report; deposit without sector-lead sign-off on non-trivial deltas |
+| **REVIEWER** | write to canonical paths; call external APIs; modify caches in the deposit |
+| **PUBLISHER** | promote outputs that haven't passed the producer's checklist and the reviewer's compare; publish without a provenance chain back to original API fetches; roll back without amending the source |
+
+The producer's prohibitions are *procedural* — enforced by checklist and review, not by code. The reviewer's prohibitions are *mechanical* — enforced by `dw_mode`, as the next section shows. The publisher's prohibitions are mostly procedural today, with one mechanical exception: the R `dw_publish` helper already refuses reviewer-mode submissions (see the publisher note below).
+
+## The data flow
+
+A single indicator moves through the relay like this:
+
+```
+External APIs                 (UIS · SDMX · WB · ILO · UNSD)
+  │  PRODUCER: dw_api_fetch(refresh = TRUE)
+  ▼
+API cache  ── 011_rawdata/.../_apis ───────────────────────┐
+  │                                                          │ REVIEWER: dw_api_cached
+  ▼                                                          │ (cache reads only — no live calls)
+Sector pipeline  ◄─────────────────────────────────────────┘
+  │  PRODUCER: dw_save(isid = ...)            REVIEWER: writes routed to sandbox
+  ▼                                                   │
+Canonical deposit ── 013_wrkdata ── carbon copy ──► Z: mirror (integrity check)
+  │  │  ▲                                               ▲
+  │  │  └── REVIEWER: dw_use (read-only) ───────────────┘
+  │  │            │
+  │  │            ▼
+  │  │     Compare report ──► Issues filed to PRODUCER / sector lead
+  │  │
+  └──┴── PUBLISHER ──► Helix · SDMX endpoints · data.unicef.org · SoWC / SI tables
+```
+
+Read the flow as three lanes. Solid arrows are normal forward flow. The reviewer's arrows into the pipeline and deposit are read-only. The publisher's arrows fan out from the blessed `013_wrkdata` deposit to downstream consumers. The diagram makes plain why mode enforcement matters: the reviewer's pipeline runs the *same scripts* as the producer's, so the only thing standing between an audit run and a corrupted deposit is the mode contract redirecting every write.
+
+## How `dw_mode` enforces the boundaries
+
+The PRODUCER / REVIEWER split is a single session-level setting. Each user keeps a personal block in `~/.config/user_config.yml`:
+
+```yaml
+jpazevedo:
+  githubFolder: "C:/GitHub/mytasks"
+  teamsRoot: "C:/Users/jpazevedo/UNICEF/Chief Statistician Office - Documents"
+  dw_mode: "reviewer"                          # producer | reviewer
+  sandboxRoot: "C:/Users/jpazevedo/dw-repro"   # only used when dw_mode = reviewer
+```
+
+`dw_mode` is **required**. Profile loading hard-fails if it is absent or set to anything other than `producer` or `reviewer`, because defaulting to either side is unsafe: defaulting to producer would let an unconfigured session corrupt the deposit, and defaulting to reviewer would surprise a Database Manager mid-deposit.
+
+From `dw_mode` the profile derives the path globals — `teamsWrkData`, the `*Canonical` read-only aliases, and a `dw_apis_allowed` flag. That derivation lets the same conductor scripts route to the deposit in producer mode and to the sandbox in reviewer mode without per-script edits. The wiring chapter covers the derivation in full; here we focus on the two enforcement points the contract relies on.
+
+The contract is enforced by **defence in depth**. The mode setting routes paths at the profile, and then the individual write and fetch helpers check *again* at the call site. Two guards do the work.
+
+### Guard 1 — reviewer mode forbids canonical and Z: writes (`dw_save`)
+
+When `dw_save` is asked to write a path that is canonical (under the Teams deposit) or under the Z: drive mirror, and the session is in reviewer mode, it refuses. The guard broadened in v0.4.0 to cover the Z: mirror as well as the Teams deposit; v0.3.0 refused canonical Teams writes only. The single escape hatch is `allow_canonical_write = TRUE`, intended for Database Manager bootstraps, never for routine reviewer work. The `isid` argument shown below names the columns that uniquely identify a row; `dw_save` checks them before writing so a duplicate key can never reach the deposit.
+
+::: {.panel-tabset}
+## R
+```r
+# Reviewer-mode session. This canonical path raises an error.
+# isid = the columns that uniquely identify a row.
+dw_save(df, file.path(teamsWrkDataCanonical, "dw_im.csv"), isid = c("iso3", "year"))
+#> Error: [cso_toolkit.dw_save] Reviewer mode forbids writes to
+#>   canonical (Teams) deposit: .../dw_im.csv
+#>   Reviewer sessions must keep canonical / Z: deposits read-only to
+#>   preserve vintage permanence; writes go to the local repo sandbox.
+#>   Fix:
+#>     1. Resolve a sandbox path instead (the profile's `teamsWrkData`
+#>        should point there in reviewer mode), OR
+#>     2. If this is a deliberate Database Manager bootstrap,
+#>        pass `allow_canonical_write = TRUE`.
+
+# Producer bootstrap (rare): explicit opt-in bypasses the guard.
+dw_save(df, canonical_path, isid = c("iso3", "year"), allow_canonical_write = TRUE)
+```
+
+## Python
+```python
+# Reviewer-mode session. This canonical path raises PermissionError.
+# isid = the columns that uniquely identify a row.
+dw_save(df, os.path.join(teams_wrk_data_canonical, "dw_im.csv"), isid=["iso3", "year"])
+# PermissionError: [cso_toolkit.dw_save] Reviewer mode forbids writes to
+#   canonical (Teams) deposit: .../dw_im.csv
+#   Reviewer sessions must keep canonical + Z: deposits read-only to
+#   preserve vintage permanence; writes go to the sandbox.
+#   Fix:
+#     1. Resolve a sandbox path instead (the profile's teamsWrkData
+#        usually points there in reviewer mode), OR
+#     2. If this is a deliberate Database Manager bootstrap,
+#        pass `allow_canonical_write=True` to bypass the guard.
+
+dw_save(df, canonical_path, isid=["iso3", "year"], allow_canonical_write=True)
+```
+
+## Stata
+```stata
+* The Stata dw_save mirrors the same path routing via $teamsWrkData,
+* which the profile points at the sandbox in reviewer mode, so writes
+* land in the sandbox without a per-call flag.
+dw_save using "$teamsWrkData/dw_im.csv", isid(iso3 year)
+```
+:::
+
+::: {.callout-note}
+The same guard also runs a *producer-side* pre-flight: in producer mode a non-canonical (sandbox) write requires at least one of the Teams or Z: mirrors to be reachable, so a deposit never ends up living only on the producer's laptop. Producer outputs are redundant by design — every canonical write fans out to both mirrors when available, and the Z: carbon copy is what later lets a reviewer verify Teams equals Z: byte-for-byte.
+:::
+
+### Guard 2 — reviewer mode forbids live API calls (`dw_require_no_api`)
+
+The second guard sits at every entry point that would hit the network. `dw_api_fetch` checks the `dw_apis_allowed` flag at the very top, before any HTTP request, and any sector-internal script that talks to a remote is expected to call `dw_require_no_api` too. In reviewer mode the call aborts; in producer mode it returns silently. The frozen cache is read with `dw_api_cached` instead of fetching live.
+
+::: {.panel-tabset}
+## R
+```r
+# At the top of a remote-touching analysis script:
+dw_require_no_api(context = "ed/06_pull_uis")
+# Reviewer mode:
+#> Error: [X] External API access is forbidden in reviewer mode. Context: ed/06_pull_uis
+
+# dw_api_fetch performs the same check internally before any httr::GET;
+# in reviewer mode it raises the cso_toolkit.dw_api envelope and stops.
+
+# To read the frozen cache instead of fetching live:
+dw_api_cached("uis", cache_key = "uis_entrance_age_primary")
+```
+
+## Python
+```python
+# Python analogue, raised by dw_api_fetch before any request:
+_dw_require_no_api("dw_api_fetch('uis', cache_key='...')",
+                   reason="cache missing at .../uis/...")
+# PermissionError: [cso_toolkit.dw_api] Reviewer mode forbids live API calls.
+#   Call:   dw_api_fetch('uis', cache_key='...')
+#   Reason: cache missing at .../uis/...
+#   Fix:
+#     1. The expected workflow is that a Database Manager has already
+#        populated the cache under teamsRawDataCanonical/_apis/.
+#        Verify the cache file exists at the path above.
+#     2. If you ARE the producer, switch modes:
+#        from cso_toolkit import _state
+#        _state.configure(dw_mode="producer", dw_apis_allowed=True)
+
+dw_api_cached("uis", cache_key="uis_entrance_age_primary")
+```
+
+## Stata
+```stata
+* Assert the contract just before a live network call:
+dw_require_no_api , context("ed/06_pull_uis")
+* Reviewer mode aborts with Stata error 459 and the envelope message:
+*   [cso_toolkit.dw_require_no_api] Reviewer mode forbids live API calls
+*     (context: ed/06_pull_uis).
+*   Why: reviewer sessions must read frozen producer caches to preserve
+*     vintage permanence; any live API call breaks provenance.
+*   Fix: switch the call to dw_use() against the frozen cache, or
+*     re-run in producer mode.
+```
+:::
+
+The three guards are the same shape — same intent, same reviewer-blocks/producer-passes logic, same envelope-style message with a *Why* and a *Fix*. They differ in their language's native failure mechanism (an R `stop()`, a Python `PermissionError`, a Stata `error 459`) and in their plumbing. In R the gate is split: `dw_api_fetch` tests the `dw_apis_allowed` flag itself and raises the `cso_toolkit.dw_api` envelope, while the standalone `dw_require_no_api(context = ...)` helper — defined by the consumer profile, not exported by the package — is what analysis scripts call directly. The Stata side, by contrast, has no API wrapper at all, so `dw_require_no_api` is the *only* mechanism a Stata script has; you must call it explicitly before every network operation.
+
+::: {.callout-warning}
+The Stata helper carries a subtlety: an **unset** mode passes through. It blocks only when `$dw_mode == "reviewer"`; producer and any empty or unknown value pass silently. This is deliberate — it means a stray script never falsely blocks a producer — but it also means the *profile* must set `dw_mode` correctly. The required-field rule in `user_config.yml` is what closes that gap: an unconfigured session fails at profile load, before it ever reaches a guard.
+:::
+
+## The helper subset each role uses
+
+The same functions serve all three roles, but each role exercises a different subset and gets different behaviour from the shared helpers.
+
+| Helper | PRODUCER | REVIEWER | PUBLISHER |
+|---|---|---|---|
+| `dw_save` | writes to the deposit (Z: mirror automatic) | sandbox writes only; canonical/Z: writes hard-fail | reads only |
+| `dw_use` | reads anywhere | reads sandbox with canonical fallback; network-first with Z: integrity check | reads `013_wrkdata` |
+| `dw_api_fetch` | fetches live and caches in the deposit | blocked in reviewer mode; reads cache instead | n/a |
+| `dw_api_cached` | reads cache | reads cache | n/a |
+| `dw_api_inventory` | audits cache freshness | audits what is available | audits provenance pre-publication |
+| `dw_compare` | runs on every production run | runs on every reviewer run | reads compare reports as a publication gate |
+| `dw_verify_z` | runs after a canonical write to confirm the mirror landed | runs on canonical reads to verify integrity | runs as a final pre-publication check |
+| `dw_isid` | enforces row uniqueness pre-write | spot-checks reproduced data | optional spot-check |
+| `dw_publish` | n/a | refused in reviewer mode | submits to Helix (R only; dry-run stub today) |
+
+The cross-language coverage of these helpers is uneven, and the chapters on the IO and external-API contracts cover the gaps honestly. Two are worth flagging here because they bear directly on the role split. First, Stata has **no API wrapper** — `dw_api_fetch` and `dw_api_cached` exist only in R and Python — so the producer's cache-refresh leg is an R/Python responsibility, and Stata's contribution to the reviewer guard is the standalone `dw_require_no_api` assertion alone. Second, `dw_publish` exists only in R. The coverage matrix appendix gives the full per-function picture.
+
+## A note on the PUBLISHER role
+
+Of the three roles, PRODUCER and REVIEWER are fully wired into the mode contract; PUBLISHER is only partly so. The role is documented in full — its inputs, its pre-publication gates, its targets (Helix, SDMX endpoints, data.unicef.org, the State of the World's Children tables), and its rollback procedure — and one piece of it is now code. The R package ships `dw_publish(path, indicator, vintage, sector, endpoint = "helix", dry_run = TRUE)`, parallel to `dw_save` and `dw_api_fetch`. It already enforces the call-site contract a publisher needs: a reviewer-mode call raises before any I/O, required arguments are validated, the artifact must exist on disk, and the endpoint allowlist currently admits only `"helix"`.
+
+What `dw_publish` does *not* yet do is submit. As of v0.5.0 it is a dry-run-only stub: `dry_run = TRUE` validates the call site and assembles the exact payload the live branch will POST, while `dry_run = FALSE` raises an envelope-shaped error pointing at the issue where the Helix endpoint contract is being negotiated with sector leads. There is no Python or Stata equivalent. So the publisher's *transport* — the actual push to Helix, SDMX, the data portal, and the SoWC tables — and its remaining boundaries (read only blessed `013_wrkdata`, require a provenance chain back to original API fetches, never roll back without amending the source) are still enforced by procedure and review rather than by code. Treat the PUBLISHER role as a contract honoured mostly by hand, with the mechanical version arriving one helper at a time.
+
+## Why this matters
+
+The whole point of the relay is *reproducibility with permanence*. A reviewer must be able to run the producer's exact scripts and get the producer's exact numbers — which means the reviewer must read the same frozen caches the producer deposited, never a fresher pull from a live API that has moved on. Each cache is a *vintage*: the exact snapshot of the data as it stood when the producer pulled it. And a reviewer must be able to reproduce those numbers without any risk of overwriting the very deposit they are auditing. The two guards deliver exactly this: the API guard keeps the reviewer reading frozen vintages, and the `dw_save` reviewer guard keeps the reviewer's output quarantined in a sandbox. Set `dw_mode` correctly once, and the same code base behaves as a producer or as a reviewer — safely, and without editing a single sector script.

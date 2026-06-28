@@ -1,0 +1,294 @@
+# Vintage sync
+
+Every consuming repository carries its own frozen copy of the cso-toolkit's helper code. That is the central design decision documented in the vendoring chapter: helpers are *copied* into a repo's `00_functions/` directory and tracked in that repo's git history, never `source()`'d or `pip install`'d live from the network. The benefit is reproducibility — a reviewer with no network access re-runs the exact code that was in effect at any commit. The cost is drift: the moment the upstream toolkit cuts a new release, every vendored copy is silently behind, and nothing forces a refresh.
+
+Vintage sync is the machinery that makes that drift visible and controllable. It answers three questions, in order: **Am I behind?** (`cso_toolkit_check`), **What changed?** (`cso_toolkit_diff`), and **Refresh me to a known tag** (`cso_toolkit_pull`). The pin that anchors all three is `.toolkit_manifest.yml`, a small YAML file vendored alongside the helpers it tracks. Some parts of this story are implemented today; others are deliberate stubs, flagged as such below.
+
+::: {.callout-note}
+As of v0.5.0, only `cso_toolkit_check` runs end to end. `cso_toolkit_diff` and `cso_toolkit_pull` are working stubs: they validate preconditions, respect the mode contract, and log what they will do, but no one has yet implemented the step that fetches files and overwrites the vendored copies. The pin and the check loop are real and in daily use; the automated refresh is the planned completion of the same design.
+:::
+
+## The pin: `.toolkit_manifest.yml`
+
+The manifest is the single source of truth for which vintage a repo carries. It lives next to the vendored helpers — by convention in the consumer's `00_functions/` — and is committed to that repo's git history right next to the code it describes. To create one, a consumer copies the template that ships in the toolkit at `templates/.toolkit_manifest.yml`, fills in the version, and updates it on every re-pull.
+
+```yaml
+source: "unicef-drp/cso-toolkit"
+pulled_version: "v0.4.0"
+pulled_date: "2026-05-26"
+pulled_by: "<your-name>"
+
+# Files vendored from cso-toolkit/r/R/ into consumer's 00_functions/
+vendored:
+  - dw_io.R
+  - dw_api.R
+  - cso_toolkit_sync.R
+  # Optional — copy only the ones your pipeline uses:
+  # - aggregate_data.R
+  # - dw_nestweight.R
+  # - create_sector_script.R
+
+# Local edits applied on top of vendored files. List paths here so that
+# cso_toolkit_pull() skips them on update. (Empty by default.)
+local_edits: []
+```
+
+The fields:
+
+| Field | Meaning |
+|---|---|
+| `source` | GitHub `owner/repo` slug of the upstream toolkit. The check helper queries this repo's releases. |
+| `pulled_version` | The tag in effect at the last pull, e.g. `"v0.4.0"`. This is the pinned vintage that `cso_toolkit_check` compares against upstream. |
+| `pulled_date` | ISO-8601 date of the pull. Free-form — the helper does **not** parse it; it is a human breadcrumb only. |
+| `pulled_by` | Who ran the pull. A breadcrumb, not used by any helper. |
+| `vendored` | The list of files copied from the toolkit into this repo. The planned `cso_toolkit_pull` iterates this list. |
+| `local_edits` | Files in `vendored` that have intentional local divergence. `cso_toolkit_pull` will skip these on update so a refresh does not clobber a deliberate patch. |
+
+Two values of `pulled_version` carry special meaning:
+
+- A tag like `"v0.4.0"` is a normal pin. The check compares it against the upstream latest tag and flags a newer release.
+- The substring **`inrepo`** (e.g. `"0.0.0-inrepo-2026-05-24"`) marks helpers that were edited locally and should never trigger a sync warning. `cso_toolkit_check` treats any `pulled_version` containing `inrepo` as "do not nag me" and reports no updates available regardless of upstream state. This is the escape hatch for the case where the toolkit's own scaffolding lived inside the consuming repo before the upstream repo existed.
+
+::: {.callout-warning}
+The helpers compute manifest hashes against working-tree content, so line endings matter. The toolkit pins LF endings via `r/.gitattributes` for `*.R`, `*.yml`, `*.md`, and friends precisely so that a vendored file's sha256 is identical on Windows, Linux, and macOS. Without this, a Windows checkout's CRLF line endings would make every file appear "changed" to a future hash-based diff — the bug fixed in issue #52.
+:::
+
+## `cso_toolkit_check` — am I behind?
+
+`cso_toolkit_check` is the only one of the three helpers that runs end to end today. It is designed to be called quietly at session start: by default it returns a result structure and prints nothing, so a profile can wire it into startup without spamming the console. Pass `quiet = FALSE` (R) / `quiet=False` (Python) to log a human-readable verdict.
+
+::: {.panel-tabset}
+## R
+```r
+# Silent: returns a list, prints nothing
+res <- cso_toolkit_check()
+
+# Loud: logs the verdict to the console
+res <- cso_toolkit_check(quiet = FALSE)
+if (!is.null(res) && isTRUE(res$updates_available)) {
+  cso_toolkit_diff()
+}
+```
+## Python
+```python
+from cso_toolkit import cso_toolkit_check, cso_toolkit_diff
+
+# Silent: returns a dict, logs nothing
+res = cso_toolkit_check()
+
+# Loud: logs the verdict
+res = cso_toolkit_check(quiet=False)
+if res is not None and res["updates_available"]:
+    cso_toolkit_diff()
+```
+## Stata
+```stata
+* Not available. Stata has no cso_toolkit_check / diff / pull helpers.
+* Pin the vintage manually in .toolkit_manifest.yml and refresh by
+* copying stata/src/ from a tagged checkout. See the gap note below.
+```
+:::
+
+The R and Python implementations are deliberate ports of one another. Both return the same structure with the same keys:
+
+| Key | Meaning |
+|---|---|
+| `source` | The upstream slug from the manifest. |
+| `pinned_version` | The manifest's `pulled_version`. |
+| `upstream_version` | The latest release tag found upstream. |
+| `updates_available` | `TRUE`/`True` when pinned and upstream differ **and** the pin is not an `inrepo` pin. |
+| `updated_files` | Always `NULL`/`None` here — reserved to be populated by `cso_toolkit_diff`. |
+
+### What the check guards against
+
+The order of these guards matters. The function returns `NULL`/`None` — silently, unless `quiet` is off — in any of the following cases:
+
+1. **Reviewer mode.** This is the very first check. Reviewer mode — the offline, no-network role defined in the roles and mode-contract chapter — forbids external network calls, and a GitHub release lookup is exactly such a call. If `dw_apis_allowed` is not `TRUE`, the function returns immediately. Reviewers therefore never see sync chatter; they run against whatever vintage the producer pinned.
+2. **Missing or unreadable manifest.** If the `yaml`/PyYAML package is absent, or no `.toolkit_manifest.yml` exists next to the helpers, the helper warns and bails. Helpers that are not vendored from any upstream simply have nothing to check.
+3. **Manifest with no `source`.** A manifest that does not name an upstream repo cannot be checked.
+4. **Upstream unreachable or has no releases.** The release lookup is wrapped so that a blocked proxy, an absent repo, or a repo with zero releases all resolve to "no result" rather than an error.
+
+Only when all four guards pass does the function compare versions. The comparison is intentionally crude: both the pinned and upstream tags are stripped of a leading `v` and compared as strings for inequality. There is no semantic-version ordering — a difference is a difference. This is enough for the signal the helper exists to give: you are not on the latest tag. It does not distinguish newer from older, and is not meant to.
+
+When an update *is* available and `quiet` is off, the producer sees a yellow alert (an ANSI escape in R; a log line in Python) naming the pinned and upstream versions and suggesting the next two commands:
+
+```text
+[cso-toolkit] unicef-drp/cso-toolkit: pinned v0.4.0 -> upstream v0.5.0 (newer tag available)
+              Run cso_toolkit_diff() to see what changed.
+              Run cso_toolkit_pull('v0.5.0') to refresh.
+```
+
+### How the upstream tag is resolved
+
+Both ports resolve the latest tag through the same two-tier strategy, in an internal helper named `.cso_upstream_latest_tag` (R) / `_cso_upstream_latest_tag` (Python):
+
+1. **Prefer the `gh` CLI** when it is on `PATH`: `gh api repos/<source>/releases/latest --jq .tag_name`. Using `gh` avoids an auth flicker when `gh auth status` is already good.
+2. **Fall back to a raw GitHub API call** — `httr::GET` in R, `requests.get` in Python — against `https://api.github.com/repos/<source>/releases/latest`, reading `tag_name` from the JSON body on an HTTP 200.
+
+If neither path yields a tag (no `gh`, no HTTP client, blocked network, or a repo with no releases), the resolver returns `NULL`/`None`, and the check degrades gracefully to "cannot determine — stay silent".
+
+## `cso_toolkit_diff` — what changed?
+
+`cso_toolkit_diff` is the bridge step: once the check tells you a newer tag exists, the diff is meant to show you which vendored files actually differ before you overwrite anything. Its signature is implemented and it respects the manifest, but the comparison body is a stub.
+
+::: {.panel-tabset}
+## R
+```r
+# Diff against the latest upstream tag
+cso_toolkit_diff()
+
+# Diff against a specific tag
+cso_toolkit_diff(target_version = "v0.5.0")
+```
+## Python
+```python
+from cso_toolkit import cso_toolkit_diff
+
+cso_toolkit_diff()
+cso_toolkit_diff(target_version="v0.5.0")
+```
+## Stata
+```stata
+* Not available — no Stata diff helper.
+```
+:::
+
+Today, both ports load the manifest, return early if it is missing, and then log:
+
+```text
+cso_toolkit_diff: not yet implemented.
+  Upstream repo (unicef-drp/cso-toolkit) needs to exist before diff is meaningful.
+  Once it does, this will fetch each file at the target tag
+  and compare sha256 against the vendored copy.
+```
+
+The planned behavior is to fetch each upstream file at `target_version` (defaulting to the latest tag) and compare it by sha256 against the vendored copy, with an optional textual diff. That comparison is the mechanism the manifest's LF-pinning was built to support: a stable working-tree hash on every platform.
+
+## `cso_toolkit_pull` — refresh to a tag
+
+`cso_toolkit_pull` is the action step. It is the most heavily guarded of the three because it is the one that would *write* — overwriting vendored code and rewriting the manifest. The guards are real and enforced today; only the final step — fetching files and overwriting the vendored copies — is stubbed.
+
+::: {.panel-tabset}
+## R
+```r
+# Refresh to a specific tag, prompting per file
+cso_toolkit_pull("v0.5.0")
+
+# Preview without writing
+cso_toolkit_pull("v0.5.0", dry_run = TRUE)
+
+# Refresh without per-file prompts
+cso_toolkit_pull("v0.5.0", confirm = FALSE)
+```
+## Python
+```python
+from cso_toolkit import cso_toolkit_pull
+
+cso_toolkit_pull("v0.5.0")
+cso_toolkit_pull("v0.5.0", dry_run=True)
+cso_toolkit_pull("v0.5.0", confirm=False)
+```
+## Stata
+```stata
+* Not available — no Stata pull helper. Refresh by copying the tagged
+* stata/src/ contents into the consumer's adopath and editing the
+* manifest by hand.
+```
+:::
+
+The arguments are parallel across the two implemented ports:
+
+| Argument | Default | Meaning |
+|---|---|---|
+| `target_version` | (required) | The tag to pull, e.g. `"v0.5.0"`. |
+| `confirm` | `TRUE` / `True` | Prompt per file before overwriting. |
+| `dry_run` | `FALSE` / `False` | Show what would change without writing. |
+
+The guard sequence, in order, is the spine of the function:
+
+1. **Reviewer mode is a hard stop, not a silent skip.** Unlike `cso_toolkit_check`, which quietly returns `NULL` for reviewers, `cso_toolkit_pull` raises. A pull requires hitting GitHub, which the reviewer-mode contract forbids, and the error explains the fix — switch the profile to producer mode (`dw_mode: producer` in `user_config.yml` for R; `_state.configure(dw_mode="producer", dw_apis_allowed=True)` in Python). A reviewer who wants a different vintage must do it in a separate producer-mode session, never by silently mutating the pin.
+2. **No manifest -> error.** The function names the path it looked under and points at the template schema.
+3. **Manifest with no `source` -> error.** It cannot pull from an unnamed upstream.
+4. **Upstream unreachable -> error.** Resolved via the same `.cso_upstream_latest_tag` helper as the check. The error enumerates the likely causes — repo does not exist yet, a UNICEF corporate proxy is blocking `api.github.com`, or no `gh`/HTTP client is installed — and the fix.
+
+These four errors all follow the toolkit's error-envelope convention with a `[cso_toolkit.cso_toolkit_pull]` prefix, a reason, and a fix (see the error-taxonomy appendix and the provenance-and-errors chapter). Only after all four pass does the stub log its "implementation TBD" message naming the target version and `dry_run` setting.
+
+The planned implementation, documented in the stub's own roxygen and docstring, runs as follows:
+
+1. Read the manifest.
+2. For each file in `vendored`, fetch it from `source` at `target_version`, then compute its sha256 against the current vendored copy.
+3. On a difference, prompt the user (overwrite / skip / show-diff), honoring `confirm` and `dry_run`, and skip anything listed under `local_edits`.
+4. Rewrite the manifest with the new `pulled_version` and per-file hashes.
+5. Log a summary.
+
+## The refresh flow
+
+The three helpers compose into one producer-driven loop. The toolkit strategy document lays it out as: the producer runs `cso_toolkit_check` at session start; if a newer tag is detected, a yellow alert names the pinned and upstream versions, points at `NEWS.md`, and suggests a pull; the producer reads the release notes, decides whether the new vintage is appropriate, and either runs `cso_toolkit_pull("<tag>")` or does nothing and keeps the pin.
+
+```text
+cso_toolkit_check()      ->  "pinned v0.4.0 -> upstream v0.5.0 (newer tag available)"
+        |                     (silent if up to date, in reviewer mode, or inrepo-pinned)
+        v
+cso_toolkit_diff()       ->  per-file sha256 comparison (planned) — what actually changed
+        |
+        v
+cso_toolkit_pull("v0.5.0")  ->  fetch, prompt per file, rewrite manifest (planned)
+```
+
+Three properties make this loop safe by design:
+
+- **It is producer-only.** Every step is gated on `dw_apis_allowed`. Reviewers never poll GitHub and never see the alert; they run the pinned vintage. This is what keeps reviewer reproducibility offline-capable.
+- **Updates are never automatic.** Nothing pulls without an explicit `cso_toolkit_pull` call. The producer reviews `NEWS.md`, judges fitness, and chooses. A repo can sit two releases behind indefinitely, and that is a valid, deliberate state.
+- **The pin is the audit trail.** Because `.toolkit_manifest.yml` is committed alongside the vendored code, the consuming repo's git history shows exactly which toolkit vintage was in effect at every commit. There is no gap between what the pin records and what the code actually is.
+
+### Asserting a minimum vintage in a script
+
+A complementary, always-available check is `dw_toolkit_version` (defined in `dw_io.R` / `dw_io.py`, new in v0.4.0). It returns the tag the *currently vendored* helper triplet was lifted from, so a sector script can assert a floor before relying on a feature that only exists in a recent contract. Unlike the sync helpers, this touches no network and works in every mode.
+
+::: {.callout-warning}
+The R and Python stamps are meant to track each other but can drift between releases: in the version this handbook documents, the R `dw_toolkit_version()` returns `"0.5.0"` while the Python port still returns `"0.4.0"`. The stamp is a hard-coded constant in each port (`_TOOLKIT_VERSION` in Python), so a release that bumps only one side leaves the other behind. Treat the value as a floor for the language you are calling it from, not as a cross-language equality check.
+:::
+
+::: {.panel-tabset}
+## R
+```r
+if (utils::compareVersion(dw_toolkit_version(), "0.4.0") < 0) {
+  stop("This script requires cso-toolkit >= 0.4.0; ",
+       "found ", dw_toolkit_version(), ". Run cso_toolkit_pull('v0.4.0').")
+}
+```
+## Python
+```python
+from cso_toolkit import dw_toolkit_version
+
+# dw_toolkit_version() returns a semver string (e.g. "0.4.0").
+# No compareVersion built-in; split and compare tuples, or assert equality.
+if tuple(map(int, dw_toolkit_version().split("."))) < (0, 4, 0):
+    raise RuntimeError(
+        f"This script requires cso-toolkit >= 0.4.0; "
+        f"found {dw_toolkit_version()}."
+    )
+```
+## Stata
+```stata
+* No dw_toolkit_version equivalent in Stata. Each .ado carries its own
+* per-file `version` header (e.g. dw_save.ado is "version 1.1 (v0.4.0)").
+* Record the pinned toolkit tag by hand in .toolkit_manifest.yml.
+```
+:::
+
+## Cross-language coverage, honestly
+
+Cross-language parity is weakest here, and the page would mislead if it implied otherwise:
+
+| Capability | R | Python | Stata |
+|---|---|---|---|
+| `.toolkit_manifest.yml` pin | yes (read) | yes (read) | referenced in README, hand-edited only |
+| `cso_toolkit_check` | yes (full) | yes (full, ported) | **none** |
+| `cso_toolkit_diff` | yes (stub) | yes (stub) | **none** |
+| `cso_toolkit_pull` | yes (stub) | yes (stub) | **none** |
+| `dw_toolkit_version` | yes (`"0.5.0"`) | yes (`"0.4.0"`) | **none** (per-`.ado` `version` headers) |
+
+The R and Python ports of the sync helpers are genuine mirrors of each other: same function names, same arguments, same return structure, same guard order, same two-tier `gh`-then-HTTP tag resolver, even the same `inrepo` escape hatch. Both also expose `dw_toolkit_version`, though the two stamps can fall out of step across a release, as the callout above warns.
+
+Stata has **no sync helpers at all**. Its `stata/src/` directory ships the IO and aggregation helpers (`dw_save`, `dw_use`, `dw_compare`, `dw_load_config`, `dw_mkdir`, `dw_require_no_api`) but nothing named `cso_toolkit_check` / `_diff` / `_pull`, and no `dw_toolkit_version` — each `.ado` instead carries its own per-file `version` header. The Stata README acknowledges the manifest only as a place to *record* the pinned version by hand; refreshing a Stata consumer means copying `stata/src/` from a tagged checkout into the project's adopath and editing `.toolkit_manifest.yml` manually. There is no automated drift detection on the Stata side. This is consistent with the broader Stata coverage gaps noted in the cross-language coverage appendix (no API wrapper, no parquet). When you adopt the toolkit in a Stata-only repo, treat vintage management as a manual, documented step rather than a tooled one.

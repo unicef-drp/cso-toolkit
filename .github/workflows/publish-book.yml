@@ -1,0 +1,28 @@
+name: Handbook (Quarto book)
+
+# Renders the cso-toolkit handbook (book/) as a build-validation check.
+# NOTE: this intentionally does NOT deploy to GitHub Pages yet — the repo
+# already publishes a pkgdown reference site to Pages. Reconciling the two
+# (handbook at root, pkgdown function reference at /reference/) is a follow-up
+# (handbook plan B4); until then this job only proves the book builds.
+
+on:
+  push:
+    branches: [develop]
+    paths: ['book/**', '.github/workflows/publish-book.yml']
+  pull_request:
+    paths: ['book/**', '.github/workflows/publish-book.yml']
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: quarto-dev/quarto-actions/setup@v2
+      - name: Render handbook
+        run: quarto render book
+      - name: Upload rendered HTML
+        uses: actions/upload-artifact@v4
+        with:
+          name: handbook-html
+          path: book/_book
