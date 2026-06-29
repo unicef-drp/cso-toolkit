@@ -59,6 +59,13 @@ format:
     code-copy: true
     code-overflow: wrap
     callout-appearance: simple
+  pdf:
+    pdf-engine: xelatex
+    papersize: a4
+    toc: true
+    toc-depth: 2
+    colorlinks: true
+    code-overflow: wrap
 
 execute:
   freeze: auto
