@@ -6,6 +6,23 @@ _Entries land here as PRs merge into `develop`. When the next release
 is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
+## v0.5.1 (2026-06-28)
+
+Documentation release — no code changes to the R / Python / Stata helpers.
+
+- **The CSO Toolkit Handbook** — a 20-chapter Quarto book documenting the
+  cross-language contract (R · Python · Stata), published to GitHub Pages
+  (<https://unicef-drp.github.io/cso-toolkit/handbook/>).
+- **Flow diagrams reoriented** wide → long (`flowchart LR` → `flowchart TD`)
+  in the README and `docs/` for narrow-context readability.
+- **Citation + Zenodo registration** — `CITATION.cff`, `.zenodo.json`, and a
+  "How to cite this work" page crediting 12 authors + 9 editors; a Zenodo DOI
+  is reserved on this release tag.
+- **Handbook cover** added under `book/images/`.
+- **LICENSE** — CC BY 4.0 scope extended to include `book/` (the handbook source).
+- **Versions aligned** to 0.5.1 across `r/DESCRIPTION`, `python/pyproject.toml`
+  (previously lagging at 0.4.0), `CITATION.cff`, and `.zenodo.json`.
+
 ## v0.5.0 (2026-06-21)
 
 - **`dw_use(sheet = NULL)` reads every sheet of an `.xlsx`** into a named
