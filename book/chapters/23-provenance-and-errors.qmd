@@ -35,7 +35,7 @@ Here is how you populate the sidecar at the call site. You write the `metadata` 
 
 ::: {.panel-tabset}
 
-## R
+#### R {.unnumbered .unlisted}
 
 ```r
 dw_save(df, name = "dw_ed_edu.csv", sector = "ed", kind = "wrk",
@@ -50,7 +50,7 @@ dw_save(df, name = "dw_ed_edu.csv", sector = "ed", kind = "wrk",
         ))
 ```
 
-## Python
+#### Python {.unnumbered .unlisted}
 
 ```python
 dw_save(df, name="dw_ed_edu.csv", sector="ed", kind="wrk",
@@ -65,7 +65,7 @@ dw_save(df, name="dw_ed_edu.csv", sector="ed", kind="wrk",
         })
 ```
 
-## Stata
+#### Stata {.unnumbered .unlisted}
 
 ```stata
 dw_save, filename("dw_ed_edu.dta")                     ///

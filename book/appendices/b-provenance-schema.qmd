@@ -9,19 +9,19 @@ The three languages diverge in one field that matters; this appendix is explicit
 An internal helper writes the sidecar at the end of every primary write, unless you turn it off:
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 ```r
 # r/R/dw_io.R — .write_provenance(path, x, fmt, vintage, metadata, isid)
 dw_save(df, name = "dw_ed_edu.csv", sector = "ed", kind = "wrk",
         provenance = TRUE)   # TRUE is the default; pass FALSE to skip
 ```
-## Python
+#### Python {.unnumbered .unlisted}
 ```python
 # python/src/dw_io.py — _write_provenance(path, x, fmt, vintage, metadata, isid)
 dw_save(df, name="dw_ed_edu.csv", sector="ed", kind="wrk",
         provenance=True)     # True is the default; pass False to skip
 ```
-## Stata
+#### Stata {.unnumbered .unlisted}
 ```stata
 * stata/src/dw_save.ado — sidecar emitted unless `nosidecar` is passed
 dw_save, filename("dw_ed_edu.dta") path("$teamsWrkData/ed") ///
@@ -174,21 +174,21 @@ The other differences are smaller but worth cataloguing:
 A reviewer or a CI check typically does three things with a sidecar: read it, confirm the recorded `sha256` still matches the file on disk, and inspect `dw_mode` / `metadata` for lineage. Reading is plain JSON:
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 ```r
 prov <- jsonlite::read_json("ed/dw_ed_edu.csv.provenance.json",
                             simplifyVector = TRUE)
 identical(prov$sha256, digest::digest(file = "ed/dw_ed_edu.csv",
                                       algo = "sha256"))
 ```
-## Python
+#### Python {.unnumbered .unlisted}
 ```python
 import json, hashlib
 prov = json.load(open("ed/dw_ed_edu.csv.provenance.json"))
 h = hashlib.sha256(open("ed/dw_ed_edu.csv", "rb").read()).hexdigest()
 prov["sha256"] == h
 ```
-## Stata
+#### Stata {.unnumbered .unlisted}
 ```stata
 * Stata has no JSON reader in the toolkit; verify via the native signature
 use "ed/dw_ed_edu.dta", clear

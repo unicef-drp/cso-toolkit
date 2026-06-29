@@ -97,7 +97,7 @@ The contract is enforced by **defence in depth**. The mode setting routes paths 
 When `dw_save` is asked to write a path that is canonical (under the Teams deposit) or under the Z: drive mirror, and the session is in reviewer mode, it refuses. The guard broadened in v0.4.0 to cover the Z: mirror as well as the Teams deposit; v0.3.0 refused canonical Teams writes only. The single escape hatch is `allow_canonical_write = TRUE`, intended for Database Manager bootstraps, never for routine reviewer work. The `isid` argument shown below names the columns that uniquely identify a row; `dw_save` checks them before writing so a duplicate key can never reach the deposit.
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 ```r
 # Reviewer-mode session. This canonical path raises an error.
 # isid = the columns that uniquely identify a row.
@@ -116,7 +116,7 @@ dw_save(df, file.path(teamsWrkDataCanonical, "dw_im.csv"), isid = c("iso3", "yea
 dw_save(df, canonical_path, isid = c("iso3", "year"), allow_canonical_write = TRUE)
 ```
 
-## Python
+#### Python {.unnumbered .unlisted}
 ```python
 # Reviewer-mode session. This canonical path raises PermissionError.
 # isid = the columns that uniquely identify a row.
@@ -134,7 +134,7 @@ dw_save(df, os.path.join(teams_wrk_data_canonical, "dw_im.csv"), isid=["iso3", "
 dw_save(df, canonical_path, isid=["iso3", "year"], allow_canonical_write=True)
 ```
 
-## Stata
+#### Stata {.unnumbered .unlisted}
 ```stata
 * The Stata dw_save mirrors the same path routing via $teamsWrkData,
 * which the profile points at the sandbox in reviewer mode, so writes
@@ -153,7 +153,7 @@ The same guard also runs a *producer-side* pre-flight: in producer mode a non-ca
 The second guard sits at every entry point that would hit the network. `dw_api_fetch` checks the `dw_apis_allowed` flag at the very top, before any HTTP request, and any sector-internal script that talks to a remote is expected to call `dw_require_no_api` too. In reviewer mode the call aborts; in producer mode it returns silently. The frozen cache is read with `dw_api_cached` instead of fetching live.
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 ```r
 # At the top of a remote-touching analysis script:
 dw_require_no_api(context = "ed/06_pull_uis")
@@ -167,7 +167,7 @@ dw_require_no_api(context = "ed/06_pull_uis")
 dw_api_cached("uis", cache_key = "uis_entrance_age_primary")
 ```
 
-## Python
+#### Python {.unnumbered .unlisted}
 ```python
 # Python analogue, raised by dw_api_fetch before any request:
 _dw_require_no_api("dw_api_fetch('uis', cache_key='...')",
@@ -186,7 +186,7 @@ _dw_require_no_api("dw_api_fetch('uis', cache_key='...')",
 dw_api_cached("uis", cache_key="uis_entrance_age_primary")
 ```
 
-## Stata
+#### Stata {.unnumbered .unlisted}
 ```stata
 * Assert the contract just before a live network call:
 dw_require_no_api , context("ed/06_pull_uis")

@@ -28,21 +28,21 @@ The toolkit's helpers group into five capability families, and each family is th
 One way to read, write, compare, and merge data, auto-dispatched by file extension: CSV / TSV / XLSX / RDS-or-PKL (R / Python native) / DTA (Stata) / Parquet / JSON / YAML. The family's public functions are `dw_save`, `dw_use`, `dw_compare`, `dw_merge`, `dw_isid`, `dw_verify_z`, `dw_stage`, and `dw_root`: the first four read, write, diff, and join; `dw_isid` enforces row uniqueness; `dw_verify_z` checks the Z: mirror byte-for-byte; `dw_stage` copies a canonical input into the reviewer sandbox under a hash guard; and `dw_root` resolves a logical store (`wrk` / `raw` / `meta`) to its filesystem path. Writes emit a `.provenance.json` sidecar by default; canonical writes are carbon-copied to the Z: drive; canonical reads run an integrity check. See the IO contract chapter for the full treatment.
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 ```r
 dw_save(df, name = "dw_ed_edu.csv", sector = "ed", kind = "wrk",
         isid = "REF_AREA",
         metadata = list(title = "Education indicators", vintage = "2026-05"))
 df <- dw_use(name = "dw_ed_edu.csv", sector = "ed", kind = "wrk")
 ```
-## Python
+#### Python {.unnumbered .unlisted}
 ```python
 dw_save(df, name="dw_ed_edu.csv", sector="ed", kind="wrk",
         isid=["REF_AREA"],
         metadata={"title": "Education indicators", "vintage": "2026-05"})
 df = dw_use(name="dw_ed_edu.csv", sector="ed", kind="wrk")
 ```
-## Stata
+#### Stata {.unnumbered .unlisted}
 ```stata
 dw_save, filename("dw_ed_edu.dta")  ///
     path("$teamsWrkData/ed")        ///
@@ -60,19 +60,19 @@ Here `isid` names the columns that uniquely identify a row; the IO family enforc
 One mode-aware wrapper around ten external data sources — UNESCO UIS, generic SDMX, the UNICEF SDMX codelist endpoint, World Bank WDI, ILO SDMX, the UNSD SDG API, pinned-commit GitHub-raw, and generic HTTP / JSON. A producer hits the live API and caches the response under `_apis/<api>/<cache_key>.<ext>`; a reviewer reads only from that cache and is physically prevented from reaching the network. Secrets in caller keyword arguments are redacted before they reach the provenance sidecar. See the external-API contract chapter.
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 ```r
 df <- dw_api_fetch(api = "wb", indicator = "SE.PRM.NENR", refresh = TRUE)
 df <- dw_api_cached(api = "wb", cache_key = "SE.PRM.NENR")
 dw_api_inventory(api = "wb")
 ```
-## Python
+#### Python {.unnumbered .unlisted}
 ```python
 df = dw_api_fetch(api="wb", indicator="SE.PRM.NENR", refresh=True)
 df = dw_api_cached(api="wb", cache_key="SE.PRM.NENR")
 dw_api_inventory(api="wb")
 ```
-## Stata
+#### Stata {.unnumbered .unlisted}
 ```stata
 * No API *fetch* wrapper exists in the Stata sibling.
 * Stata producers fetch upstream data through the R or Python sibling,

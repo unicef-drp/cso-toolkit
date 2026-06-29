@@ -32,7 +32,7 @@ The toolkit is **vendored, not installed** (see the vendoring chapter for the ra
 Create the conventional `00_functions/` directory and copy in the helpers you settled on in Step 0.
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 
 ```bash
 # From the root of your consumer repo
@@ -50,7 +50,7 @@ for (f in list.files("00_functions", pattern = "\\.R$", full.names = TRUE)) {
 }
 ```
 
-## Python
+#### Python {.unnumbered .unlisted}
 
 The Python implementation lives under `python/src/`. For the vendoring model, copy the modules alongside your pipeline code:
 
@@ -68,7 +68,7 @@ from dw_io import dw_save, dw_use, dw_compare
 from dw_api import dw_api_fetch, dw_api_inventory
 ```
 
-## Stata
+#### Stata {.unnumbered .unlisted}
 
 Stata has no native package install path that matters here; vendoring is the production model. Either extend the adopath during development or copy the `.ado` / `.sthlp` files into the consumer's `ado/` (or `PERSONAL` adopath) for production.
 
@@ -125,21 +125,21 @@ Commit the manifest in version control alongside the vendored helpers, and updat
 You can confirm at any point that the helper sees your manifest by running the sync check. In producer mode it queries the GitHub API for the latest upstream tag and warns if you are behind; in reviewer mode it quietly returns `NULL` because the mode contract forbids network calls.
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 
 ```r
 res <- cso_toolkit_check(quiet = FALSE)
 # res$pinned_version / res$upstream_version / res$updates_available
 ```
 
-## Python
+#### Python {.unnumbered .unlisted}
 
 ```python
 res = cso_toolkit_check(quiet=False)
 # res["pinned_version"] / res["upstream_version"] / res["updates_available"]
 ```
 
-## Stata
+#### Stata {.unnumbered .unlisted}
 
 ```stata
 * No Stata sync helper. Inspect .toolkit_manifest.yml by hand,
@@ -186,7 +186,7 @@ The toolkit's IO and API helpers read these globals through a safe accessor: `dw
 Load the config and emit a prominent mode banner so the operator can never mistake which mode the session is in.
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 
 ```r
 USERPROFILE <- Sys.getenv("USERPROFILE", unset = "~")
@@ -208,7 +208,7 @@ if (isTRUE(dw_apis_allowed)) {
 }
 ```
 
-## Python
+#### Python {.unnumbered .unlisted}
 
 ```python
 import os, yaml
@@ -223,7 +223,7 @@ if dw_mode not in ("producer", "reviewer"):
 # derive the same globals from dw_mode; set dw_apis_allowed accordingly
 ```
 
-## Stata
+#### Stata {.unnumbered .unlisted}
 
 ```stata
 dw_load_config                   // reads ~/.config/user_config.yml (HOME/USERPROFILE)
@@ -283,7 +283,7 @@ Switch your `user_config.yml` to `dw_mode: "producer"` and confirm the load bann
 `dw_api_fetch` tries the cache first (sandbox, then canonical fallback) and only fetches live when there is no hit and the session is in producer mode. On a first run the cache is empty, so it fetches, writes the cache via `dw_save` (mode-aware path plus Z: mirror), and emits a provenance sidecar recording endpoint, params, `fetched_at`, user, mode, and sha256 (see the provenance-sidecars chapter for the sidecar's shape). Caches never expire automatically; refresh is explicit (`refresh = TRUE`), and the DBM owns refresh cadence.
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 
 ```r
 wb <- dw_api_fetch(
@@ -295,7 +295,7 @@ wb <- dw_api_fetch(
 )
 ```
 
-## Python
+#### Python {.unnumbered .unlisted}
 
 ```python
 wb = dw_api_fetch(
@@ -307,7 +307,7 @@ wb = dw_api_fetch(
 )
 ```
 
-## Stata
+#### Stata {.unnumbered .unlisted}
 
 ```stata
 * No dw_api_fetch in Stata. Fetch + cache the source from the R or
@@ -325,7 +325,7 @@ If you run this in reviewer mode and the cache is missing, `dw_api_fetch` does n
 Write your processed output with `dw_save`. The R and Python helpers take a `name` + `sector` + `kind` shorthand that resolves the canonical path for you; pass `isid` to enforce row uniqueness on the key columns. In producer mode the write lands in the deposit, and is carbon-copied automatically to both the Teams canonical equivalent and the Z: drive when the profile makes those roots available. (The per-call `mirror_to_z` flag is deprecated — pass it and `dw_save` warns and ignores it; mirroring is now automatic and paired, controlled by which remote roots the profile makes available.) A provenance sidecar is written alongside the file.
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 
 ```r
 dw_save(
@@ -338,7 +338,7 @@ dw_save(
 )
 ```
 
-## Python
+#### Python {.unnumbered .unlisted}
 
 ```python
 dw_save(
@@ -351,7 +351,7 @@ dw_save(
 )
 ```
 
-## Stata
+#### Stata {.unnumbered .unlisted}
 
 ```stata
 dw_save , filename("dw_pop_tot.dta")    ///
@@ -368,19 +368,19 @@ Two cross-language gaps in `dw_save`. First, the Stata helper takes an explicit 
 After the run, inventory what you cached so you have a record for the deposit checklist:
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 
 ```r
 dw_api_inventory()       # all caches, with size, mtime, and fetched_at
 ```
 
-## Python
+#### Python {.unnumbered .unlisted}
 
 ```python
 dw_api_inventory()
 ```
 
-## Stata
+#### Stata {.unnumbered .unlisted}
 
 ```stata
 * No dw_api_inventory in Stata; inspect the _apis/ cache dir directly
@@ -395,7 +395,7 @@ Now prove the deposit is reproducible. Switch a second user (or your own config)
 Then compare the reviewer's freshly produced file against the canonical deposit with `dw_compare`. The `reference` (the deposited "old" side) is read through the canonical alias, which reviewer-mode code may read but never write. `dw_compare` is tolerant of a missing reference — on a genuine first deposit it warns rather than stopping — but here the reference exists from Step 4.
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 
 ```r
 report <- dw_compare(
@@ -411,7 +411,7 @@ report <- dw_compare(
 report$summary
 ```
 
-## Python
+#### Python {.unnumbered .unlisted}
 
 ```python
 import os, tempfile
@@ -428,7 +428,7 @@ report = dw_compare(
 report["summary"]
 ```
 
-## Stata
+#### Stata {.unnumbered .unlisted}
 
 ```stata
 dw_compare , current("`finaldir'/pop/dw_pop_tot.dta")            ///
