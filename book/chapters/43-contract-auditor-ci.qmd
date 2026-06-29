@@ -14,7 +14,7 @@ The signatures are deliberately parallel across the two languages that ship an a
 
 ::: {.panel-tabset}
 
-## R
+#### R {.unnumbered .unlisted}
 
 ```r
 test_scripts(
@@ -32,7 +32,7 @@ test_scripts(
 )
 ```
 
-## Python
+#### Python {.unnumbered .unlisted}
 
 ```python
 test_scripts(
@@ -51,7 +51,7 @@ test_scripts(
 )
 ```
 
-## Stata
+#### Stata {.unnumbered .unlisted}
 
 ```stata
 * No Stata auditor.
@@ -109,7 +109,7 @@ Both implementations accept `custom_rules`, merged with the built-in registry. A
 
 ::: {.panel-tabset}
 
-## R
+#### R {.unnumbered .unlisted}
 
 ```r
 my_rules <- list(
@@ -122,7 +122,7 @@ my_rules <- list(
 test_scripts("01_dw_prep", custom_rules = my_rules)
 ```
 
-## Python
+#### Python {.unnumbered .unlisted}
 
 ```python
 from cso_toolkit.test_scripts import _Rule, test_scripts
@@ -138,7 +138,7 @@ my_rules = [
 test_scripts("01_dw_prep", custom_rules=my_rules)
 ```
 
-## Stata
+#### Stata {.unnumbered .unlisted}
 
 ```stata
 * No auditor in Stata; custom rules are an R / Python concept.
@@ -167,7 +167,7 @@ By default the function only *reports* — it returns the violations frame and l
 
 ::: {.panel-tabset}
 
-## R
+#### R {.unnumbered .unlisted}
 
 ```r
 # Interactive: report only, inspect the frame.
@@ -177,7 +177,7 @@ v <- test_scripts("01_dw_prep/012_codes")
 test_scripts("01_dw_prep/012_codes", error_on_violation = TRUE)
 ```
 
-## Python
+#### Python {.unnumbered .unlisted}
 
 ```python
 # Interactive: report only, inspect the frame.
@@ -187,7 +187,7 @@ v = test_scripts("01_dw_prep/012_codes")
 test_scripts("01_dw_prep/012_codes", error_on_violation=True)
 ```
 
-## Stata
+#### Stata {.unnumbered .unlisted}
 
 ```stata
 * No auditor in Stata.
@@ -210,7 +210,7 @@ The escape hatch is a trailing comment, `# cso-allow: <rule-id>`, on the offendi
 
 ::: {.panel-tabset}
 
-## R
+#### R {.unnumbered .unlisted}
 
 ```r
 # Profile bootstrap — the one legitimate raw YAML read:
@@ -220,7 +220,7 @@ config <- yaml::read_yaml(config_path)  # cso-allow: io-yaml
 x <- read_csv(p)  # cso-allow: io-read-csv, io-write-csv
 ```
 
-## Python
+#### Python {.unnumbered .unlisted}
 
 ```python
 # Profile bootstrap — the one legitimate raw YAML read:
@@ -230,7 +230,7 @@ config = yaml.safe_load(open(config_path))  # cso-allow: io-yaml
 x = pd.read_csv(p)  # cso-allow: io-read-csv, io-to-csv
 ```
 
-## Stata
+#### Stata {.unnumbered .unlisted}
 
 ```stata
 * No auditor, hence no escape-hatch comment in Stata.
@@ -248,7 +248,7 @@ A consumer repo — DW-Production, UNPD-Population, a datalib analysis project �
 
 ::: {.panel-tabset}
 
-## R
+#### R {.unnumbered .unlisted}
 
 ```yaml
 name: contract-audit
@@ -273,7 +273,7 @@ jobs:
           Rscript -e 'csotoolkit::test_scripts("01_dw_prep", error_on_violation = TRUE)'
 ```
 
-## Python
+#### Python {.unnumbered .unlisted}
 
 ```yaml
 name: contract-audit
@@ -298,7 +298,7 @@ jobs:
           python -c "from cso_toolkit import test_scripts; test_scripts('01_dw_prep', error_on_violation=True)"
 ```
 
-## Stata
+#### Stata {.unnumbered .unlisted}
 
 ```yaml
 # No auditor in Stata; there is no contract-audit job to add for

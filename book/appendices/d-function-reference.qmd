@@ -59,17 +59,17 @@ Uniform read / write / compare / merge helpers with mode-aware path routing (pat
 :::
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 ```r
 dw_save(df, name = "dw_ed_edu.csv", sector = "ed", kind = "wrk", isid = "REF_AREA")
 df <- dw_use(name = "dw_ed_edu.csv", sector = "ed", kind = "wrk")
 ```
-## Python
+#### Python {.unnumbered .unlisted}
 ```python
 dw_save(df, name="dw_ed_edu.csv", sector="ed", kind="wrk", isid="REF_AREA")
 df = dw_use(name="dw_ed_edu.csv", sector="ed", kind="wrk")
 ```
-## Stata
+#### Stata {.unnumbered .unlisted}
 ```stata
 dw_save, filename("dw_ed_edu.dta") path("$teamsWrkData/ed") idvars(REF_AREA)
 dw_use, filename("dw_ed_edu.dta") path("$teamsWrkData/ed")
@@ -111,15 +111,15 @@ Stratified aggregation, time-window filtering, footnote formatting, and survey-w
 Per the naming conventions above, R exports both the `dw_`-prefixed and the bare name for the first four functions; Python exports the bare name only.
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 ```r
 out <- dw_aggregate_data_v2(df, stat = "weighted_mean", by = "REGION")
 ```
-## Python
+#### Python {.unnumbered .unlisted}
 ```python
 out = aggregate_data_v2(df, stat="weighted_mean", by="REGION")
 ```
-## Stata
+#### Stata {.unnumbered .unlisted}
 ```stata
 * not implemented in Stata
 ```

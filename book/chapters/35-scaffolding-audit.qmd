@@ -21,7 +21,7 @@ The sentinel is the linchpin. `create_profile()` ends by setting `profile_<repo>
 `create_profile()` is a code generator, not a runtime helper — it writes a template to disk and returns the path. The generated profile is patterned on DW-Production's `profile_DW-Production.R`: it reads the username under whichever convention the OS uses (Windows, Mac, or Linux), loads a YAML user config, resolves `dw_mode`, loads packages, and sets the sentinel.
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 ```r
 # Generic project:
 create_profile("My-Sector-Project", project_title = "My Sector Project")
@@ -32,7 +32,7 @@ create_profile("DW-Production",
                include_z_drive_check = TRUE,
                overwrite             = TRUE)
 ```
-## Python
+#### Python {.unnumbered .unlisted}
 ```python
 # Generic project:
 create_profile("My-Sector-Project", project_title="My Sector Project")
@@ -43,7 +43,7 @@ create_profile("DW-Production",
                include_z_drive_check=True,
                overwrite=True)
 ```
-## Stata
+#### Stata {.unnumbered .unlisted}
 ```stata
 * No equivalent. Stata has no create_profile scaffolder.
 * Author the profile do-file by hand and call dw_load_config inside it
@@ -85,7 +85,7 @@ The YAML config load in block 5 is the one place a profile *must* read a file di
 Where `create_profile()` scaffolds the once-per-repository profile, `create_sector_script()` scaffolds a once-per-sector run script: `<base_dir>/<sector_code>/00_run_<sector_code>.R` (or `.py`). The template it writes is deliberately runnable out of the box — it verifies the profile, sets up logging and runtime tracking, builds input/output paths, and wraps the (placeholder) work in error handling.
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 ```r
 # Generic — writes ./ws/00_run_ws.R relative to cwd:
 create_sector_script("WASH", "ws")
@@ -96,7 +96,7 @@ create_sector_script("Nutrition", "nt", base_dir = "pipelines/sectors")
 # DW-Production conventions wrapper (writes under 01_dw_prep/012_codes/):
 create_dw_sector_script("WASH", "ws")
 ```
-## Python
+#### Python {.unnumbered .unlisted}
 ```python
 # Generic — writes ./ws/00_run_ws.py relative to cwd:
 create_sector_script("WASH", "ws")
@@ -107,7 +107,7 @@ create_sector_script("Nutrition", "nt", base_dir="pipelines/sectors")
 # DW-Production conventions wrapper (writes under 01_dw_prep/012_codes/):
 create_dw_sector_script("WASH", "ws")
 ```
-## Stata
+#### Stata {.unnumbered .unlisted}
 ```stata
 * No equivalent. Stata has no create_sector_script scaffolder.
 * Author 00_run_<sector>.do by hand; guard it on $dw_mode being set
@@ -150,21 +150,21 @@ Both languages provide a `create_dw_sector_script()` — a thin wrapper that fil
 The audit is deliberately **pattern-based, not parse-based** — it greps for the load-bearing lines rather than parsing the script, so it tolerates the stylistic variation found across older profiles. It does not execute the profile.
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 ```r
 review_profile("profile_DW-Production.R")
 
 # Profile that does not touch dw_io/dw_api — downgrade dw_mode to a warning:
 review_profile("profile_my-project.R", require_dw_mode = FALSE)
 ```
-## Python
+#### Python {.unnumbered .unlisted}
 ```python
 review_profile("profile_DW-Production.py")
 
 # Profile that does not touch dw_io/dw_api — downgrade dw_mode to a warning:
 review_profile("profile_my-project.py", require_dw_mode=False)
 ```
-## Stata
+#### Stata {.unnumbered .unlisted}
 ```stata
 * No equivalent. Stata has no review_profile auditor.
 ```
@@ -195,7 +195,7 @@ Both functions return a data frame (`check`, `status`, `detail`) — invisibly i
 - **External APIs** must go through `dw_api_fetch` / `dw_api_cached` — never `httr::GET()`, `rsdmx::readSDMX()`, `wbstats::wb_data()`, `requests.get`, `sdmx.Client`, `wbgapi`, and so on.
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 ```r
 # Audit a sector codebase:
 test_scripts("01_dw_prep/012_codes/nt")
@@ -206,7 +206,7 @@ test_scripts("01_dw_prep/012_codes", error_on_violation = TRUE)
 # dw_-prefixed alias (identical behaviour):
 dw_test_scripts("01_dw_prep/012_codes")
 ```
-## Python
+#### Python {.unnumbered .unlisted}
 ```python
 # Audit a sector codebase:
 test_scripts("01_dw_prep/012_codes/nt")
@@ -214,7 +214,7 @@ test_scripts("01_dw_prep/012_codes/nt")
 # CI mode — raise RuntimeError on any io/api violation:
 test_scripts("01_dw_prep/012_codes", error_on_violation=True)
 ```
-## Stata
+#### Stata {.unnumbered .unlisted}
 ```stata
 * No equivalent. Stata has no contract auditor.
 * The Stata wrappers (dw_save / dw_use / dw_require_no_api) enforce the
@@ -270,16 +270,16 @@ The auditor and the wrappers are two layers of the same defence. The wrappers en
 The contract has principled exceptions — the YAML config bootstrap in a profile being the canonical one. For those, append a `# cso-allow: <rule-id>` comment to the offending line and the auditor will skip that one rule on that one line:
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 ```r
 config <- yaml::read_yaml(config_path)  # cso-allow: io-yaml
 ```
-## Python
+#### Python {.unnumbered .unlisted}
 ```python
 with open(config_path, encoding="utf-8") as _f:
     user_config = yaml.safe_load(_f)  # cso-allow: io-yaml
 ```
-## Stata
+#### Stata {.unnumbered .unlisted}
 ```stata
 * No auditor, so no escape hatch. Document intentional raw IO in a comment.
 ```

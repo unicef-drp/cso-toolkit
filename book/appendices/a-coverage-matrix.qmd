@@ -69,19 +69,19 @@ A few caveats sit behind the "Yes" cells:
 The `dw_save` call is the clearest illustration of name-and-argument parity with idiomatic spelling:
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 ```r
 dw_save(df, name = "dw_ed_edu.csv", sector = "ed", kind = "wrk",
         isid = "REF_AREA",
         metadata = list(title = "Education indicators", vintage = "2026-05"))
 ```
-## Python
+#### Python {.unnumbered .unlisted}
 ```python
 dw_save(df, name="dw_ed_edu.csv", sector="ed", kind="wrk",
         isid=["REF_AREA"],
         metadata={"title": "Education indicators", "vintage": "2026-05"})
 ```
-## Stata
+#### Stata {.unnumbered .unlisted}
 ```stata
 dw_save, filename("dw_ed_edu.dta")   ///
     path("$teamsWrkData/ed")         ///
@@ -113,17 +113,17 @@ A Stata-only pipeline cannot acquire fresh upstream data on its own. If your sec
 R and Python share the full `api=` dispatch surface — **ten** keys, identical on both sides: `uis`, `sdmx`, `sdmx_codelist`, `wb`, `wb_indicators`, `ilo`, `unsd_sdg`, `github_raw`, `http`, and `json_get`. For all ten, parity is complete.
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 ```r
 df <- dw_api_fetch(api = "wb", cache_key = "wb_SI.POV.DDAY",
                    indicator = "SI.POV.DDAY", country = "AGO")
 ```
-## Python
+#### Python {.unnumbered .unlisted}
 ```python
 df = dw_api_fetch(api="wb", cache_key="wb_SI.POV.DDAY",
                   indicator="SI.POV.DDAY", country="AGO")
 ```
-## Stata
+#### Stata {.unnumbered .unlisted}
 ```stata
 * No dw_api_fetch in Stata. Pull in R/Python, then:
 dw_use , filename("wb_SI.POV.DDAY.dta") path("$teamsRawData/_apis/wb")
@@ -145,19 +145,19 @@ dw_use , filename("wb_SI.POV.DDAY.dta") path("$teamsRawData/_apis/wb")
 Most of the aggregation family is R-and-Python; the two demographics convenience wrappers — `dw_pop` and `dw_regions`, added at v0.4.0 — are R-only. None of these functions has a Stata sibling, and none is on the roadmap. This is a scope decision: Stata sector pipelines aggregate with native commands (`collapse`, `egen`). `dw_nestweight` ports the World Bank EduAnalyticsToolkit's Stata command `edukit_nestweight` to R and Python; it was deliberately not ported back to Stata, since a Stata pipeline can call the upstream `edukit` command directly. `dw_pop` wraps `dw_api_fetch()` for the World Bank total-population indicator (`SP.POP.TOTL`); `dw_regions` fetches the UNICEF region taxonomy and appends regional aggregates computed via `aggregate_data_v2()`. Both ship in the R package only — Python and Stata siblings are deferred.
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 ```r
 out <- aggregate_data_v2(df, value = "OBS_VALUE", by = "REGION",
                          method = "weighted_mean", weight = "POP",
                          coverage_threshold = 0.5)
 ```
-## Python
+#### Python {.unnumbered .unlisted}
 ```python
 out = aggregate_data_v2(df, value="OBS_VALUE", by="REGION",
                         method="weighted_mean", weight="POP",
                         coverage_threshold=0.5)
 ```
-## Stata
+#### Stata {.unnumbered .unlisted}
 ```stata
 * No aggregate_data_v2 in Stata. Aggregate natively (collapse / egen)
 * or perform the aggregation in R/Python and dw_save the result for Stata.
