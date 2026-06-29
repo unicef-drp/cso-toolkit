@@ -14,7 +14,7 @@ The helpers in `00_functions/` (`dw_io.R`, `dw_api.R`, `cso_toolkit_sync.R`, the
 - Sector-comparison reporting
 - The DBM pre-deposit checklist
 
-Other DAPM-CSO repositories — `unicef-drp/UNPD-Population`, `unicef-drp/datalib-dev`, and any future deposit-bearing repository — need the same primitives. Today, each would have to vendor its own copy of these files, with the same drift risk that the cross-sector API audit (2026-05-23) found in the GitHub-regional-metadata fetches (4 CSVs read independently in 5 sectors with no shared vintage record).
+Other CSO repositories — `unicef-drp/UNPD-Population`, `unicef-drp/datalib-dev`, and any future deposit-bearing repository — need the same primitives. Today, each would have to vendor its own copy of these files, with the same drift risk that the cross-sector API audit (2026-05-23) found in the GitHub-regional-metadata fetches (4 CSVs read independently in 5 sectors with no shared vintage record).
 
 **`unicef-drp/cso-toolkit`** will be the single source of truth for these primitives. Consuming repositories vendor copies at a specific tagged version, with explicit producer-driven refresh.
 

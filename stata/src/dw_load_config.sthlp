@@ -124,7 +124,7 @@ matching global). Missing keys mean missing r() entries.{p_end}
 {title:Author}
 
 {pstd}
-João Pedro Azevedo (UNICEF Data, Analytics, Planning and Monitoring).
+João Pedro Azevedo (UNICEF Data & Analytics, Office of Strategy and Evidence).
 Mirrors the schema validated by the R sibling
 {bf:create_profile()} / {bf:review_profile()} in
 {bf:r/R/profile_helpers.R}.{p_end}
