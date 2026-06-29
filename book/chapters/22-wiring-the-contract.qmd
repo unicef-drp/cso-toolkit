@@ -24,7 +24,7 @@ The one required key is `dw_mode`. It takes exactly one of two values, `"produce
 All three language ports enforce this identically. The `create_profile` scaffolder (covered in the scaffolding chapter) emits a `dw_mode` block that validates the value at load time and stops the session otherwise:
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 ```r
 dw_mode <- user_config$dw_mode
 if (is.null(dw_mode) || !dw_mode %in% c("producer", "reviewer")) {
@@ -32,7 +32,7 @@ if (is.null(dw_mode) || !dw_mode %in% c("producer", "reviewer")) {
 }
 ```
 
-## Python
+#### Python {.unnumbered .unlisted}
 ```python
 dw_mode = user_config.get("dw_mode")
 if dw_mode not in ("producer", "reviewer"):
@@ -41,7 +41,7 @@ if dw_mode not in ("producer", "reviewer"):
     )
 ```
 
-## Stata
+#### Stata {.unnumbered .unlisted}
 ```stata
 * dw_load_config validates dw_mode while parsing the YAML and
 * hard-stops with error 459 if it is missing or out of range.
@@ -79,7 +79,7 @@ Second is `dw_apis_allowed`. This single boolean is `TRUE` only in producer mode
 How each language holds this derived state differs:
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 ```r
 # The R profile sets the derived globals directly in .GlobalEnv.
 # Downstream helpers read them from there (via an internal .try_get).
@@ -88,7 +88,7 @@ teamsRawDataCanonical <- file.path(teamsFolderCanonical, "01_dw_prep", "011_rawd
 dw_apis_allowed       <- identical(dw_mode, "producer")
 ```
 
-## Python
+#### Python {.unnumbered .unlisted}
 ```python
 # The Python profile pushes the derived state into the shared
 # cso_toolkit._state module via configure(); helpers read it back
@@ -103,7 +103,7 @@ _cso_state.configure(
 )
 ```
 
-## Stata
+#### Stata {.unnumbered .unlisted}
 ```stata
 * dw_load_config sets $dw_mode and any team* / canonical / sandboxRoot
 * keys it finds in the YAML, but it does NOT derive the mode-aware
@@ -146,7 +146,7 @@ The problem it solves is one of scale. A sector codebase typically contains ten 
 The shadow pattern solves this once. At the top of each sector's run driver (`0_execute_conductor.R`), *after* sourcing the profile, the conductor re-binds the working globals to mode-correct values. Because R, Python, and Stata all resolve those names dynamically when each downstream script runs, every script keeps its existing code unchanged and still gets the right paths:
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 ```r
 # After computing outputdir for this run (with branch-slug isolation):
 finaldir <- file.path(outputdir, "final")
@@ -158,7 +158,7 @@ teamsWrkData <- finaldir                # reviewer-mode: writes go to sandbox fi
 dwWrkData    <- finaldir                # same
 ```
 
-## Python
+#### Python {.unnumbered .unlisted}
 ```python
 # After computing outputdir for this run (with branch-slug isolation):
 finaldir = os.path.join(outputdir, "final")
@@ -172,7 +172,7 @@ _state.configure(
 )
 ```
 
-## Stata
+#### Stata {.unnumbered .unlisted}
 ```stata
 * After computing $outputdir for this run:
 global finaldir "$outputdir/final"
@@ -217,7 +217,7 @@ This is a conductor-side convention demonstrated in the integration documentatio
 A guard enforces the other half of the contract: every network entry point calls it before touching a remote. Reviewer-mode sessions never make live external API calls, because every upstream input must already be frozen in a producer-deposited cache. The profile enforces the mode at load time, but each API helper checks again at the call site — deliberate redundancy, because a single guard at the profile could be bypassed by a sector script that reaches for `httr::GET` directly. So the guard is invoked at every place a live call could originate.
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 ```r
 dw_require_no_api <- function(context = NULL) {
   if (identical(dw_mode, "reviewer")) {
@@ -228,7 +228,7 @@ dw_require_no_api <- function(context = NULL) {
 }
 ```
 
-## Python
+#### Python {.unnumbered .unlisted}
 ```python
 def dw_require_no_api(context: str | None = None) -> None:
     if dw_mode == "reviewer":
@@ -238,7 +238,7 @@ def dw_require_no_api(context: str | None = None) -> None:
         raise PermissionError(msg)
 ```
 
-## Stata
+#### Stata {.unnumbered .unlisted}
 ```stata
 dw_require_no_api , context("ed/06_pull_uis")
 * On $dw_mode == "reviewer" this aborts with error 459 and the

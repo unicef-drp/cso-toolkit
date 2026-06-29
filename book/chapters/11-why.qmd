@@ -73,7 +73,7 @@ Scale is one reason the contract is cross-language. Sectors work in R, Python, a
 
 ::: {.panel-tabset}
 
-## R
+#### R {.unnumbered .unlisted}
 
 ```r
 dw_save(df, name = "dw_ed.csv", sector = "ed", kind = "wrk",
@@ -81,7 +81,7 @@ dw_save(df, name = "dw_ed.csv", sector = "ed", kind = "wrk",
         metadata = list(title = "Education indicators", vintage = "2026-05"))
 ```
 
-## Python
+#### Python {.unnumbered .unlisted}
 
 ```python
 dw_save(df, name="dw_ed.csv", sector="ed", kind="wrk",
@@ -89,7 +89,7 @@ dw_save(df, name="dw_ed.csv", sector="ed", kind="wrk",
         metadata={"title": "Education indicators", "vintage": "2026-05"})
 ```
 
-## Stata
+#### Stata {.unnumbered .unlisted}
 
 ```stata
 dw_save, filename("dw_ed") path("$teamsWrkData/ed") ///

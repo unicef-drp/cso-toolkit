@@ -22,6 +22,7 @@ book:
     - front-matter/authors.qmd
     - front-matter/acknowledgements.qmd
     - front-matter/how-to-cite.qmd
+    - introduction.qmd
     - part: "Part I — Why & Architecture"
       chapters:
         - chapters/11-why.qmd
@@ -70,6 +71,7 @@ format:
       text: |
         \usepackage{eso-pic}
         \AtBeginDocument{\AddToShipoutPictureFG*{\put(0,0){\includegraphics[width=\paperwidth,height=\paperheight]{images/cover-A.png}}}}
+        \AtBeginDocument{\pagenumbering{roman}}
 
 execute:
   freeze: auto

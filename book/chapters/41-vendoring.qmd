@@ -56,7 +56,7 @@ For day-to-day local development, each language *also* supports a native install
 
 ::: {.panel-tabset}
 
-## R
+#### R {.unnumbered .unlisted}
 
 ```r
 # Development convenience — install the package locally
@@ -67,7 +67,7 @@ source("00_functions/dw_io.R")
 source("00_functions/dw_api.R")
 ```
 
-## Python
+#### Python {.unnumbered .unlisted}
 
 ```python
 # Development convenience — editable install
@@ -77,7 +77,7 @@ source("00_functions/dw_api.R")
 from cso_toolkit import _state, dw_save, dw_use
 ```
 
-## Stata
+#### Stata {.unnumbered .unlisted}
 
 ```stata
 * Development convenience — extend the adopath to the toolkit source
@@ -126,7 +126,7 @@ A vendored copy goes stale the moment the toolkit tags a newer version. The sync
 
 ::: {.panel-tabset}
 
-## R
+#### R {.unnumbered .unlisted}
 
 ```r
 # At session start (producer mode), quietly check for a newer upstream tag
@@ -139,7 +139,7 @@ cso_toolkit_diff()
 cso_toolkit_pull("v0.5.0")
 ```
 
-## Python
+#### Python {.unnumbered .unlisted}
 
 ```python
 from cso_toolkit import cso_toolkit_check, cso_toolkit_diff, cso_toolkit_pull
@@ -149,7 +149,7 @@ cso_toolkit_diff()           # stub today
 cso_toolkit_pull("v0.5.0")   # stub today
 ```
 
-## Stata
+#### Stata {.unnumbered .unlisted}
 
 ```stata
 * No Stata sibling of the sync helpers exists.
