@@ -7,6 +7,7 @@
 | --- | --- |
 | `cover-A.svg` | Vector source — the canonical cover (3:4, **1200×1600**, sized to match the DW-Handbook cover). |
 | `cover-A.png` | Raster export of `cover-A.svg` (the format Quarto embeds for the HTML cover). |
+| `cover-A-min.svg` / `cover-A-min.png` | The earlier minimal cover (sparse cyan, 1200x1600), kept as an alternate. |
 | `cover-A-alt.svg` / `cover-A-alt.png` | The earlier A4-proportioned cover (1280×1810), kept as an alternate. |
 | `generate-cover.js` | Regenerates **`cover-A.svg`** (the 3:4 cover) from the title / subtitle / version config. |
 
