@@ -28,6 +28,8 @@ jobs:
         with:
           persist-credentials: true
       - uses: quarto-dev/quarto-actions/setup@v2
+        with:
+          tinytex: true
       - name: Render handbook
         run: quarto render book
 

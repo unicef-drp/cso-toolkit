@@ -2,11 +2,15 @@
 
 `cso-toolkit` is the shared, cross-language contract that the UNICEF Chief Statistician Office (CSO) uses to make its analytics reproducible. The CSO runs a **data warehouse**: a shared store of signed-off statistical files, named `dw_<sector>.<ext>` (one per sector — education, water and sanitation, immunisation, and so on), that UNICEF's public data products draw from. The repository that holds the operational copy of that warehouse is `DW-Production`. The toolkit is what lets anyone, not just the file's original author, re-run a sector's pipeline and reproduce those files exactly.
 
+::: {.content-visible when-format="html"}
+[Download the handbook (PDF)](The-CSO-Toolkit-Handbook.pdf){.btn .btn-primary role="button"}
+:::
+
 It does this by encoding **one way to read, write, compare, and merge data; one way to call external APIs; one way to aggregate, version-sync, and scaffold projects** — and it does so identically in R, Python, and Stata. Every call routes through wrappers that enforce provenance sidecars (a `.provenance.json` file written next to every output, recording who made it, when, and from what), a uniqueness check (`isid` — that rows are unique on a stated key), and a producer / reviewer mode contract, so that any analytics product can be re-run by someone other than its original author and yield the same numbers. This handbook documents that contract.
 
 ## What cso-toolkit is
 
-`cso-toolkit` (the repository `unicef-drp/cso-toolkit`, currently v0.5.0) is a set of small helpers that enforce one way of doing each task, grouped into five capability families. Part III gives each family its own chapter.
+`cso-toolkit` (the repository `unicef-drp/cso-toolkit`, currently v0.5.1) is a set of small helpers that enforce one way of doing each task, grouped into five capability families. Part III gives each family its own chapter.
 
 - **IO** — `dw_save`, `dw_use`, `dw_compare`, `dw_merge`, `dw_isid`, `dw_verify_z`, `dw_stage`, `dw_root`: uniform file IO with auto-dispatch by extension, an `isid` uniqueness check, an automatic provenance sidecar on writes, a Z: drive mirror on canonical writes (a *canonical* write being the final, signed-off `dw_<sector>` file that downstream products cite, as opposed to an intermediate *working* file), and an integrity check on canonical reads.
 - **External API** — `dw_api_fetch`, `dw_api_cached`, `dw_api_inventory`: a mode-aware wrapper around external data sources (UIS, SDMX, World Bank, ILO, UNSD-SDG, GitHub-raw, generic HTTP/JSON) with a deposit-side cache.
@@ -83,8 +87,23 @@ This book is written for several audiences at once:
 - **Analysts and sector teams** working in R, Python, or Stata who need to read, write, and aggregate warehouse data the CSO way. You will spend most of your time in Part III (the cross-language API).
 - **Database managers** (producers) and **reviewers** who operate the producer / reviewer / publisher mode contract day to day. Part II explains the roles, how the mode is wired into a repo, and what the provenance sidecars and error envelopes guarantee.
 - **Repo adopters** — maintainers of DW-Production and of future deposit-bearing repositories such as UNPD-Population and datalib — who want to vendor the toolkit into their own codebase and keep it in sync. Part IV is your section.
+- **LLM and coding-agent developers** — building *assistants* that turn documentation, existing sector-specific helpers, and legacy code into the standard functions this toolkit supports; or *orchestrators* that compose the toolkit's deterministic functions as trusted building blocks. The handbook is written to be precise enough for a machine to follow — see [§ How coding agents should use this handbook](#sec-coding-agents).
 
 You do not need to read the book front to back. Use the part that matches your role and follow the cross-references to adjacent chapters.
+
+## How coding agents should use this handbook {#sec-coding-agents}
+
+A growing share of code — across software generally, and increasingly in official statistics — is written or reviewed with LLM assistance. Part of the toolkit's value is that it imposes a **minimum common architecture** — a minimum set of guardrails — on that code: no matter who (or what) writes a script, routing it through the wrappers guarantees the same provenance sidecars, the same `isid` uniqueness check, the same mode-aware role enforcement, and the same error envelope. Those guardrails do not depend on the author's discipline — which makes LLM-assisted code *safer to integrate*: they enforce provenance, uniqueness, and role boundaries regardless of who wrote the code, but they do not certify that the numbers are correct. That remains the reviewer's job.
+
+But that safety is structural; it is not a transfer of responsibility. **LLM assistance does not dilute accountability — it concentrates it.** Code now gets produced and checked at machine speed and scale. That means the people who *lead, review, and publish* the results must vouch for more output, generated faster by a process whose plausible-looking errors are easy to miss. The toolkit shrinks the surface they have to police; it does not sign off in their place. The named producer, reviewer, and publisher remain accountable for every number (see [§ The roles this toolkit serves](#the-roles-this-toolkit-serves)) — and the higher the degree of automation, the higher the bar for the human scrutiny that accountability demands.
+
+For an LLM or an agentic orchestrator, that implies:
+
+- **Map onto the toolkit's functions; don't reinvent them.** When porting documentation or a sector's bespoke helpers, translate them into `dw_save`, `dw_api_fetch`, `aggregate_data_v2`, and the rest — the verified, reproducible primitives — not equivalent ad-hoc logic.
+- **Compose, don't regenerate.** An orchestrator calls the deterministic functions as building blocks; the LLM handles orchestration and glue, not the contract's enforced behaviour. The determinism is the point.
+- **Operate within the human's role and session.** An agent runs under the session's `dw_mode` — in reviewer mode the network is unreachable — and must not flip the mode or reach for the `allow_canonical_write` / producer-bootstrap escape hatches on its own; those exist for explicit human action. The agent gets no role of its own; accountability stays with the named producer, reviewer, or publisher.
+- **Never fabricate values, provenance, or coverage.** Read and cite the provenance sidecar; surface gaps from the coverage matrix ([Appendix A](appendices/a-coverage-matrix.qmd)) rather than faking parity.
+- **Treat the contract as binding.** Code that bypasses the wrappers is flagged by the contract auditor ([Part IV](chapters/43-contract-auditor-ci.qmd)); generate code that passes it.
 
 ## How to navigate this book
 
