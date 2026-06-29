@@ -66,6 +66,10 @@ format:
     toc-depth: 2
     colorlinks: true
     code-overflow: wrap
+    include-in-header:
+      text: |
+        \usepackage{eso-pic}
+        \AtBeginDocument{\AddToShipoutPictureFG*{\put(0,0){\includegraphics[width=\paperwidth,height=\paperheight]{images/cover-A.png}}}}
 
 execute:
   freeze: auto
