@@ -1,0 +1,300 @@
+# Scaffolding and the contract auditor
+
+A contract is only as good as a team's willingness to honour it, and two costs erode that willingness over time. The first is the cost of *adoption*: if wiring a new repository into the toolkit means hand-copying a profile, remembering the sentinel convention, and recreating the producer/reviewer plumbing from scratch, people will cut corners and the contract will fray at the edges. The second is the cost of *enforcement*: once a repository is wired, nothing stops a contributor from quietly writing `read_csv()` or `httr::GET()` in a new script, bypassing the IO and external-API contracts the rest of the codebase observes.
+
+This chapter covers four helpers that attack those two costs. Three are *scaffolders* — `create_profile`, `create_sector_script`, and `review_profile` — that generate and verify the boilerplate a contract-compliant repository needs. The fourth is the *contract auditor*, `test_scripts`, which reads a directory of source files and flags every raw IO or HTTP call that should have gone through a toolkit wrapper. Together they make the right thing the easy thing on the way in, and make the wrong thing visible on the way out.
+
+One coverage caveat. The scaffolders and the auditor are implemented in R and Python only. Stata has no `create_profile`, no `create_sector_script`, no `review_profile`, and no `test_scripts`. The Stata side of the toolkit ships the runtime helpers (`dw_save`, `dw_use`, `dw_compare`, `dw_require_no_api`, `dw_load_config`) but leaves profile setup and contract auditing to convention rather than code. This is an honest gap, not an oversight to gloss over; where a Stata equivalent is missing, the tabsets below say so plainly. Throughout, the worked examples lean on DW-Production (the UNICEF Data Warehouse production repository, the toolkit's reference deployment), because that is the codebase these helpers were lifted from and generalised away from.
+
+## The scaffolding model
+
+The three scaffolders form a small dependency chain that mirrors how a repository is actually built:
+
+1. `create_profile()` writes a `profile_<repo>.R` (or `.py`) — the script every session sources first. It establishes the user's identity, loads configuration, resolves the producer/reviewer mode, loads packages, and finally sets a **sentinel**: a single object whose existence proves the whole profile ran to completion.
+2. `create_sector_script()` writes a `00_run_<sector>.R` (or `.py`) — a per-sector pipeline driver that *refuses to run* unless that sentinel is present, then wraps the sector's work in logging and error handling.
+3. `review_profile()` audits a profile after the fact, reporting `pass` / `warn` / `fail` for each block the contract depends on — useful for profiles that predate the scaffolder, or that someone hand-edited.
+
+The sentinel is the linchpin. `create_profile()` ends by setting `profile_<repo> <- TRUE`, and `create_sector_script()` generates code that checks for the profile being loaded. The two helpers therefore share one convention: if the profile loaded, the whole profile (config, mode, packages) ran to completion. The roles, the mode contract, and the sentinel are described in the roles-and-mode-contract chapter; here we look at how the scaffolders produce them.
+
+## Generating a profile: `create_profile`
+
+`create_profile()` is a code generator, not a runtime helper — it writes a template to disk and returns the path. The generated profile is patterned on DW-Production's `profile_DW-Production.R`: it reads the username under whichever convention the OS uses (Windows, Mac, or Linux), loads a YAML user config, resolves `dw_mode`, loads packages, and sets the sentinel.
+
+::: {.panel-tabset}
+## R
+```r
+# Generic project:
+create_profile("My-Sector-Project", project_title = "My Sector Project")
+
+# DW-Production, with the Z: drive advisory and overwrite:
+create_profile("DW-Production",
+               project_title         = "UNICEF DW Production",
+               include_z_drive_check = TRUE,
+               overwrite             = TRUE)
+```
+## Python
+```python
+# Generic project:
+create_profile("My-Sector-Project", project_title="My Sector Project")
+
+# DW-Production, with the Z: drive advisory and overwrite:
+create_profile("DW-Production",
+               project_title="UNICEF DW Production",
+               include_z_drive_check=True,
+               overwrite=True)
+```
+## Stata
+```stata
+* No equivalent. Stata has no create_profile scaffolder.
+* Author the profile do-file by hand and call dw_load_config inside it
+* to read ~/.config/user_config.yml and set $dw_mode + team globals.
+```
+:::
+
+The arguments are the same across R and Python:
+
+| Argument | Default | Purpose |
+|---|---|---|
+| `repo_name` | (required) | Repository folder name. Drives the sentinel name (`profile_<repo>`, with `-` and `.` mapped to `_`) and the filename (`profile_<repo>.R` / `.py`). |
+| `project_title` | `repo_name` | Human-readable title for the header block. |
+| `output_path` | `"."` | Directory the file is written to. |
+| `include_dw_mode` | `TRUE` | Emit the producer/reviewer `dw_mode` block and the `dw_require_no_api` guard. |
+| `include_z_drive_check` | `FALSE` | Emit the Z: drive availability advisory. The Z: drive is the legacy Azure file-share mirror of canonical deposits, so this block is DW-Production-specific. |
+| `author` | system user | Author name in the header. |
+| `overwrite` | `FALSE` | Stop if the file already exists, unless `TRUE`. |
+
+The generated profile opens with a **header** — title, filename, author, timestamp, and a pointer to the toolkit repository, followed by a reproducibility seed (`set.seed(12345)` / `random.seed(12345)`). After it come eight numbered blocks, assembled in order:
+
+1. **User identification** — reads `USERNAME` / `USER` and `USERPROFILE`, falling back across Windows / Mac / Linux conventions.
+2. **Flags and controls** — e.g. `create_missing_folders <- FALSE`.
+3. **Repository name** — records the repo as a literal, e.g. `repo_name <- "DW-Production"`.
+4. **Z: drive advisory** (only when `include_z_drive_check = TRUE`) — a *non-blocking* check; the absence of the legacy mirror prints a warning rather than stopping execution.
+5. **Config load** — reads `~/.config/user_config.yml` via `yaml::read_yaml()` / `yaml.safe_load()`, hard-failing if the file is missing.
+6. **Producer/reviewer mode** (only when `include_dw_mode = TRUE`) — reads `dw_mode` from the config, refuses any value other than `"producer"` or `"reviewer"`, and defines the `dw_require_no_api()` guard that reviewer-mode analysis code calls to forbid network access.
+7. **Packages / imports** — a placeholder block listing the pipeline's dependencies.
+8. **Profile sentinel** — sets `profile_<repo> <- TRUE` (R) or `profile_<repo> = True` (Python) and prints a confirmation.
+
+Block 6 hides a meaningful cross-language difference. The Python profile wires the resolved mode into the toolkit's shared state, so `dw_save` / `dw_use` / `dw_api_fetch` route by mode automatically — it imports `cso_toolkit._state` and calls `_cso_state.configure(dw_mode=..., dw_apis_allowed=(dw_mode == "producer"))`. The R profile does no such wiring; its generated `dw_require_no_api()` simply inspects `dw_mode` and `stop()`s in reviewer mode. There is a second asymmetry in block 8: the Python profile also defines a `log_message()` helper there, so that sector scripts have a logger to import. These differences reflect each language's idioms; the contract they implement is identical.
+
+::: {.callout-note}
+The YAML config load in block 5 is the one place a profile *must* read a file directly — it bootstraps the very configuration the toolkit needs before any toolkit helper is available. The auditor knows this: the generated Python profile annotates the line `yaml.safe_load(_f)  # cso-allow: io-yaml`, exempting it from the auditor's IO rule. See "The escape hatch" below.
+:::
+
+## Generating a sector driver: `create_sector_script`
+
+Where `create_profile()` scaffolds the once-per-repository profile, `create_sector_script()` scaffolds a once-per-sector run script: `<base_dir>/<sector_code>/00_run_<sector_code>.R` (or `.py`). The template it writes is deliberately runnable out of the box — it verifies the profile, sets up logging and runtime tracking, builds input/output paths, and wraps the (placeholder) work in error handling.
+
+::: {.panel-tabset}
+## R
+```r
+# Generic — writes ./ws/00_run_ws.R relative to cwd:
+create_sector_script("WASH", "ws")
+
+# Into a chosen subtree:
+create_sector_script("Nutrition", "nt", base_dir = "pipelines/sectors")
+
+# DW-Production conventions wrapper (writes under 01_dw_prep/012_codes/):
+create_dw_sector_script("WASH", "ws")
+```
+## Python
+```python
+# Generic — writes ./ws/00_run_ws.py relative to cwd:
+create_sector_script("WASH", "ws")
+
+# Into a chosen subtree:
+create_sector_script("Nutrition", "nt", base_dir="pipelines/sectors")
+
+# DW-Production conventions wrapper (writes under 01_dw_prep/012_codes/):
+create_dw_sector_script("WASH", "ws")
+```
+## Stata
+```stata
+* No equivalent. Stata has no create_sector_script scaffolder.
+* Author 00_run_<sector>.do by hand; guard it on $dw_mode being set
+* (dw_load_config must have run) before doing the sector's work.
+```
+:::
+
+The key arguments (R and Python share names and meaning, with one default that differs — flagged below):
+
+| Argument | Default (R) | Purpose |
+|---|---|---|
+| `sector_name` | (required) | Full name, e.g. `"Nutrition"`. Used in headers and log lines. |
+| `sector_code` | (required) | Short code, e.g. `"nt"`. Drives the folder and filename. |
+| `base_dir` | `"."` | Parent directory under which `<sector_code>/00_run_<sector_code>.*` is created. |
+| `profile_name` | `"projectFolder"` | The variable the sector script asserts must exist before it will run. (Python defaults this to the sentinel `"profile_DW_Production"` instead — see below.) |
+| `profile_file` | `"profile_DW-Production.R"` | Profile the script tells the user to source on failure. |
+| `input_subpath` / `output_subpath` | `c("01_dw_prep", "011_rawdata")` / `c("01_dw_prep", "013_wrkdata")` | Path components, relative to `projectFolder`, for the sector's input and output folders. |
+| `overwrite` | `FALSE` | Stop if the target exists, unless `TRUE`. |
+
+The generated R template contains five sections:
+
+- **0. Profile Verification** — `if (!exists(profile_name) || is.null(profile_name)) stop(...)`. The check is satisfied by any non-null value, so the sentinel can be a character, numeric, or logical. Note this default differs from the profile sentinel `profile_<repo>` introduced in the scaffolding-model section: the R template defaults `profile_name` to `"projectFolder"` rather than the sentinel, because `projectFolder` is the variable the template *also* uses to build paths — so the guard and the path construction share one source of truth. (The Python template makes the opposite choice; see the cross-language note below.)
+- A **`log_message` fallback** — if the profile did not define one, the template installs a minimal timestamped logger so the script runs out of the box.
+- An **`errorOccurred` flag** — initialised to `FALSE` so the `tryCatch` handler can set it with `<<-` without the caller pre-declaring the global. The top-level runner consumes this flag.
+- **1. Logging** — emits a "Starting <sector> module" line and records `start_time`.
+- **2. Sector Execution Block** — a `tryCatch({...}, error = ...)` wrapper that defines `input_folder` / `output_folder` from `projectFolder`, creates the output folder, leaves commented placeholders for load/process/export, and finishes by logging the duration. On error it sets `errorOccurred <<- TRUE` and logs the message.
+
+The Python template covers the same five sections with idiomatic equivalents — a `try/except` block instead of `tryCatch`, `pathlib.Path` for path building. Verifying the profile takes more work in Python. A profile filename like `profile_DW-Production.py` contains a hyphen, so it is not a legal Python module name. The template therefore loads it via `importlib.util.spec_from_file_location` — walking up the ancestor directories to find it — then pulls the sentinel, `log_message`, and `projectFolder` from the loaded module. This is the Python answer to R's `source()`, and it is worth knowing about when a sector script cannot find its profile. Because the Python template reads the sentinel out of the loaded module, it defaults `profile_name` to the sentinel `"profile_DW_Production"` (note the underscores) rather than to `"projectFolder"`.
+
+::: {.callout-warning}
+The default `input_subpath` / `output_subpath` differ between languages. R defaults to `011_rawdata` / `013_wrkdata`; the Python port defaults to `011_input` / `013_output`. If you scaffold the same sector in both languages, set the paths explicitly so the two drivers agree.
+:::
+
+Both languages provide a `create_dw_sector_script()` — a thin wrapper that fills in the DW-Production layout: scripts land at `01_dw_prep/012_codes/<sector>/`, with inputs and outputs under the canonical sibling folders. Reach for the wrapper inside DW-Production; reach for the generic `create_sector_script()` everywhere else. (The R package additionally exports `dw_create_sector_script` as a `dw_`-prefixed alias of the generic helper — see "A note on naming"; the Python package does not.)
+
+## Auditing a profile: `review_profile`
+
+`create_profile()` produces a profile that passes every check by construction. `review_profile()` is for the other case: a profile that someone wrote by hand, hand-edited, or inherited from before the scaffolder existed. It reads the file and runs eight presence checks, reporting `pass`, `warn`, or `fail` for each.
+
+The audit is deliberately **pattern-based, not parse-based** — it greps for the load-bearing lines rather than parsing the script, so it tolerates the stylistic variation found across older profiles. It does not execute the profile.
+
+::: {.panel-tabset}
+## R
+```r
+review_profile("profile_DW-Production.R")
+
+# Profile that does not touch dw_io/dw_api — downgrade dw_mode to a warning:
+review_profile("profile_my-project.R", require_dw_mode = FALSE)
+```
+## Python
+```python
+review_profile("profile_DW-Production.py")
+
+# Profile that does not touch dw_io/dw_api — downgrade dw_mode to a warning:
+review_profile("profile_my-project.py", require_dw_mode=False)
+```
+## Stata
+```stata
+* No equivalent. Stata has no review_profile auditor.
+```
+:::
+
+The eight checks, and the level each fails at:
+
+| # | Check | Fails at | What it looks for |
+|---|---|---|---|
+| 1 | Profile sentinel object | `fail` | `profile_<repo> <- TRUE` / `= True` — without it, sector scripts cannot verify the profile ran. |
+| 2 | Cross-platform user identification | `fail` | `Sys.getenv("USERNAME"/"USER")` / `os.environ.get(...)`. |
+| 3 | Reproducibility seed | `warn` | `set.seed(` (R); `random.seed(` / `np.random.seed(` (Python). |
+| 4 | `user_config.yml` load | `fail` | A reference to `user_config.yml` *and* a `yaml::read_yaml` / `yaml.safe_load` call. |
+| 5 | `dw_mode` resolution | `fail`* | The strings `dw_mode`, `producer`, and `reviewer` all present. |
+| 6 | `dw_require_no_api` guard | `fail`* | `dw_require_no_api` defined or invoked. |
+| 7 | Z: drive advisory | `warn`† | `dw_z_available` or `network_root <- "Z:` / `network_root = "Z:`. |
+| 8 | Packages / imports block | `warn` | `requireNamespace` / `install.packages` / `library(` (R); an `import` / `from` statement (Python). |
+
+\* Checks 5 and 6 drop from `fail` to `warn` when `require_dw_mode = FALSE` — appropriate for a profile that never touches the IO or API wrappers. † Check 7 is a `warn` by default and rises to `fail` only when `require_z_drive_check = TRUE`.
+
+Both functions return a data frame (`check`, `status`, `detail`) — invisibly in R, directly in Python — and print a formatted summary with `[OK]` / `[!]` / `[X]` markers and a tally. Use the returned frame in CI to gate on `status == "fail"`.
+
+## The contract auditor: `test_scripts`
+
+`test_scripts()` is the enforcement half of the chapter — the answer to the *second* cost named at the start. It recursively scans a directory of source files and flags every line that calls a raw file-IO or external-API function the toolkit is meant to wrap. The contract it enforces is exactly the one described in the IO-contract and external-API-contract chapters:
+
+- **File IO** must go through `dw_save` / `dw_use` / `dw_compare` / `dw_merge` — never `read_csv()`, `write_xlsx()`, `saveRDS()`, `pd.read_csv`, `df.to_excel`, `pickle.dump`, and so on.
+- **External APIs** must go through `dw_api_fetch` / `dw_api_cached` — never `httr::GET()`, `rsdmx::readSDMX()`, `wbstats::wb_data()`, `requests.get`, `sdmx.Client`, `wbgapi`, and so on.
+
+::: {.panel-tabset}
+## R
+```r
+# Audit a sector codebase:
+test_scripts("01_dw_prep/012_codes/nt")
+
+# CI mode — stop with a non-zero exit on any io/api violation:
+test_scripts("01_dw_prep/012_codes", error_on_violation = TRUE)
+
+# dw_-prefixed alias (identical behaviour):
+dw_test_scripts("01_dw_prep/012_codes")
+```
+## Python
+```python
+# Audit a sector codebase:
+test_scripts("01_dw_prep/012_codes/nt")
+
+# CI mode — raise RuntimeError on any io/api violation:
+test_scripts("01_dw_prep/012_codes", error_on_violation=True)
+```
+## Stata
+```stata
+* No equivalent. Stata has no contract auditor.
+* The Stata wrappers (dw_save / dw_use / dw_require_no_api) enforce the
+* contract at the call site, but nothing scans .do files for raw imports.
+```
+:::
+
+### How it works
+
+For each matching file (default filename pattern `\.R$` / `\.py$`), the auditor reads it line by line. Before matching, it scrubs string literals (so a URL inside a quoted string does not trigger a rule) and strips trailing comments (so commented-out code is not flagged) — while preserving any `# cso-allow:` directive on the line. It then tests each line against a registry of rules. A rule carries an `id`, a `family` (`"io"` or `"api"`), a `pattern`, a `message`, and a `suggest`ion. The R patterns are written to catch both unqualified and namespaced calls — `read_csv(` and `readr::read_csv(` both match — using a negative lookbehind so that `my_read_csv(` does not.
+
+Each violation becomes a row with `file`, `line`, `rule`, `family`, `message`, `suggest`, and `snippet`. The function returns the full data frame (invisibly in R) and, when `verbose`, prints a per-violation report:
+
+```
+[api-sdmx] 01_dw_prep/012_codes/nt/01_fetch.R:42
+  Direct rsdmx::readSDMX call.
+  > dat <- rsdmx::readSDMX(providerId = "UNICEF", ...)
+  -> dw_api_fetch(api = 'sdmx', providerId = ..., flowRef = ..., key = ..., cache_key = ...)
+```
+
+The auditor ignores its own implementation files by default (`dw_io`, `dw_api`, `cso_toolkit_sync`, `profile_helpers`, `test_scripts`, plus `_state.py` and `__init__.py` on the Python side) — those *must* call the wrapped commands — and skips noise directories (`.git`, `renv`, `packrat`, `.venv`, `__pycache__`, and so on). Both lists are overridable via `ignore_files` / `ignore_dirs`, and you can extend the registry with `custom_rules`.
+
+### What it flags
+
+The R registry (in `test_scripts.R`) covers ten IO rules and six API rules:
+
+| family | rule id | Flags |
+|---|---|---|
+| io | `io-read-csv` / `io-write-csv` | `read.csv`/`read_csv`/`read_tsv`/`read_delim` and the write counterparts. |
+| io | `io-fread` | `data.table::fread` / `fwrite`. |
+| io | `io-rds` | `saveRDS` / `readRDS`. |
+| io | `io-load-save` | `save()` / `load()` for `.RData`. |
+| io | `io-dta` | `read_dta` / `write_dta` / `read_stata` / `write_stata` (haven). |
+| io | `io-xlsx` | `read_excel`/`read_xlsx`/`write_xlsx`/`read.xlsx`/`getSheetNames`/`excel_sheets`/`loadWorkbook`. |
+| io | `io-parquet` | `read_parquet` / `write_parquet` (arrow). |
+| io | `io-json-file` | `read_json` / `write_json` (jsonlite). |
+| io | `io-yaml` | `read_yaml` / `write_yaml` / `yaml.load_file`. |
+| api | `api-httr` | `GET`/`POST`/`PUT`/`PATCH`/`DELETE`/`request` (httr / httr2). |
+| api | `api-fromjson-url` | `fromJSON()` called on a `http(s)://` / `ftp://` URL string. |
+| api | `api-sdmx` | `rsdmx::readSDMX`. |
+| api | `api-wbstats` | `wb_data` / `wb_indicators` / `wb_countries`. |
+| api | `api-ilostat` | `get_ilostat` (Rilostat). |
+| api | `api-download` | `download.file` / `curl::curl_download` / `curl::curl_fetch_*` — bypass the cache. |
+
+The Python registry (in `test_scripts.py`) is the language-appropriate mirror: twelve IO rules covering `pd.read_csv` / `.to_csv`, `read_excel` / `.to_excel`, `read_stata` / `.to_stata`, `read_parquet` / `.to_parquet`, `pickle.dump`/`load`, `json.dump`/`load`, `yaml` read/write, and a heuristic `io-open-write` rule that flags `open(..., "w")`-style calls; plus seven API rules covering `requests`, `httpx`, `urllib.request.urlopen`, `sdmx.Client`, `wbgapi`, `wbdata`, and `urllib.request.urlretrieve`. The rule *ids* are intentionally close across languages (`io-yaml` exists in both, for instance) so a `# cso-allow:` directive reads the same regardless of language.
+
+::: {.callout-note}
+The auditor and the wrappers are two layers of the same defence. The wrappers enforce the contract *at the call site* — once you call `dw_save`, mode-routing and provenance happen whether you like it or not. The auditor enforces it *at review time* — it catches the calls that never reached a wrapper at all. The wrappers cannot see a `read_csv()` that bypasses them; the auditor exists precisely to surface it.
+:::
+
+### The escape hatch: `# cso-allow:`
+
+The contract has principled exceptions — the YAML config bootstrap in a profile being the canonical one. For those, append a `# cso-allow: <rule-id>` comment to the offending line and the auditor will skip that one rule on that one line:
+
+::: {.panel-tabset}
+## R
+```r
+config <- yaml::read_yaml(config_path)  # cso-allow: io-yaml
+```
+## Python
+```python
+with open(config_path, encoding="utf-8") as _f:
+    user_config = yaml.safe_load(_f)  # cso-allow: io-yaml
+```
+## Stata
+```stata
+* No auditor, so no escape hatch. Document intentional raw IO in a comment.
+```
+:::
+
+Multiple rules can be silenced on one line as a comma-separated list — `# cso-allow: io-yaml, io-json`. The directive is read from the *raw* line (not the string-scrubbed copy), so it survives the comment-stripping the matcher applies. Use it sparingly: every allow comment is a documented, reviewable decision that this particular raw call is genuinely intended.
+
+### Running it in CI
+
+`test_scripts()` returns clean by default — it reports and moves on. To make it gate a build, pass `error_on_violation = TRUE` (R) / `error_on_violation=True` (Python). When set, the function `stop()`s (R) or raises `RuntimeError` (Python) after printing the report, but only if at least one violation is in the `io` or `api` family. The error message lists up to five offending files (with an "and N more" suffix) and restates the fix: replace the raw call with its toolkit equivalent, or annotate it with `# cso-allow:`. This is the form to wire into a pre-merge check; the contract-auditor-in-CI chapter covers the GitHub Actions plumbing in detail.
+
+## A note on naming
+
+The auditor predates a naming cleanup. Its canonical name is `test_scripts`, but the `test_` prefix collides cosmetically with `testthat::test_*` unit-test naming — and the function is *not* a unit-test runner; it audits call sites against the contract. The R package therefore also exports `dw_test_scripts` as a `dw_`-prefixed alias, and applies the same treatment to the other R scaffolders: `dw_create_profile`, `dw_create_sector_script`, and `dw_review_profile`. (These aliases are R-only; the Python package exports the un-prefixed names alone.) A future release may rename `test_scripts` to something like `dw_audit_scripts` to make the intent unmistakable; until then the alias keeps the change additive and back-compatible. Prefer the `dw_`-prefixed names in new R code. See the function-reference appendix for the full alias map.
+
+## Summary
+
+The scaffolders lower the cost of *adopting* the contract; the auditor raises the cost of *violating* it. `create_profile` and `create_sector_script` generate boilerplate that is correct by construction — sentinel, mode block, logging, error handling all wired the same way every time. `review_profile` verifies that wiring after the fact. `test_scripts` reads the codebase and names every raw IO or HTTP call that slipped past a wrapper, with a per-line escape hatch for the rare legitimate exception and a CI mode that fails the build. All four live in R and Python with shared argument names and shared rule ids; none exist in Stata, where the contract is enforced at the call site by the wrappers alone. For the vendoring mechanics that put these helpers into a consumer repository, see the vendoring-model and onboarding chapters.

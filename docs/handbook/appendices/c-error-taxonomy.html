@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.42">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Appendix C — Error taxonomy – The CSO Toolkit Handbook</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../appendices/d-function-reference.html" rel="next">
+<link href="../appendices/b-provenance-schema.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-baf7457b58093534c7052efdef5f4d86.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../appendices/a-coverage-matrix.html">Appendices</a></li><li class="breadcrumb-item"><a href="../appendices/c-error-taxonomy.html"><span class="chapter-number">C</span>&nbsp; <span class="chapter-title">Error taxonomy</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">The CSO Toolkit Handbook</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/unicef-drp/cso-toolkit/tree/main/book/" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Welcome</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../front-matter/foreword.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Foreword</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../front-matter/preface.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../front-matter/authors.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">About the authors</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../front-matter/acknowledgements.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Acknowledgements</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../front-matter/how-to-cite.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">How to cite this work</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part I — Why &amp; Architecture</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/11-why.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Why a toolkit</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/12-architecture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Architecture: one contract, three languages, many consumers</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part II — The Contract</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/21-roles-and-modes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Roles and the mode contract</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/22-wiring-the-contract.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Wiring the contract into a repo</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/23-provenance-and-errors.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Provenance sidecars and the error envelope</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part III — The API (cross-language)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/31-io.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">The IO contract</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/32-external-api.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">The external-API contract</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/33-aggregation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Aggregation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/34-vintage-sync.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Vintage sync</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/35-scaffolding-audit.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Scaffolding and the contract auditor</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part IV — Adoption &amp; Operations</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/41-vendoring.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">The vendoring model</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/42-onboarding-example.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Onboarding a repo: a worked example</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/43-contract-auditor-ci.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">The contract auditor in continuous integration (CI)</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/44-versioning-release.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Versioning and releases</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Appendices</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/a-coverage-matrix.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">A</span>&nbsp; <span class="chapter-title">Cross-language coverage matrix</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/b-provenance-schema.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">B</span>&nbsp; <span class="chapter-title">Provenance sidecar schema</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/c-error-taxonomy.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">C</span>&nbsp; <span class="chapter-title">Error taxonomy</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/d-function-reference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">D</span>&nbsp; <span class="chapter-title">Function reference</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/e-glossary.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">E</span>&nbsp; <span class="chapter-title">Glossary</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#the-five-categories-at-a-glance" id="toc-the-five-categories-at-a-glance" class="nav-link active" data-scroll-target="#the-five-categories-at-a-glance"><span class="header-section-number">C.1</span> The five categories at a glance</a></li>
+  <li><a href="#mode-contract-violation" id="toc-mode-contract-violation" class="nav-link" data-scroll-target="#mode-contract-violation"><span class="header-section-number">C.2</span> 1. Mode-contract violation</a>
+  <ul class="collapse">
+  <li><a href="#reviewer-writing-under-canonical" id="toc-reviewer-writing-under-canonical" class="nav-link" data-scroll-target="#reviewer-writing-under-canonical"><span class="header-section-number">C.2.1</span> Reviewer writing under canonical</a></li>
+  <li><a href="#reviewer-fetching-from-the-network-frozen-remote" id="toc-reviewer-fetching-from-the-network-frozen-remote" class="nav-link" data-scroll-target="#reviewer-fetching-from-the-network-frozen-remote"><span class="header-section-number">C.2.2</span> Reviewer fetching from the network (frozen remote)</a></li>
+  <li><a href="#reviewer-reaching-a-live-api" id="toc-reviewer-reaching-a-live-api" class="nav-link" data-scroll-target="#reviewer-reaching-a-live-api"><span class="header-section-number">C.2.3</span> Reviewer reaching a live API</a></li>
+  </ul></li>
+  <li><a href="#unsupported-mismatched-format" id="toc-unsupported-mismatched-format" class="nav-link" data-scroll-target="#unsupported-mismatched-format"><span class="header-section-number">C.3</span> 2. Unsupported / mismatched format</a></li>
+  <li><a href="#api-failure-blocked" id="toc-api-failure-blocked" class="nav-link" data-scroll-target="#api-failure-blocked"><span class="header-section-number">C.4</span> 3. API failure / blocked</a></li>
+  <li><a href="#integrity-isid-failure" id="toc-integrity-isid-failure" class="nav-link" data-scroll-target="#integrity-isid-failure"><span class="header-section-number">C.5</span> 4. Integrity / <code>isid</code> failure</a>
+  <ul class="collapse">
+  <li><a href="#isid-uniqueness-failure" id="toc-isid-uniqueness-failure" class="nav-link" data-scroll-target="#isid-uniqueness-failure"><span class="header-section-number">C.5.1</span> <code>isid</code> uniqueness failure</a></li>
+  <li><a href="#frozen-copy-staging-integrity-dw_stage" id="toc-frozen-copy-staging-integrity-dw_stage" class="nav-link" data-scroll-target="#frozen-copy-staging-integrity-dw_stage"><span class="header-section-number">C.5.2</span> Frozen-copy / staging integrity (<code>dw_stage</code>)</a></li>
+  <li><a href="#z-mirror-integrity-dw_verify_z" id="toc-z-mirror-integrity-dw_verify_z" class="nav-link" data-scroll-target="#z-mirror-integrity-dw_verify_z"><span class="header-section-number">C.5.3</span> Z: mirror integrity (<code>dw_verify_z</code>)</a></li>
+  </ul></li>
+  <li><a href="#vendor-drift" id="toc-vendor-drift" class="nav-link" data-scroll-target="#vendor-drift"><span class="header-section-number">C.6</span> 5. Vendor drift</a></li>
+  <li><a href="#reading-any-envelope-a-debugging-recipe" id="toc-reading-any-envelope-a-debugging-recipe" class="nav-link" data-scroll-target="#reading-any-envelope-a-debugging-recipe"><span class="header-section-number">C.7</span> Reading any envelope: a debugging recipe</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/unicef-drp/cso-toolkit/edit/main/book/appendices/c-error-taxonomy.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/unicef-drp/cso-toolkit/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../appendices/a-coverage-matrix.html">Appendices</a></li><li class="breadcrumb-item"><a href="../appendices/c-error-taxonomy.html"><span class="chapter-number">C</span>&nbsp; <span class="chapter-title">Error taxonomy</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">Appendix C — Error taxonomy</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Every error the toolkit raises shares one shape. Wherever a <code>dw_*</code> helper calls <code>stop()</code> (R), <code>raise</code> (Python), or aborts a Stata command, the message follows a three-part <strong>error envelope</strong>: a <code>WHAT</code> line, a <code>Why</code> line, and a numbered <code>Fix:</code> block.</p>
+<pre class="text"><code>[cso_toolkit.&lt;func&gt;] WHAT went wrong
+  Why this is a problem (the contract being protected)
+  Fix:
+    1. Do this, OR
+    2. Do that.</code></pre>
+<p>The leading <code>[cso_toolkit.&lt;func&gt;]</code> prefix is the load-bearing convention. It separates library messages from your own code’s errors, and — because it is a stable literal — it lets you grep a whole consumer project for every site that hits a given error class. The R <code>testthat</code> suite holds raises to this shape through a custom <code>expect_envelope()</code> matcher (it asserts the <code>^[cso_toolkit.&lt;func&gt;]</code> prefix on the raised condition), and the Python suite runs a parallel <code>error_envelope_test.py</code> that exercises 30 raise-paths. The <code>WHAT</code> / <code>Why</code> / <code>Fix</code> structure is therefore a tested invariant, not a stylistic suggestion.</p>
+<p>This appendix is a debugging quick-reference. It groups the toolkit’s errors into five categories, gives the actual envelope text for each, explains the contract the envelope defends, and tells you how to fix it. For the full per-function reference see the function reference appendix and the IO and external-API contract chapters; for the sidecar fields named below, see the provenance sidecar schema appendix.</p>
+<p>Two terms anchor everything that follows. An <strong>error envelope</strong> is the three-part message above. A session’s <strong>role</strong> is one of three: a <em>producer</em> may write canonical data and reach the network; a <em>reviewer</em> is read-only and offline; a <em>publisher</em> submits to the upstream warehouse. The roles and mode-contract chapter is the full treatment; this appendix leans only on the producer-versus-reviewer split.</p>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>Most toolkit errors are <em>deliberate stops that protect reproducibility</em>, not bugs. A reviewer-mode write refusal, an <code>isid</code> failure, or a “cache missing” stop is the contract doing its job. The fix is almost never “make the toolkit stop complaining” — it is “satisfy the contract.”</p>
+</div>
+</div>
+</div>
+<section id="the-five-categories-at-a-glance" class="level2" data-number="C.1">
+<h2 data-number="C.1" class="anchored" data-anchor-id="the-five-categories-at-a-glance"><span class="header-section-number">C.1</span> The five categories at a glance</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Category</th>
+<th>Typical prefix</th>
+<th>Root cause</th>
+<th>Where it is raised</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Mode-contract violation</td>
+<td><code>[cso_toolkit.dw_save]</code>, <code>[cso_toolkit.dw_use:remote]</code>, <code>[cso_toolkit.dw_api]</code></td>
+<td>A session in the wrong role tried a forbidden action (reviewer writing canonical, reviewer reaching the network).</td>
+<td>IO contract, external-API contract</td>
+</tr>
+<tr class="even">
+<td>Unsupported / mismatched format</td>
+<td><code>[cso_toolkit.dw_save]</code>, <code>[cso_toolkit.dw_use]</code></td>
+<td>A file extension the toolkit does not dispatch, or a format unavailable in the language sibling you are using.</td>
+<td>IO contract</td>
+</tr>
+<tr class="odd">
+<td>API failure / blocked</td>
+<td><code>[cso_toolkit.dw_api]</code></td>
+<td>Reviewer-mode lockout with no cache, or a live HTTP failure (timeout, connection, non-2xx status).</td>
+<td>External-API contract</td>
+</tr>
+<tr class="even">
+<td>Integrity / <code>isid</code> failure</td>
+<td><code>[cso_toolkit.dw_isid]</code>, <code>[cso_toolkit.dw_save]</code>, <code>[cso_toolkit.dw_stage]</code>, <code>[cso_toolkit.dw_verify_z]</code></td>
+<td>Declared keys are not unique, or two copies of a “frozen” artefact disagree by hash.</td>
+<td>IO contract, staging</td>
+</tr>
+<tr class="odd">
+<td>Vendor drift</td>
+<td><code>[cso-toolkit]</code> (sync log), <code>[cso_toolkit.cso_toolkit_pull]</code></td>
+<td>The vendored helper version trails the upstream tag pinned in the manifest.</td>
+<td>Vintage-sync contract</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="mode-contract-violation" class="level2" data-number="C.2">
+<h2 data-number="C.2" class="anchored" data-anchor-id="mode-contract-violation"><span class="header-section-number">C.2</span> 1. Mode-contract violation</h2>
+<p>The toolkit enforces the producer / reviewer / publisher mode contract at every wrapped call site, not by convention (see the roles and mode-contract chapter). A reviewer session is <em>physically</em> prevented from two things: writing under canonical paths, and reaching the network. When a reviewer-mode session attempts either, the toolkit stops before any side effect occurs.</p>
+<section id="reviewer-writing-under-canonical" class="level3" data-number="C.2.1">
+<h3 data-number="C.2.1" class="anchored" data-anchor-id="reviewer-writing-under-canonical"><span class="header-section-number">C.2.1</span> Reviewer writing under canonical</h3>
+<p>This is the canonical example of the whole envelope convention. A <code>dw_save()</code> whose resolved destination lies under <code>teamsWrkDataCanonical</code>, <code>teamsRawDataCanonical</code>, or the configured Z: drive root (<code>dwZDrive</code>) stops in reviewer mode:</p>
+<pre class="text"><code>[cso_toolkit.dw_save] Reviewer mode forbids writes to &lt;root&gt;: &lt;path&gt;
+  Reviewer sessions must keep canonical / Z: deposits read-only to preserve
+  vintage permanence; writes go to the local repo sandbox.
+  Fix:
+    1. Resolve a sandbox path instead (the profile's `teamsWrkData` should
+       point there in reviewer mode), OR
+    2. If this is a deliberate Database Manager bootstrap, pass
+       `allow_canonical_write = TRUE`.</code></pre>
+<p>The Z: branch of this check arrived in v0.4.0 (issue #14); v0.3.0 refused only Teams-canonical writes. The fix is to point the write at your sandbox — in reviewer mode the profile’s <code>teamsWrkData</code> should already resolve there, so the artefact lands outside the deposit. The escape hatch exists for one case only: you genuinely are the Database Manager seeding a one-time cache into the canonical store. Then pass the explicit flag:</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" aria-current="page">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-3" role="tab" aria-controls="tabset-1-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dw_save</span>(df, <span class="at">name =</span> <span class="st">"dw_ed_edu.csv"</span>, <span class="at">sector =</span> <span class="st">"ed"</span>, <span class="at">kind =</span> <span class="st">"wrk"</span>,</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>        <span class="at">allow_canonical_write =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>dw_save(df, name<span class="op">=</span><span class="st">"dw_ed_edu.csv"</span>, sector<span class="op">=</span><span class="st">"ed"</span>, kind<span class="op">=</span><span class="st">"wrk"</span>,</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>        allow_canonical_write<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-1-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-3-tab">
+<div class="sourceCode" id="cb5"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>* Stata's dw_save guards canonical + Z: writes via <span class="ot">$dw_mode</span> and accepts</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>* the same escape hatch <span class="kw">as</span> a flag (DBM bootstraps only):</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>dw_save, filename(<span class="st">"dw_ed_edu.dta"</span>) path(<span class="st">"$teamsWrkDataCanonical/ed"</span>) <span class="co">///</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    idvars(REF_AREA INDICATOR) allow_canonical_write</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="reviewer-fetching-from-the-network-frozen-remote" class="level3" data-number="C.2.2">
+<h3 data-number="C.2.2" class="anchored" data-anchor-id="reviewer-fetching-from-the-network-frozen-remote"><span class="header-section-number">C.2.2</span> Reviewer fetching from the network (frozen remote)</h3>
+<p><code>dw_use()</code> accepts HTTPS URLs since v0.4.0: a producer downloads once and freezes the response under a frozen root with a sidecar, and the reviewer reads only the frozen copy. If the frozen copy is missing, the reviewer cannot fetch it live, so the call stops. Since v0.4.x the envelope also names the resolution tier it chose — so you can tell whether the <em>path</em> is wrong or the <em>file</em> is genuinely absent:</p>
+<pre class="text"><code>[cso_toolkit.dw_use:remote] Reviewer mode forbids fetching from the network.
+  Missing frozen copy: &lt;path&gt;
+  URL: &lt;url&gt;
+  Frozen-root resolution: &lt;chosen-root&gt; (&lt;tier-name&gt;)
+  Fix:
+    1. If the path above is wrong, set `dw_frozen_root &lt;- '&lt;your-canonical-frozen-path&gt;'` in your profile.
+    2. Otherwise, a producer must call dw_use('&lt;url&gt;') once and commit the frozen file + sidecar before the reviewer pipeline can read it.</code></pre>
+<p>The tier line was added after a costly miss: a reviewer-mode audit spent three runs (75+ minutes on a slow network) tracing a fallback that resolved to <code>&lt;githubFolder&gt;/_frozen</code> instead of the project’s expected <code>_frozen</code> path. The envelope now surfaces that mismatch at the point of failure. The frozen root resolves in tiers — an explicit <code>dw_frozen_root</code> global first, a <code>githubFolder</code> fallback next — and the toolkit warns once per session whenever it falls back past the first tier.</p>
+</section>
+<section id="reviewer-reaching-a-live-api" class="level3" data-number="C.2.3">
+<h3 data-number="C.2.3" class="anchored" data-anchor-id="reviewer-reaching-a-live-api"><span class="header-section-number">C.2.3</span> Reviewer reaching a live API</h3>
+<p>The external-API wrapper carries the same lock. When <code>dw_apis_allowed</code> is false and the requested cache is absent, <code>dw_api_fetch()</code> stops. In Python it raises a <code>PermissionError</code> with the full envelope:</p>
+<pre class="text"><code>[cso_toolkit.dw_api] Reviewer mode forbids live API calls.
+  Call:   dw_api_fetch('sdmx_codelist', cache_key='sdmx_codelist_UNICEF_CL_RESIDENCE_1_0')
+  Reason: cache missing at /data/raw-canonical/_apis/sdmx_codelist/sdmx_codelist_UNICEF_CL_RESIDENCE_1_0.csv
+  Fix:
+    1. The expected workflow is that a Database Manager has already populated
+       the cache under teamsRawDataCanonical/_apis/. Verify the cache file exists.
+    2. If you ARE the producer, switch modes:
+       from cso_toolkit import _state
+       _state.configure(dw_mode="producer", dw_apis_allowed=True)</code></pre>
+<p>The fix for a reviewer is to confirm the producer has deposited the cache — most often, nobody populated it. The cross-language way to assert the mode you expect appears in the external-API contract chapter; do it once at profile-load time, never per call.</p>
+<div class="callout callout-style-simple callout-warning">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>The <code>Fix:</code> block here is genuinely the <em>expected</em> remedy for a reviewer: <strong>verify the cache exists</strong>, not “switch to producer.” Switching modes is the producer’s path. A reviewer who flips <code>dw_apis_allowed = TRUE</code> to make this stop go away has silently left the reproducibility floor.</p>
+</div>
+</div>
+</div>
+<p>The R and Stata siblings enforce the same lock through a <code>dw_require_no_api()</code> guard rather than a per-call envelope. In Stata, <code>dw_require_no_api</code> aborts with Stata error 459 and its own prefix:</p>
+<pre class="text"><code>[cso_toolkit.dw_require_no_api] Reviewer mode forbids live API calls.
+  Why: reviewer sessions must read frozen producer caches to preserve
+  vintage permanence; any live API call breaks provenance.</code></pre>
+<p>In R the guard is installed by the repo profile; its exact text depends on that profile, so match on the <code>[cso_toolkit.dw_api]</code> or <code>dw_require_no_api</code> token rather than on a fixed string.</p>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>Coverage note: Stata ships the <em>guard</em> (<code>dw_require_no_api.ado</code>) but not the <em>fetcher</em>. <code>dw_api_fetch</code> / <code>dw_api_cached</code> / <code>dw_api_inventory</code> are R + Python only. A Stata pipeline that needs live data routes the fetch through R or Python on the producer side, then reads the cached <code>.dta</code>. See the coverage matrix appendix.</p>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="unsupported-mismatched-format" class="level2" data-number="C.3">
+<h2 data-number="C.3" class="anchored" data-anchor-id="unsupported-mismatched-format"><span class="header-section-number">C.3</span> 2. Unsupported / mismatched format</h2>
+<p>The R and Python IO helpers auto-dispatch on the file extension, covering CSV / TSV / TXT, XLSX (single and multi-sheet), RDS, RData, DTA, Parquet, JSON, and YAML, with optional <code>.csv.gz</code> compression. An extension outside that set raises from <code>dw_save()</code> / <code>dw_use()</code> in the same envelope shape:</p>
+<pre class="text"><code>[cso_toolkit.dw_save] Unsupported file extension '&lt;ext&gt;' (path: &lt;path&gt;).
+  Supported extensions: csv, tsv, txt, xlsx, rds, RData, rda, dta, parquet, json, yml, yaml
+  Fix: rename the output so it has one of the supported extensions.</code></pre>
+<p>The real gap, though, is <strong>coverage asymmetry across siblings</strong> (see the coverage matrix appendix). The format you can write in R is not always the format you can write in Stata or Python:</p>
+<ul>
+<li><strong>Stata <code>dw_save</code> writes <code>.dta</code> only.</strong> It does not dispatch on extension — it always saves a Stata dataset, so there is no Parquet, RDS, or CSV write path on the Stata side. Pipelines that need those formats produce them in R or Python and let Stata consume the <code>.dta</code>.</li>
+<li><strong>Stata <code>dw_use</code> reads <code>.dta</code>, <code>.csv</code>, and <code>.xlsx</code> only.</strong> Parquet, RDS, and RData reads are out of scope on the Stata side; route them through R or Python.</li>
+<li><strong><code>dw_merge</code>, <code>dw_verify_z</code>, <code>dw_stage</code>, and the standalone <code>dw_isid</code> are R + Python only.</strong> Calling a name that exists in R but not in Stata fails as an <em>unknown command</em>, not as a toolkit envelope — so a “command not found” from Stata is itself a coverage signal, not a bug.</li>
+<li><strong><code>.RData</code> / <code>.rda</code> writes skip the provenance sidecar</strong> — not an error, but expect it: the write succeeds silently, with no <code>.provenance.json</code> companion.</li>
+</ul>
+<p>The fix is to choose an extension the target sibling supports, or move the step to the language whose sibling implements the format. The contract is identical <em>where the format is implemented</em>; the gaps are in coverage, not in semantics. When in doubt, the coverage matrix appendix is the authoritative source for what each sibling can read and write.</p>
+</section>
+<section id="api-failure-blocked" class="level2" data-number="C.4">
+<h2 data-number="C.4" class="anchored" data-anchor-id="api-failure-blocked"><span class="header-section-number">C.4</span> 3. API failure / blocked</h2>
+<p>Two distinct failure modes wear the <code>[cso_toolkit.dw_api]</code> prefix; separate them when debugging.</p>
+<p><strong>Blocked (policy):</strong> the reviewer-mode lockout from category 1. The network was never attempted; the toolkit refused on principle. The <code>Reason</code> line will say <code>cache missing</code>.</p>
+<p><strong>Failed (transport):</strong> a live call was attempted (you are in producer mode, the cache absent or <code>refresh = TRUE</code>) and the upstream HTTP call itself failed. In Python, every fetcher routes through a single internal HTTP layer (<code>_http_call</code>) that translates timeouts, connection errors, and non-2xx statuses into the same three-part envelope, annotated with the method, URL, status code, a truncated body snippet, and a fix hint:</p>
+<pre class="text"><code>[cso_toolkit.dw_api] HTTP GET &lt;url&gt; returned status 403.
+  Body (truncated): '...'
+  Fix: check the API's docs for that status code; common causes are bad
+  query parameters (400), missing auth (401/403), missing cache_key (404),
+  or rate limiting (429).</code></pre>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>This wrapped transport envelope is a Python feature. The R fetchers call <code>httr::stop_for_status()</code>, so an R transport failure surfaces as a raw <code>httr</code> condition without the <code>[cso_toolkit.*]</code> prefix. Don’t grep for the prefix on the R side of a transport error; match on the function and the HTTP status instead.</p>
+</div>
+</div>
+</div>
+<p>Which path you are on depends on your role and the cache state:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Session</th>
+<th>Cache state</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Producer</td>
+<td>cache present, <code>refresh = FALSE</code></td>
+<td>reads cache</td>
+</tr>
+<tr class="even">
+<td>Producer</td>
+<td>cache missing OR <code>refresh = TRUE</code></td>
+<td>hits live API, writes cache, returns</td>
+</tr>
+<tr class="odd">
+<td>Reviewer</td>
+<td>cache present</td>
+<td>reads cache</td>
+</tr>
+<tr class="even">
+<td>Reviewer</td>
+<td>cache missing</td>
+<td><strong>STOPS</strong> (blocked — category 1)</td>
+</tr>
+</tbody>
+</table>
+<p>So if you see a transport failure at all, you are necessarily a producer: a reviewer never reaches the transport layer. The toolkit cannot retry upstream availability for you. Re-run once the source is reachable; the producer-side cache then absorbs the result so the reviewer never depends on upstream uptime. (UNICEF SDMX, in particular, is prone to multi-hour 403 bursts — the cache is exactly the buffer that decouples reviewers from those bursts.) Use <code>dw_api_inventory()</code> to confirm what is already cached before re-fetching:</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-3" role="tab" aria-controls="tabset-2-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<div class="sourceCode" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dw_api_inventory</span>(<span class="st">"wb"</span>)    <span class="co"># what's cached for the World Bank source?</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="sourceCode" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>dw_api_inventory(<span class="st">"wb"</span>)    <span class="co"># DataFrame: api / cache_key / ext / size_bytes / mtime / fetched_at</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-2-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-3-tab">
+<div class="sourceCode" id="cb13"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>* No API wrapper <span class="kw">in</span> the Stata sibling — dw_api_fetch / dw_api_cached /</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>* dw_api_inventory are R + Python only (see the coverage <span class="fu">matrix</span> appendix).</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>On the Python side, the toolkit redacts secrets (tokens, keys) from caller keyword arguments before writing them to the provenance sidecar — a <code>&lt;redacted&gt;</code> placeholder replaces the value (the <code>_redact_sensitive</code> helper, added after a Copilot finding on PR #7). If a persisted sidecar’s <code>fetch_args</code> look scrubbed, that is the redaction layer working as intended. This redaction is implemented in the Python sibling; do not assume an R-side equivalent.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="integrity-isid-failure" class="level2" data-number="C.5">
+<h2 data-number="C.5" class="anchored" data-anchor-id="integrity-isid-failure"><span class="header-section-number">C.5</span> 4. Integrity / <code>isid</code> failure</h2>
+<p>This category protects the <em>content</em> of an artefact, not the <em>permission</em> to write it. Three sub-cases.</p>
+<section id="isid-uniqueness-failure" class="level3" data-number="C.5.1">
+<h3 data-number="C.5.1" class="anchored" data-anchor-id="isid-uniqueness-failure"><span class="header-section-number">C.5.1</span> <code>isid</code> uniqueness failure</h3>
+<p><code>isid</code> is Stata’s <em>is-identifier</em> check: does this set of columns uniquely identify each row? <code>dw_save(..., isid = ...)</code> runs that assertion on the declared key columns <em>before</em> writing. If duplicate rows exist on those keys, the call stops, prints the duplicate count and the first offending rows, and writes nothing:</p>
+<pre class="text"><code>[cso_toolkit.dw_isid] (&lt;path&gt;) &lt;N&gt; duplicate row(s) on key (&lt;keys&gt;).
+  First duplicates:
+  &lt;sample rows&gt;
+  Fix: deduplicate before saving (`df &lt;- dplyr::distinct(df, &lt;keys&gt;, .keep_all = TRUE)`)
+  or extend the key set so the rows become unique.</code></pre>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-3" role="tab" aria-controls="tabset-3-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
+<div class="sourceCode" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dw_save</span>(df, <span class="at">name =</span> <span class="st">"dw_ed_edu.csv"</span>, <span class="at">sector =</span> <span class="st">"ed"</span>, <span class="at">kind =</span> <span class="st">"wrk"</span>,</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>        <span class="at">isid =</span> <span class="fu">c</span>(<span class="st">"DATAFLOW"</span>,<span class="st">"REF_AREA"</span>,<span class="st">"INDICATOR"</span>,<span class="st">"SEX"</span>,</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>                 <span class="st">"WEALTH_QUINTILE"</span>,<span class="st">"RESIDENCE"</span>,<span class="st">"TIME_PERIOD"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
+<div class="sourceCode" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>dw_save(df, name<span class="op">=</span><span class="st">"dw_ed_edu.csv"</span>, sector<span class="op">=</span><span class="st">"ed"</span>, kind<span class="op">=</span><span class="st">"wrk"</span>,</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>        isid<span class="op">=</span>[<span class="st">"DATAFLOW"</span>,<span class="st">"REF_AREA"</span>,<span class="st">"INDICATOR"</span>,<span class="st">"SEX"</span>,</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>              <span class="st">"WEALTH_QUINTILE"</span>,<span class="st">"RESIDENCE"</span>,<span class="st">"TIME_PERIOD"</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-3-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-3-tab">
+<div class="sourceCode" id="cb17"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>dw_save, filename(<span class="st">"dw_ed_edu.dta"</span>) path(<span class="st">"$teamsWrkData/ed"</span>) <span class="co">///</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    idvars(DATAFLOW REF_AREA INDICATOR SEX WEALTH_QUINTILE RESIDENCE TIME_PERIOD)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<p>In Stata the uniqueness check is embedded in <code>dw_save</code> (the <code>idvars()</code> option), not exposed as a standalone command. Note that the Stata failure message is terser and does <em>not</em> carry the <code>[cso_toolkit.*]</code> prefix:</p>
+<pre class="text"><code>dw_save: idvars [&lt;keys&gt;] do not uniquely identify the dataset (or contain missing). No file written.</code></pre>
+<p>In R and Python, <code>dw_isid(df, keys)</code> is also callable on its own as a pre-flight check, and that standalone path raises the full <code>[cso_toolkit.dw_isid]</code> envelope above. Either way the fix is the same: the duplicates are real — collapse, de-duplicate, or widen the key set so the declared keys truly identify a row. The printed sample tells you <em>which</em> keys collide.</p>
+</section>
+<section id="frozen-copy-staging-integrity-dw_stage" class="level3" data-number="C.5.2">
+<h3 data-number="C.5.2" class="anchored" data-anchor-id="frozen-copy-staging-integrity-dw_stage"><span class="header-section-number">C.5.2</span> Frozen-copy / staging integrity (<code>dw_stage</code>)</h3>
+<p>The staging lifecycle copies a canonical artefact into the reviewer’s sandbox and hashes it, so a reviewer reruns against a byte-verified local copy. Several integrity stops live here, each with its own <code>WHAT</code> token:</p>
+<ul>
+<li><code>[cso_toolkit.dw_stage] COPY INTEGRITY</code> — the freshly staged copy’s hash does not match the source hash after a retry. The copy is corrupt; the staged file and sidecar are not trusted.</li>
+<li><code>[cso_toolkit.dw_stage] SANDBOX DRIFT</code> — the sandbox file’s hash no longer matches the hash archived in its <code>.staged.json</code> sidecar. Something altered the sandbox copy out of band. Fix: re-stage with <code>overwrite = TRUE</code>.</li>
+<li><code>[cso_toolkit.dw_stage] CANONICAL INTEGRITY</code> — both the Z: and Teams mirrors hold the file but disagree by hash. Neither is used as a source; nothing is written. Fix: this is a genuine deposit inconsistency — escalate to the producer to reconcile the two mirrors before any reviewer run can proceed.</li>
+</ul>
+<p>An upstream-changed condition (the sandbox still matches its own archive, but the Z:/Teams source has since changed) is a <strong>warning, not a stop</strong> (<code>UPSTREAM CHANGED</code>): the sandbox is never auto-refreshed, because re-staging is the reviewer’s explicit decision.</p>
+</section>
+<section id="z-mirror-integrity-dw_verify_z" class="level3" data-number="C.5.3">
+<h3 data-number="C.5.3" class="anchored" data-anchor-id="z-mirror-integrity-dw_verify_z"><span class="header-section-number">C.5.3</span> Z: mirror integrity (<code>dw_verify_z</code>)</h3>
+<p>On a canonical read in producer mode, <code>dw_use()</code> compares the Teams and Z: copies (by file size by default; <code>verify_z = "sha256"</code> for a deep check). A mismatch emits a <strong>warning</strong> and the read still completes — this is intentionally non-fatal, because a size difference is often a benign line-ending artefact rather than a content divergence. Pass <code>verify_z = FALSE</code> to skip the check, or <code>verify_z = "sha256"</code> when you need certainty. (<code>dw_verify_z</code> is R + Python only; the Stata <code>dw_use</code> runs an equivalent non-blocking size/<code>datasignature</code> check inline.)</p>
+</section>
+</section>
+<section id="vendor-drift" class="level2" data-number="C.6">
+<h2 data-number="C.6" class="anchored" data-anchor-id="vendor-drift"><span class="header-section-number">C.6</span> 5. Vendor drift</h2>
+<p>The toolkit is <strong>vendored</strong>, not installed over the network: consumers copy the helpers into their own <code>00_functions/</code> and pin a version in <code>.toolkit_manifest.yml</code> (see the vendoring-model chapter). Drift is the gap between that pinned version and the upstream latest tag.</p>
+<p><code>cso_toolkit_check()</code> reads the local manifest, asks the GitHub API for the latest tag, and surfaces a log line when the consumer is behind. The message is a <code>message()</code> (a yellow console log), not a hard stop:</p>
+<pre class="text"><code>[cso-toolkit] unicef-drp/cso-toolkit: pinned v0.4.0 -&gt; upstream 0.5.0 (newer tag available)</code></pre>
+<p>When the pin matches the upstream tag, the log reads <code>(up to date)</code> instead.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-3" role="tab" aria-controls="tabset-4-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
+<div class="sourceCode" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cso_toolkit_check</span>()       <span class="co"># logs if the pinned version trails the upstream tag</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cso_toolkit_diff</span>()        <span class="co"># what changed between pinned and latest</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cso_toolkit_pull</span>()        <span class="co"># refresh the vendored copy (producer / online only)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
+<div class="sourceCode" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>cso_toolkit_check()</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>cso_toolkit_diff()</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>cso_toolkit_pull()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-4-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-3-tab">
+<div class="sourceCode" id="cb22"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>* The vintage-sync <span class="kw">family</span> (cso_toolkit_check / _diff / _pull) is R + Python</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>* only; the Stata sibling has no manifest-sync helper (coverage <span class="fu">matrix</span> appendix).</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<p>Two limits to note:</p>
+<ul>
+<li><strong>Drift detection is tag-level, not file-level.</strong> <code>cso_toolkit_check()</code> compares the pinned manifest version against the upstream latest tag; per-file hash drift (catching a hand-edited vendored copy that <em>claims</em> a clean version) is planned, not shipped. A consumer that locally edited <code>dw_io.R</code> but kept the manifest pin is <strong>not</strong> flagged.</li>
+<li><strong>The check itself needs the network.</strong> <code>cso_toolkit_check()</code> calls the GitHub API, so it is unavailable in reviewer mode (it skips with a notice). Run the drift check as a producer, or in CI, not from a locked reviewer session. <code>cso_toolkit_pull()</code> goes further and <em>stops</em> in reviewer mode:</li>
+</ul>
+<pre class="text"><code>[cso_toolkit.cso_toolkit_pull] Forbidden in reviewer mode.
+  Reason: pulling a new toolkit version requires hitting GitHub, which the
+  reviewer-mode contract forbids.
+  Fix: switch the profile to producer mode (set dw_mode: producer in
+  user_config.yml) before re-running.</code></pre>
+<p>When behind, run <code>cso_toolkit_diff()</code> to read the changes, then <code>cso_toolkit_pull()</code> to refresh the vendored copy and re-pin the manifest. Because vendoring exists precisely to guarantee vintage permanence, treat a pull as a deliberate version bump in the consumer repo — review the diff, do not auto-pull on every session.</p>
+</section>
+<section id="reading-any-envelope-a-debugging-recipe" class="level2" data-number="C.7">
+<h2 data-number="C.7" class="anchored" data-anchor-id="reading-any-envelope-a-debugging-recipe"><span class="header-section-number">C.7</span> Reading any envelope: a debugging recipe</h2>
+<p>When you hit a <code>[cso_toolkit.*]</code> stop and are not sure which category it is:</p>
+<ol type="1">
+<li><strong>Read the <code>&lt;func&gt;</code> token</strong> — it tells you the contract layer: <code>dw_save</code> / <code>dw_use</code> (IO), <code>dw_api</code> / <code>dw_require_no_api</code> (external API), <code>dw_isid</code> / <code>dw_stage</code> / <code>dw_verify_z</code> (integrity), <code>cso_toolkit_pull</code> (drift).</li>
+<li><strong>Read the second word of the <code>WHAT</code> line.</strong> <code>Reviewer mode forbids</code> → category 1. <code>COPY INTEGRITY</code> / <code>SANDBOX DRIFT</code> / <code>CANONICAL INTEGRITY</code> → category 4. <code>duplicate row(s)</code> → category 4 (<code>isid</code>). <code>HTTP ... returned status</code> → category 3. <code>newer tag available</code> → category 5.</li>
+<li><strong>Check your <code>dw_mode</code> first.</strong> A large share of these stops dissolve once you confirm whether the session is a producer or a reviewer and whether that role is <em>correct</em> for the step you are running.</li>
+<li><strong>Grep the consumer project for the prefix</strong> (for example <code>[cso_toolkit.dw_save]</code>) to find every other site that can hit the same class — useful when one fix should be applied repo-wide. Remember the R transport errors (category 3) and the Stata <code>isid</code> message are the two cases that do <em>not</em> carry the prefix.</li>
+<li><strong>Do what the <code>Fix:</code> block says, in order.</strong> The numbered options are ranked: option 1 is the expected remedy; option 2 is usually the deliberate escape hatch reserved for the Database Manager.</li>
+</ol>
+<p>For the precise arguments and return values behind each helper named above, see the function reference appendix; for the sidecar fields the integrity checks compare, see the provenance sidecar schema appendix.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../appendices/b-provenance-schema.html" class="pagination-link" aria-label="Provenance sidecar schema">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">B</span>&nbsp; <span class="chapter-title">Provenance sidecar schema</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../appendices/d-function-reference.html" class="pagination-link" aria-label="Function reference">
+        <span class="nav-page-text"><span class="chapter-number">D</span>&nbsp; <span class="chapter-title">Function reference</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>UNICEF Chief Statistician Office — Data &amp; Analytics (OSE)</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/unicef-drp/cso-toolkit/edit/main/book/appendices/c-error-taxonomy.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/unicef-drp/cso-toolkit/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>Built with <a href="https://quarto.org">Quarto</a></p>
+</div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

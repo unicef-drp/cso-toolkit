@@ -17,7 +17,7 @@ Hotfix pushes directly to `develop` are permitted for admins only.
 ## Flow
 
 ```mermaid
-flowchart LR
+flowchart TD
     subgraph Protected
         Main[main<br/>published trunk<br/>tagged releases]
         Develop[develop<br/>integration trunk<br/>DEFAULT branch]

@@ -1,0 +1,85 @@
+---
+number-sections: false
+number-depth: 0
+order: 0
+audience: [all]
+status: stub
+last_reviewed: 2026-06-28
+---
+
+# About the authors {#sec-authors-about .unnumbered}
+
+::: {.callout-note appearance="simple"}
+**Stub.** Authors are the members of UNICEF Data & Analytics' Database Managers Working Group — the staff whose shared operating practice this toolkit encodes. Editors are the Chief Statistician (chair) and the unit chiefs of UNICEF Data & Analytics, acknowledged in that editorial capacity rather than as authors. ORCID IDs are to be collected before the first release. Per-contribution detail is not reproduced here by design — see [§ How authorship is framed](#sec-authorship-framing).
+:::
+
+This page credits the people behind `cso-toolkit`. The toolkit is not a single author's library; it is the reusable, cross-language contract that the CSO's Database Managers already run in practice — one way to read, write, compare, and merge data, call external APIs, aggregate, vintage-sync, and scaffold, identical in R, Python, and Stata. The named authors below are the staff whose shared working practice the toolkit codifies. This handbook documents the contract; it is complementary to the [DW-Production handbook](https://unicef-drp.github.io/DW-Production/), which documents the child-data warehouse that is one of the toolkit's consumers.
+
+## Authors {#sec-authors}
+
+The authors are the members of UNICEF Data & Analytics' Database Managers Working Group. The toolkit encodes their shared operating practice — the conventions they had converged on for reading, writing, aggregating, and re-running warehouse data — into one enforced contract. Authorship is therefore framed collectively: the helpers in `r/`, `python/`, and `stata/` are the written form of a practice these colleagues hold in common, not a set of individually parcelled modules.
+
+Listed alphabetically by surname.
+
+- **Garen Avanesian** — UNICEF Data & Analytics, Database Managers Working Group
+- **Sukhdeep Brar** — UNICEF Data & Analytics, Database Managers Working Group
+- **Joel Conkle** — UNICEF Data & Analytics, Database Managers Working Group
+- **Yadigar Coskun** — UNICEF Data & Analytics, Database Managers Working Group
+- **Ayca Donmez** — UNICEF Data & Analytics, Database Managers Working Group
+- **Lauren Francis** — UNICEF Data & Analytics, Database Managers Working Group
+- **Munkhbadar Jugder** — UNICEF Data & Analytics, Database Managers Working Group
+- **Yang Liu** — UNICEF Data & Analytics, Database Managers Working Group
+- **Vrinda Mehra** — UNICEF Data & Analytics, Database Managers Working Group
+- **Gladys Babirye Bagandanswa Nacuka** — UNICEF Data & Analytics, Database Managers Working Group
+- **Daniele Olivotti** — UNICEF Data & Analytics, Database Managers Working Group
+- **Sahar Zandinia** — UNICEF Data & Analytics, Database Managers Working Group
+
+## How authorship is framed {#sec-authorship-framing}
+
+The DW-Production handbook attributes work per sector and per file, because that book documents a warehouse whose pipelines split cleanly along sector lines. That model does **not** transfer to the toolkit. `cso-toolkit` is a single shared contract, not a collection of sector pipelines; its value is precisely that one helper behaves the same for every sector and every consumer. We therefore credit the authors collectively rather than carving the toolkit into per-person slices.
+
+The collective credit is deliberate, not a placeholder for finer-grained attribution. The toolkit is the written form of a working practice the named authors hold in common: no single helper "belongs" to one of them, and the contract's worth lies in its uniformity rather than in who wrote which line. Splitting it into per-person modules would misdescribe how the work was actually done.
+
+::: {.callout-note appearance="simple"}
+**Editor to finalize.** If, before release, the team decides to surface finer-grained credit (for example, by opening the repository's commit history to multiple named authors, or by adding a CONTRIBUTORS file), this section should point readers there. As currently maintained, the repository does not carry a per-author commit ledger, so this page does not claim one.
+:::
+
+## Editors {#sec-editors}
+
+The volume is edited by the Chief Statistician (chair) and the unit chiefs of UNICEF Data & Analytics. The editors review the handbook before release and sign off on the final manuscript. Unit chiefs are listed in this editorial capacity rather than as authors — the structure mirrors a conventional academic-volume model (contributing authors above, volume editors here).
+
+Listed alphabetically by surname, with the chair first.
+
+- **João Pedro Azevedo** — *Chair (Editor)*. Chief Statistician and Deputy Director, Data and Analytics, UNICEF
+- **Claudia Cappa** — Chief, *Child Protection, Disability and Early Childhood Development*, UNICEF Data & Analytics
+- **Enrique Delamónica** — Chief, *Child Poverty and Wellbeing*, UNICEF Data & Analytics
+- **Chika Hayashi** — Chief, *Nutrition*, UNICEF Data & Analytics
+- **Yves Jaques** — Chief, *Geospatial and Computational Analytics*, UNICEF Data & Analytics
+- **Maria Muniz** — Chief, *Integrated Health Analytics*, UNICEF Data & Analytics
+- **Andrea Rossi** — Chief, *Data Collection*, UNICEF Data & Analytics
+- **Tom Slaymaker** — Chief, *Climate, Water, Sanitation and Hygiene* (JMP co-chair), UNICEF Data & Analytics
+- **Danzhen You** — Chief, *Child Health and Mortality* (UN IGME co-chair), UNICEF Data & Analytics
+
+## Acknowledgement of the use of AI tools {#sec-ai-acknowledgement}
+
+Parts of this handbook were drafted with generative-AI assistance. AI tools did not author the book — they generated drafts that the named authors and editors are reviewing, editing, and fact-checking against the `cso-toolkit` codebase. On release, the named authors and editors take full responsibility for the methodological claims, factual statements, worked examples, and verbatim code snippets reproduced here. AI assistance applies to the handbook prose only; the toolkit source code it documents is the work of the named authors' team, encoding their shared operating practice.
+
+## Statement of responsibility {#sec-statement-of-responsibility}
+
+The authors and the editors review the text of the handbook before release. They take responsibility for the descriptions of the contract, the cross-language coverage claims, the worked examples, and the verbatim code snippets reproduced in this book.
+
+Where this book describes a capability as present in one language but not another, that reflects the real state of the code at the documented version, not an aspiration; the coverage matrix in [Appendix A](../appendices/a-coverage-matrix.qmd) is the source of truth. Errors that survive into a released edition are the responsibility of the authors and the editors — not of the AI tools used during drafting, and not of UNICEF as an institution.
+
+Readers who find errors are invited to open an issue on the [book's repository](https://github.com/unicef-drp/cso-toolkit/issues). Errata are addressed in subsequent releases per the project's versioning and release discipline (Part IV).
+
+## Affiliations and disclaimer {#sec-affiliations}
+
+The authors and the editors are staff or consultants of UNICEF's Data & Analytics section (Office of the Chief Statistician), within the Division of Data, Analytics, Planning and Monitoring (DAPM). The views expressed in this book are those of the named authors and editors and do not necessarily reflect the official position of UNICEF, its Executive Board, or its Member States. References to specific commercial products, processes, or services do not constitute or imply endorsement, recommendation, or favouring by UNICEF.
+
+The handbook text is released under [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/); the toolkit source code under `r/`, `python/`, and `stata/` is released under the [MIT License](https://github.com/unicef-drp/cso-toolkit/blob/develop/LICENSE). See [How to cite this work](how-to-cite.qmd) for the dual-license detail and the suggested citation.
+
+## Cross-references {#sec-authors-xref}
+
+- [How to cite this work](how-to-cite.qmd) — suggested citation, BibTeX, and dual-license terms
+- [Appendix A](../appendices/a-coverage-matrix.qmd) — the cross-language coverage matrix (source of truth for what exists where)
+- [`github.com/unicef-drp/cso-toolkit`](https://github.com/unicef-drp/cso-toolkit) — the toolkit source code and issue tracker

@@ -1,0 +1,212 @@
+# Provenance sidecar schema
+
+Every successful write through `dw_save()` deposits a companion file next to the primary artifact: `<path>.provenance.json`. Write `ed/dw_ed_edu.csv` and you also get `ed/dw_ed_edu.csv.provenance.json` in the same directory. The sidecar is the toolkit's record of who made the file and a way to check whether the bytes on disk have since been altered — it answers *who wrote this, when, in which session mode, from what shape of data, and does the content still match what was recorded*. Reviewer-mode integrity checks (re-hashing a file to confirm it has not changed since it was written) depend on it, which is why a producer-mode write copies the sidecar alongside the primary file to the two backup locations the toolkit mirrors canonical files to (a Teams folder and the shared `Z:` drive). The IO contract chapter and the vintage-sync chapter both lean on these checks.
+
+The three languages diverge in one field that matters; this appendix is explicit about where.
+
+## Where the sidecar comes from
+
+An internal helper writes the sidecar at the end of every primary write, unless you turn it off:
+
+::: {.panel-tabset}
+## R
+```r
+# r/R/dw_io.R — .write_provenance(path, x, fmt, vintage, metadata, isid)
+dw_save(df, name = "dw_ed_edu.csv", sector = "ed", kind = "wrk",
+        provenance = TRUE)   # TRUE is the default; pass FALSE to skip
+```
+## Python
+```python
+# python/src/dw_io.py — _write_provenance(path, x, fmt, vintage, metadata, isid)
+dw_save(df, name="dw_ed_edu.csv", sector="ed", kind="wrk",
+        provenance=True)     # True is the default; pass False to skip
+```
+## Stata
+```stata
+* stata/src/dw_save.ado — sidecar emitted unless `nosidecar` is passed
+dw_save, filename("dw_ed_edu.dta") path("$teamsWrkData/ed") ///
+         idvars(REF_AREA INDICATOR TIME_PERIOD)
+* pass the `nosidecar` option to suppress
+```
+:::
+
+The R and Python helpers skip the sidecar for `.RData` / `.rda` writes, because those formats can hold arbitrary objects rather than a single tabular schema. A failed sidecar write never aborts the primary write: if a metadata value cannot be serialised to JSON, the helper warns you and leaves the primary file intact. The sidecar is metadata about the asset; the asset is what matters.
+
+## The core schema
+
+The following fields appear in every sidecar. The table gives the JSON key, its type, the field's meaning, and which languages emit it.
+
+| Key | Type | Meaning | Languages |
+|---|---|---|---|
+| `path` | string | Absolute path of the primary file the sidecar describes. | R / Py / Stata |
+| `format` | string | In R/Python, the dispatch format of the primary file (`"csv"`, `"parquet"`, `"dta"`, …). In Stata, a literal schema-version tag `"dw_save.provenance/1"`. | R / Py / Stata (different meaning — see below) |
+| `written_at` | string | Write timestamp. R/Python: ISO-8601 UTC, `YYYY-MM-DDTHH:MM:SS+0000`. Stata: its local `c(current_date) c(current_time)`, e.g. `28 Jun 2026 14:03:51`. | R / Py / Stata (different format) |
+| `user` | string | The writing user. R/Python read `USERNAME` (Python falls back to `getpass.getuser()`); Stata reads `c(username)`. | R / Py / Stata |
+| `dw_mode` | string | The session mode at write time (`"producer"`, `"reviewer"`, or unset). A session property, never a per-call argument — see the roles and mode-contract chapter. | R / Py / Stata |
+| `sha256` | string \| null | Hex SHA-256 of the primary file's bytes, computed after the file is written. **R/Python only.** In R it is `null` when the optional `digest` package is not installed. | R / Py |
+| `datasignature` | string | Stata's native `datasignature` content hash (a checksum of variable names and values), used in place of `sha256`. **Stata only.** | Stata |
+| `vintage` | string \| null | Optional vintage tag (e.g. `"2026-05"`), echoed from the `vintage` argument; `null` when not supplied. **R/Python only** (Stata records vintage inside `metadata`, see below). | R / Py |
+| `isid` | array\<string\> \| null | The key columns asserted unique before the write (the `isid` quality contract). `null` when no uniqueness check was requested. **R/Python key is `isid`.** | R / Py |
+| `idvars` | string | Stata's equivalent of `isid` — the space-separated `idvars()` columns passed to the uniqueness check. **Stata key is `idvars`.** | Stata |
+| `schema` | object | The shape of the written data: `rows`, `cols`, and (R/Python only) `columns`. Empty object `{}` when the object was not a data frame. | R / Py / Stata |
+| `metadata` | object | The caller-supplied descriptive metadata. Present only when the caller passed a `metadata` argument. | R / Py / Stata |
+
+::: {.callout-note}
+## When the session mode is unset
+`dw_mode` reflects whatever the profile placed in the session state. If no profile set a mode, the key is still emitted but carries a falsy value: in R it serialises as the empty string (`""`) because `Sys.getenv` / the unset global resolve to empty; in Python it serialises as `null` (the unset state returns `None`). The key is therefore always present — a sidecar with a blank or `null` `dw_mode` was written by a session that never declared producer or reviewer mode. (The API-fetch sidecar below substitutes the literal `"unknown"` in this case; the write sidecar does not.)
+:::
+
+### The `schema` object
+
+`schema` captures the dimensions of what was written so a reader can sanity-check a file before trusting it.
+
+| Key | Type | Meaning | Languages |
+|---|---|---|---|
+| `schema.rows` | integer | Row count of the written data frame. | R / Py / Stata |
+| `schema.cols` | integer | Column (variable) count. | R / Py / Stata |
+| `schema.columns` | array\<string\> | Ordered list of column names. **R/Python only** — Stata records counts but not the name list. | R / Py |
+
+### The `metadata` object
+
+`metadata` is free-form descriptive lineage supplied by the caller. R and Python merge an arbitrary named list / mapping verbatim into the sidecar, so any key is permitted. Stata has no native nested-dictionary type. It therefore exposes a fixed set of named options plus a semicolon-separated pass-through, and closes the block with a sentinel `"_end": "true"` trailer — an artifact of writing JSON by hand, one line at a time, to avoid a dangling comma. The conventional keys, shared across languages, are:
+
+| Key | Type | Meaning |
+|---|---|---|
+| `title` | string | Human-readable title of the dataset. |
+| `abstract` | string | Longer description (R/Python free-form). |
+| `producer` | string | The script that produced the file (e.g. `01_dw_prep/.../02_aggregate_uis_sdg.R`). |
+| `sources` | array\<string\> (R/Py) / string (Stata) | Upstream data sources (e.g. `"UIS bulk SDG_092025"`, `"WPP 2024"`). |
+| `contact` | string | Owner handle (e.g. `@karavan88`). |
+| `vintage` | string | Data vintage; in Stata this lives inside `metadata`, in R/Python it is a top-level field as well. |
+
+## A real example (R / Python)
+
+A write such as:
+
+```r
+dw_save(edu_sdg_uis,
+        name = "dw_ed_edu.csv", sector = "ed", kind = "wrk",
+        isid = c("DATAFLOW", "REF_AREA", "INDICATOR", "TIME_PERIOD"),
+        vintage = "2026-05",
+        metadata = list(
+          title    = "Education indicators — UNICEF DW format",
+          producer = "01_dw_prep/012_codes/ed/02_aggregate_uis_sdg.R",
+          sources  = c("UIS bulk SDG_092025", "WPP 2024"),
+          contact  = "@karavan88"
+        ))
+```
+
+produces a sidecar of this shape:
+
+```json
+{
+  "path": "C:/Users/.../teamsWrkData/ed/dw_ed_edu.csv",
+  "format": "csv",
+  "written_at": "2026-06-28T14:03:51+0000",
+  "user": "jpazevedo",
+  "dw_mode": "producer",
+  "vintage": "2026-05",
+  "sha256": "9f2c1a7b4e0d8c5f3a6b2e1d9c0f4a7b8e3d2c1f0a9b8c7d6e5f4a3b2c1d0e9f",
+  "isid": ["DATAFLOW", "REF_AREA", "INDICATOR", "TIME_PERIOD"],
+  "schema": {
+    "rows": 48213,
+    "cols": 9,
+    "columns": ["DATAFLOW", "REF_AREA", "INDICATOR", "SEX",
+                "WEALTH_QUINTILE", "RESIDENCE", "TIME_PERIOD",
+                "OBS_VALUE", "DATA_SOURCE"]
+  },
+  "metadata": {
+    "title": "Education indicators — UNICEF DW format",
+    "producer": "01_dw_prep/012_codes/ed/02_aggregate_uis_sdg.R",
+    "sources": ["UIS bulk SDG_092025", "WPP 2024"],
+    "contact": "@karavan88"
+  }
+}
+```
+
+The Python sidecar is the same shape: the helper builds the identical key set, serialises with `json.dump(..., indent=2)`, and computes `sha256` by streaming the file in 64-KiB blocks. R serialises with `jsonlite::write_json(..., auto_unbox = TRUE, pretty = TRUE)`. The two pretty-printers differ in whitespace, and `auto_unbox` means a single-key `isid` in R collapses to a bare string rather than a one-element array — but the keys, types, and values otherwise match.
+
+## The Stata sidecar: same shape, one difference that matters
+
+Stata emits a sidecar built to interoperate with the R and Python siblings — the comment in `dw_save.ado` states the intent plainly: "Write a sibling .provenance.json sidecar with the same shape the R helpers emit, so reviewer-mode integrity checks work across both languages." Two fields nonetheless cannot be identical, for reasons rooted in the Stata environment:
+
+```json
+{
+  "format": "dw_save.provenance/1",
+  "path": "C:\\Users\\...\\teamsWrkData\\ed\\dw_ed_edu.dta",
+  "written_at": "28 Jun 2026 14:03:51",
+  "user": "jpazevedo",
+  "dw_mode": "producer",
+  "datasignature": "9:9(12345):1234567890:0987654321",
+  "schema": { "rows": 48213, "cols": 9 },
+  "idvars": "DATAFLOW REF_AREA INDICATOR TIME_PERIOD",
+  "metadata": {
+    "title": "Education indicators — UNICEF DW format",
+    "producer": "01_dw_prep/012_codes/ed/02_aggregate_uis_sdg.R",
+    "vintage": "2026-05",
+    "_end": "true"
+  }
+}
+```
+
+The `datasignature` value above — `"9:9(12345):..."` — is a colon-delimited string of variable count, observation count, and two checksums, opaque by design. It is what stands in for `sha256`.
+
+::: {.callout-warning}
+## The integrity field is not portable across Stata and R/Python
+R and Python record a `sha256` — a hash of the file's *bytes*. Stata records `datasignature` — a hash of the *dataset's variables and values*, computed by Stata's built-in `datasignature` command. These are not comparable: a `.dta` and a `.csv` of the same logical table have different bytes (so different `sha256`) but could share a `datasignature`; conversely the same `datasignature` says nothing about file-byte equality. The choice is intentional. `datasignature` is Stata-native, needs no external dependency, and survives the UNICEF-laptop AppLocker restrictions that would block a third-party hashing binary. The practical consequence: the byte-equality check `dw_verify_z(compare = "sha256")` (which re-hashes a canonical file against its `Z:` mirror) works between R and Python sidecars, but a Stata-written file's integrity is verified against *its own* `datasignature`, not against an R/Python `sha256`.
+:::
+
+The other differences are smaller but worth cataloguing:
+
+- **`written_at` format.** R/Python emit ISO-8601 UTC (`2026-06-28T14:03:51+0000`). Stata emits its local human-readable clock (`28 Jun 2026 14:03:51`). A parser that wants a single timestamp type must normalise.
+- **Key name for the uniqueness columns.** R/Python use `isid` (an array). Stata uses `idvars` (a single space-separated string).
+- **`format` field meaning.** In R/Python `format` is the file's dispatch format (`"csv"`, `"parquet"`, …). In Stata `format` is a literal schema-version tag, `"dw_save.provenance/1"`. The same key carries different semantics — do not assume `format` tells you the file type across all three languages.
+- **`schema.columns`.** Present in R/Python, absent in Stata (which records only `rows` and `cols`).
+- **`vintage` placement.** A top-level field in R/Python; nested inside `metadata` in Stata.
+- **`_end` sentinel.** Stata appends `"_end": "true"` as the final key of the `metadata` block — a harmless artifact of hand-writing JSON one line at a time to avoid a dangling comma. Consumers should ignore it.
+
+## A note on the API-fetch sidecar
+
+`dw_save()` is not the only producer of `.provenance.json` files. The external-API contract (see that chapter) freezes a fetched payload to disk and writes its own sidecar with a *different* shape — `url`, `sha256`, `bytes`, `fetched_at`, `fetched_by`, `dw_mode` (which falls back to the literal `"unknown"` when no mode is set). That variant records the provenance of a network fetch rather than a local write. It shares the `.provenance.json` extension and the `dw_mode` / hashing conventions, but its key set is distinct; do not parse it with the same reader you use for the write sidecar. This appendix documents only the `dw_save()` write sidecar.
+
+## Consuming the sidecar
+
+A reviewer or a CI check typically does three things with a sidecar: read it, confirm the recorded `sha256` still matches the file on disk, and inspect `dw_mode` / `metadata` for lineage. Reading is plain JSON:
+
+::: {.panel-tabset}
+## R
+```r
+prov <- jsonlite::read_json("ed/dw_ed_edu.csv.provenance.json",
+                            simplifyVector = TRUE)
+identical(prov$sha256, digest::digest(file = "ed/dw_ed_edu.csv",
+                                      algo = "sha256"))
+```
+## Python
+```python
+import json, hashlib
+prov = json.load(open("ed/dw_ed_edu.csv.provenance.json"))
+h = hashlib.sha256(open("ed/dw_ed_edu.csv", "rb").read()).hexdigest()
+prov["sha256"] == h
+```
+## Stata
+```stata
+* Stata has no JSON reader in the toolkit; verify via the native signature
+use "ed/dw_ed_edu.dta", clear
+datasignature
+* compare r(datasignature) against the sidecar's "datasignature" value by eye
+* or with a small text-parsing do-file
+```
+:::
+
+A `FALSE` / `False` result here means the file changed since it was written — the lineage record no longer describes the bytes on disk, so the sidecar can no longer vouch for the artifact. R and Python can run this byte-integrity check directly because they recorded a byte hash. Stata verification is intra-Stata: re-open the dataset, recompute `datasignature`, and compare against the value in the sidecar. There is no toolkit-provided JSON reader on the Stata side — a real coverage gap, consistent with Stata's lack of an API wrapper and parquet support documented in the cross-language coverage matrix appendix.
+
+## Summary
+
+Across R and Python the sidecar is effectively identical — same keys, same types, a byte-level `sha256`, ISO-8601 UTC timestamps, an `isid` array, and a full `schema.columns` list. Stata emits a parallel file with the same intent and most of the same keys, but substitutes `datasignature` for `sha256`, `idvars` for `isid`, a local timestamp for the UTC one, and a version tag for `format`, and omits `schema.columns`. A cross-language consumer must therefore key off the right integrity field per language, normalise the timestamp, and treat a Stata sidecar's hash as non-comparable to an R or Python one.
+
+Relevant source files (all under `C:/GitHub/myados/cso-toolkit`):
+
+- `r/R/dw_io.R` — `.write_provenance()` (R write sidecar) and `.write_remote_provenance()` (API-fetch sidecar)
+- `python/src/dw_io.py` — `_write_provenance()`, `_sha256_file()`, `_utc_now_iso()` (Python write sidecar); `_write_remote_provenance()` (API-fetch sidecar)
+- `stata/src/dw_save.ado` — Stata sidecar emission (`datasignature`, `idvars`, `format: dw_save.provenance/1`)
+- `docs/dw_io_reference.md` — sidecar field overview

@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.42">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>5&nbsp; Wiring the contract into a repo – The CSO Toolkit Handbook</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../chapters/23-provenance-and-errors.html" rel="next">
+<link href="../chapters/21-roles-and-modes.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-baf7457b58093534c7052efdef5f4d86.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/21-roles-and-modes.html">Part II — The Contract</a></li><li class="breadcrumb-item"><a href="../chapters/22-wiring-the-contract.html"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Wiring the contract into a repo</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">The CSO Toolkit Handbook</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/unicef-drp/cso-toolkit/tree/main/book/" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Welcome</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../front-matter/foreword.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Foreword</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../front-matter/preface.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../front-matter/authors.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">About the authors</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../front-matter/acknowledgements.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Acknowledgements</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../front-matter/how-to-cite.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">How to cite this work</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part I — Why &amp; Architecture</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/11-why.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Why a toolkit</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/12-architecture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Architecture: one contract, three languages, many consumers</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part II — The Contract</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/21-roles-and-modes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Roles and the mode contract</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/22-wiring-the-contract.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Wiring the contract into a repo</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/23-provenance-and-errors.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Provenance sidecars and the error envelope</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part III — The API (cross-language)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/31-io.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">The IO contract</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/32-external-api.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">The external-API contract</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/33-aggregation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Aggregation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/34-vintage-sync.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Vintage sync</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/35-scaffolding-audit.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Scaffolding and the contract auditor</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part IV — Adoption &amp; Operations</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/41-vendoring.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">The vendoring model</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/42-onboarding-example.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Onboarding a repo: a worked example</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/43-contract-auditor-ci.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">The contract auditor in continuous integration (CI)</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/44-versioning-release.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Versioning and releases</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Appendices</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/a-coverage-matrix.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">A</span>&nbsp; <span class="chapter-title">Cross-language coverage matrix</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/b-provenance-schema.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">B</span>&nbsp; <span class="chapter-title">Provenance sidecar schema</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/c-error-taxonomy.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">C</span>&nbsp; <span class="chapter-title">Error taxonomy</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/d-function-reference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">D</span>&nbsp; <span class="chapter-title">Function reference</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/e-glossary.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">E</span>&nbsp; <span class="chapter-title">Glossary</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#the-single-switch-dw_mode-in-user_config.yml" id="toc-the-single-switch-dw_mode-in-user_config.yml" class="nav-link active" data-scroll-target="#the-single-switch-dw_mode-in-user_config.yml"><span class="header-section-number">5.1</span> The single switch: <code>dw_mode</code> in <code>user_config.yml</code></a></li>
+  <li><a href="#deriving-the-producerreviewer-globals" id="toc-deriving-the-producerreviewer-globals" class="nav-link" data-scroll-target="#deriving-the-producerreviewer-globals"><span class="header-section-number">5.2</span> Deriving the producer/reviewer globals</a>
+  <ul class="collapse">
+  <li><a href="#the-mode-banner" id="toc-the-mode-banner" class="nav-link" data-scroll-target="#the-mode-banner"><span class="header-section-number">5.2.1</span> The mode banner</a></li>
+  </ul></li>
+  <li><a href="#the-conductor-shadow-pattern" id="toc-the-conductor-shadow-pattern" class="nav-link" data-scroll-target="#the-conductor-shadow-pattern"><span class="header-section-number">5.3</span> The conductor shadow pattern</a></li>
+  <li><a href="#branch-slug-isolation" id="toc-branch-slug-isolation" class="nav-link" data-scroll-target="#branch-slug-isolation"><span class="header-section-number">5.4</span> Branch-slug isolation</a></li>
+  <li><a href="#defence-in-depth-the-no-api-guard" id="toc-defence-in-depth-the-no-api-guard" class="nav-link" data-scroll-target="#defence-in-depth-the-no-api-guard"><span class="header-section-number">5.5</span> Defence in depth: the no-API guard</a></li>
+  <li><a href="#verification-checklist" id="toc-verification-checklist" class="nav-link" data-scroll-target="#verification-checklist"><span class="header-section-number">5.6</span> Verification checklist</a></li>
+  <li><a href="#where-this-fits" id="toc-where-this-fits" class="nav-link" data-scroll-target="#where-this-fits"><span class="header-section-number">5.7</span> Where this fits</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/unicef-drp/cso-toolkit/edit/main/book/chapters/22-wiring-the-contract.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/unicef-drp/cso-toolkit/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/21-roles-and-modes.html">Part II — The Contract</a></li><li class="breadcrumb-item"><a href="../chapters/22-wiring-the-contract.html"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Wiring the contract into a repo</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Wiring the contract into a repo</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>The roles chapter described <em>who</em> the producer and reviewer are and <em>what</em> obligations the <code>dw_mode</code> contract places on each. This chapter is the operational counterpart: how a repository makes its own code enforce that contract.</p>
+<p>A word of orientation first, so this chapter stands on its own. The CSO toolkit is the shared R, Python, and Stata library — vendored into DW-Production and other Chief Statistician Office (CSO) pipelines — that helper functions such as <code>dw_save</code>, <code>dw_use</code>, and <code>dw_api_fetch</code> are built on. <code>dw_mode</code> is the toolkit’s master switch: a session property, set once per user, that takes the value <code>"producer"</code> or <code>"reviewer"</code>. A <em>producer</em> (the sector’s database manager) is entitled to write the <strong>canonical deposit</strong> — the authoritative directory of frozen data artefacts synced through Teams. A <em>reviewer</em> may reproduce and check those artefacts but must never overwrite them, and must never reach a live external API, because every input a reviewer consumes has to come from a snapshot the producer already froze. Wiring the contract means making the repository’s own code honour that division automatically.</p>
+<p>The work is concrete and mostly mechanical: set one value in a configuration file, derive a handful of path globals from it, shadow those globals at the top of each pipeline run, and verify the result with a short checklist. Each step has a reason, and getting any one wrong silently re-introduces the failure the contract exists to prevent — a reviewer overwriting the canonical deposit, or a reviewer-mode run quietly hitting a live API and breaking provenance, the guarantee that every input traces back to a specific frozen snapshot.</p>
+<p>Throughout, the load-bearing idea is <em>single-switch routing</em>. A user sets <code>dw_mode</code> once, in one place. Everything downstream — where writes land, whether external API calls are permitted, which directory reads fall back to — is <em>derived</em> from that one value. No per-script edits, no per-call flags. The contract is wired once and inherited everywhere.</p>
+<section id="the-single-switch-dw_mode-in-user_config.yml" class="level2" data-number="5.1">
+<h2 data-number="5.1" class="anchored" data-anchor-id="the-single-switch-dw_mode-in-user_config.yml"><span class="header-section-number">5.1</span> The single switch: <code>dw_mode</code> in <code>user_config.yml</code></h2>
+<p>Every user of a CSO pipeline keeps a personal configuration file at <code>~/.config/user_config.yml</code> (on Windows, <code>%USERPROFILE%/.config/user_config.yml</code>). This file is per-machine and per-user; it is never committed to the repository. The keys sit at the top level — the profile that <code>create_profile</code> scaffolds reads <code>user_config$dw_mode</code> (R) or <code>user_config.get("dw_mode")</code> (Python) directly, with no per-user wrapping mapping. A minimal file looks like this:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">githubFolder</span><span class="kw">:</span><span class="at"> </span><span class="st">"C:/GitHub/mytasks"</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">teamsRoot</span><span class="kw">:</span><span class="at"> </span><span class="st">"C:/Users/jpazevedo/UNICEF/Chief Statistician Office - Documents"</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dw_mode</span><span class="kw">:</span><span class="at"> </span><span class="st">"reviewer"</span><span class="co">                                  # producer | reviewer</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sandboxRoot</span><span class="kw">:</span><span class="at"> </span><span class="st">"C:/Users/jpazevedo/dw-repro"</span><span class="co">           # used only when dw_mode = reviewer</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The one required key is <code>dw_mode</code>. It takes exactly one of two values, <code>"producer"</code> or <code>"reviewer"</code>. Loading the profile must hard-fail if <code>dw_mode</code> is missing or set to anything else. Defaulting either way is unsafe. Defaulting to <code>producer</code> would let a reviewer corrupt the canonical deposit the first time they forget to set the key; defaulting to <code>reviewer</code> would surprise a database manager in the middle of a legitimate deposit by silently diverting their writes into a sandbox. There is no safe default, so the loader refuses to guess.</p>
+<p>All three language ports enforce this identically. The <code>create_profile</code> scaffolder (covered in the scaffolding chapter) emits a <code>dw_mode</code> block that validates the value at load time and stops the session otherwise:</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" aria-current="page">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-3" role="tab" aria-controls="tabset-1-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>dw_mode <span class="ot">&lt;-</span> user_config<span class="sc">$</span>dw_mode</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">is.null</span>(dw_mode) <span class="sc">||</span> <span class="sc">!</span>dw_mode <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"producer"</span>, <span class="st">"reviewer"</span>)) {</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stop</span>(<span class="st">"[X] user_config.yml must set dw_mode to 'producer' or 'reviewer'."</span>)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>dw_mode <span class="op">=</span> user_config.get(<span class="st">"dw_mode"</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> dw_mode <span class="kw">not</span> <span class="kw">in</span> (<span class="st">"producer"</span>, <span class="st">"reviewer"</span>):</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">ValueError</span>(</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">"[X] user_config.yml must set dw_mode to 'producer' or 'reviewer'."</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-1-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-3-tab">
+<div class="sourceCode" id="cb4"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>* dw_load_config validates dw_mode <span class="kw">while</span> parsing the YAML and</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>* hard-stops with <span class="kw">error</span> 459 <span class="kw">if</span> it is <span class="fu">missing</span> <span class="kw">or</span> out <span class="kw">of</span> <span class="kw">range</span>.</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>dw_load_config</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>* -&gt; sets the <span class="kw">global</span> <span class="ot">$dw_mode</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<p>A note on the Stata path. Stata cannot link an external YAML library on AppLocker-locked corporate Windows installs, so <code>dw_load_config.ado</code> ships a minimal hand-rolled <code>key: value</code> parser. It handles the documented subset of the config schema — one pair per line, optional quoting, inline <code>#</code> comments stripped — but not nested mappings, lists, anchors, or multi-line strings. (The R and Python profiles lean on a real YAML library and so could parse a richer file, but in practice all three ports read the same flat top-level keys.) The Stata loader reads exactly the keys the YAML provides into <code>$</code>-globals and validates <code>dw_mode</code> (hard-stopping with error 459 if it is missing or out of range). Unknown keys are silently ignored, since the file may hold entries other helpers consume.</p>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>One key the loaders do <em>not</em> validate is <code>sandboxRoot</code>, even though it is mandatory in reviewer mode (it is the base the reviewer’s write globals are derived from). If <code>dw_mode: reviewer</code> is set but <code>sandboxRoot</code> is absent, the derivation below produces empty or malformed paths rather than a clean error at load time. Until the loaders gain an explicit check, a profile author should validate <code>sandboxRoot</code> themselves alongside <code>dw_mode</code>.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="deriving-the-producerreviewer-globals" class="level2" data-number="5.2">
+<h2 data-number="5.2" class="anchored" data-anchor-id="deriving-the-producerreviewer-globals"><span class="header-section-number">5.2</span> Deriving the producer/reviewer globals</h2>
+<p>Once <code>dw_mode</code> is known, the profile derives a small set of path globals from it. Deriving these globals is the heart of the wiring. In producer mode the globals point at the real Teams deposit; in reviewer mode they point at the user’s private sandbox, while a parallel set of <code>*Canonical</code> aliases preserve a <em>read-only</em> view of the real deposit so that reviewer code can still compare its outputs against canonical.</p>
+<p>The reference derivation (patterned on <code>profile_DW-Production.R</code>) computes the following from <code>dw_mode</code>:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Global</th>
+<th>Producer mode</th>
+<th>Reviewer mode</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>teamsFolder</code></td>
+<td>user’s actual Teams sync root</td>
+<td><code>sandboxRoot</code></td>
+</tr>
+<tr class="even">
+<td><code>teamsRawData</code></td>
+<td><code>teamsFolder/01_dw_prep/011_rawdata</code></td>
+<td><code>sandboxRoot/01_dw_prep/011_rawdata</code></td>
+</tr>
+<tr class="odd">
+<td><code>teamsWrkData</code></td>
+<td><code>teamsFolder/01_dw_prep/013_wrkdata</code></td>
+<td><code>sandboxRoot/01_dw_prep/013_wrkdata</code></td>
+</tr>
+<tr class="even">
+<td><code>teamsFolderCanonical</code></td>
+<td>identical to <code>teamsFolder</code></td>
+<td>user’s actual Teams sync root (read-only)</td>
+</tr>
+<tr class="odd">
+<td><code>teamsRawDataCanonical</code></td>
+<td>identical to <code>teamsRawData</code></td>
+<td><code>teamsFolderCanonical/01_dw_prep/011_rawdata</code></td>
+</tr>
+<tr class="even">
+<td><code>teamsWrkDataCanonical</code></td>
+<td>identical to <code>teamsWrkData</code></td>
+<td><code>teamsFolderCanonical/01_dw_prep/013_wrkdata</code></td>
+</tr>
+<tr class="odd">
+<td><code>dw_apis_allowed</code></td>
+<td><code>TRUE</code></td>
+<td><code>FALSE</code></td>
+</tr>
+</tbody>
+</table>
+<p>Two patterns deserve attention. The <code>*Canonical</code> aliases come first. In reviewer mode the working globals (<code>teamsRawData</code>, <code>teamsWrkData</code>) are diverted into the sandbox, but the <code>*Canonical</code> aliases continue to point at the real deposit. This split — diverted write globals, preserved read aliases — lets reviewer-mode code <em>read</em> the canonical inputs and outputs for a compare-against-warehouse step (checking reviewer outputs against the canonical deposit) without ever being able to <em>write</em> over them; the write globals simply do not reach the deposit. In producer mode the aliases collapse onto the same paths as the working globals, because the producer reads and writes the same canonical location.</p>
+<p>Second is <code>dw_apis_allowed</code>. This single boolean is <code>TRUE</code> only in producer mode. It is the value the no-API guard consults (described below), and it is the one place the “reviewers never touch live APIs” rule is encoded.</p>
+<p>How each language holds this derived state differs:</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-3" role="tab" aria-controls="tabset-2-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<div class="sourceCode" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The R profile sets the derived globals directly in .GlobalEnv.</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Downstream helpers read them from there (via an internal .try_get).</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>teamsRawData          <span class="ot">&lt;-</span> <span class="fu">file.path</span>(teamsFolder, <span class="st">"01_dw_prep"</span>, <span class="st">"011_rawdata"</span>)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>teamsRawDataCanonical <span class="ot">&lt;-</span> <span class="fu">file.path</span>(teamsFolderCanonical, <span class="st">"01_dw_prep"</span>, <span class="st">"011_rawdata"</span>)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>dw_apis_allowed       <span class="ot">&lt;-</span> <span class="fu">identical</span>(dw_mode, <span class="st">"producer"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The Python profile pushes the derived state into the shared</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co"># cso_toolkit._state module via configure(); helpers read it back</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># through _state._get(...).</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> cso_toolkit <span class="im">import</span> _state <span class="im">as</span> _cso_state</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>_cso_state.configure(</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    dw_mode<span class="op">=</span>dw_mode,</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    dw_apis_allowed<span class="op">=</span>(dw_mode <span class="op">==</span> <span class="st">"producer"</span>),</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    teamsRawData<span class="op">=</span><span class="st">"/path/to/raw"</span>,</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    teamsRawDataCanonical<span class="op">=</span><span class="st">"/path/to/raw-canonical"</span>,</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-2-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-3-tab">
+<div class="sourceCode" id="cb7"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>* dw_load_config sets <span class="ot">$dw_mode</span> and any team* / canonical / sandboxRoot</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>* keys it finds <span class="kw">in</span> the YAML, but it does NOT derive the <span class="kw">mode</span>-aware</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>* paths <span class="kw">for</span> you. The profile .<span class="kw">do</span> must <span class="kw">do</span> the producer/reviewer swap</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>* itself after the loader returns -- <span class="fu">e</span>.g. point <span class="ot">$teamsWrkData</span> <span class="fu">at</span> the</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>* canonical root <span class="kw">in</span> producer <span class="kw">mode</span>, the sandbox root <span class="kw">in</span> reviewer <span class="kw">mode</span>.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<p>The Python <code>_state</code> module is the explicit equivalent of R’s <code>.GlobalEnv</code>: where the R helpers read mode-aware globals straight out of the global environment, the Python helpers read them from a single shared module configured by <code>_state.configure(...)</code>. Its <code>configure()</code> accepts only a fixed allow-list of keys and raises <code>AttributeError</code> on any unknown key, so a typo such as a lowercase <code>teamswrkdata</code> surfaces immediately rather than silently creating a dead attribute. The accessor <code>_state._get()</code> returns <code>None</code> only for genuinely unset names — it deliberately returns falsy-but-set values like <code>False</code> or <code>""</code> as-is, so that <code>dw_apis_allowed = False</code> is observable as <code>False</code> and not silently coerced to a default.</p>
+<p>The Stata side leaves the producer/reviewer path derivation to the profile author. <code>dw_load_config</code> populates exactly the globals the YAML names and validates <code>dw_mode</code>, but there is no Stata equivalent of the R/Python derivation table baked into the loader. The profile <code>.do</code> must perform the swap itself after the loader returns.</p>
+<section id="the-mode-banner" class="level3" data-number="5.2.1">
+<h3 data-number="5.2.1" class="anchored" data-anchor-id="the-mode-banner"><span class="header-section-number">5.2.1</span> The mode banner</h3>
+<p>A profile should announce its mode prominently at load time, so that a user can never be unsure which side of the contract they are on. The reference profiles emit one of two banners:</p>
+<pre><code>PRODUCER mode — writes will land in the Teams deposit.
+   Use this mode only when you intend to promote outputs to canonical.</code></pre>
+<pre><code>REVIEWER mode — writes isolated to &lt;sandboxRoot&gt;.
+   Canonical deposit at &lt;teamsFolderCanonical&gt; is read by code but never written.</code></pre>
+<p>The banner is cheap and high-value. Most accidental cross-mode writes are caught simply by a user noticing the wrong banner scroll past at session start.</p>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>The reference profiles prefix these banners with warning and check-mark emoji (a yellow triangle for producer, a green check for reviewer), whereas the toolkit’s error strings use a plain-text <code>[X]</code> sentinel. The signalling vocabulary is therefore inconsistent between banners and errors. A consumer that wants uniform output across terminals that render emoji poorly may prefer to standardise on the <code>[X]</code> / <code>[OK]</code> / <code>[!]</code> plain-text markers the helpers already use elsewhere.</p>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="the-conductor-shadow-pattern" class="level2" data-number="5.3">
+<h2 data-number="5.3" class="anchored" data-anchor-id="the-conductor-shadow-pattern"><span class="header-section-number">5.3</span> The conductor shadow pattern</h2>
+<p>The conductor shadow pattern re-binds the path globals once, at the top of the run driver, so that no sector script needs editing. It is the most error-prone step in the whole wiring, and the place where adoption most often succeeds or fails.</p>
+<p>The problem it solves is one of scale. A sector codebase typically contains ten to forty scripts, each of which references the path globals — <code>teamsRawData</code>, <code>teamsWrkData</code>, and the other working roots — directly. The naive way to make those scripts mode-aware would be to edit every one of them. Editing every script is exactly wrong: it multiplies the change surface, and it breaks the diff audit reviewers rely on, since every script would show churn unrelated to the analysis. And it guarantees that someone, someday, edits thirty-nine scripts and forgets the fortieth.</p>
+<p>The shadow pattern solves this once. At the top of each sector’s run driver (<code>0_execute_conductor.R</code>), <em>after</em> sourcing the profile, the conductor re-binds the working globals to mode-correct values. Because R, Python, and Stata all resolve those names dynamically when each downstream script runs, every script keeps its existing code unchanged and still gets the right paths:</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-3" role="tab" aria-controls="tabset-3-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
+<div class="sourceCode" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># After computing outputdir for this run (with branch-slug isolation):</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>finaldir <span class="ot">&lt;-</span> <span class="fu">file.path</span>(outputdir, <span class="st">"final"</span>)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Conductor-level shadow: redirect downstream reads/writes without</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co"># editing any sector script.</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>teamsRawData <span class="ot">&lt;-</span> teamsRawDataCanonical   <span class="co"># reviewer-mode: read canonical inputs</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>teamsWrkData <span class="ot">&lt;-</span> finaldir                <span class="co"># reviewer-mode: writes go to sandbox final</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>dwWrkData    <span class="ot">&lt;-</span> finaldir                <span class="co"># same</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
+<div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># After computing outputdir for this run (with branch-slug isolation):</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>finaldir <span class="op">=</span> os.path.join(outputdir, <span class="st">"final"</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Conductor-level shadow: re-point the shared state so every helper</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="co"># call downstream resolves the mode-correct paths.</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> cso_toolkit <span class="im">import</span> _state</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>_state.configure(</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    teamsRawData<span class="op">=</span>_state.teamsRawDataCanonical,  <span class="co"># read canonical inputs</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    teamsWrkData<span class="op">=</span>finaldir,                       <span class="co"># writes go to sandbox final</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-3-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-3-tab">
+<div class="sourceCode" id="cb12"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>* After computing <span class="ot">$outputdir</span> <span class="kw">for</span> <span class="kw">this</span> <span class="kw">run</span>:</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">global</span> finaldir <span class="st">"$outputdir/final"</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>* Conductor-<span class="dv">level</span> shadow: re-point the globals once; every later</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>* <span class="ot">`save'</span>/<span class="ot">`dw_save'</span> against <span class="ot">$teamsWrkData</span> lands <span class="kw">in</span> the sandbox</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>* without per-call edits -- the same trick <span class="kw">as</span> R/Python.</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="kw">global</span> teamsRawData <span class="st">"$teamsRawDataCanonical"</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="kw">global</span> teamsWrkData <span class="st">"$finaldir"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<p>The shadow reads <em>from</em> the canonical alias and writes <em>to</em> the sandbox-derived <code>finaldir</code>. In reviewer mode this means inputs come from the read-only canonical deposit while every output is confined to the sandbox. In producer mode the canonical alias is identical to the working global, so the same line is a harmless identity and outputs flow to the real deposit as before. One pattern, both modes, no branching in the sector scripts themselves.</p>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>The shadow must run <em>before any other script is sourced</em> by the conductor. A script that is sourced before the shadow re-binds the globals will capture the pre-shadow values. Order matters: source profile, compute <code>outputdir</code> and <code>finaldir</code>, shadow the globals, <em>then</em> source the pipeline.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="branch-slug-isolation" class="level2" data-number="5.4">
+<h2 data-number="5.4" class="anchored" data-anchor-id="branch-slug-isolation"><span class="header-section-number">5.4</span> Branch-slug isolation</h2>
+<p>Branch-slug isolation keys output directories to the current Git branch, so that two feature branches — or a feature branch and the canonical line — never write to the same output directory, even within a single user’s sandbox. The shadow pattern composes with this second, optional but recommended, layer. The documented pattern reads the current branch, slugifies it into a filesystem-safe token, and routes non-canonical branches into a <code>branches/&lt;slug&gt;/</code> subdirectory:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>branch <span class="ot">&lt;-</span> <span class="fu">tryCatch</span>(</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">system</span>(<span class="st">"git rev-parse --abbrev-ref HEAD"</span>, <span class="at">intern =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">error =</span> <span class="cf">function</span>(e) <span class="st">"main"</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>branch_slug <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">"[^A-Za-z0-9._-]"</span>, <span class="st">"-"</span>, branch)</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>canonical_outputdir <span class="ot">&lt;-</span> <span class="fu">file.path</span>(teamsRawData, sector, <span class="st">"output"</span>)</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>outputdir <span class="ot">&lt;-</span> <span class="cf">if</span> (branch <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"main"</span>, <span class="st">"dev"</span>, <span class="st">"master"</span>)) {</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>  canonical_outputdir</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">file.path</span>(canonical_outputdir, <span class="st">"branches"</span>, branch_slug)</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This is a conductor-side convention demonstrated in the integration documentation, not a function shipped by the toolkit; each sector’s conductor implements it (or its Python/Stata equivalent) inline. It layers cleanly on top of the mode contract. In reviewer mode <code>teamsRawData</code> is already rooted under <code>sandboxRoot</code>, so a feature-branch run lands at <code>&lt;sandboxRoot&gt;/.../&lt;sector&gt;/output/branches/&lt;slug&gt;/</code> and the canonical deposit is untouched even when the reviewer is working on a branch. Only the canonical branches (<code>main</code>, <code>dev</code>, <code>master</code>) write to the un-suffixed output directory — and in reviewer mode even those are inside the sandbox.</p>
+</section>
+<section id="defence-in-depth-the-no-api-guard" class="level2" data-number="5.5">
+<h2 data-number="5.5" class="anchored" data-anchor-id="defence-in-depth-the-no-api-guard"><span class="header-section-number">5.5</span> Defence in depth: the no-API guard</h2>
+<p>A guard enforces the other half of the contract: every network entry point calls it before touching a remote. Reviewer-mode sessions never make live external API calls, because every upstream input must already be frozen in a producer-deposited cache. The profile enforces the mode at load time, but each API helper checks again at the call site — deliberate redundancy, because a single guard at the profile could be bypassed by a sector script that reaches for <code>httr::GET</code> directly. So the guard is invoked at every place a live call could originate.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-3" role="tab" aria-controls="tabset-4-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
+<div class="sourceCode" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>dw_require_no_api <span class="ot">&lt;-</span> <span class="cf">function</span>(<span class="at">context =</span> <span class="cn">NULL</span>) {</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">identical</span>(dw_mode, <span class="st">"reviewer"</span>)) {</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    msg <span class="ot">&lt;-</span> <span class="st">"[X] External API access is forbidden in reviewer mode."</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.null</span>(context)) msg <span class="ot">&lt;-</span> <span class="fu">paste0</span>(msg, <span class="st">" Context: "</span>, context)</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(msg, <span class="at">call. =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
+<div class="sourceCode" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> dw_require_no_api(context: <span class="bu">str</span> <span class="op">|</span> <span class="va">None</span> <span class="op">=</span> <span class="va">None</span>) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> dw_mode <span class="op">==</span> <span class="st">"reviewer"</span>:</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>        msg <span class="op">=</span> <span class="st">"[X] External API access is forbidden in reviewer mode."</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> context:</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>            msg <span class="op">+=</span> <span class="ss">f" Context: </span><span class="sc">{</span>context<span class="sc">}</span><span class="ss">"</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">PermissionError</span>(msg)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-4-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-3-tab">
+<div class="sourceCode" id="cb16"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>dw_require_no_api , context(<span class="st">"ed/06_pull_uis"</span>)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>* On <span class="ot">$dw_mode</span> == <span class="st">"reviewer"</span> <span class="kw">this</span> aborts with <span class="kw">error</span> 459 and the</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>* standard guard message; producer and any non-reviewer <span class="ot">value</span> pass</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>* through silently.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<p>All three share the same shape: the guard blocks only when the mode is <code>reviewer</code>, and passes silently for producer (and, on the Stata side, for any value other than <code>reviewer</code>). The reviewer-mode message points the user at the right remedy — read the frozen cache through <code>dw_use</code>, or escalate a missing input to the sector database manager — rather than at the API.</p>
+<p>The block above shows the lightweight guard the profile <em>emits</em> for sector scripts to call. The toolkit’s own <code>dw_api_fetch</code> (in R and Python; see the external-API contract chapter) carries a stricter internal variant of the same guard, which it consults against <code>dw_apis_allowed</code> at the very top of every fetch, before any HTTP request. Note one further parity gap, surfaced in the cross-language coverage appendix: Stata ships the guard but has <em>no</em> API-fetch wrapper of its own, so on the Stata side the guard is the whole of the API contract.</p>
+</section>
+<section id="verification-checklist" class="level2" data-number="5.6">
+<h2 data-number="5.6" class="anchored" data-anchor-id="verification-checklist"><span class="header-section-number">5.6</span> Verification checklist</h2>
+<p>A sector is not “wired” until it passes a short, mechanical checklist. Steps four through six are the operational definition of adoption — they are what actually proves the contract holds, as opposed to merely appearing in the code.</p>
+<ol type="1">
+<li><strong>Profile loads green.</strong> Sourcing the profile with <code>dw_mode: "reviewer"</code> produces the green reviewer banner naming the sandbox.</li>
+<li><strong>Conductor shadows the globals.</strong> The sector’s run driver writes <code>finaldir</code> and shadows the working globals before any other script is sourced.</li>
+<li><strong>No back-door network calls.</strong> No script inside the sector calls a remote without going through the API fetch helper. Grep for the obvious culprits — <code>httr::GET</code>, <code>httr::POST</code>, <code>httr::request</code>, <code>RETRY</code>, and <code>read.csv("http</code> in R, and the corresponding patterns in Python/Stata.</li>
+<li><strong>Reviewer run is sandboxed.</strong> A reviewer-mode end-to-end run produces every artifact under <code>sandboxRoot</code>, and the modification time of the canonical deposit is unchanged before and after the run.</li>
+<li><strong>Producer run reaches canonical.</strong> A producer-mode end-to-end run produces every artifact under the canonical deposit, exactly as before adoption.</li>
+<li><strong>Compare step works in reviewer mode.</strong> The sector’s compare-against-warehouse script runs in reviewer mode and writes a per-segment report under the sandbox’s <code>output/temp/</code> directory.</li>
+</ol>
+<p>The contract auditor (described in the scaffolding chapter, and its CI use in a later chapter) automates much of steps one through three. The <code>review_profile</code> helper audits a profile for exactly these blocks — the profile sentinel object (the <code>profile_&lt;repo&gt; &lt;- TRUE</code> marker that sector scripts assert was sourced), cross-platform user identification, the YAML config load, the <code>dw_mode</code> resolution, the <code>dw_require_no_api</code> guard, a reproducibility seed, an optional Z:-drive advisory, and a packages block — and reports each as <code>pass</code>, <code>warn</code>, or <code>fail</code>. Steps four through six remain manual, because only an actual end-to-end run can prove that writes land where the contract says they should.</p>
+<div class="callout callout-style-simple callout-warning">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>Step four’s mtime check is not optional ceremony. It is the only test that catches a script which <em>reads</em> a canonical global correctly but <em>writes</em> through a stale, un-shadowed handle it captured before the conductor shadow ran. The contract auditor cannot see this; only an end-to-end run with a before/after mtime comparison can.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="where-this-fits" class="level2" data-number="5.7">
+<h2 data-number="5.7" class="anchored" data-anchor-id="where-this-fits"><span class="header-section-number">5.7</span> Where this fits</h2>
+<p>Wiring the contract is the bridge between policy and enforcement. The roles chapter sets the obligations; the IO, external-API, aggregation, and vintage-sync chapters describe the helpers whose behaviour this wiring routes; the scaffolding chapter provides <code>create_profile</code> and <code>review_profile</code>, which generate a profile that passes the checklist by construction and audit one that was hand-written before the helpers existed. Once a repository has done the work in this chapter — one switch in <code>user_config.yml</code>, the derived globals, the conductor shadow, optional branch-slug isolation, and a passing checklist — every helper call it makes is mode-correct without any further per-call thought. That is the whole point: wire it once, inherit it everywhere.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../chapters/21-roles-and-modes.html" class="pagination-link" aria-label="Roles and the mode contract">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Roles and the mode contract</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../chapters/23-provenance-and-errors.html" class="pagination-link" aria-label="Provenance sidecars and the error envelope">
+        <span class="nav-page-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Provenance sidecars and the error envelope</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>UNICEF Chief Statistician Office — Data &amp; Analytics (OSE)</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/unicef-drp/cso-toolkit/edit/main/book/chapters/22-wiring-the-contract.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/unicef-drp/cso-toolkit/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>Built with <a href="https://quarto.org">Quarto</a></p>
+</div>
+  </div>
+</footer>
+
+
+
+
+</body></html>
