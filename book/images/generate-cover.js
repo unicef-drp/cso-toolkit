@@ -8,15 +8,16 @@
  *     node generate-cover.js out.svg         -> writes out.svg
  *
  *  Everything is driven by CONFIG below — edit text / colours / sizes
- *  there and re-run. Coordinates live in a 640 x 905 design space
- *  (A4 proportion); outputScale only changes the rendered pixel size,
- *  the SVG stays resolution-independent.
+ *  there and re-run. Coordinates live in a 640 x 853.33 design space
+ *  (3:4, matched to the DW-Handbook cover at 1200 x 1600); outputScale
+ *  only changes the rendered pixel size. The earlier A4-proportioned
+ *  cover is preserved as cover-A-alt.{svg,png} (1280 x 1810).
  * ------------------------------------------------------------------ */
 
 const CONFIG = {
   width: 640,
-  height: 905,
-  outputScale: 2,                 // px multiplier on the root <svg> (vector stays crisp at any value)
+  height: (640 * 4) / 3,          // exact 3:4 (width*4/3); rendered at 1200 x 1600 (DW-Handbook cover size)
+  outputScale: 1.875,             // px multiplier on the root <svg> -> 1200 x 1600
   cyan: '#1CABE2',
   ink: '#ffffff',
   fontSans: "'Helvetica Neue', Helvetica, Arial, sans-serif",
@@ -51,7 +52,7 @@ function buildSVG(cfg = CONFIG) {
   const { width: W, height: H, outputScale: S, cyan, ink, fontSans } = cfg;
 
   // --- chips: lay them out left-to-right with a 9px gap ---
-  const chipY = 815, chipH = 32, chipGap = 9;
+  const chipY = 763, chipH = 32, chipGap = 9;
   let cx = 52;
   const chipEls = cfg.chips.map((label) => {
     const w = chipWidth(label);
@@ -65,18 +66,18 @@ function buildSVG(cfg = CONFIG) {
   }).join('\n    ');
 
   // --- title: 3 lines, 65px leading, bottom-anchored block ---
-  const titleBaselines = [510, 575, 640];
+  const titleBaselines = [458, 523, 588];
   const titleEls = cfg.title.map((line, i) =>
     `<text x="52" y="${titleBaselines[i]}">${esc(line)}</text>`
   ).join('\n    ');
 
   // --- subtitle: pre-wrapped lines, 27px leading ---
-  const subBaselines = [706, 733, 760];
+  const subBaselines = [654, 681, 708];
   const subEls = cfg.subtitle.map((line, i) =>
     `<text x="52" y="${subBaselines[i]}">${esc(line)}</text>`
   ).join('\n    ');
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W * S}" height="${H * S}" viewBox="0 0 ${W} ${H}" font-family="${fontSans}">
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${Math.round(W * S)}" height="${Math.round(H * S)}" viewBox="0 0 ${W} ${H}" font-family="${fontSans}">
   <rect width="${W}" height="${H}" fill="${cyan}"/>
 
   <!-- three translucent language bands -->
@@ -92,7 +93,7 @@ function buildSVG(cfg = CONFIG) {
   <text x="588" y="80" text-anchor="end" font-size="11" font-weight="700" letter-spacing="2.42" fill="${ink}" opacity="0.9">${esc(cfg.flag)}</text>
 
   <!-- kicker -->
-  <text x="52" y="442" font-size="12" font-weight="700" letter-spacing="3.6" fill="${ink}" opacity="0.85">${esc(cfg.kicker)}</text>
+  <text x="52" y="390" font-size="12" font-weight="700" letter-spacing="3.6" fill="${ink}" opacity="0.85">${esc(cfg.kicker)}</text>
 
   <!-- title -->
   <g fill="${ink}" font-size="67" font-weight="800" letter-spacing="-1.675">
@@ -105,11 +106,11 @@ function buildSVG(cfg = CONFIG) {
   </g>
 
   <!-- footer -->
-  <line x1="52" y1="797" x2="588" y2="797" stroke="${ink}" stroke-opacity="0.4" stroke-width="1"/>
+  <line x1="52" y1="745" x2="588" y2="745" stroke="${ink}" stroke-opacity="0.4" stroke-width="1"/>
   <g>
     ${chipEls}
   </g>
-  <text x="588" y="836" text-anchor="end" font-size="13" font-weight="700" fill="${ink}">${esc(cfg.version)}</text>
+  <text x="588" y="784" text-anchor="end" font-size="13" font-weight="700" fill="${ink}">${esc(cfg.version)}</text>
 </svg>`;
 }
 
