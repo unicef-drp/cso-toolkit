@@ -5,16 +5,17 @@
 
 | File | Role |
 |---|---|
-| `cover-A.svg` | Vector source. |
-| `cover-A.png` | Rendered raster used by Quarto (HTML cover). |
-| `generate-cover.js` | Regenerates both from the title / subtitle / version. |
+| `cover-A.svg` | Vector source — the canonical cover. |
+| `cover-A.png` | Raster export of `cover-A.svg` (the format Quarto embeds for the HTML cover). |
+| `generate-cover.js` | Regenerates **`cover-A.svg`** from the title / subtitle / version config. |
 
 Regenerate after editing the title, subtitle, or version chip:
 
 ```sh
-node generate-cover.js
+node generate-cover.js          # writes cover-A.svg only
 ```
 
-Keep the version chip in step with the release tag (it currently reads
-`v0.5.0`). To use a different cover, replace `cover-A.png` (portrait) or point
-`cover-image` at another file.
+`generate-cover.js` produces the **SVG only**. After regenerating, export
+`cover-A.svg` → `cover-A.png` (e.g. with `rsvg-convert`, Inkscape, or any
+SVG→PNG tool) so the raster the book embeds stays in sync. Keep the version
+chip (currently `v0.5.0`) in step with the release tag.
