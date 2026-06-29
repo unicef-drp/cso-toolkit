@@ -1,0 +1,51 @@
+{
+  "upload_type": "publication",
+  "publication_type": "book",
+  "title": "The CSO Toolkit Handbook: One contract, three languages — reproducible analytics in R, Python, and Stata",
+  "description": "<p>The CSO Toolkit Handbook is the cross-language guide to the <code>cso-toolkit</code> contract: one IO + API contract, one producer / reviewer mode contract, and three idiomatic implementations in R, Python, and Stata. It documents how UNICEF Chief Statistician Office analytics are made reproducible and scalable across sectors and projects.</p><p>This Zenodo record archives the whole <code>cso-toolkit</code> repository. The handbook prose is licensed CC BY 4.0; the toolkit source code under <code>r/</code>, <code>python/</code>, and <code>stata/</code> is licensed MIT.</p>",
+  "creators": [
+    { "name": "Avanesian, Garen", "affiliation": "UNICEF Data & Analytics" },
+    { "name": "Brar, Sukhdeep", "affiliation": "UNICEF Data & Analytics" },
+    { "name": "Conkle, Joel", "affiliation": "UNICEF Data & Analytics" },
+    { "name": "Coskun, Yadigar", "affiliation": "UNICEF Data & Analytics" },
+    { "name": "Donmez, Ayca", "affiliation": "UNICEF Data & Analytics" },
+    { "name": "Francis, Lauren", "affiliation": "UNICEF Data & Analytics" },
+    { "name": "Jugder, Munkhbadar", "affiliation": "UNICEF Data & Analytics" },
+    { "name": "Liu, Yang", "affiliation": "UNICEF Data & Analytics" },
+    { "name": "Mehra, Vrinda", "affiliation": "UNICEF Data & Analytics" },
+    { "name": "Nacuka, Gladys Babirye Bagandanswa", "affiliation": "UNICEF Data & Analytics" },
+    { "name": "Olivotti, Daniele", "affiliation": "UNICEF Data & Analytics" },
+    { "name": "Zandinia, Sahar", "affiliation": "UNICEF Data & Analytics" }
+  ],
+  "contributors": [
+    { "name": "Azevedo, João Pedro", "type": "Editor", "affiliation": "UNICEF Data & Analytics" },
+    { "name": "Cappa, Claudia", "type": "Editor", "affiliation": "UNICEF Data & Analytics" },
+    { "name": "Delamónica, Enrique", "type": "Editor", "affiliation": "UNICEF Data & Analytics" },
+    { "name": "Hayashi, Chika", "type": "Editor", "affiliation": "UNICEF Data & Analytics" },
+    { "name": "Jaques, Yves", "type": "Editor", "affiliation": "UNICEF Data & Analytics" },
+    { "name": "Muniz, Maria", "type": "Editor", "affiliation": "UNICEF Data & Analytics" },
+    { "name": "Rossi, Andrea", "type": "Editor", "affiliation": "UNICEF Data & Analytics" },
+    { "name": "Slaymaker, Tom", "type": "Editor", "affiliation": "UNICEF Data & Analytics" },
+    { "name": "You, Danzhen", "type": "Editor", "affiliation": "UNICEF Data & Analytics" }
+  ],
+  "notes": "Edited book. Authors (creators) are the UNICEF Database Managers Working Group, listed alphabetically by surname. Editors (contributors) are the Chief Statistician (chair) and the unit chiefs of UNICEF Data & Analytics.",
+  "license": "cc-by-4.0",
+  "imprint_publisher": "UNICEF Chief Statistician Office",
+  "keywords": [
+    "reproducibility",
+    "data warehousing",
+    "UNICEF",
+    "child indicators",
+    "provenance",
+    "R",
+    "Python",
+    "Stata"
+  ],
+  "language": "eng",
+  "version": "0.5.0",
+  "publication_date": "2026-06-21",
+  "related_identifiers": [
+    { "identifier": "https://github.com/unicef-drp/cso-toolkit", "relation": "isSupplementTo" },
+    { "identifier": "https://unicef-drp.github.io/cso-toolkit/handbook/", "relation": "isIdenticalTo" }
+  ]
+}
