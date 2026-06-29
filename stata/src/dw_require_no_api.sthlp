@@ -77,7 +77,7 @@ Inside a wrapper that decides between cache and live fetch:{p_end}
 {title:Author}
 
 {pstd}
-João Pedro Azevedo (UNICEF Data, Analytics, Planning and Monitoring).
+João Pedro Azevedo (UNICEF Data & Analytics, Office of Strategy and Evidence).
 Mirrors the R helper {bf:dw_require_no_api()} shipped in
 {bf:r/R/profile_helpers.R} and the Python equivalent in
 {bf:python/src/profile_helpers.py}.{p_end}

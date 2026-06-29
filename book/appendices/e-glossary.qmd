@@ -49,7 +49,7 @@ The minimum population coverage, expressed as a fraction in `[0, 1]`, that an ag
 
 ## Cross-language parity
 
-The toolkit's design commitment that the same operation carries the same function name and the same behaviour across R, Python, and Stata, sharing a single provenance sidecar schema, mode-aware path routing, and one error-envelope shape. Parity is the goal, not yet a completed state: Stata has no external-API wrapper and no Parquet support; `dw_merge` and `dw_verify_z` are R + Python only; `dw_root`, `dw_stage`, `dw_pop`, and `dw_regions` are R-only; the contract auditor and the aggregation family have no Stata siblings; and the Python reference is hand-written (no pkgdown-style autodoc) and trails the R release — its package version lags the latest R tag. The coverage matrix appendix records the gaps function by function.
+The toolkit's design commitment that the same operation carries the same function name and the same behaviour across R, Python, and Stata, sharing a single provenance sidecar schema, mode-aware path routing, and one error-envelope shape. Parity is the goal, not yet a completed state: Stata has no external-API wrapper and no Parquet support; `dw_merge` and `dw_verify_z` are R + Python only; `dw_root`, `dw_stage`, `dw_pop`, and `dw_regions` are R-only; the contract auditor and the aggregation family have no Stata siblings; and the Python reference is hand-written (no pkgdown-style autodoc). The coverage matrix appendix records the gaps function by function.
 
 ## DBM / DBR / DBP
 

@@ -152,6 +152,6 @@ exists){break}
 {title:Author}
 
 {pstd}
-João Pedro Azevedo (UNICEF Data, Analytics, Planning and Monitoring).
+João Pedro Azevedo (UNICEF Data & Analytics, Office of Strategy and Evidence).
 Mirrors the R / Python {bf:dw_use()} contract documented in
 {bf:docs/dw_io_reference.md} and {bf:docs/dw_io_python_reference.md}.{p_end}
