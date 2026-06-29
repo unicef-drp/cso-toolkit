@@ -9,7 +9,7 @@
  *
  *  Everything is driven by CONFIG below — edit text / colours / sizes
  *  there and re-run. Coordinates live in a 640 x 905 design space
- *  (A4 proportion); OUTPUT_SCALE only changes the rendered pixel size,
+ *  (A4 proportion); outputScale only changes the rendered pixel size,
  *  the SVG stays resolution-independent.
  * ------------------------------------------------------------------ */
 
@@ -50,7 +50,7 @@ function esc(s) {
 function buildSVG(cfg = CONFIG) {
   const { width: W, height: H, outputScale: S, cyan, ink, fontSans } = cfg;
 
-  // --- chips: lay them out left-to-right with an 9px gap ---
+  // --- chips: lay them out left-to-right with a 9px gap ---
   const chipY = 815, chipH = 32, chipGap = 9;
   let cx = 52;
   const chipEls = cfg.chips.map((label) => {
