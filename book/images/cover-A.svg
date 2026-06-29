@@ -1,41 +1,41 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="1810" viewBox="0 0 640 905" font-family="&#39;Helvetica Neue&#39;, Helvetica, Arial, sans-serif">
-  <rect width="640" height="905" fill="#1CABE2"></rect>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="1810" viewBox="0 0 640 905" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif">
+  <rect width="640" height="905" fill="#1CABE2"/>
 
-  
+  <!-- three translucent language bands -->
   <g fill="#ffffff">
-    <rect x="476" y="0" width="30" height="905" opacity="0.10"></rect>
-    <rect x="520" y="0" width="30" height="905" opacity="0.14"></rect>
-    <rect x="564" y="0" width="30" height="905" opacity="0.10"></rect>
+    <rect x="476" y="0" width="30" height="905" opacity="0.10"/>
+    <rect x="520" y="0" width="30" height="905" opacity="0.14"/>
+    <rect x="564" y="0" width="30" height="905" opacity="0.10"/>
   </g>
 
-  
+  <!-- masthead -->
   <text x="52" y="80" font-size="24" font-weight="800" letter-spacing="4.8" fill="#ffffff">UNICEF</text>
   <text x="52" y="101" font-size="11" font-weight="600" letter-spacing="1.98" fill="#ffffff" opacity="0.92">CHIEF STATISTICIAN OFFICE</text>
   <text x="588" y="80" text-anchor="end" font-size="11" font-weight="700" letter-spacing="2.42" fill="#ffffff" opacity="0.9">HANDBOOK</text>
 
-  
+  <!-- kicker -->
   <text x="52" y="442" font-size="12" font-weight="700" letter-spacing="3.6" fill="#ffffff" opacity="0.85">REPRODUCIBLE ANALYTICS</text>
 
-  
+  <!-- title -->
   <g fill="#ffffff" font-size="67" font-weight="800" letter-spacing="-1.675">
     <text x="52" y="510">The CSO</text>
     <text x="52" y="575">Toolkit</text>
     <text x="52" y="640">Handbook</text>
   </g>
 
-  
+  <!-- subtitle -->
   <g fill="#ffffff" font-size="18" font-weight="400" opacity="0.95">
     <text x="52" y="706">One contract, three languages —</text>
     <text x="52" y="733">reproducible analytics in R,</text>
     <text x="52" y="760">Python, and Stata.</text>
   </g>
 
-  
-  <line x1="52" y1="797" x2="588" y2="797" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1"></line>
+  <!-- footer -->
+  <line x1="52" y1="797" x2="588" y2="797" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1"/>
   <g>
-    <rect x="52" y="815" width="36" height="32" rx="16" fill="none" stroke="#ffffff" stroke-opacity="0.75"></rect><text x="70" y="836" text-anchor="middle" font-size="13" font-weight="600" fill="#ffffff">R</text>
-    <rect x="97" y="815" width="77" height="32" rx="16" fill="none" stroke="#ffffff" stroke-opacity="0.75"></rect><text x="135.5" y="836" text-anchor="middle" font-size="13" font-weight="600" fill="#ffffff">Python</text>
-    <rect x="183" y="815" width="69" height="32" rx="16" fill="none" stroke="#ffffff" stroke-opacity="0.75"></rect><text x="217.5" y="836" text-anchor="middle" font-size="13" font-weight="600" fill="#ffffff">Stata</text>
+    <rect x="52" y="815" width="36" height="32" rx="16" fill="none" stroke="#ffffff" stroke-opacity="0.75"/><text x="70" y="836" text-anchor="middle" font-size="13" font-weight="600" fill="#ffffff">R</text>
+    <rect x="97" y="815" width="77" height="32" rx="16" fill="none" stroke="#ffffff" stroke-opacity="0.75"/><text x="135.5" y="836" text-anchor="middle" font-size="13" font-weight="600" fill="#ffffff">Python</text>
+    <rect x="183" y="815" width="69" height="32" rx="16" fill="none" stroke="#ffffff" stroke-opacity="0.75"/><text x="217.5" y="836" text-anchor="middle" font-size="13" font-weight="600" fill="#ffffff">Stata</text>
   </g>
-  <text x="588" y="836" text-anchor="end" font-size="13" font-weight="700" fill="#ffffff">v0.5.0</text>
+  <text x="588" y="836" text-anchor="end" font-size="13" font-weight="700" fill="#ffffff">v0.5.1</text>
 </svg>

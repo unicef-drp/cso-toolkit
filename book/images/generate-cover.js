@@ -32,7 +32,7 @@ const CONFIG = {
     'Python, and Stata.',
   ],
   chips: ['R', 'Python', 'Stata'],
-  version: 'v0.5.0',
+  version: 'v0.5.1',
 };
 
 // approximate pill width (px) for a chip label at 13px/600 Helvetica
