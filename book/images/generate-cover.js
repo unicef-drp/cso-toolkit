@@ -16,7 +16,7 @@
 
 const CONFIG = {
   width: 640,
-  height: 853.33,                 // 3:4 (640 x 853.33); x1.875 -> 1200 x 1600 (DW-Handbook cover size)
+  height: (640 * 4) / 3,          // exact 3:4 (width*4/3); rendered at 1200 x 1600 (DW-Handbook cover size)
   outputScale: 1.875,             // px multiplier on the root <svg> -> 1200 x 1600
   cyan: '#1CABE2',
   ink: '#ffffff',
@@ -77,7 +77,7 @@ function buildSVG(cfg = CONFIG) {
     `<text x="52" y="${subBaselines[i]}">${esc(line)}</text>`
   ).join('\n    ');
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W * S}" height="${H * S}" viewBox="0 0 ${W} ${H}" font-family="${fontSans}">
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${Math.round(W * S)}" height="${Math.round(H * S)}" viewBox="0 0 ${W} ${H}" font-family="${fontSans}">
   <rect width="${W}" height="${H}" fill="${cyan}"/>
 
   <!-- three translucent language bands -->

@@ -1,11 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1599.99375" viewBox="0 0 640 853.33" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif">
-  <rect width="640" height="853.33" fill="#1CABE2"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1600" viewBox="0 0 640 853.3333333333334" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif">
+  <rect width="640" height="853.3333333333334" fill="#1CABE2"/>
 
   <!-- three translucent language bands -->
   <g fill="#ffffff">
-    <rect x="476" y="0" width="30" height="853.33" opacity="0.10"/>
-    <rect x="520" y="0" width="30" height="853.33" opacity="0.14"/>
-    <rect x="564" y="0" width="30" height="853.33" opacity="0.10"/>
+    <rect x="476" y="0" width="30" height="853.3333333333334" opacity="0.10"/>
+    <rect x="520" y="0" width="30" height="853.3333333333334" opacity="0.14"/>
+    <rect x="564" y="0" width="30" height="853.3333333333334" opacity="0.10"/>
   </g>
 
   <!-- masthead -->
