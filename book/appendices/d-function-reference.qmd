@@ -30,7 +30,7 @@ Two naming conventions matter when you read across the columns:
 - **Python uses bare names only.** The Python package (`python/src/__init__.py`) exports the **bare** name for every function that has an R dual name — `aggregate_data_v2`, `create_profile`, `test_scripts`, and so on. There are **no `dw_`-prefixed Python aliases.** Where a row below names a `dw_`-prefixed function, the Python column refers to the bare name shown in the Notes; calling the `dw_` name in Python raises `ImportError`.
 
 ::: {.callout-warning}
-**Version skew between the languages.** The R package is at **v0.5.0**; the Python package's `__version__` still reports **0.4.0**. Several behaviours noted below (for example the Z:-root recognition in `dw_is_canonical`, or the read-all-sheets `dw_use(sheet = NULL)`) landed in R after 0.4.0 and may not yet be present, or may behave differently, in the Python sibling. When a feature's vintage matters, confirm it against the language you are actually running.
+**Version stamps, not feature parity.** The R and Python packages both report **v0.5.1**. A matching stamp is a floor, not a guarantee that every behaviour is present in both: some noted below (for example the Z:-root recognition in `dw_is_canonical`, or the read-all-sheets `dw_use(sheet = NULL)`) landed in R and may not yet be present, or may behave differently, in the Python sibling. When a feature's vintage matters, confirm it against the language you are actually running.
 :::
 
 ## IO contract
