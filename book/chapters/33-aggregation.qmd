@@ -15,7 +15,7 @@ Cross-language parity is partial here, and this chapter flags every gap. `aggreg
 The signature is the same in both languages, apart from two mechanical differences: R uses `.`-separated logical flags (`pop.coverage`, `country.coverage`) and a positional/named mix, while Python makes everything after `by` keyword-only and renames the handful of arguments whose R spelling collides with Python syntax (`global` becomes `global_`, the dotted flags become underscored).
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 ```r
 agg <- aggregate_data_v2(
   data,
@@ -26,7 +26,7 @@ agg <- aggregate_data_v2(
   coverage_threshold = 0.5
 )
 ```
-## Python
+#### Python {.unnumbered .unlisted}
 ```python
 agg = aggregate_data_v2(
     data,
@@ -37,7 +37,7 @@ agg = aggregate_data_v2(
     coverage_threshold=0.5,
 )
 ```
-## Stata
+#### Stata {.unnumbered .unlisted}
 ```stata
 * No Stata sibling. Aggregate with native Stata commands
 * (collapse / egen) and treat this contract as R/Python-only.
@@ -114,7 +114,7 @@ When `validate` is on (the default), the function checks that `value`, `weight`,
 Coverage numbers are only useful if they reach the reader. `generate_agg_footnote()` turns the coverage outputs into the canonical one-line caption that sits under aggregated tables and charts: `"N/M countries (P % population coverage)"`, with an optional `"Based on latest estimates from YYYY to YYYY."` prefix and optional `Exemptions:` / `Exclusions:` suffixes. It ships in both R and Python.
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 ```r
 note <- generate_agg_footnote(
   country_coverage = 41,
@@ -124,7 +124,7 @@ note <- generate_agg_footnote(
 )
 # "Based on latest estimates from 2015 to 2023. 41/48 countries (87 % population coverage)"
 ```
-## Python
+#### Python {.unnumbered .unlisted}
 ```python
 note = generate_agg_footnote(
     country_coverage=41,
@@ -133,7 +133,7 @@ note = generate_agg_footnote(
     start_year=2015, end_year=2023,
 )
 ```
-## Stata
+#### Stata {.unnumbered .unlisted}
 ```stata
 * No Stata sibling. Compose the footnote string by hand.
 ```
@@ -146,7 +146,7 @@ note = generate_agg_footnote(
 Most regional aggregates are "latest available estimate per country within a window." `apply_time_window()` performs that selection. Within each country it keeps the single row with the most recent `time_col`, but only if that latest year falls inside the inclusive `[start_year, end_year]` window. The helper ships in both R and Python.
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 ```r
 latest <- apply_time_window(
   data,
@@ -157,7 +157,7 @@ latest <- apply_time_window(
   exemptions  = c("SOM", "YEM")   # fragile states: keep latest regardless
 )
 ```
-## Python
+#### Python {.unnumbered .unlisted}
 ```python
 latest = apply_time_window(
     data,
@@ -168,7 +168,7 @@ latest = apply_time_window(
     exemptions=["SOM", "YEM"],
 )
 ```
-## Stata
+#### Stata {.unnumbered .unlisted}
 ```stata
 * No Stata sibling. Replicate with bysort + keep on the max year.
 ```
@@ -191,7 +191,7 @@ $$ \text{scale}_l = \frac{\sum_{i \in l} w_i}{\sum_{i \in l,\ v_i \text{ observe
 (This ports the World Bank EduAnalyticsToolkit's `edukit_nestweight`, by Diana Goldemberg.)
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 ```r
 adj <- dw_nestweight(
   data,
@@ -202,7 +202,7 @@ adj <- dw_nestweight(
 )
 # adj now has hh_weight_adj; sum(hh_weight_adj) == sum(hh_weight) per stratum
 ```
-## Python
+#### Python {.unnumbered .unlisted}
 ```python
 adj = dw_nestweight(
     data,
@@ -212,7 +212,7 @@ adj = dw_nestweight(
     new_weight="hh_weight_adj",
 )
 ```
-## Stata
+#### Stata {.unnumbered .unlisted}
 ```stata
 * No Stata sibling. The original lives in the World Bank
 * EduAnalyticsToolkit as `nestweight` / `edukit_nestweight`.
