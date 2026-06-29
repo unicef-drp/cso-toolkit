@@ -1,0 +1,59 @@
+---
+number-sections: false
+number-depth: 0
+order: 0
+audience: [all]
+status: stub
+last_reviewed: 2026-06-28
+---
+
+# Preface {.unnumbered}
+
+::: {.callout-note appearance="simple"}
+**Stub.** The prose below is a working draft. Passages marked *[editor-to-finalize]* — chiefly the personal framing of how the toolkit came to be written and any institutional positioning relative to the wider data programme — await sign-off by the named editors before the first tagged edition. *(Wiring note for the editor: this page is not yet listed in `book/_quarto.yml`; add `front-matter/preface.qmd` to the `book.chapters:` list so it renders.)*
+:::
+
+## What this handbook is
+
+This handbook documents `cso-toolkit`: the UNICEF Chief Statistician Office's reusable, cross-language contract for reproducible analytics. The toolkit encodes **one way** to read, write, compare, and merge data; **one way** to call external APIs; and **one way** to aggregate, version-sync, and scaffold projects — and it does so identically in R, Python, and Stata. Every call routes through wrappers that enforce a provenance sidecar on each output, an `isid` uniqueness check on stated keys, and a producer / reviewer mode contract. The promise these mechanisms add up to is simple: an analytics product can be re-run by someone other than its original author and yield the same numbers.
+
+The toolkit is **vendored**, not network-installed. Its source files are copied into each consumer's own repository rather than pulled from a package index at run time. That choice is deliberate and it is the spine of the whole design: a publication that cites a deposited file today should reproduce identical numbers years later from the deposit and the vendored helpers alone — no live network, no upstream package drift, no ambient version skew. The handbook returns to that idea throughout.
+
+## What this handbook is not
+
+This is not a tutorial on R, Python, or Stata, and it is not a statistics text. It assumes you can already write a script in at least one of the three languages and that you understand the analytical work your sector or team does. Its subject is narrower and more specific: the *contract* — the shared conventions and the wrappers that enforce them — and nothing beyond what the code in the repository actually implements. Where a capability exists in one language but not another, the book says so plainly rather than describing an aspiration; the cross-language coverage matrix in Appendix A is the source of truth when the prose and the code seem to disagree.
+
+It is also not the warehouse handbook. The companion *DW-Production* handbook documents UNICEF's child-data warehouse — the operational store of signed-off `dw_<sector>` files that the public data products draw from. This book is **complementary** to that one: DW-Production documents a particular warehouse and its sector pipelines; *this* book documents the reusable contract itself, for any consumer that adopts it. DW-Production is the toolkit's first and largest adopter, but it is not the only one the toolkit is built to serve.
+
+## Who this handbook is for
+
+The book is written for several audiences at once, and most readers will live in one or two parts of it rather than reading front to back:
+
+- **Database managers (producers)** who run sector pipelines, pull upstream APIs, and deposit canonical files. The contract — the roles, the mode that governs network access, the provenance sidecars — is your daily working environment, and Part II describes it.
+- **Reviewers** who re-run a pipeline from pre-deposited inputs and compare the result against the canonical deposit. The same mode contract governs your work, with the network deliberately unreachable; Part II explains why that constraint is enforced rather than merely advised.
+- **Publishers** who move signed-off deposits into downstream products. The role boundaries in Part II tell you where the toolkit's guarantees end and the publication infrastructure begins.
+- **Peer-institution adopters** — maintainers of other deposit-bearing repositories who want to vendor the toolkit into their own codebase and keep it in sync. Part IV is written for you, and it assumes the role and mode concepts from Part II.
+
+Analysts and sector teams who simply need to read, write, and aggregate data the CSO way are served by Part III, which is the reference for that daily work in all three languages.
+
+## How to read it
+
+The handbook is organised into four parts and a set of appendices.
+
+- **Part I — Why & Architecture** motivates the toolkit and lays out its shape: one contract, three language siblings, many consumer repositories, and a single canonical deposit. Start here for the big picture.
+- **Part II — The Contract** is the conceptual core: the three roles, the session-level mode that governs network access, how that contract is wired into a repository, and the two cross-cutting mechanisms — provenance sidecars and the standard error envelope — that make the toolkit trustworthy.
+- **Part III — The API (cross-language)** is the daily reference, one chapter per capability family: IO, the external-API contract, aggregation, vintage sync, and scaffolding with the contract auditor. Every chapter presents R, Python, and Stata side by side and is explicit about coverage gaps.
+- **Part IV — Adoption & Operations** is for adopters and maintainers: the vendoring model, a worked onboarding example, running the contract auditor in CI, and the project's versioning and release discipline.
+- **Appendices** collect the dense reference material: the coverage matrix (A), the provenance sidecar schema (B), the error taxonomy (C), a full function reference (D), and a glossary (E).
+
+If you are new, read the architecture chapter in Part I and the roles chapter in Part II, then turn to the IO chapter in Part III. Those three give you enough to use the toolkit safely. If you are here to adopt it into a new repository, begin with the vendoring and onboarding chapters in Part IV, keeping the roles chapter to hand.
+
+## A note on authorship
+
+The twelve authors are the members of UNICEF Data & Analytics' Database Managers Working Group — the staff whose shared operating practice the toolkit encodes. The toolkit did not arrive as a specification handed down to be implemented; it grew out of the conventions this group had already converged on, made explicit and then enforced in code. Authorship is therefore framed collectively: the contract is a shared body of practice, and crediting it as such is more honest than parcelling it out by file or function. The nine editors are the Chief Statistician, as chair, and the unit chiefs of UNICEF Data & Analytics, acknowledged in that editorial capacity rather than as authors. *[editor-to-finalize: any first-person account of the toolkit's origins, and the precise institutional positioning of this work within the wider data programme, are for the editors to settle.]*
+
+::: {.callout-note}
+Parts of this handbook were drafted with generative-AI assistance. The AI did not author the book; it produced drafts that the named authors and editors are reviewing, editing, and fact-checking against the `cso-toolkit` codebase. On release, the named authors and editors take full responsibility for the methodological claims, factual statements, and code examples reproduced here.
+:::
+
+The handbook text is released under [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/); the toolkit source code under `r/`, `python/`, and `stata/` is released under the MIT License. Attribute each part under its own license.

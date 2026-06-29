@@ -60,6 +60,316 @@
     ]
   },
   {
+    "objectID": "front-matter/foreword.html",
+    "href": "front-matter/foreword.html",
+    "title": "Foreword",
+    "section": "",
+    "text": "Stub. Draft foreword by the Chief Statistician (chair of editors). AI-assisted draft prepared for João Pedro Azevedo to review, personalise, and finalise. Passages marked [editor to finalise] invite specific framing, emphasis, or a personal note in his own voice; nothing here should ship as a quotation or anecdote attributed to him until he has confirmed it.\n\n\n\nEvery number UNICEF publishes about children is, in the end, a claim that someone can check. A coverage rate, a stunting estimate, a count of children out of school — each is only as credible as our ability to say where it came from and to produce it again. In official statistics, “again” is often the hard word. The same indicator, recomputed by a second analyst in a second language, can come out a different number, and reconstructing why can take longer than the original analysis did. That gap between published and reproducible is the problem this toolkit exists to close. [editor to finalise: JPA may wish to open in the first person with his own recollection of where this gap bit hardest in practice; the lines above are written generally so that nothing is attributed to him as a personal anecdote until he confirms it.]\ncso-toolkit is the Chief Statistician Office’s answer: one contract, expressed identically in R, Python, and Stata. It fixes one way to read, write, compare, and merge data; one way to call external sources; one way to aggregate, version-sync, and scaffold a project — so that an analytics product can be re-run by someone other than its author and yield the same numbers. The contract is not advice. It is enforced at every wrapped call site: a provenance sidecar written next to every output, an isid uniqueness check on a stated key, and a producer / reviewer mode that makes the network unreachable to a reviewer rather than merely asking them not to use it. Those three guarantees turn “trust me” into “check me.”\nI want to dwell on one design choice, because it is the institutional case for this book: we vendor the toolkit rather than install it. A consumer repository copies the helpers into its own tree and keeps them under version control alongside the analysis they serve. This is, on the surface, the less fashionable option — package managers exist precisely to spare us from copying code. But UNICEF’s statistical files are meant to outlive the environment that produced them. A figure citing dw_&lt;sector&gt;.csv in 2026 must reproduce identically when a reviewer re-runs it years later, working from the canonical deposit and the vendored helpers alone — no network, no upstream package drift, no ambient version skew silently changing a rounding rule. Vintage permanence is not a feature we add on top; it is the reason the toolkit is shaped the way it is. Vendoring is how a statistical office that publishes for the long record protects that record from the churn of the software underneath it. [editor to finalise: JPA may wish to add a sentence on why this matters specifically for an institution that issues global estimates governments rely on.]\nThis handbook is deliberately scoped to the contract itself, not to any one warehouse that uses it. Its companion, the DW-Production handbook, documents the child-data warehouse — the operational store of signed-off sector files. This book documents the reusable machinery beneath that and any future deposit-bearing repository: how the wrappers behave, what the sidecars promise, how the roles are enforced, and how a new repo adopts and stays in sync. The two are complementary by design. Read together, they describe both what UNICEF Data & Analytics produces and how it guarantees the producing.\nThe twelve named authors are the members of UNICEF Data & Analytics’ Database Managers Working Group — the colleagues whose shared, hard-won operating practice the toolkit encodes. This is genuinely collective work: the toolkit is the written-down form of how this group already agreed to handle data, and authorship is credited to the group as a whole rather than parcelled out by sector or function. The other eight editors are the unit chiefs of UNICEF Data & Analytics, who reviewed the handbook in that editorial capacity; I chair the editorial group as Chief Statistician. I am grateful to all of them. [editor to finalise: JPA may wish to thank the working group in his own words and acknowledge the contribution this represents over and above their day jobs.]\nA note on how the book was made, in keeping with our own standard of provenance: parts of it were drafted with generative-AI assistance. The AI did not author the book. It produced drafts that the named authors and editors are reviewing, editing, and checking against the cso-toolkit codebase, and on release those authors and editors take full responsibility for every methodological claim, factual statement, and code example in it. The handbook text is released under CC BY 4.0; the toolkit code under r/, python/, and stata/ is MIT-licensed — attribute each part under its own terms.\nThe toolkit is young, and so is this book. The coverage is honestly uneven across the three languages today, and the handbook says so wherever that is true rather than papering over it. What is already settled is the principle: one contract, enforced, reproducible, and built to last longer than the tools it runs on. That principle is worth writing down, and worth holding ourselves to. [editor to finalise: JPA’s closing — a forward-looking line on where the toolkit goes next and what he expects of the teams adopting it.]\nJoão Pedro Azevedo\nChief Statistician and Deputy Director, Data and Analytics, UNICEF\nChair of Editors",
+    "crumbs": [
+      "Foreword"
+    ]
+  },
+  {
+    "objectID": "front-matter/preface.html",
+    "href": "front-matter/preface.html",
+    "title": "Preface",
+    "section": "",
+    "text": "What this handbook is\nThis handbook documents cso-toolkit: the UNICEF Chief Statistician Office’s reusable, cross-language contract for reproducible analytics. The toolkit encodes one way to read, write, compare, and merge data; one way to call external APIs; and one way to aggregate, version-sync, and scaffold projects — and it does so identically in R, Python, and Stata. Every call routes through wrappers that enforce a provenance sidecar on each output, an isid uniqueness check on stated keys, and a producer / reviewer mode contract. The promise these mechanisms add up to is simple: an analytics product can be re-run by someone other than its original author and yield the same numbers.\nThe toolkit is vendored, not network-installed. Its source files are copied into each consumer’s own repository rather than pulled from a package index at run time. That choice is deliberate and it is the spine of the whole design: a publication that cites a deposited file today should reproduce identical numbers years later from the deposit and the vendored helpers alone — no live network, no upstream package drift, no ambient version skew. The handbook returns to that idea throughout.",
+    "crumbs": [
+      "Preface"
+    ]
+  },
+  {
+    "objectID": "front-matter/preface.html#what-this-handbook-is-not",
+    "href": "front-matter/preface.html#what-this-handbook-is-not",
+    "title": "Preface",
+    "section": "What this handbook is not",
+    "text": "What this handbook is not\nThis is not a tutorial on R, Python, or Stata, and it is not a statistics text. It assumes you can already write a script in at least one of the three languages and that you understand the analytical work your sector or team does. Its subject is narrower and more specific: the contract — the shared conventions and the wrappers that enforce them — and nothing beyond what the code in the repository actually implements. Where a capability exists in one language but not another, the book says so plainly rather than describing an aspiration; the cross-language coverage matrix in Appendix A is the source of truth when the prose and the code seem to disagree.\nIt is also not the warehouse handbook. The companion DW-Production handbook documents UNICEF’s child-data warehouse — the operational store of signed-off dw_&lt;sector&gt; files that the public data products draw from. This book is complementary to that one: DW-Production documents a particular warehouse and its sector pipelines; this book documents the reusable contract itself, for any consumer that adopts it. DW-Production is the toolkit’s first and largest adopter, but it is not the only one the toolkit is built to serve.",
+    "crumbs": [
+      "Preface"
+    ]
+  },
+  {
+    "objectID": "front-matter/preface.html#who-this-handbook-is-for",
+    "href": "front-matter/preface.html#who-this-handbook-is-for",
+    "title": "Preface",
+    "section": "Who this handbook is for",
+    "text": "Who this handbook is for\nThe book is written for several audiences at once, and most readers will live in one or two parts of it rather than reading front to back:\n\nDatabase managers (producers) who run sector pipelines, pull upstream APIs, and deposit canonical files. The contract — the roles, the mode that governs network access, the provenance sidecars — is your daily working environment, and Part II describes it.\nReviewers who re-run a pipeline from pre-deposited inputs and compare the result against the canonical deposit. The same mode contract governs your work, with the network deliberately unreachable; Part II explains why that constraint is enforced rather than merely advised.\nPublishers who move signed-off deposits into downstream products. The role boundaries in Part II tell you where the toolkit’s guarantees end and the publication infrastructure begins.\nPeer-institution adopters — maintainers of other deposit-bearing repositories who want to vendor the toolkit into their own codebase and keep it in sync. Part IV is written for you, and it assumes the role and mode concepts from Part II.\n\nAnalysts and sector teams who simply need to read, write, and aggregate data the CSO way are served by Part III, which is the reference for that daily work in all three languages.",
+    "crumbs": [
+      "Preface"
+    ]
+  },
+  {
+    "objectID": "front-matter/preface.html#how-to-read-it",
+    "href": "front-matter/preface.html#how-to-read-it",
+    "title": "Preface",
+    "section": "How to read it",
+    "text": "How to read it\nThe handbook is organised into four parts and a set of appendices.\n\nPart I — Why & Architecture motivates the toolkit and lays out its shape: one contract, three language siblings, many consumer repositories, and a single canonical deposit. Start here for the big picture.\nPart II — The Contract is the conceptual core: the three roles, the session-level mode that governs network access, how that contract is wired into a repository, and the two cross-cutting mechanisms — provenance sidecars and the standard error envelope — that make the toolkit trustworthy.\nPart III — The API (cross-language) is the daily reference, one chapter per capability family: IO, the external-API contract, aggregation, vintage sync, and scaffolding with the contract auditor. Every chapter presents R, Python, and Stata side by side and is explicit about coverage gaps.\nPart IV — Adoption & Operations is for adopters and maintainers: the vendoring model, a worked onboarding example, running the contract auditor in CI, and the project’s versioning and release discipline.\nAppendices collect the dense reference material: the coverage matrix (A), the provenance sidecar schema (B), the error taxonomy (C), a full function reference (D), and a glossary (E).\n\nIf you are new, read the architecture chapter in Part I and the roles chapter in Part II, then turn to the IO chapter in Part III. Those three give you enough to use the toolkit safely. If you are here to adopt it into a new repository, begin with the vendoring and onboarding chapters in Part IV, keeping the roles chapter to hand.",
+    "crumbs": [
+      "Preface"
+    ]
+  },
+  {
+    "objectID": "front-matter/preface.html#a-note-on-authorship",
+    "href": "front-matter/preface.html#a-note-on-authorship",
+    "title": "Preface",
+    "section": "A note on authorship",
+    "text": "A note on authorship\nThe twelve authors are the members of UNICEF Data & Analytics’ Database Managers Working Group — the staff whose shared operating practice the toolkit encodes. The toolkit did not arrive as a specification handed down to be implemented; it grew out of the conventions this group had already converged on, made explicit and then enforced in code. Authorship is therefore framed collectively: the contract is a shared body of practice, and crediting it as such is more honest than parcelling it out by file or function. The nine editors are the Chief Statistician, as chair, and the unit chiefs of UNICEF Data & Analytics, acknowledged in that editorial capacity rather than as authors. [editor-to-finalize: any first-person account of the toolkit’s origins, and the precise institutional positioning of this work within the wider data programme, are for the editors to settle.]\n\n\n\n\n\n\nParts of this handbook were drafted with generative-AI assistance. The AI did not author the book; it produced drafts that the named authors and editors are reviewing, editing, and fact-checking against the cso-toolkit codebase. On release, the named authors and editors take full responsibility for the methodological claims, factual statements, and code examples reproduced here.\n\n\n\nThe handbook text is released under Creative Commons Attribution 4.0 International (CC BY 4.0); the toolkit source code under r/, python/, and stata/ is released under the MIT License. Attribute each part under its own license.",
+    "crumbs": [
+      "Preface"
+    ]
+  },
+  {
+    "objectID": "front-matter/authors.html",
+    "href": "front-matter/authors.html",
+    "title": "About the authors",
+    "section": "",
+    "text": "Authors\nThis page credits the people behind cso-toolkit. The toolkit is not a single author’s library; it is the reusable, cross-language contract that the CSO’s Database Managers already run in practice — one way to read, write, compare, and merge data, call external APIs, aggregate, vintage-sync, and scaffold, identical in R, Python, and Stata. The named authors below are the staff whose shared working practice the toolkit codifies. This handbook documents the contract; it is complementary to the DW-Production handbook, which documents the child-data warehouse that is one of the toolkit’s consumers.\nThe authors are the members of UNICEF Data & Analytics’ Database Managers Working Group. The toolkit encodes their shared operating practice — the conventions they had converged on for reading, writing, aggregating, and re-running warehouse data — into one enforced contract. Authorship is therefore framed collectively: the helpers in r/, python/, and stata/ are the written form of a practice these colleagues hold in common, not a set of individually parcelled modules.\nListed alphabetically by surname.",
+    "crumbs": [
+      "About the authors"
+    ]
+  },
+  {
+    "objectID": "front-matter/authors.html#sec-authors",
+    "href": "front-matter/authors.html#sec-authors",
+    "title": "About the authors",
+    "section": "",
+    "text": "Garen Avanesian — UNICEF Data & Analytics, Database Managers Working Group\nSukhdeep Brar — UNICEF Data & Analytics, Database Managers Working Group\nJoel Conkle — UNICEF Data & Analytics, Database Managers Working Group\nYadigar Coskun — UNICEF Data & Analytics, Database Managers Working Group\nAyca Donmez — UNICEF Data & Analytics, Database Managers Working Group\nLauren Francis — UNICEF Data & Analytics, Database Managers Working Group\nMunkhbadar Jugder — UNICEF Data & Analytics, Database Managers Working Group\nYang Liu — UNICEF Data & Analytics, Database Managers Working Group\nVrinda Mehra — UNICEF Data & Analytics, Database Managers Working Group\nGladys Babirye Bagandanswa Nacuka — UNICEF Data & Analytics, Database Managers Working Group\nDaniele Olivotti — UNICEF Data & Analytics, Database Managers Working Group\nSahar Zandinia — UNICEF Data & Analytics, Database Managers Working Group",
+    "crumbs": [
+      "About the authors"
+    ]
+  },
+  {
+    "objectID": "front-matter/authors.html#sec-authorship-framing",
+    "href": "front-matter/authors.html#sec-authorship-framing",
+    "title": "About the authors",
+    "section": "How authorship is framed",
+    "text": "How authorship is framed\nThe DW-Production handbook attributes work per sector and per file, because that book documents a warehouse whose pipelines split cleanly along sector lines. That model does not transfer to the toolkit. cso-toolkit is a single shared contract, not a collection of sector pipelines; its value is precisely that one helper behaves the same for every sector and every consumer. We therefore credit the authors collectively rather than carving the toolkit into per-person slices.\nThe collective credit is deliberate, not a placeholder for finer-grained attribution. The toolkit is the written form of a working practice the named authors hold in common: no single helper “belongs” to one of them, and the contract’s worth lies in its uniformity rather than in who wrote which line. Splitting it into per-person modules would misdescribe how the work was actually done.\n\n\n\n\n\n\nEditor to finalize. If, before release, the team decides to surface finer-grained credit (for example, by opening the repository’s commit history to multiple named authors, or by adding a CONTRIBUTORS file), this section should point readers there. As currently maintained, the repository does not carry a per-author commit ledger, so this page does not claim one.",
+    "crumbs": [
+      "About the authors"
+    ]
+  },
+  {
+    "objectID": "front-matter/authors.html#sec-editors",
+    "href": "front-matter/authors.html#sec-editors",
+    "title": "About the authors",
+    "section": "Editors",
+    "text": "Editors\nThe volume is edited by the Chief Statistician (chair) and the unit chiefs of UNICEF Data & Analytics. The editors review the handbook before release and sign off on the final manuscript. Unit chiefs are listed in this editorial capacity rather than as authors — the structure mirrors a conventional academic-volume model (contributing authors above, volume editors here).\nListed alphabetically by surname, with the chair first.\n\nJoão Pedro Azevedo — Chair (Editor). Chief Statistician and Deputy Director, Data and Analytics, UNICEF\nClaudia Cappa — Chief, Child Protection, Disability and Early Childhood Development, UNICEF Data & Analytics\nEnrique Delamónica — Chief, Child Poverty and Wellbeing, UNICEF Data & Analytics\nChika Hayashi — Chief, Nutrition, UNICEF Data & Analytics\nYves Jaques — Chief, Geospatial and Computational Analytics, UNICEF Data & Analytics\nMaria Muniz — Chief, Integrated Health Analytics, UNICEF Data & Analytics\nAndrea Rossi — Chief, Data Collection, UNICEF Data & Analytics\nTom Slaymaker — Chief, Climate, Water, Sanitation and Hygiene (JMP co-chair), UNICEF Data & Analytics\nDanzhen You — Chief, Child Health and Mortality (UN IGME co-chair), UNICEF Data & Analytics",
+    "crumbs": [
+      "About the authors"
+    ]
+  },
+  {
+    "objectID": "front-matter/authors.html#sec-ai-acknowledgement",
+    "href": "front-matter/authors.html#sec-ai-acknowledgement",
+    "title": "About the authors",
+    "section": "Acknowledgement of the use of AI tools",
+    "text": "Acknowledgement of the use of AI tools\nParts of this handbook were drafted with generative-AI assistance. AI tools did not author the book — they generated drafts that the named authors and editors are reviewing, editing, and fact-checking against the cso-toolkit codebase. On release, the named authors and editors take full responsibility for the methodological claims, factual statements, worked examples, and verbatim code snippets reproduced here. AI assistance applies to the handbook prose only; the toolkit source code it documents is the work of the named authors’ team, encoding their shared operating practice.",
+    "crumbs": [
+      "About the authors"
+    ]
+  },
+  {
+    "objectID": "front-matter/authors.html#sec-statement-of-responsibility",
+    "href": "front-matter/authors.html#sec-statement-of-responsibility",
+    "title": "About the authors",
+    "section": "Statement of responsibility",
+    "text": "Statement of responsibility\nThe authors and the editors review the text of the handbook before release. They take responsibility for the descriptions of the contract, the cross-language coverage claims, the worked examples, and the verbatim code snippets reproduced in this book.\nWhere this book describes a capability as present in one language but not another, that reflects the real state of the code at the documented version, not an aspiration; the coverage matrix in Appendix A is the source of truth. Errors that survive into a released edition are the responsibility of the authors and the editors — not of the AI tools used during drafting, and not of UNICEF as an institution.\nReaders who find errors are invited to open an issue on the book’s repository. Errata are addressed in subsequent releases per the project’s versioning and release discipline (Part IV).",
+    "crumbs": [
+      "About the authors"
+    ]
+  },
+  {
+    "objectID": "front-matter/authors.html#sec-affiliations",
+    "href": "front-matter/authors.html#sec-affiliations",
+    "title": "About the authors",
+    "section": "Affiliations and disclaimer",
+    "text": "Affiliations and disclaimer\nThe authors and the editors are staff or consultants of UNICEF’s Data & Analytics section (Office of the Chief Statistician), within the Division of Data, Analytics, Planning and Monitoring (DAPM). The views expressed in this book are those of the named authors and editors and do not necessarily reflect the official position of UNICEF, its Executive Board, or its Member States. References to specific commercial products, processes, or services do not constitute or imply endorsement, recommendation, or favouring by UNICEF.\nThe handbook text is released under Creative Commons Attribution 4.0 International (CC BY 4.0); the toolkit source code under r/, python/, and stata/ is released under the MIT License. See How to cite this work for the dual-license detail and the suggested citation.",
+    "crumbs": [
+      "About the authors"
+    ]
+  },
+  {
+    "objectID": "front-matter/authors.html#sec-authors-xref",
+    "href": "front-matter/authors.html#sec-authors-xref",
+    "title": "About the authors",
+    "section": "Cross-references",
+    "text": "Cross-references\n\nHow to cite this work — suggested citation, BibTeX, and dual-license terms\nAppendix A — the cross-language coverage matrix (source of truth for what exists where)\ngithub.com/unicef-drp/cso-toolkit — the toolkit source code and issue tracker",
+    "crumbs": [
+      "About the authors"
+    ]
+  },
+  {
+    "objectID": "front-matter/acknowledgements.html",
+    "href": "front-matter/acknowledgements.html",
+    "title": "Acknowledgements",
+    "section": "",
+    "text": "Authors and editors\nThe toolkit and this handbook are the work of twelve named authors — the members of UNICEF Data & Analytics’ Database Managers Working Group, the staff whose shared operating practice the toolkit encodes — and nine named editors: the Chief Statistician, as chair, together with the unit chiefs of UNICEF Data & Analytics.\nSee About the authors for the full roster — the twelve authors (listed alphabetically by surname) and the nine editors with their unit-chief titles. The full citation, including the BibTeX entry, is on the How to cite this work page.",
+    "crumbs": [
+      "Acknowledgements"
+    ]
+  },
+  {
+    "objectID": "front-matter/acknowledgements.html#a-note-on-collective-authorship",
+    "href": "front-matter/acknowledgements.html#a-note-on-collective-authorship",
+    "title": "Acknowledgements",
+    "section": "A note on collective authorship",
+    "text": "A note on collective authorship\nThe cso-toolkit is not a collection of independently owned features; it is a single shared contract — one way to read, write, compare, and merge data, call external APIs, aggregate, version-sync, and scaffold — that the Database Managers Working Group converged on through shared practice across many sectors and three languages. The credit for that convergence belongs to the group, not to individuals holding discrete pieces of it. For that reason we name the authors collectively rather than apportioning per-function or per-language contributions. The full commit-level history remains reproducible from the repository:\ngit shortlog --summary --numbered --email --all",
+    "crumbs": [
+      "Acknowledgements"
+    ]
+  },
+  {
+    "objectID": "front-matter/acknowledgements.html#consumer-and-adopter-repositories",
+    "href": "front-matter/acknowledgements.html#consumer-and-adopter-repositories",
+    "title": "Acknowledgements",
+    "section": "Consumer and adopter repositories",
+    "text": "Consumer and adopter repositories\nThis toolkit exists to be vendored into other repositories — copied into a consumer’s own codebase rather than installed over the network — so that each consumer’s pipelines run against a pinned, drift-free copy of the contract. We thank the teams maintaining the repositories that adopt and exercise it:\n\nDW-Production — the operational copy of the UNICEF child-data warehouse, and the toolkit’s first and primary consumer. Its sector pipelines are where the contract is stress-tested in daily use. The companion DW-Production handbook documents that warehouse; this handbook documents the reusable contract those pipelines depend on. The two are complementary.\nFuture deposit-bearing repositories (editor-to-finalize: confirm which adopters to name at release — e.g. UNPD-Population, datalib) that vendor the toolkit to gain the same provenance, uniqueness, and producer/reviewer guarantees.\n\nAdoption feedback from these consumers — bug reports, coverage-gap requests, and onboarding friction — has shaped the toolkit’s API and is the reason its asymmetries between languages are documented honestly rather than papered over.",
+    "crumbs": [
+      "Acknowledgements"
+    ]
+  },
+  {
+    "objectID": "front-matter/acknowledgements.html#methodological-lineage",
+    "href": "front-matter/acknowledgements.html#methodological-lineage",
+    "title": "Acknowledgements",
+    "section": "Methodological lineage",
+    "text": "Methodological lineage\nThe toolkit does not invent a measurement methodology; it serves one. It is the reusable contract that makes the analytics behind UNICEF’s flagship statistical products reproducible, as those products are derived through the warehouse it serves. The practices it encodes build on:\n\nUNICEF’s MICS programme and its long history of country-led survey methodology\nWHO/UNICEF Joint Monitoring Programme (JMP) for WASH measurement\nWHO/UNICEF Estimates of National Immunization Coverage (WUENIC)\nThe UN Inter-agency Group for Child Mortality Estimation (UN IGME)\nUNESCO Institute for Statistics (UIS) for education indicators\nWorld Bank’s DIME Data Handbook as the genre exemplar this handbook follows, and the DIME Wiki community for ongoing reproducibility reference\n\nThe toolkit’s contribution is upstream of these: it is the plumbing — provenance sidecars, the isid uniqueness check, mode-aware path routing, and the vendoring model — that lets the numbers feeding these products be re-derived years later from a canonical deposit alone.",
+    "crumbs": [
+      "Acknowledgements"
+    ]
+  },
+  {
+    "objectID": "front-matter/acknowledgements.html#external-reviewers",
+    "href": "front-matter/acknowledgements.html#external-reviewers",
+    "title": "Acknowledgements",
+    "section": "External reviewers",
+    "text": "External reviewers\n(To be filled in after the pre-release external review pass. Do not name reviewers until they have confirmed.)",
+    "crumbs": [
+      "Acknowledgements"
+    ]
+  },
+  {
+    "objectID": "front-matter/acknowledgements.html#funding-and-support",
+    "href": "front-matter/acknowledgements.html#funding-and-support",
+    "title": "Acknowledgements",
+    "section": "Funding and support",
+    "text": "Funding and support\n(To be filled in per UNICEF Communications guidance. No funder is named pending that guidance.)",
+    "crumbs": [
+      "Acknowledgements"
+    ]
+  },
+  {
+    "objectID": "front-matter/acknowledgements.html#acknowledgement-of-the-use-of-ai-tools",
+    "href": "front-matter/acknowledgements.html#acknowledgement-of-the-use-of-ai-tools",
+    "title": "Acknowledgements",
+    "section": "Acknowledgement of the use of AI tools",
+    "text": "Acknowledgement of the use of AI tools\nParts of this handbook were drafted with generative-AI assistance. AI tools did not author the book — they generated drafts that the named authors and editors are reviewing, editing, and fact-checking against the cso-toolkit codebase. On release, the named authors and editors take full responsibility for the methodological claims, factual statements, worked examples, and verbatim code snippets reproduced here.",
+    "crumbs": [
+      "Acknowledgements"
+    ]
+  },
+  {
+    "objectID": "front-matter/acknowledgements.html#license",
+    "href": "front-matter/acknowledgements.html#license",
+    "title": "Acknowledgements",
+    "section": "License",
+    "text": "License\nThis repository is dual-licensed. The handbook text is released under Creative Commons Attribution 4.0 International (CC BY 4.0); the toolkit source code under r/, python/, and stata/ is released under the MIT License. Attribute each part under its own license. See How to cite this work for details.",
+    "crumbs": [
+      "Acknowledgements"
+    ]
+  },
+  {
+    "objectID": "front-matter/acknowledgements.html#tooling",
+    "href": "front-matter/acknowledgements.html#tooling",
+    "title": "Acknowledgements",
+    "section": "Tooling",
+    "text": "Tooling\nThe handbook is built with Quarto, an open-source scientific and technical publishing system. The toolkit itself is written in R, Python, and Stata, and this book shows all three siblings side by side. Continuous deployment runs on GitHub Actions; the built handbook is published at https://unicef-drp.github.io/cso-toolkit/handbook/.",
+    "crumbs": [
+      "Acknowledgements"
+    ]
+  },
+  {
+    "objectID": "front-matter/acknowledgements.html#affiliation-and-disclaimer",
+    "href": "front-matter/acknowledgements.html#affiliation-and-disclaimer",
+    "title": "Acknowledgements",
+    "section": "Affiliation and disclaimer",
+    "text": "Affiliation and disclaimer\nThis handbook is a publication of the UNICEF Chief Statistician Office — Data & Analytics (OSE). The statements in it are those of the authors and editors and do not necessarily reflect the policies or views of UNICEF. The designations employed and the presentation of material do not imply the expression of any opinion on the part of UNICEF.",
+    "crumbs": [
+      "Acknowledgements"
+    ]
+  },
+  {
+    "objectID": "front-matter/how-to-cite.html",
+    "href": "front-matter/how-to-cite.html",
+    "title": "How to cite this work",
+    "section": "",
+    "text": "Suggested citation (APA)\nAuthors are listed alphabetically by surname. Editors are the Chief Statistician (chair) and the unit chiefs of UNICEF Data & Analytics; they are acknowledged in that editorial capacity rather than as authors.",
+    "crumbs": [
+      "How to cite this work"
+    ]
+  },
+  {
+    "objectID": "front-matter/how-to-cite.html#suggested-citation-apa",
+    "href": "front-matter/how-to-cite.html#suggested-citation-apa",
+    "title": "How to cite this work",
+    "section": "",
+    "text": "Avanesian, G., Brar, S., Conkle, J., Coskun, Y., Donmez, A., Francis, L., Jugder, M., Liu, Y., Mehra, V., Nacuka, G. B. B., Olivotti, D., & Zandinia, S. (2026). The CSO Toolkit Handbook: One contract, three languages — reproducible analytics in R, Python, and Stata (J. P. Azevedo, C. Cappa, E. Delamónica, C. Hayashi, Y. Jaques, M. Muniz, A. Rossi, T. Slaymaker, & D. You, Eds.). UNICEF Chief Statistician Office. https://doi.org/10.5281/zenodo.XXXXXXX",
+    "crumbs": [
+      "How to cite this work"
+    ]
+  },
+  {
+    "objectID": "front-matter/how-to-cite.html#bibtex",
+    "href": "front-matter/how-to-cite.html#bibtex",
+    "title": "How to cite this work",
+    "section": "BibTeX",
+    "text": "BibTeX\n@book{csotoolkithandbook2026,\n  title     = {The CSO Toolkit Handbook: One contract, three languages ---\n               reproducible analytics in R, Python, and Stata},\n  author    = {Avanesian, Garen and Brar, Sukhdeep and Conkle, Joel and\n               Coskun, Yadigar and Donmez, Ayca and Francis, Lauren and\n               Jugder, Munkhbadar and Liu, Yang and Mehra, Vrinda and\n               Nacuka, Gladys Babirye Bagandanswa and\n               Olivotti, Daniele and Zandinia, Sahar},\n  editor    = {Azevedo, Jo{\\~a}o Pedro and Cappa, Claudia and\n               Delam{\\'o}nica, Enrique and Hayashi, Chika and\n               Jaques, Yves and Muniz, Maria and Rossi, Andrea and\n               Slaymaker, Tom and You, Danzhen},\n  year      = {2026},\n  publisher = {UNICEF Chief Statistician Office},\n  url       = {https://unicef-drp.github.io/cso-toolkit/handbook/},\n  doi       = {10.5281/zenodo.XXXXXXX},\n  edition   = {First},\n  note      = {The book documents the {\\tt cso-toolkit} codebase at\n                {\\tt github.com/unicef-drp/cso-toolkit}.\n                Edited by Jo{\\~a}o Pedro Azevedo (Chief Statistician,\n                UNICEF Data \\& Analytics) as chair, with the unit chiefs\n                of UNICEF Data \\& Analytics as co-editors.}\n}",
+    "crumbs": [
+      "How to cite this work"
+    ]
+  },
+  {
+    "objectID": "front-matter/how-to-cite.html#chicago-author-date",
+    "href": "front-matter/how-to-cite.html#chicago-author-date",
+    "title": "How to cite this work",
+    "section": "Chicago author-date",
+    "text": "Chicago author-date\n\nAvanesian, Garen, Sukhdeep Brar, Joel Conkle, Yadigar Coskun, Ayca Donmez, Lauren Francis, Munkhbadar Jugder, Yang Liu, Vrinda Mehra, Gladys Babirye Bagandanswa Nacuka, Daniele Olivotti, and Sahar Zandinia. 2026. The CSO Toolkit Handbook: One contract, three languages — reproducible analytics in R, Python, and Stata. Edited by João Pedro Azevedo, Claudia Cappa, Enrique Delamónica, Chika Hayashi, Yves Jaques, Maria Muniz, Andrea Rossi, Tom Slaymaker, and Danzhen You. UNICEF Chief Statistician Office. https://doi.org/10.5281/zenodo.XXXXXXX.",
+    "crumbs": [
+      "How to cite this work"
+    ]
+  },
+  {
+    "objectID": "front-matter/how-to-cite.html#versioned-citation",
+    "href": "front-matter/how-to-cite.html#versioned-citation",
+    "title": "How to cite this work",
+    "section": "Versioned citation",
+    "text": "Versioned citation\nTo cite a specific edition, append the version tag (e.g., v0.5.1) and use that release’s version DOI rather than the always-latest concept DOI. Each tagged release has its own version DOI; the concept DOI always resolves to the most recent version.",
+    "crumbs": [
+      "How to cite this work"
+    ]
+  },
+  {
+    "objectID": "front-matter/how-to-cite.html#license",
+    "href": "front-matter/how-to-cite.html#license",
+    "title": "How to cite this work",
+    "section": "License",
+    "text": "License\nThe handbook text is released under Creative Commons Attribution 4.0 International (CC BY 4.0). You are free to share and adapt the material with appropriate attribution.\nThis repository is dual-licensed. The handbook prose (the built book under docs/handbook/, and the documentation it is sourced from) is CC BY 4.0; the toolkit source code under r/, python/, and stata/ is released under the MIT License. A whole-repository Zenodo archive therefore contains both the CC BY 4.0 handbook and the MIT-licensed code — attribute each part under its own license.",
+    "crumbs": [
+      "How to cite this work"
+    ]
+  },
+  {
+    "objectID": "front-matter/how-to-cite.html#acknowledgement-of-the-use-of-ai-tools",
+    "href": "front-matter/how-to-cite.html#acknowledgement-of-the-use-of-ai-tools",
+    "title": "How to cite this work",
+    "section": "Acknowledgement of the use of AI tools",
+    "text": "Acknowledgement of the use of AI tools\nParts of this handbook were drafted with generative-AI assistance. AI tools did not author the book — they generated drafts that the named authors and editors are reviewing, editing, and fact-checking against the cso-toolkit codebase. On release, the named authors and editors take full responsibility for the methodological claims, factual statements, worked examples, and verbatim code snippets reproduced here.",
+    "crumbs": [
+      "How to cite this work"
+    ]
+  },
+  {
     "objectID": "chapters/11-why.html",
     "href": "chapters/11-why.html",
     "title": "2  Why a toolkit",

@@ -38,8 +38,8 @@ authors:
   - family-names: Zandinia
     given-names: Sahar
     affiliation: "UNICEF Data & Analytics"
-version: "0.5.0"
-date-released: "2026-06-21"
+version: "0.5.1"
+date-released: "2026-06-28"
 license: CC-BY-4.0
 repository-code: "https://github.com/unicef-drp/cso-toolkit"
 url: "https://unicef-drp.github.io/cso-toolkit/handbook/"
@@ -62,8 +62,8 @@ preferred-citation:
   year: 2026
   publisher:
     name: "UNICEF Chief Statistician Office"
-  version: "0.5.0"
-  date-released: "2026-06-21"
+  version: "0.5.1"
+  date-released: "2026-06-28"
   license: CC-BY-4.0
   url: "https://unicef-drp.github.io/cso-toolkit/handbook/"
   repository-code: "https://github.com/unicef-drp/cso-toolkit"
