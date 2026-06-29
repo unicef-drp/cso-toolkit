@@ -122,7 +122,7 @@ This is what makes a tag's immutability load-bearing. Reviewer mode forbids the 
 The check / pull surface is itself part of the contract, but it is **R-first**: the vintage-sync helpers (`cso_toolkit_check` / `cso_toolkit_diff` / `cso_toolkit_pull`) are exercised through the R sibling, and `cso_toolkit_pull()`'s file-refresh body is still being finished. A Stata consumer has no automated check or pull at all and edits `.toolkit_manifest.yml` by hand.
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 ```r
 # Producer-mode: is the pinned vintage behind upstream?
 cso_toolkit_check()
@@ -130,7 +130,7 @@ cso_toolkit_check()
 # Refresh the vendored files to a chosen tag (explicit, producer-only)
 cso_toolkit_pull(target_version = "v0.5.0")
 ```
-## Python
+#### Python {.unnumbered .unlisted}
 ```python
 # Coverage gap: the cso_toolkit_* vintage-sync helpers are R-first.
 # A Python consumer pins .toolkit_manifest.yml and refreshes the
@@ -138,7 +138,7 @@ cso_toolkit_pull(target_version = "v0.5.0")
 # pulled_version. See the vintage sync chapter and the coverage
 # matrix appendix.
 ```
-## Stata
+#### Stata {.unnumbered .unlisted}
 ```stata
 * Coverage gap: no Stata sibling of the vintage-sync helpers ships.
 * Stata consumers pin .toolkit_manifest.yml by hand and refresh the

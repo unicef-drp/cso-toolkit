@@ -28,21 +28,21 @@ The toolkit's helpers group into five capability families, and each family is th
 One way to read, write, compare, and merge data, auto-dispatched by file extension: CSV / TSV / XLSX / RDS-or-PKL (R / Python native) / DTA (Stata) / Parquet / JSON / YAML. The family's public functions are `dw_save`, `dw_use`, `dw_compare`, `dw_merge`, `dw_isid`, `dw_verify_z`, `dw_stage`, and `dw_root`: the first four read, write, diff, and join; `dw_isid` enforces row uniqueness; `dw_verify_z` checks the Z: mirror byte-for-byte; `dw_stage` copies a canonical input into the reviewer sandbox under a hash guard; and `dw_root` resolves a logical store (`wrk` / `raw` / `meta`) to its filesystem path. Writes emit a `.provenance.json` sidecar by default; canonical writes are carbon-copied to the Z: drive; canonical reads run an integrity check. See the IO contract chapter for the full treatment.
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 ```r
 dw_save(df, name = "dw_ed_edu.csv", sector = "ed", kind = "wrk",
         isid = "REF_AREA",
         metadata = list(title = "Education indicators", vintage = "2026-05"))
 df <- dw_use(name = "dw_ed_edu.csv", sector = "ed", kind = "wrk")
 ```
-## Python
+#### Python {.unnumbered .unlisted}
 ```python
 dw_save(df, name="dw_ed_edu.csv", sector="ed", kind="wrk",
         isid=["REF_AREA"],
         metadata={"title": "Education indicators", "vintage": "2026-05"})
 df = dw_use(name="dw_ed_edu.csv", sector="ed", kind="wrk")
 ```
-## Stata
+#### Stata {.unnumbered .unlisted}
 ```stata
 dw_save, filename("dw_ed_edu.dta")  ///
     path("$teamsWrkData/ed")        ///
@@ -60,19 +60,19 @@ Here `isid` names the columns that uniquely identify a row; the IO family enforc
 One mode-aware wrapper around ten external data sources — UNESCO UIS, generic SDMX, the UNICEF SDMX codelist endpoint, World Bank WDI, ILO SDMX, the UNSD SDG API, pinned-commit GitHub-raw, and generic HTTP / JSON. A producer hits the live API and caches the response under `_apis/<api>/<cache_key>.<ext>`; a reviewer reads only from that cache and is physically prevented from reaching the network. Secrets in caller keyword arguments are redacted before they reach the provenance sidecar. See the external-API contract chapter.
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 ```r
 df <- dw_api_fetch(api = "wb", indicator = "SE.PRM.NENR", refresh = TRUE)
 df <- dw_api_cached(api = "wb", cache_key = "SE.PRM.NENR")
 dw_api_inventory(api = "wb")
 ```
-## Python
+#### Python {.unnumbered .unlisted}
 ```python
 df = dw_api_fetch(api="wb", indicator="SE.PRM.NENR", refresh=True)
 df = dw_api_cached(api="wb", cache_key="SE.PRM.NENR")
 dw_api_inventory(api="wb")
 ```
-## Stata
+#### Stata {.unnumbered .unlisted}
 ```stata
 * No API *fetch* wrapper exists in the Stata sibling.
 * Stata producers fetch upstream data through the R or Python sibling,
@@ -125,12 +125,12 @@ Cross-language parity is the design goal, not a finished fact. The gaps worth na
 - **No Stata API *fetch* wrapper.** `dw_api_fetch` / `dw_api_cached` / `dw_api_inventory` are R and Python only. Stata ships the enforcement half (`dw_require_no_api`) but not the fetch half.
 - **No Stata parquet or RDS, and `dw_merge` / `dw_verify_z` are not in the Stata sibling.** `dw_isid` in Stata is embedded inside `dw_save` (the `idvars()` option) rather than exposed as its own command. (The read contract, `dw_use`, *is* now in Stata as of v0.4.0; issue #5 is closed.)
 - **The demographics helpers `dw_pop` / `dw_regions` are R-only.** Neither has a Python or Stata sibling yet; a non-R consumer that needs population denominators or regional groupings routes through the R sibling or a pre-computed artefact.
-- **No Python autodoc.** R has Roxygen-complete reference documentation (34 `.Rd` files plus a pkgdown site configured in `r/_pkgdown.yml`); Python has no equivalent pkgdown-style generated reference, only hand-written references and module READMEs, and the Python sibling trails the R release.
+- **No Python autodoc.** R has Roxygen-complete reference documentation (34 `.Rd` files plus a pkgdown site configured in `r/_pkgdown.yml`); Python has no equivalent pkgdown-style generated reference, only hand-written references and module READMEs.
 
 Treat the parity claim as "same names, same behaviour where a function exists in both," not "every function exists everywhere."
 :::
 
-Maturity differs by sibling as well as by function. The R sibling was feature-complete first and leads the release line; the Python sibling followed as a full port (nine functional modules and twenty-eight public entries) but trails the current R release; the Stata sibling shipped a focused subset and is still filling in. As of v0.5.0 the Stata sibling exposes six commands — `dw_save`, `dw_use`, `dw_compare`, `dw_mkdir`, `dw_load_config`, and `dw_require_no_api`. The versioning-and-releases chapter traces this timeline; the point for the architecture is that a consumer chooses *one* sibling and gets whatever that sibling implements, so the choice of language is also a choice of current coverage.
+Maturity differs by sibling as well as by function. The R sibling was feature-complete first and leads the release line; the Python sibling followed as a full port (nine functional modules and twenty-eight public entries) but has not yet reached full feature parity with it; the Stata sibling shipped a focused subset and is still filling in. As of v0.5.0 the Stata sibling exposes six commands — `dw_save`, `dw_use`, `dw_compare`, `dw_mkdir`, `dw_load_config`, and `dw_require_no_api`. The versioning-and-releases chapter traces this timeline; the point for the architecture is that a consumer chooses *one* sibling and gets whatever that sibling implements, so the choice of language is also a choice of current coverage.
 
 ## Layer three — consumer repositories vendor the helpers
 

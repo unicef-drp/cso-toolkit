@@ -22,6 +22,7 @@ book:
     - front-matter/authors.qmd
     - front-matter/acknowledgements.qmd
     - front-matter/how-to-cite.qmd
+    - introduction.qmd
     - part: "Part I — Why & Architecture"
       chapters:
         - chapters/11-why.qmd
@@ -59,6 +60,18 @@ format:
     code-copy: true
     code-overflow: wrap
     callout-appearance: simple
+  pdf:
+    pdf-engine: xelatex
+    papersize: a4
+    toc: true
+    toc-depth: 2
+    colorlinks: true
+    code-overflow: wrap
+    include-in-header:
+      text: |
+        \usepackage{eso-pic}
+        \AtBeginDocument{\AddToShipoutPictureFG*{\put(0,0){\includegraphics[width=\paperwidth,height=\paperheight]{images/cover-A.png}}}}
+        \AtBeginDocument{\pagenumbering{roman}}
 
 execute:
   freeze: auto

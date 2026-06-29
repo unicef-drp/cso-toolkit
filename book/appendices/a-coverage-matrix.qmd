@@ -32,7 +32,7 @@ The mode contract itself is at parity across all three languages: a reviewer-ses
 
 ::: {.callout-note}
 ## A version skew worth knowing
-The repository headline version is **v0.5.0**, but that number is carried by the R package (`csotoolkit` 0.5.0) and the shared `NEWS.md`. The Python package still declares `__version__ = "0.4.0"`. Treat the languages as released on slightly different cadences: R leads, Python trails by a point release, and the Stata package versions per-command via its `.ado` files. Where a cell below says "Yes" for a recent feature, R is the sibling guaranteed to have it first.
+The repository headline version is **v0.5.1**, carried by the R package (`csotoolkit` 0.5.1), the Python package (`__version__ = "0.5.1"`), and the shared `NEWS.md`. The R and Python version stamps are now level; the Stata package versions per-command via its `.ado` files. A matching version number is a floor, not a guarantee of feature parity, though: where a cell below says "Yes" for a recent feature, R is the sibling guaranteed to have it first.
 :::
 
 ## Function coverage matrix
@@ -69,19 +69,19 @@ A few caveats sit behind the "Yes" cells:
 The `dw_save` call is the clearest illustration of name-and-argument parity with idiomatic spelling:
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 ```r
 dw_save(df, name = "dw_ed_edu.csv", sector = "ed", kind = "wrk",
         isid = "REF_AREA",
         metadata = list(title = "Education indicators", vintage = "2026-05"))
 ```
-## Python
+#### Python {.unnumbered .unlisted}
 ```python
 dw_save(df, name="dw_ed_edu.csv", sector="ed", kind="wrk",
         isid=["REF_AREA"],
         metadata={"title": "Education indicators", "vintage": "2026-05"})
 ```
-## Stata
+#### Stata {.unnumbered .unlisted}
 ```stata
 dw_save, filename("dw_ed_edu.dta")   ///
     path("$teamsWrkData/ed")         ///
@@ -113,17 +113,17 @@ A Stata-only pipeline cannot acquire fresh upstream data on its own. If your sec
 R and Python share the full `api=` dispatch surface — **ten** keys, identical on both sides: `uis`, `sdmx`, `sdmx_codelist`, `wb`, `wb_indicators`, `ilo`, `unsd_sdg`, `github_raw`, `http`, and `json_get`. For all ten, parity is complete.
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 ```r
 df <- dw_api_fetch(api = "wb", cache_key = "wb_SI.POV.DDAY",
                    indicator = "SI.POV.DDAY", country = "AGO")
 ```
-## Python
+#### Python {.unnumbered .unlisted}
 ```python
 df = dw_api_fetch(api="wb", cache_key="wb_SI.POV.DDAY",
                   indicator="SI.POV.DDAY", country="AGO")
 ```
-## Stata
+#### Stata {.unnumbered .unlisted}
 ```stata
 * No dw_api_fetch in Stata. Pull in R/Python, then:
 dw_use , filename("wb_SI.POV.DDAY.dta") path("$teamsRawData/_apis/wb")
@@ -142,22 +142,22 @@ dw_use , filename("wb_SI.POV.DDAY.dta") path("$teamsRawData/_apis/wb")
 | `dw_pop` | Yes | n/a | n/a |
 | `dw_regions` | Yes | n/a | n/a |
 
-Most of the aggregation family is R-and-Python; the two demographics convenience wrappers — `dw_pop` and `dw_regions`, added at v0.5.0 — are R-only. None of these functions has a Stata sibling, and none is on the roadmap. This is a scope decision: Stata sector pipelines aggregate with native commands (`collapse`, `egen`). `dw_nestweight` ports the World Bank EduAnalyticsToolkit's Stata command `edukit_nestweight` to R and Python; it was deliberately not ported back to Stata, since a Stata pipeline can call the upstream `edukit` command directly. `dw_pop` wraps `dw_api_fetch()` for the World Bank total-population indicator (`SP.POP.TOTL`); `dw_regions` fetches the UNICEF region taxonomy and appends regional aggregates computed via `aggregate_data_v2()`. Both ship in the R package only — Python and Stata siblings are deferred (the Python package trails R by a point release).
+Most of the aggregation family is R-and-Python; the two demographics convenience wrappers — `dw_pop` and `dw_regions`, added at v0.4.0 — are R-only. None of these functions has a Stata sibling, and none is on the roadmap. This is a scope decision: Stata sector pipelines aggregate with native commands (`collapse`, `egen`). `dw_nestweight` ports the World Bank EduAnalyticsToolkit's Stata command `edukit_nestweight` to R and Python; it was deliberately not ported back to Stata, since a Stata pipeline can call the upstream `edukit` command directly. `dw_pop` wraps `dw_api_fetch()` for the World Bank total-population indicator (`SP.POP.TOTL`); `dw_regions` fetches the UNICEF region taxonomy and appends regional aggregates computed via `aggregate_data_v2()`. Both ship in the R package only — Python and Stata siblings are deferred.
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 ```r
 out <- aggregate_data_v2(df, value = "OBS_VALUE", by = "REGION",
                          method = "weighted_mean", weight = "POP",
                          coverage_threshold = 0.5)
 ```
-## Python
+#### Python {.unnumbered .unlisted}
 ```python
 out = aggregate_data_v2(df, value="OBS_VALUE", by="REGION",
                         method="weighted_mean", weight="POP",
                         coverage_threshold=0.5)
 ```
-## Stata
+#### Stata {.unnumbered .unlisted}
 ```stata
 * No aggregate_data_v2 in Stata. Aggregate natively (collapse / egen)
 * or perform the aggregation in R/Python and dw_save the result for Stata.
@@ -250,8 +250,8 @@ The headline gaps:
 
 ## Summary: how complete is each sibling?
 
-- **R** is the reference implementation: every capability family, the full format set including `.rds` and gzipped CSV/TSV, the only generated reference site, and the only CI-gated test suite. It also carries the highest version (v0.5.0). If a behaviour is ambiguous, R defines it.
-- **Python** is a near-complete functional port — core IO (including `.pkl`), all ten external-API dispatch keys, aggregation, vintage sync, and scaffolding — with full type hints, but no generated reference site, CI-manual-only testing, a few R-only helpers it has not yet picked up (`dw_stage`, `dw_root`, `dw_pop`, `dw_regions`), and a version (0.4.0) that trails R by a point release.
+- **R** is the reference implementation: every capability family, the full format set including `.rds` and gzipped CSV/TSV, the only generated reference site, and the only CI-gated test suite. Its version stamp is v0.5.1, level with Python. If a behaviour is ambiguous, R defines it.
+- **Python** is a near-complete functional port — core IO (including `.pkl`), all ten external-API dispatch keys, aggregation, vintage sync, and scaffolding — with full type hints, but no generated reference site, CI-manual-only testing, a few R-only helpers it has not yet picked up (`dw_stage`, `dw_root`, `dw_pop`, `dw_regions`). Its version stamp now matches R at 0.5.1, though those helper gaps remain.
 - **Stata** is a deliberately scoped subset: full IO and mode contract for `.dta` / `.csv` / `.xlsx`, the reviewer no-API gate, recursive `mkdir`, and config loading — but **no external-API wrapper, no aggregation, no vintage-sync helpers, no contract auditor, no Parquet/binary formats, and no automated tests**. It enforces every half of the mode contract it can reach, and routes everything else through R or Python.
 
 When you vendor, choose the language that fits the pipeline — and where a Stata pipeline needs a capability this matrix marks "Route via R/Python," plan that crossing explicitly. The vendoring-model and onboarding chapters walk through how to wire a multi-language sector so the crossings are clean.

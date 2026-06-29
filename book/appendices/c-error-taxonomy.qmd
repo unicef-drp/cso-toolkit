@@ -52,21 +52,21 @@ This is the canonical example of the whole envelope convention. A `dw_save()` wh
 The Z: branch of this check arrived in v0.4.0 (issue #14); v0.3.0 refused only Teams-canonical writes. The fix is to point the write at your sandbox — in reviewer mode the profile's `teamsWrkData` should already resolve there, so the artefact lands outside the deposit. The escape hatch exists for one case only: you genuinely are the Database Manager seeding a one-time cache into the canonical store. Then pass the explicit flag:
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 
 ```r
 dw_save(df, name = "dw_ed_edu.csv", sector = "ed", kind = "wrk",
         allow_canonical_write = TRUE)
 ```
 
-## Python
+#### Python {.unnumbered .unlisted}
 
 ```python
 dw_save(df, name="dw_ed_edu.csv", sector="ed", kind="wrk",
         allow_canonical_write=True)
 ```
 
-## Stata
+#### Stata {.unnumbered .unlisted}
 
 ```stata
 * Stata's dw_save guards canonical + Z: writes via $dw_mode and accepts
@@ -179,19 +179,19 @@ Which path you are on depends on your role and the cache state:
 So if you see a transport failure at all, you are necessarily a producer: a reviewer never reaches the transport layer. The toolkit cannot retry upstream availability for you. Re-run once the source is reachable; the producer-side cache then absorbs the result so the reviewer never depends on upstream uptime. (UNICEF SDMX, in particular, is prone to multi-hour 403 bursts — the cache is exactly the buffer that decouples reviewers from those bursts.) Use `dw_api_inventory()` to confirm what is already cached before re-fetching:
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 
 ```r
 dw_api_inventory("wb")    # what's cached for the World Bank source?
 ```
 
-## Python
+#### Python {.unnumbered .unlisted}
 
 ```python
 dw_api_inventory("wb")    # DataFrame: api / cache_key / ext / size_bytes / mtime / fetched_at
 ```
 
-## Stata
+#### Stata {.unnumbered .unlisted}
 
 ```stata
 * No API wrapper in the Stata sibling — dw_api_fetch / dw_api_cached /
@@ -220,7 +220,7 @@ This category protects the *content* of an artefact, not the *permission* to wri
 ```
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 
 ```r
 dw_save(df, name = "dw_ed_edu.csv", sector = "ed", kind = "wrk",
@@ -228,7 +228,7 @@ dw_save(df, name = "dw_ed_edu.csv", sector = "ed", kind = "wrk",
                  "WEALTH_QUINTILE","RESIDENCE","TIME_PERIOD"))
 ```
 
-## Python
+#### Python {.unnumbered .unlisted}
 
 ```python
 dw_save(df, name="dw_ed_edu.csv", sector="ed", kind="wrk",
@@ -236,7 +236,7 @@ dw_save(df, name="dw_ed_edu.csv", sector="ed", kind="wrk",
               "WEALTH_QUINTILE","RESIDENCE","TIME_PERIOD"])
 ```
 
-## Stata
+#### Stata {.unnumbered .unlisted}
 
 ```stata
 dw_save, filename("dw_ed_edu.dta") path("$teamsWrkData/ed") ///
@@ -279,7 +279,7 @@ The toolkit is **vendored**, not installed over the network: consumers copy the 
 When the pin matches the upstream tag, the log reads `(up to date)` instead.
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 
 ```r
 cso_toolkit_check()       # logs if the pinned version trails the upstream tag
@@ -287,7 +287,7 @@ cso_toolkit_diff()        # what changed between pinned and latest
 cso_toolkit_pull()        # refresh the vendored copy (producer / online only)
 ```
 
-## Python
+#### Python {.unnumbered .unlisted}
 
 ```python
 cso_toolkit_check()
@@ -295,7 +295,7 @@ cso_toolkit_diff()
 cso_toolkit_pull()
 ```
 
-## Stata
+#### Stata {.unnumbered .unlisted}
 
 ```stata
 * The vintage-sync family (cso_toolkit_check / _diff / _pull) is R + Python

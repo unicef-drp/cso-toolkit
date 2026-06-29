@@ -23,19 +23,19 @@ The single authoritative copy of a sector's deposited artefacts — the `dw_<sec
 The static-analysis helper, `test_scripts()`, that recursively scans a directory of R or Python scripts and flags any direct call to a raw file-IO or external-API command the toolkit is meant to wrap — for example `read_csv`, `pd.read_csv`, `httr::GET`, `requests.get`, `rsdmx::readSDMX`, or `sdmx.Client`. It exists to keep a vendoring repo from quietly drifting back to un-wrapped IO. A per-line escape hatch, `# cso-allow: <rule-id>`, suppresses an intentional exception; `error_on_violation = TRUE` turns it into a build gate. The auditor is R + Python only; there is no Stata sibling. See the scaffolding and contract auditor chapter and the CI chapter.
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 
 ```r
 test_scripts("01_dw_prep/", error_on_violation = TRUE)
 ```
 
-## Python
+#### Python {.unnumbered .unlisted}
 
 ```python
 test_scripts("01_dw_prep/", error_on_violation=True)
 ```
 
-## Stata
+#### Stata {.unnumbered .unlisted}
 
 ```stata
 * Not implemented — the contract auditor has no Stata sibling.
@@ -49,7 +49,7 @@ The minimum population coverage, expressed as a fraction in `[0, 1]`, that an ag
 
 ## Cross-language parity
 
-The toolkit's design commitment that the same operation carries the same function name and the same behaviour across R, Python, and Stata, sharing a single provenance sidecar schema, mode-aware path routing, and one error-envelope shape. Parity is the goal, not yet a completed state: Stata has no external-API wrapper and no Parquet support; `dw_merge` and `dw_verify_z` are R + Python only; `dw_root`, `dw_stage`, `dw_pop`, and `dw_regions` are R-only; the contract auditor and the aggregation family have no Stata siblings; and the Python reference is hand-written (no pkgdown-style autodoc) and trails the R release — its package version lags the latest R tag. The coverage matrix appendix records the gaps function by function.
+The toolkit's design commitment that the same operation carries the same function name and the same behaviour across R, Python, and Stata, sharing a single provenance sidecar schema, mode-aware path routing, and one error-envelope shape. Parity is the goal, not yet a completed state: Stata has no external-API wrapper and no Parquet support; `dw_merge` and `dw_verify_z` are R + Python only; `dw_root`, `dw_stage`, `dw_pop`, and `dw_regions` are R-only; the contract auditor and the aggregation family have no Stata siblings; and the Python reference is hand-written (no pkgdown-style autodoc). The coverage matrix appendix records the gaps function by function.
 
 ## DBM / DBR / DBP
 
@@ -64,20 +64,20 @@ The session-level boolean that gates every external network call. It is `TRUE` i
 The session property — `"producer"` or `"reviewer"` — that selects which side of the mode contract a session operates under. It is read once at profile-load time from the user's block in `~/.config/user_config.yml`; it is **required**, and profile loading hard-fails if it is absent (defaulting either way is unsafe). From it the profile derives the path globals (`teamsWrkData` and its `*Canonical` aliases) and `dw_apis_allowed`. It is a session property, never a per-call argument. See the roles and mode contract chapter.
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 
 ```r
 dw_mode <- "producer"          # normally set by profile_<repo>.R from YAML
 dw_apis_allowed <- TRUE
 ```
 
-## Python
+#### Python {.unnumbered .unlisted}
 
 ```python
 _state.configure(dw_mode="producer", dw_apis_allowed=True)
 ```
 
-## Stata
+#### Stata {.unnumbered .unlisted}
 
 ```stata
 global dw_mode "producer"
@@ -117,21 +117,21 @@ The behaviour, added to `dw_use()` in v0.4.0, by which a producer may pass an HT
 The capability family that gives every read, write, compare, and merge a single shape: `dw_save`, `dw_use`, `dw_compare`, `dw_merge`, `dw_isid`, and `dw_verify_z`, alongside two path-and-staging helpers — `dw_root()` (resolves the mode-aware `wrk` / `raw` / `meta` root so sector scripts build paths without knowing producer-vs-reviewer mode) and `dw_stage()` (a reviewer-mode helper that copies a canonical input into the sandbox once, then hash-guards the staged copy on every later run; in producer mode it is a no-op). Dispatch is automatic by file extension (CSV / TSV / XLSX / RDS-or-PKL / DTA / Parquet / JSON / YAML); every write runs the `isid` uniqueness check, emits a provenance sidecar, mirrors to Teams and Z: on canonical writes, and verifies integrity on canonical reads. Coverage is not uniform: `dw_merge` and `dw_verify_z` are R + Python only, `dw_root` and `dw_stage` are R-only, and Stata has no Parquet or RDS support (`dw_use.ado` reads `.dta` / `.csv` / `.xlsx` only — pipelines needing other formats route through R or Python and `dw_save()` to `.dta` for Stata consumption). See the IO contract chapter.
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 
 ```r
 dw_save(df, name = "dw_ed_edu.csv", sector = "ed", kind = "wrk",
         isid = "REF_AREA")
 ```
 
-## Python
+#### Python {.unnumbered .unlisted}
 
 ```python
 dw_save(df, name="dw_ed_edu.csv", sector="ed", kind="wrk",
         isid=["REF_AREA"])
 ```
 
-## Stata
+#### Stata {.unnumbered .unlisted}
 
 ```stata
 dw_save, filename("dw_ed_edu.dta") path("$teamsWrkData/ed") idvars(REF_AREA INDICATOR)
@@ -144,19 +144,19 @@ dw_save, filename("dw_ed_edu.dta") path("$teamsWrkData/ed") idvars(REF_AREA INDI
 A uniqueness check named after the Stata command of the same idea: assert that a given set of columns identifies rows uniquely (no duplicate key tuples). The toolkit exposes it both as a standalone helper, `dw_isid(df, keys)`, and as the `isid =` argument to `dw_save()`, which runs the check automatically before writing. A failed `isid` check is a write-blocking error: a non-unique key means the deposit cannot be trusted as a keyed table. In Stata the check is embedded in `dw_save` via `idvars(...)` rather than exposed as a separate command.
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 
 ```r
 dw_isid(df, keys = c("REF_AREA", "INDICATOR", "SEX"))
 ```
 
-## Python
+#### Python {.unnumbered .unlisted}
 
 ```python
 dw_isid(df, keys=["REF_AREA", "INDICATOR", "SEX"])
 ```
 
-## Stata
+#### Stata {.unnumbered .unlisted}
 
 ```stata
 dw_save, filename("out.dta") path("$teamsWrkData/ed") idvars(REF_AREA INDICATOR SEX)
@@ -221,19 +221,19 @@ The capability family of consumer-side helpers that keep a vendored copy from si
 The carbon-copy of the canonical deposit kept on the UNICEF Azure file share (the `Z:` drive). A producer's canonical write is mirrored to Z: automatically and non-blockingly: a failed mirror emits an envelope-shaped warning rather than rolling back the primary write. On canonical reads, the toolkit can verify that the Teams copy and the Z: copy are byte-equal; `dw_verify_z()` exposes this check, and `dw_use()` runs it on canonical reads (`verify_z = "sha256"` for a deep check, `verify_z = FALSE` to skip). The mirror is a redundancy and integrity guarantee, not a separate deposit. `dw_verify_z` is R + Python only.
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 
 ```r
 dw_verify_z("013_wrkdata/dw_ed_edu.csv")
 ```
 
-## Python
+#### Python {.unnumbered .unlisted}
 
 ```python
 dw_verify_z("013_wrkdata/dw_ed_edu.csv")
 ```
 
-## Stata
+#### Stata {.unnumbered .unlisted}
 
 ```stata
 * Not implemented — dw_verify_z has no Stata sibling.
