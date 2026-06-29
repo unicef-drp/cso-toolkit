@@ -1,0 +1,136 @@
+cff-version: 1.2.0
+message: "If you use the CSO Toolkit Handbook or the cso-toolkit codebase, please cite it as below."
+title: "The CSO Toolkit Handbook"
+authors:
+  - family-names: Avanesian
+    given-names: Garen
+    affiliation: "UNICEF Data & Analytics"
+  - family-names: Brar
+    given-names: Sukhdeep
+    affiliation: "UNICEF Data & Analytics"
+  - family-names: Conkle
+    given-names: Joel
+    affiliation: "UNICEF Data & Analytics"
+  - family-names: Coskun
+    given-names: Yadigar
+    affiliation: "UNICEF Data & Analytics"
+  - family-names: Donmez
+    given-names: Ayca
+    affiliation: "UNICEF Data & Analytics"
+  - family-names: Francis
+    given-names: Lauren
+    affiliation: "UNICEF Data & Analytics"
+  - family-names: Jugder
+    given-names: Munkhbadar
+    affiliation: "UNICEF Data & Analytics"
+  - family-names: Liu
+    given-names: Yang
+    affiliation: "UNICEF Data & Analytics"
+  - family-names: Mehra
+    given-names: Vrinda
+    affiliation: "UNICEF Data & Analytics"
+  - family-names: Nacuka
+    given-names: "Gladys Babirye Bagandanswa"
+    affiliation: "UNICEF Data & Analytics"
+  - family-names: Olivotti
+    given-names: Daniele
+    affiliation: "UNICEF Data & Analytics"
+  - family-names: Zandinia
+    given-names: Sahar
+    affiliation: "UNICEF Data & Analytics"
+version: "0.5.1"
+date-released: "2026-06-28"
+license: CC-BY-4.0
+repository-code: "https://github.com/unicef-drp/cso-toolkit"
+url: "https://unicef-drp.github.io/cso-toolkit/handbook/"
+keywords:
+  - reproducibility
+  - data warehousing
+  - UNICEF
+  - child indicators
+  - provenance
+  - R
+  - Python
+  - Stata
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.XXXXXXX"
+    description: "Concept DOI (always resolves to the latest version; placeholder until reserved on first release)."
+preferred-citation:
+  type: book
+  title: "The CSO Toolkit Handbook: One contract, three languages — reproducible analytics in R, Python, and Stata"
+  year: 2026
+  publisher:
+    name: "UNICEF Chief Statistician Office"
+  version: "0.5.1"
+  date-released: "2026-06-28"
+  license: CC-BY-4.0
+  url: "https://unicef-drp.github.io/cso-toolkit/handbook/"
+  repository-code: "https://github.com/unicef-drp/cso-toolkit"
+  doi: "10.5281/zenodo.XXXXXXX"
+  authors:
+    - family-names: Avanesian
+      given-names: Garen
+      affiliation: "UNICEF Data & Analytics"
+    - family-names: Brar
+      given-names: Sukhdeep
+      affiliation: "UNICEF Data & Analytics"
+    - family-names: Conkle
+      given-names: Joel
+      affiliation: "UNICEF Data & Analytics"
+    - family-names: Coskun
+      given-names: Yadigar
+      affiliation: "UNICEF Data & Analytics"
+    - family-names: Donmez
+      given-names: Ayca
+      affiliation: "UNICEF Data & Analytics"
+    - family-names: Francis
+      given-names: Lauren
+      affiliation: "UNICEF Data & Analytics"
+    - family-names: Jugder
+      given-names: Munkhbadar
+      affiliation: "UNICEF Data & Analytics"
+    - family-names: Liu
+      given-names: Yang
+      affiliation: "UNICEF Data & Analytics"
+    - family-names: Mehra
+      given-names: Vrinda
+      affiliation: "UNICEF Data & Analytics"
+    - family-names: Nacuka
+      given-names: "Gladys Babirye Bagandanswa"
+      affiliation: "UNICEF Data & Analytics"
+    - family-names: Olivotti
+      given-names: Daniele
+      affiliation: "UNICEF Data & Analytics"
+    - family-names: Zandinia
+      given-names: Sahar
+      affiliation: "UNICEF Data & Analytics"
+  editors:
+    - family-names: Azevedo
+      given-names: "João Pedro"
+      affiliation: "UNICEF Data & Analytics"
+      email: jazevedo@unicef.org
+    - family-names: Cappa
+      given-names: Claudia
+      affiliation: "UNICEF Data & Analytics"
+    - family-names: Delamónica
+      given-names: Enrique
+      affiliation: "UNICEF Data & Analytics"
+    - family-names: Hayashi
+      given-names: Chika
+      affiliation: "UNICEF Data & Analytics"
+    - family-names: Jaques
+      given-names: Yves
+      affiliation: "UNICEF Data & Analytics"
+    - family-names: Muniz
+      given-names: Maria
+      affiliation: "UNICEF Data & Analytics"
+    - family-names: Rossi
+      given-names: Andrea
+      affiliation: "UNICEF Data & Analytics"
+    - family-names: Slaymaker
+      given-names: Tom
+      affiliation: "UNICEF Data & Analytics"
+    - family-names: You
+      given-names: Danzhen
+      affiliation: "UNICEF Data & Analytics"

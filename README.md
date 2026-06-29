@@ -10,6 +10,8 @@
 [![License: MIT (code) + CC BY 4.0 (docs)](https://img.shields.io/badge/license-MIT%20%2B%20CC--BY--4.0-blue)](LICENSE)
 [![Tag](https://img.shields.io/github/v/tag/unicef-drp/cso-toolkit?label=tag)](https://github.com/unicef-drp/cso-toolkit/releases)
 
+📖 **[The CSO Toolkit Handbook](https://unicef-drp.github.io/cso-toolkit/handbook/)** — the cross-language guide to the contract (R · Python · Stata).
+
 ---
 
 ## TL;DR
@@ -80,8 +82,9 @@ ambient `dplyr` version skew.
 ## Architecture at a glance
 
 ```mermaid
-flowchart LR
+flowchart TD
     subgraph EXT["External data sources"]
+        direction LR
         UIS[UIS]
         SDMX[SDMX]
         WB[World Bank]
@@ -114,6 +117,7 @@ flowchart LR
     end
 
     subgraph CANON["Canonical deposit"]
+        direction LR
         TEAMS["Teams folder<br/>060.DW-MASTER/"]
         ZDRIVE["Z: drive<br/>(carbon-copy mirror)"]
         HELIX["data.unicef.org<br/>+ SDMX downstream"]
@@ -152,7 +156,7 @@ the data warehouse, each with a strict capability boundary the toolkit
 enforces at every wrapped call site:
 
 ```mermaid
-flowchart LR
+flowchart TD
     A["UNICEF data sources<br/>(UIS · SDMX · WB · ILO · ...)"]
     B[("Teams folder<br/>+ Z: drive mirror<br/>(canonical deposit)")]
     C[("data.unicef.org<br/>+ SDMX feed<br/>+ Helix")]

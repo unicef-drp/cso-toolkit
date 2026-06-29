@@ -1,0 +1,214 @@
+# The vendoring model
+
+The most consequential design decision in `cso-toolkit` — the shared helper library behind DW-Production and its sibling analytics pipelines — is not in any of its functions. It is in how those functions reach the repositories that use them. The toolkit is **vendored, not installed**: a consuming repository copies the helper files into its own tree, commits them to its own git history, and pins the version it copied in a small manifest file. There is no live `source()`, no `pip install` at session start, no `net install` from a network location. Why the project chose vendoring, where the line falls between toolkit and consumer, and how the refresh flow keeps a vendored copy current without surprising a reviewer — those are the subjects of this chapter.
+
+## What "vendoring" means here
+
+Vendoring is the practice of copying a dependency's source code directly into your project rather than referencing it from an external package registry. When DW-Production (a consuming pipeline repository) adopts `cso-toolkit`, it does not declare a dependency that some installer resolves later. Instead, the canonical helper files — `dw_io.R`, `dw_api.R`, `cso_toolkit_sync.R`, and any siblings the pipeline actually uses — are copied from the toolkit's `r/R/` directory into DW-Production's own `00_functions/` directory and tracked in DW-Production's git. The copies freeze the vintage: every commit in the consuming repo records exactly which helper code was in effect at that point in history.
+
+A single small file records what was copied and from where. The `.toolkit_manifest.yml` (its schema lives in the toolkit's `templates/.toolkit_manifest.yml`) sits next to the vendored helpers and pins the version:
+
+```yaml
+source: "unicef-drp/cso-toolkit"
+pulled_version: "v0.4.0"
+pulled_date: "2026-05-26"
+pulled_by: "<your-name>"
+
+vendored:
+  - dw_io.R
+  - dw_api.R
+  - cso_toolkit_sync.R
+
+local_edits: []
+```
+
+The `source` field names the upstream repository; `pulled_version` is the tag that was in effect at the most recent copy; `vendored` lists the files that were copied; and `local_edits` lists any vendored files the consumer has since modified, so the refresh workflow knows to leave them alone. The manifest is committed alongside the helpers and updated every time the toolkit is re-pulled. (See the provenance sidecars chapter for the related sidecar manifests that travel with data deposits, and the appendix on the sidecar schema for field-level detail.)
+
+::: {.callout-note}
+The same manifest schema applies to every language. R and Python consumers vendor into `00_functions/`; Stata consumers copy `.ado` and `.sthlp` files into the project's `ado/` directory (or `PERSONAL` adopath) and pin the same `pulled_version`. The contract is identical; only the destination directory differs by language idiom.
+:::
+
+## Why vendor instead of install
+
+Four reasons drive the choice, and they reinforce one another. The toolkit's strategy document and README make the same case; the four points below restate what the project says explicitly.
+
+### 1. Reproducibility — vintage permanence
+
+A publication that cites a `dw_<sector>.csv` deposit in 2026 must, two years later, produce identical numbers when someone re-runs the pipeline. That guarantee fails the moment the helper code can drift out from under the analysis. With vendoring, every consuming repo's git history shows exactly which helper code was in effect at any commit — there is no situation where "the repo's pinned version was X but the running R session installed Y." A 2026-05 release that needs re-running uses the helper code as it stood in 2026-05, because that code is physically in the repo at that commit. Network sourcing, by contrast, resolves to *whatever is current at run time*, which is precisely the drift the toolkit exists to prevent.
+
+### 2. Producer-controlled refresh
+
+Toolkit updates are not pulled automatically. The producer reviews the release notes, decides whether the new vintage is appropriate for the current work, and explicitly refreshes. This deliberately reverses the usual package-manager default, where dependencies creep forward on their own. Here the producer holds the upgrade decision, and a vendored copy never changes until someone chooses to change it and commits the result. (See the versioning and releases chapter for how the toolkit signals what changed between versions.)
+
+### 3. Offline reviewer reproducibility
+
+A reviewer with no network access — on a plane, behind a corporate proxy, sitting in customs — can still re-run the full pipeline, because the vendored helpers are right there in the repo. This dovetails with the mode contract (see the roles and mode contract chapter): reviewer mode physically forbids external network calls, so a reviewer could not fetch helpers over the network even if the design allowed it. Vendoring is what makes the offline reviewer path coherent: the frozen canonical deposit, the frozen API cache, and the frozen helper code all travel with the repo.
+
+### 4. Cross-language symmetry
+
+A package model fits R and Python tolerably but fits Stata poorly. Stata has no native package-install path that matters for this workflow. Vendoring works uniformly across all three languages: copy the files in, pin the vintage, done. The R helpers copy into `00_functions/`, the Python modules into the same place, and the Stata `.ado`/`.sthlp` files into `ado/`. One model, three languages, no special case.
+
+A practical fifth consideration reinforces the rest: **AppLocker reality.** UNICEF laptops block many script-installable paths outright. Copying files into a project directory always works where a network installer might be silently denied.
+
+## Vendoring is the production model — not the only path
+
+For day-to-day local development, each language *also* supports a native install path. This is a convenience for working on the toolkit itself or experimenting, not the model that consuming repositories ship with.
+
+::: {.panel-tabset}
+
+## R
+
+```r
+# Development convenience — install the package locally
+devtools::install_local("r/")
+
+# Production: vendored copies are sourced from 00_functions/
+source("00_functions/dw_io.R")
+source("00_functions/dw_api.R")
+```
+
+## Python
+
+```python
+# Development convenience — editable install
+# pip install -e python/
+
+# Production: import the vendored package after configuring the session
+from cso_toolkit import _state, dw_save, dw_use
+```
+
+## Stata
+
+```stata
+* Development convenience — extend the adopath to the toolkit source
+adopath ++ "C:/Github/myados/cso-toolkit/stata/src"
+
+* Production: copy src/ into the project's ado/ (or PERSONAL adopath);
+* Stata picks them up automatically once they are on the path.
+```
+
+:::
+
+In every language, the development install path is the exception and vendoring is the rule. The reproducibility, offline, and producer-control guarantees above all depend on the production path being vendored.
+
+## What lives in cso-toolkit vs. the consumer
+
+The boundary between the toolkit and its consumers is sharp, and keeping it sharp is what lets many repositories share one contract without leaking sector-specific detail upstream. The operative rule is simple: **if a helper would need to mention a specific sector to do its job, it does not belong in the toolkit.** The toolkit supplies the reproducibility floor — uniform IO, mode-aware API caching, provenance sidecars, the aggregation and scaffolding families — and the consumer supplies the domain logic that sits on top of it. The two tables below are the evidence for that rule.
+
+**Lives in `cso-toolkit`** — anything repo-neutral and reusable:
+
+| Subtree | Content |
+|---|---|
+| `r/R/` | Canonical R helper source (`dw_io.R`, `dw_api.R`, `cso_toolkit_sync.R`, aggregation, scaffolding, demographics) |
+| `python/src/` | Python siblings of the same helpers, plus `_state.py` for session configuration |
+| `stata/src/` | Stata `.ado` + `.sthlp` equivalents for the subset of helpers that fit Stata idioms |
+| `templates/` | Repo-neutral templates: `.toolkit_manifest.yml`, `dbm_submission_template.md` |
+| `docs/` | Canonical operational docs: roles and workflow, mode-contract integration, per-function references |
+| `tests/` | Unit and regression tests for the helpers |
+| `NEWS.md` + git tags | Per-version release notes and semantic-version tags |
+
+**Lives in the consumer, never in the toolkit** — anything sector- or repo-specific:
+
+- A consumer's profile script and its sector code
+- A consumer's `user_config.yml` (the producer/reviewer mode setting, paths, and the like)
+- Sector-specific data, indicator lists, and pipeline conductors
+- Anything that references a particular sector's domain
+
+This division is why new sectors and repositories — UNPD-Population, datalib, future deposit-bearing repos — inherit the floor for free instead of reinventing it. It is also why a drift problem the project hit early — four regional-metadata CSVs read independently across five sectors, with no shared vintage record — does not recur once everyone vendors the same helpers and pins them through one manifest.
+
+## The refresh decision flow
+
+A vendored copy goes stale the moment the toolkit tags a newer version. The sync helpers exist to surface that gap and to drive the upgrade — but only on the producer's terms. Three functions implement the flow, and they carry the same names across the languages that support them.
+
+::: {.callout-warning}
+**Two of the three sync helpers are stubs today.** `cso_toolkit_check` is fully implemented: it queries the upstream tag and reports whether you are behind. `cso_toolkit_diff` and `cso_toolkit_pull` are deliberate no-op stubs that validate state and explain themselves, but do not yet fetch or overwrite files; they will be wired once the upstream refresh path is finalized. The design intent below is fixed, so read Steps 3 and 4 as the contract those stubs will honor.
+:::
+
+::: {.panel-tabset}
+
+## R
+
+```r
+# At session start (producer mode), quietly check for a newer upstream tag
+res <- cso_toolkit_check(quiet = FALSE)
+
+# Inspect what would change before overwriting anything (stub today)
+cso_toolkit_diff()
+
+# Refresh the vendored copies to a target tag, prompting per file (stub today)
+cso_toolkit_pull("v0.5.0")
+```
+
+## Python
+
+```python
+from cso_toolkit import cso_toolkit_check, cso_toolkit_diff, cso_toolkit_pull
+
+res = cso_toolkit_check(quiet=False)
+cso_toolkit_diff()           # stub today
+cso_toolkit_pull("v0.5.0")   # stub today
+```
+
+## Stata
+
+```stata
+* No Stata sibling of the sync helpers exists.
+* Stata consumers refresh manually: re-copy stata/src/*.ado into ado/
+* and bump pulled_version in .toolkit_manifest.yml by hand.
+```
+
+:::
+
+::: {.callout-warning}
+**Coverage gap — Stata has no sync helper.** `cso_toolkit_check`, `cso_toolkit_diff`, and `cso_toolkit_pull` exist in R and Python only. The `stata/src/` directory ships `dw_save`, `dw_use`, `dw_compare`, `dw_mkdir`, `dw_require_no_api`, and `dw_load_config` — but no `cso_toolkit_sync` equivalent. A Stata consumer keeps its vendored vintage current by hand: re-copy the `.ado`/`.sthlp` files and edit `pulled_version` in the manifest. (See the cross-language coverage matrix appendix for the full parity picture.)
+:::
+
+The decision flow runs as follows.
+
+**Step 1 — Check (producer only, quiet by default).** At session start the producer runs `cso_toolkit_check()`. It reads the local `.toolkit_manifest.yml`, queries the upstream repository for its latest release tag, and compares that tag against the pinned `pulled_version`. The check is gated by the mode contract: if the session's `dw_apis_allowed` flag is not `TRUE` — that is, in reviewer mode — it returns immediately and silently. Reviewers never see this branch, because the contract forbids the GitHub lookup. The lookup itself prefers the `gh` CLI (`gh api repos/<source>/releases/latest --jq .tag_name`) and falls back to a raw `api.github.com` request — via `httr` in R, `requests` in Python — when `gh` is absent. If neither path reaches the network, the check returns `NULL` (R) or `None` (Python) and stays quiet.
+
+**Step 2 — Decide.** If a newer tag is detected, `cso_toolkit_check(quiet = FALSE)` logs a yellow alert: it names the pinned and upstream versions, points at the release notes, and suggests the exact `cso_toolkit_pull()` call to run. If the pinned version is current — or if `pulled_version` is set to `inrepo`, the convention for a copy whose helpers have been edited locally and should never trigger sync warnings — the check reports no update and stays quiet. Note how this differs from the `local_edits` list: `inrepo` is a manifest-wide switch on `pulled_version` that silences the whole comparison (the check skips any tag whose pinned value contains the string `inrepo`), whereas `local_edits` is a per-file skip list that lets the check still run but tells a future `cso_toolkit_pull()` which individual files to leave untouched. The producer now chooses: refresh, or keep the pinned vintage. Nothing changes unless the producer acts.
+
+**Step 3 — Diff (look before you leap).** `cso_toolkit_diff()` is the inspection step: by design it fetches each upstream file at the target tag and compares it against the vendored copy by `sha256`, so the producer can see exactly what would change before committing to an overwrite. Today it is a stub that explains itself and no-ops; the comparison logic lands once the upstream refresh path is wired.
+
+**Step 4 — Pull.** `cso_toolkit_pull("v0.5.0")` performs the refresh: for each file in the manifest it fetches the upstream version at the target tag, computes a `sha256` against the current vendored copy, and — when they differ — prompts per file (overwrite, skip, or show diff). Files listed under `local_edits` are skipped so a consumer's deliberate local divergence is never clobbered. It then updates the manifest's `pulled_version`, `pulled_date`, and hashes, and logs a summary. Like `check`, `pull` is producer-only: in reviewer mode it raises a mode-lock error rather than touching the network, with the standard three-part error message — what failed, why, and how to fix it — directing the user to switch to producer mode (see the error taxonomy appendix). This too is a stub today; before it does anything, it validates the manifest, the `source` key, and upstream reachability, and refuses loudly if any are missing.
+
+The decision flow, in outline:
+
+```text
+                  cso-toolkit (upstream)
+                  v0.1.0  v0.2.0  v0.3.0 ...
+                             |
+        (producer runs cso_toolkit_check() at session start)
+                             |
+                             v
+                  Newer tag detected?
+                  -----------------------------------
+                  YES: log a yellow alert with
+                       pinned version, upstream
+                       version, pointer to NEWS.md,
+                       and a suggested pull command
+                  NO:  stay silent
+                             |
+        (producer decides; reviewer never reaches this branch
+         because the check is gated by dw_apis_allowed)
+                             |
+                +------------+------------+
+                v                         v
+      cso_toolkit_pull("v0.2.0")    do nothing (keep pinned)
+       * fetch files at the tag      * vendored vintage is
+       * sha256-diff vs vendored       frozen until the next
+       * prompt per file               explicit pull
+       * update the manifest
+       * log a summary
+```
+
+Reviewers always run against whatever vintage the producer has pinned. If a reviewer wants to validate against a *different* vintage, they cannot do it from a reviewer-mode session — they do it through a separate producer-mode session, refresh the pin there, and commit. The mode contract and the vendoring model are two halves of the same guarantee: the reviewer's environment is frozen, and freezing the helper code is what makes the rest of the freeze meaningful.
+
+## Why not a package, in one sentence
+
+A package model would let a consuming repo's helper code drift independently of its git history, would fail offline, would surrender the upgrade decision to an installer, and would not fit Stata at all. Vendoring trades the small cost of an explicit refresh step for vintage permanence across three languages and any number of consumers — which is exactly the bargain a reproducibility-first toolkit should make.
+
+---
+
+The vendoring model is the connective tissue of everything else in this book. The IO and API contracts are only reproducible because the code that enforces them is frozen in the consumer's history; the mode contract's offline reviewer path is only coherent because the helpers travel with the repo. The next chapter walks through onboarding a repository end to end — copying the helpers, writing the manifest, wiring the profile — as a concrete worked example of this model in practice.

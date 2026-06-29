@@ -14,7 +14,7 @@ The pipeline has three distinct roles. They share the helpers in `00_functions/`
 The diagram below shows who reads, who writes, who pulls from external APIs, and where the mode contract draws hard lines. Solid arrows are normal flow; dashed arrows are read-only paths.
 
 ```mermaid
-flowchart LR
+flowchart TD
     APIs[External APIs<br/>UIS · SDMX · WB · ILO · UNSD]
     Cache[(API cache<br/>060.DW-MASTER/01_dw_prep/<br/>011_rawdata/_apis)]
     Pipeline[Sector pipeline]
@@ -67,7 +67,7 @@ Read the diagram by colour:
 ### Role-vs-action matrix
 
 ```mermaid
-flowchart LR
+flowchart TD
     subgraph Allowed
         PR_API[PRODUCER<br/>can call APIs]
         PR_CAN[PRODUCER<br/>can write canonical]

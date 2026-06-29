@@ -1,0 +1,74 @@
+---
+number-sections: false
+number-depth: 0
+order: 0
+audience: [all]
+status: stub
+last_reviewed: 2026-06-28
+---
+
+# Acknowledgements {.unnumbered}
+
+::: {.callout-note appearance="simple"}
+**Stub.** Authorship is framed collectively: this handbook documents a shared operating practice, and the contributions to that practice do not decompose cleanly into per-person, per-function credit. The named authors and editors are the people responsible for the toolkit and this book; they are listed in full on the [About the authors](authors.qmd) page. External reviewers and any funding acknowledgement are left as marked placeholders for the editor to finalize before the first tagged release. Personal passages flagged *editor-to-finalize* await confirmation from the people named.
+:::
+
+## Authors and editors
+
+The toolkit and this handbook are the work of twelve named authors — the members of UNICEF Data & Analytics' **Database Managers Working Group**, the staff whose shared operating practice the toolkit encodes — and nine named editors: the Chief Statistician, as chair, together with the unit chiefs of UNICEF Data & Analytics.
+
+See [About the authors](authors.qmd) for the full roster — the twelve authors (listed alphabetically by surname) and the nine editors with their unit-chief titles. The full citation, including the BibTeX entry, is on the [How to cite this work](how-to-cite.qmd) page.
+
+## A note on collective authorship
+
+The `cso-toolkit` is not a collection of independently owned features; it is a single shared contract — one way to read, write, compare, and merge data, call external APIs, aggregate, version-sync, and scaffold — that the Database Managers Working Group converged on through shared practice across many sectors and three languages. The credit for that convergence belongs to the group, not to individuals holding discrete pieces of it. For that reason we name the authors collectively rather than apportioning per-function or per-language contributions. The full commit-level history remains reproducible from the repository:
+
+```bash
+git shortlog --summary --numbered --email --all
+```
+
+## Consumer and adopter repositories
+
+This toolkit exists to be vendored into other repositories — copied into a consumer's own codebase rather than installed over the network — so that each consumer's pipelines run against a pinned, drift-free copy of the contract. We thank the teams maintaining the repositories that adopt and exercise it:
+
+- **`DW-Production`** — the operational copy of the UNICEF child-data warehouse, and the toolkit's first and primary consumer. Its sector pipelines are where the contract is stress-tested in daily use. The companion *DW-Production* handbook documents that warehouse; this handbook documents the reusable contract those pipelines depend on. The two are complementary.
+- **Future deposit-bearing repositories** *(editor-to-finalize: confirm which adopters to name at release — e.g. UNPD-Population, datalib)* that vendor the toolkit to gain the same provenance, uniqueness, and producer/reviewer guarantees.
+
+Adoption feedback from these consumers — bug reports, coverage-gap requests, and onboarding friction — has shaped the toolkit's API and is the reason its asymmetries between languages are documented honestly rather than papered over.
+
+## Methodological lineage
+
+The toolkit does not invent a measurement methodology; it serves one. It is the reusable contract that makes the analytics behind UNICEF's flagship statistical products reproducible, as those products are derived through the warehouse it serves. The practices it encodes build on:
+
+- UNICEF's MICS programme and its long history of country-led survey methodology
+- WHO/UNICEF Joint Monitoring Programme (JMP) for WASH measurement
+- WHO/UNICEF Estimates of National Immunization Coverage (WUENIC)
+- The UN Inter-agency Group for Child Mortality Estimation (UN IGME)
+- UNESCO Institute for Statistics (UIS) for education indicators
+- World Bank's [DIME Data Handbook](https://worldbank.github.io/dime-data-handbook/) as the genre exemplar this handbook follows, and the DIME Wiki community for ongoing reproducibility reference
+
+The toolkit's contribution is upstream of these: it is the plumbing — provenance sidecars, the `isid` uniqueness check, mode-aware path routing, and the vendoring model — that lets the numbers feeding these products be re-derived years later from a canonical deposit alone.
+
+## External reviewers
+
+*(To be filled in after the pre-release external review pass. Do not name reviewers until they have confirmed.)*
+
+## Funding and support
+
+*(To be filled in per UNICEF Communications guidance. No funder is named pending that guidance.)*
+
+## Acknowledgement of the use of AI tools
+
+Parts of this handbook were drafted with generative-AI assistance. AI tools did not author the book — they generated drafts that the named authors and editors are reviewing, editing, and fact-checking against the `cso-toolkit` codebase. On release, the named authors and editors take full responsibility for the methodological claims, factual statements, worked examples, and verbatim code snippets reproduced here.
+
+## License
+
+This repository is **dual-licensed**. The handbook text is released under [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/); the toolkit source code under `r/`, `python/`, and `stata/` is released under the [MIT License](https://github.com/unicef-drp/cso-toolkit/blob/develop/LICENSE). Attribute each part under its own license. See [How to cite this work](how-to-cite.qmd) for details.
+
+## Tooling
+
+The handbook is built with [Quarto](https://quarto.org), an open-source scientific and technical publishing system. The toolkit itself is written in [R](https://www.r-project.org/), [Python](https://www.python.org/), and [Stata](https://www.stata.com/), and this book shows all three siblings side by side. Continuous deployment runs on GitHub Actions; the built handbook is published at <https://unicef-drp.github.io/cso-toolkit/handbook/>.
+
+## Affiliation and disclaimer
+
+This handbook is a publication of the UNICEF Chief Statistician Office — Data & Analytics (OSE). The statements in it are those of the authors and editors and do not necessarily reflect the policies or views of UNICEF. The designations employed and the presentation of material do not imply the expression of any opinion on the part of UNICEF.

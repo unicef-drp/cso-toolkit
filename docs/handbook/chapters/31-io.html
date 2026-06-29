@@ -1,0 +1,1407 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.42">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>7&nbsp; The IO contract – The CSO Toolkit Handbook</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../chapters/32-external-api.html" rel="next">
+<link href="../chapters/23-provenance-and-errors.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-baf7457b58093534c7052efdef5f4d86.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/31-io.html">Part III — The API (cross-language)</a></li><li class="breadcrumb-item"><a href="../chapters/31-io.html"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">The IO contract</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">The CSO Toolkit Handbook</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/unicef-drp/cso-toolkit/tree/main/book/" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Welcome</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../front-matter/foreword.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Foreword</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../front-matter/preface.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../front-matter/authors.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">About the authors</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../front-matter/acknowledgements.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Acknowledgements</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../front-matter/how-to-cite.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">How to cite this work</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part I — Why &amp; Architecture</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/11-why.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Why a toolkit</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/12-architecture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Architecture: one contract, three languages, many consumers</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part II — The Contract</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/21-roles-and-modes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Roles and the mode contract</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/22-wiring-the-contract.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Wiring the contract into a repo</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/23-provenance-and-errors.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Provenance sidecars and the error envelope</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part III — The API (cross-language)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/31-io.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">The IO contract</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/32-external-api.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">The external-API contract</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/33-aggregation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Aggregation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/34-vintage-sync.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Vintage sync</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/35-scaffolding-audit.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Scaffolding and the contract auditor</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part IV — Adoption &amp; Operations</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/41-vendoring.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">The vendoring model</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/42-onboarding-example.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Onboarding a repo: a worked example</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/43-contract-auditor-ci.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">The contract auditor in continuous integration (CI)</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/44-versioning-release.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Versioning and releases</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Appendices</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/a-coverage-matrix.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">A</span>&nbsp; <span class="chapter-title">Cross-language coverage matrix</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/b-provenance-schema.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">B</span>&nbsp; <span class="chapter-title">Provenance sidecar schema</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/c-error-taxonomy.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">C</span>&nbsp; <span class="chapter-title">Error taxonomy</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/d-function-reference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">D</span>&nbsp; <span class="chapter-title">Function reference</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/e-glossary.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">E</span>&nbsp; <span class="chapter-title">Glossary</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#orientation-five-terms-this-chapter-leans-on" id="toc-orientation-five-terms-this-chapter-leans-on" class="nav-link active" data-scroll-target="#orientation-five-terms-this-chapter-leans-on"><span class="header-section-number">7.1</span> Orientation: five terms this chapter leans on</a></li>
+  <li><a href="#auto-dispatch-by-extension" id="toc-auto-dispatch-by-extension" class="nav-link" data-scroll-target="#auto-dispatch-by-extension"><span class="header-section-number">7.2</span> Auto-dispatch by extension</a></li>
+  <li><a href="#writing-dw_save" id="toc-writing-dw_save" class="nav-link" data-scroll-target="#writing-dw_save"><span class="header-section-number">7.3</span> Writing: <code>dw_save</code></a>
+  <ul class="collapse">
+  <li><a href="#the-uniqueness-contract-isid" id="toc-the-uniqueness-contract-isid" class="nav-link" data-scroll-target="#the-uniqueness-contract-isid"><span class="header-section-number">7.3.1</span> The uniqueness contract: <code>isid</code></a></li>
+  <li><a href="#the-provenance-sidecar" id="toc-the-provenance-sidecar" class="nav-link" data-scroll-target="#the-provenance-sidecar"><span class="header-section-number">7.3.2</span> The provenance sidecar</a></li>
+  <li><a href="#mode-aware-write-routing" id="toc-mode-aware-write-routing" class="nav-link" data-scroll-target="#mode-aware-write-routing"><span class="header-section-number">7.3.3</span> Mode-aware write routing</a></li>
+  <li><a href="#the-overwrite-gate" id="toc-the-overwrite-gate" class="nav-link" data-scroll-target="#the-overwrite-gate"><span class="header-section-number">7.3.4</span> The overwrite gate</a></li>
+  <li><a href="#other-writing-behaviours" id="toc-other-writing-behaviours" class="nav-link" data-scroll-target="#other-writing-behaviours"><span class="header-section-number">7.3.5</span> Other writing behaviours</a></li>
+  </ul></li>
+  <li><a href="#reading-dw_use" id="toc-reading-dw_use" class="nav-link" data-scroll-target="#reading-dw_use"><span class="header-section-number">7.4</span> Reading: <code>dw_use</code></a>
+  <ul class="collapse">
+  <li><a href="#mode-aware-read-routing" id="toc-mode-aware-read-routing" class="nav-link" data-scroll-target="#mode-aware-read-routing"><span class="header-section-number">7.4.1</span> Mode-aware read routing</a></li>
+  <li><a href="#column-subsetting-strict-and-lenient" id="toc-column-subsetting-strict-and-lenient" class="nav-link" data-scroll-target="#column-subsetting-strict-and-lenient"><span class="header-section-number">7.4.2</span> Column subsetting: strict and lenient</a></li>
+  <li><a href="#the-z-integrity-check" id="toc-the-z-integrity-check" class="nav-link" data-scroll-target="#the-z-integrity-check"><span class="header-section-number">7.4.3</span> The Z: integrity check</a></li>
+  </ul></li>
+  <li><a href="#the-lower-level-and-resolver-helpers" id="toc-the-lower-level-and-resolver-helpers" class="nav-link" data-scroll-target="#the-lower-level-and-resolver-helpers"><span class="header-section-number">7.5</span> The lower-level and resolver helpers</a>
+  <ul class="collapse">
+  <li><a href="#dw_isid-standalone-uniqueness-check" id="toc-dw_isid-standalone-uniqueness-check" class="nav-link" data-scroll-target="#dw_isid-standalone-uniqueness-check"><span class="header-section-number">7.5.1</span> <code>dw_isid</code> — standalone uniqueness check</a></li>
+  <li><a href="#dw_verify_z-z-mirror-integrity" id="toc-dw_verify_z-z-mirror-integrity" class="nav-link" data-scroll-target="#dw_verify_z-z-mirror-integrity"><span class="header-section-number">7.5.2</span> <code>dw_verify_z</code> — Z: mirror integrity</a></li>
+  <li><a href="#dw_root-mode-aware-data-root" id="toc-dw_root-mode-aware-data-root" class="nav-link" data-scroll-target="#dw_root-mode-aware-data-root"><span class="header-section-number">7.5.3</span> <code>dw_root</code> — mode-aware data root</a></li>
+  <li><a href="#dw_stage-reviewer-mode-sandbox-staging" id="toc-dw_stage-reviewer-mode-sandbox-staging" class="nav-link" data-scroll-target="#dw_stage-reviewer-mode-sandbox-staging"><span class="header-section-number">7.5.4</span> <code>dw_stage</code> — reviewer-mode sandbox staging</a></li>
+  </ul></li>
+  <li><a href="#comparing-and-joining" id="toc-comparing-and-joining" class="nav-link" data-scroll-target="#comparing-and-joining"><span class="header-section-number">7.6</span> Comparing and joining</a>
+  <ul class="collapse">
+  <li><a href="#dw_compare-three-way-diff-against-a-reference" id="toc-dw_compare-three-way-diff-against-a-reference" class="nav-link" data-scroll-target="#dw_compare-three-way-diff-against-a-reference"><span class="header-section-number">7.6.1</span> <code>dw_compare</code> — three-way diff against a reference</a></li>
+  <li><a href="#dw_merge-stata-style-join-with-cardinality-assertion" id="toc-dw_merge-stata-style-join-with-cardinality-assertion" class="nav-link" data-scroll-target="#dw_merge-stata-style-join-with-cardinality-assertion"><span class="header-section-number">7.6.2</span> <code>dw_merge</code> — Stata-style join with cardinality assertion</a></li>
+  </ul></li>
+  <li><a href="#putting-it-together" id="toc-putting-it-together" class="nav-link" data-scroll-target="#putting-it-together"><span class="header-section-number">7.7</span> Putting it together</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/unicef-drp/cso-toolkit/edit/main/book/chapters/31-io.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/unicef-drp/cso-toolkit/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/31-io.html">Part III — The API (cross-language)</a></li><li class="breadcrumb-item"><a href="../chapters/31-io.html"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">The IO contract</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">The IO contract</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Every analytics pipeline begins and ends with reading and writing files. In the DW-Production world, however, an unguarded <code>read_csv</code> or <code>to_csv</code> is a liability: it can silently overwrite a published deposit, leave a producer’s only copy on a laptop, read a stale cached file with no provenance, or let a duplicate-keyed table into the warehouse. The IO contract is <code>cso-toolkit</code>’s answer to all of these. It is a small family of paired read and write helpers — chiefly <code>dw_save</code> and <code>dw_use</code> — that wrap ordinary language-native IO with three layers of discipline: auto-dispatch on the file extension, mode-aware path routing, and a uniqueness and integrity contract enforced at the call site.</p>
+<p>The toolkit promises parity — but not <em>full</em> parity. The same function names, the same arguments, and the same behaviour hold across R, Python, and Stata, so a sector that runs partly in R and partly in Stata uses one mental model on both sides. Where the languages must diverge, this chapter says where. Stata reads and writes only <code>.dta</code>, <code>.csv</code>, and <code>.xlsx</code>; it has no parquet, no RDS, no remote-URL fetch, and a few of the helpers below have no Stata sibling at all.</p>
+<section id="orientation-five-terms-this-chapter-leans-on" class="level2" data-number="7.1">
+<h2 data-number="7.1" class="anchored" data-anchor-id="orientation-five-terms-this-chapter-leans-on"><span class="header-section-number">7.1</span> Orientation: five terms this chapter leans on</h2>
+<p>Before the mechanics, five load-bearing terms. The whole argument of the chapter — every guard, every mirror, every warning — rests on them, so they are worth fixing in place first.</p>
+<ul>
+<li>A <strong>canonical deposit</strong> is the permanent, published copy of a dataset. It is the version downstream work and external consumers depend on; once written for a given vintage it must never change.</li>
+<li>Deposits live in two shared network stores. <strong>Teams</strong> is the SharePoint-synced document library that holds the canonical area; <strong>Z:</strong> is a network drive that mirrors it byte-for-byte. The toolkit treats a path under either store as canonical.</li>
+<li>The <strong>producer/reviewer mode</strong> is a session-wide switch. In <em>producer</em> mode you write new deposits; in <em>reviewer</em> mode you may only read them, never overwrite canonical. Mode is a <strong>session property</strong>, never a per-call argument: it is set once by <code>dw_mode</code> in <code>~/.config/user_config.yml</code> and read by the consumer’s profile at startup (see the chapter on wiring the contract into a repo). The profile makes the path globals (<code>teamsWrkData</code>, <code>teamsRawData</code>, and the <code>*Canonical</code> roots) mode-aware, and the helpers below resolve through them.</li>
+<li>An <strong>error envelope</strong> is the toolkit’s structured failure message: it always states WHAT failed, WHY, and HOW to fix it. The same shape is used for hard stops and for non-blocking warnings (see the error-taxonomy appendix).</li>
+<li><strong>AppLocker</strong> is the Windows policy on locked-down UNICEF laptops that blocks unsigned executables. It is why the Stata side never shells out to an external binary — a constraint that shapes two of the design boundaries below.</li>
+</ul>
+<p>The <code>kind</code> argument that appears throughout selects which of three data roots a path resolves against: <code>raw</code> (inputs), <code>wrk</code> (working outputs), or <code>meta</code> (metadata). The functions covered here are <code>dw_save</code>, <code>dw_use</code>, <code>dw_compare</code>, <code>dw_merge</code>, <code>dw_isid</code>, <code>dw_verify_z</code>, <code>dw_stage</code>, and <code>dw_root</code>. They live in <code>r/R/dw_io.R</code>, <code>python/src/dw_io.py</code>, and the <code>.ado</code> files under <code>stata/src/</code>.</p>
+</section>
+<section id="auto-dispatch-by-extension" class="level2" data-number="7.2">
+<h2 data-number="7.2" class="anchored" data-anchor-id="auto-dispatch-by-extension"><span class="header-section-number">7.2</span> Auto-dispatch by extension</h2>
+<p>Both <code>dw_save</code> and <code>dw_use</code> choose their underlying reader or writer from the file extension. The caller never names a format; the path’s suffix decides. This keeps call sites uniform: switching an output from CSV to parquet is a one-character edit to the filename, not a rewrite.</p>
+<p>Read the dispatch table below as three columns of parity — R and Python mirror each other almost exactly; Stata is the deliberate exception, and the first coverage gap.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Extension</th>
+<th>R writer / reader</th>
+<th>Python writer / reader</th>
+<th>Stata</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>.csv</code> / <code>.tsv</code> / <code>.txt</code></td>
+<td><code>data.table::fwrite</code> / <code>fread</code></td>
+<td><code>pandas.to_csv</code> / <code>read_csv</code></td>
+<td>yes (<code>.csv</code> only)</td>
+</tr>
+<tr class="even">
+<td><code>.csv.gz</code> / <code>.tsv.gz</code></td>
+<td><code>fwrite(compress="gzip")</code></td>
+<td><code>to_csv(compression="gzip")</code></td>
+<td>—</td>
+</tr>
+<tr class="odd">
+<td><code>.xlsx</code></td>
+<td><code>writexl</code> / <code>openxlsx</code>; <code>readxl</code></td>
+<td><code>openpyxl</code> via pandas</td>
+<td>yes</td>
+</tr>
+<tr class="even">
+<td><code>.dta</code></td>
+<td><code>haven::write_dta</code> / <code>read_dta</code></td>
+<td><code>pandas.to_stata</code> / <code>read_stata</code></td>
+<td>yes (native)</td>
+</tr>
+<tr class="odd">
+<td><code>.rds</code> (R) / <code>.pkl</code> (Py)</td>
+<td><code>saveRDS</code> / <code>readRDS</code></td>
+<td><code>pickle.dump</code> / <code>load</code></td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td><code>.RData</code> / <code>.rda</code></td>
+<td><code>save()</code> / <code>load()</code></td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr class="odd">
+<td><code>.parquet</code></td>
+<td><code>arrow::write_parquet</code> / <code>read_parquet</code></td>
+<td><code>pandas.to_parquet</code> / <code>read_parquet</code></td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td><code>.json</code></td>
+<td><code>jsonlite</code></td>
+<td><code>json</code> / <code>to_json</code></td>
+<td>—</td>
+</tr>
+<tr class="odd">
+<td><code>.yml</code> / <code>.yaml</code></td>
+<td><code>yaml</code></td>
+<td><code>PyYAML</code></td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p>The R and Python rows are near-complete mirrors. The only deliberate split is the in-language binary format: R’s <code>.rds</code> versus Python’s <code>.pkl</code>, both serving the same “fast native object dump” role. Stata covers <code>.dta</code>, <code>.csv</code>, and <code>.xlsx</code>, and nothing else.</p>
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Stata format limits
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Parquet, RDS, and JSON reads and writes will not dispatch on the Stata side. A pipeline that needs a binary or columnar format in Stata routes the heavy step through R or Python and hands back a <code>.dta</code> (or <code>.csv</code>) that Stata can <code>use</code>. This is a permanent design boundary, not a missing feature: keeping Stata free of shell-outs and external binaries is what keeps the <code>.ado</code> helpers AppLocker-safe.</p>
+</div>
+</div>
+</section>
+<section id="writing-dw_save" class="level2" data-number="7.3">
+<h2 data-number="7.3" class="anchored" data-anchor-id="writing-dw_save"><span class="header-section-number">7.3</span> Writing: <code>dw_save</code></h2>
+<p><code>dw_save</code> is the uniform writer. It resolves a path, optionally asserts row uniqueness, writes atomically, emits a provenance sidecar — a companion JSON recording who wrote the file, when, and how — and, in producer mode, fans the write out to redundant mirrors. In its simplest form it takes an object and a path:</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" aria-current="page">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-3" role="tab" aria-controls="tabset-1-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dw_save</span>(df, <span class="at">path =</span> <span class="st">"out.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>dw_save(df, path<span class="op">=</span><span class="st">"out.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-1-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-3-tab">
+<div class="sourceCode" id="cb3"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>dw_save , filename(<span class="st">"out"</span>) path(<span class="st">"out"</span>) idvars(REF_AREA)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<p>In practice you rarely pass a literal path. The structured call style lets the helper resolve the path through the mode-aware roots, so the same script lands in the canonical deposit in producer mode and in the local sandbox in reviewer mode with no change to the call. Three arguments do the work: <code>name</code> is the file basename, <code>sector</code> is the sector folder (<code>"ed"</code>, <code>"nt"</code>, …), and <code>kind</code> selects the data root (<code>raw</code>, <code>wrk</code>, or <code>meta</code>, defaulting to <code>wrk</code>).</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-3" role="tab" aria-controls="tabset-2-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<div class="sourceCode" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dw_save</span>(df, <span class="at">name =</span> <span class="st">"dw_ed_edu.csv"</span>, <span class="at">sector =</span> <span class="st">"ed"</span>, <span class="at">kind =</span> <span class="st">"wrk"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>dw_save(df, name<span class="op">=</span><span class="st">"dw_ed_edu.csv"</span>, sector<span class="op">=</span><span class="st">"ed"</span>, kind<span class="op">=</span><span class="st">"wrk"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-2-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-3-tab">
+<div class="sourceCode" id="cb6"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>dw_save , filename(<span class="st">"dw_ed_edu"</span>) path(<span class="st">"$teamsWrkData/ed"</span>) idvars(REF_AREA INDICATOR)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<p>Note the Stata divergence in calling convention. R and Python accept the <code>name</code> / <code>sector</code> / <code>kind</code> triple, which resolves against the profile roots via <code>dw_resolve_path</code>; Stata’s <code>dw_save</code> takes an explicit <code>path()</code> and <code>filename()</code>, with <code>idvars()</code> mandatory (the uniqueness check is not optional in Stata). The structured resolver — <code>name</code> / <code>sector</code> / <code>kind</code> plus the <code>dw_resolve_path</code> / <code>dw_root</code> machinery behind it — is an R and Python feature.</p>
+<section id="the-uniqueness-contract-isid" class="level3" data-number="7.3.1">
+<h3 data-number="7.3.1" class="anchored" data-anchor-id="the-uniqueness-contract-isid"><span class="header-section-number">7.3.1</span> The uniqueness contract: <code>isid</code></h3>
+<p>Pass a key tuple and <code>dw_save</code> runs an <code>isid</code> check — asserting that the declared key columns uniquely identify every row — <em>before</em> writing a single byte. If any rows duplicate on the declared keys, the call stops with the duplicate count and a sample of the offending rows; the table never reaches disk. This is the toolkit’s main guard against the classic warehouse defect of a silently double-counted series.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-3" role="tab" aria-controls="tabset-3-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
+<div class="sourceCode" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dw_save</span>(df, <span class="at">name =</span> <span class="st">"dw_ed_edu.csv"</span>, <span class="at">sector =</span> <span class="st">"ed"</span>, <span class="at">kind =</span> <span class="st">"wrk"</span>,</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>        <span class="at">isid =</span> <span class="fu">c</span>(<span class="st">"DATAFLOW"</span>, <span class="st">"REF_AREA"</span>, <span class="st">"INDICATOR"</span>, <span class="st">"SEX"</span>,</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>                 <span class="st">"WEALTH_QUINTILE"</span>, <span class="st">"RESIDENCE"</span>, <span class="st">"TIME_PERIOD"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
+<div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>dw_save(df, name<span class="op">=</span><span class="st">"dw_ed_edu.csv"</span>, sector<span class="op">=</span><span class="st">"ed"</span>, kind<span class="op">=</span><span class="st">"wrk"</span>,</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>        isid<span class="op">=</span>[<span class="st">"DATAFLOW"</span>, <span class="st">"REF_AREA"</span>, <span class="st">"INDICATOR"</span>, <span class="st">"SEX"</span>,</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>              <span class="st">"WEALTH_QUINTILE"</span>, <span class="st">"RESIDENCE"</span>, <span class="st">"TIME_PERIOD"</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-3-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-3-tab">
+<div class="sourceCode" id="cb9"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>dw_save , filename(<span class="st">"dw_ed_edu"</span>) path(<span class="st">"$teamsWrkData/ed"</span>) <span class="co">///</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    idvars(DATAFLOW REF_AREA INDICATOR SEX WEALTH_QUINTILE RESIDENCE TIME_PERIOD)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<p>In R and Python <code>isid</code> is an optional argument; in Stata <code>idvars()</code> is required. The same check is also exposed standalone as <code>dw_isid</code> (see below).</p>
+</section>
+<section id="the-provenance-sidecar" class="level3" data-number="7.3.2">
+<h3 data-number="7.3.2" class="anchored" data-anchor-id="the-provenance-sidecar"><span class="header-section-number">7.3.2</span> The provenance sidecar</h3>
+<p>Every successful write (except R’s <code>.RData</code> / <code>.rda</code>) emits a companion <code>&lt;path&gt;.provenance.json</code> next to the file. It records when the file was written, by whom, in which mode, the content hash, the schema (rows, columns, column names), the <code>isid</code> keys used, and any free-form metadata you supply. Pass <code>metadata</code> to make the sidecar self-describing:</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-3" role="tab" aria-controls="tabset-4-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
+<div class="sourceCode" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dw_save</span>(df, <span class="at">name =</span> <span class="st">"dw_ed_edu.csv"</span>, <span class="at">sector =</span> <span class="st">"ed"</span>, <span class="at">kind =</span> <span class="st">"wrk"</span>,</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>        <span class="at">metadata =</span> <span class="fu">list</span>(</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">title    =</span> <span class="st">"Education indicators — UNICEF DW format"</span>,</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>          <span class="at">producer =</span> <span class="st">"01_dw_prep/012_codes/ed/02_aggregate_uis_sdg.R"</span>,</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>          <span class="at">sources  =</span> <span class="fu">c</span>(<span class="st">"UIS bulk SDG_092025"</span>, <span class="st">"WPP 2024"</span>),</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>          <span class="at">contact  =</span> <span class="st">"@karavan88"</span>,</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>          <span class="at">vintage  =</span> <span class="st">"2026-05"</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>        ))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
+<div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>dw_save(df, name<span class="op">=</span><span class="st">"dw_ed_edu.csv"</span>, sector<span class="op">=</span><span class="st">"ed"</span>, kind<span class="op">=</span><span class="st">"wrk"</span>,</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>        metadata<span class="op">=</span>{</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>          <span class="st">"title"</span>: <span class="st">"Education indicators — UNICEF DW format"</span>,</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>          <span class="st">"producer"</span>: <span class="st">"01_dw_prep/012_codes/ed/02_aggregate_uis_sdg.py"</span>,</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>          <span class="st">"sources"</span>: [<span class="st">"UIS bulk SDG_092025"</span>, <span class="st">"WPP 2024"</span>],</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>          <span class="st">"vintage"</span>: <span class="st">"2026-05"</span>,</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>        })</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-4-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-3-tab">
+<div class="sourceCode" id="cb12"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>dw_save , filename(<span class="st">"dw_ed_edu"</span>) path(<span class="st">"$teamsWrkData/ed"</span>) <span class="co">///</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    idvars(REF_AREA INDICATOR)                          <span class="co">///</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"Education indicators"</span>)                       <span class="co">///</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    producer(<span class="st">"01_dw_prep/012_codes/ed/example.do"</span>)      <span class="co">///</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    sources(<span class="st">"UIS bulk SDG_092025"</span>)                      <span class="co">///</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    contact(<span class="st">"@karavan88"</span>)                               <span class="co">///</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    vintage(<span class="st">"2026-05"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<p>On the Stata side, <code>title()</code>, <code>producer()</code>, <code>sources()</code>, <code>contact()</code>, and <code>vintage()</code> are dedicated options; arbitrary extra fields go through a semicolon-separated <code>metadata("key1 value1; key2 value2")</code> option. Stata also offers <code>nosidecar</code> to skip the sidecar entirely and <code>nocompress</code> to skip the <code>compress</code> step.</p>
+<p>The sidecar schema is shared across all three languages, with one deliberate substitution: R and Python record a file-level <strong>SHA-256</strong>, while Stata records its native <code>datasignature</code> (a content hash of the dataset’s values, not a hash of the file’s bytes). The reason is the same AppLocker constraint that excludes the binary formats — computing SHA-256 in Stata would mean shelling out to an external binary. The practical consequence is that cross-tool integrity comparisons must compare <em>content</em> hashes, not <em>file</em> hashes. The full schema is documented in the provenance-sidecar appendix.</p>
+<p>In R and Python, the sidecar write is wrapped so that a non-serialisable metadata value (a <code>Date</code> object or a numpy scalar, say) emits a warning rather than rolling back the primary write — the asset is what matters; the sidecar is metadata about it.</p>
+</section>
+<section id="mode-aware-write-routing" class="level3" data-number="7.3.3">
+<h3 data-number="7.3.3" class="anchored" data-anchor-id="mode-aware-write-routing"><span class="header-section-number">7.3.3</span> Mode-aware write routing</h3>
+<p>Mode-aware routing is the contract’s central feature, and it does two opposite jobs depending on the session mode: it <em>blocks</em> unsafe writes in reviewer mode, and it <em>duplicates</em> safe writes in producer mode.</p>
+<p><strong>Reviewer mode refuses to write to a canonical deposit.</strong> Any write whose resolved path lands under a canonical Teams root or under the configured Z: drive root stops with the error envelope. Reviewer sessions must keep canonical deposits read-only so that a published vintage stays permanent. The Z: branch is the v0.4.0 broadening of the guard; earlier versions refused only canonical writes. For a deliberate Database Manager bootstrap, pass the bypass flag:</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-5-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-1" role="tab" aria-controls="tabset-5-1" aria-selected="true">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-5-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-2" role="tab" aria-controls="tabset-5-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-5-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-3" role="tab" aria-controls="tabset-5-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-5-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-5-1-tab">
+<div class="sourceCode" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dw_save</span>(df, <span class="at">path =</span> canonical_path, <span class="at">allow_canonical_write =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-5-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-2-tab">
+<div class="sourceCode" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>dw_save(df, path<span class="op">=</span>canonical_path, allow_canonical_write<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-5-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-3-tab">
+<div class="sourceCode" id="cb15"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>dw_save , filename(<span class="st">"dw_ed_edu"</span>) path(<span class="st">"$teamsWrkDataCanonical/ed"</span>) <span class="co">///</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    idvars(REF_AREA) allow_canonical_write</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<p>In R the guard raises <code>stop()</code>; in Python it raises <code>PermissionError</code>; in Stata it raises error 459. All three carry the same WHAT / WHY / HOW envelope (see the error-taxonomy appendix).</p>
+<p><strong>Producer mode mirrors redundantly.</strong> A producer’s output must never live only on the producer’s laptop. So in producer mode each successful primary write is carbon-copied — along with its sidecar — to both its Teams canonical equivalent and its Z: drive equivalent, whichever are configured. The helper performs a pre-flight check: if <em>neither</em> mirror is reachable, <code>dw_save</code> hard-stops before writing, because the deposit would not be recoverable. Each mirror copy is non-blocking: a failure to reach Teams or Z: after the primary write emits an envelope-shaped warning (tagged “Teams mirror” or “Z: mirror”) but does not roll back the primary.</p>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<code>mirror_to_z</code> is gone
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>In v0.3.0 you chose mirroring per call with a <code>mirror_to_z</code> argument. From v0.4.0 mirroring is automatic and paired, driven entirely by which remote roots the profile makes available. <code>dw_save</code> still accepts the old argument but ignores it, with a deprecation warning.</p>
+</div>
+</div>
+<p>The Z: drive matters here because it is a carbon copy of the Teams canonical deposit. A path under Z: is therefore <em>also</em> a canonical artifact: reviewer writes to it are barred, and reviewer reads of an explicit Z: path run the integrity check described below.</p>
+</section>
+<section id="the-overwrite-gate" class="level3" data-number="7.3.4">
+<h3 data-number="7.3.4" class="anchored" data-anchor-id="the-overwrite-gate"><span class="header-section-number">7.3.4</span> The overwrite gate</h3>
+<p><code>dw_save</code> will not silently clobber an existing deposit, and the default behaviour is mode-aware. The <code>overwrite</code> argument is a sentinel: when left at its default it resolves to <em>permissive</em> in reviewer mode (the local sandbox is gitignored and safe to re-run) and <em>strict</em> in producer mode (re-running against the canonical deposit demands a deliberate decision). When the check runs strict, it examines <strong>every</strong> destination that will actually be written — primary, Teams mirror, and Z: mirror — and stops if any of them already exists.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-6-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-1" role="tab" aria-controls="tabset-6-1" aria-selected="true">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-6-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-2" role="tab" aria-controls="tabset-6-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-6-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-3" role="tab" aria-controls="tabset-6-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-6-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-6-1-tab">
+<div class="sourceCode" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># overwrite defaults to a mode-aware sentinel (NULL); pass TRUE to replace.</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dw_save</span>(df, <span class="at">name =</span> <span class="st">"dw_ed_edu.csv"</span>, <span class="at">sector =</span> <span class="st">"ed"</span>, <span class="at">kind =</span> <span class="st">"wrk"</span>,</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>        <span class="at">overwrite =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-6-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-6-2-tab">
+<div class="sourceCode" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># In Python the default is the strict value (overwrite=False); pass True to replace.</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>dw_save(df, name<span class="op">=</span><span class="st">"dw_ed_edu.csv"</span>, sector<span class="op">=</span><span class="st">"ed"</span>, kind<span class="op">=</span><span class="st">"wrk"</span>,</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>        overwrite<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-6-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-6-3-tab">
+<div class="sourceCode" id="cb18"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>* Stata always writes with `save, replace`; the canonical / Z: write barrier</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>* is enforced <span class="kw">by</span> the reviewer-<span class="kw">mode</span> guard above, <span class="kw">not</span> <span class="kw">by</span> an overwrite flag.</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>dw_save , filename(<span class="st">"dw_ed_edu"</span>) path(<span class="st">"$teamsWrkData/ed"</span>) idvars(REF_AREA)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<p>The mode-aware sentinel is an R refinement. In R, <code>overwrite = NULL</code> resolves to <code>TRUE</code> in reviewer mode and <code>FALSE</code> in producer mode; Python’s <code>overwrite</code> defaults to a plain <code>False</code> in every mode. Stata has no <code>overwrite</code> option at all: its <code>save, replace</code> always replaces the primary, and the canonical and Z: deposits are protected by the reviewer-mode guard rather than by an existence check.</p>
+<p>In R there is one further safety stage: overwriting an <em>existing producer deposit</em> is treated as destructive even when <code>overwrite</code> is true. Interactively <code>dw_save</code> prompts <code>[y/N]</code>; non-interactively it stops unless you also pass <code>force = TRUE</code> for a deliberate automated re-deposit.</p>
+</section>
+<section id="other-writing-behaviours" class="level3" data-number="7.3.5">
+<h3 data-number="7.3.5" class="anchored" data-anchor-id="other-writing-behaviours"><span class="header-section-number">7.3.5</span> Other writing behaviours</h3>
+<ul>
+<li><strong>Atomic writes.</strong> R and Python both write to a <code>.tmp</code> sibling and rename into place, so a crash mid-write never leaves a half-written deposit at the canonical name. Stata writes via <code>save, replace</code>.</li>
+<li><strong>Compression.</strong> For CSV / TSV / TXT, <code>compress = TRUE</code> appends <code>.gz</code> and gzips. If the path already ends in <code>.gz</code>, compression auto-enables — there is no foot-gun where you ask for <code>.gz</code> but get an uncompressed file.</li>
+<li><strong>CSV dialect (R only).</strong> A <code>dialect</code> argument selects between <code>data.table::fwrite</code> (the default) and a <code>utils::write.table</code> path that preserves byte-parity with legacy <code>utils::write.csv()</code> output, for sector scripts that depend on the old bytes. The <code>base</code> dialect is incompatible with <code>compress = TRUE</code> and raises an explanatory error rather than failing silently.</li>
+</ul>
+</section>
+</section>
+<section id="reading-dw_use" class="level2" data-number="7.4">
+<h2 data-number="7.4" class="anchored" data-anchor-id="reading-dw_use"><span class="header-section-number">7.4</span> Reading: <code>dw_use</code></h2>
+<p><code>dw_use</code> is the read counterpart: same path resolution, same extension dispatch. By default R returns a tibble; pass <code>as = "data.frame"</code> or <code>as = "data.table"</code> to change the shape. Python returns a pandas <code>DataFrame</code> for tabular formats. Stata loads the dataset into memory.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-7-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-7-1" role="tab" aria-controls="tabset-7-1" aria-selected="true">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-7-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-7-2" role="tab" aria-controls="tabset-7-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-7-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-7-3" role="tab" aria-controls="tabset-7-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-7-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-7-1-tab">
+<div class="sourceCode" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>edu <span class="ot">&lt;-</span> <span class="fu">dw_use</span>(<span class="at">name =</span> <span class="st">"dw_ed_edu.csv"</span>, <span class="at">sector =</span> <span class="st">"ed"</span>, <span class="at">kind =</span> <span class="st">"wrk"</span>)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>edu <span class="ot">&lt;-</span> <span class="fu">dw_use</span>(<span class="at">path =</span> <span class="st">"C:/path/to/file.parquet"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-7-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-7-2-tab">
+<div class="sourceCode" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>edu <span class="op">=</span> dw_use(name<span class="op">=</span><span class="st">"dw_ed_edu.csv"</span>, sector<span class="op">=</span><span class="st">"ed"</span>, kind<span class="op">=</span><span class="st">"wrk"</span>)</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>edu <span class="op">=</span> dw_use(path<span class="op">=</span><span class="st">"/path/to/file.parquet"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-7-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-7-3-tab">
+<div class="sourceCode" id="cb21"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>dw_use , filename(<span class="st">"dw_ed_edu.dta"</span>) path(<span class="st">"$teamsWrkData/ed"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<section id="mode-aware-read-routing" class="level3" data-number="7.4.1">
+<h3 data-number="7.4.1" class="anchored" data-anchor-id="mode-aware-read-routing"><span class="header-section-number">7.4.1</span> Mode-aware read routing</h3>
+<p>Reads, like writes, branch on the session mode — but in the <em>opposite</em> direction, because the goal here is provenance, not protection.</p>
+<ul>
+<li><strong>Producer / unknown mode (local-first).</strong> Try the literal path; if it is missing and <code>fallback_canonical</code> is on (the default), walk the <code>teams*Data → teams*DataCanonical</code> prefix map and read the canonical copy.</li>
+<li><strong>Reviewer mode (network-first).</strong> Try the Teams canonical equivalent first, then the Z: mirror, then fall back to the repo-local copy — but that last step emits an envelope-shaped warning, because a reviewer reading a local copy is reading bytes of unverified provenance. If the file is absent in all three places, <code>dw_use</code> raises an error pointing the reviewer at the sector producer. Disable the local fallback with <code>fallback_canonical = FALSE</code> (in Stata, the <code>nofallback_canonical</code> option) to fail fast instead.</li>
+</ul>
+<p>The reviewer warning is the auditable signal of a provenance gap; it is meant to be noisy.</p>
+</section>
+<section id="column-subsetting-strict-and-lenient" class="level3" data-number="7.4.2">
+<h3 data-number="7.4.2" class="anchored" data-anchor-id="column-subsetting-strict-and-lenient"><span class="header-section-number">7.4.2</span> Column subsetting: strict and lenient</h3>
+<p><code>dw_use</code> accepts a <code>cols</code> vector to restrict the read. The default is <strong>strict</strong>: every requested column must exist in the file’s schema, matching the contract of the underlying readers (<code>fread(select=)</code>, <code>read_parquet(col_select=)</code>, <code>read_dta(col_select=)</code>, pandas <code>usecols</code>). On the Stata side, <code>cols()</code> is a column subset on the dispatched <code>.dta</code> / <code>.csv</code> / <code>.xlsx</code>.</p>
+<p>R adds a <code>cols_lenient = TRUE</code> flag that flips to “select if present” semantics: it introspects the file’s schema cheaply (parquet metadata, or a header-only read for dta / csv / xlsx), intersects the request with the actual columns, silently drops the missing ones, and — on an empty intersection — warns and reads all columns. The point is to give sector scripts the <code>dplyr::any_of()</code> intent <em>inside</em> <code>dw_use</code>, because calling <code>any_of()</code> at the top level errors fatally under tidyselect ≥ 1.2.0.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-8-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-1" role="tab" aria-controls="tabset-8-1" aria-selected="true">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-8-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-2" role="tab" aria-controls="tabset-8-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-8-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-3" role="tab" aria-controls="tabset-8-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-8-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-8-1-tab">
+<div class="sourceCode" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Strict (default): errors if a requested col is missing from the schema</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">dw_use</span>(<span class="at">path =</span> parquet_path, <span class="at">cols =</span> <span class="fu">c</span>(<span class="st">"REF_AREA"</span>, <span class="st">"OBS_VALUE"</span>))</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Lenient: intersect with the file's actual schema; missing cols dropped</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">dw_use</span>(<span class="at">path =</span> parquet_path,</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>             <span class="at">cols =</span> <span class="fu">c</span>(<span class="st">"REF_AREA"</span>, <span class="st">"OBS_VALUE"</span>, <span class="st">"MAYBE_PRESENT_COL"</span>),</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>             <span class="at">cols_lenient =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-8-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-8-2-tab">
+<div class="sourceCode" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Strict column subset (pandas usecols / columns= semantics)</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> dw_use(path<span class="op">=</span>parquet_path, cols<span class="op">=</span>[<span class="st">"REF_AREA"</span>, <span class="st">"OBS_VALUE"</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-8-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-8-3-tab">
+<div class="sourceCode" id="cb24"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>* Stata <span class="bn">cols</span>() subsets the dispatched .dta / .csv / .xlsx</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>dw_use , filename(<span class="st">"dw_ed_edu.dta"</span>) path(<span class="st">"$teamsWrkData/ed"</span>) <span class="co">///</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    <span class="bn">cols</span>(REF_AREA OBS_VALUE)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<p>The <code>cols_lenient</code> flag and its metadata-only schema introspection are an R-side feature; Python and Stata offer the strict subset only.</p>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+A read bug worth remembering
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Before v0.4.3, R’s <code>dw_use(parquet_path)</code> with no <code>cols</code> passed <code>col_select = NULL</code> to Arrow, which Arrow read as “select zero columns” — returning an empty-column tibble. The dta branch had the same defect. From v0.4.3 the helper passes <code>col_select</code> only when <code>cols</code> is non-NULL, so a bare <code>dw_use(path)</code> reliably returns all columns. If you see a zero-column read from an old vendored copy, this is why; bump the vendored version.</p>
+</div>
+</div>
+</section>
+<section id="the-z-integrity-check" class="level3" data-number="7.4.3">
+<h3 data-number="7.4.3" class="anchored" data-anchor-id="the-z-integrity-check"><span class="header-section-number">7.4.3</span> The Z: integrity check</h3>
+<p>When a read resolves to a <em>canonical</em> file and Z: is available, <code>dw_use</code> automatically compares the Teams copy against its Z: mirror. By default this is a fast file-size check; a mismatch emits a warning but the read still completes (with the Teams data). Pass <code>verify_z = "sha256"</code> for a deep hash comparison, or <code>verify_z = FALSE</code> (in Stata, <code>verify_z(off)</code>) to skip it. On the Stata side the deep comparison uses <code>datasignature</code> and only applies to the <code>.dta</code> path. The check is exposed standalone as <code>dw_verify_z</code>.</p>
+</section>
+</section>
+<section id="the-lower-level-and-resolver-helpers" class="level2" data-number="7.5">
+<h2 data-number="7.5" class="anchored" data-anchor-id="the-lower-level-and-resolver-helpers"><span class="header-section-number">7.5</span> The lower-level and resolver helpers</h2>
+<section id="dw_isid-standalone-uniqueness-check" class="level3" data-number="7.5.1">
+<h3 data-number="7.5.1" class="anchored" data-anchor-id="dw_isid-standalone-uniqueness-check"><span class="header-section-number">7.5.1</span> <code>dw_isid</code> — standalone uniqueness check</h3>
+<p>The uniqueness assertion <code>dw_save</code> runs internally is also callable on its own, for validating an in-memory frame mid-pipeline:</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-9-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-9-1" role="tab" aria-controls="tabset-9-1" aria-selected="true">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-9-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-9-2" role="tab" aria-controls="tabset-9-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-9-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-9-3" role="tab" aria-controls="tabset-9-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-9-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-9-1-tab">
+<div class="sourceCode" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dw_isid</span>(df, <span class="at">keys =</span> <span class="fu">c</span>(<span class="st">"REF_AREA"</span>, <span class="st">"TIME_PERIOD"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-9-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-9-2-tab">
+<div class="sourceCode" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>dw_isid(df, keys<span class="op">=</span>[<span class="st">"REF_AREA"</span>, <span class="st">"TIME_PERIOD"</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-9-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-9-3-tab">
+<div class="sourceCode" id="cb27"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>* Stata uses the built-<span class="kw">in</span> <span class="kw">isid</span>; dw_save enforces it via idvars()</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="kw">isid</span> REF_AREA TIME_PERIOD</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<p>It stops with the duplicate count and a sample of offending rows on failure, and it also catches the easy mistake of naming a key column that does not exist in the data.</p>
+</section>
+<section id="dw_verify_z-z-mirror-integrity" class="level3" data-number="7.5.2">
+<h3 data-number="7.5.2" class="anchored" data-anchor-id="dw_verify_z-z-mirror-integrity"><span class="header-section-number">7.5.2</span> <code>dw_verify_z</code> — Z: mirror integrity</h3>
+<p><code>dw_verify_z</code> returns a status list (<code>match_size</code>, <code>size_mismatch</code>, <code>match_sha256</code>, <code>sha256_mismatch</code>, <code>z_missing</code>, <code>no_z_mirror</code>, …) rather than stopping, so callers decide what to do with a mismatch. It is the building block behind <code>dw_use</code>’s automatic check. This is an R and Python helper; on the Stata side the equivalent check is folded into <code>dw_use</code> (size by default, <code>datasignature</code> deep check on request) and is not separately exposed.</p>
+</section>
+<section id="dw_root-mode-aware-data-root" class="level3" data-number="7.5.3">
+<h3 data-number="7.5.3" class="anchored" data-anchor-id="dw_root-mode-aware-data-root"><span class="header-section-number">7.5.3</span> <code>dw_root</code> — mode-aware data root</h3>
+<p><code>dw_root("wrk" | "raw" | "meta")</code> returns the absolute path to one of the three vendored data roots, already resolved for the current mode. Sector scripts use it to build paths without knowing whether they are in producer or reviewer mode:</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>final_path <span class="ot">&lt;-</span> <span class="fu">file.path</span>(<span class="fu">dw_root</span>(<span class="st">"wrk"</span>), <span class="st">"nt"</span>, <span class="st">"2025"</span>, <span class="st">"dw_nut.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This is an R helper. The richer structured resolver, <code>dw_resolve_path(name=, sector=, kind=, vintage=)</code>, is the full path-builder that <code>dw_save</code> and <code>dw_use</code> call internally; it is available in both R and Python.</p>
+</section>
+<section id="dw_stage-reviewer-mode-sandbox-staging" class="level3" data-number="7.5.4">
+<h3 data-number="7.5.4" class="anchored" data-anchor-id="dw_stage-reviewer-mode-sandbox-staging"><span class="header-section-number">7.5.4</span> <code>dw_stage</code> — reviewer-mode sandbox staging</h3>
+<p><code>dw_stage</code> (R only) is an opt-in reviewer helper that copies a canonical input from Z: (preferred) or Teams into the local sandbox the first time a script needs it, verifies the copy’s hash against the source, and archives that hash in a <code>&lt;path&gt;.staged.json</code> sidecar. On every later run it re-checks the sandbox copy against the archived hash before letting the read proceed. It is a no-op outside reviewer mode.</p>
+<p>The lifecycle has five states:</p>
+<ul>
+<li><strong>First stage</strong> — the sandbox copy is missing, so copy from the first available source (Z: before Teams), re-hash the copy against the source, and archive the hash.</li>
+<li><strong>Clean later run</strong> — the sandbox copy still matches its archived hash; skip the copy and return the sandbox path.</li>
+<li><strong>Sandbox drift</strong> — the staged copy was modified out of band; stop with the SANDBOX DRIFT envelope.</li>
+<li><strong>Forced re-stage</strong> — <code>overwrite = TRUE</code> unconditionally re-copies, re-verifies, and re-archives.</li>
+<li><strong>Upstream changed</strong> — the canonical source moved on; warn, but do not auto-refresh, because rolling canonical inputs forward is the reviewer’s explicit decision.</li>
+</ul>
+<p>When both Z: and Teams hold the file, the two are hash-compared before either is used; disagreement is a canonical-integrity stop.</p>
+<p>You rarely call <code>dw_stage</code> directly. The usual path is to let <code>dw_use</code> invoke it, per call or globally:</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-10-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-10-1" role="tab" aria-controls="tabset-10-1" aria-selected="true">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-10-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-10-2" role="tab" aria-controls="tabset-10-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-10-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-10-3" role="tab" aria-controls="tabset-10-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-10-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-10-1-tab">
+<div class="sourceCode" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Per-call opt-in: stage the canonical input into the sandbox, then read it</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">dw_use</span>(<span class="at">name =</span> <span class="st">"dw_nut.csv"</span>, <span class="at">sector =</span> <span class="st">"nt"</span>, <span class="at">kind =</span> <span class="st">"wrk"</span>, <span class="at">stage =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Or globally, in the profile:</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="co">#   dw_autostage &lt;- TRUE</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-10-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-10-2-tab">
+<div class="sourceCode" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Not available — dw_stage is an R-only helper.</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> dw_use(name<span class="op">=</span><span class="st">"dw_nut.csv"</span>, sector<span class="op">=</span><span class="st">"nt"</span>, kind<span class="op">=</span><span class="st">"wrk"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-10-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-10-3-tab">
+<div class="sourceCode" id="cb31"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>* Not available — dw_stage is an R-only helper.</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>dw_use , filename(<span class="st">"dw_nut.dta"</span>) path(<span class="st">"$teamsWrkData/nt"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<p><code>dw_stage</code> and <code>dw_use</code>’s <code>stage =</code> integration are R-only. The <code>.staged.json</code> sidecar is deliberately distinct from <code>dw_save</code>’s <code>.provenance.json</code>, so a file that is both written by <code>dw_save</code> and staged by <code>dw_stage</code> carries both metadata blocks side by side; each reader refuses to misread the other’s schema by checking a <code>type</code> discriminator.</p>
+</section>
+</section>
+<section id="comparing-and-joining" class="level2" data-number="7.6">
+<h2 data-number="7.6" class="anchored" data-anchor-id="comparing-and-joining"><span class="header-section-number">7.6</span> Comparing and joining</h2>
+<section id="dw_compare-three-way-diff-against-a-reference" class="level3" data-number="7.6.1">
+<h3 data-number="7.6.1" class="anchored" data-anchor-id="dw_compare-three-way-diff-against-a-reference"><span class="header-section-number">7.6.1</span> <code>dw_compare</code> — three-way diff against a reference</h3>
+<p><code>dw_compare</code> answers “what changed since the last deposit?” It keys two data frames on <code>by</code>, then classifies rows as <strong>added</strong> (present in current, absent in reference), <strong>removed</strong> (the reverse), and <strong>changed</strong> (present in both, with a differing value column). Numeric columns can compare within a tolerance; string columns normalise missing-equivalents (<code>""</code>, <code>"NA"</code>, <code>"N/A"</code>, <code>"NULL"</code>, <code>"."</code>) to equal. In R and Python it returns a list with a one-row <code>summary</code> plus the <code>added</code>, <code>removed</code>, and <code>changed</code> frames, and can optionally write per-segment CSV reports.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-11-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-11-1" role="tab" aria-controls="tabset-11-1" aria-selected="true">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-11-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-11-2" role="tab" aria-controls="tabset-11-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-11-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-11-3" role="tab" aria-controls="tabset-11-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-11-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-11-1-tab">
+<div class="sourceCode" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>report <span class="ot">&lt;-</span> <span class="fu">dw_compare</span>(</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">current   =</span> <span class="fu">dw_use</span>(<span class="at">name =</span> <span class="st">"dw_ed_edu.csv"</span>, <span class="at">sector =</span> <span class="st">"ed"</span>, <span class="at">kind =</span> <span class="st">"wrk"</span>),</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">reference =</span> <span class="fu">dw_use</span>(<span class="at">path =</span> <span class="fu">file.path</span>(teamsWrkDataCanonical, <span class="st">"ed/dw_ed_edu.csv"</span>)),</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">by         =</span> <span class="fu">c</span>(<span class="st">"DATAFLOW"</span>, <span class="st">"REF_AREA"</span>, <span class="st">"INDICATOR"</span>, <span class="st">"SEX"</span>,</span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>                 <span class="st">"WEALTH_QUINTILE"</span>, <span class="st">"TIME_PERIOD"</span>),</span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">value_cols =</span> <span class="fu">c</span>(<span class="st">"OBS_VALUE"</span>, <span class="st">"DATA_SOURCE"</span>),</span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">numeric_value_cols =</span> <span class="st">"OBS_VALUE"</span>,</span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">tol        =</span> <span class="fl">1e-5</span>,</span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">label      =</span> <span class="st">"ed_dw_edu"</span>,</span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">write_report_to =</span> <span class="fu">file.path</span>(<span class="fu">tempdir</span>(), <span class="st">"ed_compare"</span>)</span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a>report<span class="sc">$</span>summary</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-11-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-11-2-tab">
+<div class="sourceCode" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>report <span class="op">=</span> dw_compare(</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>    current<span class="op">=</span>dw_use(name<span class="op">=</span><span class="st">"dw_ed_edu.csv"</span>, sector<span class="op">=</span><span class="st">"ed"</span>, kind<span class="op">=</span><span class="st">"wrk"</span>),</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    reference<span class="op">=</span>dw_use(path<span class="op">=</span>ref_path),</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>    by<span class="op">=</span>[<span class="st">"DATAFLOW"</span>, <span class="st">"REF_AREA"</span>, <span class="st">"INDICATOR"</span>, <span class="st">"SEX"</span>,</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">"WEALTH_QUINTILE"</span>, <span class="st">"TIME_PERIOD"</span>],</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>    value_cols<span class="op">=</span>[<span class="st">"OBS_VALUE"</span>, <span class="st">"DATA_SOURCE"</span>],</span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>    numeric_value_cols<span class="op">=</span>[<span class="st">"OBS_VALUE"</span>],</span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>    tol<span class="op">=</span><span class="fl">1e-5</span>,</span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>    label<span class="op">=</span><span class="st">"ed_dw_edu"</span>,</span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>report[<span class="st">"summary"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-11-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-11-3-tab">
+<div class="sourceCode" id="cb34"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>* idvars / valuevars / tol / <span class="kw">report</span> / <span class="kw">label</span>; compares <span class="kw">two</span> .dta files</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>dw_compare , current(<span class="st">"dw_ed_edu.dta"</span>) reference(<span class="st">"ref_dw_ed_edu.dta"</span>) <span class="co">///</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    idvars(DATAFLOW REF_AREA INDICATOR SEX WEALTH_QUINTILE TIME_PERIOD) <span class="co">///</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>    valuevars(OBS_VALUE) tol(0.00001) <span class="kw">label</span>(<span class="st">"ed_dw_edu"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<p><code>dw_compare</code> tolerates a degenerate first deposit gracefully: in R and Python a missing or unreadable reference is treated as empty (with a warning), so every current row reports as added rather than crashing the run. Note the divergences. R and Python name the arguments <code>value_cols</code> / <code>numeric_value_cols</code>; Stata uses <code>valuevars</code> and infers numeric-versus-string comparison from each variable’s storage type. The numeric tolerance defaults differ too — <code>1e-5</code> in R and Python, <code>1e-8</code> in Stata — so set <code>tol</code> explicitly when it matters. The Stata <code>dw_compare</code> prints a console summary and, via <code>report()</code>, an optional Markdown file of row counts and per-column change counts; it is sized for a publication-gate diff, not the rich row-level Markdown of its upstream <code>comparefiles</code> ancestor.</p>
+</section>
+<section id="dw_merge-stata-style-join-with-cardinality-assertion" class="level3" data-number="7.6.2">
+<h3 data-number="7.6.2" class="anchored" data-anchor-id="dw_merge-stata-style-join-with-cardinality-assertion"><span class="header-section-number">7.6.2</span> <code>dw_merge</code> — Stata-style join with cardinality assertion</h3>
+<p><code>dw_merge</code> is a join that <em>asserts its cardinality</em>. You declare <code>how</code> as one of <code>m:1</code>, <code>1:1</code>, <code>1:m</code>, or <code>m:m</code>, and the helper warns when the actual duplication of the keys on either side disagrees with what you declared — catching the silent fan-out that turns a clean join into a row explosion. The <code>using</code> side can be a data frame already in memory or a path string, which is auto-read through <code>dw_use</code>.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-12-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-12-1" role="tab" aria-controls="tabset-12-1" aria-selected="true">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-12-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-12-2" role="tab" aria-controls="tabset-12-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-12-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-12-3" role="tab" aria-controls="tabset-12-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-12-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-12-1-tab">
+<div class="sourceCode" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>enriched <span class="ot">&lt;-</span> <span class="fu">dw_merge</span>(</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>  edu_sdg_uis,</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">using =</span> <span class="fu">file.path</span>(teamsRawData, <span class="st">"ed/metadata/regions.csv"</span>),</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">by    =</span> <span class="st">"ISO3"</span>,</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">how   =</span> <span class="st">"m:1"</span></span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-12-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-12-2-tab">
+<div class="sourceCode" id="cb36"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>enriched <span class="op">=</span> dw_merge(</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>    edu_sdg_uis,</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>    using<span class="op">=</span>os.path.join(teamsRawData, <span class="st">"ed/metadata/regions.csv"</span>),</span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>    by<span class="op">=</span><span class="st">"ISO3"</span>,</span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>    how<span class="op">=</span><span class="st">"m:1"</span>,</span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-12-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-12-3-tab">
+<div class="sourceCode" id="cb37"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>* Stata has the native `merge`, which already takes the cardinality;</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>* dw_merge is an R / Python helper.</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="kw">merge</span> <span class="fu">m</span>:1 ISO3 <span class="kw">using</span> <span class="st">"regions.dta"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<p>Under the hood <code>dw_merge</code> is a left join; the value it adds over a bare join is the cardinality warning. It is an R and Python helper — Stata’s built-in <code>merge m:1 / 1:1 / ...</code> already carries the cardinality declaration natively, so no wrapper is shipped.</p>
+</section>
+</section>
+<section id="putting-it-together" class="level2" data-number="7.7">
+<h2 data-number="7.7" class="anchored" data-anchor-id="putting-it-together"><span class="header-section-number">7.7</span> Putting it together</h2>
+<p>A typical producer step reads its inputs, prepares the data, asserts uniqueness, and deposits the result with provenance — all through the contract, so the same script runs unmodified in reviewer mode (reading network-first, writing only to the sandbox) and in producer mode (reading local-first, writing redundantly to Teams and Z:):</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-13-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-13-1" role="tab" aria-controls="tabset-13-1" aria-selected="true">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-13-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-13-2" role="tab" aria-controls="tabset-13-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-13-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-13-3" role="tab" aria-controls="tabset-13-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-13-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-13-1-tab">
+<div class="sourceCode" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>raw <span class="ot">&lt;-</span> <span class="fu">dw_use</span>(<span class="at">name =</span> <span class="st">"uis_sdg.parquet"</span>, <span class="at">sector =</span> <span class="st">"ed"</span>, <span class="at">kind =</span> <span class="st">"raw"</span>)</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>edu <span class="ot">&lt;-</span> <span class="fu">aggregate_indicators</span>(raw)          <span class="co"># ... your prep ...</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a><span class="fu">dw_save</span>(edu, <span class="at">name =</span> <span class="st">"dw_ed_edu.csv"</span>, <span class="at">sector =</span> <span class="st">"ed"</span>, <span class="at">kind =</span> <span class="st">"wrk"</span>,</span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>        <span class="at">isid =</span> <span class="fu">c</span>(<span class="st">"REF_AREA"</span>, <span class="st">"INDICATOR"</span>, <span class="st">"TIME_PERIOD"</span>),</span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a>        <span class="at">metadata =</span> <span class="fu">list</span>(<span class="at">title =</span> <span class="st">"Education indicators"</span>,</span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a>                        <span class="at">producer =</span> <span class="st">"ed/02_aggregate.R"</span>,</span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a>                        <span class="at">sources =</span> <span class="fu">c</span>(<span class="st">"UIS bulk SDG_092025"</span>),</span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a>                        <span class="at">vintage =</span> <span class="st">"2026-05"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-13-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-13-2-tab">
+<div class="sourceCode" id="cb39"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>raw <span class="op">=</span> dw_use(name<span class="op">=</span><span class="st">"uis_sdg.parquet"</span>, sector<span class="op">=</span><span class="st">"ed"</span>, kind<span class="op">=</span><span class="st">"raw"</span>)</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>edu <span class="op">=</span> aggregate_indicators(raw)           <span class="co"># ... your prep ...</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>dw_save(edu, name<span class="op">=</span><span class="st">"dw_ed_edu.csv"</span>, sector<span class="op">=</span><span class="st">"ed"</span>, kind<span class="op">=</span><span class="st">"wrk"</span>,</span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>        isid<span class="op">=</span>[<span class="st">"REF_AREA"</span>, <span class="st">"INDICATOR"</span>, <span class="st">"TIME_PERIOD"</span>],</span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>        metadata<span class="op">=</span>{<span class="st">"title"</span>: <span class="st">"Education indicators"</span>,</span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>                  <span class="st">"producer"</span>: <span class="st">"ed/02_aggregate.py"</span>,</span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a>                  <span class="st">"sources"</span>: [<span class="st">"UIS bulk SDG_092025"</span>],</span>
+<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a>                  <span class="st">"vintage"</span>: <span class="st">"2026-05"</span>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-13-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-13-3-tab">
+<div class="sourceCode" id="cb40"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>* uis_sdg is .parquet upstream; the producer hands Stata a .dta to consume.</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>dw_use , filename(<span class="st">"uis_sdg.dta"</span>) path(<span class="st">"$teamsRawData/ed"</span>)</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>* ... your prep ...</span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>dw_save , filename(<span class="st">"dw_ed_edu"</span>) path(<span class="st">"$teamsWrkData/ed"</span>) <span class="co">///</span></span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>    idvars(REF_AREA INDICATOR TIME_PERIOD)              <span class="co">///</span></span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"Education indicators"</span>)                       <span class="co">///</span></span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a>    producer(<span class="st">"ed/02_aggregate.do"</span>)                      <span class="co">///</span></span>
+<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a>    sources(<span class="st">"UIS bulk SDG_092025"</span>)                      <span class="co">///</span></span>
+<span id="cb40-9"><a href="#cb40-9" aria-hidden="true" tabindex="-1"></a>    vintage(<span class="st">"2026-05"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<p>The roles and mode-contract chapter explains how the producer/reviewer switch is set and what each role may do; the external-API chapter covers the remote-fetch side of IO (which, on the Stata side, must route through R or Python — Stata has no API wrapper); and the provenance-sidecars chapter and the appendices give the sidecar schema, the error taxonomy, the full function reference, and the cross-language coverage matrix that this chapter has summarised in prose.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../chapters/23-provenance-and-errors.html" class="pagination-link" aria-label="Provenance sidecars and the error envelope">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Provenance sidecars and the error envelope</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../chapters/32-external-api.html" class="pagination-link" aria-label="The external-API contract">
+        <span class="nav-page-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">The external-API contract</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>UNICEF Chief Statistician Office — Data &amp; Analytics (OSE)</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/unicef-drp/cso-toolkit/edit/main/book/chapters/31-io.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/unicef-drp/cso-toolkit/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>Built with <a href="https://quarto.org">Quarto</a></p>
+</div>
+  </div>
+</footer>
+
+
+
+
+</body></html>
