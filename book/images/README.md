@@ -5,17 +5,19 @@
 
 | File | Role |
 | --- | --- |
-| `cover-A.svg` | Vector source — the canonical cover. |
+| `cover-A.svg` | Vector source — the canonical cover (3:4, **1200×1600**, sized to match the DW-Handbook cover). |
 | `cover-A.png` | Raster export of `cover-A.svg` (the format Quarto embeds for the HTML cover). |
-| `generate-cover.js` | Regenerates **`cover-A.svg`** from the title / subtitle / version config. |
+| `cover-A-min.svg` / `cover-A-min.png` | The earlier minimal cover (sparse cyan, 1200x1600), kept as an alternate. |
+| `cover-A-alt.svg` / `cover-A-alt.png` | The earlier A4-proportioned cover (1280×1810), kept as an alternate. |
+| `generate-cover.js` | Regenerates **`cover-A.svg`** (the 3:4 cover) from the title / subtitle / version config. |
 
 Regenerate after editing the title, subtitle, or version chip:
 
 ```sh
-node generate-cover.js          # writes cover-A.svg only
+node generate-cover.js          # writes cover-A.svg
 ```
 
 `generate-cover.js` produces the **SVG only**. After regenerating, export
-`cover-A.svg` → `cover-A.png` (e.g. with `rsvg-convert`, Inkscape, or any
-SVG→PNG tool) so the raster the book embeds stays in sync. Keep the version
-chip (currently `v0.5.0`) in step with the release tag.
+`cover-A.svg` → `cover-A.png` at **1200×1600** with any SVG→PNG tool (e.g.
+`cairosvg`, `rsvg-convert`, or Inkscape) so the raster the book embeds stays in
+sync. Keep the version chip (currently `v0.5.1`) in step with the release tag.

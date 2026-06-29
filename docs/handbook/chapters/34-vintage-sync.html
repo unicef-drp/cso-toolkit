@@ -151,7 +151,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../index.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Welcome</span></span></a>
+ <span class="menu-text">The CSO Toolkit Handbook</span></a>
   </div>
 </li>
         <li class="sidebar-item">
@@ -182,6 +182,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <div class="sidebar-item-container"> 
   <a href="../front-matter/how-to-cite.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">How to cite this work</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../introduction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction</span></span></a>
   </div>
 </li>
         <li class="sidebar-item sidebar-item-section">
@@ -719,7 +725,7 @@ cso_toolkit_pull("v0.5.0")  -&gt;  fetch, prompt per file, rewrite manifest (pla
 <i class="callout-icon"></i>
 </div>
 <div class="callout-body-container">
-<p>The R and Python stamps are meant to track each other but can drift between releases: in the version this handbook documents, the R <code>dw_toolkit_version()</code> returns <code>"0.5.0"</code> while the Python port still returns <code>"0.4.0"</code>. The stamp is a hard-coded constant in each port (<code>_TOOLKIT_VERSION</code> in Python), so a release that bumps only one side leaves the other behind. Treat the value as a floor for the language you are calling it from, not as a cross-language equality check.</p>
+<p>The R and Python stamps are meant to track each other but can drift between releases — in earlier releases the R <code>dw_toolkit_version()</code> returned <code>"0.5.0"</code> while the Python port returned <code>"0.4.0"</code>; they are aligned at <code>"0.5.1"</code> in the version this handbook documents. The stamp is a hard-coded constant in each port (<code>_TOOLKIT_VERSION</code> in Python), so a release that bumps only one side can still leave the other behind. Treat the value as a floor for the language you are calling it from, not as a cross-language equality check.</p>
 </div>
 </div>
 </div>
@@ -798,8 +804,8 @@ cso_toolkit_pull("v0.5.0")  -&gt;  fetch, prompt per file, rewrite manifest (pla
 </tr>
 <tr class="odd">
 <td><code>dw_toolkit_version</code></td>
-<td>yes (<code>"0.5.0"</code>)</td>
-<td>yes (<code>"0.4.0"</code>)</td>
+<td>yes (<code>"0.5.1"</code>)</td>
+<td>yes (<code>"0.5.1"</code>)</td>
 <td><strong>none</strong> (per-<code>.ado</code> <code>version</code> headers)</td>
 </tr>
 </tbody>

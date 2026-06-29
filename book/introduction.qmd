@@ -1,0 +1,132 @@
+# Introduction
+
+```{=latex}
+\pagenumbering{arabic}
+```
+
+`cso-toolkit` is the shared, cross-language contract that the UNICEF Chief Statistician Office (CSO) uses to make its analytics reproducible. The CSO runs a **data warehouse**: a shared store of signed-off statistical files, named `dw_<sector>.<ext>` (one per sector — education, water and sanitation, immunisation, and so on), that UNICEF's public data products draw from. The repository that holds the operational copy of that warehouse is `DW-Production`. The toolkit is what lets anyone, not just the file's original author, re-run a sector's pipeline and reproduce those files exactly.
+
+::: {.content-visible when-format="html"}
+[Download the handbook (PDF)](The-CSO-Toolkit-Handbook.pdf){.btn .btn-primary role="button"}
+:::
+
+It does this by encoding **one way to read, write, compare, and merge data; one way to call external APIs; one way to aggregate, version-sync, and scaffold projects** — and it does so identically in R, Python, and Stata. Every call routes through wrappers that enforce provenance sidecars (a `.provenance.json` file written next to every output, recording who made it, when, and from what), a uniqueness check (`isid` — that rows are unique on a stated key), and a producer / reviewer mode contract, so that any analytics product can be re-run by someone other than its original author and yield the same numbers. This handbook documents that contract.
+
+## What cso-toolkit is
+
+`cso-toolkit` (the repository `unicef-drp/cso-toolkit`, currently v0.5.1) is a set of small helpers that enforce one way of doing each task, grouped into five capability families. Part III gives each family its own chapter.
+
+- **IO** — `dw_save`, `dw_use`, `dw_compare`, `dw_merge`, `dw_isid`, `dw_verify_z`, `dw_stage`, `dw_root`: uniform file IO with auto-dispatch by extension, an `isid` uniqueness check, an automatic provenance sidecar on writes, a Z: drive mirror on canonical writes (a *canonical* write being the final, signed-off `dw_<sector>` file that downstream products cite, as opposed to an intermediate *working* file), and an integrity check on canonical reads.
+- **External API** — `dw_api_fetch`, `dw_api_cached`, `dw_api_inventory`: a mode-aware wrapper around external data sources (UIS, SDMX, World Bank, ILO, UNSD-SDG, GitHub-raw, generic HTTP/JSON) with a deposit-side cache.
+- **Aggregation** — `aggregate_data_v2`, `apply_time_window`, `generate_agg_footnote`, `dw_nestweight`, `dw_pop`, `dw_regions` (the earlier `aggregate_data` is kept for back-compat): weighted aggregation with population and country coverage, latest-observation time windowing, survey-weight redistribution, and population / region lookups.
+- **Vintage sync** — `cso_toolkit_check`, `cso_toolkit_diff`, `cso_toolkit_pull`: consumer-side helpers that compare the locally **vendored** copy of the toolkit (its source files copied into the consumer's own repository rather than installed over the network) against the latest upstream release and refresh it on demand.
+- **Scaffolding and contract auditing** — `create_profile`, `create_sector_script`, `review_profile`, `test_scripts`: project scaffolds plus a static auditor that flags raw IO/API calls that should have gone through the toolkit.
+
+These families look miscellaneous, but one idea ties them together: **vintage permanence**. A *vintage* is a dated snapshot of upstream data — the data as it stood when a release was cut. Vintage permanence is the guarantee that a publication citing `dw_<sector>.csv` in 2026 will, years later, produce identical numbers when re-run by a reviewer who has only the canonical deposit and the vendored helpers — no network access, no upstream package drift, no ambient `dplyr` version skew. Everything in the toolkit serves that goal.
+
+## One contract, three languages
+
+The defining commitment of `cso-toolkit` is **cross-language parity**: the same command names and the same behaviour across R, Python, and Stata. A `dw_save` in R looks and behaves like a `dw_save` in Python, which looks and behaves like `dw_save` in Stata. The same provenance sidecar schema, the same mode-aware path routing, and the same three-part error envelope (`[cso_toolkit.<func>] WHAT / Why / Fix`) hold across all three siblings.
+
+::: {.panel-tabset}
+
+#### R {.unnumbered .unlisted}
+
+```r
+df <- tibble::tibble(REF_AREA = c("AGO", "BFA"), OBS_VALUE = c(0.5, 0.7))
+dw_save(df, name = "dw_ed_edu.csv", sector = "ed", kind = "wrk",
+        isid = "REF_AREA",
+        metadata = list(title = "Education indicators", vintage = "2026-05"))
+```
+
+#### Python {.unnumbered .unlisted}
+
+```python
+df = pd.DataFrame({"REF_AREA": ["AGO", "BFA"], "OBS_VALUE": [0.5, 0.7]})
+dw_save(df, name="dw_ed_edu.csv", sector="ed", kind="wrk",
+        isid=["REF_AREA"],
+        metadata={"title": "Education indicators", "vintage": "2026-05"})
+```
+
+#### Stata {.unnumbered .unlisted}
+
+```stata
+use "input.dta", clear
+dw_save, filename("dw_ed_edu.dta")  ///
+    path("$teamsWrkData/ed")        ///
+    idvars(REF_AREA INDICATOR)      ///
+    title("Education indicators")   ///
+    vintage("2026-05")
+```
+
+:::
+
+The `kind` argument in the examples names which tier of the warehouse a file belongs to: `kind = "wrk"` is a *working* (intermediate) output, written to scratch and freely re-runnable; a *canonical* write is the final deposit that downstream products cite, and the toolkit guards it with the Z: drive mirror and the reviewer-mode write lock described below. The examples deliberately use the working tier, which is the common case during a pipeline run.
+
+That parity is the ideal, and most of this handbook is organised around it. But the parity is not yet complete. The current gaps:
+
+- **Stata has no external-API wrapper** — the API contract (`dw_api_fetch` and friends) exists only in R and Python. Stata also has no Parquet support; pipelines that need Parquet route through R or Python on the producer side and deposit a `.dta` for Stata consumption.
+- **`dw_merge` and `dw_verify_z` are R + Python only.** Stata folds the uniqueness check into `dw_save` (via its `idvars()` option) rather than exposing a standalone `dw_isid`.
+- **The demographics family** (`dw_pop`, `dw_regions`) is R-only; Python and Stata siblings remain on the roadmap.
+- **Reference documentation is asymmetric.** R has Roxygen-complete reference pages and a pkgdown site; Python has hand-written references rather than autogenerated, pkgdown-style docs.
+
+The cross-language coverage matrix in Appendix A is the authoritative, function-by-function record of what exists where. Wherever this book shows code, it shows all three siblings side by side; where a language is missing a capability, it is marked, not faked.
+
+## The roles this toolkit serves
+
+`cso-toolkit` divides everyone who touches the data warehouse into three roles, each with a strict capability boundary the toolkit enforces at every wrapped call site:
+
+| Role | What they do | Network access |
+|---|---|---|
+| **PRODUCER** (Database Manager, DBM) | Runs the sector pipeline, pulls upstream APIs, deposits the final `dw_<sector>.<ext>` into the canonical warehouse, and writes a submission template (a pre-deposit checklist documenting the deposit). | **Yes** — `dw_apis_allowed = TRUE`. |
+| **REVIEWER** (Database Reviewer, DBR) | Re-runs the pipeline from pre-deposited inputs, compares against the canonical deposit, files issues. Writes only to a sandbox. | **No** — every API call site raises a mode-lock error. |
+| **PUBLISHER** (Database Publisher, DBP) | Pulls signed-off deposits into `data.unicef.org`, SDMX, and downstream products. | N/A (infrastructure outside this repo). |
+
+The mode is not a per-call argument but a **session property**. It is read once at profile-load time (`dw_mode`) and then enforced automatically everywhere. A reviewer does not have to remember to avoid the network; the toolkit makes the network unreachable for them. This is why we say the contract is enforced, not merely conventional.
+
+## Who this handbook is for
+
+This book is written for several audiences at once:
+
+- **Analysts and sector teams** working in R, Python, or Stata who need to read, write, and aggregate warehouse data the CSO way. You will spend most of your time in Part III (the cross-language API).
+- **Database managers** (producers) and **reviewers** who operate the producer / reviewer / publisher mode contract day to day. Part II explains the roles, how the mode is wired into a repo, and what the provenance sidecars and error envelopes guarantee.
+- **Repo adopters** — maintainers of DW-Production and of future deposit-bearing repositories such as UNPD-Population and datalib — who want to vendor the toolkit into their own codebase and keep it in sync. Part IV is your section.
+- **LLM and coding-agent developers** — building *assistants* that turn documentation, existing sector-specific helpers, and legacy code into the standard functions this toolkit supports; or *orchestrators* that compose the toolkit's deterministic functions as trusted building blocks. The handbook is written to be precise enough for a machine to follow — see [§ How coding agents should use this handbook](#sec-coding-agents).
+
+You do not need to read the book front to back. Use the part that matches your role and follow the cross-references to adjacent chapters.
+
+## How coding agents should use this handbook {#sec-coding-agents}
+
+A growing share of code — across software generally, and increasingly in official statistics — is written or reviewed with LLM assistance. Part of the toolkit's value is that it imposes a **minimum common architecture** — a minimum set of guardrails — on that code: no matter who (or what) writes a script, routing it through the wrappers guarantees the same provenance sidecars, the same `isid` uniqueness check, the same mode-aware role enforcement, and the same error envelope. Those guardrails do not depend on the author's discipline — which makes LLM-assisted code *safer to integrate*: they enforce provenance, uniqueness, and role boundaries regardless of who wrote the code, but they do not certify that the numbers are correct. That remains the reviewer's job.
+
+But that safety is structural; it is not a transfer of responsibility. **LLM assistance does not dilute accountability — it concentrates it.** Code now gets produced and checked at machine speed and scale. That means the people who *lead, review, and publish* the results must vouch for more output, generated faster by a process whose plausible-looking errors are easy to miss. The toolkit shrinks the surface they have to police; it does not sign off in their place. The named producer, reviewer, and publisher remain accountable for every number (see [§ The roles this toolkit serves](#the-roles-this-toolkit-serves)) — and the higher the degree of automation, the higher the bar for the human scrutiny that accountability demands.
+
+For an LLM or an agentic orchestrator, that implies:
+
+- **Map onto the toolkit's functions; don't reinvent them.** When porting documentation or a sector's bespoke helpers, translate them into `dw_save`, `dw_api_fetch`, `aggregate_data_v2`, and the rest — the verified, reproducible primitives — not equivalent ad-hoc logic.
+- **Compose, don't regenerate.** An orchestrator calls the deterministic functions as building blocks; the LLM handles orchestration and glue, not the contract's enforced behaviour. The determinism is the point.
+- **Operate within the human's role and session.** An agent runs under the session's `dw_mode` — in reviewer mode the network is unreachable — and must not flip the mode or reach for the `allow_canonical_write` / producer-bootstrap escape hatches on its own; those exist for explicit human action. The agent gets no role of its own; accountability stays with the named producer, reviewer, or publisher.
+- **Never fabricate values, provenance, or coverage.** Read and cite the provenance sidecar; surface gaps from the coverage matrix ([Appendix A](appendices/a-coverage-matrix.qmd)) rather than faking parity.
+- **Treat the contract as binding.** Code that bypasses the wrappers is flagged by the contract auditor ([Part IV](chapters/43-contract-auditor-ci.qmd)); generate code that passes it.
+
+## How to navigate this book
+
+The handbook is organised into four parts and a set of appendices.
+
+- **Part I — Why & Architecture** motivates the toolkit (why a shared repo at all) and lays out the architecture: one contract, three language siblings, many consumer repos, and a single canonical deposit. Start here if you want the big picture before the API details.
+
+- **Part II — The Contract** is the conceptual core. It defines the three roles and the session-level mode contract, shows how to wire that contract into a repo's profile, and explains the two cross-cutting mechanisms that make the toolkit trustworthy: provenance sidecars and the standard error envelope.
+
+- **Part III — The API (cross-language)** is the reference for daily work, one chapter per capability family: the IO contract; the external-API contract; aggregation; vintage sync; and scaffolding plus the contract auditor. Every chapter presents R, Python, and Stata together and is explicit about coverage gaps.
+
+- **Part IV — Adoption & Operations** is for adopters and maintainers: the vendoring model and why it is preferred over network installation, a worked example of onboarding a repo, running the contract auditor in CI, and the project's versioning and release discipline.
+
+- **Appendices** collect the dense reference material: the cross-language coverage matrix (A), the provenance sidecar schema (B), the error taxonomy (C), a full function reference (D), and a glossary (E).
+
+If you are brand new, read the architecture chapter in Part I and the roles chapter in Part II, then jump to the IO contract chapter in Part III. Those three pages give you enough to use the toolkit safely.
+
+If you are here to adopt the toolkit into a new repository, read the vendoring-model and onboarding chapters in Part IV first; they assume the role and mode concepts from Part II, so keep the roles chapter to hand.
+
+::: {.callout-note}
+This handbook documents the toolkit as it actually exists in the repository, including its current asymmetries between languages. Where this book describes a capability as present in one language but not another, that reflects the real state of the code, not an aspiration. Treat the coverage matrix in Appendix A as the source of truth when in doubt.
+:::

@@ -151,7 +151,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../index.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Welcome</span></span></a>
+ <span class="menu-text">The CSO Toolkit Handbook</span></a>
   </div>
 </li>
         <li class="sidebar-item">
@@ -182,6 +182,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <div class="sidebar-item-container"> 
   <a href="../front-matter/how-to-cite.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">How to cite this work</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../introduction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction</span></span></a>
   </div>
 </li>
         <li class="sidebar-item sidebar-item-section">
@@ -554,13 +560,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>No Stata API <em>fetch</em> wrapper.</strong> <code>dw_api_fetch</code> / <code>dw_api_cached</code> / <code>dw_api_inventory</code> are R and Python only. Stata ships the enforcement half (<code>dw_require_no_api</code>) but not the fetch half.</li>
 <li><strong>No Stata parquet or RDS, and <code>dw_merge</code> / <code>dw_verify_z</code> are not in the Stata sibling.</strong> <code>dw_isid</code> in Stata is embedded inside <code>dw_save</code> (the <code>idvars()</code> option) rather than exposed as its own command. (The read contract, <code>dw_use</code>, <em>is</em> now in Stata as of v0.4.0; issue #5 is closed.)</li>
 <li><strong>The demographics helpers <code>dw_pop</code> / <code>dw_regions</code> are R-only.</strong> Neither has a Python or Stata sibling yet; a non-R consumer that needs population denominators or regional groupings routes through the R sibling or a pre-computed artefact.</li>
-<li><strong>No Python autodoc.</strong> R has Roxygen-complete reference documentation (34 <code>.Rd</code> files plus a pkgdown site configured in <code>r/_pkgdown.yml</code>); Python has no equivalent pkgdown-style generated reference, only hand-written references and module READMEs, and the Python sibling trails the R release.</li>
+<li><strong>No Python autodoc.</strong> R has Roxygen-complete reference documentation (34 <code>.Rd</code> files plus a pkgdown site configured in <code>r/_pkgdown.yml</code>); Python has no equivalent pkgdown-style generated reference, only hand-written references and module READMEs.</li>
 </ul>
 <p>Treat the parity claim as “same names, same behaviour where a function exists in both,” not “every function exists everywhere.”</p>
 </div>
 </div>
 </div>
-<p>Maturity differs by sibling as well as by function. The R sibling was feature-complete first and leads the release line; the Python sibling followed as a full port (nine functional modules and twenty-eight public entries) but trails the current R release; the Stata sibling shipped a focused subset and is still filling in. As of v0.5.0 the Stata sibling exposes six commands — <code>dw_save</code>, <code>dw_use</code>, <code>dw_compare</code>, <code>dw_mkdir</code>, <code>dw_load_config</code>, and <code>dw_require_no_api</code>. The versioning-and-releases chapter traces this timeline; the point for the architecture is that a consumer chooses <em>one</em> sibling and gets whatever that sibling implements, so the choice of language is also a choice of current coverage.</p>
+<p>Maturity differs by sibling as well as by function. The R sibling was feature-complete first and leads the release line; the Python sibling followed as a full port (nine functional modules and twenty-eight public entries) but has not yet reached full feature parity with it; the Stata sibling shipped a focused subset and is still filling in. As of v0.5.0 the Stata sibling exposes six commands — <code>dw_save</code>, <code>dw_use</code>, <code>dw_compare</code>, <code>dw_mkdir</code>, <code>dw_load_config</code>, and <code>dw_require_no_api</code>. The versioning-and-releases chapter traces this timeline; the point for the architecture is that a consumer chooses <em>one</em> sibling and gets whatever that sibling implements, so the choice of language is also a choice of current coverage.</p>
 </section>
 <section id="layer-three-consumer-repositories-vendor-the-helpers" class="level2" data-number="3.4">
 <h2 data-number="3.4" class="anchored" data-anchor-id="layer-three-consumer-repositories-vendor-the-helpers"><span class="header-section-number">3.4</span> Layer three — consumer repositories vendor the helpers</h2>

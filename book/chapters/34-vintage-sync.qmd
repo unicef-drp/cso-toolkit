@@ -58,7 +58,7 @@ The helpers compute manifest hashes against working-tree content, so line ending
 `cso_toolkit_check` is the only one of the three helpers that runs end to end today. It is designed to be called quietly at session start: by default it returns a result structure and prints nothing, so a profile can wire it into startup without spamming the console. Pass `quiet = FALSE` (R) / `quiet=False` (Python) to log a human-readable verdict.
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 ```r
 # Silent: returns a list, prints nothing
 res <- cso_toolkit_check()
@@ -69,7 +69,7 @@ if (!is.null(res) && isTRUE(res$updates_available)) {
   cso_toolkit_diff()
 }
 ```
-## Python
+#### Python {.unnumbered .unlisted}
 ```python
 from cso_toolkit import cso_toolkit_check, cso_toolkit_diff
 
@@ -81,7 +81,7 @@ res = cso_toolkit_check(quiet=False)
 if res is not None and res["updates_available"]:
     cso_toolkit_diff()
 ```
-## Stata
+#### Stata {.unnumbered .unlisted}
 ```stata
 * Not available. Stata has no cso_toolkit_check / diff / pull helpers.
 * Pin the vintage manually in .toolkit_manifest.yml and refresh by
@@ -134,7 +134,7 @@ If neither path yields a tag (no `gh`, no HTTP client, blocked network, or a rep
 `cso_toolkit_diff` is the bridge step: once the check tells you a newer tag exists, the diff is meant to show you which vendored files actually differ before you overwrite anything. Its signature is implemented and it respects the manifest, but the comparison body is a stub.
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 ```r
 # Diff against the latest upstream tag
 cso_toolkit_diff()
@@ -142,14 +142,14 @@ cso_toolkit_diff()
 # Diff against a specific tag
 cso_toolkit_diff(target_version = "v0.5.0")
 ```
-## Python
+#### Python {.unnumbered .unlisted}
 ```python
 from cso_toolkit import cso_toolkit_diff
 
 cso_toolkit_diff()
 cso_toolkit_diff(target_version="v0.5.0")
 ```
-## Stata
+#### Stata {.unnumbered .unlisted}
 ```stata
 * Not available — no Stata diff helper.
 ```
@@ -171,7 +171,7 @@ The planned behavior is to fetch each upstream file at `target_version` (default
 `cso_toolkit_pull` is the action step. It is the most heavily guarded of the three because it is the one that would *write* — overwriting vendored code and rewriting the manifest. The guards are real and enforced today; only the final step — fetching files and overwriting the vendored copies — is stubbed.
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 ```r
 # Refresh to a specific tag, prompting per file
 cso_toolkit_pull("v0.5.0")
@@ -182,7 +182,7 @@ cso_toolkit_pull("v0.5.0", dry_run = TRUE)
 # Refresh without per-file prompts
 cso_toolkit_pull("v0.5.0", confirm = FALSE)
 ```
-## Python
+#### Python {.unnumbered .unlisted}
 ```python
 from cso_toolkit import cso_toolkit_pull
 
@@ -190,7 +190,7 @@ cso_toolkit_pull("v0.5.0")
 cso_toolkit_pull("v0.5.0", dry_run=True)
 cso_toolkit_pull("v0.5.0", confirm=False)
 ```
-## Stata
+#### Stata {.unnumbered .unlisted}
 ```stata
 * Not available — no Stata pull helper. Refresh by copying the tagged
 * stata/src/ contents into the consumer's adopath and editing the
@@ -248,18 +248,18 @@ Three properties make this loop safe by design:
 A complementary, always-available check is `dw_toolkit_version` (defined in `dw_io.R` / `dw_io.py`, new in v0.4.0). It returns the tag the *currently vendored* helper triplet was lifted from, so a sector script can assert a floor before relying on a feature that only exists in a recent contract. Unlike the sync helpers, this touches no network and works in every mode.
 
 ::: {.callout-warning}
-The R and Python stamps are meant to track each other but can drift between releases: in the version this handbook documents, the R `dw_toolkit_version()` returns `"0.5.0"` while the Python port still returns `"0.4.0"`. The stamp is a hard-coded constant in each port (`_TOOLKIT_VERSION` in Python), so a release that bumps only one side leaves the other behind. Treat the value as a floor for the language you are calling it from, not as a cross-language equality check.
+The R and Python stamps are meant to track each other but can drift between releases — in earlier releases the R `dw_toolkit_version()` returned `"0.5.0"` while the Python port returned `"0.4.0"`; they are aligned at `"0.5.1"` in the version this handbook documents. The stamp is a hard-coded constant in each port (`_TOOLKIT_VERSION` in Python), so a release that bumps only one side can still leave the other behind. Treat the value as a floor for the language you are calling it from, not as a cross-language equality check.
 :::
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 ```r
 if (utils::compareVersion(dw_toolkit_version(), "0.4.0") < 0) {
   stop("This script requires cso-toolkit >= 0.4.0; ",
        "found ", dw_toolkit_version(), ". Run cso_toolkit_pull('v0.4.0').")
 }
 ```
-## Python
+#### Python {.unnumbered .unlisted}
 ```python
 from cso_toolkit import dw_toolkit_version
 
@@ -271,7 +271,7 @@ if tuple(map(int, dw_toolkit_version().split("."))) < (0, 4, 0):
         f"found {dw_toolkit_version()}."
     )
 ```
-## Stata
+#### Stata {.unnumbered .unlisted}
 ```stata
 * No dw_toolkit_version equivalent in Stata. Each .ado carries its own
 * per-file `version` header (e.g. dw_save.ado: "*! version 1.1 26MAY2026").
@@ -290,7 +290,7 @@ Cross-language parity is weakest here, and the page would mislead if it implied 
 | `cso_toolkit_check` | yes (full) | yes (full, ported) | **none** |
 | `cso_toolkit_diff` | yes (stub) | yes (stub) | **none** |
 | `cso_toolkit_pull` | yes (stub) | yes (stub) | **none** |
-| `dw_toolkit_version` | yes (`"0.5.0"`) | yes (`"0.4.0"`) | **none** (per-`.ado` `version` headers) |
+| `dw_toolkit_version` | yes (`"0.5.1"`) | yes (`"0.5.1"`) | **none** (per-`.ado` `version` headers) |
 
 The R and Python ports of the sync helpers are genuine mirrors of each other: same function names, same arguments, same return structure, same guard order, same two-tier `gh`-then-HTTP tag resolver, even the same `inrepo` escape hatch. Both also expose `dw_toolkit_version`, though the two stamps can fall out of step across a release, as the callout above warns.
 

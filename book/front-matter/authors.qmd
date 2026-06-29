@@ -74,7 +74,7 @@ Readers who find errors are invited to open an issue on the [book's repository](
 
 ## Affiliations and disclaimer {#sec-affiliations}
 
-The authors and the editors are staff or consultants of UNICEF's Data & Analytics section (Office of the Chief Statistician), within the Division of Data, Analytics, Planning and Monitoring (DAPM). The views expressed in this book are those of the named authors and editors and do not necessarily reflect the official position of UNICEF, its Executive Board, or its Member States. References to specific commercial products, processes, or services do not constitute or imply endorsement, recommendation, or favouring by UNICEF.
+The authors and the editors are staff or consultants of UNICEF's Data & Analytics section (Office of the Chief Statistician), within the Office of Strategy and Evidence (OSE). The views expressed in this book are those of the named authors and editors and do not necessarily reflect the official position of UNICEF, its Executive Board, or its Member States. References to specific commercial products, processes, or services do not constitute or imply endorsement, recommendation, or favouring by UNICEF.
 
 The handbook text is released under [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/); the toolkit source code under `r/`, `python/`, and `stata/` is released under the [MIT License](https://github.com/unicef-drp/cso-toolkit/blob/develop/LICENSE). See [How to cite this work](how-to-cite.qmd) for the dual-license detail and the suggested citation.
 

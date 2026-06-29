@@ -19,7 +19,7 @@ The contract exposes exactly three public functions. They share names across R a
 `dw_api_fetch(api, cache_key, ...)` is the workhorse. It checks the cache first; on a miss it either fetches live (producer) or stops (reviewer). Its signature also accepts `refresh`, `ext`, and `metadata` keywords, described in the sections that follow, plus per-source arguments that flow through `...` to the internal fetcher. `dw_api_cached(api, cache_key)` is the explicit cache-only reader — it never touches the network under any mode, and raises if the cache is absent. `dw_api_inventory(api = NULL)` lists what has already been cached, reading the provenance sidecars so the Database Manager can audit freshness.
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 ```r
 # Fetch (or read cache): one named source, one stable cache key.
 entrance_age_primary <- dw_api_fetch(
@@ -36,7 +36,7 @@ lp <- dw_api_cached(api = "wb", cache_key = "wb_learning_poverty_primary")
 dw_api_inventory("wb")
 ```
 
-## Python
+#### Python {.unnumbered .unlisted}
 ```python
 from cso_toolkit import dw_api_fetch, dw_api_cached, dw_api_inventory
 
@@ -53,7 +53,7 @@ lp = dw_api_cached(api="wb", cache_key="wb_learning_poverty_primary")
 dw_api_inventory("wb")
 ```
 
-## Stata
+#### Stata {.unnumbered .unlisted}
 ```stata
 * Stata has no API fetcher. There is no dw_api_fetch / dw_api_cached /
 * dw_api_inventory in the Stata package. A Stata sector script that needs
@@ -106,7 +106,7 @@ The wrapper dispatches on the `api =` string. Both the R implementation and the 
 One serialisation default is worth calling out. Several sources return shapes that do not flatten cleanly into CSV — a nested JSON tree, plain text, the World Bank catalogue's list-columns, or arbitrary content fetched by `github_raw`. Both languages therefore default those four sources — `wb_indicators`, `json_get`, `http`, and `github_raw` — to a non-tabular serialisation: RDS in R, pickle (`pkl`) in Python. The remaining six default to CSV. The `ext =` argument lets a caller override the per-API default when needed, for example to force a UIS response into a non-tabular cache:
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 ```r
 # Force a non-tabular cache when the response isn't flat-rectangular.
 raw_tree <- dw_api_fetch(
@@ -118,7 +118,7 @@ raw_tree <- dw_api_fetch(
 )
 ```
 
-## Python
+#### Python {.unnumbered .unlisted}
 ```python
 raw_tree = dw_api_fetch(
     api="uis",
@@ -129,7 +129,7 @@ raw_tree = dw_api_fetch(
 )
 ```
 
-## Stata
+#### Stata {.unnumbered .unlisted}
 ```stata
 * n/a — no Stata fetcher; the producer chooses ext on the R/Python side.
 ```
@@ -138,7 +138,7 @@ raw_tree = dw_api_fetch(
 A few worked calls, side by side:
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 ```r
 # UNICEF SDMX codelist (one of the 14 collapsed into a loop)
 codebook_residence <- dw_api_fetch(
@@ -168,7 +168,7 @@ regions <- dw_api_fetch(
 )
 ```
 
-## Python
+#### Python {.unnumbered .unlisted}
 ```python
 from cso_toolkit import _state, dw_api_fetch
 
@@ -198,7 +198,7 @@ lp_data = dw_api_fetch(
 )
 ```
 
-## Stata
+#### Stata {.unnumbered .unlisted}
 ```stata
 * No Stata fetcher. Read the frozen cache an R/Python producer deposited:
 dw_use, filename("wb_learning_poverty_primary.csv") path("$teamsRawData/_apis/wb")
@@ -252,20 +252,20 @@ Caches **never expire automatically**. Refresh is always an explicit `refresh = 
 `dw_api_inventory` walks `teamsRawDataCanonical/_apis/`, skips the `.provenance.json` sidecars, and returns one row per cache file. When a sidecar is present it pulls `metadata$fetched_at` (falling back to `written_at`) into the result, so the Database Manager can spot stale caches at a glance. The result frame carries `api`, `cache_key`, `ext`, `size_bytes`, `mtime`, and `fetched_at`; it returns an empty frame when nothing is cached.
 
 ::: {.panel-tabset}
-## R
+#### R {.unnumbered .unlisted}
 ```r
 dw_api_inventory()
 #   api  cache_key                     ext  size_bytes  mtime             fetched_at
 # 1 wb   wb_learning_poverty_primary   csv  142136      2026-05-23 16:42  2026-05-23T16:42:31+0000
 ```
 
-## Python
+#### Python {.unnumbered .unlisted}
 ```python
 inv = dw_api_inventory()
 # DataFrame columns: api / cache_key / ext / size_bytes / mtime / fetched_at
 ```
 
-## Stata
+#### Stata {.unnumbered .unlisted}
 ```stata
 * No Stata inventory function. Inspect the deposit directly, e.g.:
 dir "_apis/"
