@@ -1,34 +1,697 @@
 {
   "schema_version": "1.0.0",
-  "generated_at": "2026-05-31T00:32:42Z",
-  "generated_on": "2026-05-30",
+  "generated_at": "2026-06-29T17:30:38Z",
+  "generated_on": "2026-06-29",
   "sectors": ["nt", "hva", "im", "ws", "mnch", "cme", "ed", "wt", "ecd"],
   "sdmx": {
-    "checked_at": "2026-05-31T00:32:42Z",
+    "checked_at": "2026-06-29T17:30:38Z",
     "endpoints": {
       "unicef_health_status": {
         "status": "ok",
-        "checked_at": "2026-05-31T00:32:42Z"
+        "checked_at": "2026-06-29T17:30:38Z"
       }
     },
     "source": "live"
   },
   "cso_toolkit": {
     "repo": "unicef-drp/cso-toolkit",
-    "fetched_at": "2026-05-31T00:32:42Z",
+    "fetched_at": "2026-06-29T17:30:38Z",
     "prs": [
       {
+        "number": 123,
+        "title": "Release: promote handbook work to main (docs only; stays v0.5.1)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/123",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-29T16:38:28Z",
+        "updated_at": "2026-06-29T16:45:27Z",
+        "closed_at": "2026-06-29T16:45:27Z",
+        "merged_at": "2026-06-29T16:45:27Z"
+      },
+      {
+        "number": 122,
+        "title": "Handbook: front matter (roman) then 1. Introduction (arabic); de-list code tabs; minimal landing",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/122",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-29T15:17:05Z",
+        "updated_at": "2026-06-29T15:28:45Z",
+        "closed_at": "2026-06-29T15:28:43Z",
+        "merged_at": "2026-06-29T15:28:43Z"
+      },
+      {
+        "number": 121,
+        "title": "Handbook: add the cover as page 1 of the PDF",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/121",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-29T14:03:30Z",
+        "updated_at": "2026-06-29T14:16:57Z",
+        "closed_at": "2026-06-29T14:16:55Z",
+        "merged_at": "2026-06-29T14:16:55Z"
+      },
+      {
+        "number": 120,
+        "title": "Handbook: D&A->OSE rename + R/Python version reconciliation (follow-up to #119)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/120",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-29T12:44:49Z",
+        "updated_at": "2026-06-29T13:01:03Z",
+        "closed_at": "2026-06-29T13:01:01Z",
+        "merged_at": "2026-06-29T13:01:01Z"
+      },
+      {
+        "number": 119,
+        "title": "Handbook: cover redesign + PDF download + LLM/agent guidance (1.4-1.5) + OSE affiliation",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/119",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-29T12:03:07Z",
+        "updated_at": "2026-06-29T12:30:46Z",
+        "closed_at": "2026-06-29T12:30:45Z",
+        "merged_at": "2026-06-29T12:30:45Z"
+      },
+      {
+        "number": 118,
+        "title": "docs(handbook): resize cover to DW size + re-render",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/118",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-29T05:07:46Z",
+        "updated_at": "2026-06-29T10:59:33Z",
+        "closed_at": "2026-06-29T10:59:31Z",
+        "merged_at": "2026-06-29T10:59:31Z"
+      },
+      {
+        "number": 117,
+        "title": "test(version): pin version-stamp tests to 0.5.1",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/117",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-29T04:25:03Z",
+        "updated_at": "2026-06-29T04:32:58Z",
+        "closed_at": "2026-06-29T04:32:56Z",
+        "merged_at": "2026-06-29T04:32:56Z"
+      },
+      {
+        "number": 116,
+        "title": "Release v0.5.1: develop -> main",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/116",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-29T03:13:03Z",
+        "updated_at": "2026-06-29T04:41:00Z",
+        "closed_at": "2026-06-29T04:39:43Z",
+        "merged_at": "2026-06-29T04:39:43Z"
+      },
+      {
+        "number": 115,
+        "title": "Release v0.5.1: version bump + cover + front matter",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/115",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-29T03:13:01Z",
+        "updated_at": "2026-06-29T03:45:18Z",
+        "closed_at": "2026-06-29T03:45:16Z",
+        "merged_at": "2026-06-29T03:45:16Z"
+      },
+      {
+        "number": 114,
+        "title": "docs(handbook): cover + citation / Zenodo registration",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/114",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-28T23:52:28Z",
+        "updated_at": "2026-06-29T02:40:49Z",
+        "closed_at": "2026-06-29T02:40:46Z",
+        "merged_at": "2026-06-29T02:40:46Z"
+      },
+      {
+        "number": 113,
+        "title": "docs(handbook): first draft of the CSO Toolkit Handbook (Quarto book)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/113",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-28T15:55:17Z",
+        "updated_at": "2026-06-28T19:56:49Z",
+        "closed_at": "2026-06-28T19:56:48Z",
+        "merged_at": "2026-06-28T19:56:48Z"
+      },
+      {
+        "number": 112,
+        "title": "docs: reorient flow diagrams wide -> long (flowchart LR -> TD)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/112",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-28T14:47:54Z",
+        "updated_at": "2026-06-28T19:06:30Z",
+        "closed_at": "2026-06-28T19:06:28Z",
+        "merged_at": "2026-06-28T19:06:28Z"
+      },
+      {
+        "number": 110,
+        "title": "Release v0.5.0 (develop -> main)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/110",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-21T12:37:19Z",
+        "updated_at": "2026-06-21T12:41:13Z",
+        "closed_at": "2026-06-21T12:37:21Z",
+        "merged_at": "2026-06-21T12:37:21Z"
+      },
+      {
+        "number": 109,
+        "title": "chore(release): cut v0.5.0",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/109",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-21T12:33:13Z",
+        "updated_at": "2026-06-21T12:35:40Z",
+        "closed_at": "2026-06-21T12:35:38Z",
+        "merged_at": "2026-06-21T12:35:38Z"
+      },
+      {
+        "number": 108,
+        "title": "feat: producer-safety -- dw_compare degenerate-side warnings + dw_save overwrite confirmation",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/108",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-21T10:07:11Z",
+        "updated_at": "2026-06-21T12:25:00Z",
+        "closed_at": "2026-06-21T12:24:57Z",
+        "merged_at": "2026-06-21T12:24:57Z"
+      },
+      {
+        "number": 107,
+        "title": "feat(dw_io): multi-sheet xlsx reads + dwZDrive canonical recognition + io-xlsx rule",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/107",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-21T09:40:31Z",
+        "updated_at": "2026-06-21T12:20:34Z",
+        "closed_at": "2026-06-21T12:20:32Z",
+        "merged_at": "2026-06-21T12:20:32Z"
+      },
+      {
+        "number": 105,
+        "title": "Release v0.4.11 (develop → main)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/105",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-15T02:15:40Z",
+        "updated_at": "2026-06-15T02:21:14Z",
+        "closed_at": "2026-06-15T02:20:30Z",
+        "merged_at": "2026-06-15T02:20:30Z"
+      },
+      {
+        "number": 104,
+        "title": "chore(release): cut v0.4.11",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/104",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-15T02:11:13Z",
+        "updated_at": "2026-06-15T02:15:38Z",
+        "closed_at": "2026-06-15T02:15:36Z",
+        "merged_at": "2026-06-15T02:15:36Z"
+      },
+      {
+        "number": 103,
+        "title": "feat(r): extend verbose/debug convention to every worker function",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/103",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-15T01:48:16Z",
+        "updated_at": "2026-06-15T02:07:07Z",
+        "closed_at": "2026-06-15T02:07:05Z",
+        "merged_at": "2026-06-15T02:07:05Z"
+      },
+      {
+        "number": 102,
+        "title": "fix(r): dw_verbosity() reports effective verbosity",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/102",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-14T18:02:25Z",
+        "updated_at": "2026-06-14T18:06:49Z",
+        "closed_at": "2026-06-14T18:06:48Z",
+        "merged_at": "2026-06-14T18:06:48Z"
+      },
+      {
+        "number": 101,
+        "title": "Release v0.4.10 (develop → main)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/101",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-14T17:52:11Z",
+        "updated_at": "2026-06-14T18:11:30Z",
+        "closed_at": "2026-06-14T18:11:30Z",
+        "merged_at": "2026-06-14T18:11:30Z"
+      },
+      {
+        "number": 100,
+        "title": "chore(release): cut v0.4.10",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/100",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-14T17:46:53Z",
+        "updated_at": "2026-06-14T17:51:43Z",
+        "closed_at": "2026-06-14T17:51:42Z",
+        "merged_at": "2026-06-14T17:51:42Z"
+      },
+      {
+        "number": 99,
+        "title": "feat(r): toolkit-wide verbose/debug convention for all dw_* helpers",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/99",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-14T15:03:48Z",
+        "updated_at": "2026-06-14T17:32:44Z",
+        "closed_at": "2026-06-14T17:32:42Z",
+        "merged_at": "2026-06-14T17:32:42Z"
+      },
+      {
+        "number": 98,
+        "title": "feat(aggregate_data_v2): add 'total' method for additive count/stock aggregation",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/98",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-11T03:34:00Z",
+        "updated_at": "2026-06-14T17:42:45Z",
+        "closed_at": "2026-06-14T17:42:44Z",
+        "merged_at": "2026-06-14T17:42:44Z"
+      },
+      {
+        "number": 96,
+        "title": "release: v0.4.9.1 (dw_stage canonical-input fix)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/96",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-02T23:43:08Z",
+        "updated_at": "2026-06-02T23:47:22Z",
+        "closed_at": "2026-06-02T23:47:22Z",
+        "merged_at": "2026-06-02T23:47:22Z"
+      },
+      {
+        "number": 95,
+        "title": "fix(r): dw_stage handles canonical-rooted input paths (v0.4.9.1)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/95",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-02T22:38:40Z",
+        "updated_at": "2026-06-14T17:35:20Z",
+        "closed_at": "2026-06-02T23:42:03Z",
+        "merged_at": "2026-06-02T23:42:03Z"
+      },
+      {
+        "number": 93,
+        "title": "release: develop → main — v0.4.9",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/93",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T18:41:48Z",
+        "updated_at": "2026-06-01T18:46:40Z",
+        "closed_at": "2026-06-01T18:46:40Z",
+        "merged_at": "2026-06-01T18:46:40Z"
+      },
+      {
+        "number": 92,
+        "title": "chore(release): cut v0.4.9 (dw_stage reviewer-mode auto-stage)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/92",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T18:37:20Z",
+        "updated_at": "2026-06-01T18:41:32Z",
+        "closed_at": "2026-06-01T18:41:28Z",
+        "merged_at": "2026-06-01T18:41:28Z"
+      },
+      {
+        "number": 91,
+        "title": "feat(r): dw_stage() reviewer-mode auto-stage with hash-guard + dw_use opt-in",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/91",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T18:05:46Z",
+        "updated_at": "2026-06-01T18:30:50Z",
+        "closed_at": "2026-06-01T18:30:44Z",
+        "merged_at": "2026-06-01T18:30:44Z"
+      },
+      {
+        "number": 90,
+        "title": "release: develop → main — v0.4.8",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/90",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T16:42:16Z",
+        "updated_at": "2026-06-01T16:46:35Z",
+        "closed_at": "2026-06-01T16:46:35Z",
+        "merged_at": "2026-06-01T16:46:35Z"
+      },
+      {
+        "number": 89,
+        "title": "chore(release): cut v0.4.8 (dashboard-hardening micro-release)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/89",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T16:37:33Z",
+        "updated_at": "2026-06-01T16:42:00Z",
+        "closed_at": "2026-06-01T16:41:56Z",
+        "merged_at": "2026-06-01T16:41:56Z"
+      },
+      {
+        "number": 88,
+        "title": "fix(dashboard): rename per-sector prs_closed to prs_closed_total + honest column header (closes #74)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/88",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T14:30:19Z",
+        "updated_at": "2026-06-01T16:29:09Z",
+        "closed_at": "2026-06-01T16:29:04Z",
+        "merged_at": "2026-06-01T16:29:04Z"
+      },
+      {
+        "number": 87,
+        "title": "fix(ci): tighten SOFT pattern — bare OneDrive over-matches on toolkit content (closes #85)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/87",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T14:27:40Z",
+        "updated_at": "2026-06-01T16:25:09Z",
+        "closed_at": "2026-06-01T16:25:06Z",
+        "merged_at": "2026-06-01T16:25:06Z"
+      },
+      {
+        "number": 86,
+        "title": "fix(ci): leak-guard diagnostic uplift (matched-token list + artifact upload on failure) — partial #85",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/86",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T14:22:13Z",
+        "updated_at": "2026-06-01T14:25:22Z",
+        "closed_at": "2026-06-01T14:22:42Z",
+        "merged_at": "2026-06-01T14:22:42Z"
+      },
+      {
+        "number": 84,
+        "title": "release: develop → main — v0.4.7",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/84",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T13:55:44Z",
+        "updated_at": "2026-06-01T14:05:08Z",
+        "closed_at": "2026-06-01T14:05:08Z",
+        "merged_at": "2026-06-01T14:05:07Z"
+      },
+      {
+        "number": 83,
+        "title": "chore(release): cut v0.4.7 (deferred-bug backlog + v0.4.7 tracker findings)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/83",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T13:51:00Z",
+        "updated_at": "2026-06-01T13:55:26Z",
+        "closed_at": "2026-06-01T13:55:22Z",
+        "merged_at": "2026-06-01T13:55:22Z"
+      },
+      {
+        "number": 81,
+        "title": "test(r): extend dw_is_canonical coverage to canon_roots branch (#61.2)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/81",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T12:25:30Z",
+        "updated_at": "2026-06-01T13:40:11Z",
+        "closed_at": "2026-06-01T13:40:08Z",
+        "merged_at": "2026-06-01T13:40:08Z"
+      },
+      {
+        "number": 80,
+        "title": "fix(ci): dashboard.yml paths-ignore covers non-package commits (closes #61.3)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/80",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T12:22:22Z",
+        "updated_at": "2026-06-01T13:44:01Z",
+        "closed_at": "2026-06-01T13:43:56Z",
+        "merged_at": "2026-06-01T13:43:56Z"
+      },
+      {
+        "number": 79,
+        "title": "fix(dashboard): collect.R reachable + alias-overmatch (closes #63)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/79",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T12:20:35Z",
+        "updated_at": "2026-06-01T13:40:06Z",
+        "closed_at": "2026-06-01T13:40:04Z",
+        "merged_at": "2026-06-01T13:40:03Z"
+      },
+      {
+        "number": 78,
+        "title": "fix(r): create_sector_script DW wrapper paths + sentinel (closes #28)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/78",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T11:33:44Z",
+        "updated_at": "2026-06-01T11:48:06Z",
+        "closed_at": "2026-06-01T11:48:04Z",
+        "merged_at": "2026-06-01T11:48:04Z"
+      },
+      {
+        "number": 77,
+        "title": "fix(r): dw_regions renames Aggregate to caller's value (closes #27)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/77",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T11:30:34Z",
+        "updated_at": "2026-06-01T11:51:31Z",
+        "closed_at": "2026-06-01T11:51:26Z",
+        "merged_at": "2026-06-01T11:51:26Z"
+      },
+      {
+        "number": 76,
+        "title": "fix(r): dw_save no self-mirror when primary is canonical (closes #26)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/76",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T11:28:31Z",
+        "updated_at": "2026-06-01T11:48:02Z",
+        "closed_at": "2026-06-01T11:47:59Z",
+        "merged_at": "2026-06-01T11:47:59Z"
+      },
+      {
+        "number": 75,
+        "title": "fix(r): dw_save mirror paths honour .gz suffix (closes #25)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/75",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T11:26:11Z",
+        "updated_at": "2026-06-01T11:48:47Z",
+        "closed_at": "2026-06-01T11:48:45Z",
+        "merged_at": "2026-06-01T11:48:44Z"
+      },
+      {
+        "number": 73,
+        "title": "fix(ci,dashboard): address Copilot findings on PR #72 (leak-guard glob + entity double-escape)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/73",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T10:49:52Z",
+        "updated_at": "2026-06-01T11:05:44Z",
+        "closed_at": "2026-06-01T11:05:38Z",
+        "merged_at": "2026-06-01T11:05:38Z"
+      },
+      {
+        "number": 72,
+        "title": "sync: develop → main — dashboard catch-up (no version bump)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/72",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T02:45:12Z",
+        "updated_at": "2026-06-01T11:12:13Z",
+        "closed_at": "2026-06-01T11:12:13Z",
+        "merged_at": "2026-06-01T11:12:13Z"
+      },
+      {
+        "number": 71,
+        "title": "feat(dashboard): chart open-in-new-tab + cso-toolkit tab (explainer, issues, new-issue buttons)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/71",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-05-31T21:00:45Z",
+        "updated_at": "2026-05-31T21:20:49Z",
+        "closed_at": "2026-05-31T21:20:47Z",
+        "merged_at": "2026-05-31T21:20:47Z"
+      },
+      {
+        "number": 70,
+        "title": "fix(dashboard): working chart fullscreen via parent-level control",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/70",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-05-31T16:18:58Z",
+        "updated_at": "2026-05-31T16:27:24Z",
+        "closed_at": "2026-05-31T16:27:22Z",
+        "merged_at": "2026-05-31T16:27:22Z"
+      },
+      {
+        "number": 69,
+        "title": "fix(dashboard): let chart iframes go fullscreen (allow=fullscreen)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/69",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-05-31T13:45:51Z",
+        "updated_at": "2026-05-31T13:49:56Z",
+        "closed_at": "2026-05-31T13:49:54Z",
+        "merged_at": "2026-05-31T13:49:54Z"
+      },
+      {
+        "number": 68,
+        "title": "feat(dashboard): replicated-indicator counts per sector + KPI (from parity.json)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/68",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-05-31T13:00:56Z",
+        "updated_at": "2026-05-31T13:10:30Z",
+        "closed_at": "2026-05-31T13:10:29Z",
+        "merged_at": "2026-05-31T13:10:29Z"
+      },
+      {
+        "number": 67,
+        "title": "chore(ci): make the dashboard leak-guard name-free (pattern classes only)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/67",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-05-31T12:45:06Z",
+        "updated_at": "2026-05-31T12:49:10Z",
+        "closed_at": "2026-05-31T12:49:08Z",
+        "merged_at": "2026-05-31T12:49:08Z"
+      },
+      {
+        "number": 66,
+        "title": "feat(dashboard): full-size not-yet-replicated cards + what's-missing KPI/hero stats",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/66",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-05-31T01:56:33Z",
+        "updated_at": "2026-05-31T03:32:26Z",
+        "closed_at": "2026-05-31T03:32:25Z",
+        "merged_at": "2026-05-31T03:32:25Z"
+      },
+      {
         "number": 65,
-        "title": "feat(dashboard): topic tags, new-tab links, interactive ggiraph charts",
-        "state": "open",
+        "title": "feat+fix(dashboard): topic tags, interactive charts, new-tab links + privacy redaction + review fixes",
+        "state": "closed",
         "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/65",
         "user": {
           "login": "jpazvd"
         },
         "created_at": "2026-05-30T21:22:53Z",
-        "updated_at": "2026-05-30T23:03:25Z",
-        "closed_at": null,
-        "merged_at": null
+        "updated_at": "2026-06-14T17:35:18Z",
+        "closed_at": "2026-05-31T01:47:16Z",
+        "merged_at": "2026-05-31T01:47:16Z"
       },
       {
         "number": 64,
@@ -52,7 +715,7 @@
           "login": "jpazvd"
         },
         "created_at": "2026-05-30T18:05:39Z",
-        "updated_at": "2026-05-30T18:32:50Z",
+        "updated_at": "2026-06-14T17:35:15Z",
         "closed_at": "2026-05-30T18:32:50Z",
         "merged_at": "2026-05-30T18:32:50Z"
       },
@@ -604,27 +1267,826 @@
         "name": "develop"
       },
       {
-        "name": "docs/dashboard-dwprod"
-      },
-      {
-        "name": "docs/dashboard-topics"
-      },
-      {
         "name": "main"
       }
     ],
     "issues": [
       {
-        "number": 65,
-        "title": "feat(dashboard): topic tags, new-tab links, interactive ggiraph charts",
+        "number": 123,
+        "title": "Release: promote handbook work to main (docs only; stays v0.5.1)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/123",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-29T16:38:28Z",
+        "updated_at": "2026-06-29T16:45:27Z",
+        "closed_at": "2026-06-29T16:45:27Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 122,
+        "title": "Handbook: front matter (roman) then 1. Introduction (arabic); de-list code tabs; minimal landing",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/122",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-29T15:17:05Z",
+        "updated_at": "2026-06-29T15:28:45Z",
+        "closed_at": "2026-06-29T15:28:43Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 121,
+        "title": "Handbook: add the cover as page 1 of the PDF",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/121",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-29T14:03:30Z",
+        "updated_at": "2026-06-29T14:16:57Z",
+        "closed_at": "2026-06-29T14:16:55Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 120,
+        "title": "Handbook: D&A->OSE rename + R/Python version reconciliation (follow-up to #119)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/120",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-29T12:44:49Z",
+        "updated_at": "2026-06-29T13:01:03Z",
+        "closed_at": "2026-06-29T13:01:01Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 119,
+        "title": "Handbook: cover redesign + PDF download + LLM/agent guidance (1.4-1.5) + OSE affiliation",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/119",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-29T12:03:07Z",
+        "updated_at": "2026-06-29T12:30:46Z",
+        "closed_at": "2026-06-29T12:30:45Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 118,
+        "title": "docs(handbook): resize cover to DW size + re-render",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/118",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-29T05:07:46Z",
+        "updated_at": "2026-06-29T10:59:33Z",
+        "closed_at": "2026-06-29T10:59:31Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 117,
+        "title": "test(version): pin version-stamp tests to 0.5.1",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/117",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-29T04:25:03Z",
+        "updated_at": "2026-06-29T04:32:58Z",
+        "closed_at": "2026-06-29T04:32:56Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 116,
+        "title": "Release v0.5.1: develop -> main",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/116",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-29T03:13:03Z",
+        "updated_at": "2026-06-29T04:41:00Z",
+        "closed_at": "2026-06-29T04:39:43Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 115,
+        "title": "Release v0.5.1: version bump + cover + front matter",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/115",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-29T03:13:01Z",
+        "updated_at": "2026-06-29T03:45:18Z",
+        "closed_at": "2026-06-29T03:45:16Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 114,
+        "title": "docs(handbook): cover + citation / Zenodo registration",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/114",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-28T23:52:28Z",
+        "updated_at": "2026-06-29T02:40:49Z",
+        "closed_at": "2026-06-29T02:40:46Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 113,
+        "title": "docs(handbook): first draft of the CSO Toolkit Handbook (Quarto book)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/113",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-28T15:55:17Z",
+        "updated_at": "2026-06-28T19:56:49Z",
+        "closed_at": "2026-06-28T19:56:48Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 112,
+        "title": "docs: reorient flow diagrams wide -> long (flowchart LR -> TD)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/112",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-28T14:47:54Z",
+        "updated_at": "2026-06-28T19:06:30Z",
+        "closed_at": "2026-06-28T19:06:28Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 111,
+        "title": "dw_compare: add diagnose= diff-profile + guard the reviewer-remap path-self-compare footgun",
         "state": "open",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/issues/111",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-21T23:21:31Z",
+        "updated_at": "2026-06-21T23:21:31Z",
+        "closed_at": null,
+        "merged_at": null
+      },
+      {
+        "number": 110,
+        "title": "Release v0.5.0 (develop -> main)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/110",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-21T12:37:19Z",
+        "updated_at": "2026-06-21T12:41:13Z",
+        "closed_at": "2026-06-21T12:37:21Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 109,
+        "title": "chore(release): cut v0.5.0",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/109",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-21T12:33:13Z",
+        "updated_at": "2026-06-21T12:35:40Z",
+        "closed_at": "2026-06-21T12:35:38Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 108,
+        "title": "feat: producer-safety -- dw_compare degenerate-side warnings + dw_save overwrite confirmation",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/108",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-21T10:07:11Z",
+        "updated_at": "2026-06-21T12:25:00Z",
+        "closed_at": "2026-06-21T12:24:57Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 107,
+        "title": "feat(dw_io): multi-sheet xlsx reads + dwZDrive canonical recognition + io-xlsx rule",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/107",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-21T09:40:31Z",
+        "updated_at": "2026-06-21T12:20:34Z",
+        "closed_at": "2026-06-21T12:20:32Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 106,
+        "title": "v0.4.12: fix vendor-surfaced issues (dw_api mirror_to_z, README paths, profile_helpers Z probe) + warn-if-behind in cso_toolkit_check",
+        "state": "open",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/issues/106",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-16T14:41:54Z",
+        "updated_at": "2026-06-16T14:41:54Z",
+        "closed_at": null,
+        "merged_at": null
+      },
+      {
+        "number": 105,
+        "title": "Release v0.4.11 (develop → main)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/105",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-15T02:15:40Z",
+        "updated_at": "2026-06-15T02:21:14Z",
+        "closed_at": "2026-06-15T02:20:30Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 104,
+        "title": "chore(release): cut v0.4.11",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/104",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-15T02:11:13Z",
+        "updated_at": "2026-06-15T02:15:38Z",
+        "closed_at": "2026-06-15T02:15:36Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 103,
+        "title": "feat(r): extend verbose/debug convention to every worker function",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/103",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-15T01:48:16Z",
+        "updated_at": "2026-06-15T02:07:07Z",
+        "closed_at": "2026-06-15T02:07:05Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 102,
+        "title": "fix(r): dw_verbosity() reports effective verbosity",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/102",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-14T18:02:25Z",
+        "updated_at": "2026-06-14T18:06:49Z",
+        "closed_at": "2026-06-14T18:06:48Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 101,
+        "title": "Release v0.4.10 (develop → main)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/101",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-14T17:52:11Z",
+        "updated_at": "2026-06-14T18:11:30Z",
+        "closed_at": "2026-06-14T18:11:30Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 100,
+        "title": "chore(release): cut v0.4.10",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/100",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-14T17:46:53Z",
+        "updated_at": "2026-06-14T17:51:43Z",
+        "closed_at": "2026-06-14T17:51:42Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 99,
+        "title": "feat(r): toolkit-wide verbose/debug convention for all dw_* helpers",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/99",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-14T15:03:48Z",
+        "updated_at": "2026-06-14T17:32:44Z",
+        "closed_at": "2026-06-14T17:32:42Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 98,
+        "title": "feat(aggregate_data_v2): add 'total' method for additive count/stock aggregation",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/98",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-11T03:34:00Z",
+        "updated_at": "2026-06-14T17:42:45Z",
+        "closed_at": "2026-06-14T17:42:44Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 97,
+        "title": "dw_toolkit_version() returns \"0.4.9\" but DESCRIPTION is 0.4.9.1 (version-stamp not bumped)",
+        "state": "open",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/issues/97",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-03T00:43:30Z",
+        "updated_at": "2026-06-03T00:43:30Z",
+        "closed_at": null,
+        "merged_at": null
+      },
+      {
+        "number": 96,
+        "title": "release: v0.4.9.1 (dw_stage canonical-input fix)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/96",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-02T23:43:08Z",
+        "updated_at": "2026-06-02T23:47:22Z",
+        "closed_at": "2026-06-02T23:47:22Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 95,
+        "title": "fix(r): dw_stage handles canonical-rooted input paths (v0.4.9.1)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/95",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-02T22:38:40Z",
+        "updated_at": "2026-06-14T17:35:20Z",
+        "closed_at": "2026-06-02T23:42:03Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 94,
+        "title": "[BUG] dw_stage fails on canonical-rooted input paths (dw_autostage broken for conductor pattern)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/issues/94",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-02T22:37:57Z",
+        "updated_at": "2026-06-02T23:42:04Z",
+        "closed_at": "2026-06-02T23:42:04Z",
+        "merged_at": null
+      },
+      {
+        "number": 93,
+        "title": "release: develop → main — v0.4.9",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/93",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T18:41:48Z",
+        "updated_at": "2026-06-01T18:46:40Z",
+        "closed_at": "2026-06-01T18:46:40Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 92,
+        "title": "chore(release): cut v0.4.9 (dw_stage reviewer-mode auto-stage)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/92",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T18:37:20Z",
+        "updated_at": "2026-06-01T18:41:32Z",
+        "closed_at": "2026-06-01T18:41:28Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 91,
+        "title": "feat(r): dw_stage() reviewer-mode auto-stage with hash-guard + dw_use opt-in",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/91",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T18:05:46Z",
+        "updated_at": "2026-06-01T18:30:50Z",
+        "closed_at": "2026-06-01T18:30:44Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 90,
+        "title": "release: develop → main — v0.4.8",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/90",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T16:42:16Z",
+        "updated_at": "2026-06-01T16:46:35Z",
+        "closed_at": "2026-06-01T16:46:35Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 89,
+        "title": "chore(release): cut v0.4.8 (dashboard-hardening micro-release)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/89",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T16:37:34Z",
+        "updated_at": "2026-06-01T16:42:00Z",
+        "closed_at": "2026-06-01T16:41:56Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 88,
+        "title": "fix(dashboard): rename per-sector prs_closed to prs_closed_total + honest column header (closes #74)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/88",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T14:30:19Z",
+        "updated_at": "2026-06-01T16:29:09Z",
+        "closed_at": "2026-06-01T16:29:04Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 87,
+        "title": "fix(ci): tighten SOFT pattern — bare OneDrive over-matches on toolkit content (closes #85)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/87",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T14:27:40Z",
+        "updated_at": "2026-06-01T16:25:09Z",
+        "closed_at": "2026-06-01T16:25:06Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 86,
+        "title": "fix(ci): leak-guard diagnostic uplift (matched-token list + artifact upload on failure) — partial #85",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/86",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T14:22:13Z",
+        "updated_at": "2026-06-01T14:25:22Z",
+        "closed_at": "2026-06-01T14:22:42Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 85,
+        "title": "dashboard: render.R leaks private DW-Production symbol names into public index.html",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/issues/85",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T14:04:58Z",
+        "updated_at": "2026-06-01T14:27:59Z",
+        "closed_at": "2026-06-01T14:22:44Z",
+        "merged_at": null
+      },
+      {
+        "number": 84,
+        "title": "release: develop → main — v0.4.7",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/84",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T13:55:44Z",
+        "updated_at": "2026-06-01T14:05:08Z",
+        "closed_at": "2026-06-01T14:05:08Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 83,
+        "title": "chore(release): cut v0.4.7 (deferred-bug backlog + v0.4.7 tracker findings)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/83",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T13:51:00Z",
+        "updated_at": "2026-06-01T13:55:26Z",
+        "closed_at": "2026-06-01T13:55:22Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 82,
+        "title": "dw_is_canonical: derive OneDrive pattern from teamsFolderCanonical at call time (#61.1 follow-up)",
+        "state": "open",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/issues/82",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T13:45:00Z",
+        "updated_at": "2026-06-01T14:14:32Z",
+        "closed_at": null,
+        "merged_at": null
+      },
+      {
+        "number": 81,
+        "title": "test(r): extend dw_is_canonical coverage to canon_roots branch (#61.2)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/81",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T12:25:30Z",
+        "updated_at": "2026-06-01T13:40:11Z",
+        "closed_at": "2026-06-01T13:40:08Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 80,
+        "title": "fix(ci): dashboard.yml paths-ignore covers non-package commits (closes #61.3)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/80",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T12:22:22Z",
+        "updated_at": "2026-06-01T13:44:01Z",
+        "closed_at": "2026-06-01T13:43:56Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 79,
+        "title": "fix(dashboard): collect.R reachable + alias-overmatch (closes #63)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/79",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T12:20:35Z",
+        "updated_at": "2026-06-01T13:40:06Z",
+        "closed_at": "2026-06-01T13:40:04Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 78,
+        "title": "fix(r): create_sector_script DW wrapper paths + sentinel (closes #28)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/78",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T11:33:44Z",
+        "updated_at": "2026-06-01T11:48:06Z",
+        "closed_at": "2026-06-01T11:48:04Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 77,
+        "title": "fix(r): dw_regions renames Aggregate to caller's value (closes #27)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/77",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T11:30:34Z",
+        "updated_at": "2026-06-01T11:51:31Z",
+        "closed_at": "2026-06-01T11:51:26Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 76,
+        "title": "fix(r): dw_save no self-mirror when primary is canonical (closes #26)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/76",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T11:28:31Z",
+        "updated_at": "2026-06-01T11:48:02Z",
+        "closed_at": "2026-06-01T11:47:59Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 75,
+        "title": "fix(r): dw_save mirror paths honour .gz suffix (closes #25)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/75",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T11:26:11Z",
+        "updated_at": "2026-06-01T11:48:47Z",
+        "closed_at": "2026-06-01T11:48:45Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 74,
+        "title": "dashboard: `prs_closed` has different semantics overall vs per-sector",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/issues/74",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T10:50:16Z",
+        "updated_at": "2026-06-01T16:29:06Z",
+        "closed_at": "2026-06-01T16:29:06Z",
+        "merged_at": null
+      },
+      {
+        "number": 73,
+        "title": "fix(ci,dashboard): address Copilot findings on PR #72 (leak-guard glob + entity double-escape)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/73",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T10:49:52Z",
+        "updated_at": "2026-06-01T11:05:44Z",
+        "closed_at": "2026-06-01T11:05:38Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 72,
+        "title": "sync: develop → main — dashboard catch-up (no version bump)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/72",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-06-01T02:45:12Z",
+        "updated_at": "2026-06-01T11:12:13Z",
+        "closed_at": "2026-06-01T11:12:13Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 71,
+        "title": "feat(dashboard): chart open-in-new-tab + cso-toolkit tab (explainer, issues, new-issue buttons)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/71",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-05-31T21:00:45Z",
+        "updated_at": "2026-05-31T21:20:49Z",
+        "closed_at": "2026-05-31T21:20:47Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 70,
+        "title": "fix(dashboard): working chart fullscreen via parent-level control",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/70",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-05-31T16:18:58Z",
+        "updated_at": "2026-05-31T16:27:24Z",
+        "closed_at": "2026-05-31T16:27:22Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 69,
+        "title": "fix(dashboard): let chart iframes go fullscreen (allow=fullscreen)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/69",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-05-31T13:45:51Z",
+        "updated_at": "2026-05-31T13:49:56Z",
+        "closed_at": "2026-05-31T13:49:54Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 68,
+        "title": "feat(dashboard): replicated-indicator counts per sector + KPI (from parity.json)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/68",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-05-31T13:00:56Z",
+        "updated_at": "2026-05-31T13:10:30Z",
+        "closed_at": "2026-05-31T13:10:29Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 67,
+        "title": "chore(ci): make the dashboard leak-guard name-free (pattern classes only)",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/67",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-05-31T12:45:06Z",
+        "updated_at": "2026-05-31T12:49:10Z",
+        "closed_at": "2026-05-31T12:49:08Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 66,
+        "title": "feat(dashboard): full-size not-yet-replicated cards + what's-missing KPI/hero stats",
+        "state": "closed",
+        "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/66",
+        "user": {
+          "login": "jpazvd"
+        },
+        "created_at": "2026-05-31T01:56:33Z",
+        "updated_at": "2026-05-31T03:32:26Z",
+        "closed_at": "2026-05-31T03:32:25Z",
+        "merged_at": null,
+        "pull_request": true
+      },
+      {
+        "number": 65,
+        "title": "feat+fix(dashboard): topic tags, interactive charts, new-tab links + privacy redaction + review fixes",
+        "state": "closed",
         "html_url": "https://github.com/unicef-drp/cso-toolkit/pull/65",
         "user": {
           "login": "jpazvd"
         },
         "created_at": "2026-05-30T21:22:53Z",
-        "updated_at": "2026-05-30T23:03:25Z",
-        "closed_at": null,
+        "updated_at": "2026-06-14T17:35:18Z",
+        "closed_at": "2026-05-31T01:47:16Z",
         "merged_at": null,
         "pull_request": true
       },
@@ -645,14 +2107,14 @@
       {
         "number": 63,
         "title": "v0.4.7 follow-ups from PR #62 Copilot review (2 dashboard correctness improvements)",
-        "state": "open",
+        "state": "closed",
         "html_url": "https://github.com/unicef-drp/cso-toolkit/issues/63",
         "user": {
           "login": "jpazvd"
         },
         "created_at": "2026-05-30T18:32:47Z",
-        "updated_at": "2026-05-30T18:32:47Z",
-        "closed_at": null,
+        "updated_at": "2026-06-01T13:40:05Z",
+        "closed_at": "2026-06-01T13:40:05Z",
         "merged_at": null
       },
       {
@@ -664,7 +2126,7 @@
           "login": "jpazvd"
         },
         "created_at": "2026-05-30T18:05:39Z",
-        "updated_at": "2026-05-30T18:32:50Z",
+        "updated_at": "2026-06-14T17:35:15Z",
         "closed_at": "2026-05-30T18:32:50Z",
         "merged_at": null,
         "pull_request": true
@@ -672,14 +2134,14 @@
       {
         "number": 61,
         "title": "v0.4.7 follow-ups from PR #60 Copilot review (4 enhancements; not release blockers)",
-        "state": "open",
+        "state": "closed",
         "html_url": "https://github.com/unicef-drp/cso-toolkit/issues/61",
         "user": {
           "login": "jpazvd"
         },
         "created_at": "2026-05-30T16:16:14Z",
-        "updated_at": "2026-05-30T16:16:14Z",
-        "closed_at": null,
+        "updated_at": "2026-06-01T13:40:11Z",
+        "closed_at": "2026-06-01T13:40:11Z",
         "merged_at": null
       },
       {
@@ -1021,7 +2483,7 @@
           "login": "jpazvd"
         },
         "created_at": "2026-05-28T23:43:41Z",
-        "updated_at": "2026-05-28T23:44:03Z",
+        "updated_at": "2026-06-01T14:14:34Z",
         "closed_at": null,
         "merged_at": null,
         "milestone": {
@@ -1157,7 +2619,7 @@
           "login": "jpazvd"
         },
         "created_at": "2026-05-28T01:54:05Z",
-        "updated_at": "2026-05-28T01:55:50Z",
+        "updated_at": "2026-06-01T14:14:36Z",
         "closed_at": null,
         "merged_at": null,
         "milestone": {
@@ -1216,53 +2678,53 @@
       {
         "number": 28,
         "title": "[v0.4.2] create_sector_script DW wrapper: wrong default paths (011_input/013_output) + nonexistent profile sentinel",
-        "state": "open",
+        "state": "closed",
         "html_url": "https://github.com/unicef-drp/cso-toolkit/issues/28",
         "user": {
           "login": "jpazvd"
         },
         "created_at": "2026-05-27T17:23:15Z",
-        "updated_at": "2026-05-27T17:23:15Z",
-        "closed_at": null,
+        "updated_at": "2026-06-01T11:48:05Z",
+        "closed_at": "2026-06-01T11:48:05Z",
         "merged_at": null
       },
       {
         "number": 27,
         "title": "[v0.4.2] dw_regions(): Aggregate column not renamed to caller's value arg; regional rows have NA in value",
-        "state": "open",
+        "state": "closed",
         "html_url": "https://github.com/unicef-drp/cso-toolkit/issues/27",
         "user": {
           "login": "jpazvd"
         },
         "created_at": "2026-05-27T17:23:13Z",
-        "updated_at": "2026-05-27T17:23:13Z",
-        "closed_at": null,
+        "updated_at": "2026-06-01T11:51:28Z",
+        "closed_at": "2026-06-01T11:51:28Z",
         "merged_at": null
       },
       {
         "number": 26,
         "title": "[v0.4.2] dw_save: producer-mode self-mirror when teamsWrkData == teamsFolderCanonical emits false Teams-mirror-failed warning",
-        "state": "open",
+        "state": "closed",
         "html_url": "https://github.com/unicef-drp/cso-toolkit/issues/26",
         "user": {
           "login": "jpazvd"
         },
         "created_at": "2026-05-27T17:23:12Z",
-        "updated_at": "2026-05-27T17:23:12Z",
-        "closed_at": null,
+        "updated_at": "2026-06-01T11:48:00Z",
+        "closed_at": "2026-06-01T11:48:00Z",
         "merged_at": null
       },
       {
         "number": 25,
         "title": "[v0.4.2] dw_save flow ordering: mirror destinations computed before .gz suffix; mirror_to_z dots leak",
-        "state": "open",
+        "state": "closed",
         "html_url": "https://github.com/unicef-drp/cso-toolkit/issues/25",
         "user": {
           "login": "jpazvd"
         },
         "created_at": "2026-05-27T17:23:10Z",
-        "updated_at": "2026-05-27T17:23:10Z",
-        "closed_at": null,
+        "updated_at": "2026-06-01T11:48:46Z",
+        "closed_at": "2026-06-01T11:48:46Z",
         "merged_at": null
       },
       {
@@ -1352,14 +2814,14 @@
       {
         "number": 18,
         "title": "[v0.4.0] dw_regions() — UNICEF regional aggregates",
-        "state": "open",
+        "state": "closed",
         "html_url": "https://github.com/unicef-drp/cso-toolkit/issues/18",
         "user": {
           "login": "jpazvd"
         },
         "created_at": "2026-05-26T20:08:33Z",
-        "updated_at": "2026-05-26T20:08:33Z",
-        "closed_at": null,
+        "updated_at": "2026-06-01T11:17:08Z",
+        "closed_at": "2026-06-01T11:17:08Z",
         "merged_at": null
       },
       {
@@ -1398,7 +2860,7 @@
           "login": "jpazvd"
         },
         "created_at": "2026-05-26T18:48:39Z",
-        "updated_at": "2026-05-28T23:44:05Z",
+        "updated_at": "2026-06-01T14:14:37Z",
         "closed_at": null,
         "merged_at": null,
         "milestone": {
@@ -1651,81 +3113,81 @@
   },
   "dw_production": {
     "repo": "unicef-drp/DW-Production",
-    "fetched_at": "2026-05-31T00:32:42Z",
+    "fetched_at": "2026-06-29T17:30:38Z",
     "reachable": true,
     "counts": {
-      "prs_total": 148,
-      "prs_open": 27,
-      "prs_merged": 98,
-      "prs_closed": 23,
-      "issues_total": 30,
-      "issues_open": 27,
-      "issues_closed": 3,
-      "branches_total": 46
+      "prs_total": 280,
+      "prs_open": 5,
+      "prs_merged": 239,
+      "prs_closed": 36,
+      "issues_total": 45,
+      "issues_open": 22,
+      "issues_closed": 23,
+      "branches_total": 10
     },
     "by_sector": {
       "nt": {
-        "prs_open": 4,
-        "prs_closed": 22,
-        "issues_open": 6,
-        "issues_closed": 1,
-        "branches": 8
+        "prs_open": 2,
+        "prs_closed_total": 39,
+        "issues_open": 2,
+        "issues_closed": 7,
+        "branches": 2
       },
       "hva": {
-        "prs_open": 3,
-        "prs_closed": 6,
+        "prs_open": 0,
+        "prs_closed_total": 18,
         "issues_open": 2,
-        "issues_closed": 0,
-        "branches": 4
+        "issues_closed": 1,
+        "branches": 0
       },
       "im": {
-        "prs_open": 3,
-        "prs_closed": 8,
+        "prs_open": 0,
+        "prs_closed_total": 28,
         "issues_open": 1,
         "issues_closed": 1,
-        "branches": 4
+        "branches": 0
       },
       "ws": {
-        "prs_open": 2,
-        "prs_closed": 7,
-        "issues_open": 1,
-        "issues_closed": 0,
-        "branches": 2
-      },
-      "mnch": {
-        "prs_open": 3,
-        "prs_closed": 2,
-        "issues_open": 1,
-        "issues_closed": 0,
-        "branches": 3
-      },
-      "cme": {
-        "prs_open": 2,
-        "prs_closed": 4,
-        "issues_open": 2,
-        "issues_closed": 0,
-        "branches": 2
-      },
-      "ed": {
-        "prs_open": 3,
-        "prs_closed": 7,
-        "issues_open": 2,
-        "issues_closed": 0,
-        "branches": 3
-      },
-      "wt": {
         "prs_open": 1,
-        "prs_closed": 2,
+        "prs_closed_total": 19,
         "issues_open": 1,
-        "issues_closed": 0,
-        "branches": 2
-      },
-      "ecd": {
-        "prs_open": 1,
-        "prs_closed": 0,
-        "issues_open": 2,
         "issues_closed": 0,
         "branches": 1
+      },
+      "mnch": {
+        "prs_open": 0,
+        "prs_closed_total": 15,
+        "issues_open": 1,
+        "issues_closed": 0,
+        "branches": 0
+      },
+      "cme": {
+        "prs_open": 0,
+        "prs_closed_total": 16,
+        "issues_open": 1,
+        "issues_closed": 1,
+        "branches": 0
+      },
+      "ed": {
+        "prs_open": 0,
+        "prs_closed_total": 32,
+        "issues_open": 3,
+        "issues_closed": 3,
+        "branches": 0
+      },
+      "wt": {
+        "prs_open": 0,
+        "prs_closed_total": 6,
+        "issues_open": 0,
+        "issues_closed": 2,
+        "branches": 0
+      },
+      "ecd": {
+        "prs_open": 0,
+        "prs_closed_total": 1,
+        "issues_open": 1,
+        "issues_closed": 1,
+        "branches": 0
       }
     }
   },
