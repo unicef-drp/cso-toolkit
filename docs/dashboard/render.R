@@ -49,7 +49,7 @@ CHARTS_DIR    <- file.path(DASHBOARD_DIR, "charts")
 STATE_PATH    <- file.path(DATA_DIR, "state.json")
 OUT_HTML      <- file.path(DASHBOARD_DIR, "index.html")
 
-SECTOR_ORDER  <- c("nt", "hva", "im", "ws", "mnch", "cme", "ed", "wt", "ecd")
+SECTOR_ORDER  <- c("nt", "hva", "im", "ws", "mnch", "cme", "ed", "wt", "ecd", "gn")
 SECTOR_LABELS <- c(
   nt   = "Nutrition (NT)",
   hva  = "HIV/AIDS (HVA)",
@@ -58,8 +58,9 @@ SECTOR_LABELS <- c(
   mnch = "MNCH",
   cme  = "Child Mortality (CME)",
   ed   = "Education (ED)",
-  wt   = "Women's Status (WT)",
-  ecd  = "Early Childhood Dev (ECD)"
+  wt   = "Work Transition (WT)",
+  ecd  = "Early Childhood Dev (ECD)",
+  gn   = "Gender (GN)"
 )
 
 # ----- helpers ------------------------------------------------------------- #
@@ -173,6 +174,13 @@ compute_kpis <- function(state) {
   n_blocked     <- sum(vapply(SECTOR_ORDER, function(s) {
     identical(rep[[s]]$status, "BLOCKED")
   }, logical(1)))
+  # Tracked sectors with no replication snapshot yet (e.g. GN/Gender): counted in
+  # n_sectors but not in full/partial/blocked, so the hero status tags still sum
+  # to the tracked total.
+  n_with_status     <- sum(vapply(SECTOR_ORDER, function(s) {
+    !is.null(rep[[s]]$status)
+  }, logical(1)))
+  n_tracked_pending <- n_total - n_with_status
 
   # The dashboard tracks DW-Production sector work, so the PR/issue KPIs report
   # DW-Production. collect.R emits privacy-safe aggregate counts only (the repo
@@ -201,6 +209,8 @@ compute_kpis <- function(state) {
     n_full          = n_full,
     n_partial       = n_partial,
     n_blocked       = n_blocked,
+    n_with_status   = n_with_status,
+    n_tracked_pending = n_tracked_pending,
     open_prs        = open_prs,
     open_issues     = open_issues,
     open_actions    = open_actions,
@@ -221,7 +231,7 @@ kpis <- compute_kpis(state)
 # still scrolls to the section (no-JS reveals every pane).
 render_kpi_row <- function(kpis) {
   tiles <- list(
-    list(label = "Sectors tracked",  value = kpis$n_sectors,    sub = "9 in scope",         jump = "tab-sectors"),
+    list(label = "Sectors tracked",  value = kpis$n_sectors,    sub = sprintf("%d under replication review", kpis$n_with_status), jump = "tab-sectors"),
     list(label = "Fully replicated", value = kpis$n_full,       sub = "v0.4.x mode-lock",    jump = "tab-sectors"),
     list(label = "Partial",          value = kpis$n_partial,    sub = "halted mid-pipeline", jump = "tab-phases"),
     list(label = "Blocked",          value = kpis$n_blocked,    sub = "env / package issue", jump = "tab-phases", alert = isTRUE(kpis$n_blocked > 0)),
@@ -258,6 +268,7 @@ render_tab_landing <- function(state, kpis) {
   )
   for (s in SECTOR_ORDER) {
     r <- rep[[s]]
+    if (is.null(r$status)) next  # tracked but not yet replicated (e.g. GN) — no phase
     phase <- "Production"
     if (identical(r$status, "FULLY_REPLICATED")) phase <- "Review"
     if (!is.null(r$published) && isTRUE(r$published)) phase <- "Live"
@@ -345,9 +356,10 @@ render_tab_landing <- function(state, kpis) {
     st <- r$status %||% "UNKNOWN"
     cls  <- if (identical(st, "FULLY_REPLICATED")) "st-ok"
             else if (identical(st, "PARTIAL_REPLICATED")) "st-partial"
-            else if (identical(st, "BLOCKED")) "st-blocked" else "st-partial"
+            else if (identical(st, "BLOCKED")) "st-blocked" else "st-idle"
     meta <- if (identical(st, "FULLY_REPLICATED")) "replicated"
-            else if (identical(st, "PARTIAL_REPLICATED")) "partial" else "blocked"
+            else if (identical(st, "PARTIAL_REPLICATED")) "partial"
+            else if (identical(st, "BLOCKED")) "blocked" else "not yet replicated"
     sprintf(paste0('<a class="s-dot" href="#tab-sectors" data-jump="tab-sectors" ',
                    'title="%s"><span class="s-code">%s</span>',
                    '<span class="s-state %s"></span><span class="s-meta">%s</span></a>'),
@@ -361,7 +373,7 @@ render_tab_landing <- function(state, kpis) {
           '<span class="tag tag-ok">%d replicated</span>',
           '<span class="tag tag-partial">%d partial</span>',
           '<span class="tag tag-blocked">%d blocked</span>',
-          '<span class="tag tag-idle">%d not yet replicated</span>',
+          '<span class="tag tag-idle">%d pending</span>',
         '</div>',
         '<div class="hero-sub">%d subject areas tracked &middot; %d awaiting replication &middot; %d folders still empty</div>',
       '</div>',
@@ -370,7 +382,7 @@ render_tab_landing <- function(state, kpis) {
       '</div>',
     '</div>'),
     kpis$n_full, kpis$n_sectors, kpis$n_full, kpis$n_partial, kpis$n_blocked,
-    kpis$n_not_repl, kpis$n_subjects, kpis$n_not_repl, kpis$n_empty, strip_html)
+    kpis$n_tracked_pending, kpis$n_subjects, kpis$n_not_repl, kpis$n_empty, strip_html)
 
   # DW-Production activity: privacy-safe counts + links that open on GitHub
   # (they resolve for viewers with access; the repo stays private).
@@ -408,7 +420,7 @@ render_tab_landing <- function(state, kpis) {
   paste0(
     '<section id="tab-landing" class="tab-pane active">',
     '<h2>Strategic overview</h2>',
-    '<p class="section-lead">Live status of the nine DW-Production sector replications, the toolkit they depend on, and the open work.</p>',
+    '<p class="section-lead">Live status of the DW-Production sector replications, the toolkit they depend on, and the open work.</p>',
     tags_html,
     hero_html,
     render_kpi_row(kpis),
@@ -432,7 +444,7 @@ render_tab_landing <- function(state, kpis) {
 # ----- Tab 2: Sectors ------------------------------------------------------ #
 
 render_sector_card <- function(s, r) {
-  status <- r$status %||% "UNKNOWN"
+  status <- r$status %||% "NOT YET REPLICATED"
   pill_class <- switch(
     status,
     FULLY_REPLICATED   = "ok",
@@ -534,7 +546,7 @@ render_tab_sectors <- function(state) {
     render_sector_card(s, rep[[s]] %||% list())
   }, character(1)), collapse = "")
 
-  # Full subject-area universe: the nine tracked replication sectors above, plus
+  # Full subject-area universe: the ten tracked sectors above, plus
   # every other DW-Production 012_codes subject (generated from state$topics so
   # the set can't drift). The not-yet-tracked subjects render as grey placeholder
   # cards, so the page shows the whole roadmap, not only the active sectors.
@@ -603,6 +615,7 @@ render_tab_phases <- function(state) {
   )
   for (s in SECTOR_ORDER) {
     r <- rep[[s]] %||% list()
+    if (is.null(r$status)) next  # tracked but not yet replicated (e.g. GN) — no phase
     phase <- "Production"
     if (identical(r$status, "PARTIAL_REPLICATED")) phase <- "Production"
     if (identical(r$status, "FULLY_REPLICATED"))   phase <- "Review"
@@ -929,6 +942,7 @@ main { padding: 18px 24px; max-width: 1380px; margin: 0 auto; }
 .st-ok    { background: #2ecc71; }
 .st-partial { background: #f7b801; }
 .st-blocked { background: #e74c3c; }
+.st-idle    { background: #9aa7b4; }
 
 /* ---- KPI tiles (clickable deep-dive links) ---- */
 .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 0 0 16px; }
