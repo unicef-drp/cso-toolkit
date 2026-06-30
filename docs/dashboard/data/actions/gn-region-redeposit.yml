@@ -1,0 +1,13 @@
+id: gn-region-redeposit
+title: "GN: producer re-deposit of region metadata at the pinned vintage"
+sector: gn
+severity: HIGH
+status: IN-PROGRESS
+owner: "GN sector lead"
+created_at: "2026-06-30"
+due_at: null
+blocker_for_dbm: "A region-metadata vintage pin landed on the integration branch, but its cache-key change invalidates the warm cache — until the producer re-deposits the region files at the pinned vintage, reviewer-mode Gender runs hard-stop at the no-API gate."
+description: |
+  The Gender region-metadata vintage pin (ref-specific cache keys plus commit-pinned URLs) merged as a code-only change. Because the new cache keys invalidate the existing warm cache, a reviewer-mode run hard-stops at the no-API gate until the six region files are re-deposited at the pinned vintage in producer mode, followed by a reproduction check (the canonical Gender output must still reproduce identically). Verify this producer re-deposit happened; if not, Gender reviewer reproducibility is currently broken on the integration branch. Detail in the private DW-Production tracker.
+references:
+  - "DW-Production tracker (private): Gender region-metadata pin"
