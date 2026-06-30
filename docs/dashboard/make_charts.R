@@ -373,7 +373,7 @@ save_girafe(p4, "pr_funnel.html")
 drift_df <- data.frame(
   sector  = c("Nutrition (NT)", "HIV/AIDS (HVA)", "Immunization (IM)",
               "Water & Sanitation (WS)", "MNCH", "Child Mortality (CME)",
-              "Education (ED)", "Women's Status (WT)", "Early Childhood Dev (ECD)"),
+              "Education (ED)", "Work Transition (WT)", "Early Childhood Dev (ECD)"),
   version = 0.45,
   stringsAsFactors = FALSE
 )
