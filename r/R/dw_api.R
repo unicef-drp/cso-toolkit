@@ -32,11 +32,13 @@
 #   "sdmx"           SDMX data fetch via rsdmx (any provider + flowRef)
 #   "sdmx_codelist"  SDMX codelist GET + JSON parse to (code, name, description)
 #   "wb"             World Bank wbstats::wb_data
+#   "wb_indicators"  World Bank indicator catalogue (wbstats::wb_indicators)
 #   "ilo"            ILO SDMX via rsdmx (provider = "ILO")
 #   "unsd_sdg"       UNSD SDG API: httr::POST with form-encoded seriesCodes
 #   "github_raw"     Pinned-commit raw.githubusercontent.com fetch
 #   "http"           Generic HTTP GET returning text
 #   "json_get"       Generic JSON GET -> parsed object
+#   "csv"            Flat CSV-at-a-URL: SDMX REST-CSV, Data360, ILOSTAT rplumber
 #-------------------------------------------------------------------
 
 # ============================================================================
@@ -135,7 +137,7 @@
 #'
 #' @param api Character. API identifier. One of `"uis"`, `"sdmx"`,
 #'   `"sdmx_codelist"`, `"wb"`, `"wb_indicators"`, `"ilo"`, `"unsd_sdg"`,
-#'   `"github_raw"`, `"http"`, `"json_get"`. See file header for details.
+#'   `"github_raw"`, `"http"`, `"json_get"`, `"csv"`. See file header for details.
 #' @param cache_key Character. Short snake_case identifier used as the
 #'   cache filename basename.
 #' @param refresh Logical. If `TRUE`, hit the API even when a cache exists
