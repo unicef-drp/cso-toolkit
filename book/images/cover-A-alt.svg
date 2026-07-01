@@ -37,5 +37,5 @@
     <rect x="97" y="815" width="77" height="32" rx="16" fill="none" stroke="#ffffff" stroke-opacity="0.75"/><text x="135.5" y="836" text-anchor="middle" font-size="13" font-weight="600" fill="#ffffff">Python</text>
     <rect x="183" y="815" width="69" height="32" rx="16" fill="none" stroke="#ffffff" stroke-opacity="0.75"/><text x="217.5" y="836" text-anchor="middle" font-size="13" font-weight="600" fill="#ffffff">Stata</text>
   </g>
-  <text x="588" y="836" text-anchor="end" font-size="13" font-weight="700" fill="#ffffff">v0.5.1</text>
+  <text x="588" y="836" text-anchor="end" font-size="13" font-weight="700" fill="#ffffff">v0.6.0</text>
 </svg>

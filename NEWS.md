@@ -6,6 +6,11 @@ _Entries land here as PRs merge into `develop`. When the next release
 is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
+## v0.6.0 (2026-07-01)
+
+Feature + robustness release for the `dw_api_fetch` / `dw_save` producer path:
+a new `api = "csv"` fetcher plus two producer-path bug fixes.
+
 - **`dw_api_fetch()` cache write fixed** — dropped the removed `mirror_to_z`
   argument from the internal `dw_save()` call. `dw_save`'s `...` is forwarded to
   the writers, so `mirror_to_z = TRUE` reached `.write_csv` / `saveRDS` and raised
