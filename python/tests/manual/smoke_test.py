@@ -306,10 +306,10 @@ def main() -> int:
     # ===================================================================
 
     # --- #14.0 dw_toolkit_version() stamp matches the package __version__
-    assert cso_toolkit.dw_toolkit_version() == "0.5.1", (
-        f"dw_toolkit_version() != 0.5.1 (got {cso_toolkit.dw_toolkit_version()!r})"
+    assert cso_toolkit.dw_toolkit_version() == "0.6.0", (
+        f"dw_toolkit_version() != 0.6.0 (got {cso_toolkit.dw_toolkit_version()!r})"
     )
-    print("[#14] dw_toolkit_version() returns '0.5.1' OK")
+    print("[#14] dw_toolkit_version() returns '0.6.0' OK")
 
     # --- #14.1 reviewer mode forbids canonical writes (v0.3.0 preserved)
     with tempfile.TemporaryDirectory() as tdir:
