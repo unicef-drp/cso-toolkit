@@ -42,7 +42,7 @@
     "Stata"
   ],
   "language": "eng",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "publication_date": "2026-06-28",
   "related_identifiers": [
     { "identifier": "https://github.com/unicef-drp/cso-toolkit", "relation": "isSupplementTo" },

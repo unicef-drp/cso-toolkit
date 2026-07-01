@@ -20,4 +20,4 @@ node generate-cover.js          # writes cover-A.svg
 `generate-cover.js` produces the **SVG only**. After regenerating, export
 `cover-A.svg` → `cover-A.png` at **1200×1600** with any SVG→PNG tool (e.g.
 `cairosvg`, `rsvg-convert`, or Inkscape) so the raster the book embeds stays in
-sync. Keep the version chip (currently `v0.5.1`) in step with the release tag.
+sync. Keep the version chip (currently `v0.6.0`) in step with the release tag.

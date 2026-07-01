@@ -40,7 +40,7 @@ const CONFIG = {
     'Python, and Stata.',
   ],
   chips: ['R', 'Python', 'Stata'],
-  version: 'v0.5.1',
+  version: 'v0.6.0',
 };
 
 // the toolkit's own vocabulary — the contract, written down
