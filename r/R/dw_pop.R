@@ -14,9 +14,9 @@
 # sessions can hit the network (and cache the result via `dw_save`),
 # reviewer sessions read the cached deposit only (no live fetch).
 #
-# TODO: Python sibling at `python/src/dw_pop.py`, Stata sibling at
-# `stata/src/dw_pop.ado`.  R-only in v0.4.0; cross-language parity
-# tracked at GitHub issue #17.
+# Python sibling ships at `python/src/dw_pop.py`.
+# TODO: Stata sibling at `stata/src/dw_pop.ado` still pending;
+# cross-language parity tracked at GitHub issue #17.
 
 #' Latest country-level population numbers
 #'
