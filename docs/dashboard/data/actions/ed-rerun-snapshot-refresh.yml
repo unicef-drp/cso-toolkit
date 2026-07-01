@@ -1,0 +1,13 @@
+id: ed-rerun-snapshot-refresh
+title: "ED: re-run + refresh snapshot once the World Bank API blockers clear"
+sector: ed
+severity: MEDIUM
+status: TODO
+owner: "ED sector lead"
+created_at: "2026-06-30"
+due_at: null
+blocker_for_dbm: "ED shows 'partial' because its last reviewer run halted mid-pipeline on a World Bank API throttle; the status will not change until ED is re-run end-to-end and its snapshot refreshed."
+description: |
+  ED is stuck at partial replication on the dashboard because its last reviewer snapshot halted at step 3 of 5 (Learning Poverty and Foundational Learning Skills) when the World Bank API was throttled on the reviewer network. Once the World Bank API access actions land (allowlist or cache, plus re-enabling the fetch block), re-run ED end-to-end and refresh its replication snapshot so the dashboard reflects the completed run. Follows ed-wb-api-allowlist and ed-wb-block-uncomment.
+references:
+  - "replication_ed_latest.json: status, halt_step"

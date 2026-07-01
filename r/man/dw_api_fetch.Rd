@@ -18,7 +18,7 @@ dw_api_fetch(
 \arguments{
 \item{api}{Character. API identifier. One of `"uis"`, `"sdmx"`,
 `"sdmx_codelist"`, `"wb"`, `"wb_indicators"`, `"ilo"`, `"unsd_sdg"`,
-`"github_raw"`, `"http"`, `"json_get"`. See file header for details.}
+`"github_raw"`, `"http"`, `"json_get"`, `"csv"`. See file header for details.}
 
 \item{cache_key}{Character. Short snake_case identifier used as the
 cache filename basename.}

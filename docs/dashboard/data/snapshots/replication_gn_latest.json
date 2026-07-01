@@ -1,0 +1,21 @@
+{
+  "_schema_version": "1.0.0",
+  "sector": "gn",
+  "last_run_at": "2026-06-29T16:00:00Z",
+  "last_run_by": "reviewer",
+  "status": "PARTIAL_REPLICATED",
+  "steps_completed": "pipeline runs end-to-end and reproduces canonical; formal sector-review not yet run",
+  "outputs": [
+    {"file": "dw_gn.csv", "rows": 59876, "step": "aggregate"}
+  ],
+  "fixes_applied": [
+    "Ported the Gender pipeline onto the cso-toolkit aggregation routine (aggregate_data_v2, population-weighted mean, 50% population-coverage mask)",
+    "Verified reproduction: dw_log_compare against the Teams canonical reports 0 added / 0 removed / 0 changed (identical, tol=1e-5; max numeric delta ~1e-13) across 59,876 rows",
+    "Wired the reproducibility gate over all three numeric value columns so the run verifies reproduction instead of asserting it",
+    "Closed a reviewer-mode no-API hole in the remote-CSV fallback so a cold-cache run hard-stops instead of silently reading the network"
+  ],
+  "toolkit_findings": [
+    "Gender is dev-resident and has not had a formal sector-review pass yet — the 0/0/0 reproduction is a targeted reviewer check, not a full review"
+  ],
+  "blockers_for_dbm": "P0 data-integrity (gn-ilo-recode-contamination): the ILO indicator recode is inert, so canonical Gender outputs ship raw source indicator IDs instead of the warehouse codes — fix the recode, add a write-time guard, and re-deposit the corrected canonical. Pending (gn-region-redeposit): a producer re-deposit of region metadata at the pinned vintage, else reviewer-mode Gender runs hard-stop at the no-API gate."
+}

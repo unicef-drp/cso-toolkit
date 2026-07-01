@@ -311,7 +311,7 @@ The R package installs under the name `csotoolkit` (note: no hyphen, no undersco
 
 ::: {.callout-warning}
 ## Version skew between the two packages
-As of writing, `python/pyproject.toml` and `r/DESCRIPTION` both declare `0.5.1`. A matching version is not a promise of rule-set parity, though: if it matters to you, pin the version you install and check that the Python registry carries the rules your contract relies on, rather than assuming the two languages catch exactly the same calls. The versioning-and-releases chapter explains how the two version lines are reconciled.
+As of writing, `python/pyproject.toml` and `r/DESCRIPTION` both declare `0.6.0`. A matching version is not a promise of rule-set parity, though: if it matters to you, pin the version you install and check that the Python registry carries the rules your contract relies on, rather than assuming the two languages catch exactly the same calls. The versioning-and-releases chapter explains how the two version lines are reconciled.
 :::
 
 A few practical notes, each worth keeping distinct:

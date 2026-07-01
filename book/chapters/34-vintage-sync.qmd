@@ -248,7 +248,7 @@ Three properties make this loop safe by design:
 A complementary, always-available check is `dw_toolkit_version` (defined in `dw_io.R` / `dw_io.py`, new in v0.4.0). It returns the tag the *currently vendored* helper triplet was lifted from, so a sector script can assert a floor before relying on a feature that only exists in a recent contract. Unlike the sync helpers, this touches no network and works in every mode.
 
 ::: {.callout-warning}
-The R and Python stamps are meant to track each other but can drift between releases — in earlier releases the R `dw_toolkit_version()` returned `"0.5.0"` while the Python port returned `"0.4.0"`; they are aligned at `"0.5.1"` in the version this handbook documents. The stamp is a hard-coded constant in each port (`_TOOLKIT_VERSION` in Python), so a release that bumps only one side can still leave the other behind. Treat the value as a floor for the language you are calling it from, not as a cross-language equality check.
+The R and Python stamps are meant to track each other but can drift between releases — in earlier releases the R `dw_toolkit_version()` returned `"0.5.0"` while the Python port returned `"0.4.0"`; they are aligned at `"0.6.0"` in the version this handbook documents. The stamp is a hard-coded constant in each port (`_TOOLKIT_VERSION` in Python), so a release that bumps only one side can still leave the other behind. Treat the value as a floor for the language you are calling it from, not as a cross-language equality check.
 :::
 
 ::: {.panel-tabset}
@@ -290,7 +290,7 @@ Cross-language parity is weakest here, and the page would mislead if it implied 
 | `cso_toolkit_check` | yes (full) | yes (full, ported) | **none** |
 | `cso_toolkit_diff` | yes (stub) | yes (stub) | **none** |
 | `cso_toolkit_pull` | yes (stub) | yes (stub) | **none** |
-| `dw_toolkit_version` | yes (`"0.5.1"`) | yes (`"0.5.1"`) | **none** (per-`.ado` `version` headers) |
+| `dw_toolkit_version` | yes (`"0.6.0"`) | yes (`"0.6.0"`) | **none** (per-`.ado` `version` headers) |
 
 The R and Python ports of the sync helpers are genuine mirrors of each other: same function names, same arguments, same return structure, same guard order, same two-tier `gh`-then-HTTP tag resolver, even the same `inrepo` escape hatch. Both also expose `dw_toolkit_version`, though the two stamps can fall out of step across a release, as the callout above warns.
 
