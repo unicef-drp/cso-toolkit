@@ -71,3 +71,18 @@ test_that("dw_api_fetch dispatches api='csv' rather than rejecting it", {
   # read, NOT at the unsupported-api guard.
   expect_false(grepl("Unsupported api", conditionMessage(err)))
 })
+
+test_that(".api_fetch_csv parses a CSV source into a data frame", {
+  # Positive contract test (PR #128 review): the dispatch probe above only proves
+  # 'csv' is wired into the switch; this proves the fetcher actually parses a CSV
+  # source, so a broken .api_fetch_csv cannot pass silently.
+  fetch_csv <- get(".api_fetch_csv", envir = asNamespace("csotoolkit"))
+  tmp <- tempfile(fileext = ".csv")
+  on.exit(unlink(tmp), add = TRUE)
+  writeLines(c("a,b", "1,x", "2,y"), tmp)
+  out <- fetch_csv(tmp)
+  expect_s3_class(out, "data.frame")
+  expect_equal(nrow(out), 2L)
+  expect_equal(names(out), c("a", "b"))
+  expect_equal(out$a, c(1, 2))
+})
