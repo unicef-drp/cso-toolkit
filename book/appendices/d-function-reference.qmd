@@ -131,11 +131,11 @@ Convenience wrappers for the population denominators and the UNICEF region taxon
 
 | Function | R | Python | Stata | Notes |
 |---|---|---|---|---|
-| `dw_pop` | ✅ | — | — | World Bank `SP.POP.TOTL` denominators; added v0.4.0 (issue #17) |
+| `dw_pop` | ✅ | ✅ | — | World Bank `SP.POP.TOTL` denominators; added v0.4.0, Python sibling added for issue #17 |
 | `dw_regions` | ✅ | — | — | Append UNICEF regional aggregate rows; added v0.4.0 (issue #18) |
 
 ::: {.callout-note}
-The demographics family is **R-only today.** Python and Stata siblings of `dw_pop` and `dw_regions` are not yet shipped; a `dw_regions()` redesign against the Country-and-Region-Metadata-API (issue #40) is on the roadmap.
+`dw_pop` ships in **R and Python**; `dw_regions` is **R-only today.** The Stata sibling of `dw_pop` and the Python and Stata siblings of `dw_regions` are not yet shipped; a `dw_regions()` redesign against the Country-and-Region-Metadata-API (issue #40) is on the roadmap.
 :::
 
 ## Vintage sync

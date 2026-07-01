@@ -41,6 +41,7 @@ cso_state.configure(
 | `cso_toolkit_sync.py`           | `cso_toolkit_check`, `cso_toolkit_diff`, `cso_toolkit_pull` |
 | `aggregate_data.py`             | `aggregate_data`, `aggregate_data_v2`, `generate_agg_footnote`, `apply_time_window` |
 | `dw_nestweight.py`              | `dw_nestweight` |
+| `dw_pop.py`                     | `dw_pop` (World Bank population wrapper) |
 | `generate_markdown_report.py`   | `generate_markdown_report`, `process_all_csv_files` |
 | `create_sector_script.py`       | `create_sector_script`, `create_dw_sector_script` |
 | `profile_helpers.py`            | `create_profile`, `review_profile` |

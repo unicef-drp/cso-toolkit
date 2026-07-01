@@ -5,7 +5,7 @@ Aggregation is the step where many country-level observations collapse into a fe
 The contract has two layers. At the bottom sits `aggregate_data_v2()`, a general-purpose grouped aggregator that computes a value together with the coverage metadata needed to judge whether that value is trustworthy. On top sit a set of convenience helpers, each pairing one recurring problem with one function: `apply_time_window()` (picking the latest observation in a window), `dw_nestweight()` (redistributing weights over missing rows), `dw_pop()` (fetching population denominators), and `dw_regions()` (producing UNICEF regional aggregates). Each feeds its output into the aggregator. A companion helper, `generate_agg_footnote()`, turns the aggregator's coverage numbers into the caption that travels with the result.
 
 ::: {.callout-warning}
-Cross-language parity is partial here, and this chapter flags every gap. `aggregate_data_v2`, `apply_time_window`, `generate_agg_footnote`, and `dw_nestweight` ship in **R and Python**. `dw_pop` and `dw_regions` are **R-only**: their source files carry `TODO` markers for the missing Python and Stata siblings (tracked at issues #17 for `dw_pop` and #18 for `dw_regions`). The current release, `v0.5.0` (2026-06-21), shipped without those siblings, so they remain unported. **Stata has none of the aggregation helpers** — its `src/` directory stops at file IO (`dw_save`, `dw_use`, and friends). And even where R and Python both ship a function, one method differs: the R aggregator supports a `"total"` method that the Python aggregator does not. See the cross-language coverage matrix appendix for the consolidated picture.
+Cross-language parity is partial here, and this chapter flags every gap. `aggregate_data_v2`, `apply_time_window`, `generate_agg_footnote`, `dw_nestweight`, and `dw_pop` ship in **R and Python**. `dw_regions` is **R-only**: its source file carries a `TODO` marker for the missing Python and Stata siblings (tracked at issue #18); `dw_pop`'s remaining gap is its Stata sibling (tracked at issue #17). **Stata has none of the aggregation helpers** — its `src/` directory stops at file IO (`dw_save`, `dw_use`, and friends). And even where R and Python both ship a function, one method differs: the R aggregator supports a `"total"` method that the Python aggregator does not. See the cross-language coverage matrix appendix for the consolidated picture.
 :::
 
 ## The core aggregator: `aggregate_data_v2`
@@ -230,14 +230,16 @@ A few behavioral details, identical across the two implementations:
 
 Note one small interface difference: the R signature carries both `verbose` and `debug` (inheriting from the global options), while the Python signature exposes `verbose` only.
 
-## R-only helpers: `dw_pop` and `dw_regions`
+## Demographics helpers: `dw_pop` and `dw_regions`
 
-The remaining two helpers wrap the demographics-and-regions workflow. Both are **R-only** in this release. Each file carries a `TODO` marking the missing siblings: a Python port (`python/src/dw_pop.py` / `dw_regions.py`) and a Stata port (`stata/src/dw_pop.ado` / `dw_regions.ado`), tracked at issues #17 (`dw_pop`) and #18 (`dw_regions`). The current release, `v0.5.0`, shipped without those ports, so both remain open. There is no Stata equivalent today, and Stata has no API wrapper for either to build on — see the external-API contract chapter for why the Stata side stops at file IO.
+The remaining two helpers wrap the demographics-and-regions workflow. `dw_pop` now ships in **R and Python** (`python/src/dw_pop.py`); `dw_regions` is still **R-only**. Each file carries a `TODO` marking the siblings that remain: a Stata port for `dw_pop` (`stata/src/dw_pop.ado`, issue #17) and both a Python and a Stata port for `dw_regions` (`python/src/dw_regions.py`, `stata/src/dw_regions.ado`, issue #18). There is no Stata equivalent for either today, and Stata has no API wrapper to build on — see the external-API contract chapter for why the Stata side stops at file IO.
 
 ### `dw_pop` — population denominators
 
 `dw_pop()` is a thin convenience wrapper over `dw_api_fetch(api = "wb")` for the World Bank total-population indicator `SP.POP.TOTL`. Every sector that wants a population-weighted regional mean needs a denominator; `dw_pop()` hides the indicator code, the cache key, and the work of normalising column names, returning a clean three-column table: `REF_AREA`, `TIME_PERIOD`, `OBS_VALUE`.
 
+::: {.panel-tabset}
+#### R {.unnumbered .unlisted}
 ```r
 # All countries, latest year per country
 pop <- dw_pop()
@@ -249,7 +251,22 @@ pop_2023 <- dw_pop(year = 2023)
 pop_sahel <- dw_pop(countries = c("BFA", "MLI", "NER", "TCD"))
 ```
 
-Arguments: `year` (a year or vector of years; `NULL` returns the latest year per country), `indicator` (default `"SP.POP.TOTL"`), `countries` (ISO3/M49 filter; `NULL` keeps all), `refresh` (force a live fetch and overwrite the cache, producer mode only), and `cache_key` (the cache basename forwarded to `dw_api_fetch`, default `"wb_population_sp_pop_totl"`). The function tolerates the fact that the `wbstats` R package has changed its response columns across versions — it probes for `iso3c`/`iso2c`, `date`/`TIME_PERIOD`, and `value`/`OBS_VALUE` columns — and drops rows missing any of the key triplet so sparse regional-aggregate rows from the World Bank do not leak through.
+#### Python {.unnumbered .unlisted}
+```python
+from cso_toolkit import dw_pop
+
+# All countries, latest year per country
+pop = dw_pop()
+
+# All countries, a specific year
+pop_2023 = dw_pop(year=2023)
+
+# A specific country list
+pop_sahel = dw_pop(countries=["BFA", "MLI", "NER", "TCD"])
+```
+:::
+
+Arguments: `year` (a year or list of years; `None` returns the latest year per country), `indicator` (default `"SP.POP.TOTL"`), `countries` (ISO3/M49 filter; `None` keeps all), `refresh` (force a live fetch and overwrite the cache, producer mode only), and `cache_key` (the cache basename forwarded to `dw_api_fetch`, default `"wb_population_sp_pop_totl"`). The function tolerates the fact that the World Bank client packages have changed their response columns across versions — it probes for `iso3c`/`iso2c`, `date`/`TIME_PERIOD`, and `value`/`OBS_VALUE` columns — and drops rows missing any of the key triplet so sparse regional-aggregate rows from the World Bank do not leak through. The R and Python siblings share the same argument names, defaults, and cache key, so a producer can populate the cache in one language and a reviewer read it back in the other.
 
 Because it routes through `dw_api_fetch`, `dw_pop` inherits the mode contract exactly: a producer session may hit the network and cache the result, while a reviewer session reads the cached deposit only and never fetches live. The mode mechanics live in the roles-and-mode chapter; the cache layer in the external-API contract chapter.
 
@@ -296,4 +313,4 @@ note   <- generate_agg_footnote(country_coverage = 41, total_countries = 48,
                                 exemptions = c("SOM", "YEM"))
 ```
 
-A Python pipeline can run the first two steps and the footnote identically (`apply_time_window`, `dw_nestweight`, `generate_agg_footnote` all ship in Python), then call `aggregate_data_v2` directly for the grouped aggregate — but it cannot yet call `dw_regions` or `dw_pop`, and it cannot use `method = "total"`. A Stata pipeline has none of these helpers and must perform aggregation with native Stata commands, treating this contract as R/Python-only for now. The function reference and coverage matrix appendices give the authoritative per-language inventory.
+A Python pipeline can run the first two steps and the footnote identically (`apply_time_window`, `dw_nestweight`, `generate_agg_footnote` all ship in Python), fetch population denominators with `dw_pop`, then call `aggregate_data_v2` directly for the grouped aggregate — but it cannot yet call `dw_regions`, and it cannot use `method = "total"`. A Stata pipeline has none of these helpers and must perform aggregation with native Stata commands, treating this contract as R/Python-only for now. The function reference and coverage matrix appendices give the authoritative per-language inventory.
