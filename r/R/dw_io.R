@@ -1126,19 +1126,21 @@ dw_save <- function(x,
 	# primary + Teams + Z: destinations). Retry with exponential backoff: on
 	# Windows the same-dir rename can fail transiently while OneDrive sync or an
 	# AV scan briefly holds the destination locked.
+	rename_max_attempts <- 5L
+	rename_base_delay   <- 0.25   # seconds; delay = base * 2^(attempt-1): 0.25, 0.5, 1, 2 s
 	ok_rename <- FALSE
-	for (attempt in 1:5) {
+	for (attempt in seq_len(rename_max_attempts)) {
 		ok_rename <- tryCatch(file.rename(tmp_path, path),
 		 warning = function(w) FALSE,
 		 error = function(e) FALSE)
 		if (isTRUE(ok_rename)) break
-		if (attempt < 5) Sys.sleep(0.25 * 2^(attempt - 1))   # 0.25, 0.5, 1, 2 s
+		if (attempt < rename_max_attempts) Sys.sleep(rename_base_delay * 2^(attempt - 1))
 	}
 	if (!isTRUE(ok_rename)) {
 		file.remove(tmp_path)
 		stop(sprintf(
-			"[cso_toolkit.dw_save] Atomic rename %s -> %s failed after 5 attempts.\n Fix: make sure the destination is not open in another process (Excel locks .xlsx files), then retry.",
-			tmp_path, path
+			"[cso_toolkit.dw_save] Atomic rename %s -> %s failed after %d attempts.\n Fix: make sure the destination is not open in another process (Excel locks .xlsx files), then retry.",
+			tmp_path, path, rename_max_attempts
 		), call. = FALSE)
 	}
 
