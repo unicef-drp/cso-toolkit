@@ -14,7 +14,7 @@ It does this by encoding **one way to read, write, compare, and merge data; one 
 
 ## What cso-toolkit is
 
-`cso-toolkit` (the repository `unicef-drp/cso-toolkit`, currently v0.5.1) is a set of small helpers that enforce one way of doing each task, grouped into five capability families. Part III gives each family its own chapter.
+`cso-toolkit` (the repository `unicef-drp/cso-toolkit`, currently v0.6.0) is a set of small helpers that enforce one way of doing each task, grouped into five capability families. Part III gives each family its own chapter.
 
 - **IO** — `dw_save`, `dw_use`, `dw_compare`, `dw_merge`, `dw_isid`, `dw_verify_z`, `dw_stage`, `dw_root`: uniform file IO with auto-dispatch by extension, an `isid` uniqueness check, an automatic provenance sidecar on writes, a Z: drive mirror on canonical writes (a *canonical* write being the final, signed-off `dw_<sector>` file that downstream products cite, as opposed to an intermediate *working* file), and an integrity check on canonical reads.
 - **External API** — `dw_api_fetch`, `dw_api_cached`, `dw_api_inventory`: a mode-aware wrapper around external data sources (UIS, SDMX, World Bank, ILO, UNSD-SDG, GitHub-raw, generic HTTP/JSON) with a deposit-side cache.

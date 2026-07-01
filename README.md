@@ -219,10 +219,11 @@ copy. Allowlist is configured per-consumer (empty by default).
 
 ### Cached external APIs — `dw_api_fetch`, `dw_api_cached`, `dw_api_inventory`
 
-Mode-aware wrapper around 10 external data sources. Producer hits the
-live API and caches under `_apis/<api>/<cache_key>.<ext>`; reviewer
-reads only from the cache. Secrets in caller kwargs are redacted
-before they reach the provenance sidecar.
+Mode-aware wrapper around 11 external data sources (10 shared with
+Python; `csv` is R-only so far). Producer hits the live API and caches
+under `_apis/<api>/<cache_key>.<ext>`; reviewer reads only from the
+cache. Secrets in caller kwargs are redacted before they reach the
+provenance sidecar.
 
 | `api =` value | Source | R | Python |
 |---|---|---|---|
@@ -234,6 +235,7 @@ before they reach the provenance sidecar.
 | `"unsd_sdg"` | UNSD SDG API | ✅ | ✅ |
 | `"github_raw"` | Pinned-commit raw.githubusercontent.com | ✅ | ✅ |
 | `"http"`, `"json_get"` | Generic HTTP / JSON | ✅ | ✅ |
+| `"csv"` | Flat CSV-at-a-URL (SDMX REST-CSV, Data360, ILOSTAT rplumber) | ✅ | ⏳ |
 
 References: [R](docs/dw_api_reference.md) · [Python](docs/dw_api_python_reference.md).
 
@@ -399,7 +401,9 @@ Semantic versioning (MAJOR.MINOR.PATCH).
 | `v0.4.4` | 2026-05-29 | Quality release. Three milestone issues land in one cycle (PRs [#39](https://github.com/unicef-drp/cso-toolkit/pull/39), [#41](https://github.com/unicef-drp/cso-toolkit/pull/41), [#43](https://github.com/unicef-drp/cso-toolkit/pull/43)). All three surfaced during the v0.4.3.1 fanout audit (IM / WS / HVA install + reviewer-mode runs on 2026-05-28). No public API breaks. |
 | `v0.4.5` | 2026-05-29 | Closes v0.4.5 milestone with standalone-source `%>%` binding (issue [#46](https://github.com/unicef-drp/cso-toolkit/issues/46) / PR [#47](https://github.com/unicef-drp/cso-toolkit/pull/47)) and 8 new `dw_`-prefixed aliases (issue [#42](https://github.com/unicef-drp/cso-toolkit/issues/42) / PR [#48](https://github.com/unicef-drp/cso-toolkit/pull/48)). `magrittr` declared as a first-class Import with `importFrom` in NAMESPACE. No public API breaks; both old and new names remain exported throughout v0.4.x. |
 | `v0.4.6` | 2026-05-30 | Quality release. Four issues land in one cycle — **HIGH-severity** `dw_is_canonical` recognises OneDrive-mounted Teams Documents path (issue [#54](https://github.com/unicef-drp/cso-toolkit/issues/54); pre-fix, reviewer-mode `dw_save()` could silently overwrite canonical Teams artefacts on UNICEF laptops where Documents is OneDrive-mounted); re-exported `dw_root()` public wrapper around `.dw_root_for()` (issue [#53](https://github.com/unicef-drp/cso-toolkit/issues/53)); `.cso_require("magrittr")` envelope on standalone-source `%>%` gate (issue [#51](https://github.com/unicef-drp/cso-toolkit/issues/51)); `r/.gitattributes` pin so the R subtree checks out with LF endings on Windows (issue [#52](https://github.com/unicef-drp/cso-toolkit/issues/52)). Also lands the cso-toolkit-hosted DW Operations Hub dashboard infrastructure (single-page SPA at `docs/dashboard/`, nightly cron via `.github/workflows/dashboard.yml`) and renames the third role INGESTOR → PUBLISHER (DBM/DBR/DBP). No public API breaks. |
-| `v0.5.0` | _planned_ | Live `dw_publish()` submission branch (Helix endpoint + auth + idempotency); Python + Stata siblings of `dw_pop()` and `dw_regions()`. |
+| `v0.5.0` | 2026-06-21 | `dw_use(sheet = NULL)` read-all-sheets; `dwZDrive` recognition in `dw_is_canonical`; `dw_compare` degenerate-side fix; `dw_save` overwrite-confirm. |
+| `v0.5.1` | 2026-06-28 | Documentation release — the 20-chapter CSO Toolkit Handbook (Quarto → GitHub Pages) + Citation / Zenodo registration; no helper code changes. |
+| `v0.6.0` | 2026-07-01 | `dw_api_fetch(api = "csv")` fetcher for flat CSV-at-a-URL endpoints; fixes the `dw_api_fetch` producer cache write (removed `mirror_to_z`) and adds a `dw_save` atomic-rename retry-with-backoff. |
 | `v1.0.0` | _committed API_ | After the `ed` sector pilot lands and a second sector vendors the helpers without modification. |
 
 **Changelog.** Per-release notes — including breaking-change migration
@@ -430,7 +434,7 @@ locally and on CI (`.github/workflows/r-check.yml`).
 Code under [MIT](LICENSE); documentation under CC BY 4.0.
 
 > UNICEF Chief Statistician Office, *cso-toolkit: Shared helpers and
-> operating model for child-indicator data warehousing*, v0.3.0 (2026),
+> operating model for child-indicator data warehousing*, v0.6.0 (2026),
 > <https://github.com/unicef-drp/cso-toolkit>
 
 ---

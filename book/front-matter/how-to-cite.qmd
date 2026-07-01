@@ -53,7 +53,7 @@ Authors are listed alphabetically by surname. Editors are the Chief Statistician
 
 ## Versioned citation
 
-To cite a specific edition, append the version tag (e.g., `v0.5.1`) and use that release's **version DOI** rather than the always-latest **concept DOI**. Each tagged release has its own version DOI; the concept DOI always resolves to the most recent version.
+To cite a specific edition, append the version tag (e.g., `v0.6.0`) and use that release's **version DOI** rather than the always-latest **concept DOI**. Each tagged release has its own version DOI; the concept DOI always resolves to the most recent version.
 
 ## License
 

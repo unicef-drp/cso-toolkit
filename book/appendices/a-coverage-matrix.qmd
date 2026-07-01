@@ -32,7 +32,7 @@ The mode contract itself is at parity across all three languages: a reviewer-ses
 
 ::: {.callout-note}
 ## A version skew worth knowing
-The repository headline version is **v0.5.1**, carried by the R package (`csotoolkit` 0.5.1), the Python package (`__version__ = "0.5.1"`), and the shared `NEWS.md`. The R and Python version stamps are now level; the Stata package versions per-command via its `.ado` files. A matching version number is a floor, not a guarantee of feature parity, though: where a cell below says "Yes" for a recent feature, R is the sibling guaranteed to have it first.
+The repository headline version is **v0.6.0**, carried by the R package (`csotoolkit` 0.6.0), the Python package (`__version__ = "0.6.0"`), and the shared `NEWS.md`. The R and Python version stamps are now level; the Stata package versions per-command via its `.ado` files. A matching version number is a floor, not a guarantee of feature parity, though: where a cell below says "Yes" for a recent feature, R is the sibling guaranteed to have it first.
 :::
 
 ## Function coverage matrix
@@ -110,7 +110,7 @@ What Stata *does* provide is the reviewer-side guard. `dw_require_no_api` is a p
 A Stata-only pipeline cannot acquire fresh upstream data on its own. If your sector runs entirely in Stata, the producer step that hits UIS, SDMX, the World Bank, ILO, UNSD-SDG, or GitHub-raw must be written in R or Python. Plan the language split at design time, not after the fact.
 :::
 
-R and Python share the full `api=` dispatch surface — **ten** keys, identical on both sides: `uis`, `sdmx`, `sdmx_codelist`, `wb`, `wb_indicators`, `ilo`, `unsd_sdg`, `github_raw`, `http`, and `json_get`. For all ten, parity is complete.
+R and Python share **ten** `api=` dispatch keys — `uis`, `sdmx`, `sdmx_codelist`, `wb`, `wb_indicators`, `ilo`, `unsd_sdg`, `github_raw`, `http`, and `json_get` — with complete parity. Since v0.6.0, R adds an eleventh, `csv` (flat CSV-at-a-URL: SDMX REST-CSV, World Bank Data360 file URLs, ILOSTAT rplumber `format=.csv`); the Python sibling has not yet picked it up, so the two are level at ten shared keys with `csv` R-only.
 
 ::: {.panel-tabset}
 #### R {.unnumbered .unlisted}
@@ -250,8 +250,8 @@ The headline gaps:
 
 ## Summary: how complete is each sibling?
 
-- **R** is the reference implementation: every capability family, the full format set including `.rds` and gzipped CSV/TSV, the only generated reference site, and the only CI-gated test suite. Its version stamp is v0.5.1, level with Python. If a behaviour is ambiguous, R defines it.
-- **Python** is a near-complete functional port — core IO (including `.pkl`), all ten external-API dispatch keys, aggregation, vintage sync, and scaffolding — with full type hints, but no generated reference site, CI-manual-only testing, a few R-only helpers it has not yet picked up (`dw_stage`, `dw_root`, `dw_pop`, `dw_regions`). Its version stamp now matches R at 0.5.1, though those helper gaps remain.
+- **R** is the reference implementation: every capability family, the full format set including `.rds` and gzipped CSV/TSV, the only generated reference site, and the only CI-gated test suite. Its version stamp is v0.6.0, level with Python. If a behaviour is ambiguous, R defines it.
+- **Python** is a near-complete functional port — core IO (including `.pkl`), all ten external-API dispatch keys, aggregation, vintage sync, and scaffolding — with full type hints, but no generated reference site, CI-manual-only testing, a few R-only helpers it has not yet picked up (`dw_stage`, `dw_root`, `dw_pop`, `dw_regions`). Its version stamp now matches R at 0.6.0, though those helper gaps remain.
 - **Stata** is a deliberately scoped subset: full IO and mode contract for `.dta` / `.csv` / `.xlsx`, the reviewer no-API gate, recursive `mkdir`, and config loading — but **no external-API wrapper, no aggregation, no vintage-sync helpers, no contract auditor, no Parquet/binary formats, and no automated tests**. It enforces every half of the mode contract it can reach, and routes everything else through R or Python.
 
 When you vendor, choose the language that fits the pipeline — and where a Stata pipeline needs a capability this matrix marks "Route via R/Python," plan that crossing explicitly. The vendoring-model and onboarding chapters walk through how to wire a multi-language sector so the crossings are clean.
