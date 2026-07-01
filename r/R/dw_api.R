@@ -222,8 +222,9 @@ dw_api_fetch <- function(api,
 		"github_raw"     = do.call(.api_fetch_github_raw,     args),
 		"http"           = do.call(.api_fetch_http,           args),
 		"json_get"       = do.call(.api_fetch_json_get,       args),
+		"csv"            = do.call(.api_fetch_csv,            args),
 		stop(sprintf(
-			"[cso_toolkit.dw_api_fetch] Unsupported api '%s'.\n  Supported: uis, sdmx, sdmx_codelist, wb, wb_indicators, ilo, unsd_sdg, github_raw, http, json_get\n  Fix: pass one of the supported strings as `api =`, or add a new branch to the switch() in dw_api.R.",
+			"[cso_toolkit.dw_api_fetch] Unsupported api '%s'.\n  Supported: uis, sdmx, sdmx_codelist, wb, wb_indicators, ilo, unsd_sdg, github_raw, http, json_get, csv\n  Fix: pass one of the supported strings as `api =`, or add a new branch to the switch() in dw_api.R.",
 			api
 		), call. = FALSE)
 	)
@@ -243,7 +244,7 @@ dw_api_fetch <- function(api,
 		),
 		metadata
 	)
-	dw_save(result, path = cache_path, metadata = api_metadata, mirror_to_z = TRUE, verbose = v, debug = d)
+	dw_save(result, path = cache_path, metadata = api_metadata, verbose = v, debug = d)
 
 	.dw_msg("dw_api_fetch", "done: ", api, "/", cache_key, " (", if (is.data.frame(result)) paste0(nrow(result), " rows") else class(result)[1], ")", v = v)
 	result
@@ -610,6 +611,25 @@ dw_api_inventory <- function(api = NULL, verbose = NULL, debug = NULL) {
 .api_fetch_json_get <- function(url, ...) {
 	.require("jsonlite")
 	jsonlite::fromJSON(url, ...)
+}
+
+#' Generic CSV-at-a-URL GET returning a parsed data frame
+#'
+#' Internal. For flat CSV endpoints that `github_raw` (GitHub-only) and
+#' `http` (raw text, no round-trip) do not cover -- SDMX REST-CSV, World
+#' Bank Data360 file URLs, ILOSTAT rplumber `format=.csv`. Caches as a
+#' parsed frame (`.dw_api_default_ext("csv") == "csv"`).
+#'
+#' @param url Character. URL returning CSV.
+#' @param ... Passed to `readr::read_csv`.
+#'
+#' @return data.frame.
+#'
+#' @keywords internal
+#' @noRd
+.api_fetch_csv <- function(url, ...) {
+	.require("readr")
+	as.data.frame(readr::read_csv(url, show_col_types = FALSE, ...))
 }
 
 # ============================================================================

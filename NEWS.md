@@ -6,6 +6,19 @@ _Entries land here as PRs merge into `develop`. When the next release
 is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
+- **`dw_api_fetch()` cache write fixed** — dropped the removed `mirror_to_z`
+  argument from the internal `dw_save()` call. `dw_save`'s `...` is forwarded to
+  the writers, so `mirror_to_z = TRUE` reached `.write_csv` / `saveRDS` and raised
+  `unused argument`, crashing **every** producer cache write _after_ the live
+  fetch — so nothing was cached and reviewer-mode reproducibility silently
+  degraded to live reads. (Producer-mode Z: mirroring has been automatic since
+  v0.4.0.)
+- **`dw_api_fetch(api = "csv")`** — new fetcher for flat CSV-at-a-URL endpoints
+  that `github_raw` (GitHub-only) and `http` (raw text, no round-trip) don't
+  cover: SDMX REST-CSV, World Bank Data360 file URLs, ILOSTAT rplumber
+  `format=.csv`. Caches as a parsed frame (`.dw_api_default_ext("csv") == "csv"`).
+  Usage: `dw_api_fetch(api = "csv", cache_key = "...", url = "...")`.
+
 ## v0.5.1 (2026-06-28)
 
 Documentation release — no code changes to the R / Python / Stata helpers.
