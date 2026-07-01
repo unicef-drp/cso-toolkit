@@ -6,6 +6,12 @@ _Entries land here as PRs merge into `develop`. When the next release
 is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
+- **`dw_save()` atomic-rename resilience** — the primary `file.rename(tmp, path)`
+  now retries up to 5× with exponential backoff (0.25 / 0.5 / 1 / 2 s) before the
+  terminal `stop()`. On Windows the same-directory rename can fail transiently
+  while OneDrive sync or an AV scan briefly holds the destination locked; a single
+  attempt turned that transient lock into a hard write failure.
+
 ## v0.5.1 (2026-06-28)
 
 Documentation release — no code changes to the R / Python / Stata helpers.
