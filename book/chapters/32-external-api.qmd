@@ -4,7 +4,7 @@ A reproducible analysis must be able to re-run today and produce the same number
 
 Three roles govern who may touch the network. A *producer* (a session running in producer mode) hits the live API and populates the cache; a *reviewer* (a session running in reviewer mode) reads the frozen cache and is forbidden from touching the network at all; and the *Database Manager* — the team member who owns the deposit — is the producer who decides when each cache is refreshed. These are session modes and a stewardship role, not three separate job titles: the same person is a producer one day and a reviewer the next, depending on how their session is configured. The roles-and-mode contract chapter defines all three in full; this chapter shows how the API wrapper enforces them.
 
-This chapter documents the three public entry points of the contract — `dw_api_fetch`, `dw_api_cached`, and `dw_api_inventory` — the ten external sources they cover, the cache layout and provenance sidecars they emit, and the producer/reviewer behaviour that makes the whole thing reproducible. It builds on the roles-and-mode contract (the chapter on roles and the mode contract), on the IO contract (the wrapper writes and reads its cache through `dw_save` and `dw_use`, covered in the IO contract chapter), and on the provenance-sidecar and error-envelope conventions (the provenance-sidecars chapter and the error-taxonomy chapter).
+This chapter documents the three public entry points of the contract — `dw_api_fetch`, `dw_api_cached`, and `dw_api_inventory` — the eleven external sources they cover (ten shared with Python; `csv` is R-only so far), the cache layout and provenance sidecars they emit, and the producer/reviewer behaviour that makes the whole thing reproducible. It builds on the roles-and-mode contract (the chapter on roles and the mode contract), on the IO contract (the wrapper writes and reads its cache through `dw_save` and `dw_use`, covered in the IO contract chapter), and on the provenance-sidecar and error-envelope conventions (the provenance-sidecars chapter and the error-taxonomy chapter).
 
 ## Why a wrapper at all
 
@@ -88,7 +88,7 @@ The reviewer lockout is loud and instructive rather than a bare error. In Python
 
 ## The supported sources
 
-The wrapper dispatches on the `api =` string. Both the R implementation and the Python port support the same ten values. Each maps to a thin internal fetcher that knows the URL shape for that source and imports its package lazily — that is, the package is loaded only when that source is actually fetched, so a consumer that never touches SDMX need not have `rsdmx` or `sdmx1` installed.
+The wrapper dispatches on the `api =` string. The R implementation supports eleven values; the Python port supports the same ten with the exception of `csv`, which was added to R in v0.6.0. Each maps to a thin internal fetcher that knows the URL shape for that source and imports its package lazily — that is, the package is loaded only when that source is actually fetched, so a consumer that never touches SDMX need not have `rsdmx` or `sdmx1` installed.
 
 | `api =` value     | Source / what it replaces                                              | R package        | Python package | Key arguments |
 |-------------------|------------------------------------------------------------------------|------------------|----------------|---------------|
@@ -102,8 +102,9 @@ The wrapper dispatches on the `api =` string. Both the R implementation and the 
 | `"github_raw"`    | Pinned-commit `raw.githubusercontent.com` fetch                       | `readr`          | `requests`     | `owner_repo`, `ref`, `path` |
 | `"http"`          | Generic HTTP GET returning text (`httr::GET`)                         | `httr`           | `requests`     | `url`, `headers` |
 | `"json_get"`      | Generic JSON GET → parsed object (`jsonlite::fromJSON`)               | `jsonlite`       | `requests`     | `url` |
+| `"csv"` (R-only, v0.6.0) | Flat CSV-at-a-URL: SDMX REST-CSV, WB Data360 files, ILOSTAT rplumber `format=.csv` (`readr::read_csv`) | `readr` | — (not yet ported) | `url` |
 
-One serialisation default is worth calling out. Several sources return shapes that do not flatten cleanly into CSV — a nested JSON tree, plain text, the World Bank catalogue's list-columns, or arbitrary content fetched by `github_raw`. Both languages therefore default those four sources — `wb_indicators`, `json_get`, `http`, and `github_raw` — to a non-tabular serialisation: RDS in R, pickle (`pkl`) in Python. The remaining six default to CSV. The `ext =` argument lets a caller override the per-API default when needed, for example to force a UIS response into a non-tabular cache:
+One serialisation default is worth calling out. Several sources return shapes that do not flatten cleanly into CSV — a nested JSON tree, plain text, the World Bank catalogue's list-columns, or arbitrary content fetched by `github_raw`. Both languages therefore default those four sources — `wb_indicators`, `json_get`, `http`, and `github_raw` — to a non-tabular serialisation: RDS in R, pickle (`pkl`) in Python. The remaining flat-tabular sources default to CSV — the six shared ones plus R's `csv` fetcher. The `ext =` argument lets a caller override the per-API default when needed, for example to force a UIS response into a non-tabular cache:
 
 ::: {.panel-tabset}
 #### R {.unnumbered .unlisted}

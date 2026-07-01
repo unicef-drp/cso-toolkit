@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------
 # 00_functions/dw_io.R
-# Toolkit version: 0.5.1
+# Toolkit version: 0.6.0
 # Purpose: Uniform read/write helpers for DW-Production R scripts.
 # Auto-dispatch by file extension; supports every IO form the
 # sector scripts currently use; enforces the reviewer/producer
@@ -355,7 +355,7 @@ dw_is_canonical <- function(path, debug = NULL) {
 #' rely on a v0.4.0+ contract (e.g. network-first reviewer reads,
 #' mirror-to-both producer writes).
 #'
-#' @return Character. Currently `"0.5.1"`.
+#' @return Character. Currently `"0.6.0"`.
 #'
 #' @examples
 #' if (utils::compareVersion(dw_toolkit_version(), "0.4.0") < 0) {
@@ -370,8 +370,8 @@ dw_is_canonical <- function(path, debug = NULL) {
 #'   See [dw_verbosity()].
 #' @export
 dw_toolkit_version <- function(debug = NULL) {
-	.dw_dbg("dw_toolkit_version", "vendored tag = 0.5.1", d = .dw_d(debug))
-	"0.5.1"
+	.dw_dbg("dw_toolkit_version", "vendored tag = 0.6.0", d = .dw_d(debug))
+	"0.6.0"
 }
 
 # ============================================================================
@@ -1122,16 +1122,25 @@ dw_save <- function(x,
 		), call. = FALSE)
 	)
 
-	# Primary atomic rename (overwrite gate already enforced above
-	# across primary + Teams + Z: destinations).
-	ok_rename <- tryCatch(file.rename(tmp_path, path),
-	 warning = function(w) FALSE,
-	 error = function(e) FALSE)
+	# Primary atomic rename (overwrite gate already enforced above across
+	# primary + Teams + Z: destinations). Retry with exponential backoff: on
+	# Windows the same-dir rename can fail transiently while OneDrive sync or an
+	# AV scan briefly holds the destination locked.
+	rename_max_attempts <- 5L
+	rename_base_delay   <- 0.25   # seconds; delay = base * 2^(attempt-1): 0.25, 0.5, 1, 2 s
+	ok_rename <- FALSE
+	for (attempt in seq_len(rename_max_attempts)) {
+		ok_rename <- tryCatch(file.rename(tmp_path, path),
+		 warning = function(w) FALSE,
+		 error = function(e) FALSE)
+		if (isTRUE(ok_rename)) break
+		if (attempt < rename_max_attempts) Sys.sleep(rename_base_delay * 2^(attempt - 1))
+	}
 	if (!isTRUE(ok_rename)) {
 		file.remove(tmp_path)
 		stop(sprintf(
-			"[cso_toolkit.dw_save] Atomic rename %s -> %s failed.\n Fix: make sure the destination is not open in another process (Excel locks .xlsx files), then retry.",
-			tmp_path, path
+			"[cso_toolkit.dw_save] Atomic rename %s -> %s failed after %d attempts.\n Fix: make sure the destination is not open in another process (Excel locks .xlsx files), then retry.",
+			tmp_path, path, rename_max_attempts
 		), call. = FALSE)
 	}
 

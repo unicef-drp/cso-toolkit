@@ -1,0 +1,13 @@
+id: gn-ilo-recode-contamination
+title: "GN: ILO indicator recode is inert — canonical contaminated"
+sector: gn
+severity: HIGH
+status: TODO
+owner: "GN sector lead"
+created_at: "2026-06-30"
+due_at: null
+blocker_for_dbm: "The ILO indicator recode never fires, so canonical Gender outputs ship raw source indicator IDs instead of the warehouse codes; downstream filters on the warehouse code prefix silently drop every ILO row."
+description: |
+  In the Gender national-extract step, the indicator-recode condition tests the source ILO indicator IDs without the annual-frequency suffix the fetched IDs actually carry, so the match never fires and every ILO row falls through with its raw source ID instead of the warehouse Gender codes. The canonical Gender file is already contaminated (every release), and it is invisible in a vintage diff because the prior canonical is wrong too. Fix: align the recode condition with the fetched IDs, add a write-time guard that rejects un-recoded rows, and re-deposit the corrected canonical. Detail in the private DW-Production tracker.
+references:
+  - "DW-Production tracker (private): Gender ILO recode data-integrity"

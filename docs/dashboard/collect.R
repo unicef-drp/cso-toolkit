@@ -67,7 +67,7 @@ dir.create(ACTIONS_DIR,   showWarnings = FALSE, recursive = TRUE)
 TODAY  <- format(Sys.Date(), "%Y-%m-%d")
 NOWUTC <- format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
 
-SECTORS <- c("nt", "hva", "im", "ws", "mnch", "cme", "ed", "wt", "ecd")
+SECTORS <- c("nt", "hva", "im", "ws", "mnch", "cme", "ed", "wt", "ecd", "gn")
 
 log_info <- function(msg)  message(sprintf("[%s] %s", NOWUTC, msg))
 log_warn <- function(msg)  message(sprintf("[%s] WARN: %s", NOWUTC, msg))
@@ -330,7 +330,8 @@ collect_dw_production_github <- function() {
     nt = "nutrition|\\bnt\\b", hva = "hiv|\\bhva\\b", im = "immun|\\bim\\b",
     ws = "wash|water|\\bws\\b", mnch = "mnch|maternal|newborn",
     cme = "\\bcme\\b|child.?mortal", ed = "educat|\\bed\\b",
-    wt = "\\bwt\\b|cp.?cluster|weighting", ecd = "ecd|early.?child"
+    wt = "\\bwt\\b|work.?transition|cp.?cluster", ecd = "ecd|early.?child",
+    gn = "gender|\\bgpi\\b|\\bgn\\b"
   )
   sector_of <- function(text) {
     text <- tolower(text %||% "")
