@@ -124,7 +124,7 @@ Cross-language parity is the design goal, not a finished fact. The gaps worth na
 
 - **No Stata API *fetch* wrapper.** `dw_api_fetch` / `dw_api_cached` / `dw_api_inventory` are R and Python only. Stata ships the enforcement half (`dw_require_no_api`) but not the fetch half.
 - **No Stata parquet or RDS, and `dw_merge` / `dw_verify_z` are not in the Stata sibling.** `dw_isid` in Stata is embedded inside `dw_save` (the `idvars()` option) rather than exposed as its own command. (The read contract, `dw_use`, *is* now in Stata as of v0.4.0; issue #5 is closed.)
-- **The demographics helpers `dw_pop` / `dw_regions` are R-only.** Neither has a Python or Stata sibling yet; a non-R consumer that needs population denominators or regional groupings routes through the R sibling or a pre-computed artefact.
+- **The demographics helpers are partially ported.** `dw_pop` ships in R and Python; `dw_regions` is still R-only. Neither has a Stata sibling yet, so a Stata consumer that needs population denominators or regional groupings routes through a sibling or a pre-computed artefact.
 - **No Python autodoc.** R has Roxygen-complete reference documentation (34 `.Rd` files plus a pkgdown site configured in `r/_pkgdown.yml`); Python has no equivalent pkgdown-style generated reference, only hand-written references and module READMEs.
 
 Treat the parity claim as "same names, same behaviour where a function exists in both," not "every function exists everywhere."
