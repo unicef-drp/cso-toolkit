@@ -23,9 +23,9 @@ asserts the three outputs are **value-equal within tolerance**.
 conformance/
   fixtures/indicators.csv   # shared canonical input (edge cases below)
   run_r.R                   # driver: dw_use -> dw_save -> dw_use -> out_r.csv
-  run_python.py             # driver -> out_python.csv          (TODO)
+  run_python.py             # driver -> out_python.csv
   run_stata.do              # driver -> out_stata.csv           (TODO)
-  compare.py                # asserts out_r == out_python == out_stata  (TODO)
+  compare.py                # asserts out_r == out_python == out_stata
 ```
 
 The **fixture** deliberately exercises float precision (`0.333333333`,
@@ -44,26 +44,25 @@ is.
 
 ## CI (`conformance.yml`)
 
-Jobs: `r-conformance`, `python-conformance`, `stata-conformance` — each runs its
-driver and uploads `out_<lang>.csv`; a final `compare` job downloads all three
-and runs `compare.py` (non-zero exit on any mismatch), on push/PR to
-`main` + `develop`.
+Jobs: `r-conformance`, `python-conformance` — each runs its driver and uploads
+`out_<lang>.csv`; a final `compare` job downloads the outputs and runs
+`compare.py` (non-zero exit on any mismatch), on push/PR to `main` + `develop`.
 
-> **Stata-in-CI needs provisioning (admin action).** There is no Stata runner
-> in this org today. The `stata-conformance` job is wired to a **Stata Docker
-> image + a `STATA_LIC` repository secret** (the license file). An org admin
-> must add that secret before the Stata gate can run; alternatively point the
-> job at a **self-hosted runner** with Stata installed. Until then the R and
-> Python gates run and the Stata job is skipped / allowed-to-fail.
+> **Stata-in-CI needs provisioning (admin action — issue #133).** There is no
+> Stata runner in this org today. A `stata-conformance` job needs either a
+> **Stata Docker image + a `STATA_LIC` repository secret** (the license file)
+> or a **self-hosted runner** with Stata installed. Until provisioned, the R
+> and Python gates run in CI, `compare.py` tolerates the absent Stata output,
+> and Stata parity remains a local release gate.
 
 ## Status
 
 - [x] Fixture + design
 - [x] `run_r.R` — **working** (verified locally)
-- [ ] `run_python.py`
-- [ ] `run_stata.do`
-- [ ] `compare.py`
-- [ ] `.github/workflows/conformance.yml`
+- [x] `run_python.py` — R ↔ Python round-trip verified locally (6/6 rows agree)
+- [ ] `run_stata.do` (after Stata-in-CI provisioning, issue #133)
+- [x] `compare.py`
+- [x] `.github/workflows/conformance.yml` (R + Python + compare)
 - [ ] `.github/workflows/python-check.yml` (Phase 0 — promote the manual Python
       tests to CI; independent of this harness)
-- [ ] `STATA_LIC` secret provisioned (admin)
+- [ ] `STATA_LIC` secret / self-hosted runner provisioned (admin — issue #133)
