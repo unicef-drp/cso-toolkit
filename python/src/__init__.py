@@ -55,6 +55,9 @@ from .aggregate_data import (
 # Survey-weight redistribution
 from .dw_nestweight import dw_nestweight
 
+# Demographics helpers
+from .dw_pop import dw_pop
+
 # Markdown reporter
 from .generate_markdown_report import (
     generate_markdown_report,
@@ -89,6 +92,7 @@ __all__ = [
     "apply_time_window", "generate_agg_footnote",
     # Other
     "dw_nestweight",
+    "dw_pop",
     "generate_markdown_report", "process_all_csv_files",
     "create_sector_script", "create_dw_sector_script",
     "create_profile", "review_profile",
