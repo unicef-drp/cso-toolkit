@@ -1,0 +1,80 @@
+name: Conformance
+
+# Cross-language parity gate: each language driver round-trips the shared
+# fixture through the IO contract and emits a normalised CSV; compare.py
+# asserts the outputs are value-equal within 1e-9 (see conformance/README.md).
+#
+# Stata: no `stata-conformance` job yet — blocked on a STATA_LIC secret or a
+# self-hosted Stata runner (issue #133). compare.py tolerates the missing
+# output, so the job slots in without touching the compare step.
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: conformance-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  r-conformance:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          working-directory: ./r
+          extra-packages: any::devtools
+
+      - name: Run R driver
+        run: Rscript conformance/run_r.R conformance/fixtures/indicators.csv out_r.csv
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: out_r
+          path: out_r.csv
+
+  python-conformance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install package
+        run: pip install ./python
+
+      - name: Run Python driver
+        run: python conformance/run_python.py conformance/fixtures/indicators.csv out_python.csv
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: out_python
+          path: out_python.csv
+
+  compare:
+    runs-on: ubuntu-latest
+    needs: [r-conformance, python-conformance]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+
+      - name: Compare driver outputs
+        run: >
+          python conformance/compare.py
+          r=out_r.csv python=out_python.csv stata=out_stata.csv
