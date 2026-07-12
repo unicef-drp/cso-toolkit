@@ -1,0 +1,134 @@
+# The microdata archive: archive, catalogue, tool
+
+A survey costs millions of dollars and several years to field. Re-analysing the microdata it produces costs an afternoon. That asymmetry is the whole argument for this part of the book. The household- and person-level records that every published indicator ultimately rests on are the most expensive and least reproducible asset the office holds — and, in practice, they are often managed with *less* rigour than the code that reads them. A pipeline gets a git history, a manifest, and a provenance sidecar; the raw survey it consumes gets a folder on a shared drive whose name means something only to the person who created it. Part V documents `datalib`, the tool that extends the reproducibility floor — the guarantee, set out in the why-a-toolkit chapter, that a 2026 analysis must re-run identically in 2028 — from the aggregate outputs down to the survey microdata those outputs are built from.
+
+This opening chapter introduces the whole of Part V: the boundary between the microdata archive and the indicator warehouse, the three-layer picture (archive, catalogue, tool) that frames the initiative, the stock-and-flow approach to deposits, the deposit-gate-promote governance, and the access and licensing floor. The IHSN-grammar chapter that follows takes up the folder convention in detail; the datalib API and conformance chapter takes up the cross-language contract and its oracle test suite.
+
+Scope today is deliberately narrow. The archive covers **household surveys for global child monitoring** (MICS, DHS, LSMS, including the MICS Harmonized Database) *now*; other survey types *next*; anonymized public-use microdata *later*. Nothing in Part V assumes more than that.
+
+::: {.callout-note}
+## Version and source of authority
+
+This part documents datalib **contract v1** as shipped in **datalib v0.7.0**, and the governance model at **draft v0.3**; `unicef-drp/datalib-unicef` is authoritative — `config/grammar.md` for the contract, `docs/GOVERNANCE_microdata_deposit.md` for governance.
+:::
+
+::: {.callout-note}
+Access: internal — request via the CSO team (repository visibility is tracked in datalib issue #20).
+:::
+
+## Why a microdata archive
+
+The reproducibility floor is a guarantee you inherit rather than a feature you remember to switch on. For the aggregate warehouse, the toolkit builds that floor from provenance sidecars, a replayable frozen deposit, and uniqueness checks. For survey microdata the failure modes are different, but the promise is the same: a number computed from a 2019 survey today must be computable from the *same* records, read from the *same* place, by a different analyst in two years.
+
+Three things routinely break that promise for microdata specifically.
+
+- **Silent divergence of "the same" survey.** Two teams each hold a copy of the same MICS round. One recoded a variable; the other dropped a module. Neither copy records what was done, and there is no shared name that would even reveal the two are meant to be identical. When their indicators disagree, there is nothing to point at.
+- **Folder names that carry no contract.** A directory called `Tajikistan final v2 USE THIS` tells a script nothing. Which country code, which year, which survey, which vintage? The information a loader needs to resolve a file deterministically is exactly the information a hand-typed folder name tends to omit.
+- **Transformations with no reverse.** The deposited `.dta` is three recodes downstream of the original, and the recodes live in a script no one can find. The output cannot be reproduced because its inputs cannot be reconstructed.
+
+datalib's answer is to make the *shelving convention itself* executable. A survey's country, year, survey instrument, and vintage are encoded in a machine-parseable folder name (the IHSN grammar), the untouched source is preserved alongside every derived form, and one library — in R, Python, and Stata — resolves, loads, and merges by reading that convention rather than trusting a human to remember it. Provenance is recorded *structurally*: the vintage is in the folder name and `Data/Original/` is never mutated. That is the same intent as the toolkit's `.provenance.json` sidecar, reached by a different mechanism; the provenance-schema appendix carries only a short pointer to this difference, not a second sidecar specification.
+
+## Two data layers, one office
+
+The single most important thing to hold clear before reading the rest of Part V is that datalib is **not** part of the data warehouse. The CSO office runs two data layers under one roof. They share a team and an operator config file; they do not share a store, a contract, or a grain.
+
+| Dimension | Aggregate / indicator warehouse | Survey microdata archive |
+|---|---|---|
+| Contract prefix | `dw_*` | `datalib_*` |
+| Canonical store | Teams `060.DW-MASTER` (+ its Z: mirror) | `Z:/datalib*` trees + a staging area |
+| What lives there | Deposited indicator files (aggregates) | Survey vintages (household / person records) |
+| Grain | one row per indicator × unit × time | one row per household or per person |
+| Documented in | Parts I–IV of this book | Part V (this part) |
+| Team | CSO — Data & Analytics (OSE) | the same team |
+| Operator config | `~/.config/user_config.yml` | the same file |
+
+State it plainly: **microdata deposits NEVER enter `060.DW-MASTER`, and indicator deposits never land in the `Z:/datalib*` trees.** The warehouse holds the aggregates a producer blesses and a publisher pushes downstream to Helix and the public pages; the archive holds the survey records those aggregates were computed from. Same office, two contracts, two stores, different data layer. Everything in Part V lives on the microdata side of that line, and the boundary is referenced again in both the IHSN-grammar chapter and the datalib API and conformance chapter.
+
+The one genuinely shared thing is the operator config file. Both contracts are designed to key off the single `~/.config/user_config.yml`, datalib reading a `datalib:` block from its user section for the library root. As the configuration-across-tiers discussion in the architecture chapter notes, the *toolkit* side of that shared-file coexistence is still gated on a parser guard, so the `datalib:` block is not yet added to the toolkit's own `user_config.yml`; treat the two contracts as separate namespaces that happen to share a file.
+
+## Archive, catalogue, tool
+
+The governance draft frames the initiative as three distinct layers, and confusing them is the most common way to misunderstand the project. datalib the software is only one of the three.
+
+| Layer | What it is | What it is **not** | Status |
+|---|---|---|---|
+| **Microdata archive** | the governed store of the data files themselves — the `Z:/datalib*` trees, the staging area, and the deposit process that fills them | not a website; not a metadata index | this initiative (all of Part V) |
+| **Microdata catalogue** | the metadata and discovery layer (IHSN / NADA tooling over a DDI model) | not the files themselves | a Phase-2+ product, seeded by the tool's auto-generated inventories |
+| **Tool (datalib)** | software in R, Python, and Stata that encodes the shelving convention as executable code | neither the store nor the catalogue | shipped: contract v1 in datalib v0.7.0 |
+
+The one-liner is worth memorising: **an archive without a catalogue is unfindable; a catalogue without an archive points at silos; both without a tool are manual drudgery.** The three depend on each other, and datalib is the leg that exists today — the executable convention that also produces the inventories the future catalogue will index.
+
+## Stock and flow
+
+The archive would never fill if conformance were a precondition for deposit — teams hold years of surveys under their own naming, and demanding they rename everything first guarantees they deposit nothing. So the governance draws a sharp line between what already exists and what is created from now on, and treats the two differently.
+
+| | **Stock** — existing holdings | **Flow** — new work |
+|---|---|---|
+| Rule of thumb | "copy it as it is, don't touch it" | "name it right from day one" |
+| Naming | preserved *exactly* as-is, folder structure intact so existing scripts keep running | follows the datalib IHSN grammar from the start |
+| Destination | `Z:/staging-area/<domain>/<team-folder-as-is>/` | promoted into the domain's canonical tree as masters / adaptations |
+| Conformance | never a precondition; progressive, survey by survey | required at deposit |
+
+Depositing stock as-is is not a compromise; it is the point. Preserving the original folder unlocks a four-phase payoff, each phase enabled by the one before:
+
+1. **Preserve and make portable** — get the survey off a personal drive and into a governed, backed-up store without breaking the scripts that already read it.
+2. **Compare inputs across teams** — once two teams' copies of the same survey sit side by side, their differences become visible for the first time.
+3. **Reverse-engineer transformations** — with the original preserved next to each derived form, the recodes between them can be reconstructed.
+4. **Consolidate** — converge on one authoritative file per survey.
+
+Conformance, in other words, is something the archive *arrives at* survey by survey, not a gate that keeps surveys out.
+
+## Deposit, gate, promote
+
+A deposit is not simply a file copy. It passes a seven-item review gate before anything is promoted from staging into a canonical tree. The gate is summarised here; the deposit quickstart and the governance draft in the datalib repository (`docs/GOVERNANCE_microdata_deposit.md`) carry the operative detail, and this chapter points to them rather than reproducing them.
+
+1. **Inventory logged** — the deposit is recorded.
+2. **Naming conforms** — the IHSN grammar is checked (flow only; stock is exempt).
+3. **Reproducibility** — a non-author can re-run the deposit's script from staging.
+4. **No breakage outside its staging folder** — the deposit touches nothing else.
+5. **Licence recorded** — MICS as country-owned, DHS per-project, IPUMS per its conditions.
+6. **Access tier assigned** — one of the tiers below.
+7. **De-identification confirmed** — de-identified microdata only.
+
+The division of labour mirrors the toolkit's producer → reviewer → publisher relay, mapped onto an organisational standard rather than a session-level mode: the **Core Group decides** the gate outcome, and the **Data Steward operates** the checks and the move. A pass lets the Data Steward promote the conformed vintages into the domain's canonical tree — **never into `060.DW-MASTER`.**
+
+| Microdata role | Verb | Responsibility | Toolkit analogue |
+|---|---|---|---|
+| Deposit focal (one per unit) | deposits | assembles and lodges the unit's deposit into staging | PRODUCER |
+| Microdata Core Group (deposit focals + Data Steward as chair) | decides | rules on each gate outcome; converges transformations | REVIEWER (the compare-and-bless step) |
+| Data Steward (+ deputy) | operates / promotes | runs gate checks, executes the assisted move, promotes conformed vintages, keeps logs | REVIEWER's operational half + PUBLISHER |
+| Standards Board (all Unit Chiefs) | ratifies | ratify the standard, the domain registry, promotion-to-production | — (governance above the three runners) |
+| Process Lead (a Unit Chief; currently Yves Jaques) | chairs / unblocks | chairs the Standards Board, sets cadence, unblocks | — |
+| Chief Statistician | accountable | ratifies the standard and resourcing; final arbiter; delegates process guidance | — |
+| Unit Chiefs | own | own their unit's deposits and access; name the focal | — |
+
+The toolkit's three session-level runners (see the roles-and-mode-contract chapter) need no ratifying layer above them because the toolkit's governance lives elsewhere; the microdata standard, being an office-wide convention, carries that extra scaffolding of Board, Process Lead, and accountable owner.
+
+::: {.callout-note}
+Promotion targets a **thematic domain** tree, not one global folder: health → `Z:/datalib-hlt` (HLT), education → `Z:/datalib-edu` (EDU), nutrition → `Z:/datalib-nut` (NUT), child-protection → `Z:/datalib-chp` (CHP), cross-cutting → `Z:/datalib`. A *domain* is the organisational grouping of holdings; a *collection* is the harmonization code in the folder grammar (the IHSN-grammar chapter covers collections). The two are aligned but not identical — and as of v0.7.0 / contract v1 only HLT (and IPUMS) is registered in datalib's merge registry; EDU, NUT, and CHP become first-class as their module lists and keys are verified in later phases.
+:::
+
+## Access and licensing
+
+Deposit does **not** re-license anything: the producer's terms travel with the files, and the archive's job is to record and honour them, not to widen them. Every survey is assigned one of three access tiers at the gate, on a least-privilege default (a staging folder is readable by the depositing unit, the Data Steward, and the Core Group; wider access is granted per survey by the depositing Unit Chief).
+
+| Tier | Meaning |
+|---|---|
+| **Open-internal** | shareable within UNICEF |
+| **Licensed** | use bounded by the producer's licence terms |
+| **Restricted** | tightest access; named users only |
+
+A fourth, openly-shareable tier arrives only with anonymized public-use files, which are a later-scope concern. Two floors hold across all tiers. First, licensing is producer-defined: MICS microdata is **country-owned**, DHS is licensed **per project**, IPUMS travels under **its own conditions** — the archive records the tier but does not grant beyond it. Second, **only de-identified microdata is admitted**: no direct identifiers, and no geography below the approved level. Finally, remember that **staging is a waypoint, not an archive** — a deposit is reviewed within a quarter and retired after it is either promoted or turned down. Nothing is meant to live in `Z:/staging-area/` indefinitely.
+
+::: {.callout-warning}
+## Governance is a draft, not a settled standard
+
+The governance summarised in this part is **draft v0.3 and pre-ratification.** Appointments are partly TBD — the Data Steward, in particular, is not yet named. Four decisions are open before the Standards Board and should not be presented as resolved:
+
+1. **Canonical topology** — one library root versus per-domain roots (`Z:/datalib`, `Z:/datalib-hlt`, `Z:/datalib-edu`, …); to be decided before the first promotion.
+2. **Domain registry** — confirmation of the thematic-domain list.
+3. **Access-tier defaults** — the default tier and its per-survey overrides.
+4. **MICS Harmonized Database deposit route** — reference-in-place versus copy into staging.
+
+Read Part V as documentation of a working tool and a proposed governance model, not as a ratified office standard. Where the governance draft and this chapter differ, the draft in `unicef-drp/datalib-unicef` (`docs/GOVERNANCE_microdata_deposit.md`) is authoritative.
+:::
