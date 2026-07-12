@@ -1,0 +1,164 @@
+# The IHSN convention and the folder grammar
+
+This is the second chapter of Part V, and it takes up the one idea the whole microdata archive rests on: a survey's provenance lives in the *path*. The reproducibility mission the rest of this book serves — a 2026 number must be recomputable from the same records, read from the same place, by a different analyst in 2028 — has an aggregate half kept by the toolkit's `.provenance.json` sidecar (see the provenance sidecars chapter) and a microdata half kept here, by a different mechanism entirely. On the aggregate side, a receipt is written *beside* each output. On the microdata side, the receipt *is the shelving*: the country, the year, the survey instrument, and the vintage are all encoded in a machine-parseable folder name that follows the IHSN survey-cataloguing convention, and the untouched producer files are preserved under `Data/Original/`. Nothing is stamped onto the data; where a file sits, and what its folder is called, is the record. This chapter documents that grammar — the token positions, the vintage rules, the collection registry, the seven shared semantics every language implementation honours, and the deployment topologies the estate runs today.
+
+The boundary the microdata-archive chapter draws governs this chapter as it governs the rest of Part V. The toolkit's `dw_*` contract serves the **aggregate / indicator warehouse** — the canonical `060.DW-MASTER` Teams deposit. datalib's `datalib_*` contract serves survey **microdata** — the `Z:/datalib*` trees plus a staging area. Same office, same `~/.config/user_config.yml` file, a **different data layer**; a microdata deposit never enters `060.DW-MASTER`. Everything below is about how the microdata side names things so that a loader can find them without trusting a human to remember.
+
+::: {.callout-note}
+## Version and source of authority
+
+This part documents datalib **contract v1** as shipped in **datalib v0.7.0**, and the governance model at **draft v0.3**; `unicef-drp/datalib-unicef` is authoritative — `config/grammar.md` for the contract, `docs/GOVERNANCE_microdata_deposit.md` for governance.
+:::
+
+::: {.callout-note}
+Access: internal — request via the CSO team (repository visibility is tracked in datalib issue #20).
+:::
+
+## Naming as structural provenance
+
+The toolkit and datalib solve the same problem in opposite directions. When the toolkit writes an aggregate through `dw_save`, it leaves the data file's bytes alone and writes a *separate* JSON receipt — `<path>.provenance.json` — that records who wrote the file, when, in which session mode, and with what content hash (see the provenance sidecars chapter for the full schema). The provenance is a companion artefact; strip the sidecar and the data file no longer knows where it came from.
+
+datalib inverts that. There is no sidecar, because there is nothing to add: the provenance is already carried by the folder name and by the discipline of never mutating the original. Read `TJK_2009_TLSS/TJK_2009_TLSS_v01_M/` and you already know the country (Tajikistan), the year (2009), the survey (the Tajikistan Living Standards Survey), and the master vintage (the first) — without opening a single file. Descend into `Data/Original/` and you find the producer's files exactly as they were deposited, byte-for-byte, so that the derived forms under `Data/Stata/`, `Data/R/`, and `Data/Other/` can always be checked back against the source they were built from. The vintage is in the path; the source is preserved; the two together *are* the receipt. This is **structural provenance** — the microdata counterpart of the sidecar, reached by encoding rather than annotation.
+
+The consequence for the appendices is deliberate: the provenance-schema appendix, which specifies the toolkit's sidecar field-by-field, carries only a short pointer to this difference, not a second datalib-flavoured sidecar section. There is no datalib sidecar to specify. The mechanism differs; the intent — a frozen artefact that can be trusted and traced years later — is identical.
+
+Because the provenance is the naming, the naming has to be exact. A folder called `Tajikistan final v2 USE THIS` carries the same information to a human and *no* information to a loader; the grammar below is what lets a machine resolve a file deterministically from a country, a year, a survey, and an optional vintage.
+
+## The folder grammar
+
+The grammar is vendored verbatim from datalib's `config/grammar.md` at the pinned contract version, so that this chapter and the loader can never drift apart:
+
+{{< include ../includes/datalib/_folder-grammar.md >}}
+
+Read the tree from the root down. The **first token** is a country: a directory named by its three-letter code (`TJK`, `ZWE`), one token, holding everything for that country. The **survey folder** one level down is three tokens joined by `_` — country, year, survey — so `TJK_2009_TLSS` is Tajikistan's 2009 Tajikistan Living Standards Survey, and `ZWE_2019_MICS` would be Zimbabwe's 2019 MICS. Inside a survey folder, each *vintage* is its own directory whose name extends the three-token stem: a **master vintage** appends `_v<MM>_M` for five tokens (`TJK_2009_TLSS_v01_M`), and an **adaptation vintage** appends a further `_v<AA>_A_<HHHH>` for eight (`TJK_2009_TLSS_v01_M_v01_A_HLT`). Every vintage folder holds the same three subtrees — `Data/{Original,Stata,R,Other}`, `Doc/`, and `Programs/` — and each data file under `Data/Stata/` is named for its own vintage folder plus a module suffix, e.g. `TJK_2009_TLSS_v01_M_household.dta`.
+
+The token positions are fixed, and this is what makes the name parseable rather than merely descriptive. Splitting a fully-qualified adaptation name on `_`, position **1** is the country, position **2** the year, position **3** the survey, position **4** the master vintage (`v01`), position **6** the adaptation vintage, and position **8** the collection code. Those positions are the contract: an implementation reads a country from position 1 and a collection from position 8, never by pattern-guessing from the surrounding text.
+
+Mapping the grammar onto a call makes the correspondence concrete. To resolve Zimbabwe's 2019 MICS in the HLT collection — country in position 1, year in 2, survey in 3, collection in 8 — each language spells the same request its own way:
+
+::: {.panel-tabset}
+
+#### R {.unnumbered .unlisted}
+
+```r
+datalib_resolve("ZWE", 2019, "MICS", collection = "HLT", root = "Z:/datalib")
+#> resolves to the vintage folder for ZWE_2019_MICS in the HLT collection
+```
+
+#### Python {.unnumbered .unlisted}
+
+```python
+from datalib import datalib_resolve
+datalib_resolve("ZWE", 2019, "MICS", collection="HLT", root="Z:/datalib")
+```
+
+#### Stata {.unnumbered .unlisted}
+
+```stata
+datalib, country(ZWE) year(2019) survey(MICS) collection(HLT)
+* with no arguments, `datalib` opens interactive folder navigation instead;
+* `datalib help` documents the option set.
+```
+
+:::
+
+The arguments are the token positions by another name. What the loader does with them — how it uppercases, how it matches, how it fills the vintage when you omit it — is the subject of the two sections that follow.
+
+## Vintages: masters and adaptations
+
+A survey folder accumulates two kinds of vintage, and the distinction is load-bearing. A **master vintage**, `<stem>_v<MM>_M`, is a cleaned-but-general version of the survey — the office's canonical rendering of the raw instrument, not yet specialised to any analytical purpose. An **adaptation vintage**, `<stem>_v<MM>_M_v<AA>_A_<HHHH>`, is a harmonisation built *on top of* a specific master for a specific collection: the `v<AA>_A` counts the adaptation, and the trailing `<HHHH>` names the collection it harmonises to (position 8). So `TJK_2009_TLSS_v01_M` is the first master, and `TJK_2009_TLSS_v01_M_v01_A_HLT` is the first HLT-collection adaptation of that first master. Masters descend from the original; adaptations descend from a master.
+
+Vintages are **integers**, and how they are compared is a contract, not an implementation detail. Inputs are liberal — `1`, `01`, `v01`, and `V01` all denote the same vintage — but the internal form is a zero-padded `v%02d`. "Latest" means the **numeric maximum**, never the alphabetical or directory-listing maximum. This is the difference that bites: listed as strings, `v10` sorts *before* `v09`, so a loader that trusted the filesystem's ordering would silently pick the wrong, older vintage once a survey passed nine revisions. datalib compares the integers, so `v10 > v09` and the tenth master wins. The rule sounds pedantic until the tenth vintage exists; then it is the difference between reproducible and wrong.
+
+Because vintages are ordered, they can be defaulted, and the defaulting rules are what let a caller name only what they care about. Omit the **year** and datalib resolves the latest year for that country and survey; omit the **master version** and it takes the latest master; omit the **adaptation version** and it takes the latest adaptation *of the requested collection*. Each default is the numeric maximum of its level, and the resolved vintage folder must actually exist on disk — resolution verifies the folder before any load is attempted, so a default can never silently point at nothing.
+
+Enumeration and defaulting are two views of the same ordering. You can ask for the list explicitly, or lean on the default and let the loader take the maximum:
+
+::: {.panel-tabset}
+
+#### R {.unnumbered .unlisted}
+
+```r
+# Enumerate — the returned integers are compared numerically, not as strings
+datalib_vintages("ZWE", 2019, "MICS", root = "Z:/datalib")
+#> [1]  1  2 10        # latest master is v10, NOT v02
+datalib_adaptations("ZWE", 2019, "MICS", collection = "HLT", root = "Z:/datalib")
+
+# Or omit the versions and let resolve default to the numeric-latest of each
+datalib_resolve("ZWE", 2019, "MICS", collection = "HLT", root = "Z:/datalib")
+```
+
+#### Python {.unnumbered .unlisted}
+
+```python
+from datalib import datalib_vintages, datalib_adaptations, datalib_resolve
+datalib_vintages("ZWE", 2019, "MICS", root="Z:/datalib")          # -> [1, 2, 10]
+datalib_adaptations("ZWE", 2019, "MICS", collection="HLT", root="Z:/datalib")
+datalib_resolve("ZWE", 2019, "MICS", collection="HLT", root="Z:/datalib")
+```
+
+#### Stata {.unnumbered .unlisted}
+
+```stata
+* Omit year() and the version options; datalib resolves the numeric-latest
+* at each level — latest year, then latest master, then latest HLT adaptation:
+datalib, country(ZWE) survey(MICS) collection(HLT)
+```
+
+:::
+
+## Collections and modules
+
+A **collection** is the harmonisation target named in position 8 of an adaptation folder, and it is more than a label: it fixes *which modules a survey ships*, *what level each module sits at* (one row per household, or one row per person), and *which keys merge them*. That mapping is not hard-coded in each language; it lives in one registry, `config/collections.yml`, vendored here at the pinned contract version:
+
+::: {.callout-note}
+## The vendored collection registry (`config/collections.yml`, contract_version 1)
+
+{{< include ../includes/datalib/collections.yml >}}
+:::
+
+Rendered as a table, the two registered collections — HLT and IPUMS — and their modules read as follows. This table is authored from the registry above; it mirrors the vendored YAML rather than adding to it.
+
+| Collection | Module | Level | `line_number` source | Merge keys |
+|---|---|---|---|---|
+| HLT | `household` | hh | — | `svy_id`, `cluster_id`, `household_id` |
+| HLT | `hhmembers` | person | `hh_line_number` → `line_number` | `svy_id`, `cluster_id`, `household_id`, `line_number` |
+| HLT | `adult` | person | `line_number` | `svy_id`, `cluster_id`, `household_id`, `line_number` |
+| HLT | `children` | person | `line_number` | `svy_id`, `cluster_id`, `household_id`, `line_number` |
+| IPUMS | `hh` | hh | — | `svy_id`, `household_id` |
+| IPUMS | `bh` | person | `line_number` | `svy_id`, `household_id`, `line_number` |
+| IPUMS | `ch` | person | `line_number` | `svy_id`, `household_id`, `line_number` |
+| IPUMS | `fs` | person | `line_number` | `svy_id`, `household_id`, `line_number` |
+| IPUMS | `hl` | person | `line_number` | `svy_id`, `household_id`, `line_number` |
+| IPUMS | `mn` | person | `line_number` | `svy_id`, `household_id`, `line_number` |
+| IPUMS | `wm` | person | `line_number` | `svy_id`, `household_id`, `line_number` |
+
+The registry is a single source of truth with a hand-mirrored leg. R and Python consume **byte-identical synced copies** of `collections.yml`, and each package's test suite asserts that its copy equals the source. Stata has no YAML parser in the relevant path, so it mirrors the same registry **by hand in `_dlw.ado`**; a change to the registry that is not reflected in the Stata leg is a bug, and the shared conformance cases (see the datalib API and conformance chapter) are the drift guard that catches it. The `contract_version: 1` field is the pin every implementation carries, incremented only when the semantics change.
+
+Two caveats belong on this table. First, the **IPUMS keys are unverified**: at contract time there was no real IPUMS tree to validate against, so the `keys_hh`/`keys_person` shown for IPUMS are the registry's best statement rather than a checked fact. What keeps that honest at run time is the per-module key validation described in the semantics below — every module's keys are checked for uniqueness on load, so an incorrect key stops the merge with a typed error rather than producing a silently wrong join. Second, **collection is not the same thing as domain.** A *domain* is the organisational grouping of holdings that governance uses to route deposits into thematic trees — health → `Z:/datalib-hlt`, education → `Z:/datalib-edu`, nutrition → `Z:/datalib-nut`, child-protection → `Z:/datalib-chp`, cross-cutting → `Z:/datalib` (see the microdata-archive chapter). A *collection* is the harmonisation code in position 8 of the folder grammar. The two are **aligned but not identical**: the HLT domain and the HLT collection point at the same subject matter, but the domain is where a survey is *shelved* and the collection is how a vintage is *harmonised and merged*. As of v0.7.0 / contract v1, only HLT (and IPUMS) is registered in the merge registry; EDU, NUT, and CHP become first-class collections as their module lists and keys are verified in later phases, even though their domains already exist as deposit destinations.
+
+## The seven shared semantics
+
+The grammar is only as trustworthy as the rules every language applies to it, and datalib pins seven. They are the shared semantics of `config/grammar.md`, and each one is a place where an implementation could plausibly differ and is contractually forbidden to.
+
+**1 — Uppercase once, match exactly.** Case is normalised a single time, at the input boundary, and thereafter matching is exact: a country is matched by its whole code, a survey folder by its exact `*_<SURVEY>` suffix. Matching is never a substring test — `MICS` does not match `MICS6`, and `ZWE` does not match a folder that merely contains those letters. Normalising once and matching exactly is what stops a loose match from resolving the wrong survey.
+
+**2 — Vintages are integers, latest is the numeric maximum.** As the vintages section sets out: inputs accept `1`/`01`/`v01`/`V01`, the internal form is `v%02d`, and "latest" is the numeric maximum, never the alphabetical one, so `v10 > v09`. This is the single rule most likely to be got wrong by a naïve directory listing and the single rule most consequential when it is.
+
+**3 — Defaults resolve to the latest, and the target must exist.** Omit the year and get the latest year; omit the master version and get the latest master; omit the adaptation version and get the latest adaptation of the requested collection. Every default is the numeric maximum of its level, and resolution verifies that the chosen vintage folder exists before any load proceeds — a default never resolves to a folder that is not there.
+
+**4 — Loaders never mutate.** A loader reads; it does not recode, drop, or rename values. There are exactly **two documented schema additions**, and both are structural, not analytical. First, a person module whose registry `linevar` is not already `line_number` — HLT's `hhmembers`, whose line variable is `hh_line_number` — has that column *renamed* to `line_number` on load, purely to normalise the merge key. Second, provenance columns `ctrycode` and `year` are added when they are absent, never overwritten when they are present, on every load. Both additions are of a piece with structural provenance: the loader records where a record came from without ever altering what the record says.
+
+**5 — Merge is keyed, per-module-validated, and outer.** Person modules chain **1:1** on `keys_person`; household modules attach **m:1** on `keys_hh` (or 1:1 when only a household module is present). Before any join, each module's declared keys are validated for uniqueness — an isid-equivalent check — and a module whose keys are missing or duplicated stops the merge with a **typed error that names the offending module**, rather than letting a bad key produce a silently wrong result. Unmatched rows are kept (the join is outer), and the merge indicator is not retained in the output. A toolkit reader will recognise the instinct: this is the same cardinality-first discipline as the toolkit's `dw_merge`, and the per-module uniqueness check is the microdata sibling of the toolkit's `dw_isid` guard — declare the grain, prove it, then join.
+
+**6 — Errors map to a shared taxonomy.** The failure classes — invalid input, not found, config file missing, user block missing, library root unset — map onto Stata exit codes, R condition classes (`datalib_error_*`), and Python exception types, so the same contract violation is recognisable across the three languages. The mapping table is vendored into the error taxonomy appendix, whose datalib section carries it alongside the toolkit's own envelope.
+
+**7 — Library-root resolution follows a fixed precedence.** Where a language reads the library root from is ordered, and the order differs by language idiom. In **R and Python** the precedence is: an explicit `root` argument, then the `DATALIB_ROOT` environment variable, then the language option (`option(datalib.root)` in R), then an optional `datalib:` key in the user block of `~/.config/user_config.yml`, then an error if none is set. In **Stata** it is: the `root()` option, then the `${datalib}` session global — which `getuserconfig`/`datalib_config` fills from the config key when it is unset, so a config-derived global outranks the environment variable *once it is loaded* — then `DATALIB_ROOT`, then an error. The precedence orderings are deliberately not identical; they reflect each language's native configuration conventions, and the datalib API and conformance chapter documents the practical consequence.
+
+## Deployment topologies
+
+The grammar is written for a **single library root**: countries sit directly under `<root>`, and harmonisations live as adaptation folders beneath them. That is the model the contract describes, and it is a complete and valid deployment on its own.
+
+The UNICEF estate today also runs a **multi-root** topology — one tree per thematic domain: `Z:/datalib` for cross-cutting holdings, and `Z:/datalib-hlt`, `Z:/datalib-edu`, `Z:/datalib-nut`, and `Z:/datalib-chp` for health, education, nutrition, and child-protection respectively. Both topologies are valid, and the grammar inside any one root is identical either way — a country folder under `Z:/datalib-hlt` obeys exactly the same token positions as one under `Z:/datalib`. The operational fact that follows is worth stating plainly: **`datalib_catalog` inventories one root per call.** A catalogue of the whole estate under a multi-root layout is the union of one call per domain root, not a single traversal; a caller that forgets this inventories only the domain it happened to point at.
+
+Which topology becomes canonical is not settled. Whether UNICEF consolidates to a single library root or keeps per-domain roots is one of the four **open Standards-Board decisions** flagged in the microdata-archive chapter, and the governance draft asks for it to be decided before the first promotion into a canonical tree. Until then, treat both topologies as supported, write code that names its root explicitly, and do not assume a single-root world when catalog-level work may be spanning several domain trees. The grammar is stable across that decision; only the number of roots it is applied under is in question.

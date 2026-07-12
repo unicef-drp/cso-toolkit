@@ -1,0 +1,171 @@
+# The `datalib_*` API and its conformance suite
+
+This is the third chapter of Part V, and it is where the microdata archive stops being a folder convention and becomes executable code. The microdata-archive chapter draws the boundary and sets out the governance; the IHSN grammar chapter documents the shelving convention — the country/survey/vintage folder tree that encodes provenance in a name. This chapter documents the software that reads and writes that tree: the thirteen shared functions of the `datalib_*` surface, and the conformance suite that keeps the R, Python, and Stata siblings honest against each other and against a committed specification. The reproducibility mission is the same one the whole book serves — a survey deposited once must load the same way, in the same shape, from any of the three languages, years after the analyst who deposited it has moved on. A shelving convention is only as trustworthy as the loader that honours it, so the loader is where the contract has to be pinned down and tested.
+
+Recall the boundary the microdata-archive chapter draws, because it governs everything below. The toolkit's `dw_*` contract serves the **aggregate / indicator warehouse** — the canonical `060.DW-MASTER` Teams deposit. datalib's `datalib_*` contract serves survey **microdata** — the `Z:/datalib*` trees plus a staging area. Same office, same `~/.config/user_config.yml` file, a **different data layer**. A microdata deposit never enters `060.DW-MASTER`. This chapter is entirely about the microdata side; where a `dw_*` function shares a name-shape or a design idea with a `datalib_*` one, the resemblance is a family likeness, not a shared code path.
+
+::: {.callout-note}
+This part documents datalib **contract v1** as shipped in **datalib v0.7.0**, and the governance model at **draft v0.3**; `unicef-drp/datalib-unicef` is authoritative — `config/grammar.md` for the contract, `docs/GOVERNANCE_microdata_deposit.md` for governance.
+:::
+
+## The thirteen-function shared surface
+
+The public surface is small and deliberately identical across the three languages. The same thirteen verbs exist in each, so a script's *intent* reads the same whether it is written in R, Python, or Stata; only the calling syntax differs.
+
+{{< include ../includes/datalib/_public-surface.md >}}
+
+The surface is **thirteen functions as of datalib v0.7.0 / contract v1**. They fall into six groups, each a stage in the same pipeline — from *where is the library* to *give me the data*:
+
+| Group | Functions | What they do |
+|---|---|---|
+| Config & root | `datalib_config` · `datalib_root` | Read and inspect the per-operator configuration (the `datalib:` block), and resolve the active library root through the precedence chain below. |
+| Enumerate | `datalib_countries` · `datalib_surveys` · `datalib_vintages` · `datalib_adaptations` | Walk the tree one level at a time: which countries live under a root, which survey folders a country holds (matched by exact `*_<SURVEY>` suffix, never substring), which master vintages exist (as integers, so "latest" is the numeric maximum — `v10` beats `v09`, never an alphabetical listing), and which adaptation vintages a collection has. |
+| Resolve, files, catalog | `datalib_resolve` · `datalib_files` · `datalib_catalog` | Turn a country/year/survey/collection request plus optional versions into a single **verified** vintage folder (the resolved folder must exist — it is checked before any load); list the files inside it by section (`data`, `data-original`, `data-r`, `data-other`, `doc`, `programs`); and inventory a whole root. |
+| Load & browse | `datalib_load` · `datalib_browse` | Load and merge the modules of a resolved vintage into memory, and navigate the tree interactively. |
+| Create | `datalib_create` | Scaffold a new, grammar-conformant vintage folder — the entry point for *flow* deposits that follow the convention from day one. |
+| Map drive | `datalib_map_drive` | Map the `Z:` drive so the library root is reachable on a fresh machine. |
+
+The defaults thread through the whole surface: omit the year and you get the latest year; omit the master version and you get the latest master; omit the adaptation version and you get the latest adaptation of the requested collection. Every default resolves to a concrete, existing folder before a byte is read.
+
+## Worked examples
+
+The most important groups are *resolve* — turning a human request into a verified folder — and *load* — turning that folder into a data frame. Both use the real syntax shipped in the datalib README, worked here against the running example of Zimbabwe's 2019 MICS, health collection (`HLT`).
+
+**Resolve.** `datalib_resolve` is pure name-arithmetic: it applies the defaults, resolves the vintage, confirms the folder exists, and returns the resolved path. It reads nothing.
+
+::: {.panel-tabset}
+
+#### R {.unnumbered .unlisted}
+
+```r
+datalib_resolve("ZWE", 2019, "MICS", collection = "HLT", root = "Z:/datalib")
+```
+
+#### Python {.unnumbered .unlisted}
+
+```python
+from datalib import datalib_resolve
+datalib_resolve("ZWE", 2019, "MICS", collection="HLT", root="Z:/datalib")
+```
+
+#### Stata {.unnumbered .unlisted}
+
+```stata
+datalib_resolve, country(ZWE) year(2019) survey(MICS) collection(HLT) root("Z:/datalib")
+* The umbrella command `datalib, country(ZWE) year(2019) survey(MICS)
+* collection(HLT)` resolves *and then* loads in one step; `datalib_resolve`
+* is the resolve-only leg of that same path.
+```
+
+:::
+
+**Load.** `datalib_load` resolves, reads the modules the collection registry lists, and merges them: person-level modules chain 1:1 on `keys_person`, then household-level modules attach m:1 on `keys_hh`, with keys validated per module. It returns a single data frame when `merge` is on (the default) and a named list (R) or dict (Python) of one frame per module when `merge` is off. Unmatched rows are kept — the merge is an outer join and the merge indicator is not retained.
+
+::: {.panel-tabset}
+
+#### R {.unnumbered .unlisted}
+
+```r
+# Merged data frame (default):
+df  <- datalib_load("ZWE", 2019, "MICS", collection = "HLT", root = "Z:/datalib")
+
+# Unmerged: a named list, one data frame per module:
+mods <- datalib_load("ZWE", 2019, "MICS", collection = "HLT",
+                     root = "Z:/datalib", merge = FALSE)
+```
+
+#### Python {.unnumbered .unlisted}
+
+```python
+from datalib import datalib_load
+
+# Merged DataFrame (default):
+df   = datalib_load("ZWE", 2019, "MICS", collection="HLT", root="Z:/datalib")
+
+# Unmerged: a dict of DataFrames, one per module:
+mods = datalib_load("ZWE", 2019, "MICS", collection="HLT",
+                    root="Z:/datalib", merge=False)
+```
+
+#### Stata {.unnumbered .unlisted}
+
+```stata
+* The umbrella command resolves, loads, and merges into memory:
+datalib, country(ZWE) year(2019) survey(MICS) collection(HLT)
+
+* `datalib` with no arguments opens interactive folder navigation
+* (the datalib_browse group); `datalib help` prints the command reference.
+* Stata holds one dataset in memory, so the merge=FALSE "named list" shape
+* has no direct Stata analogue — load modules individually to inspect them.
+```
+
+:::
+
+::: {.callout-note}
+## Loaders never mutate values
+`datalib_load` performs **no recodes and no drops**. It makes exactly two documented *schema* additions, and never touches the values that were already there: (a) in a person module whose registry `linevar` is not already `line_number`, that column is renamed to `line_number` so the merge keys line up; and (b) provenance columns `ctrycode` and `year` are added when absent (and never overwritten). Everything else — every value in `Data/Original/` — arrives exactly as it was deposited. This is datalib's provenance mechanism: not a sidecar file, but the untouched original plus a name that encodes the vintage. The provenance-schema appendix contrasts it with the toolkit's `.provenance.json` sidecar.
+:::
+
+**Enumerate and catalogue.** Before you resolve, you often need to know what is on the shelf. The enumerate group answers one level at a time; `datalib_catalog` inventories a whole root at once. Python additionally ships a command-line front end.
+
+::: {.panel-tabset}
+
+#### R {.unnumbered .unlisted}
+
+```r
+datalib_countries(root = "Z:/datalib")
+datalib_surveys("ZWE", root = "Z:/datalib")
+datalib_catalog(root = "Z:/datalib")
+```
+
+#### Python {.unnumbered .unlisted}
+
+```python
+from datalib import datalib_countries, datalib_catalog
+datalib_countries(root="Z:/datalib")
+datalib_catalog(root="Z:/datalib")
+
+# Or from a shell, without importing:
+#   python -m datalib ls --root Z:/datalib
+```
+
+#### Stata {.unnumbered .unlisted}
+
+```stata
+datalib_countries, root("Z:/datalib")
+datalib_catalog,   root("Z:/datalib")
+* No `python -m datalib ls` equivalent in Stata; use interactive `datalib`.
+```
+
+:::
+
+`datalib_catalog` inventories **one root per call**. That matters under the multi-root deployment described below: a full picture of a per-domain estate is one `datalib_catalog` call per root, not a single sweep.
+
+## Root and config resolution
+
+Every function above needs to know *which* library root it is operating on, and the surface never guesses. It resolves the root through a fixed precedence chain, and the chain differs between the two script-language siblings and Stata:
+
+| Language | Root precedence (first match wins) |
+|---|---|
+| R / Python | explicit `root =` argument → `DATALIB_ROOT` environment variable → language option (`options(datalib.root = )` in R) → the `datalib:` key in the user block of `~/.config/user_config.yml` → error |
+| Stata | `root()` option → `${datalib}` session global → `DATALIB_ROOT` environment variable → error |
+
+The two chains look different because Stata folds the config file in one step earlier. The `${datalib}` global is not an independent source: when it is unset, `getuserconfig` / `datalib_config` fill it *from the config key*. So once the config has been loaded into the session, a config-derived `${datalib}` outranks `DATALIB_ROOT` — the opposite of the R/Python ordering, where the environment variable outranks the config key. The precedence is identical in spirit (explicit argument beats session state beats environment beats file), but a Stata operator who sets `DATALIB_ROOT` expecting it to win should know the loaded config global sits ahead of it.
+
+This is where the boundary from the microdata-archive chapter becomes concrete at the file level. datalib reads its root from a **`datalib:` block** in `~/.config/user_config.yml` — the *same file* the toolkit reads its own flat `dw_*` keys from, but a **distinct namespace** within it. The intent is one shared operator-config file across the office; the reality today is two separate namespaces in one file, because the toolkit's own loader does not yet tolerate a `datalib:` block (a parser guard in `dw_load_config` is pending). The architecture chapter's *configuration across the tiers* note is the authority on that caveat; treat the `datalib:` and `dw_*` keys as separate namespaces until it lifts.
+
+Two onboarding utilities put the pieces in place on a fresh machine, and each is one of the thirteen with a verbatim alias for muscle memory: `getuserconfig` / `datalib_config` writes and reads the per-operator config, including the `datalib:` root key, and `mapzdrive` / `datalib_map_drive` maps `Z:`. These, together with the loader itself, are the **narrow slice** slated to migrate into the CSO Toolkit under the `dw_*` prefix — the onboarding-plus-loader functions, not all thirteen. The architecture chapter frames datalib as a provisional tier-(ii) ecosystem package for exactly this reason: the handbook points at datalib's own repository for the full surface and documents here only the positioning and the cross-cutting contracts. The migration does not change the boundary — a migrated `dw_`-prefixed loader would still read microdata from `Z:/datalib*`, never from `060.DW-MASTER`.
+
+## Errors
+
+datalib raises a small, closed set of contract conditions, mapped consistently across the three languages: invalid input, not found (country / survey / vintage / file), config file missing, user block missing, and library root unset each map to a Stata exit code, an R condition class in the `datalib_error_*` family, and a Python exception; separately, per-module key validation failure during a merge stops with a typed error that **names the offending module**, so a duplicated or missing identifier is diagnosable without opening the data. The full mapping — Stata codes, R classes, Python exceptions, side by side — has a single home in the datalib section of the error-taxonomy appendix, and is not reproduced here.
+
+## The conformance suite
+
+datalib's conformance kit is an **oracle** harness: each implementation is run against a *committed specification of expected outputs*, not against the other implementations. As of **datalib v0.7.0 / contract v1**, the suite ships two golden-case files — `cases_resolve.csv` and `cases_load.csv` — exercised against a single committed synthetic fixture library and run per language: R with `testthat`, Python with `pytest`, and a Stata do-file harness. The precise case count lives in the repository and is deliberately left unstated in prose, because it grows survey by survey as collections are verified; what is fixed is the shape — resolve cases and load cases, one fixture tree, three runners, all asserting the same expected answers. Deliberate departures from the pre-contract Stata behaviour are recorded, with rationale, in `tests/DIVERGENCES.md`, so a divergence is a documented decision rather than a silent drift.
+
+It is worth setting this against the toolkit's **own** conformance harness — the `conformance/` machinery shipped in `#134` — because the two are complementary designs, not the same tool applied twice. The toolkit's harness is a **parity** harness: it runs the R, Python, and Stata siblings against *each other* and asserts they agree to a 1e-9 numeric tolerance. It answers *do the siblings agree?* datalib's oracle harness answers a different question — *does each sibling match the specified answer?* — by checking every implementation against committed expected outputs. Parity guards against the siblings drifting apart; an oracle guards against all of them drifting together away from the specification. The collection registry (reproduced in the IHSN grammar chapter, and carrying the note that the IPUMS keys are unverified against real deposits, guarded per-module until one lands) is the shared source both languages consume, and the golden cases are the drift guard that keeps the hand-mirrored Stata copy byte-aligned with the R and Python copies. Read together, datalib's oracle suite is the microdata counterpart of the toolkit's contract discipline: the same conviction that a cross-language contract is only real if a test can fail when it is broken.
+
+## Access
+
+Access: internal — request via the CSO team (repository visibility is tracked in datalib issue #20).

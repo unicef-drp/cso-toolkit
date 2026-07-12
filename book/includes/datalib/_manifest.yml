@@ -1,0 +1,16 @@
+# Vendored-partial manifest for the datalib (microdata archive) chapters.
+# These partials are copied from the datalib-unicef repository at a pinned
+# tag — never hand-edited here. On any change to datalib's config/grammar.md,
+# config/collections.yml, or the public surface, refresh this directory and
+# bump `pulled_version` below. Pins are VERSION TAGS, never commit SHAs
+# (history-rewrite-safe).
+source: unicef-drp/datalib-unicef
+contract_version: 1
+pulled_version: v0.7.0
+pulled_date: 2026-07-12
+governance_draft: v0.3
+vendored:
+  - _folder-grammar.md      # from config/grammar.md § "Folder-name grammar"
+  - _error-taxonomy.md      # from config/grammar.md § "Shared semantics" item 6
+  - _public-surface.md      # from config/grammar.md § "Shared public surface"
+  - collections.yml         # byte-synced copy of config/collections.yml

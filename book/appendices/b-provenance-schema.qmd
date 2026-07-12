@@ -210,3 +210,8 @@ Relevant source files (all under `C:/GitHub/myados/cso-toolkit`):
 - `python/src/dw_io.py` — `_write_provenance()`, `_sha256_file()`, `_utc_now_iso()` (Python write sidecar); `_write_remote_provenance()` (API-fetch sidecar)
 - `stata/src/dw_save.ado` — Stata sidecar emission (`datasignature`, `idvars`, `format: dw_save.provenance/1`)
 - `docs/dw_io_reference.md` — sidecar field overview
+
+::: {.callout-note}
+## Microdata records provenance structurally, not in a sidecar
+The survey-microdata archive — datalib's `Z:/datalib*` trees, a different data layer from the aggregate warehouse this sidecar serves — records provenance **structurally** rather than in a `.provenance.json` companion: the vintage is encoded in the IHSN folder name (`<CCC>_<YYYY>_<SSSS>_v<MM>_M` and its adaptation extension), and `Data/Original/` is kept untouched so the raw deposit is its own lineage record. Different mechanism, same intent as the sidecar — there is no datalib sidecar to document here. See the IHSN convention chapter.
+:::

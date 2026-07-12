@@ -1,0 +1,59 @@
+# vendored from datalib-unicef config/collections.yml @ v0.7.0 — do not hand-edit; refresh via _manifest.yml
+# datalib collection registry — THE single source of truth for module lists,
+# module levels, and merge keys. R and Python consume synced byte-identical
+# copies (each package's test suite asserts equality). The Stata leg mirrors
+# this registry by hand in stata/src/_/_dlw.ado (no YAML parser there); edits to
+# this file MUST be mirrored in _dlw.ado — the shared conformance cases in
+# tests/ are the drift guard.
+#
+# contract_version: increment when semantics change; every implementation pins it.
+contract_version: 1
+
+# Keys:
+#   modules   : the modules a collection ships (file suffix after the vintage stem)
+#   level     : hh (one row per household) or person (one row per person)
+#   linevar   : the module's person-line variable when it is NOT already
+#               called line_number; implementations normalize it on load
+#   keys_hh   : merge keys for hh-level modules
+#   keys_person : merge keys for person-level modules (after linevar normalization)
+#
+# Merge semantics (contract): person-level modules chain 1:1 on keys_person,
+# then hh-level modules attach m:1 on keys_hh. Keys are validated per module
+# (isid-equivalent); modules whose identifiers are missing/duplicated stop the
+# merge with an error. Loaders never mutate values.
+
+collections:
+  HLT:
+    keys_hh: [svy_id, cluster_id, household_id]
+    keys_person: [svy_id, cluster_id, household_id, line_number]
+    modules:
+      household:
+        level: hh
+      hhmembers:
+        level: person
+        linevar: hh_line_number
+      adult:
+        level: person
+      children:
+        level: person
+
+  IPUMS:
+    # NOTE: keys unverified against real IPUMS deposits (no IPUMS tree available
+    # at contract time); the per-module key validation guards against error.
+    keys_hh: [svy_id, household_id]
+    keys_person: [svy_id, household_id, line_number]
+    modules:
+      hh:
+        level: hh
+      bh:
+        level: person
+      ch:
+        level: person
+      fs:
+        level: person
+      hl:
+        level: person
+      mn:
+        level: person
+      wm:
+        level: person

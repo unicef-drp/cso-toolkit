@@ -45,6 +45,11 @@ book:
         - chapters/42-onboarding-example.qmd
         - chapters/43-contract-auditor-ci.qmd
         - chapters/44-versioning-release.qmd
+    - part: "Part V — The Microdata Archive (datalib)"
+      chapters:
+        - chapters/51-microdata-archive.qmd
+        - chapters/52-ihsn-grammar.qmd
+        - chapters/53-datalib-api-conformance.qmd
   appendices:
     - appendices/a-coverage-matrix.qmd
     - appendices/b-provenance-schema.qmd

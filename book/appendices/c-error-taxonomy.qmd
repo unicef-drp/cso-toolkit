@@ -329,3 +329,11 @@ When you hit a `[cso_toolkit.*]` stop and are not sure which category it is:
 5. **Do what the `Fix:` block says, in order.** The numbered options are ranked: option 1 is the expected remedy; option 2 is usually the deliberate escape hatch reserved for the Database Manager.
 
 For the precise arguments and return values behind each helper named above, see the function reference appendix; for the sidecar fields the integrity checks compare, see the provenance sidecar schema appendix.
+
+## The datalib error taxonomy
+
+The survey-microdata tool `datalib` uses a **typed** error taxonomy too, but with a **different envelope shape** from the toolkit's: it raises a stable class/code per failure — a Stata exit code, an R condition class, a Python exception — rather than the toolkit's `[cso_toolkit.<func>]` `WHAT` / `Why` / `Fix:` message prefix. The two are complementary, not interchangeable; do not merge them into one table.
+
+{{< include ../includes/datalib/_error-taxonomy.md >}}
+
+Unlike the toolkit envelope, datalib does not contract a `Fix:` block: the class/code *is* the machine-actionable surface — the Stata exit code, the `datalib_error_*` R condition class, or the Python exception type is what a caller catches and branches on. For the functions that raise these, see the datalib API chapter.
