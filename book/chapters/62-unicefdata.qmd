@@ -1,0 +1,112 @@
+# unicefData: public child statistics in three languages
+
+The reproducibility mission this book serves does not stop at the toolkit's own boundary. A CSO analyst reaches for published child-statistics indicators constantly — to explore a series before it enters a pipeline, to teach a method, to sanity-check an aggregate against the public figure — and those reaches should be as consistent across R, Python, and Stata as the `dw_*` contract is. `unicefData` is the package that makes them so: trilingual, tidy access to the **public** UNICEF SDMX data warehouse (`sdmx.data.unicef.org`, surfaced to the world as `data.unicef.org`). The ecosystem chapter set out the three tiers of shared code, the membership gate, and the three configuration contracts in full; the architecture chapter's orientation pointed here for the worked treatment. This chapter is that treatment for the **first full tier-(ii) member**. It positions `unicefData` and draws its boundaries against the rest of the ecosystem — it does **not** re-document the package's API, which lives, canonically, in `unicef-drp/unicefData`.
+
+`unicefData` is the first tier-(ii) package to clear the whole membership gate rather than most of it: a public `unicef-drp` home, a tagged public release, CI-executed tests, a trilingual surface, changelog and versioning discipline, and a governance wording reconciled with its author disclaimer. That last item matters, and it is where honesty has to be explicit. By contrast, `datalib` — documented across Part V — meets every criterion **except** a public release and is a *provisional* member pending its visibility decision, and the mapping/boundaries capability is a *candidate* under evaluation, not yet named in this book. `unicefData` is the one that is fully in.
+
+::: {.callout-warning}
+## Official data, unofficial client
+
+The **data** `unicefData` returns is UNICEF's official public statistics — the same figures published at `data.unicef.org`. The **package** is not an official UNICEF product. Its own README states plainly that it is "not an official UNICEF product … the views of the author." The honest reconciliation, and the one this book adopts, is that `unicefData` is **CSO-staff-maintained, MIT-licensed, and supported by a named maintainer** — useful and backed, but not an institutional product with an SLA the organisation has signed. This is exactly why the tier-(ii) status table carries a *named support owner* column rather than a bare "UNICEF-supported" label: support is a person on the CSO team, and institutional adoption is a Phase-4 decision, not a claim this chapter makes.
+:::
+
+::: {.callout-note}
+## Version and source of authority
+
+This chapter is pinned to **unicefData v2.4.2**, bundled-metadata vintage **2026-04-20**, at which point the client exposes **733 indicators**. Per-language versions differ under the *minimum bump rule*: a release tag is cut across all three siblings at once, but each registry re-publishes only when that language's own surface changed, so the versions lag independently — **R 2.4.1** (CRAN), **Python 2.4.2** (PyPI, package `unicefdata`), **Stata 2.4.1** (SSC), all under tag **v2.4.2**. Counts and versions below are stamped because they drift; `unicef-drp/unicefData` is the canonical, authoritative documentation for the surface itself.
+:::
+
+## When to use what
+
+This is the decision the audience actually needs, because three tools in the CSO estate can all put a UNICEF number in front of you and they are **not** interchangeable. The question is never only "where does the number come from" but "what contract is wrapped around the read."
+
+| Tool | Data layer | Mode contract? | Lands in a deposit? | Use it when |
+|---|---|---|---|---|
+| `dw_api_fetch` (toolkit) | Aggregate indicators, fetched to build the warehouse | **Yes** — producer / reviewer mode-gated | **Yes** — cached into the `060.DW-MASTER` deposit, vintage-frozen | You are building or refreshing the aggregate warehouse and need the fetched bytes to replay identically years later |
+| `unicefData()` (this chapter) | Aggregate indicators, published public series | No | No | You want tidy public indicators for analysis, exploration, or teaching against `data.unicef.org` |
+| `datalib_load` (microdata archive) | Survey **microdata** — household / person records | No (its own governance) | No — reads the `Z:/datalib*` archive | You need the underlying survey records, not indicators |
+
+The boundaries are one sentence each. `dw_api_fetch` is the warehouse-builder's tool: it is mode-gated, and every response it fetches is cached **into** the DW-Production deposit so the exact bytes behind a published aggregate can be reproduced vintage-permanent long after the fetch. `unicefData()` is the analyst's tool: it returns the same class of published public indicators as a tidy frame with **no** mode contract and **no** deposit, for exploration, teaching, and one-off analysis. `datalib_load` is not on the indicator layer at all: it loads survey microdata — the household and person records that indicators are computed *from* — and belongs to the microdata-archive chapter's contract, not this one. The subtlety worth stating explicitly is that `dw_api_fetch` and `unicefData()` may read the very same public SDMX warehouse; what separates them is the mode gate and the frozen deposit on one side versus a bare tidy read on the other.
+
+## Quick start
+
+Because `unicefData` is a **public** package, install instructions belong here (unlike the internal packages in Part V). All three lines are pinned to v2.4.2, and each honours the minimum bump rule — you get the latest published version for your language, which may lag the tag.
+
+::: {.panel-tabset}
+
+#### R {.unnumbered .unlisted}
+
+```r
+# Install (public) — R 2.4.1 on CRAN:
+install.packages("unicefData")
+# or the development head:
+# devtools::install_github("unicef-drp/unicefData")
+
+library(unicefData)
+
+# Under-five mortality (CME_MRY0T4), three countries, 2015-2023:
+u5mr <- unicefData(
+  indicator = "CME_MRY0T4",
+  countries = c("ALB", "USA", "BRA"),
+  year      = "2015:2023"
+)
+
+search_indicators("mortality")   # find an indicator code
+list_categories()                # list dataflows / categories
+```
+
+#### Python {.unnumbered .unlisted}
+
+```python
+# Install (public) — Python 2.4.2 on PyPI, package name `unicefdata`:
+#   pip install unicefdata
+
+from unicefdata import unicefData, search_indicators, list_categories
+
+# Under-five mortality (CME_MRY0T4), three countries, 2015-2023:
+u5mr = unicefData(
+    indicator="CME_MRY0T4",
+    countries=["ALB", "USA", "BRA"],
+    year="2015:2023",
+)
+
+search_indicators("mortality")   # find an indicator code
+list_categories()                # list dataflows / categories
+```
+
+#### Stata {.unnumbered .unlisted}
+
+```stata
+* Install (public) — Stata 2.4.1 on SSC:
+*   ssc install unicefdata
+* or the GitHub route:
+*   net install unicefdata, from("https://raw.githubusercontent.com/unicef-drp/unicefData/main/stata")
+
+* Under-five mortality (CME_MRY0T4), three countries, 2015-2023:
+unicefdata, indicator(CME_MRY0T4) countries(ALB USA BRA) year(2015:2023) clear
+
+unicefdata, search(mortality)    // find an indicator code
+unicefdata, flows                // list dataflows / categories
+```
+
+:::
+
+::: {.callout-note}
+## Caching and offline use
+
+The indicator metadata `unicefData` needs to resolve codes and dataflows **auto-downloads on first use and refreshes every 30 days**; the cache is cleared with `clear_unicef_cache()` (R), `clear_cache()` (Python), or `unicefdata, clearcache` (Stata). Because the package also **bundles** a metadata snapshot (`metadata/current/*.yaml`, vintage **2026-04-20** at v2.4.2), search and category listing work offline against that snapshot even before the first network refresh — a fetch of actual observations still needs the warehouse.
+:::
+
+## The surface
+
+The whole point of a trilingual package is that the same verbs and the same output schema appear in every language, so a script's *intent* reads identically whether it is R, Python, or Stata. The core surface is a handful of functions — fetch a series, search the catalogue, list categories, manage the cache — and every fetch returns one **normalised tidy schema** (`dataflow`, `iso3`, `indicator`, `sex`, `age`, `period`, `value`, `unit`, `obs_status`, `data_source`), mapped from the underlying SDMX columns the same way in all three. The vendored table below is pinned to v2.4.2 and is transcluded rather than retyped; the package's own documentation remains canonical for anything the pin does not cover.
+
+{{< include ../includes/unicefdata/_surface-table.md >}}
+
+## Configuration
+
+`unicefData` sits in a **third** configuration namespace, deliberately distinct from the other two tiers. It is configured entirely through **environment variables** — `UNICEF_DATA_HOME` for its data and cache root, `UNICEF_CONFIG_PATH` for an optional config location — and it reads **no** `~/.config/user_config.yml` at all. That is a design constraint, not an oversight: `unicefData` is CRAN-track, and CRAN policy dislikes packages that read user files by surprise, so the package takes only what the environment hands it. The contrast with the rest of the ecosystem is clean. The toolkit reads **flat keys** from `~/.config/user_config.yml` through generated profile blocks and `dw_load_config`; `datalib` reads a `datalib:` block from its **own** package-specific config file (the shared-file arrangement still waits on a parser guard in `dw_load_config`); `unicefData` reads environment variables and nothing on disk. Do not expect a toolkit profile block to configure `unicefData`, and treat all three as separate namespaces. The ecosystem chapter's *configuration across the tiers* section is the authority on why the three diverge today and why convergence onto a shared contract is a Phase-4 decision rather than something already shipped.
+
+## A conformance exemplar
+
+`unicefData` did the parity thing before the toolkit's own harness shipped, and it is worth reading the two together. The package carries a cross-language output test — `tests/test_cross_language_output.{R,py}` — that runs the **same query** through the R and Python siblings and **compares the outputs**, backed by an expected-columns schema fixture that pins the tidy shape every language must produce. That is the same conviction the toolkit's conformance harness (shipped in `#134`) executes: a cross-language contract is only real if a test can fail when it is broken. The difference is one of reach, and it is the honest one to state — `unicefData`'s automated comparison today pairs **R against Python**, with the schema fixture guarding the columns all three (including Stata) must return, whereas the toolkit's harness generalises the same instinct to a three-way parity check that asserts the R, Python, and Stata siblings agree to a **1e-9** numeric tolerance. Read in sequence, `unicefData`'s cross-language test is the exemplar and the toolkit's harness is the exemplar carried to its full form: the parity pledge the coverage-matrix appendix tracks is not an aspiration invented in a vacuum, but a practice a shipping tier-(ii) member already modelled. The precise number of test cases is deliberately left unstated — it drifts with releases and differs on the development fork — so this description is pinned to the **v2.4.2** approach, not to a case count.

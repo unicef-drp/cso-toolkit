@@ -1,0 +1,88 @@
+# The UNICEF analytics ecosystem: three tiers
+
+The architecture chapter already introduced this ecosystem in miniature. Its "wider ecosystem" section gave the orientation: a compact three-tier table, a one-sentence membership rule, the parity pledge, and a note about why configuration diverges across packages today. That section did its job — it told a reader building a pipeline where the surrounding code comes from — and then it pointed here. This chapter is the full map. It is the authoritative treatment: the same three tiers, but with the columns, the membership gate, and the governance policy set out in full, so that the orientation upstream can stay short.
+
+The organizing idea is simple and it governs everything that follows. Shared code around a CSO pipeline is not one undifferentiated pile. It falls into three tiers, and the tier a piece of code belongs to decides two things at once: **who maintains it**, and **what this book is willing to assert about it**. Those two questions travel together. The toolkit's own functions carry the strongest maintenance commitment and the strongest claim — the book *is* their specification. An external package used in one production pipeline carries neither a maintenance promise nor a conformance claim; the book asserts only that a specific version did a specific thing on a specific day. Everything between those poles is the middle tier, and most of the governance in this chapter exists to keep that middle tier honest.
+
+Because the tiers are a reproducibility instrument, not an org chart, this chapter is deliberately conservative about claims. Where the book cannot stand behind something, it says so — and it says so in a *structured* way, so that a reader can tell an institutional commitment from a named individual's good work, and a live conformance guarantee from a dated observation.
+
+## The three tiers
+
+The table below is the authoritative version. It carries more columns than the orientation table in the architecture chapter — in particular a **visibility** column and a **support owner** column — because those two columns are exactly where an over-strong claim would otherwise hide.
+
+| Tier | What it is | Members | Canonical home | Visibility | Support owner | What the book asserts |
+|---|---|---|---|---|---|---|
+| **(i) Toolkit internals** | The `dw_*` contract and its three siblings — the toolkit itself | The `dw_*` function surface | `unicef-drp/cso-toolkit` | PUBLIC — the book is the docs | CSO maintainer (toolkit) | **Normative.** The book is the specification; the coverage-matrix appendix is the honesty device that records where languages have not yet reached parity. |
+| **(ii) UNICEF-supported public packages** | Full packages with their own release lines, maintained by CSO staff in their own repos | unicefData (FULL); datalib (PROVISIONAL); a mapping / boundaries capability (CANDIDATE) | Each package's own `unicef-drp` repo | PUBLIC (unicefData) · internal, pending #20 (datalib) · private candidate (mapping) | A named CSO maintainer, per package | **Relationships and cross-cutting contracts.** The book documents how the packages fit together (config, conformance conventions) and points at each package's own per-function docs. It never re-documents a package's API. |
+| **(iii) Curated third-party functions** | External packages used in production pipelines | A *derived* list (see the curated-third-party appendix) | Upstream (external) | External | None — upstream maintainer; no CSO promise | **Behaved as described, on a date.** Only that a named version behaved as described on a stated date in a stated pipeline. No maintenance promise, no conformance claim. |
+
+**Tier (i) is normative.** For the toolkit's own functions there is no separate reference manual that the book could fall out of sync with — the book is the reference. That is a strong claim, and it is earned by a strong honesty device: the coverage-matrix appendix records, function by function and language by language, where the three implementations actually reach parity and where they do not. The steady-state pledge for tier (i) is equal R, Python, and Stata support, and that pledge is not just prose — the toolkit's conformance harness executes it, comparing the three implementations against one another to a tolerance of `1e-9` (shipped in PR #134).
+
+**Tier (ii) is relational.** These are full packages with their own release cadences, their own changelogs, and their own maintainers. The book's job for tier (ii) is *not* to mirror their documentation — that would drift the moment either side changed — but to document the **relationships** and the **cross-cutting contracts** that hold the ecosystem together: how configuration is (and is not) shared, what conformance conventions a member is expected to follow. For anything package-specific, the book points at that package's own docs. The chapters that follow this one in Part VI are the worked example of that pointing.
+
+**Tier (iii) is evidentiary.** A third-party function earns a row only because it was actually used in a production pipeline and a sector lead verified its behaviour. The book's claim is correspondingly narrow: this version, this pipeline, this date, this observed behaviour. Nothing about future releases, nothing about cross-language parity. The rules and the table live in the curated-third-party appendix.
+
+## The tier-(ii) membership gate
+
+Tier (ii) is the only tier with an admission test, because it is the only tier where the book makes a *standing* claim ("this is a supported ecosystem member") rather than a one-off one. The gate is six criteria, applied uniformly to every candidate:
+
+1. **(a) A public `unicef-drp` home** — the package lives in the organization's namespace, not a personal fork.
+2. **(b) A tagged public release** — a versioned, publicly installable artifact, not just a branch.
+3. **(c) CI-executed tests** — tests that run in continuous integration, not tests that merely exist.
+4. **(d) Trilingual, or explicitly scoped with a roadmap** — R, Python, and Stata support, or an honest statement of which languages are in scope and a plan for the rest.
+5. **(e) Changelog and versioning discipline** — a maintained changelog and a versioning scheme a consumer can pin against.
+6. **(f) Governance wording reconciled with any author disclaimer** — where a package's own README carries an author disclaimer, the book's governance language is reconciled with it rather than contradicting it.
+
+A **PROVISIONAL member** is a package that meets **(a), (c), (d), (e), and (f)** but has **(b) pending** — it is a real, maintained, tested, trilingual ecosystem member that has not yet cut its public release.
+
+Applying the gate today:
+
+- **unicefData — FULL member.** It meets all six criteria: a public `unicef-drp/unicefData` home, tagged public releases on CRAN / PyPI / SSC, CI-executed tests, trilingual coverage, a maintained changelog, and governance wording reconciled with its author disclaimer. The unicefData chapter that follows is its per-package pointer.
+- **datalib — PROVISIONAL member.** It meets (a), (c), (d), (e), and (f), but criterion (b) — a *public* tagged release — is pending. datalib is maintained in `unicef-drp/datalib-unicef`, which is internal today; the move to a public release is tracked by datalib issue #20. Until that closes, datalib is a full ecosystem member in every respect except public visibility, and the book labels it exactly that. The microdata-archive chapters in Part V document datalib itself.
+- **A mapping / boundaries capability — CANDIDATE only.** This capability is still under evaluation. There are two internal candidates, and **neither is named in this book** — not because they are secret, but because naming a winner before the fork resolves and before the winner has actually passed the gate would be a claim the book cannot yet stand behind. When one candidate clears the gate, it will be named here and given its pointer; until then it is a candidate, not a member.
+
+::: {.callout-note}
+## What "UNICEF-supported" does — and does not — mean
+
+Tier (ii) is labelled "UNICEF-supported public packages," and that phrase is easy to over-read. It does **not** mean the organization has signed a service-level agreement for these packages. Support for each package is a **named CSO maintainer** — a person, recorded in the support-owner column — who keeps the package alive. Institutional adoption, the step that would turn a named maintainer into an organizational commitment, is a **Phase-4 decision** that has not been taken. The book deliberately does not write an SLA the organization has not signed. The support-owner and visibility columns exist precisely so that "supported" reads as "a named person maintains this," never as "the institution guarantees this."
+:::
+
+## Curated third-party functions
+
+Tier (iii) has no admission committee. Its list is **derived, not curated** — a subtle but load-bearing distinction. A row does not appear because someone decided a package was good; it appears because two facts became true: the package was **used in a production pipeline**, and a **sector lead attached a verification stamp** recording that it behaved as described. The list is a byproduct of production evidence, which is why the book can make a claim about it at all.
+
+The claim stays narrow on purpose. A tier-(iii) row asserts that a *named version* behaved as described on a *stated date* in a *stated pipeline* — and nothing more. There is no maintenance promise and no conformance claim, because the book does not maintain these packages and does not run them through the parity harness.
+
+One consequence is worth stating plainly: **stale rows display stale; they never block a release.** If a verification stamp ages, the appendix shows it aging rather than silently dropping the row or holding up a book build. A visible stale stamp is information; a suppressed one is a lie. The full rules and the derived table live in the curated-third-party appendix, which today holds the inclusion rules and a deliberately-empty derived table awaiting its first production-verified row.
+
+## Configuration across the tiers
+
+Configuration is the clearest place where the three tiers are genuinely, deliberately divergent — and the architecture chapter's config-divergence note pointed here for the reason. Today there are **three separate configuration contracts**, and they should be treated as **three separate namespaces**. They are not yet meant to interoperate.
+
+| Contract | Config source | Mechanism | Reads the toolkit's `user_config.yml`? |
+|---|---|---|---|
+| **Toolkit (tier i)** | `~/.config/user_config.yml` | **Flat keys**, written as generated profile blocks and read by `dw_load_config` | Yes — this *is* its file |
+| **datalib (tier ii)** | Its own package-specific config file | A `datalib:` block in datalib's own file | No — separate file today |
+| **unicefData (tier ii)** | Environment variables `UNICEF_DATA_HOME` / `UNICEF_CONFIG_PATH` | Read from the environment; **no user config file is read at all** | No — reads no user file |
+
+The toolkit reads **flat keys** from `~/.config/user_config.yml`, populated as generated profile blocks and consumed by `dw_load_config`. datalib reads a `datalib:` block from its **own** package-specific config file. A shared-file arrangement — a single `user_config.yml` carrying a `datalib:` block alongside the toolkit's flat keys — is attractive, but it waits on a **parser guard** in `dw_load_config` that does not exist yet.
+
+::: {.callout-warning}
+## Do not add a `datalib:` block to the toolkit's `user_config.yml` yet
+
+The shared-file arrangement is not shipped. Until `dw_load_config` grows the parser guard that lets it ignore a nested `datalib:` block cleanly, adding one to the toolkit's `user_config.yml` risks the toolkit's flat-key reader tripping over it. Keep datalib's configuration in datalib's own file for now.
+:::
+
+unicefData sits apart from both. It is configured entirely by **environment variables** — `UNICEF_DATA_HOME` and `UNICEF_CONFIG_PATH` — and reads **no user config file at all**. This is not an oversight: unicefData is CRAN-track, and CRAN policy dislikes packages that read user files by surprise. The environment-variable contract keeps it CRAN-clean.
+
+Convergence of these three contracts onto a single shared configuration surface is a **Phase-4 decision**, not something the ecosystem has shipped. Until that decision is taken, the safe mental model is three namespaces that happen to sit near one another, not one namespace with three dialects.
+
+## What the handbook asserts, tier by tier
+
+Pulling the policy back into one place, so a reader can carry it without the table:
+
+- **Tier (i) — normative.** For the toolkit's own `dw_*` functions, the book is the specification. The coverage-matrix appendix records where the three languages have and have not reached parity, and the conformance harness (#134) executes the parity pledge to `1e-9`.
+- **Tier (ii) — relationships and cross-cutting contracts, never the API.** For UNICEF-supported packages, the book documents how they fit together — configuration namespaces, conformance conventions, membership status — and points at each package's own per-function docs. It does not re-document a package's API, and each package's support is a named CSO maintainer, not an institutional SLA.
+- **Tier (iii) — behaved as described, on a date.** For curated third-party functions, the book asserts only that a named version behaved as described on a stated date in a stated pipeline. The list is derived from production use plus a sector lead's verification stamp; stale stamps display stale and never block a release.
+
+That is the whole governance model, and it is the lens for the rest of Part VI. The next chapter applies it to the first full tier-(ii) member, unicefData — pointing at its docs, its conformance exemplar, and the decision of when to reach for it rather than the toolkit's own fetch path, without ever re-documenting its API.

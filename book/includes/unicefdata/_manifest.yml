@@ -1,0 +1,17 @@
+# Vendored-partial manifest for the unicefData ecosystem chapter.
+# Copied from the PUBLIC unicef-drp/unicefData repository at a pinned tag —
+# never the personal dev fork, and never hand-edited here. Refresh and bump
+# `pulled_version` when unicefData tags a release whose surface this chapter
+# describes. Pins are VERSION TAGS, never commit SHAs.
+source: unicef-drp/unicefData
+pulled_version: v2.4.2
+pulled_date: 2026-07-12
+# Per-language stamps differ (the "minimum bump rule" — a shared tag does not
+# mean every language leg is at that number):
+language_versions:
+  r: 2.4.1        # CRAN
+  python: 2.4.2   # PyPI (unicefdata)
+  stata: 2.4.1    # SSC
+metadata_vintage: 2026-04-20
+vendored:
+  - _surface-table.md   # generated from NAMESPACE + tests/fixtures/expected/expected_columns.csv
