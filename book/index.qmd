@@ -1,9 +1,9 @@
-# The CSO Toolkit Handbook {.unnumbered}
+# The CSO Handbook {.unnumbered}
 
 *One contract, three languages — reproducible analytics in R, Python, and Stata.*
 
 ::: {.content-visible when-format="html"}
-[Download the handbook (PDF)](The-CSO-Toolkit-Handbook.pdf){.btn .btn-primary role="button"}
+[Download the handbook (PDF)](The-CSO-Handbook.pdf){.btn .btn-primary role="button"}
 :::
 
 This handbook documents the `cso-toolkit` contract. Start with the **[Introduction](introduction.qmd)**, then read the part that matches your role.

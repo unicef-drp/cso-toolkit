@@ -1,6 +1,6 @@
 # Handbook cover
 
-`cover-A.png` is the cover of *The CSO Toolkit Handbook*, wired into the book via
+`cover-A.png` is the cover of *The CSO Handbook*, wired into the book via
 `cover-image: images/cover-A.png` in [`../_quarto.yml`](../_quarto.yml).
 
 | File | Role |

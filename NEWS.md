@@ -6,6 +6,38 @@ _Entries land here as PRs merge into `develop`. When the next release
 is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
+## v0.7.0 (2026-07-12)
+
+Handbook, ecosystem, and the executed conformance gate.
+
+### Added
+
+- **The handbook became _The CSO Handbook_** — the DW-Production manual is now the
+  umbrella for the three-tier CSO analytics ecosystem. Two new parts: **Part V —
+  The Microdata Archive (datalib)** (the archive/catalogue/tool model, the IHSN
+  folder grammar, and the `datalib_*` API + conformance) and **Part VI — The
+  Ecosystem** (the three-tier taxonomy + membership gate, plus a `unicefData`
+  chapter). Adds Appendix F (curated third-party functions); appendices A/C/D/E
+  amended; vendored pinned partials under `book/includes/`.
+- **Cross-language conformance harness** (`conformance/`, CI-gated): the R and
+  Python siblings round-trip a shared fixture and a comparator asserts
+  value-equality within `1e-9` — parity is now **executed**, not just asserted.
+  (The Stata leg awaits a `STATA_LIC` runner, issue #133.)
+- **`dw_map_drive`** — maps the team network drive (default `Z:`) from the new
+  `dwZDrive` / `dwZDriveUNC` config keys via `dw_load_config`, using `net use`
+  (Windows-only; safe by default, with `force` / `dryrun` / `discover`). The
+  toolkit port of datalib's `mapzdrive` — the drive-mapping half of the
+  onboarding-migration story, now under the `dw_*` prefix.
+
+### Fixed
+
+- **`dw_load_config`** — an **indent guard** so a shared
+  `~/.config/user_config.yml` can carry a `datalib:` block alongside the
+  toolkit's flat keys without the parser mis-adopting a nested key (e.g. a
+  `datalib` block's `sandboxRoot`) as a toolkit global; and a **pre-existing
+  crash** (`r(133)`) on any double-quoted value — the `teamsWrkData: "C:/…"`
+  form the schema documents (#138).
+
 ## v0.6.0 (2026-07-01)
 
 Feature + robustness release for the `dw_api_fetch` / `dw_save` producer path:

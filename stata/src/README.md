@@ -48,10 +48,21 @@ sector that runs partly in Stata and partly in R uses the same producer
   [`dw_require_no_api.sthlp`](dw_require_no_api.sthlp).
 - [`dw_load_config.ado`](dw_load_config.ado) — hand-rolled YAML reader
   for `~/.config/user_config.yml` (path overridable via `filepath()`).
-  Populates `$dw_mode` + the `teams*` and `sandboxRoot` path globals.
-  No external dependency (AppLocker-safe). Hard-stops when `dw_mode` is
-  missing or not in `{producer, reviewer}`. Companion help:
+  Populates `$dw_mode` + the `teams*`, `dwZDrive`/`dwZDriveUNC`, and
+  `sandboxRoot` path globals. No external dependency (AppLocker-safe).
+  Hard-stops when `dw_mode` is missing or not in `{producer, reviewer}`.
+  Reads only top-level keys (an indent guard skips a nested `datalib:`
+  block in a shared config). Companion help:
   [`dw_load_config.sthlp`](dw_load_config.sthlp).
+
+### Onboarding helpers (v0.6.0, new)
+
+- [`dw_map_drive.ado`](dw_map_drive.ado) — map the team network drive
+  (default `Z:`) from `dwZDrive`/`dwZDriveUNC` via `dw_load_config`, using
+  `net use`. Windows-only; safe by default (never disturbs an existing
+  mapping unless `force`; `dryrun` previews; `discover` reads a mapped
+  drive's UNC). The toolkit port of datalib's `mapzdrive`. Companion help:
+  [`dw_map_drive.sthlp`](dw_map_drive.sthlp).
 
 ## Lineage
 
@@ -67,6 +78,7 @@ family:
 | `dw_use.ado` | new (cso-toolkit v0.4.0; mirrors `r/R/dw_io.R::dw_use`) |
 | `dw_require_no_api.ado` | new (cso-toolkit v0.4.0; mirrors `r/R/profile_helpers.R`) |
 | `dw_load_config.ado` | new (cso-toolkit v0.4.0; hand-rolled YAML subset) |
+| `dw_map_drive.ado` | port of datalib `mapzdrive` (cso-toolkit v0.6.0) |
 
 Each port keeps the upstream's algorithmic core and credits the original
 author in its header. The cso-toolkit versions deliberately diverge on

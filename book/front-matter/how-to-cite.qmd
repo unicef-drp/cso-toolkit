@@ -17,13 +17,13 @@ Authors are listed alphabetically by surname. Editors are the Chief Statistician
 
 ## Suggested citation (APA)
 
-> Avanesian, G., Brar, S., Conkle, J., Coskun, Y., Donmez, A., Francis, L., Jugder, M., Liu, Y., Mehra, V., Nacuka, G. B. B., Olivotti, D., & Zandinia, S. (2026). *The CSO Toolkit Handbook: One contract, three languages — reproducible analytics in R, Python, and Stata* (J. P. Azevedo, C. Cappa, E. Delamónica, C. Hayashi, Y. Jaques, M. Muniz, A. Rossi, T. Slaymaker, & D. You, Eds.). UNICEF Chief Statistician Office. https://doi.org/10.5281/zenodo.XXXXXXX
+> Avanesian, G., Brar, S., Conkle, J., Coskun, Y., Donmez, A., Francis, L., Jugder, M., Liu, Y., Mehra, V., Nacuka, G. B. B., Olivotti, D., & Zandinia, S. (2026). *The CSO Handbook: One contract, three languages — reproducible analytics in R, Python, and Stata* (J. P. Azevedo, C. Cappa, E. Delamónica, C. Hayashi, Y. Jaques, M. Muniz, A. Rossi, T. Slaymaker, & D. You, Eds.). UNICEF Chief Statistician Office. https://doi.org/10.5281/zenodo.XXXXXXX
 
 ## BibTeX
 
 ```bibtex
-@book{csotoolkithandbook2026,
-  title     = {The CSO Toolkit Handbook: One contract, three languages ---
+@book{csohandbook2026,
+  title     = {The CSO Handbook: One contract, three languages ---
                reproducible analytics in R, Python, and Stata},
   author    = {Avanesian, Garen and Brar, Sukhdeep and Conkle, Joel and
                Coskun, Yadigar and Donmez, Ayca and Francis, Lauren and
@@ -49,7 +49,7 @@ Authors are listed alphabetically by surname. Editors are the Chief Statistician
 
 ## Chicago author-date
 
-> Avanesian, Garen, Sukhdeep Brar, Joel Conkle, Yadigar Coskun, Ayca Donmez, Lauren Francis, Munkhbadar Jugder, Yang Liu, Vrinda Mehra, Gladys Babirye Bagandanswa Nacuka, Daniele Olivotti, and Sahar Zandinia. 2026. *The CSO Toolkit Handbook: One contract, three languages — reproducible analytics in R, Python, and Stata*. Edited by João Pedro Azevedo, Claudia Cappa, Enrique Delamónica, Chika Hayashi, Yves Jaques, Maria Muniz, Andrea Rossi, Tom Slaymaker, and Danzhen You. UNICEF Chief Statistician Office. https://doi.org/10.5281/zenodo.XXXXXXX.
+> Avanesian, Garen, Sukhdeep Brar, Joel Conkle, Yadigar Coskun, Ayca Donmez, Lauren Francis, Munkhbadar Jugder, Yang Liu, Vrinda Mehra, Gladys Babirye Bagandanswa Nacuka, Daniele Olivotti, and Sahar Zandinia. 2026. *The CSO Handbook: One contract, three languages — reproducible analytics in R, Python, and Stata*. Edited by João Pedro Azevedo, Claudia Cappa, Enrique Delamónica, Chika Hayashi, Yves Jaques, Maria Muniz, Andrea Rossi, Tom Slaymaker, and Danzhen You. UNICEF Chief Statistician Office. https://doi.org/10.5281/zenodo.XXXXXXX.
 
 ## Versioned citation
 

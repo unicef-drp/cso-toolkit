@@ -124,7 +124,7 @@ Cross-language parity is the design goal, not a finished fact. The gaps worth na
 
 - **No Stata API *fetch* wrapper.** `dw_api_fetch` / `dw_api_cached` / `dw_api_inventory` are R and Python only. Stata ships the enforcement half (`dw_require_no_api`) but not the fetch half.
 - **No Stata parquet or RDS, and `dw_merge` / `dw_verify_z` are not in the Stata sibling.** `dw_isid` in Stata is embedded inside `dw_save` (the `idvars()` option) rather than exposed as its own command. (The read contract, `dw_use`, *is* now in Stata as of v0.4.0; issue #5 is closed.)
-- **The demographics helpers `dw_pop` / `dw_regions` are R-only.** Neither has a Python or Stata sibling yet; a non-R consumer that needs population denominators or regional groupings routes through the R sibling or a pre-computed artefact.
+- **The demographics helpers are partially ported.** `dw_pop` ships in R and Python; `dw_regions` is still R-only. Neither has a Stata sibling yet, so a Stata consumer that needs population denominators or regional groupings routes through a sibling or a pre-computed artefact.
 - **No Python autodoc.** R has Roxygen-complete reference documentation (34 `.Rd` files plus a pkgdown site configured in `r/_pkgdown.yml`); Python has no equivalent pkgdown-style generated reference, only hand-written references and module READMEs.
 
 Treat the parity claim as "same names, same behaviour where a function exists in both," not "every function exists everywhere."
@@ -162,6 +162,26 @@ The one edge that carries a version number is the **vendoring edge** (`LANG --> 
 
 ::: {.callout-note}
 If you are matching the prose to the rendered picture: there is no dotted style in this diagram. Every non-solid arrow is the same Mermaid dashed style (`-.->`), and there are exactly two of them — the language-parallel edge and the reviewer-reads edge.
+:::
+
+## The wider ecosystem: three tiers of shared code
+
+The toolkit is not the only shared code a CSO analytics product touches, and this handbook's authority is not uniform across everything a pipeline imports. As of 2026-07, the shared code around a CSO pipeline falls into three tiers, and the tier determines both who maintains the code and what this book asserts about it:
+
+| Tier | What it is | Members | Canonical home | What this book asserts |
+|---|---|---|---|---|
+| **(i) The toolkit** | The `dw_*` contract and its three language siblings — everything the preceding sections describe | `csotoolkit` R / Python / Stata | `unicef-drp/cso-toolkit` | **Normative.** This book *is* the documentation; the coverage-matrix appendix is its honesty device |
+| **(ii) UNICEF-supported packages** | Full packages with their own release lines, maintained by CSO staff in their own repositories | `unicefData` (public); `datalib` (provisional member — public release pending); a mapping/boundaries capability (under evaluation) | Each package's own `unicef-drp` repository | Positioning and the cross-cutting contracts (configuration, conformance conventions). Per-function documentation stays in the package's own repository — this book points, it never re-documents |
+| **(iii) Third-party functions** | External packages used inside production pipelines | e.g. community Stata commands, CRAN/PyPI utilities | Upstream registries (CRAN, PyPI, SSC) | Only that a named version behaved as described on a stated date in DW-Production. No maintenance promise, no conformance claim |
+
+Membership in tier (ii) is criteria-based, not honorary: a public `unicef-drp` home, tagged releases, CI-executed tests, and changelog discipline. `datalib` — the survey-microdata archive tool — meets all but the public-release criterion today and is listed as *provisional*; a supported **mapping/boundaries package is under evaluation, with two internal candidates**, and is not documented here until the evaluation resolves and the winner passes the same gate. The inclusion rules and the verified list for tier (iii) live in the curated-third-party appendix. This section is the orientation; the ecosystem chapter in Part VI develops the tiers, the membership gate, the per-tier authority claims, and the three configuration contracts in full, and documents `unicefData`, the first full tier-(ii) member.
+
+**The parity pledge.** Within tier (i), the steady-state commitment is *equal* R, Python, and Stata support: every cell of the coverage-matrix appendix must eventually read as fully supported, partially supported with a documented scope, or not-applicable with a stated design reason — never a bare gap. The matrix is the honesty device that tracks the distance between that pledge and today's reality; the cross-language conformance harness (`conformance/`) is the machinery that keeps the "supported" cells honest by executing the parity claim in CI.
+
+::: {.callout-note}
+## Configuration across the tiers
+
+The three tiers do not yet share a configuration contract, and the divergence is deliberate until a common design is agreed. The toolkit reads flat keys from `~/.config/user_config.yml` through generated profile blocks and `dw_load_config`; `datalib` reads a `datalib:` block from its **own package-specific config file** (a shared-file arrangement is planned but waits on a parser guard in `dw_load_config`, so do not add a `datalib:` block to the toolkit's `user_config.yml` yet); `unicefData` is configured through environment variables (`UNICEF_DATA_HOME` and friends) and reads no user config file at all. If you operate across tiers, treat the three mechanisms as separate namespaces.
 :::
 
 The four layers — toolkit, siblings, consumers, deposit — are the frame to hold for the rest of the book. From here, Part II elaborates the contract those layers carry; Part III gives each capability family its own chapter; and Part IV covers how a repository joins the architecture as a new consumer and stays in sync over time.

@@ -1,4 +1,4 @@
-*! version 1.0 26MAY2026 cso-toolkit cso-toolkit@unicef.org
+*! version 1.2 12JUL2026 cso-toolkit cso-toolkit@unicef.org
 *! Author: João Pedro Azevedo
 
 * dw_load_config -- read `~/.config/user_config.yml` (or any caller-
@@ -16,6 +16,7 @@
 *     teamsRawDataCanonical: "C:/Users/<you>/.../DW-MASTER/.../011_rawdata"
 *     teamsFolderCanonical: "C:/Users/<you>/.../DW-MASTER"
 *     dwZDrive: "Z:/"
+*     dwZDriveUNC: '\\<server>\<share>'    (optional; consumed by dw_map_drive)
 *     sandboxRoot: "C:/Users/<you>/sandbox"
 *
 * Behaviour:
@@ -25,6 +26,13 @@
 *   - Nested mappings, lists, anchors, multi-line strings, and `null`
 *     literals are NOT supported -- this is a deliberate subset to
 *     keep the parser auditable in a single .ado file.
+*   - Only TOP-LEVEL (column-0) keys are read. A line that begins with
+*     whitespace is nested under some parent block and is skipped by the
+*     indent guard, and a top-level block header (e.g. `datalib:`) is an
+*     unknown key and is ignored. This is what lets a SHARED
+*     `~/.config/user_config.yml` carry a `datalib:` block alongside the
+*     toolkit's flat keys without the parser mis-adopting a nested key
+*     (e.g. a datalib block's `sandboxRoot`) as a toolkit global.
 *   - Unknown keys are silently ignored (the YAML may contain entries
 *     other helpers care about).
 *   - Hard-stops with envelope-shaped error 459 when `dw_mode` is
@@ -89,6 +97,18 @@ program define   dw_load_config, rclass
     while r(eof) == 0 {
         local raw `"`line'"'
 
+        * Indent guard (checked on the RAW line, before trimming): a line
+        * that begins with whitespace is nested under a parent key -- for
+        * example a child of a `datalib:` block in a shared user_config.yml.
+        * This flat parser reads only top-level keys, so an indented line is
+        * never one of ours; skip it rather than mis-adopting a nested key
+        * (e.g. a datalib block's `sandboxRoot`) as a toolkit global.
+        local ind = substr(`"`raw'"', 1, 1)
+        if "`ind'" == " " | "`ind'" == char(9) {
+            file read `fh' line
+            continue
+        }
+
         * Strip leading / trailing whitespace.
         local raw = trim(`"`raw'"')
 
@@ -121,11 +141,16 @@ program define   dw_load_config, rclass
             local value = trim(substr(`"`value'"', 1, `hash' - 1))
         }
 
-        * Strip wrapping single or double quotes if present.
+        * Strip wrapping single or double quotes if present. Compound
+        * quotes are required around the macro-expanded first/last chars:
+        * a bare "`lq'" expands to """ when the value is double-quoted,
+        * which Stata mis-parses as r(133) -- so a quoted value such as
+        * `teamsWrkData: "C:/..."` (exactly as the schema documents) would
+        * otherwise crash the parser (fixed in v1.1).
         if length(`"`value'"') >= 2 {
             local lq = substr(`"`value'"', 1, 1)
             local rq = substr(`"`value'"', length(`"`value'"'), 1)
-            if ("`lq'" == `"""' & "`rq'" == `"""') | ("`lq'" == "'" & "`rq'" == "'") {
+            if (`"`lq'"' == `"""' & `"`rq'"' == `"""') | (`"`lq'"' == "'" & `"`rq'"' == "'") {
                 local value = substr(`"`value'"', 2, length(`"`value'"') - 2)
             }
         }
@@ -170,6 +195,10 @@ program define   dw_load_config, rclass
         else if "`key'" == "dwZDrive" {
             global dwZDrive `"`value'"'
             return local dwZDrive `"`value'"'
+        }
+        else if "`key'" == "dwZDriveUNC" {
+            global dwZDriveUNC `"`value'"'
+            return local dwZDriveUNC `"`value'"'
         }
         else if "`key'" == "sandboxRoot" {
             global sandboxRoot `"`value'"'

@@ -53,6 +53,7 @@ Uniform read / write / compare / merge helpers with mode-aware path routing (pat
 | `dw_toolkit_version` | ✅ | ✅ | — | Reports the installed toolkit version |
 | `dw_verbosity` | ✅ | — | — | Sets session verbosity / debug options (v0.4.10) |
 | `dw_mkdir` | — | — | ✅ | Stata-only: recursive mkdir (Stata's built-in is not recursive) |
+| `dw_map_drive` | — | — | ✅ | Stata-only onboarding: maps the team network drive from config (port of datalib's `mapzdrive`) |
 
 ::: {.callout-warning}
 `dw_publish` is exported but remains a **stub** as of v0.5.0: only the dry-run path (`dry_run = TRUE`, the default) is supported, returning a validated payload with a `sha256`. A live submission (`dry_run = FALSE`) deliberately raises an error pointing at issue #15. Do not treat it as a working submission path; the live Helix branch is still pending. See the versioning and releases chapter.
@@ -131,11 +132,11 @@ Convenience wrappers for the population denominators and the UNICEF region taxon
 
 | Function | R | Python | Stata | Notes |
 |---|---|---|---|---|
-| `dw_pop` | ✅ | — | — | World Bank `SP.POP.TOTL` denominators; added v0.4.0 (issue #17) |
+| `dw_pop` | ✅ | ✅ | — | World Bank `SP.POP.TOTL` denominators; added v0.4.0, Python sibling added for issue #17 |
 | `dw_regions` | ✅ | — | — | Append UNICEF regional aggregate rows; added v0.4.0 (issue #18) |
 
 ::: {.callout-note}
-The demographics family is **R-only today.** Python and Stata siblings of `dw_pop` and `dw_regions` are not yet shipped; a `dw_regions()` redesign against the Country-and-Region-Metadata-API (issue #40) is on the roadmap.
+`dw_pop` ships in **R and Python**; `dw_regions` is **R-only today.** The Stata sibling of `dw_pop` and the Python and Stata siblings of `dw_regions` are not yet shipped; a `dw_regions()` redesign against the Country-and-Region-Metadata-API (issue #40) is on the roadmap.
 :::
 
 ## Vintage sync
@@ -193,7 +194,7 @@ Three Stata commands have no R or Python sibling because they fill gaps specific
 | `dw_require_no_api` | Reviewer-mode no-API gate — Stata's equivalent of the network lockout |
 | `dw_load_config` | AppLocker-safe YAML config loader for the profile (loads config without an external binary the corporate AppLocker policy would block) |
 
-The full set of files under `stata/src/` is: `dw_save`, `dw_use`, `dw_compare`, `dw_mkdir`, `dw_require_no_api`, and `dw_load_config`, each shipped as an `.ado` plus a matching `.sthlp`.
+The full set of files under `stata/src/` is: `dw_save`, `dw_use`, `dw_compare`, `dw_mkdir`, `dw_map_drive`, `dw_require_no_api`, and `dw_load_config`, each shipped as an `.ado` plus a matching `.sthlp`.
 
 ## How to find a function fast
 
@@ -212,3 +213,31 @@ The lists on this page are generated from, and should be reconciled against, the
 - `stata/src/` — one `.ado` plus one `.sthlp` per Stata command.
 - `docs/dw_io_python_reference.md`, `docs/dw_api_python_reference.md` — the hand-written Python IO and API references.
 - `docs/dw_io_reference.md`, `docs/dw_api_reference.md` — the R-side narrative references for the IO and API families.
+
+## Microdata archive (`datalib_*`)
+
+*Access: internal — request via the CSO team (repository visibility is tracked in datalib issue #20).*
+
+This family belongs to **`datalib`**, the survey-microdata archive tool — a different data layer from the toolkit's `dw_*` surface. It shelves and loads survey **microdata** under the `Z:/datalib*` IHSN trees; those deposits never enter the aggregate warehouse `060.DW-MASTER`. It is documented in full in Part V, and appears here only as a directory entry so the two contracts can be found in one place. As of datalib **v0.7.0 / contract v1** the surface is thirteen `datalib_*` functions: Stata and Python export all thirteen; R exports the thirteen canonical names.
+
+| Function | R | Python | Stata | Notes |
+|---|---|---|---|---|
+| `datalib_config` | ✅ | ✅ | ✅ | Load the per-operator config block (the `datalib:` root key in `~/.config/user_config.yml`). Python also exports the verbatim alias `getuserconfig`; Stata keeps `getuserconfig` as the original command |
+| `datalib_root` | ✅ | ✅ | ✅ | Resolve the library root (explicit arg → `DATALIB_ROOT` → language option → config key → error) |
+| `datalib_countries` | ✅ | ✅ | ✅ | Enumerate country folders under a root |
+| `datalib_surveys` | ✅ | ✅ | ✅ | Enumerate survey folders for a country (exact `*_<SURVEY>` suffix match, never substring) |
+| `datalib_vintages` | ✅ | ✅ | ✅ | List master vintages; "latest" is the numeric maximum (`v10 > v09`) |
+| `datalib_adaptations` | ✅ | ✅ | ✅ | List adaptation vintages of a collection |
+| `datalib_resolve` | ✅ | ✅ | ✅ | Resolve country / year / survey / collection to a verified vintage folder |
+| `datalib_files` | ✅ | ✅ | ✅ | List files by section: `data` · `data-original` · `data-r` · `data-other` · `doc` · `programs` (identical sections in all three languages) |
+| `datalib_catalog` | ✅ | ✅ | ✅ | Inventory **one** root per call (multi-root estates call it per root) |
+| `datalib_load` | ✅ | ✅ | ✅ | Load, normalise, and merge without mutating data; returns a data frame, or a named list when merge is off |
+| `datalib_browse` | ✅ | ✅ | ✅ | Interactive folder navigation (in Stata, bare `datalib` with no arguments) |
+| `datalib_create` | ✅ | ✅ | ✅ | Scaffold a grammar-conforming vintage folder (flow deposits) |
+| `datalib_map_drive` | ✅ | ✅ | ✅ | Map the `Z:` share. Python also exports the verbatim alias `mapzdrive`; Stata keeps `mapzdrive` as the original command |
+
+### Where the per-function reference lives
+
+datalib documents itself in the same three idioms as the toolkit. **R** — roxygen2 man pages for the thirteen canonical names; open one with `?datalib_resolve`. **Python** — per-function docstrings (`help(datalib_resolve)` after `from datalib import datalib_resolve`) plus the CLI entry point `python -m datalib`. **Stata** — `help datalib`, and a companion `.sthlp` file next to each command's `.ado`.
+
+This family is tracked in its own repository, `unicef-drp/datalib-unicef`, not in this book's source tree; the coverage-matrix appendix's datalib note is the authoritative pointer to it. Because datalib is a tier-(ii) ecosystem package (see the architecture chapter), its cross-language coverage is asserted and tested in that repository, not in this appendix.
