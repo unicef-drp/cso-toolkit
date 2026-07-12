@@ -55,7 +55,9 @@ stata/
     ├── dw_require_no_api.ado   # reviewer-mode no-API gate
     ├── dw_require_no_api.sthlp
     ├── dw_load_config.ado      # YAML config loader (AppLocker-safe)
-    └── dw_load_config.sthlp
+    ├── dw_load_config.sthlp
+    ├── dw_map_drive.ado        # map the team network drive (port of datalib mapzdrive)
+    └── dw_map_drive.sthlp
 ```
 
 ## Quick start
