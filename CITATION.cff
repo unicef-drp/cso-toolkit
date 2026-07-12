@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 message: "If you use the CSO Toolkit Handbook or the cso-toolkit codebase, please cite it as below."
-title: "The CSO Toolkit Handbook"
+title: "The CSO Handbook"
 authors:
   - family-names: Avanesian
     given-names: Garen
@@ -58,7 +58,7 @@ identifiers:
     description: "Concept DOI (always resolves to the latest version; placeholder until reserved on first release)."
 preferred-citation:
   type: book
-  title: "The CSO Toolkit Handbook: One contract, three languages — reproducible analytics in R, Python, and Stata"
+  title: "The CSO Handbook: One contract, three languages — reproducible analytics in R, Python, and Stata"
   year: 2026
   publisher:
     name: "UNICEF Chief Statistician Office"
