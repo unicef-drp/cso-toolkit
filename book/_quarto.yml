@@ -50,6 +50,10 @@ book:
         - chapters/51-microdata-archive.qmd
         - chapters/52-ihsn-grammar.qmd
         - chapters/53-datalib-api-conformance.qmd
+    - part: "Part VI — The Ecosystem"
+      chapters:
+        - chapters/61-ecosystem.qmd
+        - chapters/62-unicefdata.qmd
   appendices:
     - appendices/a-coverage-matrix.qmd
     - appendices/b-provenance-schema.qmd
