@@ -6,6 +6,23 @@ _Entries land here as PRs merge into `develop`. When the next release
 is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
+### Added
+
+- **`dw_map_drive`** — maps the team network drive (default `Z:`) from the new
+  `dwZDrive` / `dwZDriveUNC` config keys via `dw_load_config`, using `net use`
+  (Windows-only; safe by default, with `force` / `dryrun` / `discover`). The
+  toolkit port of datalib's `mapzdrive` — the drive-mapping half of the
+  onboarding-migration story, now under the `dw_*` prefix.
+
+### Fixed
+
+- **`dw_load_config`** — an **indent guard** so a shared
+  `~/.config/user_config.yml` can carry a `datalib:` block alongside the
+  toolkit's flat keys without the parser mis-adopting a nested key (e.g. a
+  `datalib` block's `sandboxRoot`) as a toolkit global; and a **pre-existing
+  crash** (`r(133)`) on any double-quoted value — the `teamsWrkData: "C:/…"`
+  form the schema documents (#138).
+
 ## v0.6.0 (2026-07-01)
 
 Feature + robustness release for the `dw_api_fetch` / `dw_save` producer path:

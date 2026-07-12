@@ -1,4 +1,4 @@
-*! version 1.1 12JUL2026 cso-toolkit cso-toolkit@unicef.org
+*! version 1.2 12JUL2026 cso-toolkit cso-toolkit@unicef.org
 *! Author: João Pedro Azevedo
 
 * dw_load_config -- read `~/.config/user_config.yml` (or any caller-
@@ -16,6 +16,7 @@
 *     teamsRawDataCanonical: "C:/Users/<you>/.../DW-MASTER/.../011_rawdata"
 *     teamsFolderCanonical: "C:/Users/<you>/.../DW-MASTER"
 *     dwZDrive: "Z:/"
+*     dwZDriveUNC: '\\<server>\<share>'    (optional; consumed by dw_map_drive)
 *     sandboxRoot: "C:/Users/<you>/sandbox"
 *
 * Behaviour:
@@ -194,6 +195,10 @@ program define   dw_load_config, rclass
         else if "`key'" == "dwZDrive" {
             global dwZDrive `"`value'"'
             return local dwZDrive `"`value'"'
+        }
+        else if "`key'" == "dwZDriveUNC" {
+            global dwZDriveUNC `"`value'"'
+            return local dwZDriveUNC `"`value'"'
         }
         else if "`key'" == "sandboxRoot" {
             global sandboxRoot `"`value'"'

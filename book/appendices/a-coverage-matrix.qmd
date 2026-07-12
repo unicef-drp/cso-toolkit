@@ -58,6 +58,7 @@ The table below is grouped by the five capability families. Each row is one publ
 | `dw_mkdir` | via base R `dir.create` | via `os.makedirs` | Yes (`dw_mkdir.ado` — Stata's built-in cannot nest) |
 | `dw_verbosity` | Yes (session verbose/debug switch) | Planned | n/a |
 | `dw_default_unicef_allowlist` | Yes (remote-URL freeze allowlist) | Planned | n/a (no remote-URL reads in Stata) |
+| `dw_map_drive` | n/a | n/a | Yes (`dw_map_drive.ado` — Stata-only onboarding: maps the team network drive from `dwZDrive`/`dwZDriveUNC`; the toolkit port of datalib's `mapzdrive`) |
 
 A few caveats sit behind the "Yes" cells:
 

@@ -53,6 +53,7 @@ Uniform read / write / compare / merge helpers with mode-aware path routing (pat
 | `dw_toolkit_version` | ✅ | ✅ | — | Reports the installed toolkit version |
 | `dw_verbosity` | ✅ | — | — | Sets session verbosity / debug options (v0.4.10) |
 | `dw_mkdir` | — | — | ✅ | Stata-only: recursive mkdir (Stata's built-in is not recursive) |
+| `dw_map_drive` | — | — | ✅ | Stata-only onboarding: maps the team network drive from config (port of datalib's `mapzdrive`) |
 
 ::: {.callout-warning}
 `dw_publish` is exported but remains a **stub** as of v0.5.0: only the dry-run path (`dry_run = TRUE`, the default) is supported, returning a validated payload with a `sha256`. A live submission (`dry_run = FALSE`) deliberately raises an error pointing at issue #15. Do not treat it as a working submission path; the live Helix branch is still pending. See the versioning and releases chapter.
@@ -193,7 +194,7 @@ Three Stata commands have no R or Python sibling because they fill gaps specific
 | `dw_require_no_api` | Reviewer-mode no-API gate — Stata's equivalent of the network lockout |
 | `dw_load_config` | AppLocker-safe YAML config loader for the profile (loads config without an external binary the corporate AppLocker policy would block) |
 
-The full set of files under `stata/src/` is: `dw_save`, `dw_use`, `dw_compare`, `dw_mkdir`, `dw_require_no_api`, and `dw_load_config`, each shipped as an `.ado` plus a matching `.sthlp`.
+The full set of files under `stata/src/` is: `dw_save`, `dw_use`, `dw_compare`, `dw_mkdir`, `dw_map_drive`, `dw_require_no_api`, and `dw_load_config`, each shipped as an `.ado` plus a matching `.sthlp`.
 
 ## How to find a function fast
 
