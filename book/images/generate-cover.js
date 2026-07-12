@@ -1,6 +1,6 @@
 /* ------------------------------------------------------------------ *
  *  generate-cover.js
- *  Generates an SVG of "The CSO Toolkit Handbook" cover — option A
+ *  Generates an SVG of "The CSO Handbook" cover — option A
  *  (UNICEF-cyan, official). Pure vector, no external assets.
  *
  *  Design: a full-frame faint "code rain" of the toolkit's own
@@ -33,7 +33,7 @@ const CONFIG = {
   unit: 'CHIEF STATISTICIAN OFFICE',
   flag: 'HANDBOOK',
   kicker: 'REPRODUCIBLE ANALYTICS',
-  title: ['The CSO', 'Toolkit', 'Handbook'],
+  title: ['The CSO', 'Handbook'],
   subtitle: [
     'One contract, three languages —',
     'reproducible analytics in R,',
@@ -98,8 +98,8 @@ function buildSVG(cfg = CONFIG) {
     return el;
   }).join('\n    ');
 
-  // --- title: 3 lines, large, 84px leading ---
-  const titleBaselines = [440, 524, 608];
+  // --- title: large, 84px leading; baselines recentred for the line count ---
+  const titleBaselines = cfg.title.length === 3 ? [440, 524, 608] : [468, 552];
   const titleEls = cfg.title.map((line, i) =>
     `<text x="50" y="${titleBaselines[i]}">${esc(line)}</text>`
   ).join('\n    ');

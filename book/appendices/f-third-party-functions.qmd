@@ -1,0 +1,28 @@
+# Curated third-party functions
+
+CSO production pipelines use a small number of functions the toolkit does not provide and UNICEF does not maintain — community Stata commands, CRAN and PyPI utilities. This appendix is the honest register of that third tier of the ecosystem (the architecture chapter defines the tiers): what these functions are, which versions were verified, by whom, and when.
+
+Two things this appendix is **not**. It is not an endorsement — UNICEF curates this *list*, never the code behind it. And it is not a conformance claim: nothing here follows the toolkit's mode contract, error envelope, or provenance sidecar unless the caveat column says otherwise. The book's assertion for every row is exactly this: *the named version behaved as described, on the stated date, in the stated pipeline.* Nothing more.
+
+## Inclusion rules
+
+The list is **derived, not curated by taste**. A row enters this table only when all of the following hold:
+
+1. **Production use** — the function is called in at least one production pipeline (a DW-Production sector script or an equivalent vendored consumer). No speculative or "might be useful" entries.
+2. **Verified by its user** — the sector lead (or pipeline owner) who actually uses the function stamps the row: version tested, date, and any caveats. The handbook maintainer records the stamp; the user of the code owns the claim.
+3. **License compatible** — the upstream license permits the production use.
+4. **Environment-safe** — installable and runnable on the UNICEF laptop baseline (AppLocker: no unsigned binaries; corporate network: no unusual endpoints at runtime).
+
+## Staleness policy
+
+Rows are stamped, never re-certified wholesale. A row whose *Verified* date has aged past the version it names simply displays that age — stale rows are visible, and staleness **never blocks a release** of the toolkit or this handbook. If an upstream release breaks a pipeline, the fix is a new verification stamp (or the row's removal), not an emergency edit to this book.
+
+## The register
+
+| Function / package | Language | Purpose | Version tested | Verified by | Date | Caveats |
+|---|---|---|---|---|---|---|
+| _(no verified entries yet — rows are added as sector leads stamp them)_ | | | | | | |
+
+::: {.callout-note}
+This register was introduced with the ecosystem taxonomy (architecture chapter) and starts deliberately empty rather than pre-populated: per inclusion rule 2, every row needs its user's verification stamp, and importing an unverified list would put the book's name on claims nobody owns. Candidate entries — functions already visible in production pipelines — are collected by scanning the pipelines' vendored manifests and dependency loads; each becomes a row when its sector lead verifies it.
+:::

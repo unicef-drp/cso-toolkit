@@ -50,9 +50,8 @@
 
   <!-- title -->
   <g fill="#ffffff" font-size="84" font-weight="800" letter-spacing="-2.1">
-    <text x="50" y="440">The CSO</text>
-    <text x="50" y="524">Toolkit</text>
-    <text x="50" y="608">Handbook</text>
+    <text x="50" y="468">The CSO</text>
+    <text x="50" y="552">Handbook</text>
   </g>
 
   <!-- subtitle -->

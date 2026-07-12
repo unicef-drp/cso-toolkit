@@ -1,8 +1,8 @@
 {
   "upload_type": "publication",
   "publication_type": "book",
-  "title": "The CSO Toolkit Handbook: One contract, three languages — reproducible analytics in R, Python, and Stata",
-  "description": "<p>The CSO Toolkit Handbook is the cross-language guide to the <code>cso-toolkit</code> contract: one IO + API contract, one producer / reviewer mode contract, and three idiomatic implementations in R, Python, and Stata. It documents how UNICEF Chief Statistician Office analytics are made reproducible and scalable across sectors and projects.</p><p>This Zenodo record archives the whole <code>cso-toolkit</code> repository. The handbook prose is licensed CC BY 4.0; the toolkit source code under <code>r/</code>, <code>python/</code>, and <code>stata/</code> is licensed MIT.</p>",
+  "title": "The CSO Handbook: One contract, three languages — reproducible analytics in R, Python, and Stata",
+  "description": "<p>The CSO Handbook is the cross-language guide to the <code>cso-toolkit</code> contract: one IO + API contract, one producer / reviewer mode contract, and three idiomatic implementations in R, Python, and Stata. It documents how UNICEF Chief Statistician Office analytics are made reproducible and scalable across sectors and projects.</p><p>This Zenodo record archives the whole <code>cso-toolkit</code> repository. The handbook prose is licensed CC BY 4.0; the toolkit source code under <code>r/</code>, <code>python/</code>, and <code>stata/</code> is licensed MIT.</p>",
   "creators": [
     { "name": "Avanesian, Garen", "affiliation": "UNICEF Data & Analytics" },
     { "name": "Brar, Sukhdeep", "affiliation": "UNICEF Data & Analytics" },

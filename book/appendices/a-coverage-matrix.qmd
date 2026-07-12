@@ -4,6 +4,8 @@ The promise of `cso-toolkit` is parity: the same command names, the same argumen
 
 Read this page as a map of expectations. If you are vendoring the helpers into a Stata-only pipeline, the gaps here tell you which capabilities you must route through R or Python instead. But if you are an author wiring a multi-language sector, the matrix tells you which call sites will behave identically on both sides of the language boundary.
 
+On authority: **this appendix is the contract view** — the canonical statement of what exists in which language; the function-reference appendix is the *finding aid* that points to each language's per-function documentation. Where the two ever disagree, this matrix wins.
+
 Four terms recur throughout, and the whole matrix rests on them. Glossed once, here:
 
 - **Mode contract** — the rule governing what a session may do. A *reviewer session* forbids live network calls and writes to canonical paths; a *producer session* permits both. The toolkit reads the mode from a session global (`dw_mode`).
@@ -54,6 +56,8 @@ The table below is grouped by the five capability families. Each row is one publ
 | `dw_resolve_path` | Yes | Yes | Internal to `dw_use` / `dw_save` |
 | `dw_is_canonical` | Yes | Yes | Internal to the mode guard |
 | `dw_mkdir` | via base R `dir.create` | via `os.makedirs` | Yes (`dw_mkdir.ado` — Stata's built-in cannot nest) |
+| `dw_verbosity` | Yes (session verbose/debug switch) | Planned | n/a |
+| `dw_default_unicef_allowlist` | Yes (remote-URL freeze allowlist) | Planned | n/a (no remote-URL reads in Stata) |
 
 A few caveats sit behind the "Yes" cells:
 
@@ -101,6 +105,7 @@ Note the surface difference in how metadata is passed: R and Python accept a sin
 | `dw_api_cached` | Yes | Yes | Route via R/Python |
 | `dw_api_inventory` | Yes | Yes | Route via R/Python |
 | `dw_require_no_api` (reviewer gate) | via profile helpers | via profile helpers | Yes (`dw_require_no_api.ado`) |
+| `dw_publish` (Helix submission) | Skeleton — exported but errors with guidance; the Helix endpoint integration is tracked in issue #15 | Planned | n/a (API-side capability) |
 
 The largest gap in the toolkit: **Stata has no external-API wrapper.** There is no `dw_api_fetch` in Stata and none is planned. External data must be pulled in R or Python, which writes the result into the deposit cache (`teamsRawData/_apis/<api>/<cache_key>.<ext>`, the canonical landing place for fetched upstream data, mirrored to the Z: drive); the Stata pipeline then reads that cache with `dw_use`.
 
@@ -239,12 +244,14 @@ Parity is about more than the functions. The scaffolding around each language �
 | Generated API reference | Yes (Roxygen → 34 `.Rd` files + pkgdown site) | No autodoc; prose reference in `docs/` only | `.sthlp` help file per command |
 | Type/interface metadata | NAMESPACE exports (~44, incl. aliases) | PEP 561 `py.typed`, full type hints | n/a |
 | Unit/regression test suite | Yes (`testthat`: 32 test files, 370+ `expect_*` assertions) | Manual smoke test + error-envelope test | No automated suite |
-| Wired into CI | Yes (`r-check.yml`: Ubuntu release+devel, macOS, Windows) | No (manual-only) | No |
+| Wired into CI | Yes (`r-check.yml`: Ubuntu release+devel, macOS, Windows) | Conformance driver only (`conformance.yml`); unit tests manual-only | No (Stata conformance driver pending license provisioning, issue #133) |
+| Cross-language conformance gate | Yes (driver + comparator in `conformance.yml`) | Yes (driver + comparator in `conformance.yml`) | Pending (issue #133) |
 | Error-envelope verification | `expect_envelope()` helper used across the suite | dedicated `error_envelope_test.py` | Enforced at call site; not separately tested |
 
 The headline gaps:
 
-- **R is the only sibling wired into CI.** GitHub Actions runs `R CMD check` (which invokes the `testthat` suite) on every push and pull request to `main`/`develop` across four configurations: Ubuntu on R-release and R-devel, macOS, and Windows. The Python smoke and error-envelope tests are real and runnable, but they are **manual-only** — bootstrapped by copying `python/src/` into a temp dir and run by hand, not gated in CI. The Stata side has no automated test suite at all.
+- **R is the only sibling whose *unit tests* run in CI.** GitHub Actions runs `R CMD check` (which invokes the `testthat` suite) on every push and pull request to `main`/`develop` across four configurations: Ubuntu on R-release and R-devel, macOS, and Windows. The Python smoke and error-envelope tests are real and runnable, but they are **manual-only** — bootstrapped by copying `python/src/` into a temp dir and run by hand, not gated in CI. The Stata side has no automated test suite at all.
+- **Cross-language parity is now executed, not just asserted.** The `Conformance` workflow (`conformance.yml`, on every push and PR to `main`/`develop`) runs the R and Python drivers over the shared fixture — a `dw_use → dw_save → dw_use` round-trip — and a comparator asserts the outputs are value-equal within `1e-9`. The Stata leg of the same harness waits on a `STATA_LIC` secret or self-hosted runner (issue #133); until provisioned, Stata parity remains a local release gate.
 - **Python lacks a generated reference site.** R ships a pkgdown-style autodoc built from Roxygen comments (34 `.Rd` files); Python has no equivalent pkgdown/Sphinx-style autodoc. Its public surface is documented in prose under `docs/` and in the per-module catalogue, and its interfaces are machine-readable via full type hints and a PEP 561 `py.typed` marker, but there is no rendered API site.
 - **Stata documents per-command via `.sthlp`.** Each Stata `.ado` ships a companion `.sthlp` help file, accessible with `help dw_save` and friends. There is no aggregated reference site.
 
@@ -255,3 +262,9 @@ The headline gaps:
 - **Stata** is a deliberately scoped subset: full IO and mode contract for `.dta` / `.csv` / `.xlsx`, the reviewer no-API gate, recursive `mkdir`, and config loading — but **no external-API wrapper, no aggregation, no vintage-sync helpers, no contract auditor, no Parquet/binary formats, and no automated tests**. It enforces every half of the mode contract it can reach, and routes everything else through R or Python.
 
 When you vendor, choose the language that fits the pipeline — and where a Stata pipeline needs a capability this matrix marks "Route via R/Python," plan that crossing explicitly. The vendoring-model and onboarding chapters walk through how to wire a multi-language sector so the crossings are clean.
+
+## Related contracts outside this matrix
+
+::: {.callout-note}
+The survey-microdata archive tool **`datalib`** maintains its own trilingual contract — thirteen `datalib_*` functions implemented identically in Stata, R, and Python, pinned by an oracle-style golden-case conformance suite — tracked in its own repository (`unicef-drp/datalib-unicef`, internal at the time of writing). It is a tier-(ii) package in the ecosystem sense of the architecture chapter, not part of this matrix: its coverage is asserted and tested in its own repository, not here.
+:::

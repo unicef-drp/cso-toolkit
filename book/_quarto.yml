@@ -3,10 +3,10 @@ project:
   output-dir: _book
 
 book:
-  title: "The CSO Toolkit Handbook"
+  title: "The CSO Handbook"
   subtitle: "One contract, three languages — reproducible analytics in R, Python, and Stata"
   cover-image: images/cover-A.png
-  cover-image-alt: "The CSO Toolkit Handbook — UNICEF-cyan cover with the title and R / Python / Stata language chips."
+  cover-image-alt: "The CSO Handbook — UNICEF-cyan cover with the title and R / Python / Stata language chips."
   reader-mode: true
   search: true
   repo-url: https://github.com/unicef-drp/cso-toolkit
@@ -51,6 +51,7 @@ book:
     - appendices/c-error-taxonomy.qmd
     - appendices/d-function-reference.qmd
     - appendices/e-glossary.qmd
+    - appendices/f-third-party-functions.qmd
 
 format:
   html:
