@@ -405,6 +405,7 @@ Semantic versioning (MAJOR.MINOR.PATCH).
 | `v0.5.1` | 2026-06-28 | Documentation release — the 20-chapter CSO Toolkit Handbook (Quarto → GitHub Pages) + Citation / Zenodo registration; no helper code changes. |
 | `v0.6.0` | 2026-07-01 | `dw_api_fetch(api = "csv")` fetcher for flat CSV-at-a-URL endpoints; fixes the `dw_api_fetch` producer cache write (removed `mirror_to_z`) and adds a `dw_save` atomic-rename retry-with-backoff. |
 | `v0.7.0` | 2026-07-12 | Handbook + ecosystem + executed parity: the book becomes **The CSO Handbook** with Part V (microdata archive / datalib) and Part VI (three-tier ecosystem + unicefData); the cross-language **conformance harness** runs R↔Python parity in CI; new `dw_map_drive` (+ `dwZDriveUNC` config key); `dw_load_config` indent-guard + quoted-value fix. No public API breaks. |
+| `v0.8.0` | 2026-07-13 | Python parity release: Python exports the canonical `dw_*` aliases (previously they raised `ImportError`; PR [#143](https://github.com/unicef-drp/cso-toolkit/pull/143)), plus `dw_root()` and `dw_default_unicef_allowlist()`; the dashboard workflow deploys from `develop` only (stops the post-release failure on `main`, PR [#142](https://github.com/unicef-drp/cso-toolkit/pull/142)). No public API breaks. |
 | `v1.0.0` | _committed API_ | After the `ed` sector pilot lands and a second sector vendors the helpers without modification. |
 
 **Changelog.** Per-release notes — including breaking-change migration
