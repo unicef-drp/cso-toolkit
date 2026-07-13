@@ -23,8 +23,14 @@ on:
     - cron: "0 6 * * *"
   push:
     branches:
+      # develop only. GitHub Pages serves this repo from `develop`, and the
+      # github-pages environment's branch policy allows only `develop` to
+      # deploy — so a push to `main` (every develop->main release merge) can
+      # only fail the `deploy` job at the environment gate (BlobNotFound /
+      # 1-second job with no steps). develop already deployed before the
+      # release, so main has nothing new to publish. The 06:00 cron runs on
+      # the default branch (develop) and is unaffected.
       - develop
-      - main
     # paths-ignore (rather than the narrower paths) — the dashboard
     # reflects more than its own subtree (NEWS.md, top-level README,
     # LICENSE, dashboard data committed elsewhere). Excluding the

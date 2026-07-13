@@ -6,6 +6,28 @@ _Entries land here as PRs merge into `develop`. When the next release
 is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
+## v0.8.0 (2026-07-13)
+
+Python parity: the canonical `dw_*` surface now resolves in Python.
+
+### Added
+
+- **Python `dw_*` aliases + `dw_root` + `dw_default_unicef_allowlist`** — closes
+  the no-behavior parity gap where the canonical `dw_`-prefixed spellings raised
+  `ImportError` in Python. Python now exports a `dw_`-prefixed alias for every
+  dual-named helper (`dw_aggregate_data`, `dw_test_scripts`, …), plus `dw_root()`
+  (the mode-aware `wrk`/`raw`/`meta` root) and `dw_default_unicef_allowlist()`
+  (the remote-URL freeze patterns) — so the canonical spelling resolves
+  identically in R and Python.
+
+### Fixed
+
+- **Dashboard workflow deploys from `develop` only** — deploys triggered from
+  `main` failed the `github-pages` environment branch policy (which allows only
+  `develop`); the `main` trigger is removed so the nightly dashboard deploy no
+  longer fails after a release lands on `main`.
+  ([#142](https://github.com/unicef-drp/cso-toolkit/pull/142))
+
 ## v0.7.0 (2026-07-12)
 
 Handbook, ecosystem, and the executed conformance gate.
