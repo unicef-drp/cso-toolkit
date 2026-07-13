@@ -20,10 +20,12 @@ from . import _state  # re-export the configuration module
 # IO helpers (dw_io.py)
 from .dw_io import (
     dw_compare,
+    dw_default_unicef_allowlist,
     dw_is_canonical,
     dw_isid,
     dw_merge,
     dw_resolve_path,
+    dw_root,
     dw_save,
     dw_toolkit_version,
     dw_use,
@@ -77,11 +79,27 @@ from .profile_helpers import (
 # Contract auditor
 from .test_scripts import test_scripts
 
+# dw_-prefixed aliases of the bare-named helpers, mirroring the R package
+# (R exports both names since v0.4.5). Same objects, not separate functions,
+# so a caller can `from cso_toolkit import dw_aggregate_data` and the canonical
+# dw_* spelling resolves identically across R and Python.
+dw_aggregate_data = aggregate_data
+dw_aggregate_data_v2 = aggregate_data_v2
+dw_apply_time_window = apply_time_window
+dw_generate_agg_footnote = generate_agg_footnote
+dw_generate_markdown_report = generate_markdown_report
+dw_process_all_csv_files = process_all_csv_files
+dw_create_sector_script = create_sector_script
+dw_create_profile = create_profile
+dw_review_profile = review_profile
+dw_test_scripts = test_scripts
+
 __all__ = [
     "_state",
     # IO
     "dw_save", "dw_use", "dw_compare", "dw_merge", "dw_isid",
     "dw_verify_z", "dw_resolve_path", "dw_is_canonical",
+    "dw_root", "dw_default_unicef_allowlist",
     "dw_toolkit_version",
     # API
     "dw_api_fetch", "dw_api_cached", "dw_api_inventory",
@@ -97,6 +115,11 @@ __all__ = [
     "create_sector_script", "create_dw_sector_script",
     "create_profile", "review_profile",
     "test_scripts",
+    # dw_-prefixed aliases (mirror the R dual names)
+    "dw_aggregate_data", "dw_aggregate_data_v2", "dw_apply_time_window",
+    "dw_generate_agg_footnote", "dw_generate_markdown_report",
+    "dw_process_all_csv_files", "dw_create_sector_script",
+    "dw_create_profile", "dw_review_profile", "dw_test_scripts",
 ]
 
 __version__ = "0.7.0"

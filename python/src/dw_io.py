@@ -137,6 +137,44 @@ def dw_toolkit_version() -> str:
     return _TOOLKIT_VERSION
 
 
+def dw_root(kind: str = "wrk") -> Optional[str]:
+    """Return the profile-defined root for a logical ``kind``.
+
+    Mirrors the R ``dw_root()``: a thin public wrapper over the mode-aware
+    root resolver. ``kind`` is one of ``"wrk"`` (working data), ``"raw"``
+    (raw inputs), or ``"meta"`` (metadata). Returns the root string, or
+    ``None`` when the profile has not set it (matching R's ``NULL``); raises
+    ``ValueError`` for an unknown kind.
+
+    Examples
+    --------
+    >>> from cso_toolkit import _state, dw_root
+    >>> _state.configure(teamsWrkData="/tmp/wrk")
+    >>> dw_root("wrk")
+    '/tmp/wrk'
+    """
+    return _dw_root_for(kind)
+
+
+def dw_default_unicef_allowlist() -> tuple:
+    """Return the default UNICEF remote-URL freeze allowlist patterns.
+
+    Mirrors the R ``dw_default_unicef_allowlist()``: the two PCRE patterns
+    matching ``unicef-drp`` GitHub raw + repo URLs. Pass to
+    ``_state.configure(dw_url_allowlist=dw_default_unicef_allowlist())`` (or
+    extend it) so ``dw_use`` accepts those URLs under the remote-URL freeze.
+
+    Returns
+    -------
+    tuple of str
+        Two anchored regular expressions.
+    """
+    return (
+        r"^https://raw\.githubusercontent\.com/unicef-drp/",
+        r"^https://github\.com/unicef-drp/",
+    )
+
+
 # ---------------------------------------------------------------------------
 # Path resolution
 # ---------------------------------------------------------------------------
