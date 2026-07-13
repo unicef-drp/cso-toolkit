@@ -27,7 +27,7 @@ Each family below lists its members and shows which languages export the functio
 Two naming conventions matter when you read across the columns:
 
 - **R dual names.** Several R functions are exported under **two names** — a short historical name and a `dw_`-prefixed alias. The `dw_` aliases were introduced incrementally across v0.4.4 and v0.4.5 (issue #42 / PR #48) and remain exported alongside the bare names. The tables list the canonical `dw_`-prefixed name first and note the bare alias.
-- **Python uses bare names only.** The Python package (`python/src/__init__.py`) exports the **bare** name for every function that has an R dual name — `aggregate_data_v2`, `create_profile`, `test_scripts`, and so on. There are **no `dw_`-prefixed Python aliases.** Where a row below names a `dw_`-prefixed function, the Python column refers to the bare name shown in the Notes; calling the `dw_` name in Python raises `ImportError`.
+- **Python exports both names too.** The Python package (`python/src/__init__.py`) exports the **bare** name *and* a `dw_`-prefixed alias for every dual-named function — `aggregate_data_v2` / `dw_aggregate_data_v2`, `create_profile` / `dw_create_profile`, `test_scripts` / `dw_test_scripts`, and so on — so the canonical `dw_`-prefixed spelling resolves identically in R and Python. (Earlier these aliases were R-only, and the `dw_` spelling raised `ImportError` in Python.)
 
 ::: {.callout-warning}
 **Version stamps, not feature parity.** The R and Python packages both report **v0.6.0**. A matching stamp is a floor, not a guarantee that every behaviour is present in both: some noted below (for example the Z:-root recognition in `dw_is_canonical`, or the read-all-sheets `dw_use(sheet = NULL)`) landed in R and may not yet be present, or may behave differently, in the Python sibling. When a feature's vintage matters, confirm it against the language you are actually running.
@@ -109,7 +109,7 @@ Stratified aggregation, time-window filtering, footnote formatting, and survey-w
 | `dw_generate_agg_footnote` | ✅ | ✅ | — | Standardised coverage footnote; bare name `generate_agg_footnote` |
 | `dw_nestweight` | ✅ | ✅ | — | Survey-weight redistribution; R port of EduAnalyticsToolkit's `edukit_nestweight` (no bare alias — `dw_nestweight` is the only name in both R and Python) |
 
-Per the naming conventions above, R exports both the `dw_`-prefixed and the bare name for the first four functions; Python exports the bare name only.
+Per the naming conventions above, R and Python both export the `dw_`-prefixed and the bare name for the first four functions.
 
 ::: {.panel-tabset}
 #### R {.unnumbered .unlisted}
@@ -163,7 +163,7 @@ Generators for the standard CSO building blocks (profile scripts, sector run-scr
 | `dw_review_profile` | ✅ | ✅ | — | Audit a profile for required blocks (pass/warn/fail); bare name `review_profile` |
 | `dw_test_scripts` | ✅ | ✅ | — | Contract auditor: flag raw IO / API calls; bare name `test_scripts` |
 
-As above, R exports both names for the dual-named helpers; Python exports the bare name only.
+As above, R and Python both export the `dw_`-prefixed and the bare name for the dual-named helpers.
 
 ::: {.callout-note}
 A future v0.5.x rename of `test_scripts` / `dw_test_scripts` to `dw_audit_scripts` (to surface the audit intent and avoid the testthat name collision) is on the design horizon; the current prefix-only alias keeps that cleanup additive.
@@ -198,7 +198,7 @@ The full set of files under `stata/src/` is: `dw_save`, `dw_use`, `dw_compare`, 
 
 ## How to find a function fast
 
-- **You know the name.** In R, `?<name>`; in Python, `help(<name>)` after importing it from `cso_toolkit` (use the bare name, not a `dw_` prefix, for the dual-named functions); in Stata, `help <command>`.
+- **You know the name.** In R, `?<name>`; in Python, `help(<name>)` after importing it from `cso_toolkit` (either the bare name or the `dw_` prefix works for the dual-named functions); in Stata, `help <command>`.
 - **You know the task but not the name.** Find the matching chapter in Part III, then return here for the family table.
 - **You want the rendered web reference.** Open the pkgdown site at `https://unicef-drp.github.io/cso-toolkit` and use the *Reference* tab; it is the most complete of the three languages even when you work in Python or Stata.
 - **You want to know whether a language has a function.** Use the tables above for a quick read and the cross-language coverage matrix appendix for the authoritative, issue-tracked answer.
