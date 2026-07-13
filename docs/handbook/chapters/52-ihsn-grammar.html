@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.42">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>17&nbsp; The IHSN convention and the folder grammar – The CSO Handbook</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../chapters/53-datalib-api-conformance.html" rel="next">
+<link href="../chapters/51-microdata-archive.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-baf7457b58093534c7052efdef5f4d86.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/51-microdata-archive.html">Part V — The Microdata Archive (datalib)</a></li><li class="breadcrumb-item"><a href="../chapters/52-ihsn-grammar.html"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">The IHSN convention and the folder grammar</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">The CSO Handbook</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/unicef-drp/cso-toolkit/tree/main/book/" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">The CSO Handbook</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../front-matter/foreword.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Foreword</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../front-matter/preface.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../front-matter/authors.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">About the authors</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../front-matter/acknowledgements.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Acknowledgements</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../front-matter/how-to-cite.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">How to cite this work</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../introduction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part I — Why &amp; Architecture</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/11-why.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Why a toolkit</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/12-architecture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Architecture: one contract, three languages, many consumers</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part II — The Contract</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/21-roles-and-modes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Roles and the mode contract</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/22-wiring-the-contract.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Wiring the contract into a repo</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/23-provenance-and-errors.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Provenance sidecars and the error envelope</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part III — The API (cross-language)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/31-io.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">The IO contract</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/32-external-api.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">The external-API contract</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/33-aggregation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Aggregation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/34-vintage-sync.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Vintage sync</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/35-scaffolding-audit.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Scaffolding and the contract auditor</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part IV — Adoption &amp; Operations</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/41-vendoring.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">The vendoring model</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/42-onboarding-example.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Onboarding a repo: a worked example</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/43-contract-auditor-ci.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">The contract auditor in continuous integration (CI)</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/44-versioning-release.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Versioning and releases</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part V — The Microdata Archive (datalib)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/51-microdata-archive.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">The microdata archive: archive, catalogue, tool</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/52-ihsn-grammar.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">The IHSN convention and the folder grammar</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/53-datalib-api-conformance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">The <code>datalib_*</code> API and its conformance suite</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part VI — The Ecosystem</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/61-ecosystem.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">The UNICEF analytics ecosystem: three tiers</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/62-unicefdata.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">unicefData: public child statistics in three languages</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">Appendices</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/a-coverage-matrix.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">A</span>&nbsp; <span class="chapter-title">Cross-language coverage matrix</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/b-provenance-schema.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">B</span>&nbsp; <span class="chapter-title">Provenance sidecar schema</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/c-error-taxonomy.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">C</span>&nbsp; <span class="chapter-title">Error taxonomy</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/d-function-reference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">D</span>&nbsp; <span class="chapter-title">Function reference</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/e-glossary.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">E</span>&nbsp; <span class="chapter-title">Glossary</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/f-third-party-functions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">F</span>&nbsp; <span class="chapter-title">Curated third-party functions</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#naming-as-structural-provenance" id="toc-naming-as-structural-provenance" class="nav-link active" data-scroll-target="#naming-as-structural-provenance"><span class="header-section-number">17.1</span> Naming as structural provenance</a></li>
+  <li><a href="#the-folder-grammar" id="toc-the-folder-grammar" class="nav-link" data-scroll-target="#the-folder-grammar"><span class="header-section-number">17.2</span> The folder grammar</a></li>
+  <li><a href="#vintages-masters-and-adaptations" id="toc-vintages-masters-and-adaptations" class="nav-link" data-scroll-target="#vintages-masters-and-adaptations"><span class="header-section-number">17.3</span> Vintages: masters and adaptations</a></li>
+  <li><a href="#collections-and-modules" id="toc-collections-and-modules" class="nav-link" data-scroll-target="#collections-and-modules"><span class="header-section-number">17.4</span> Collections and modules</a></li>
+  <li><a href="#the-seven-shared-semantics" id="toc-the-seven-shared-semantics" class="nav-link" data-scroll-target="#the-seven-shared-semantics"><span class="header-section-number">38.1</span> The seven shared semantics</a></li>
+  <li><a href="#deployment-topologies" id="toc-deployment-topologies" class="nav-link" data-scroll-target="#deployment-topologies"><span class="header-section-number">38.2</span> Deployment topologies</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/unicef-drp/cso-toolkit/edit/main/book/chapters/52-ihsn-grammar.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/unicef-drp/cso-toolkit/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/51-microdata-archive.html">Part V — The Microdata Archive (datalib)</a></li><li class="breadcrumb-item"><a href="../chapters/52-ihsn-grammar.html"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">The IHSN convention and the folder grammar</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">The IHSN convention and the folder grammar</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>This is the second chapter of Part V, and it takes up the one idea the whole microdata archive rests on: a survey’s provenance lives in the <em>path</em>. The reproducibility mission the rest of this book serves — a 2026 number must be recomputable from the same records, read from the same place, by a different analyst in 2028 — has an aggregate half kept by the toolkit’s <code>.provenance.json</code> sidecar (see the provenance sidecars chapter) and a microdata half kept here, by a different mechanism entirely. On the aggregate side, a receipt is written <em>beside</em> each output. On the microdata side, the receipt <em>is the shelving</em>: the country, the year, the survey instrument, and the vintage are all encoded in a machine-parseable folder name that follows the IHSN survey-cataloguing convention, and the untouched producer files are preserved under <code>Data/Original/</code>. Nothing is stamped onto the data; where a file sits, and what its folder is called, is the record. This chapter documents that grammar — the token positions, the vintage rules, the collection registry, the seven shared semantics every language implementation honours, and the deployment topologies the estate runs today.</p>
+<p>The boundary the microdata-archive chapter draws governs this chapter as it governs the rest of Part V. The toolkit’s <code>dw_*</code> contract serves the <strong>aggregate / indicator warehouse</strong> — the canonical <code>060.DW-MASTER</code> Teams deposit. datalib’s <code>datalib_*</code> contract serves survey <strong>microdata</strong> — the <code>Z:/datalib*</code> trees plus a staging area. Same office, same <code>~/.config/user_config.yml</code> file, a <strong>different data layer</strong>; a microdata deposit never enters <code>060.DW-MASTER</code>. Everything below is about how the microdata side names things so that a loader can find them without trusting a human to remember.</p>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Version and source of authority
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This part documents datalib <strong>contract v1</strong> as shipped in <strong>datalib v0.7.0</strong>, and the governance model at <strong>draft v0.3</strong>; <code>unicef-drp/datalib-unicef</code> is authoritative — <code>config/grammar.md</code> for the contract, <code>docs/GOVERNANCE_microdata_deposit.md</code> for governance.</p>
+</div>
+</div>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>Access: internal — request via the CSO team (repository visibility is tracked in datalib issue #20).</p>
+</div>
+</div>
+</div>
+<section id="naming-as-structural-provenance" class="level2" data-number="17.1">
+<h2 data-number="17.1" class="anchored" data-anchor-id="naming-as-structural-provenance"><span class="header-section-number">17.1</span> Naming as structural provenance</h2>
+<p>The toolkit and datalib solve the same problem in opposite directions. When the toolkit writes an aggregate through <code>dw_save</code>, it leaves the data file’s bytes alone and writes a <em>separate</em> JSON receipt — <code>&lt;path&gt;.provenance.json</code> — that records who wrote the file, when, in which session mode, and with what content hash (see the provenance sidecars chapter for the full schema). The provenance is a companion artefact; strip the sidecar and the data file no longer knows where it came from.</p>
+<p>datalib inverts that. There is no sidecar, because there is nothing to add: the provenance is already carried by the folder name and by the discipline of never mutating the original. Read <code>TJK_2009_TLSS/TJK_2009_TLSS_v01_M/</code> and you already know the country (Tajikistan), the year (2009), the survey (the Tajikistan Living Standards Survey), and the master vintage (the first) — without opening a single file. Descend into <code>Data/Original/</code> and you find the producer’s files exactly as they were deposited, byte-for-byte, so that the derived forms under <code>Data/Stata/</code>, <code>Data/R/</code>, and <code>Data/Other/</code> can always be checked back against the source they were built from. The vintage is in the path; the source is preserved; the two together <em>are</em> the receipt. This is <strong>structural provenance</strong> — the microdata counterpart of the sidecar, reached by encoding rather than annotation.</p>
+<p>The consequence for the appendices is deliberate: the provenance-schema appendix, which specifies the toolkit’s sidecar field-by-field, carries only a short pointer to this difference, not a second datalib-flavoured sidecar section. There is no datalib sidecar to specify. The mechanism differs; the intent — a frozen artefact that can be trusted and traced years later — is identical.</p>
+<p>Because the provenance is the naming, the naming has to be exact. A folder called <code>Tajikistan final v2 USE THIS</code> carries the same information to a human and <em>no</em> information to a loader; the grammar below is what lets a machine resolve a file deterministically from a country, a year, a survey, and an optional vintage.</p>
+</section>
+<section id="the-folder-grammar" class="level2" data-number="17.2">
+<h2 data-number="17.2" class="anchored" data-anchor-id="the-folder-grammar"><span class="header-section-number">17.2</span> The folder grammar</h2>
+<p>The grammar is vendored verbatim from datalib’s <code>config/grammar.md</code> at the pinned contract version, so that this chapter and the loader can never drift apart:</p>
+<!-- vendored from datalib-unicef config/grammar.md @ v0.7.0 — do not hand-edit; refresh via _manifest.yml -->
+<pre><code>&lt;root&gt;/&lt;CCC&gt;/                                            1 token
+&lt;root&gt;/&lt;CCC&gt;/&lt;CCC&gt;_&lt;YYYY&gt;_&lt;SSSS&gt;/                        3 tokens ("_"-separated)
+  master vintage:     &lt;CCC&gt;_&lt;YYYY&gt;_&lt;SSSS&gt;_v&lt;MM&gt;_M        5 tokens
+  adaptation vintage: &lt;CCC&gt;_&lt;YYYY&gt;_&lt;SSSS&gt;_v&lt;MM&gt;_M_v&lt;AA&gt;_A_&lt;HHHH&gt;   8 tokens
+inside a vintage:     Data/{Original,Stata,R,Other}  Doc/  Programs/
+data files:           &lt;vintage-folder-name&gt;_&lt;module&gt;.dta   under Data/Stata/</code></pre>
+<p>Token positions when splitting on <code>_</code>: 1 country, 2 year, 3 survey, 4 master vintage (<code>v01</code>), 6 adaptation vintage, 8 collection.</p>
+<p>Read the tree from the root down. The <strong>first token</strong> is a country: a directory named by its three-letter code (<code>TJK</code>, <code>ZWE</code>), one token, holding everything for that country. The <strong>survey folder</strong> one level down is three tokens joined by <code>_</code> — country, year, survey — so <code>TJK_2009_TLSS</code> is Tajikistan’s 2009 Tajikistan Living Standards Survey, and <code>ZWE_2019_MICS</code> would be Zimbabwe’s 2019 MICS. Inside a survey folder, each <em>vintage</em> is its own directory whose name extends the three-token stem: a <strong>master vintage</strong> appends <code>_v&lt;MM&gt;_M</code> for five tokens (<code>TJK_2009_TLSS_v01_M</code>), and an <strong>adaptation vintage</strong> appends a further <code>_v&lt;AA&gt;_A_&lt;HHHH&gt;</code> for eight (<code>TJK_2009_TLSS_v01_M_v01_A_HLT</code>). Every vintage folder holds the same three subtrees — <code>Data/{Original,Stata,R,Other}</code>, <code>Doc/</code>, and <code>Programs/</code> — and each data file under <code>Data/Stata/</code> is named for its own vintage folder plus a module suffix, e.g.&nbsp;<code>TJK_2009_TLSS_v01_M_household.dta</code>.</p>
+<p>The token positions are fixed, and this is what makes the name parseable rather than merely descriptive. Splitting a fully-qualified adaptation name on <code>_</code>, position <strong>1</strong> is the country, position <strong>2</strong> the year, position <strong>3</strong> the survey, position <strong>4</strong> the master vintage (<code>v01</code>), position <strong>6</strong> the adaptation vintage, and position <strong>8</strong> the collection code. Those positions are the contract: an implementation reads a country from position 1 and a collection from position 8, never by pattern-guessing from the surrounding text.</p>
+<p>Mapping the grammar onto a call makes the correspondence concrete. To resolve Zimbabwe’s 2019 MICS in the HLT collection — country in position 1, year in 2, survey in 3, collection in 8 — each language spells the same request its own way:</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" aria-current="page">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-3" role="tab" aria-controls="tabset-1-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">datalib_resolve</span>(<span class="st">"ZWE"</span>, <span class="dv">2019</span>, <span class="st">"MICS"</span>, <span class="at">collection =</span> <span class="st">"HLT"</span>, <span class="at">root =</span> <span class="st">"Z:/datalib"</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; resolves to the vintage folder for ZWE_2019_MICS in the HLT collection</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> datalib <span class="im">import</span> datalib_resolve</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>datalib_resolve(<span class="st">"ZWE"</span>, <span class="dv">2019</span>, <span class="st">"MICS"</span>, collection<span class="op">=</span><span class="st">"HLT"</span>, root<span class="op">=</span><span class="st">"Z:/datalib"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-1-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-3-tab">
+<div class="sourceCode" id="cb4"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>datalib, country(ZWE) <span class="fu">year</span>(2019) survey(MICS) collection(HLT)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>* with no arguments, `datalib` opens interactive folder navigation instead;</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>* `datalib help` documents the option <span class="kw">set</span>.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<p>The arguments are the token positions by another name. What the loader does with them — how it uppercases, how it matches, how it fills the vintage when you omit it — is the subject of the two sections that follow.</p>
+</section>
+<section id="vintages-masters-and-adaptations" class="level2" data-number="17.3">
+<h2 data-number="17.3" class="anchored" data-anchor-id="vintages-masters-and-adaptations"><span class="header-section-number">17.3</span> Vintages: masters and adaptations</h2>
+<p>A survey folder accumulates two kinds of vintage, and the distinction is load-bearing. A <strong>master vintage</strong>, <code>&lt;stem&gt;_v&lt;MM&gt;_M</code>, is a cleaned-but-general version of the survey — the office’s canonical rendering of the raw instrument, not yet specialised to any analytical purpose. An <strong>adaptation vintage</strong>, <code>&lt;stem&gt;_v&lt;MM&gt;_M_v&lt;AA&gt;_A_&lt;HHHH&gt;</code>, is a harmonisation built <em>on top of</em> a specific master for a specific collection: the <code>v&lt;AA&gt;_A</code> counts the adaptation, and the trailing <code>&lt;HHHH&gt;</code> names the collection it harmonises to (position 8). So <code>TJK_2009_TLSS_v01_M</code> is the first master, and <code>TJK_2009_TLSS_v01_M_v01_A_HLT</code> is the first HLT-collection adaptation of that first master. Masters descend from the original; adaptations descend from a master.</p>
+<p>Vintages are <strong>integers</strong>, and how they are compared is a contract, not an implementation detail. Inputs are liberal — <code>1</code>, <code>01</code>, <code>v01</code>, and <code>V01</code> all denote the same vintage — but the internal form is a zero-padded <code>v%02d</code>. “Latest” means the <strong>numeric maximum</strong>, never the alphabetical or directory-listing maximum. This is the difference that bites: listed as strings, <code>v10</code> sorts <em>before</em> <code>v09</code>, so a loader that trusted the filesystem’s ordering would silently pick the wrong, older vintage once a survey passed nine revisions. datalib compares the integers, so <code>v10 &gt; v09</code> and the tenth master wins. The rule sounds pedantic until the tenth vintage exists; then it is the difference between reproducible and wrong.</p>
+<p>Because vintages are ordered, they can be defaulted, and the defaulting rules are what let a caller name only what they care about. Omit the <strong>year</strong> and datalib resolves the latest year for that country and survey; omit the <strong>master version</strong> and it takes the latest master; omit the <strong>adaptation version</strong> and it takes the latest adaptation <em>of the requested collection</em>. Each default is the numeric maximum of its level, and the resolved vintage folder must actually exist on disk — resolution verifies the folder before any load is attempted, so a default can never silently point at nothing.</p>
+<p>Enumeration and defaulting are two views of the same ordering. You can ask for the list explicitly, or lean on the default and let the loader take the maximum:</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-3" role="tab" aria-controls="tabset-2-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<div class="sourceCode" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Enumerate — the returned integers are compared numerically, not as strings</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">datalib_vintages</span>(<span class="st">"ZWE"</span>, <span class="dv">2019</span>, <span class="st">"MICS"</span>, <span class="at">root =</span> <span class="st">"Z:/datalib"</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1]  1  2 10        # latest master is v10, NOT v02</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">datalib_adaptations</span>(<span class="st">"ZWE"</span>, <span class="dv">2019</span>, <span class="st">"MICS"</span>, <span class="at">collection =</span> <span class="st">"HLT"</span>, <span class="at">root =</span> <span class="st">"Z:/datalib"</span>)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Or omit the versions and let resolve default to the numeric-latest of each</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="fu">datalib_resolve</span>(<span class="st">"ZWE"</span>, <span class="dv">2019</span>, <span class="st">"MICS"</span>, <span class="at">collection =</span> <span class="st">"HLT"</span>, <span class="at">root =</span> <span class="st">"Z:/datalib"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> datalib <span class="im">import</span> datalib_vintages, datalib_adaptations, datalib_resolve</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>datalib_vintages(<span class="st">"ZWE"</span>, <span class="dv">2019</span>, <span class="st">"MICS"</span>, root<span class="op">=</span><span class="st">"Z:/datalib"</span>)          <span class="co"># -&gt; [1, 2, 10]</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>datalib_adaptations(<span class="st">"ZWE"</span>, <span class="dv">2019</span>, <span class="st">"MICS"</span>, collection<span class="op">=</span><span class="st">"HLT"</span>, root<span class="op">=</span><span class="st">"Z:/datalib"</span>)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>datalib_resolve(<span class="st">"ZWE"</span>, <span class="dv">2019</span>, <span class="st">"MICS"</span>, collection<span class="op">=</span><span class="st">"HLT"</span>, root<span class="op">=</span><span class="st">"Z:/datalib"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-2-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-3-tab">
+<div class="sourceCode" id="cb7"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>* Omit <span class="fu">year</span>() and the <span class="kw">version</span> options; datalib resolves the <span class="kw">numeric</span>-latest</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>* <span class="fu">at</span> each <span class="dv">level</span> — latest <span class="fu">year</span>, then latest master, then latest HLT adaptation:</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>datalib, country(ZWE) survey(MICS) collection(HLT)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="collections-and-modules" class="level2" data-number="17.4">
+<h2 data-number="17.4" class="anchored" data-anchor-id="collections-and-modules"><span class="header-section-number">17.4</span> Collections and modules</h2>
+<p>A <strong>collection</strong> is the harmonisation target named in position 8 of an adaptation folder, and it is more than a label: it fixes <em>which modules a survey ships</em>, <em>what level each module sits at</em> (one row per household, or one row per person), and <em>which keys merge them</em>. That mapping is not hard-coded in each language; it lives in one registry, <code>config/collections.yml</code>, vendored here at the pinned contract version:</p>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+The vendored collection registry (<code>config/collections.yml</code>, contract_version 1)
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<section id="vendored-from-datalib-unicef-configcollections.yml-v0.7.0-do-not-hand-edit-refresh-via-_manifest.yml" class="level1" data-number="18">
+<h1 data-number="18"><span class="header-section-number">18</span> vendored from datalib-unicef config/collections.yml @ v0.7.0 — do not hand-edit; refresh via _manifest.yml</h1>
+</section>
+<section id="datalib-collection-registry-the-single-source-of-truth-for-module-lists" class="level1" data-number="19">
+<h1 data-number="19"><span class="header-section-number">19</span> datalib collection registry — THE single source of truth for module lists,</h1>
+</section>
+<section id="module-levels-and-merge-keys.-r-and-python-consume-synced-byte-identical" class="level1" data-number="20">
+<h1 data-number="20"><span class="header-section-number">20</span> module levels, and merge keys. R and Python consume synced byte-identical</h1>
+</section>
+<section id="copies-each-packages-test-suite-asserts-equality.-the-stata-leg-mirrors" class="level1" data-number="21">
+<h1 data-number="21"><span class="header-section-number">21</span> copies (each package’s test suite asserts equality). The Stata leg mirrors</h1>
+</section>
+<section id="this-registry-by-hand-in-statasrc__dlw.ado-no-yaml-parser-there-edits-to" class="level1" data-number="22">
+<h1 data-number="22"><span class="header-section-number">22</span> this registry by hand in stata/src/_/_dlw.ado (no YAML parser there); edits to</h1>
+</section>
+<section id="this-file-must-be-mirrored-in-_dlw.ado-the-shared-conformance-cases-in" class="level1" data-number="23">
+<h1 data-number="23"><span class="header-section-number">23</span> this file MUST be mirrored in _dlw.ado — the shared conformance cases in</h1>
+</section>
+<section id="tests-are-the-drift-guard." class="level1" data-number="24">
+<h1 data-number="24"><span class="header-section-number">24</span> tests/ are the drift guard.</h1>
+</section>
+<section id="section" class="level1" data-number="25">
+<h1 data-number="25"><span class="header-section-number">25</span> </h1>
+</section>
+<section id="contract_version-increment-when-semantics-change-every-implementation-pins-it." class="level1" data-number="26">
+<h1 data-number="26"><span class="header-section-number">26</span> contract_version: increment when semantics change; every implementation pins it.</h1>
+<p>contract_version: 1</p>
+</section>
+<section id="keys" class="level1" data-number="27">
+<h1 data-number="27"><span class="header-section-number">27</span> Keys:</h1>
+</section>
+<section id="modules-the-modules-a-collection-ships-file-suffix-after-the-vintage-stem" class="level1" data-number="28">
+<h1 data-number="28"><span class="header-section-number">28</span> modules : the modules a collection ships (file suffix after the vintage stem)</h1>
+</section>
+<section id="level-hh-one-row-per-household-or-person-one-row-per-person" class="level1" data-number="29">
+<h1 data-number="29"><span class="header-section-number">29</span> level : hh (one row per household) or person (one row per person)</h1>
+</section>
+<section id="linevar-the-modules-person-line-variable-when-it-is-not-already" class="level1" data-number="30">
+<h1 data-number="30"><span class="header-section-number">30</span> linevar : the module’s person-line variable when it is NOT already</h1>
+</section>
+<section id="called-line_number-implementations-normalize-it-on-load" class="level1" data-number="31">
+<h1 data-number="31"><span class="header-section-number">31</span> called line_number; implementations normalize it on load</h1>
+</section>
+<section id="keys_hh-merge-keys-for-hh-level-modules" class="level1" data-number="32">
+<h1 data-number="32"><span class="header-section-number">32</span> keys_hh : merge keys for hh-level modules</h1>
+</section>
+<section id="keys_person-merge-keys-for-person-level-modules-after-linevar-normalization" class="level1" data-number="33">
+<h1 data-number="33"><span class="header-section-number">33</span> keys_person : merge keys for person-level modules (after linevar normalization)</h1>
+</section>
+<section id="section-1" class="level1" data-number="34">
+<h1 data-number="34"><span class="header-section-number">34</span> </h1>
+</section>
+<section id="merge-semantics-contract-person-level-modules-chain-11-on-keys_person" class="level1" data-number="35">
+<h1 data-number="35"><span class="header-section-number">35</span> Merge semantics (contract): person-level modules chain 1:1 on keys_person,</h1>
+</section>
+<section id="then-hh-level-modules-attach-m1-on-keys_hh.-keys-are-validated-per-module" class="level1" data-number="36">
+<h1 data-number="36"><span class="header-section-number">36</span> then hh-level modules attach m:1 on keys_hh. Keys are validated per module</h1>
+</section>
+<section id="isid-equivalent-modules-whose-identifiers-are-missingduplicated-stop-the" class="level1" data-number="37">
+<h1 data-number="37"><span class="header-section-number">37</span> (isid-equivalent); modules whose identifiers are missing/duplicated stop the</h1>
+</section>
+<section id="merge-with-an-error.-loaders-never-mutate-values." class="level1" data-number="38">
+<h1 data-number="38"><span class="header-section-number">38</span> merge with an error. Loaders never mutate values.</h1>
+<p>collections: HLT: keys_hh: [svy_id, cluster_id, household_id] keys_person: [svy_id, cluster_id, household_id, line_number] modules: household: level: hh hhmembers: level: person linevar: hh_line_number adult: level: person children: level: person</p>
+<p>IPUMS: # NOTE: keys unverified against real IPUMS deposits (no IPUMS tree available # at contract time); the per-module key validation guards against error. keys_hh: [svy_id, household_id] keys_person: [svy_id, household_id, line_number] modules: hh: level: hh bh: level: person ch: level: person fs: level: person hl: level: person mn: level: person wm: level: person</p>
+</section>
+</div>
+</div>
+<p>Rendered as a table, the two registered collections — HLT and IPUMS — and their modules read as follows. This table is authored from the registry above; it mirrors the vendored YAML rather than adding to it.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Collection</th>
+<th>Module</th>
+<th>Level</th>
+<th><code>line_number</code> source</th>
+<th>Merge keys</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>HLT</td>
+<td><code>household</code></td>
+<td>hh</td>
+<td>—</td>
+<td><code>svy_id</code>, <code>cluster_id</code>, <code>household_id</code></td>
+</tr>
+<tr class="even">
+<td>HLT</td>
+<td><code>hhmembers</code></td>
+<td>person</td>
+<td><code>hh_line_number</code> → <code>line_number</code></td>
+<td><code>svy_id</code>, <code>cluster_id</code>, <code>household_id</code>, <code>line_number</code></td>
+</tr>
+<tr class="odd">
+<td>HLT</td>
+<td><code>adult</code></td>
+<td>person</td>
+<td><code>line_number</code></td>
+<td><code>svy_id</code>, <code>cluster_id</code>, <code>household_id</code>, <code>line_number</code></td>
+</tr>
+<tr class="even">
+<td>HLT</td>
+<td><code>children</code></td>
+<td>person</td>
+<td><code>line_number</code></td>
+<td><code>svy_id</code>, <code>cluster_id</code>, <code>household_id</code>, <code>line_number</code></td>
+</tr>
+<tr class="odd">
+<td>IPUMS</td>
+<td><code>hh</code></td>
+<td>hh</td>
+<td>—</td>
+<td><code>svy_id</code>, <code>household_id</code></td>
+</tr>
+<tr class="even">
+<td>IPUMS</td>
+<td><code>bh</code></td>
+<td>person</td>
+<td><code>line_number</code></td>
+<td><code>svy_id</code>, <code>household_id</code>, <code>line_number</code></td>
+</tr>
+<tr class="odd">
+<td>IPUMS</td>
+<td><code>ch</code></td>
+<td>person</td>
+<td><code>line_number</code></td>
+<td><code>svy_id</code>, <code>household_id</code>, <code>line_number</code></td>
+</tr>
+<tr class="even">
+<td>IPUMS</td>
+<td><code>fs</code></td>
+<td>person</td>
+<td><code>line_number</code></td>
+<td><code>svy_id</code>, <code>household_id</code>, <code>line_number</code></td>
+</tr>
+<tr class="odd">
+<td>IPUMS</td>
+<td><code>hl</code></td>
+<td>person</td>
+<td><code>line_number</code></td>
+<td><code>svy_id</code>, <code>household_id</code>, <code>line_number</code></td>
+</tr>
+<tr class="even">
+<td>IPUMS</td>
+<td><code>mn</code></td>
+<td>person</td>
+<td><code>line_number</code></td>
+<td><code>svy_id</code>, <code>household_id</code>, <code>line_number</code></td>
+</tr>
+<tr class="odd">
+<td>IPUMS</td>
+<td><code>wm</code></td>
+<td>person</td>
+<td><code>line_number</code></td>
+<td><code>svy_id</code>, <code>household_id</code>, <code>line_number</code></td>
+</tr>
+</tbody>
+</table>
+<p>The registry is a single source of truth with a hand-mirrored leg. R and Python consume <strong>byte-identical synced copies</strong> of <code>collections.yml</code>, and each package’s test suite asserts that its copy equals the source. Stata has no YAML parser in the relevant path, so it mirrors the same registry <strong>by hand in <code>_dlw.ado</code></strong>; a change to the registry that is not reflected in the Stata leg is a bug, and the shared conformance cases (see the datalib API and conformance chapter) are the drift guard that catches it. The <code>contract_version: 1</code> field is the pin every implementation carries, incremented only when the semantics change.</p>
+<p>Two caveats belong on this table. First, the <strong>IPUMS keys are unverified</strong>: at contract time there was no real IPUMS tree to validate against, so the <code>keys_hh</code>/<code>keys_person</code> shown for IPUMS are the registry’s best statement rather than a checked fact. What keeps that honest at run time is the per-module key validation described in the semantics below — every module’s keys are checked for uniqueness on load, so an incorrect key stops the merge with a typed error rather than producing a silently wrong join. Second, <strong>collection is not the same thing as domain.</strong> A <em>domain</em> is the organisational grouping of holdings that governance uses to route deposits into thematic trees — health → <code>Z:/datalib-hlt</code>, education → <code>Z:/datalib-edu</code>, nutrition → <code>Z:/datalib-nut</code>, child-protection → <code>Z:/datalib-chp</code>, cross-cutting → <code>Z:/datalib</code> (see the microdata-archive chapter). A <em>collection</em> is the harmonisation code in position 8 of the folder grammar. The two are <strong>aligned but not identical</strong>: the HLT domain and the HLT collection point at the same subject matter, but the domain is where a survey is <em>shelved</em> and the collection is how a vintage is <em>harmonised and merged</em>. As of v0.7.0 / contract v1, only HLT (and IPUMS) is registered in the merge registry; EDU, NUT, and CHP become first-class collections as their module lists and keys are verified in later phases, even though their domains already exist as deposit destinations.</p>
+</section>
+<section id="the-seven-shared-semantics" class="level2" data-number="38.1">
+<h2 data-number="38.1" class="anchored" data-anchor-id="the-seven-shared-semantics"><span class="header-section-number">38.1</span> The seven shared semantics</h2>
+<p>The grammar is only as trustworthy as the rules every language applies to it, and datalib pins seven. They are the shared semantics of <code>config/grammar.md</code>, and each one is a place where an implementation could plausibly differ and is contractually forbidden to.</p>
+<p><strong>1 — Uppercase once, match exactly.</strong> Case is normalised a single time, at the input boundary, and thereafter matching is exact: a country is matched by its whole code, a survey folder by its exact <code>*_&lt;SURVEY&gt;</code> suffix. Matching is never a substring test — <code>MICS</code> does not match <code>MICS6</code>, and <code>ZWE</code> does not match a folder that merely contains those letters. Normalising once and matching exactly is what stops a loose match from resolving the wrong survey.</p>
+<p><strong>2 — Vintages are integers, latest is the numeric maximum.</strong> As the vintages section sets out: inputs accept <code>1</code>/<code>01</code>/<code>v01</code>/<code>V01</code>, the internal form is <code>v%02d</code>, and “latest” is the numeric maximum, never the alphabetical one, so <code>v10 &gt; v09</code>. This is the single rule most likely to be got wrong by a naïve directory listing and the single rule most consequential when it is.</p>
+<p><strong>3 — Defaults resolve to the latest, and the target must exist.</strong> Omit the year and get the latest year; omit the master version and get the latest master; omit the adaptation version and get the latest adaptation of the requested collection. Every default is the numeric maximum of its level, and resolution verifies that the chosen vintage folder exists before any load proceeds — a default never resolves to a folder that is not there.</p>
+<p><strong>4 — Loaders never mutate.</strong> A loader reads; it does not recode, drop, or rename values. There are exactly <strong>two documented schema additions</strong>, and both are structural, not analytical. First, a person module whose registry <code>linevar</code> is not already <code>line_number</code> — HLT’s <code>hhmembers</code>, whose line variable is <code>hh_line_number</code> — has that column <em>renamed</em> to <code>line_number</code> on load, purely to normalise the merge key. Second, provenance columns <code>ctrycode</code> and <code>year</code> are added when they are absent, never overwritten when they are present, on every load. Both additions are of a piece with structural provenance: the loader records where a record came from without ever altering what the record says.</p>
+<p><strong>5 — Merge is keyed, per-module-validated, and outer.</strong> Person modules chain <strong>1:1</strong> on <code>keys_person</code>; household modules attach <strong>m:1</strong> on <code>keys_hh</code> (or 1:1 when only a household module is present). Before any join, each module’s declared keys are validated for uniqueness — an isid-equivalent check — and a module whose keys are missing or duplicated stops the merge with a <strong>typed error that names the offending module</strong>, rather than letting a bad key produce a silently wrong result. Unmatched rows are kept (the join is outer), and the merge indicator is not retained in the output. A toolkit reader will recognise the instinct: this is the same cardinality-first discipline as the toolkit’s <code>dw_merge</code>, and the per-module uniqueness check is the microdata sibling of the toolkit’s <code>dw_isid</code> guard — declare the grain, prove it, then join.</p>
+<p><strong>6 — Errors map to a shared taxonomy.</strong> The failure classes — invalid input, not found, config file missing, user block missing, library root unset — map onto Stata exit codes, R condition classes (<code>datalib_error_*</code>), and Python exception types, so the same contract violation is recognisable across the three languages. The mapping table is vendored into the error taxonomy appendix, whose datalib section carries it alongside the toolkit’s own envelope.</p>
+<p><strong>7 — Library-root resolution follows a fixed precedence.</strong> Where a language reads the library root from is ordered, and the order differs by language idiom. In <strong>R and Python</strong> the precedence is: an explicit <code>root</code> argument, then the <code>DATALIB_ROOT</code> environment variable, then the language option (<code>option(datalib.root)</code> in R), then an optional <code>datalib:</code> key in the user block of <code>~/.config/user_config.yml</code>, then an error if none is set. In <strong>Stata</strong> it is: the <code>root()</code> option, then the <code>${datalib}</code> session global — which <code>getuserconfig</code>/<code>datalib_config</code> fills from the config key when it is unset, so a config-derived global outranks the environment variable <em>once it is loaded</em> — then <code>DATALIB_ROOT</code>, then an error. The precedence orderings are deliberately not identical; they reflect each language’s native configuration conventions, and the datalib API and conformance chapter documents the practical consequence.</p>
+</section>
+<section id="deployment-topologies" class="level2" data-number="38.2">
+<h2 data-number="38.2" class="anchored" data-anchor-id="deployment-topologies"><span class="header-section-number">38.2</span> Deployment topologies</h2>
+<p>The grammar is written for a <strong>single library root</strong>: countries sit directly under <code>&lt;root&gt;</code>, and harmonisations live as adaptation folders beneath them. That is the model the contract describes, and it is a complete and valid deployment on its own.</p>
+<p>The UNICEF estate today also runs a <strong>multi-root</strong> topology — one tree per thematic domain: <code>Z:/datalib</code> for cross-cutting holdings, and <code>Z:/datalib-hlt</code>, <code>Z:/datalib-edu</code>, <code>Z:/datalib-nut</code>, and <code>Z:/datalib-chp</code> for health, education, nutrition, and child-protection respectively. Both topologies are valid, and the grammar inside any one root is identical either way — a country folder under <code>Z:/datalib-hlt</code> obeys exactly the same token positions as one under <code>Z:/datalib</code>. The operational fact that follows is worth stating plainly: <strong><code>datalib_catalog</code> inventories one root per call.</strong> A catalogue of the whole estate under a multi-root layout is the union of one call per domain root, not a single traversal; a caller that forgets this inventories only the domain it happened to point at.</p>
+<p>Which topology becomes canonical is not settled. Whether UNICEF consolidates to a single library root or keeps per-domain roots is one of the four <strong>open Standards-Board decisions</strong> flagged in the microdata-archive chapter, and the governance draft asks for it to be decided before the first promotion into a canonical tree. Until then, treat both topologies as supported, write code that names its root explicitly, and do not assume a single-root world when catalog-level work may be spanning several domain trees. The grammar is stable across that decision; only the number of roots it is applied under is in question.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../chapters/51-microdata-archive.html" class="pagination-link" aria-label="The microdata archive: archive, catalogue, tool">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">The microdata archive: archive, catalogue, tool</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../chapters/53-datalib-api-conformance.html" class="pagination-link" aria-label="The `datalib_*` API and its conformance suite">
+        <span class="nav-page-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">The <code>datalib_*</code> API and its conformance suite</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>UNICEF Chief Statistician Office — Data &amp; Analytics (OSE)</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/unicef-drp/cso-toolkit/edit/main/book/chapters/52-ihsn-grammar.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/unicef-drp/cso-toolkit/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>Built with <a href="https://quarto.org">Quarto</a></p>
+</div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

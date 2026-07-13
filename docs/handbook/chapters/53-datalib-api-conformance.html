@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Preface – The CSO Handbook</title>
+<title>18&nbsp; The datalib_* API and its conformance suite – The CSO Handbook</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -20,6 +20,40 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
@@ -30,8 +64,8 @@ ul.task-list li input[type="checkbox"] {
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
-<link href="../front-matter/authors.html" rel="next">
-<link href="../front-matter/foreword.html" rel="prev">
+<link href="../chapters/61-ecosystem.html" rel="next">
+<link href="../chapters/52-ihsn-grammar.html" rel="prev">
 <script src="../site_libs/quarto-html/quarto.js"></script>
 <script src="../site_libs/quarto-html/popper.min.js"></script>
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
@@ -81,7 +115,7 @@ ul.task-list li input[type="checkbox"] {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../front-matter/preface.html">Preface</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/51-microdata-archive.html">Part V — The Microdata Archive (datalib)</a></li><li class="breadcrumb-item"><a href="../chapters/53-datalib-api-conformance.html"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">The <code>datalib_*</code> API and its conformance suite</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -128,7 +162,7 @@ ul.task-list li input[type="checkbox"] {
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../front-matter/preface.html" class="sidebar-item-text sidebar-link active">
+  <a href="../front-matter/preface.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Preface</span></a>
   </div>
 </li>
@@ -307,7 +341,7 @@ ul.task-list li input[type="checkbox"] {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/53-datalib-api-conformance.html" class="sidebar-item-text sidebar-link">
+  <a href="../chapters/53-datalib-api-conformance.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">The <code>datalib_*</code> API and its conformance suite</span></span></a>
   </div>
 </li>
@@ -393,20 +427,21 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#what-this-handbook-is" id="toc-what-this-handbook-is" class="nav-link active" data-scroll-target="#what-this-handbook-is">What this handbook is</a></li>
-  <li><a href="#what-this-handbook-is-not" id="toc-what-this-handbook-is-not" class="nav-link" data-scroll-target="#what-this-handbook-is-not">What this handbook is not</a></li>
-  <li><a href="#who-this-handbook-is-for" id="toc-who-this-handbook-is-for" class="nav-link" data-scroll-target="#who-this-handbook-is-for">Who this handbook is for</a></li>
-  <li><a href="#how-to-read-it" id="toc-how-to-read-it" class="nav-link" data-scroll-target="#how-to-read-it">How to read it</a></li>
-  <li><a href="#a-note-on-authorship" id="toc-a-note-on-authorship" class="nav-link" data-scroll-target="#a-note-on-authorship">A note on authorship</a></li>
+  <li><a href="#the-thirteen-function-shared-surface" id="toc-the-thirteen-function-shared-surface" class="nav-link active" data-scroll-target="#the-thirteen-function-shared-surface"><span class="header-section-number">18.1</span> The thirteen-function shared surface</a></li>
+  <li><a href="#worked-examples" id="toc-worked-examples" class="nav-link" data-scroll-target="#worked-examples"><span class="header-section-number">18.2</span> Worked examples</a></li>
+  <li><a href="#root-and-config-resolution" id="toc-root-and-config-resolution" class="nav-link" data-scroll-target="#root-and-config-resolution"><span class="header-section-number">18.3</span> Root and config resolution</a></li>
+  <li><a href="#errors" id="toc-errors" class="nav-link" data-scroll-target="#errors"><span class="header-section-number">18.4</span> Errors</a></li>
+  <li><a href="#the-conformance-suite" id="toc-the-conformance-suite" class="nav-link" data-scroll-target="#the-conformance-suite"><span class="header-section-number">18.5</span> The conformance suite</a></li>
+  <li><a href="#access" id="toc-access" class="nav-link" data-scroll-target="#access"><span class="header-section-number">18.6</span> Access</a></li>
   </ul>
-<div class="toc-actions"><ul><li><a href="https://github.com/unicef-drp/cso-toolkit/edit/main/book/front-matter/preface.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/unicef-drp/cso-toolkit/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+<div class="toc-actions"><ul><li><a href="https://github.com/unicef-drp/cso-toolkit/edit/main/book/chapters/53-datalib-api-conformance.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/unicef-drp/cso-toolkit/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default">
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/51-microdata-archive.html">Part V — The Microdata Archive (datalib)</a></li><li class="breadcrumb-item"><a href="../chapters/53-datalib-api-conformance.html"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">The <code>datalib_*</code> API and its conformance suite</span></a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title">Preface</h1>
+<h1 class="title"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">The <code>datalib_*</code> API and its conformance suite</span></h1>
 </div>
 
 
@@ -423,63 +458,208 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
+<p>This is the third chapter of Part V, and it is where the microdata archive stops being a folder convention and becomes executable code. The microdata-archive chapter draws the boundary and sets out the governance; the IHSN grammar chapter documents the shelving convention — the country/survey/vintage folder tree that encodes provenance in a name. This chapter documents the software that reads and writes that tree: the thirteen shared functions of the <code>datalib_*</code> surface, and the conformance suite that keeps the R, Python, and Stata siblings honest against each other and against a committed specification. The reproducibility mission is the same one the whole book serves — a survey deposited once must load the same way, in the same shape, from any of the three languages, years after the analyst who deposited it has moved on. A shelving convention is only as trustworthy as the loader that honours it, so the loader is where the contract has to be pinned down and tested.</p>
+<p>Recall the boundary the microdata-archive chapter draws, because it governs everything below. The toolkit’s <code>dw_*</code> contract serves the <strong>aggregate / indicator warehouse</strong> — the canonical <code>060.DW-MASTER</code> Teams deposit. datalib’s <code>datalib_*</code> contract serves survey <strong>microdata</strong> — the <code>Z:/datalib*</code> trees plus a staging area. Same office, same <code>~/.config/user_config.yml</code> file, a <strong>different data layer</strong>. A microdata deposit never enters <code>060.DW-MASTER</code>. This chapter is entirely about the microdata side; where a <code>dw_*</code> function shares a name-shape or a design idea with a <code>datalib_*</code> one, the resemblance is a family likeness, not a shared code path.</p>
 <div class="callout callout-style-simple callout-note">
 <div class="callout-body d-flex">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-body-container">
-<p><strong>Stub.</strong> The prose below is a working draft. Passages marked <em>[editor-to-finalize]</em> — chiefly the personal framing of how the toolkit came to be written and any institutional positioning relative to the wider data programme — await sign-off by the named editors before the first tagged edition. <em>(Wiring note for the editor: this page is not yet listed in <code>book/_quarto.yml</code>; add <code>front-matter/preface.qmd</code> to the <code>book.chapters:</code> list so it renders.)</em></p>
+<p>This part documents datalib <strong>contract v1</strong> as shipped in <strong>datalib v0.7.0</strong>, and the governance model at <strong>draft v0.3</strong>; <code>unicef-drp/datalib-unicef</code> is authoritative — <code>config/grammar.md</code> for the contract, <code>docs/GOVERNANCE_microdata_deposit.md</code> for governance.</p>
 </div>
 </div>
 </div>
-<section id="what-this-handbook-is" class="level2">
-<h2 class="anchored" data-anchor-id="what-this-handbook-is">What this handbook is</h2>
-<p>This handbook documents <code>cso-toolkit</code>: the UNICEF Chief Statistician Office’s reusable, cross-language contract for reproducible analytics. The toolkit encodes <strong>one way</strong> to read, write, compare, and merge data; <strong>one way</strong> to call external APIs; and <strong>one way</strong> to aggregate, version-sync, and scaffold projects — and it does so identically in R, Python, and Stata. Every call routes through wrappers that enforce a provenance sidecar on each output, an <code>isid</code> uniqueness check on stated keys, and a producer / reviewer mode contract. The promise these mechanisms add up to is simple: an analytics product can be re-run by someone other than its original author and yield the same numbers.</p>
-<p>The toolkit is <strong>vendored</strong>, not network-installed. Its source files are copied into each consumer’s own repository rather than pulled from a package index at run time. That choice is deliberate and it is the spine of the whole design: a publication that cites a deposited file today should reproduce identical numbers years later from the deposit and the vendored helpers alone — no live network, no upstream package drift, no ambient version skew. The handbook returns to that idea throughout.</p>
+<section id="the-thirteen-function-shared-surface" class="level2" data-number="18.1">
+<h2 data-number="18.1" class="anchored" data-anchor-id="the-thirteen-function-shared-surface"><span class="header-section-number">18.1</span> The thirteen-function shared surface</h2>
+<p>The public surface is small and deliberately identical across the three languages. The same thirteen verbs exist in each, so a script’s <em>intent</em> reads the same whether it is written in R, Python, or Stata; only the calling syntax differs.</p>
+<!-- vendored from datalib-unicef config/grammar.md @ v0.7.0 (§ Shared public surface) — do not hand-edit; refresh via _manifest.yml -->
+<p><code>datalib_config</code> · <code>datalib_root</code> · <code>datalib_countries</code> · <code>datalib_surveys</code> · <code>datalib_vintages</code> · <code>datalib_adaptations</code> · <code>datalib_resolve</code> · <code>datalib_files</code> (sections <code>data</code> · <code>data-original</code> · <code>data-r</code> · <code>data-other</code> · <code>doc</code> · <code>programs</code>, identical in all three languages) · <code>datalib_catalog</code> · <code>datalib_load</code> · <code>datalib_browse</code> · <code>datalib_create</code> · <code>datalib_map_drive</code>.</p>
+<p>All 13 exist in Stata and Python; Python additionally exports the verbatim aliases <code>getuserconfig</code> / <code>mapzdrive</code> (Stata keeps those as the original commands; R exports the 13 canonical names only).</p>
+<p>The surface is <strong>thirteen functions as of datalib v0.7.0 / contract v1</strong>. They fall into six groups, each a stage in the same pipeline — from <em>where is the library</em> to <em>give me the data</em>:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Group</th>
+<th>Functions</th>
+<th>What they do</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Config &amp; root</td>
+<td><code>datalib_config</code> · <code>datalib_root</code></td>
+<td>Read and inspect the per-operator configuration (the <code>datalib:</code> block), and resolve the active library root through the precedence chain below.</td>
+</tr>
+<tr class="even">
+<td>Enumerate</td>
+<td><code>datalib_countries</code> · <code>datalib_surveys</code> · <code>datalib_vintages</code> · <code>datalib_adaptations</code></td>
+<td>Walk the tree one level at a time: which countries live under a root, which survey folders a country holds (matched by exact <code>*_&lt;SURVEY&gt;</code> suffix, never substring), which master vintages exist (as integers, so “latest” is the numeric maximum — <code>v10</code> beats <code>v09</code>, never an alphabetical listing), and which adaptation vintages a collection has.</td>
+</tr>
+<tr class="odd">
+<td>Resolve, files, catalog</td>
+<td><code>datalib_resolve</code> · <code>datalib_files</code> · <code>datalib_catalog</code></td>
+<td>Turn a country/year/survey/collection request plus optional versions into a single <strong>verified</strong> vintage folder (the resolved folder must exist — it is checked before any load); list the files inside it by section (<code>data</code>, <code>data-original</code>, <code>data-r</code>, <code>data-other</code>, <code>doc</code>, <code>programs</code>); and inventory a whole root.</td>
+</tr>
+<tr class="even">
+<td>Load &amp; browse</td>
+<td><code>datalib_load</code> · <code>datalib_browse</code></td>
+<td>Load and merge the modules of a resolved vintage into memory, and navigate the tree interactively.</td>
+</tr>
+<tr class="odd">
+<td>Create</td>
+<td><code>datalib_create</code></td>
+<td>Scaffold a new, grammar-conformant vintage folder — the entry point for <em>flow</em> deposits that follow the convention from day one.</td>
+</tr>
+<tr class="even">
+<td>Map drive</td>
+<td><code>datalib_map_drive</code></td>
+<td>Map the <code>Z:</code> drive so the library root is reachable on a fresh machine.</td>
+</tr>
+</tbody>
+</table>
+<p>The defaults thread through the whole surface: omit the year and you get the latest year; omit the master version and you get the latest master; omit the adaptation version and you get the latest adaptation of the requested collection. Every default resolves to a concrete, existing folder before a byte is read.</p>
 </section>
-<section id="what-this-handbook-is-not" class="level2">
-<h2 class="anchored" data-anchor-id="what-this-handbook-is-not">What this handbook is not</h2>
-<p>This is not a tutorial on R, Python, or Stata, and it is not a statistics text. It assumes you can already write a script in at least one of the three languages and that you understand the analytical work your sector or team does. Its subject is narrower and more specific: the <em>contract</em> — the shared conventions and the wrappers that enforce them — and nothing beyond what the code in the repository actually implements. Where a capability exists in one language but not another, the book says so plainly rather than describing an aspiration; the cross-language coverage matrix in Appendix A is the source of truth when the prose and the code seem to disagree.</p>
-<p>It is also not the warehouse handbook. The companion <em>DW-Production</em> handbook documents UNICEF’s child-data warehouse — the operational store of signed-off <code>dw_&lt;sector&gt;</code> files that the public data products draw from. This book is <strong>complementary</strong> to that one: DW-Production documents a particular warehouse and its sector pipelines; <em>this</em> book documents the reusable contract itself, for any consumer that adopts it. DW-Production is the toolkit’s first and largest adopter, but it is not the only one the toolkit is built to serve.</p>
-</section>
-<section id="who-this-handbook-is-for" class="level2">
-<h2 class="anchored" data-anchor-id="who-this-handbook-is-for">Who this handbook is for</h2>
-<p>The book is written for several audiences at once, and most readers will live in one or two parts of it rather than reading front to back:</p>
-<ul>
-<li><strong>Database managers (producers)</strong> who run sector pipelines, pull upstream APIs, and deposit canonical files. The contract — the roles, the mode that governs network access, the provenance sidecars — is your daily working environment, and Part II describes it.</li>
-<li><strong>Reviewers</strong> who re-run a pipeline from pre-deposited inputs and compare the result against the canonical deposit. The same mode contract governs your work, with the network deliberately unreachable; Part II explains why that constraint is enforced rather than merely advised.</li>
-<li><strong>Publishers</strong> who move signed-off deposits into downstream products. The role boundaries in Part II tell you where the toolkit’s guarantees end and the publication infrastructure begins.</li>
-<li><strong>Peer-institution adopters</strong> — maintainers of other deposit-bearing repositories who want to vendor the toolkit into their own codebase and keep it in sync. Part IV is written for you, and it assumes the role and mode concepts from Part II.</li>
-</ul>
-<p>Analysts and sector teams who simply need to read, write, and aggregate data the CSO way are served by Part III, which is the reference for that daily work in all three languages.</p>
-</section>
-<section id="how-to-read-it" class="level2">
-<h2 class="anchored" data-anchor-id="how-to-read-it">How to read it</h2>
-<p>The handbook is organised into four parts and a set of appendices.</p>
-<ul>
-<li><strong>Part I — Why &amp; Architecture</strong> motivates the toolkit and lays out its shape: one contract, three language siblings, many consumer repositories, and a single canonical deposit. Start here for the big picture.</li>
-<li><strong>Part II — The Contract</strong> is the conceptual core: the three roles, the session-level mode that governs network access, how that contract is wired into a repository, and the two cross-cutting mechanisms — provenance sidecars and the standard error envelope — that make the toolkit trustworthy.</li>
-<li><strong>Part III — The API (cross-language)</strong> is the daily reference, one chapter per capability family: IO, the external-API contract, aggregation, vintage sync, and scaffolding with the contract auditor. Every chapter presents R, Python, and Stata side by side and is explicit about coverage gaps.</li>
-<li><strong>Part IV — Adoption &amp; Operations</strong> is for adopters and maintainers: the vendoring model, a worked onboarding example, running the contract auditor in CI, and the project’s versioning and release discipline.</li>
-<li><strong>Appendices</strong> collect the dense reference material: the coverage matrix (A), the provenance sidecar schema (B), the error taxonomy (C), a full function reference (D), and a glossary (E).</li>
-</ul>
-<p>If you are new, read the architecture chapter in Part I and the roles chapter in Part II, then turn to the IO chapter in Part III. Those three give you enough to use the toolkit safely. If you are here to adopt it into a new repository, begin with the vendoring and onboarding chapters in Part IV, keeping the roles chapter to hand.</p>
-</section>
-<section id="a-note-on-authorship" class="level2">
-<h2 class="anchored" data-anchor-id="a-note-on-authorship">A note on authorship</h2>
-<p>The twelve authors are the members of UNICEF Data &amp; Analytics’ Database Managers Working Group — the staff whose shared operating practice the toolkit encodes. The toolkit did not arrive as a specification handed down to be implemented; it grew out of the conventions this group had already converged on, made explicit and then enforced in code. Authorship is therefore framed collectively: the contract is a shared body of practice, and crediting it as such is more honest than parcelling it out by file or function. The nine editors are the Chief Statistician, as chair, and the unit chiefs of UNICEF Data &amp; Analytics, acknowledged in that editorial capacity rather than as authors. <em>[editor-to-finalize: any first-person account of the toolkit’s origins, and the precise institutional positioning of this work within the wider data programme, are for the editors to settle.]</em></p>
-<div class="callout callout-style-simple callout-note">
-<div class="callout-body d-flex">
+<section id="worked-examples" class="level2" data-number="18.2">
+<h2 data-number="18.2" class="anchored" data-anchor-id="worked-examples"><span class="header-section-number">18.2</span> Worked examples</h2>
+<p>The most important groups are <em>resolve</em> — turning a human request into a verified folder — and <em>load</em> — turning that folder into a data frame. Both use the real syntax shipped in the datalib README, worked here against the running example of Zimbabwe’s 2019 MICS, health collection (<code>HLT</code>).</p>
+<p><strong>Resolve.</strong> <code>datalib_resolve</code> is pure name-arithmetic: it applies the defaults, resolves the vintage, confirms the folder exists, and returns the resolved path. It reads nothing.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" aria-current="page">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-3" role="tab" aria-controls="tabset-1-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">datalib_resolve</span>(<span class="st">"ZWE"</span>, <span class="dv">2019</span>, <span class="st">"MICS"</span>, <span class="at">collection =</span> <span class="st">"HLT"</span>, <span class="at">root =</span> <span class="st">"Z:/datalib"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> datalib <span class="im">import</span> datalib_resolve</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>datalib_resolve(<span class="st">"ZWE"</span>, <span class="dv">2019</span>, <span class="st">"MICS"</span>, collection<span class="op">=</span><span class="st">"HLT"</span>, root<span class="op">=</span><span class="st">"Z:/datalib"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-1-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-3-tab">
+<div class="sourceCode" id="cb3"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>datalib_resolve, country(ZWE) <span class="fu">year</span>(2019) survey(MICS) collection(HLT) root(<span class="st">"Z:/datalib"</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>* The umbrella command `datalib, country(ZWE) <span class="fu">year</span>(2019) survey(MICS)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>* collection(HLT)` resolves *and then* loads <span class="kw">in</span> one step; `datalib_resolve`</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>* is the resolve-only leg <span class="kw">of</span> that same path.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<p><strong>Load.</strong> <code>datalib_load</code> resolves, reads the modules the collection registry lists, and merges them: person-level modules chain 1:1 on <code>keys_person</code>, then household-level modules attach m:1 on <code>keys_hh</code>, with keys validated per module. It returns a single data frame when <code>merge</code> is on (the default) and a named list (R) or dict (Python) of one frame per module when <code>merge</code> is off. Unmatched rows are kept — the merge is an outer join and the merge indicator is not retained.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-3" role="tab" aria-controls="tabset-2-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<div class="sourceCode" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Merged data frame (default):</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>df  <span class="ot">&lt;-</span> <span class="fu">datalib_load</span>(<span class="st">"ZWE"</span>, <span class="dv">2019</span>, <span class="st">"MICS"</span>, <span class="at">collection =</span> <span class="st">"HLT"</span>, <span class="at">root =</span> <span class="st">"Z:/datalib"</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Unmerged: a named list, one data frame per module:</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>mods <span class="ot">&lt;-</span> <span class="fu">datalib_load</span>(<span class="st">"ZWE"</span>, <span class="dv">2019</span>, <span class="st">"MICS"</span>, <span class="at">collection =</span> <span class="st">"HLT"</span>,</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>                     <span class="at">root =</span> <span class="st">"Z:/datalib"</span>, <span class="at">merge =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> datalib <span class="im">import</span> datalib_load</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Merged DataFrame (default):</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>df   <span class="op">=</span> datalib_load(<span class="st">"ZWE"</span>, <span class="dv">2019</span>, <span class="st">"MICS"</span>, collection<span class="op">=</span><span class="st">"HLT"</span>, root<span class="op">=</span><span class="st">"Z:/datalib"</span>)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Unmerged: a dict of DataFrames, one per module:</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>mods <span class="op">=</span> datalib_load(<span class="st">"ZWE"</span>, <span class="dv">2019</span>, <span class="st">"MICS"</span>, collection<span class="op">=</span><span class="st">"HLT"</span>,</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>                    root<span class="op">=</span><span class="st">"Z:/datalib"</span>, merge<span class="op">=</span><span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-2-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-3-tab">
+<div class="sourceCode" id="cb6"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>* The umbrella command resolves, loads, and merges into <span class="dv">memory</span>:</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>datalib, country(ZWE) <span class="fu">year</span>(2019) survey(MICS) collection(HLT)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>* `datalib` with no arguments opens interactive folder navigation</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>* (the datalib_browse <span class="fu">group</span>); `datalib help` prints the command reference.</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>* Stata holds one dataset <span class="kw">in</span> <span class="dv">memory</span>, so the <span class="kw">merge</span>=FALSE <span class="st">"named list"</span> shape</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>* has no direct Stata analogue — <span class="kw">load</span> modules individually to inspect them.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
-<div class="callout-body-container">
-<p>Parts of this handbook were drafted with generative-AI assistance. The AI did not author the book; it produced drafts that the named authors and editors are reviewing, editing, and fact-checking against the <code>cso-toolkit</code> codebase. On release, the named authors and editors take full responsibility for the methodological claims, factual statements, and code examples reproduced here.</p>
+<div class="callout-title-container flex-fill">
+Loaders never mutate values
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>datalib_load</code> performs <strong>no recodes and no drops</strong>. It makes exactly two documented <em>schema</em> additions, and never touches the values that were already there: (a) in a person module whose registry <code>linevar</code> is not already <code>line_number</code>, that column is renamed to <code>line_number</code> so the merge keys line up; and (b) provenance columns <code>ctrycode</code> and <code>year</code> are added when absent (and never overwritten). Everything else — every value in <code>Data/Original/</code> — arrives exactly as it was deposited. This is datalib’s provenance mechanism: not a sidecar file, but the untouched original plus a name that encodes the vintage. The provenance-schema appendix contrasts it with the toolkit’s <code>.provenance.json</code> sidecar.</p>
+</div>
+</div>
+<p><strong>Enumerate and catalogue.</strong> Before you resolve, you often need to know what is on the shelf. The enumerate group answers one level at a time; <code>datalib_catalog</code> inventories a whole root at once. Python additionally ships a command-line front end.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-3" role="tab" aria-controls="tabset-3-3" aria-selected="false">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
+<div class="sourceCode" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">datalib_countries</span>(<span class="at">root =</span> <span class="st">"Z:/datalib"</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">datalib_surveys</span>(<span class="st">"ZWE"</span>, <span class="at">root =</span> <span class="st">"Z:/datalib"</span>)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">datalib_catalog</span>(<span class="at">root =</span> <span class="st">"Z:/datalib"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
+<div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> datalib <span class="im">import</span> datalib_countries, datalib_catalog</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>datalib_countries(root<span class="op">=</span><span class="st">"Z:/datalib"</span>)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>datalib_catalog(root<span class="op">=</span><span class="st">"Z:/datalib"</span>)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Or from a shell, without importing:</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="co">#   python -m datalib ls --root Z:/datalib</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="tabset-3-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-3-tab">
+<div class="sourceCode" id="cb9"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>datalib_countries, root(<span class="st">"Z:/datalib"</span>)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>datalib_catalog,   root(<span class="st">"Z:/datalib"</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>* No `python -<span class="fu">m</span> datalib ls` equivalent <span class="kw">in</span> Stata; <span class="kw">use</span> interactive `datalib`.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div>
 </div>
-<p>The handbook text is released under <a href="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International (CC BY 4.0)</a>; the toolkit source code under <code>r/</code>, <code>python/</code>, and <code>stata/</code> is released under the MIT License. Attribute each part under its own license.</p>
+<p><code>datalib_catalog</code> inventories <strong>one root per call</strong>. That matters under the multi-root deployment described below: a full picture of a per-domain estate is one <code>datalib_catalog</code> call per root, not a single sweep.</p>
+</section>
+<section id="root-and-config-resolution" class="level2" data-number="18.3">
+<h2 data-number="18.3" class="anchored" data-anchor-id="root-and-config-resolution"><span class="header-section-number">18.3</span> Root and config resolution</h2>
+<p>Every function above needs to know <em>which</em> library root it is operating on, and the surface never guesses. It resolves the root through a fixed precedence chain, and the chain differs between the two script-language siblings and Stata:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Language</th>
+<th>Root precedence (first match wins)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>R / Python</td>
+<td>explicit <code>root =</code> argument → <code>DATALIB_ROOT</code> environment variable → language option (<code>options(datalib.root = )</code> in R) → the <code>datalib:</code> key in the user block of <code>~/.config/user_config.yml</code> → error</td>
+</tr>
+<tr class="even">
+<td>Stata</td>
+<td><code>root()</code> option → <code>${datalib}</code> session global → <code>DATALIB_ROOT</code> environment variable → error</td>
+</tr>
+</tbody>
+</table>
+<p>The two chains look different because Stata folds the config file in one step earlier. The <code>${datalib}</code> global is not an independent source: when it is unset, <code>getuserconfig</code> / <code>datalib_config</code> fill it <em>from the config key</em>. So once the config has been loaded into the session, a config-derived <code>${datalib}</code> outranks <code>DATALIB_ROOT</code> — the opposite of the R/Python ordering, where the environment variable outranks the config key. The precedence is identical in spirit (explicit argument beats session state beats environment beats file), but a Stata operator who sets <code>DATALIB_ROOT</code> expecting it to win should know the loaded config global sits ahead of it.</p>
+<p>This is where the boundary from the microdata-archive chapter becomes concrete at the file level. datalib reads its root from a <strong><code>datalib:</code> block</strong> in <code>~/.config/user_config.yml</code> — the <em>same file</em> the toolkit reads its own flat <code>dw_*</code> keys from, but a <strong>distinct namespace</strong> within it. The intent is one shared operator-config file across the office; the reality today is two separate namespaces in one file, because the toolkit’s own loader does not yet tolerate a <code>datalib:</code> block (a parser guard in <code>dw_load_config</code> is pending). The architecture chapter’s <em>configuration across the tiers</em> note is the authority on that caveat; treat the <code>datalib:</code> and <code>dw_*</code> keys as separate namespaces until it lifts.</p>
+<p>Two onboarding utilities put the pieces in place on a fresh machine, and each is one of the thirteen with a verbatim alias for muscle memory: <code>getuserconfig</code> / <code>datalib_config</code> writes and reads the per-operator config, including the <code>datalib:</code> root key, and <code>mapzdrive</code> / <code>datalib_map_drive</code> maps <code>Z:</code>. These, together with the loader itself, are the <strong>narrow slice</strong> slated to migrate into the CSO Toolkit under the <code>dw_*</code> prefix — the onboarding-plus-loader functions, not all thirteen. The architecture chapter frames datalib as a provisional tier-(ii) ecosystem package for exactly this reason: the handbook points at datalib’s own repository for the full surface and documents here only the positioning and the cross-cutting contracts. The migration does not change the boundary — a migrated <code>dw_</code>-prefixed loader would still read microdata from <code>Z:/datalib*</code>, never from <code>060.DW-MASTER</code>.</p>
+</section>
+<section id="errors" class="level2" data-number="18.4">
+<h2 data-number="18.4" class="anchored" data-anchor-id="errors"><span class="header-section-number">18.4</span> Errors</h2>
+<p>datalib raises a small, closed set of contract conditions, mapped consistently across the three languages: invalid input, not found (country / survey / vintage / file), config file missing, user block missing, and library root unset each map to a Stata exit code, an R condition class in the <code>datalib_error_*</code> family, and a Python exception; separately, per-module key validation failure during a merge stops with a typed error that <strong>names the offending module</strong>, so a duplicated or missing identifier is diagnosable without opening the data. The full mapping — Stata codes, R classes, Python exceptions, side by side — has a single home in the datalib section of the error-taxonomy appendix, and is not reproduced here.</p>
+</section>
+<section id="the-conformance-suite" class="level2" data-number="18.5">
+<h2 data-number="18.5" class="anchored" data-anchor-id="the-conformance-suite"><span class="header-section-number">18.5</span> The conformance suite</h2>
+<p>datalib’s conformance kit is an <strong>oracle</strong> harness: each implementation is run against a <em>committed specification of expected outputs</em>, not against the other implementations. As of <strong>datalib v0.7.0 / contract v1</strong>, the suite ships two golden-case files — <code>cases_resolve.csv</code> and <code>cases_load.csv</code> — exercised against a single committed synthetic fixture library and run per language: R with <code>testthat</code>, Python with <code>pytest</code>, and a Stata do-file harness. The precise case count lives in the repository and is deliberately left unstated in prose, because it grows survey by survey as collections are verified; what is fixed is the shape — resolve cases and load cases, one fixture tree, three runners, all asserting the same expected answers. Deliberate departures from the pre-contract Stata behaviour are recorded, with rationale, in <code>tests/DIVERGENCES.md</code>, so a divergence is a documented decision rather than a silent drift.</p>
+<p>It is worth setting this against the toolkit’s <strong>own</strong> conformance harness — the <code>conformance/</code> machinery shipped in <code>#134</code> — because the two are complementary designs, not the same tool applied twice. The toolkit’s harness is a <strong>parity</strong> harness: it runs the R, Python, and Stata siblings against <em>each other</em> and asserts they agree to a 1e-9 numeric tolerance. It answers <em>do the siblings agree?</em> datalib’s oracle harness answers a different question — <em>does each sibling match the specified answer?</em> — by checking every implementation against committed expected outputs. Parity guards against the siblings drifting apart; an oracle guards against all of them drifting together away from the specification. The collection registry (reproduced in the IHSN grammar chapter, and carrying the note that the IPUMS keys are unverified against real deposits, guarded per-module until one lands) is the shared source both languages consume, and the golden cases are the drift guard that keeps the hand-mirrored Stata copy byte-aligned with the R and Python copies. Read together, datalib’s oracle suite is the microdata counterpart of the toolkit’s contract discipline: the same conviction that a cross-language contract is only real if a test can fail when it is broken.</p>
+</section>
+<section id="access" class="level2" data-number="18.6">
+<h2 data-number="18.6" class="anchored" data-anchor-id="access"><span class="header-section-number">18.6</span> Access</h2>
+<p>Access: internal — request via the CSO team (repository visibility is tracked in datalib issue #20).</p>
 
 
 </section>
@@ -904,13 +1084,13 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="../front-matter/foreword.html" class="pagination-link" aria-label="Foreword">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Foreword</span>
+      <a href="../chapters/52-ihsn-grammar.html" class="pagination-link" aria-label="The IHSN convention and the folder grammar">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">The IHSN convention and the folder grammar</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../front-matter/authors.html" class="pagination-link" aria-label="About the authors">
-        <span class="nav-page-text">About the authors</span> <i class="bi bi-arrow-right-short"></i>
+      <a href="../chapters/61-ecosystem.html" class="pagination-link" aria-label="The UNICEF analytics ecosystem: three tiers">
+        <span class="nav-page-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">The UNICEF analytics ecosystem: three tiers</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
@@ -922,7 +1102,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 </div>   
     <div class="nav-footer-center">
       &nbsp;
-    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/unicef-drp/cso-toolkit/edit/main/book/front-matter/preface.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/unicef-drp/cso-toolkit/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/unicef-drp/cso-toolkit/edit/main/book/chapters/53-datalib-api-conformance.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/unicef-drp/cso-toolkit/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
     <div class="nav-footer-right">
 <p>Built with <a href="https://quarto.org">Quarto</a></p>
 </div>
