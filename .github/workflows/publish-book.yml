@@ -13,8 +13,14 @@ name: Handbook (Quarto book)
 # 2026-07-13 (#146). GitHub does not accept the built-in github-actions
 # identity in classic-protection bypass allowances, hence the PR route.
 # No trigger loop: this workflow's push paths are book/**, and the bot PR
-# touches only docs/handbook/**; its merge does trigger the dashboard
-# deploy, which is exactly what ships the refresh to Pages.
+# touches only docs/handbook/**. The bot merge is made with GITHUB_TOKEN,
+# so it does NOT trigger the dashboard's push run (GitHub's recursion
+# guard) — the final step dispatches dashboard.yml explicitly to ship the
+# refresh to Pages immediately instead of waiting for the nightly cron.
+# Near-simultaneous runs race benignly: renders are not byte-deterministic
+# (PDF timestamps, hashed asset names), so two runs produce conflicting
+# PRs; the loser detects that develop's docs/handbook moved past its base
+# and closes its own PR as superseded (first seen 2026-07-16, #148/#149).
 
 on:
   push:
@@ -34,6 +40,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      actions: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -61,9 +68,11 @@ jobs:
           set -euo pipefail
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          BASE_SHA=$(git rev-parse HEAD)
           git add docs/handbook
           if git diff --cached --quiet; then
             echo "No handbook changes to commit."
+            echo "merged=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           BRANCH="bot/handbook-rebuild-${GITHUB_RUN_ID}"
@@ -72,12 +81,42 @@ jobs:
           git push origin "$BRANCH"
           PR_URL=$(gh pr create --base develop --head "$BRANCH" \
             --title "chore(handbook): rebuild docs/handbook" \
-            --body "Automated rebuild of docs/handbook from ${GITHUB_SHA} (run ${GITHUB_RUN_ID}). Merges itself; on merge the dashboard workflow deploys the refreshed tree to Pages.")
+            --body "Automated rebuild of docs/handbook from ${GITHUB_SHA} (run ${GITHUB_RUN_ID}). Merges itself; the workflow then dispatches the dashboard deploy.")
           # develop requires a PR but 0 approvals and no required checks, so the
           # plain merge completes immediately; --auto is the fallback if required
-          # checks are ever added. A failed merge must be loud, not a warning —
-          # the silent-warning pattern is what hid the GH006 rejections.
-          gh pr merge "$PR_URL" --merge --delete-branch \
-            || gh pr merge "$PR_URL" --auto --merge --delete-branch \
+          # checks are ever added (repo auto-merge enabled 2026-07-16). A failed
+          # merge must be loud, not a warning — the silent-warning pattern is
+          # what hid the GH006 rejections.
+          if gh pr merge "$PR_URL" --merge --delete-branch; then
+            echo "merged=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # A sibling run may have merged its own refresh between our checkout
+          # and this merge; the PRs conflict because renders are not
+          # byte-deterministic. If develop's docs/handbook moved past our base,
+          # this refresh is superseded — close it and succeed (the sibling's
+          # run dispatches the deploy).
+          git fetch origin develop
+          if ! git diff --quiet "$BASE_SHA" origin/develop -- docs/handbook; then
+            gh pr close "$PR_URL" --delete-branch \
+              --comment "Superseded: a sibling publish-book run refreshed docs/handbook after this run's checkout."
+            echo "Refresh superseded by a sibling run; closed $PR_URL."
+            echo "merged=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          gh pr merge "$PR_URL" --auto --merge --delete-branch \
+            && echo "merged=true" >> "$GITHUB_OUTPUT" \
             || { echo "::error::could not merge $PR_URL automatically; the published handbook will go stale until it is merged"; exit 1; }
+        shell: bash
+        id: refresh
+
+      - name: Deploy via dashboard dispatch
+        if: github.event_name != 'pull_request' && steps.refresh.outputs.merged == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # The bot merge above was made with GITHUB_TOKEN, which never triggers
+          # the dashboard's push run — dispatch it so the refresh deploys now
+          # rather than at the nightly cron.
+          gh workflow run dashboard.yml --ref develop
         shell: bash
