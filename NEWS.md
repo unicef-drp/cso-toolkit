@@ -6,6 +6,28 @@ _Entries land here as PRs merge into `develop`. When the next release
 is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
+### Fixed
+
+- **Generated profiles no longer risk hanging on a dead-mapped Z: drive (R +
+  Python)** — `create_profile(include_z_drive_check = TRUE)` emitted
+  `dir.exists("Z:/")` (R) / `Path("Z:/").is_dir()` (Python), which on Windows
+  blocks for the full SMB timeout (tens of seconds to minutes) when the
+  drive letter is mapped but unreachable, e.g. off VPN. The generated profile
+  now defines a timeout-bounded probe (`.dw_drive_available()` /
+  `_dw_drive_available()`: `vol` in a child process capped at 3 s for drive
+  letters, a plain directory check otherwise), mirroring DW-Production's
+  profile. New tests: `test-create-profile-z-probe.R` (Z1–Z4) and
+  `test_profile_z_probe.py`.
+  ([#106](https://github.com/unicef-drp/cso-toolkit/issues/106), item 3)
+- **Vendored package READMEs no longer carry broken links (R, Python,
+  Stata)** — `r/R/README.md`, `python/src/README.md` and
+  `stata/src/README.md` linked to the rest of the repo with relative paths
+  (`../../NEWS.md`, `../../templates/.toolkit_manifest.yml`, …) that do not
+  exist once the folder is vendored into a consumer's `00_functions/`. The
+  19 links now point at the same files on GitHub (`main`), so they resolve
+  both upstream and in a vendored copy.
+  ([#106](https://github.com/unicef-drp/cso-toolkit/issues/106), item 2)
+
 ## v0.9.0 (2026-11-19)
 
 Inputs kept out of Git, verified against the deposit; runs compared from

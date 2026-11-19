@@ -1,6 +1,6 @@
 # python/src/ — Python helpers
 
-Python port of the R helpers in [`r/R/`](../../r/R/).  Same behaviour
+Python port of the R helpers in [`r/R/`](https://github.com/unicef-drp/cso-toolkit/tree/main/r/R/).  Same behaviour
 contract; mode-aware path routing, cached external-API access,
 provenance sidecars, and version-drift detection.
 
@@ -94,10 +94,10 @@ API-specific (lazy-imported by `dw_api_fetch`):
 
 ## See also
 
-- [Top-level README](../../README.md) — toolkit overview + architecture
+- [Top-level README](https://github.com/unicef-drp/cso-toolkit/blob/main/README.md) — toolkit overview + architecture
   diagram.
-- [`python/README.md`](../README.md) — Python package overview (install,
+- [`python/README.md`](https://github.com/unicef-drp/cso-toolkit/blob/main/python/README.md) — Python package overview (install,
   layout, quick start, testing).
-- [NEWS.md / Changelog](../../NEWS.md) — per-release notes.
-- Sibling implementations: [`r/R/README.md`](../../r/R/README.md)
-  · [`stata/src/README.md`](../../stata/src/README.md).
+- [NEWS.md / Changelog](https://github.com/unicef-drp/cso-toolkit/blob/main/NEWS.md) — per-release notes.
+- Sibling implementations: [`r/R/README.md`](https://github.com/unicef-drp/cso-toolkit/blob/main/r/R/README.md)
+  · [`stata/src/README.md`](https://github.com/unicef-drp/cso-toolkit/blob/main/stata/src/README.md).

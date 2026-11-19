@@ -34,7 +34,10 @@
 #'   block that reads `dw_mode` from `user_config.yml` and hard-fails when
 #'   missing? Default `TRUE`.
 #' @param include_z_drive_check Logical. Include the Z: drive availability
-#'   advisory block? Default `FALSE` (DW-Production-specific).
+#'   advisory block? Default `FALSE` (DW-Production-specific). The generated
+#'   check uses a timeout-bounded probe (`vol` in a child process, 3 s) for
+#'   drive letters, so a dead-mapped Z: cannot hang the profile; other paths
+#'   use `dir.exists()`.
 #' @param author Character. Author name for the header. Defaults to the
 #'   system user.
 #' @param overwrite Logical. If `FALSE` (default), stops when the target
@@ -129,8 +132,24 @@ create_profile <- function(repo_name,
     "#----------------------------------------",
     "# The Z: drive is the legacy Azure file-share mirror of canonical",
     "# deposits. Absence does NOT stop execution -- only an advisory.",
+    "#",
+    "# Timeout-bounded probe: dir.exists() on a Windows drive letter that is",
+    "# mapped but unreachable (e.g. Z: off VPN) blocks for the full SMB timeout",
+    "# -- tens of seconds to minutes. For a drive letter, probe with `vol` in a",
+    "# child process capped at `timeout` seconds; other paths use dir.exists().",
+    ".dw_drive_available <- function(root, timeout = 3) {",
+    "  is_drive_letter <- .Platform$OS.type == \"windows\" &&",
+    "    nchar(root) <= 3 && substr(root, 2, 2) == \":\"",
+    "  if (!is_drive_letter) return(dir.exists(root))",
+    "  rc <- tryCatch(",
+    "    system2(\"cmd\", c(\"/c\", \"vol\", substr(root, 1, 2)),",
+    "            stdout = FALSE, stderr = FALSE, timeout = timeout),",
+    "    error = function(e) 1L, warning = function(w) 1L",
+    "  )",
+    "  isTRUE(rc == 0L)",
+    "}",
     "network_root <- \"Z:/\"",
-    "dw_z_available <- dir.exists(network_root)",
+    "dw_z_available <- .dw_drive_available(network_root)",
     "if (!dw_z_available) {",
     "  red  <- function(s) paste0(\"\\033[31m\", s, \"\\033[0m\")",
     "  bold <- function(s) paste0(\"\\033[1m\", s, \"\\033[0m\")",

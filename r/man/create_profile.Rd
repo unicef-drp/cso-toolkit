@@ -45,7 +45,10 @@ block that reads `dw_mode` from `user_config.yml` and hard-fails when
 missing? Default `TRUE`.}
 
 \item{include_z_drive_check}{Logical. Include the Z: drive availability
-advisory block? Default `FALSE` (DW-Production-specific).}
+advisory block? Default `FALSE` (DW-Production-specific). The generated
+check uses a timeout-bounded probe (`vol` in a child process, 3 s) for
+drive letters, so a dead-mapped Z: cannot hang the profile; other paths
+use `dir.exists()`.}
 
 \item{author}{Character. Author name for the header. Defaults to the
 system user.}
