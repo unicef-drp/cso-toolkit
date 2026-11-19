@@ -6,6 +6,11 @@ _Entries land here as PRs merge into `develop`. When the next release
 is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
+## v0.9.0 (2026-11-19)
+
+Inputs kept out of Git, verified against the deposit; runs compared from
+their provenance sidecars.
+
 ### Added
 
 - **`dw_fetch_inputs()` and `dw_check_deposit()` (R only)** — for pipelines
@@ -31,6 +36,27 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
   `dw_fetch_inputs()`. Use `dw_compare()` next for the record-level diff.
   Python and Stata siblings are planned
   ([#152](https://github.com/unicef-drp/cso-toolkit/issues/152)).
+  ([#153](https://github.com/unicef-drp/cso-toolkit/pull/153))
+
+### Documentation
+
+- **The four functions are documented wherever their IO-contract siblings
+  are** — the IO contract chapter (with R / Python / Stata tabs), the error
+  taxonomy (each envelope and its Fix), the provenance schema (the
+  `metadata.inputs` record), the glossary (new "Deposit check" and "Input
+  manifest" entries), the roles tables, the README and the DBM submission
+  template. ([#155](https://github.com/unicef-drp/cso-toolkit/pull/155))
+
+### Fixed
+
+- **`dw_toolkit_version()` reported `"0.6.0"` in v0.7.0 and v0.8.0** — the
+  R (`r/R/dw_io.R` header, docstring, return value) and Python
+  (`python/src/dw_io.py` `_TOOLKIT_VERSION`) stamps were not bumped in those
+  two releases, so `dw_stage()`'s `.staged.json` sidecars and `dw_publish()`
+  payloads written under them record `0.6.0` (`dw_save()`'s
+  `.provenance.json` does not carry the toolkit version). Both now report
+  `0.9.0`; a `0.6.0` stamp written after 2026-07-12 means "v0.6.0, v0.7.0 or
+  v0.8.0".
 
 ## v0.8.0 (2026-07-13)
 
