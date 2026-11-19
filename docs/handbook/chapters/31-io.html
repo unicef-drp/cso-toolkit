@@ -83,7 +83,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-4c5e755a3bfe43f3706dcc37cc2065fe.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-554944da459c622dc457c1ed647c448c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -437,11 +437,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#dw_verify_z-z-mirror-integrity" id="toc-dw_verify_z-z-mirror-integrity" class="nav-link" data-scroll-target="#dw_verify_z-z-mirror-integrity"><span class="header-section-number">7.5.2</span> <code>dw_verify_z</code> — Z: mirror integrity</a></li>
   <li><a href="#dw_root-mode-aware-data-root" id="toc-dw_root-mode-aware-data-root" class="nav-link" data-scroll-target="#dw_root-mode-aware-data-root"><span class="header-section-number">7.5.3</span> <code>dw_root</code> — mode-aware data root</a></li>
   <li><a href="#dw_stage-reviewer-mode-sandbox-staging" id="toc-dw_stage-reviewer-mode-sandbox-staging" class="nav-link" data-scroll-target="#dw_stage-reviewer-mode-sandbox-staging"><span class="header-section-number">7.5.4</span> <code>dw_stage</code> — reviewer-mode sandbox staging</a></li>
+  <li><a href="#dw_fetch_inputs-and-dw_check_deposit-inputs-kept-out-of-git" id="toc-dw_fetch_inputs-and-dw_check_deposit-inputs-kept-out-of-git" class="nav-link" data-scroll-target="#dw_fetch_inputs-and-dw_check_deposit-inputs-kept-out-of-git"><span class="header-section-number">7.5.5</span> <code>dw_fetch_inputs</code> and <code>dw_check_deposit</code> — inputs kept out of Git</a></li>
   </ul></li>
   <li><a href="#comparing-and-joining" id="toc-comparing-and-joining" class="nav-link" data-scroll-target="#comparing-and-joining"><span class="header-section-number">7.6</span> Comparing and joining</a>
   <ul class="collapse">
   <li><a href="#dw_compare-three-way-diff-against-a-reference" id="toc-dw_compare-three-way-diff-against-a-reference" class="nav-link" data-scroll-target="#dw_compare-three-way-diff-against-a-reference"><span class="header-section-number">7.6.1</span> <code>dw_compare</code> — three-way diff against a reference</a></li>
-  <li><a href="#dw_merge-stata-style-join-with-cardinality-assertion" id="toc-dw_merge-stata-style-join-with-cardinality-assertion" class="nav-link" data-scroll-target="#dw_merge-stata-style-join-with-cardinality-assertion"><span class="header-section-number">7.6.2</span> <code>dw_merge</code> — Stata-style join with cardinality assertion</a></li>
+  <li><a href="#dw_read_provenance-and-dw_provenance_diff-did-this-run-reproduce-the-last-one" id="toc-dw_read_provenance-and-dw_provenance_diff-did-this-run-reproduce-the-last-one" class="nav-link" data-scroll-target="#dw_read_provenance-and-dw_provenance_diff-did-this-run-reproduce-the-last-one"><span class="header-section-number">7.6.2</span> <code>dw_read_provenance</code> and <code>dw_provenance_diff</code> — did this run reproduce the last one?</a></li>
+  <li><a href="#dw_merge-stata-style-join-with-cardinality-assertion" id="toc-dw_merge-stata-style-join-with-cardinality-assertion" class="nav-link" data-scroll-target="#dw_merge-stata-style-join-with-cardinality-assertion"><span class="header-section-number">7.6.3</span> <code>dw_merge</code> — Stata-style join with cardinality assertion</a></li>
   </ul></li>
   <li><a href="#putting-it-together" id="toc-putting-it-together" class="nav-link" data-scroll-target="#putting-it-together"><span class="header-section-number">7.7</span> Putting it together</a></li>
   </ul>
@@ -481,7 +483,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>An <strong>error envelope</strong> is the toolkit’s structured failure message: it always states WHAT failed, WHY, and HOW to fix it. The same shape is used for hard stops and for non-blocking warnings (see the error-taxonomy appendix).</li>
 <li><strong>AppLocker</strong> is the Windows policy on locked-down UNICEF laptops that blocks unsigned executables. It is why the Stata side never shells out to an external binary — a constraint that shapes two of the design boundaries below.</li>
 </ul>
-<p>The <code>kind</code> argument that appears throughout selects which of three data roots a path resolves against: <code>raw</code> (inputs), <code>wrk</code> (working outputs), or <code>meta</code> (metadata). The functions covered here are <code>dw_save</code>, <code>dw_use</code>, <code>dw_compare</code>, <code>dw_merge</code>, <code>dw_isid</code>, <code>dw_verify_z</code>, <code>dw_stage</code>, and <code>dw_root</code>. They live in <code>r/R/dw_io.R</code>, <code>python/src/dw_io.py</code>, and the <code>.ado</code> files under <code>stata/src/</code>.</p>
+<p>The <code>kind</code> argument that appears throughout selects which of three data roots a path resolves against: <code>raw</code> (inputs), <code>wrk</code> (working outputs), or <code>meta</code> (metadata). The functions covered here are <code>dw_save</code>, <code>dw_use</code>, <code>dw_compare</code>, <code>dw_merge</code>, <code>dw_isid</code>, <code>dw_verify_z</code>, <code>dw_stage</code>, <code>dw_root</code>, <code>dw_fetch_inputs</code>, <code>dw_check_deposit</code>, <code>dw_read_provenance</code>, and <code>dw_provenance_diff</code>. They live in <code>r/R/dw_io.R</code>, <code>python/src/dw_io.py</code>, and the <code>.ado</code> files under <code>stata/src/</code>.</p>
 </section>
 <section id="auto-dispatch-by-extension" class="level2" data-number="7.2">
 <h2 data-number="7.2" class="anchored" data-anchor-id="auto-dispatch-by-extension"><span class="header-section-number">7.2</span> Auto-dispatch by extension</h2>
@@ -884,6 +886,40 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <p><code>dw_stage</code> and <code>dw_use</code>’s <code>stage =</code> integration are R-only. The <code>.staged.json</code> sidecar is deliberately distinct from <code>dw_save</code>’s <code>.provenance.json</code>, so a file that is both written by <code>dw_save</code> and staged by <code>dw_stage</code> carries both metadata blocks side by side; each reader refuses to misread the other’s schema by checking a <code>type</code> discriminator.</p>
 </section>
+<section id="dw_fetch_inputs-and-dw_check_deposit-inputs-kept-out-of-git" class="level3" data-number="7.5.5">
+<h3 data-number="7.5.5" class="anchored" data-anchor-id="dw_fetch_inputs-and-dw_check_deposit-inputs-kept-out-of-git"><span class="header-section-number">7.5.5</span> <code>dw_fetch_inputs</code> and <code>dw_check_deposit</code> — inputs kept out of Git</h3>
+<p>Some pipelines keep their raw inputs out of Git — Consult-tool exports, licensed microdata, large deliveries — in a gitignored folder of the consumer repository. The copy that makes such a run reproducible is the one deposited in the canonical store, so the toolkit treats the deposit as the source of truth. The local folder mirrors a deposit folder: <code>&lt;repo&gt;/&lt;rel_dir&gt;</code> corresponds to <code>&lt;teamsFolderCanonical&gt;/&lt;rel_dir&gt;</code> on Teams and <code>&lt;dwZDrive&gt;/&lt;rel_dir&gt;</code> on Z:.</p>
+<p><code>dw_fetch_inputs</code> (R only) runs at the top of such a pipeline:</p>
+<ul>
+<li>it lists the input files (matching <code>pattern</code>) locally and in the deposit folder on Teams and on Z:;</li>
+<li>it stops when Teams and Z: hold different versions of the same file (the same canonical-integrity rule as <code>dw_stage</code>);</li>
+<li>it copies deposit-only files into the local folder — Z: preferred, each copy SHA-256-verified and moved into place by atomic rename — or, with <code>copy = FALSE</code>, leaves the folder untouched and returns the deposit paths to read in place;</li>
+<li>with <code>gitkeep = TRUE</code> (the default) it creates the local folder and every local or deposit subfolder, each with an empty <code>.gitkeep</code>, so the layout stays visible even though the data files are gitignored (the consumer’s <code>.gitignore</code> needs <code>!&lt;rel_dir&gt;/**/</code> and <code>!&lt;rel_dir&gt;/**/.gitkeep</code> exceptions); <code>.gitkeep</code> files are never treated as inputs;</li>
+<li>it finishes with <code>dw_check_deposit</code>, so any local file that is missing from the deposit, or differs from it, stops the run.</li>
+</ul>
+<p>It returns the <strong>input manifest</strong>: one row per input with <code>file</code>, <code>path</code> (what to read), <code>sha256</code>, <code>origin</code> (<code>local</code>, <code>copied from Z:</code>, <code>copied from Teams</code>, <code>read from …</code>), and the Teams and Z: status. <code>dw_check_deposit</code> can also be called on its own: a file passes when an identical copy exists on Teams or Z: and no existing copy differs, so an unmounted Z: is fine when Teams matches; <code>stop_on_fail = FALSE</code> returns the per-file report (<code>match</code>, <code>differs</code>, <code>missing</code>, <code>no access</code>) instead of stopping. Both functions only read the deposit and write only under the local folder, so they behave identically in producer and reviewer sessions.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-11-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-11-1" role="tab" aria-controls="tabset-11-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-11-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-11-2" role="tab" aria-controls="tabset-11-2" aria-selected="false" href="">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-11-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-11-3" role="tab" aria-controls="tabset-11-3" aria-selected="false" href="">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-11-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-11-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>rel <span class="ot">&lt;-</span> <span class="st">"02_consultations/023_targets/inputs"</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>manifest <span class="ot">&lt;-</span> <span class="fu">dw_fetch_inputs</span>(</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">local_root =</span> <span class="fu">file.path</span>(projectFolder, rel),</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">rel_dir    =</span> rel,</span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">pattern    =</span> <span class="st">"_20(23|24|25)</span><span class="sc">\\</span><span class="st">.(csv|txt)$"</span></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>inputs <span class="ot">&lt;-</span> <span class="fu">lapply</span>(manifest<span class="sc">$</span>path, readr<span class="sc">::</span>read_csv)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="tabset-11-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-11-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Not available — dw_fetch_inputs and dw_check_deposit are R-only (#152).</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="tabset-11-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-11-3-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>* Not available — dw_fetch_inputs and dw_check_deposit are R-only (#152).</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<p>Record the manifest in the outputs’ sidecars — <code>dw_save(..., metadata = list(inputs = manifest[, c("file", "sha256", "origin")]))</code> — so each output names the exact inputs it was built from; <code>dw_provenance_diff</code> (below) reads that record back.</p>
+</section>
 </section>
 <section id="comparing-and-joining" class="level2" data-number="7.6">
 <h2 data-number="7.6" class="anchored" data-anchor-id="comparing-and-joining"><span class="header-section-number">7.6</span> Comparing and joining</h2>
@@ -891,71 +927,104 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 data-number="7.6.1" class="anchored" data-anchor-id="dw_compare-three-way-diff-against-a-reference"><span class="header-section-number">7.6.1</span> <code>dw_compare</code> — three-way diff against a reference</h3>
 <p><code>dw_compare</code> answers “what changed since the last deposit?” It keys two data frames on <code>by</code>, then classifies rows as <strong>added</strong> (present in current, absent in reference), <strong>removed</strong> (the reverse), and <strong>changed</strong> (present in both, with a differing value column). Numeric columns can compare within a tolerance; string columns normalise missing-equivalents (<code>""</code>, <code>"NA"</code>, <code>"N/A"</code>, <code>"NULL"</code>, <code>"."</code>) to equal. In R and Python it returns a list with a one-row <code>summary</code> plus the <code>added</code>, <code>removed</code>, and <code>changed</code> frames, and can optionally write per-segment CSV reports.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-11-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-11-1" role="tab" aria-controls="tabset-11-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-11-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-11-2" role="tab" aria-controls="tabset-11-2" aria-selected="false" href="">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-11-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-11-3" role="tab" aria-controls="tabset-11-3" aria-selected="false" href="">Stata</a></li></ul>
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-12-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-12-1" role="tab" aria-controls="tabset-12-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-12-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-12-2" role="tab" aria-controls="tabset-12-2" aria-selected="false" href="">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-12-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-12-3" role="tab" aria-controls="tabset-12-3" aria-selected="false" href="">Stata</a></li></ul>
 <div class="tab-content">
-<div id="tabset-11-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-11-1-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>report <span class="ot">&lt;-</span> <span class="fu">dw_compare</span>(</span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">current   =</span> <span class="fu">dw_use</span>(<span class="at">name =</span> <span class="st">"dw_ed_edu.csv"</span>, <span class="at">sector =</span> <span class="st">"ed"</span>, <span class="at">kind =</span> <span class="st">"wrk"</span>),</span>
-<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">reference =</span> <span class="fu">dw_use</span>(<span class="at">path =</span> <span class="fu">file.path</span>(teamsWrkDataCanonical, <span class="st">"ed/dw_ed_edu.csv"</span>)),</span>
-<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">by         =</span> <span class="fu">c</span>(<span class="st">"DATAFLOW"</span>, <span class="st">"REF_AREA"</span>, <span class="st">"INDICATOR"</span>, <span class="st">"SEX"</span>,</span>
-<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>                 <span class="st">"WEALTH_QUINTILE"</span>, <span class="st">"TIME_PERIOD"</span>),</span>
-<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">value_cols =</span> <span class="fu">c</span>(<span class="st">"OBS_VALUE"</span>, <span class="st">"DATA_SOURCE"</span>),</span>
-<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">numeric_value_cols =</span> <span class="st">"OBS_VALUE"</span>,</span>
-<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">tol        =</span> <span class="fl">1e-5</span>,</span>
-<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">label      =</span> <span class="st">"ed_dw_edu"</span>,</span>
-<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">write_report_to =</span> <span class="fu">file.path</span>(<span class="fu">tempdir</span>(), <span class="st">"ed_compare"</span>)</span>
-<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a>report<span class="sc">$</span>summary</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="tabset-12-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-12-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>report <span class="ot">&lt;-</span> <span class="fu">dw_compare</span>(</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">current   =</span> <span class="fu">dw_use</span>(<span class="at">name =</span> <span class="st">"dw_ed_edu.csv"</span>, <span class="at">sector =</span> <span class="st">"ed"</span>, <span class="at">kind =</span> <span class="st">"wrk"</span>),</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">reference =</span> <span class="fu">dw_use</span>(<span class="at">path =</span> <span class="fu">file.path</span>(teamsWrkDataCanonical, <span class="st">"ed/dw_ed_edu.csv"</span>)),</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">by         =</span> <span class="fu">c</span>(<span class="st">"DATAFLOW"</span>, <span class="st">"REF_AREA"</span>, <span class="st">"INDICATOR"</span>, <span class="st">"SEX"</span>,</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>                 <span class="st">"WEALTH_QUINTILE"</span>, <span class="st">"TIME_PERIOD"</span>),</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">value_cols =</span> <span class="fu">c</span>(<span class="st">"OBS_VALUE"</span>, <span class="st">"DATA_SOURCE"</span>),</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">numeric_value_cols =</span> <span class="st">"OBS_VALUE"</span>,</span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">tol        =</span> <span class="fl">1e-5</span>,</span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">label      =</span> <span class="st">"ed_dw_edu"</span>,</span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">write_report_to =</span> <span class="fu">file.path</span>(<span class="fu">tempdir</span>(), <span class="st">"ed_compare"</span>)</span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>report<span class="sc">$</span>summary</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<div id="tabset-11-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-11-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>report <span class="op">=</span> dw_compare(</span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>    current<span class="op">=</span>dw_use(name<span class="op">=</span><span class="st">"dw_ed_edu.csv"</span>, sector<span class="op">=</span><span class="st">"ed"</span>, kind<span class="op">=</span><span class="st">"wrk"</span>),</span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    reference<span class="op">=</span>dw_use(path<span class="op">=</span>ref_path),</span>
-<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>    by<span class="op">=</span>[<span class="st">"DATAFLOW"</span>, <span class="st">"REF_AREA"</span>, <span class="st">"INDICATOR"</span>, <span class="st">"SEX"</span>,</span>
-<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">"WEALTH_QUINTILE"</span>, <span class="st">"TIME_PERIOD"</span>],</span>
-<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>    value_cols<span class="op">=</span>[<span class="st">"OBS_VALUE"</span>, <span class="st">"DATA_SOURCE"</span>],</span>
-<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>    numeric_value_cols<span class="op">=</span>[<span class="st">"OBS_VALUE"</span>],</span>
-<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>    tol<span class="op">=</span><span class="fl">1e-5</span>,</span>
-<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>    label<span class="op">=</span><span class="st">"ed_dw_edu"</span>,</span>
-<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>report[<span class="st">"summary"</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="tabset-12-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-12-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>report <span class="op">=</span> dw_compare(</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>    current<span class="op">=</span>dw_use(name<span class="op">=</span><span class="st">"dw_ed_edu.csv"</span>, sector<span class="op">=</span><span class="st">"ed"</span>, kind<span class="op">=</span><span class="st">"wrk"</span>),</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>    reference<span class="op">=</span>dw_use(path<span class="op">=</span>ref_path),</span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>    by<span class="op">=</span>[<span class="st">"DATAFLOW"</span>, <span class="st">"REF_AREA"</span>, <span class="st">"INDICATOR"</span>, <span class="st">"SEX"</span>,</span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">"WEALTH_QUINTILE"</span>, <span class="st">"TIME_PERIOD"</span>],</span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>    value_cols<span class="op">=</span>[<span class="st">"OBS_VALUE"</span>, <span class="st">"DATA_SOURCE"</span>],</span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>    numeric_value_cols<span class="op">=</span>[<span class="st">"OBS_VALUE"</span>],</span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>    tol<span class="op">=</span><span class="fl">1e-5</span>,</span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>    label<span class="op">=</span><span class="st">"ed_dw_edu"</span>,</span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a>report[<span class="st">"summary"</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<div id="tabset-11-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-11-3-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>* idvars / valuevars / tol / <span class="kw">report</span> / <span class="kw">label</span>; compares <span class="kw">two</span> .dta files</span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>dw_compare , current(<span class="st">"dw_ed_edu.dta"</span>) reference(<span class="st">"ref_dw_ed_edu.dta"</span>) <span class="co">///</span></span>
-<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    idvars(DATAFLOW REF_AREA INDICATOR SEX WEALTH_QUINTILE TIME_PERIOD) <span class="co">///</span></span>
-<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>    valuevars(OBS_VALUE) tol(0.00001) <span class="kw">label</span>(<span class="st">"ed_dw_edu"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="tabset-12-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-12-3-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>* idvars / valuevars / tol / <span class="kw">report</span> / <span class="kw">label</span>; compares <span class="kw">two</span> .dta files</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>dw_compare , current(<span class="st">"dw_ed_edu.dta"</span>) reference(<span class="st">"ref_dw_ed_edu.dta"</span>) <span class="co">///</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>    idvars(DATAFLOW REF_AREA INDICATOR SEX WEALTH_QUINTILE TIME_PERIOD) <span class="co">///</span></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>    valuevars(OBS_VALUE) tol(0.00001) <span class="kw">label</span>(<span class="st">"ed_dw_edu"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 </div>
 <p><code>dw_compare</code> tolerates a degenerate first deposit gracefully: in R and Python a missing or unreadable reference is treated as empty (with a warning), so every current row reports as added rather than crashing the run. Note the divergences. R and Python name the arguments <code>value_cols</code> / <code>numeric_value_cols</code>; Stata uses <code>valuevars</code> and infers numeric-versus-string comparison from each variable’s storage type. The numeric tolerance defaults differ too — <code>1e-5</code> in R and Python, <code>1e-8</code> in Stata — so set <code>tol</code> explicitly when it matters. The Stata <code>dw_compare</code> prints a console summary and, via <code>report()</code>, an optional Markdown file of row counts and per-column change counts; it is sized for a publication-gate diff, not the rich row-level Markdown of its upstream <code>comparefiles</code> ancestor.</p>
 </section>
-<section id="dw_merge-stata-style-join-with-cardinality-assertion" class="level3" data-number="7.6.2">
-<h3 data-number="7.6.2" class="anchored" data-anchor-id="dw_merge-stata-style-join-with-cardinality-assertion"><span class="header-section-number">7.6.2</span> <code>dw_merge</code> — Stata-style join with cardinality assertion</h3>
+<section id="dw_read_provenance-and-dw_provenance_diff-did-this-run-reproduce-the-last-one" class="level3" data-number="7.6.2">
+<h3 data-number="7.6.2" class="anchored" data-anchor-id="dw_read_provenance-and-dw_provenance_diff-did-this-run-reproduce-the-last-one"><span class="header-section-number">7.6.2</span> <code>dw_read_provenance</code> and <code>dw_provenance_diff</code> — did this run reproduce the last one?</h3>
+<p><code>dw_compare</code> says which records moved; <code>dw_provenance_diff</code> (R only) answers the question before it, from the <code>dw_save</code> sidecars alone and without reading any data: did the new run reproduce the previous one? <code>dw_read_provenance</code> reads the <code>&lt;path&gt;.provenance.json</code> sidecar of an output (or returns <code>NULL</code> when there is none); read the previous one <strong>before</strong> the new run overwrites the output. <code>dw_provenance_diff</code> then compares the two sidecars — inputs through the <code>metadata$inputs</code> record (<code>file</code> + <code>sha256</code> per input, the shape of the <code>dw_fetch_inputs</code> manifest), outputs through <code>sha256</code> — and returns a status:</p>
+<ul>
+<li><strong><code>reproduced</code></strong> — same inputs and a byte-identical output;</li>
+<li><strong><code>inputs_changed</code></strong> — input files were added, removed, or changed; the three lists are returned;</li>
+<li><strong><code>output_changed</code></strong> — the same inputs but a different output, which only the code or the environment can explain; it warns with an envelope;</li>
+<li><strong><code>first_run</code></strong> — there is no previous sidecar;</li>
+<li><strong><code>no_input_record</code></strong> — a sidecar predates the input record, so only the output hashes are compared.</li>
+</ul>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-13-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-13-1" role="tab" aria-controls="tabset-13-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-13-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-13-2" role="tab" aria-controls="tabset-13-2" aria-selected="false" href="">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-13-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-13-3" role="tab" aria-controls="tabset-13-3" aria-selected="false" href="">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-13-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-13-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>previous <span class="ot">&lt;-</span> <span class="fu">dw_read_provenance</span>(out_csv)      <span class="co"># NULL on the first run</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dw_save</span>(result, <span class="at">path =</span> out_csv, <span class="at">isid =</span> key,</span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>        <span class="at">metadata =</span> <span class="fu">list</span>(<span class="at">inputs =</span> manifest[, <span class="fu">c</span>(<span class="st">"file"</span>, <span class="st">"sha256"</span>, <span class="st">"origin"</span>)]))</span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>run <span class="ot">&lt;-</span> <span class="fu">dw_provenance_diff</span>(previous, out_csv)</span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>run<span class="sc">$</span>status                                   <span class="co"># e.g. "reproduced"</span></span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a><span class="co"># then, record by record</span></span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a><span class="fu">dw_compare</span>(<span class="at">current =</span> result, <span class="at">reference =</span> previous_df, <span class="at">by =</span> key)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="tabset-13-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-13-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Not available — dw_read_provenance and dw_provenance_diff are R-only (#152).</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="tabset-13-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-13-3-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb40"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>* Not available — dw_read_provenance and dw_provenance_diff are R-only (#152).</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<p><code>dw_provenance_diff</code> never stops on a difference; only a missing current sidecar or an invalid one is an error. The status is the caller’s to act on — log it, fail a CI job on <code>output_changed</code>, or follow up with <code>dw_compare</code>.</p>
+</section>
+<section id="dw_merge-stata-style-join-with-cardinality-assertion" class="level3" data-number="7.6.3">
+<h3 data-number="7.6.3" class="anchored" data-anchor-id="dw_merge-stata-style-join-with-cardinality-assertion"><span class="header-section-number">7.6.3</span> <code>dw_merge</code> — Stata-style join with cardinality assertion</h3>
 <p><code>dw_merge</code> is a join that <em>asserts its cardinality</em>. You declare <code>how</code> as one of <code>m:1</code>, <code>1:1</code>, <code>1:m</code>, or <code>m:m</code>, and the helper warns when the actual duplication of the keys on either side disagrees with what you declared — catching the silent fan-out that turns a clean join into a row explosion. The <code>using</code> side can be a data frame already in memory or a path string, which is auto-read through <code>dw_use</code>.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-12-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-12-1" role="tab" aria-controls="tabset-12-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-12-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-12-2" role="tab" aria-controls="tabset-12-2" aria-selected="false" href="">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-12-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-12-3" role="tab" aria-controls="tabset-12-3" aria-selected="false" href="">Stata</a></li></ul>
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-14-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-14-1" role="tab" aria-controls="tabset-14-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-14-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-14-2" role="tab" aria-controls="tabset-14-2" aria-selected="false" href="">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-14-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-14-3" role="tab" aria-controls="tabset-14-3" aria-selected="false" href="">Stata</a></li></ul>
 <div class="tab-content">
-<div id="tabset-12-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-12-1-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>enriched <span class="ot">&lt;-</span> <span class="fu">dw_merge</span>(</span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>  edu_sdg_uis,</span>
-<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">using =</span> <span class="fu">file.path</span>(teamsRawData, <span class="st">"ed/metadata/regions.csv"</span>),</span>
-<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">by    =</span> <span class="st">"ISO3"</span>,</span>
-<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">how   =</span> <span class="st">"m:1"</span></span>
-<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="tabset-14-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-14-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>enriched <span class="ot">&lt;-</span> <span class="fu">dw_merge</span>(</span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>  edu_sdg_uis,</span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">using =</span> <span class="fu">file.path</span>(teamsRawData, <span class="st">"ed/metadata/regions.csv"</span>),</span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">by    =</span> <span class="st">"ISO3"</span>,</span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">how   =</span> <span class="st">"m:1"</span></span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<div id="tabset-12-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-12-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>enriched <span class="op">=</span> dw_merge(</span>
-<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>    edu_sdg_uis,</span>
-<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>    using<span class="op">=</span>os.path.join(teamsRawData, <span class="st">"ed/metadata/regions.csv"</span>),</span>
-<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>    by<span class="op">=</span><span class="st">"ISO3"</span>,</span>
-<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>    how<span class="op">=</span><span class="st">"m:1"</span>,</span>
-<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="tabset-14-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-14-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb42"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>enriched <span class="op">=</span> dw_merge(</span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>    edu_sdg_uis,</span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>    using<span class="op">=</span>os.path.join(teamsRawData, <span class="st">"ed/metadata/regions.csv"</span>),</span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>    by<span class="op">=</span><span class="st">"ISO3"</span>,</span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>    how<span class="op">=</span><span class="st">"m:1"</span>,</span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<div id="tabset-12-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-12-3-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>* Stata has the native `merge`, which already takes the cardinality;</span>
-<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>* dw_merge is an R / Python helper.</span>
-<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="kw">merge</span> <span class="fu">m</span>:1 ISO3 <span class="kw">using</span> <span class="st">"regions.dta"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="tabset-14-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-14-3-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb43"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>* Stata has the native `merge`, which already takes the cardinality;</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>* dw_merge is an R / Python helper.</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a><span class="kw">merge</span> <span class="fu">m</span>:1 ISO3 <span class="kw">using</span> <span class="st">"regions.dta"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 </div>
@@ -966,40 +1035,40 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 data-number="7.7" class="anchored" data-anchor-id="putting-it-together"><span class="header-section-number">7.7</span> Putting it together</h2>
 <p>A typical producer step reads its inputs, prepares the data, asserts uniqueness, and deposits the result with provenance — all through the contract, so the same script runs unmodified in reviewer mode (reading network-first, writing only to the sandbox) and in producer mode (reading local-first, writing redundantly to Teams and Z:):</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-13-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-13-1" role="tab" aria-controls="tabset-13-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-13-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-13-2" role="tab" aria-controls="tabset-13-2" aria-selected="false" href="">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-13-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-13-3" role="tab" aria-controls="tabset-13-3" aria-selected="false" href="">Stata</a></li></ul>
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-15-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-15-1" role="tab" aria-controls="tabset-15-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-15-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-15-2" role="tab" aria-controls="tabset-15-2" aria-selected="false" href="">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-15-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-15-3" role="tab" aria-controls="tabset-15-3" aria-selected="false" href="">Stata</a></li></ul>
 <div class="tab-content">
-<div id="tabset-13-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-13-1-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>raw <span class="ot">&lt;-</span> <span class="fu">dw_use</span>(<span class="at">name =</span> <span class="st">"uis_sdg.parquet"</span>, <span class="at">sector =</span> <span class="st">"ed"</span>, <span class="at">kind =</span> <span class="st">"raw"</span>)</span>
-<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>edu <span class="ot">&lt;-</span> <span class="fu">aggregate_indicators</span>(raw)          <span class="co"># ... your prep ...</span></span>
-<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a><span class="fu">dw_save</span>(edu, <span class="at">name =</span> <span class="st">"dw_ed_edu.csv"</span>, <span class="at">sector =</span> <span class="st">"ed"</span>, <span class="at">kind =</span> <span class="st">"wrk"</span>,</span>
-<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>        <span class="at">isid =</span> <span class="fu">c</span>(<span class="st">"REF_AREA"</span>, <span class="st">"INDICATOR"</span>, <span class="st">"TIME_PERIOD"</span>),</span>
-<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a>        <span class="at">metadata =</span> <span class="fu">list</span>(<span class="at">title =</span> <span class="st">"Education indicators"</span>,</span>
-<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a>                        <span class="at">producer =</span> <span class="st">"ed/02_aggregate.R"</span>,</span>
-<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a>                        <span class="at">sources =</span> <span class="fu">c</span>(<span class="st">"UIS bulk SDG_092025"</span>),</span>
-<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a>                        <span class="at">vintage =</span> <span class="st">"2026-05"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="tabset-15-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-15-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>raw <span class="ot">&lt;-</span> <span class="fu">dw_use</span>(<span class="at">name =</span> <span class="st">"uis_sdg.parquet"</span>, <span class="at">sector =</span> <span class="st">"ed"</span>, <span class="at">kind =</span> <span class="st">"raw"</span>)</span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>edu <span class="ot">&lt;-</span> <span class="fu">aggregate_indicators</span>(raw)          <span class="co"># ... your prep ...</span></span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a><span class="fu">dw_save</span>(edu, <span class="at">name =</span> <span class="st">"dw_ed_edu.csv"</span>, <span class="at">sector =</span> <span class="st">"ed"</span>, <span class="at">kind =</span> <span class="st">"wrk"</span>,</span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a>        <span class="at">isid =</span> <span class="fu">c</span>(<span class="st">"REF_AREA"</span>, <span class="st">"INDICATOR"</span>, <span class="st">"TIME_PERIOD"</span>),</span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a>        <span class="at">metadata =</span> <span class="fu">list</span>(<span class="at">title =</span> <span class="st">"Education indicators"</span>,</span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a>                        <span class="at">producer =</span> <span class="st">"ed/02_aggregate.R"</span>,</span>
+<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a>                        <span class="at">sources =</span> <span class="fu">c</span>(<span class="st">"UIS bulk SDG_092025"</span>),</span>
+<span id="cb44-9"><a href="#cb44-9" aria-hidden="true" tabindex="-1"></a>                        <span class="at">vintage =</span> <span class="st">"2026-05"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<div id="tabset-13-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-13-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>raw <span class="op">=</span> dw_use(name<span class="op">=</span><span class="st">"uis_sdg.parquet"</span>, sector<span class="op">=</span><span class="st">"ed"</span>, kind<span class="op">=</span><span class="st">"raw"</span>)</span>
-<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>edu <span class="op">=</span> aggregate_indicators(raw)           <span class="co"># ... your prep ...</span></span>
-<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>dw_save(edu, name<span class="op">=</span><span class="st">"dw_ed_edu.csv"</span>, sector<span class="op">=</span><span class="st">"ed"</span>, kind<span class="op">=</span><span class="st">"wrk"</span>,</span>
-<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>        isid<span class="op">=</span>[<span class="st">"REF_AREA"</span>, <span class="st">"INDICATOR"</span>, <span class="st">"TIME_PERIOD"</span>],</span>
-<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>        metadata<span class="op">=</span>{<span class="st">"title"</span>: <span class="st">"Education indicators"</span>,</span>
-<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>                  <span class="st">"producer"</span>: <span class="st">"ed/02_aggregate.py"</span>,</span>
-<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a>                  <span class="st">"sources"</span>: [<span class="st">"UIS bulk SDG_092025"</span>],</span>
-<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a>                  <span class="st">"vintage"</span>: <span class="st">"2026-05"</span>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="tabset-15-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-15-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb45"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>raw <span class="op">=</span> dw_use(name<span class="op">=</span><span class="st">"uis_sdg.parquet"</span>, sector<span class="op">=</span><span class="st">"ed"</span>, kind<span class="op">=</span><span class="st">"raw"</span>)</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>edu <span class="op">=</span> aggregate_indicators(raw)           <span class="co"># ... your prep ...</span></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>dw_save(edu, name<span class="op">=</span><span class="st">"dw_ed_edu.csv"</span>, sector<span class="op">=</span><span class="st">"ed"</span>, kind<span class="op">=</span><span class="st">"wrk"</span>,</span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>        isid<span class="op">=</span>[<span class="st">"REF_AREA"</span>, <span class="st">"INDICATOR"</span>, <span class="st">"TIME_PERIOD"</span>],</span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>        metadata<span class="op">=</span>{<span class="st">"title"</span>: <span class="st">"Education indicators"</span>,</span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a>                  <span class="st">"producer"</span>: <span class="st">"ed/02_aggregate.py"</span>,</span>
+<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a>                  <span class="st">"sources"</span>: [<span class="st">"UIS bulk SDG_092025"</span>],</span>
+<span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a>                  <span class="st">"vintage"</span>: <span class="st">"2026-05"</span>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<div id="tabset-13-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-13-3-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb40"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>* uis_sdg is .parquet upstream; the producer hands Stata a .dta to consume.</span>
-<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>dw_use , filename(<span class="st">"uis_sdg.dta"</span>) path(<span class="st">"$teamsRawData/ed"</span>)</span>
-<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>* ... your prep ...</span>
-<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>dw_save , filename(<span class="st">"dw_ed_edu"</span>) path(<span class="st">"$teamsWrkData/ed"</span>) <span class="co">///</span></span>
-<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>    idvars(REF_AREA INDICATOR TIME_PERIOD)              <span class="co">///</span></span>
-<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"Education indicators"</span>)                       <span class="co">///</span></span>
-<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a>    producer(<span class="st">"ed/02_aggregate.do"</span>)                      <span class="co">///</span></span>
-<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a>    sources(<span class="st">"UIS bulk SDG_092025"</span>)                      <span class="co">///</span></span>
-<span id="cb40-9"><a href="#cb40-9" aria-hidden="true" tabindex="-1"></a>    vintage(<span class="st">"2026-05"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="tabset-15-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-15-3-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb46"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>* uis_sdg is .parquet upstream; the producer hands Stata a .dta to consume.</span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>dw_use , filename(<span class="st">"uis_sdg.dta"</span>) path(<span class="st">"$teamsRawData/ed"</span>)</span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>* ... your prep ...</span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>dw_save , filename(<span class="st">"dw_ed_edu"</span>) path(<span class="st">"$teamsWrkData/ed"</span>) <span class="co">///</span></span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>    idvars(REF_AREA INDICATOR TIME_PERIOD)              <span class="co">///</span></span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"Education indicators"</span>)                       <span class="co">///</span></span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a>    producer(<span class="st">"ed/02_aggregate.do"</span>)                      <span class="co">///</span></span>
+<span id="cb46-8"><a href="#cb46-8" aria-hidden="true" tabindex="-1"></a>    sources(<span class="st">"UIS bulk SDG_092025"</span>)                      <span class="co">///</span></span>
+<span id="cb46-9"><a href="#cb46-9" aria-hidden="true" tabindex="-1"></a>    vintage(<span class="st">"2026-05"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 </div>

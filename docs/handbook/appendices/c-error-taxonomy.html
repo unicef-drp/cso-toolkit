@@ -83,7 +83,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-4c5e755a3bfe43f3706dcc37cc2065fe.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-554944da459c622dc457c1ed647c448c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -429,6 +429,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#isid-uniqueness-failure" id="toc-isid-uniqueness-failure" class="nav-link" data-scroll-target="#isid-uniqueness-failure"><span class="header-section-number">C.5.1</span> <code>isid</code> uniqueness failure</a></li>
   <li><a href="#frozen-copy-staging-integrity-dw_stage" id="toc-frozen-copy-staging-integrity-dw_stage" class="nav-link" data-scroll-target="#frozen-copy-staging-integrity-dw_stage"><span class="header-section-number">C.5.2</span> Frozen-copy / staging integrity (<code>dw_stage</code>)</a></li>
   <li><a href="#z-mirror-integrity-dw_verify_z" id="toc-z-mirror-integrity-dw_verify_z" class="nav-link" data-scroll-target="#z-mirror-integrity-dw_verify_z"><span class="header-section-number">C.5.3</span> Z: mirror integrity (<code>dw_verify_z</code>)</a></li>
+  <li><a href="#input-deposit-integrity-dw_fetch_inputs-dw_check_deposit" id="toc-input-deposit-integrity-dw_fetch_inputs-dw_check_deposit" class="nav-link" data-scroll-target="#input-deposit-integrity-dw_fetch_inputs-dw_check_deposit"><span class="header-section-number">C.5.4</span> Input-deposit integrity (<code>dw_fetch_inputs</code>, <code>dw_check_deposit</code>)</a></li>
+  <li><a href="#run-comparison-dw_read_provenance-dw_provenance_diff" id="toc-run-comparison-dw_read_provenance-dw_provenance_diff" class="nav-link" data-scroll-target="#run-comparison-dw_read_provenance-dw_provenance_diff"><span class="header-section-number">C.5.5</span> Run comparison (<code>dw_read_provenance</code>, <code>dw_provenance_diff</code>)</a></li>
   </ul></li>
   <li><a href="#vendor-drift" id="toc-vendor-drift" class="nav-link" data-scroll-target="#vendor-drift"><span class="header-section-number">C.6</span> 5. Vendor drift</a></li>
   <li><a href="#reading-any-envelope-a-debugging-recipe" id="toc-reading-any-envelope-a-debugging-recipe" class="nav-link" data-scroll-target="#reading-any-envelope-a-debugging-recipe"><span class="header-section-number">C.7</span> Reading any envelope: a debugging recipe</a></li>
@@ -515,9 +517,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>Integrity / <code>isid</code> failure</td>
-<td><code>[cso_toolkit.dw_isid]</code>, <code>[cso_toolkit.dw_save]</code>, <code>[cso_toolkit.dw_stage]</code>, <code>[cso_toolkit.dw_verify_z]</code></td>
-<td>Declared keys are not unique, or two copies of a “frozen” artefact disagree by hash.</td>
-<td>IO contract, staging</td>
+<td><code>[cso_toolkit.dw_isid]</code>, <code>[cso_toolkit.dw_save]</code>, <code>[cso_toolkit.dw_stage]</code>, <code>[cso_toolkit.dw_verify_z]</code>, <code>[cso_toolkit.dw_fetch_inputs]</code>, <code>[cso_toolkit.dw_check_deposit]</code>, <code>[cso_toolkit.dw_read_provenance]</code>, <code>[cso_toolkit.dw_provenance_diff]</code></td>
+<td>Declared keys are not unique, two copies of a “frozen” artefact disagree by hash, a local input is missing from or differs from the deposit, or a provenance sidecar is missing or unreadable.</td>
+<td>IO contract, staging, input deposit, run comparison</td>
 </tr>
 <tr class="odd">
 <td>Vendor drift</td>
@@ -626,6 +628,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>Stata <code>dw_save</code> writes <code>.dta</code> only.</strong> It does not dispatch on extension — it always saves a Stata dataset, so there is no Parquet, RDS, or CSV write path on the Stata side. Pipelines that need those formats produce them in R or Python and let Stata consume the <code>.dta</code>.</li>
 <li><strong>Stata <code>dw_use</code> reads <code>.dta</code>, <code>.csv</code>, and <code>.xlsx</code> only.</strong> Parquet, RDS, and RData reads are out of scope on the Stata side; route them through R or Python.</li>
 <li><strong><code>dw_merge</code>, <code>dw_verify_z</code>, <code>dw_stage</code>, and the standalone <code>dw_isid</code> are R + Python only.</strong> Calling a name that exists in R but not in Stata fails as an <em>unknown command</em>, not as a toolkit envelope — so a “command not found” from Stata is itself a coverage signal, not a bug.</li>
+<li><strong><code>dw_fetch_inputs</code>, <code>dw_check_deposit</code>, <code>dw_read_provenance</code>, and <code>dw_provenance_diff</code> are R only</strong> (Python and Stata siblings: #152). Their envelopes are raised by R alone; from Python or Stata the names are simply undefined.</li>
 <li><strong><code>.RData</code> / <code>.rda</code> writes skip the provenance sidecar</strong> — not an error, but expect it: the write succeeds silently, with no <code>.provenance.json</code> companion.</li>
 </ul>
 <p>The fix is to choose an extension the target sibling supports, or move the step to the language whose sibling implements the format. The contract is identical <em>where the format is implemented</em>; the gaps are in coverage, not in semantics. When in doubt, the coverage matrix appendix is the authoritative source for what each sibling can read and write.</p>
@@ -761,6 +764,28 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="z-mirror-integrity-dw_verify_z" class="level3" data-number="C.5.3">
 <h3 data-number="C.5.3" class="anchored" data-anchor-id="z-mirror-integrity-dw_verify_z"><span class="header-section-number">C.5.3</span> Z: mirror integrity (<code>dw_verify_z</code>)</h3>
 <p>On a canonical read in producer mode, <code>dw_use()</code> compares the Teams and Z: copies (by file size by default; <code>verify_z = "sha256"</code> for a deep check). A mismatch emits a <strong>warning</strong> and the read still completes — this is intentionally non-fatal, because a size difference is often a benign line-ending artefact rather than a content divergence. Pass <code>verify_z = FALSE</code> to skip the check, or <code>verify_z = "sha256"</code> when you need certainty. (<code>dw_verify_z</code> is R + Python only; the Stata <code>dw_use</code> runs an equivalent non-blocking size/<code>datasignature</code> check inline.)</p>
+</section>
+<section id="input-deposit-integrity-dw_fetch_inputs-dw_check_deposit" class="level3" data-number="C.5.4">
+<h3 data-number="C.5.4" class="anchored" data-anchor-id="input-deposit-integrity-dw_fetch_inputs-dw_check_deposit"><span class="header-section-number">C.5.4</span> Input-deposit integrity (<code>dw_fetch_inputs</code>, <code>dw_check_deposit</code>)</h3>
+<p>For pipelines whose inputs are kept out of Git, the deposit on Teams / Z: is the source of truth, and every local input must have an identical copy there. The stops (R only):</p>
+<ul>
+<li><code>[cso_toolkit.dw_fetch_inputs] No input files … were found locally or in the deposit.</code> — nothing matches the pattern in the local folder, on Teams, or on Z:. Fix: deposit the inputs in the Teams folder named in the message (same relative layout) and rerun; if the deposit is unreachable too, source the consumer profile, sync Teams, or connect to Z:.</li>
+<li><code>[cso_toolkit.dw_fetch_inputs] Teams and Z: hold different versions of '&lt;file&gt;'.</code> — a canonical-integrity stop, as in <code>dw_stage</code>: nothing is copied. Fix: decide which version is correct and replace the other.</li>
+<li><code>[cso_toolkit.dw_fetch_inputs] Could not copy '&lt;file&gt;' from the deposit.</code> — the copy failed or its SHA-256 did not match the source, twice; the temporary <code>&lt;file&gt;.dw_fetch.tmp</code> is removed. Fix: make sure the source is fully synced (OneDrive) or Z: is reachable, and that the local folder is writable.</li>
+<li><code>[cso_toolkit.dw_check_deposit] Deposit check failed for N of M input file(s).</code> — the message tabulates each file’s Teams and Z: status. <code>missing</code>: copy the file to the Teams deposit (same relative path) and let OneDrive sync. <code>differs</code>: the local file and the deposited copy are not the same; decide which is correct and replace the other.</li>
+<li><code>[cso_toolkit.dw_check_deposit] Cannot verify the inputs: neither the Teams deposit nor Z: is available.</code> — Fix: source the consumer profile (it sets <code>teamsFolderCanonical</code>, <code>dwZDrive</code>, <code>dw_z_available</code>), sync Teams, or connect to Z:.</li>
+<li><code>[cso_toolkit.dw_check_deposit] N path(s) are not under local_root …</code> — a caller error: the deposit location of such a path is undefined.</li>
+</ul>
+<p><code>dw_check_deposit(..., stop_on_fail = FALSE)</code> returns the per-file report instead of stopping on missing or differing files.</p>
+</section>
+<section id="run-comparison-dw_read_provenance-dw_provenance_diff" class="level3" data-number="C.5.5">
+<h3 data-number="C.5.5" class="anchored" data-anchor-id="run-comparison-dw_read_provenance-dw_provenance_diff"><span class="header-section-number">C.5.5</span> Run comparison (<code>dw_read_provenance</code>, <code>dw_provenance_diff</code>)</h3>
+<p>Run comparison is informational: a difference between two runs is a <strong>status</strong>, not an error. Only these conditions raise (R only):</p>
+<ul>
+<li><code>[cso_toolkit.dw_read_provenance] The provenance sidecar is not valid JSON</code> — Fix: rewrite the output with <code>dw_save()</code> to regenerate its sidecar, or restore the sidecar from version control. A <em>missing</em> sidecar is not an error: <code>dw_read_provenance</code> returns <code>NULL</code>.</li>
+<li><code>[cso_toolkit.dw_provenance_diff] The current output has no provenance sidecar.</code> — Fix: write the output with <code>dw_save()</code> (<code>provenance = TRUE</code>, the default) before comparing runs.</li>
+<li><code>[cso_toolkit.dw_provenance_diff] Same inputs as the previous run but a different output</code> — a <strong>warning</strong> (status <code>output_changed</code>): the code or the environment changed between two runs on identical inputs. Fix: if intended, record the change; otherwise run <code>dw_compare()</code> on the two outputs. Pass <code>warn = FALSE</code> to silence it.</li>
+</ul>
 </section>
 </section>
 <section id="vendor-drift" class="level2" data-number="C.6">
