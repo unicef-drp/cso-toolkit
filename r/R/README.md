@@ -1,7 +1,7 @@
 # r/R/ — R helpers
 
 Vendored, not installed. Python siblings of every helper below live at
-[`python/src/`](../../python/src/) — same behaviour contract, same path
+[`python/src/`](https://github.com/unicef-drp/cso-toolkit/tree/main/python/src/) — same behaviour contract, same path
 routing, same provenance sidecars; pick the language that fits the
 sector pipeline you are vendoring into.
 
@@ -67,15 +67,15 @@ pulled_date: "2026-05-25"
 
 `cso_toolkit_check()` reads the manifest, asks the GitHub API for the latest
 tag, and warns if the consumer is behind. See
-[`templates/.toolkit_manifest.yml`](../../templates/.toolkit_manifest.yml)
+[`templates/.toolkit_manifest.yml`](https://github.com/unicef-drp/cso-toolkit/blob/main/templates/.toolkit_manifest.yml)
 for the full schema (fields, optional helpers, `local_edits` opt-out).
 
 ## See also
 
-- [Top-level README](../../README.md) — toolkit overview + architecture
+- [Top-level README](https://github.com/unicef-drp/cso-toolkit/blob/main/README.md) — toolkit overview + architecture
   diagram.
-- [`r/README.md`](../README.md) — R package overview (install, layout,
+- [`r/README.md`](https://github.com/unicef-drp/cso-toolkit/blob/main/r/README.md) — R package overview (install, layout,
   quick start, testing).
-- [NEWS.md / Changelog](../../NEWS.md) — per-release notes.
-- Sibling implementations: [`python/src/README.md`](../../python/src/README.md)
-  · [`stata/src/README.md`](../../stata/src/README.md).
+- [NEWS.md / Changelog](https://github.com/unicef-drp/cso-toolkit/blob/main/NEWS.md) — per-release notes.
+- Sibling implementations: [`python/src/README.md`](https://github.com/unicef-drp/cso-toolkit/blob/main/python/src/README.md)
+  · [`stata/src/README.md`](https://github.com/unicef-drp/cso-toolkit/blob/main/stata/src/README.md).

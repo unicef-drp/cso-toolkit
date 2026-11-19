@@ -64,7 +64,10 @@ def create_profile(
         Include the producer / reviewer mode block that reads ``dw_mode``
         from ``user_config.yml`` and hard-fails when missing.
     include_z_drive_check
-        Include the Z: drive availability advisory.
+        Include the Z: drive availability advisory.  The generated check
+        uses a timeout-bounded probe (``vol`` in a child process, 3 s) for
+        drive letters, so a dead-mapped Z: cannot hang the profile; other
+        paths use ``Path.is_dir()``.
     author
         Author name for the header.
     overwrite
@@ -147,8 +150,27 @@ repo_name = "{repo_name}"
 # ----------------------------------------
 # The Z: drive is the legacy Azure file-share mirror of canonical
 # deposits.  Absence does NOT stop execution — only an advisory.
+#
+# Timeout-bounded probe: Path.is_dir() on a Windows drive letter that is
+# mapped but unreachable (e.g. Z: off VPN) blocks for the full SMB timeout
+# — tens of seconds to minutes.  For a drive letter, probe with `vol` in a
+# child process capped at `timeout` seconds; other paths use is_dir().
+import subprocess
+
+
+def _dw_drive_available(root, timeout=3):
+    if os.name == "nt" and len(root) <= 3 and root[1:2] == ":":
+        try:
+            proc = subprocess.run(["cmd", "/c", "vol", root[:2]],
+                                  capture_output=True, timeout=timeout)
+        except (subprocess.TimeoutExpired, OSError):
+            return False
+        return proc.returncode == 0
+    return Path(root).is_dir()
+
+
 network_root = "Z:/"
-dw_z_available = Path(network_root).is_dir()
+dw_z_available = _dw_drive_available(network_root)
 if not dw_z_available:
     print("\\n[!] Network drive (Z:) not mounted - NON-BLOCKING", file=sys.stderr)
 

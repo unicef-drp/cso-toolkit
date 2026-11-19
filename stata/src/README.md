@@ -1,7 +1,7 @@
 # stata/src/ — Stata helpers
 
 Six Stata helpers covering the full IO + mode-contract surface as of
-v0.4.0; they mirror the R API contract from [`r/R/`](../../r/R/) so a
+v0.4.0; they mirror the R API contract from [`r/R/`](https://github.com/unicef-drp/cso-toolkit/tree/main/r/R/) so a
 sector that runs partly in Stata and partly in R uses the same producer
 / reviewer contract on both sides.
 
@@ -150,10 +150,10 @@ pipelines needing those formats route through R or Python and
 
 ## See also
 
-- [Top-level README](../../README.md) — toolkit overview + architecture
+- [Top-level README](https://github.com/unicef-drp/cso-toolkit/blob/main/README.md) — toolkit overview + architecture
   diagram.
-- [`stata/README.md`](../README.md) — Stata package overview (install,
+- [`stata/README.md`](https://github.com/unicef-drp/cso-toolkit/blob/main/stata/README.md) — Stata package overview (install,
   layout, mode contract, known limitations).
-- [NEWS.md / Changelog](../../NEWS.md) — per-release notes.
-- Sibling implementations: [`r/R/README.md`](../../r/R/README.md)
-  · [`python/src/README.md`](../../python/src/README.md).
+- [NEWS.md / Changelog](https://github.com/unicef-drp/cso-toolkit/blob/main/NEWS.md) — per-release notes.
+- Sibling implementations: [`r/R/README.md`](https://github.com/unicef-drp/cso-toolkit/blob/main/r/R/README.md)
+  · [`python/src/README.md`](https://github.com/unicef-drp/cso-toolkit/blob/main/python/src/README.md).
