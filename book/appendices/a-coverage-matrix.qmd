@@ -52,6 +52,8 @@ The table below is grouped by the five capability families. Each row is one publ
 | `dw_isid` | Yes | Yes | Embedded in `dw_save` (no standalone command) |
 | `dw_verify_z` | Yes | Yes | n/a (integrity via `datasignature` inside `dw_use`) |
 | `dw_stage` | Yes | n/a | n/a |
+| `dw_fetch_inputs` | Yes | Planned | Planned |
+| `dw_check_deposit` | Yes | Planned | Planned |
 | `dw_root` | Yes | Yes | n/a |
 | `dw_resolve_path` | Yes | Yes | Internal to `dw_use` / `dw_save` |
 | `dw_is_canonical` | Yes | Yes | Internal to the mode guard |
@@ -66,6 +68,7 @@ A few caveats sit behind the "Yes" cells:
 - **`dw_merge` and `dw_verify_z` are R-and-Python only.** There is no Stata sibling and none is planned. `dw_merge` is a join-with-duplicate-key guard (it warns when left/right duplicate structure does not match the declared `how`); `dw_verify_z` compares a file against its Z:-drive mirror, by file size (default, fast) or by deep SHA-256. A Stata pipeline needing either routes through R or Python.
 - **`dw_mkdir` is the mirror image.** It is a first-class *Stata* helper because Stata's built-in `mkdir` does not accept nested paths; R and Python have no need for it because their standard libraries already create directories recursively.
 - **`dw_root` is R + Python; `dw_stage` is R-only.** `dw_root` resolves the mode-aware repo/canonical root for a vendored `kind` (`"wrk"` / `"raw"` / `"meta"`) so a sector script can build paths without knowing whether the session is producer or reviewer; `dw_stage` copies a reviewer-mode sandbox file into place with a `.staged.json` integrity sidecar. `dw_stage` has no Python or Stata sibling yet.
+- **`dw_fetch_inputs` and `dw_check_deposit` are R-only for now.** They serve pipelines that keep raw inputs out of Git in a local folder mirroring a deposit folder: `dw_fetch_inputs` copies deposit-only inputs locally (or reads them in place), keeps the folder layout visible with `.gitkeep` placeholders, and returns an input manifest; `dw_check_deposit` proves every local input has an identical SHA-256 copy on Teams or Z:. Python and Stata siblings are planned.
 
 ::: {.callout-note}
 `dw_isid` is not a missing Stata feature. The uniqueness check it performs is built directly into `dw_save.ado` via Stata's native `isid`, so the guarantee runs at every write — there is simply no separately callable `dw_isid` command. Declare your key with `idvars(...)` and the check fires.

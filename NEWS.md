@@ -6,6 +6,21 @@ _Entries land here as PRs merge into `develop`. When the next release
 is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
+### Added
+
+- **`dw_fetch_inputs()` and `dw_check_deposit()` (R only)** — for pipelines
+  whose raw inputs are kept out of Git in a local folder that mirrors a
+  folder of the canonical deposit (Teams `060.DW-MASTER` and its Z: mirror).
+  `dw_fetch_inputs()` copies deposit-only inputs into the local folder
+  (Z: preferred, each copy SHA-256-verified, atomic rename as in
+  `dw_stage()`), or reads them in place with `copy = FALSE`; stops when Teams
+  and Z: disagree; by default (`gitkeep = TRUE`) mirrors the folder layout
+  locally with a `.gitkeep` in every folder so it stays visible; and returns
+  an input manifest (file, path, SHA-256, origin) to pass to `dw_save()`'s
+  `metadata`. `dw_check_deposit()` proves every local input has an identical
+  copy on Teams or Z:. Both only read the deposit, so they behave the same in
+  producer and reviewer sessions. Python and Stata siblings are planned.
+
 ## v0.8.0 (2026-07-13)
 
 Python parity: the canonical `dw_*` surface now resolves in Python.
