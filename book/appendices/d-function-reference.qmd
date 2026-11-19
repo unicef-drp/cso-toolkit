@@ -149,7 +149,7 @@ Consumer-side helpers that read the local `.toolkit_manifest.yml`, query upstrea
 
 | Function | R | Python | Stata | Notes |
 |---|---|---|---|---|
-| `cso_toolkit_check` | ✅ | ✅ | — | Compare the pinned vintage against upstream |
+| `cso_toolkit_check` | ✅ | ✅ | — | Compare the pinned vintage against a target version (offline; warns when behind, v0.9.2) and, in producer mode, the latest upstream tag |
 | `cso_toolkit_diff` | ✅ | ✅ | — | Show what changed between vintages |
 | `cso_toolkit_pull` | ✅ | ✅ | — | Refresh the vendored copy |
 

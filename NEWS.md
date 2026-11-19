@@ -6,6 +6,33 @@ _Entries land here as PRs merge into `develop`. When the next release
 is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
+### Added
+
+- **`cso_toolkit_check()` warns loudly when the vendored copy is behind a
+  target version (R + Python)** — new `target_version` argument and optional
+  manifest key `target_version:`. The comparison is offline, so it runs in
+  producer **and** reviewer mode. When the pinned `pulled_version` is behind
+  the target, it raises a `[cso_toolkit.cso_toolkit_check]` warning carrying
+  the exact `cso_toolkit_pull(target_version = "...")` command (even with
+  `quiet = TRUE`) and, with `quiet = FALSE`, prints a boxed alert. Reviewer
+  mode only warns: no network call, no file change. A newer upstream tag
+  (producer mode) now also shows a boxed notice with the commands, but does
+  not warn. The result gains `target_version`, `target_source` and
+  `behind_target`. Documented in the manifest template, the vintage-sync
+  chapter and the error taxonomy.
+  ([#106](https://github.com/unicef-drp/cso-toolkit/issues/106), item 4)
+
+### Fixed
+
+- **`cso_toolkit_check()` compares versions numerically (R + Python)** — tags
+  were compared as strings for inequality, so `0.10.0` vs `0.9.1` and a
+  vendored copy *ahead* of the latest tag were both reported as "newer tag
+  available". Versions now compare as dotted numbers (leading `v` and
+  pre-release suffix stripped); `inrepo` pins are never behind. The R alert
+  no longer prints `pinned vv0.9.0`.
+- **Reviewer mode no longer skips the whole check** — it skips only the
+  upstream poll. Without a target version it still returns `NULL`, as before.
+
 ## v0.9.1 (2026-11-19)
 
 Patch: generated profiles no longer risk hanging on a dead-mapped Z:
