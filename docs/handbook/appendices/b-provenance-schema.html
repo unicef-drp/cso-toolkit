@@ -83,7 +83,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-4c5e755a3bfe43f3706dcc37cc2065fe.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-554944da459c622dc457c1ed647c448c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -424,7 +424,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#a-real-example-r-python" id="toc-a-real-example-r-python" class="nav-link" data-scroll-target="#a-real-example-r-python"><span class="header-section-number">B.3</span> A real example (R / Python)</a></li>
   <li><a href="#the-stata-sidecar-same-shape-one-difference-that-matters" id="toc-the-stata-sidecar-same-shape-one-difference-that-matters" class="nav-link" data-scroll-target="#the-stata-sidecar-same-shape-one-difference-that-matters"><span class="header-section-number">B.4</span> The Stata sidecar: same shape, one difference that matters</a></li>
   <li><a href="#a-note-on-the-api-fetch-sidecar" id="toc-a-note-on-the-api-fetch-sidecar" class="nav-link" data-scroll-target="#a-note-on-the-api-fetch-sidecar"><span class="header-section-number">B.5</span> A note on the API-fetch sidecar</a></li>
-  <li><a href="#consuming-the-sidecar" id="toc-consuming-the-sidecar" class="nav-link" data-scroll-target="#consuming-the-sidecar"><span class="header-section-number">B.6</span> Consuming the sidecar</a></li>
+  <li><a href="#consuming-the-sidecar" id="toc-consuming-the-sidecar" class="nav-link" data-scroll-target="#consuming-the-sidecar"><span class="header-section-number">B.6</span> Consuming the sidecar</a>
+  <ul class="collapse">
+  <li><a href="#comparing-the-sidecars-of-two-runs" id="toc-comparing-the-sidecars-of-two-runs" class="nav-link" data-scroll-target="#comparing-the-sidecars-of-two-runs"><span class="header-section-number">B.6.1</span> Comparing the sidecars of two runs</a></li>
+  </ul></li>
   <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary"><span class="header-section-number">B.7</span> Summary</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/unicef-drp/cso-toolkit/edit/main/book/appendices/b-provenance-schema.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/unicef-drp/cso-toolkit/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
@@ -672,68 +675,82 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>string</td>
 <td>Data vintage; in Stata this lives inside <code>metadata</code>, in R/Python it is a top-level field as well.</td>
 </tr>
+<tr class="odd">
+<td><code>inputs</code></td>
+<td>array&lt;object&gt; (R)</td>
+<td>The exact input files the output was built from, one record per input: <code>file</code> (path relative to the inputs folder), <code>sha256</code>, and optionally <code>origin</code>. Pass the manifest returned by <code>dw_fetch_inputs()</code> (<code>manifest[, c("file", "sha256", "origin")]</code>). <code>dw_provenance_diff()</code> reads this record to tell whether two runs used the same inputs. R only for now (#152).</td>
+</tr>
 </tbody>
 </table>
+<p>The <code>inputs</code> record serialises as an array of objects:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="st">"metadata"</span><span class="er">:</span> <span class="fu">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"title"</span><span class="fu">:</span> <span class="st">"Global Child Targets 2030 - consolidated dataset"</span><span class="fu">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"producer"</span><span class="fu">:</span> <span class="st">"02_consultations/023_targets/consolidate_targets.R"</span><span class="fu">,</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"inputs"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">"file"</span><span class="fu">:</span> <span class="st">"2024/NUTRITION_2024.csv"</span><span class="fu">,</span> <span class="dt">"sha256"</span><span class="fu">:</span> <span class="st">"5e1f…"</span><span class="fu">,</span> <span class="dt">"origin"</span><span class="fu">:</span> <span class="st">"local"</span> <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">"file"</span><span class="fu">:</span> <span class="st">"2025/WASH_2025.csv"</span><span class="fu">,</span>      <span class="dt">"sha256"</span><span class="fu">:</span> <span class="st">"a07c…"</span><span class="fu">,</span> <span class="dt">"origin"</span><span class="fu">:</span> <span class="st">"copied from Teams"</span> <span class="fu">}</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 </section>
 <section id="a-real-example-r-python" class="level2" data-number="B.3">
 <h2 data-number="B.3" class="anchored" data-anchor-id="a-real-example-r-python"><span class="header-section-number">B.3</span> A real example (R / Python)</h2>
 <p>A write such as:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dw_save</span>(edu_sdg_uis,</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>        <span class="at">name =</span> <span class="st">"dw_ed_edu.csv"</span>, <span class="at">sector =</span> <span class="st">"ed"</span>, <span class="at">kind =</span> <span class="st">"wrk"</span>,</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>        <span class="at">isid =</span> <span class="fu">c</span>(<span class="st">"DATAFLOW"</span>, <span class="st">"REF_AREA"</span>, <span class="st">"INDICATOR"</span>, <span class="st">"TIME_PERIOD"</span>),</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>        <span class="at">vintage =</span> <span class="st">"2026-05"</span>,</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>        <span class="at">metadata =</span> <span class="fu">list</span>(</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>          <span class="at">title    =</span> <span class="st">"Education indicators — UNICEF DW format"</span>,</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>          <span class="at">producer =</span> <span class="st">"01_dw_prep/012_codes/ed/02_aggregate_uis_sdg.R"</span>,</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>          <span class="at">sources  =</span> <span class="fu">c</span>(<span class="st">"UIS bulk SDG_092025"</span>, <span class="st">"WPP 2024"</span>),</span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>          <span class="at">contact  =</span> <span class="st">"@karavan88"</span></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>        ))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dw_save</span>(edu_sdg_uis,</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>        <span class="at">name =</span> <span class="st">"dw_ed_edu.csv"</span>, <span class="at">sector =</span> <span class="st">"ed"</span>, <span class="at">kind =</span> <span class="st">"wrk"</span>,</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>        <span class="at">isid =</span> <span class="fu">c</span>(<span class="st">"DATAFLOW"</span>, <span class="st">"REF_AREA"</span>, <span class="st">"INDICATOR"</span>, <span class="st">"TIME_PERIOD"</span>),</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>        <span class="at">vintage =</span> <span class="st">"2026-05"</span>,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>        <span class="at">metadata =</span> <span class="fu">list</span>(</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>          <span class="at">title    =</span> <span class="st">"Education indicators — UNICEF DW format"</span>,</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>          <span class="at">producer =</span> <span class="st">"01_dw_prep/012_codes/ed/02_aggregate_uis_sdg.R"</span>,</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>          <span class="at">sources  =</span> <span class="fu">c</span>(<span class="st">"UIS bulk SDG_092025"</span>, <span class="st">"WPP 2024"</span>),</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>          <span class="at">contact  =</span> <span class="st">"@karavan88"</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>        ))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>produces a sidecar of this shape:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"path"</span><span class="fu">:</span> <span class="st">"C:/Users/.../teamsWrkData/ed/dw_ed_edu.csv"</span><span class="fu">,</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"format"</span><span class="fu">:</span> <span class="st">"csv"</span><span class="fu">,</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"written_at"</span><span class="fu">:</span> <span class="st">"2026-06-28T14:03:51+0000"</span><span class="fu">,</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"user"</span><span class="fu">:</span> <span class="st">"jpazevedo"</span><span class="fu">,</span></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"dw_mode"</span><span class="fu">:</span> <span class="st">"producer"</span><span class="fu">,</span></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"vintage"</span><span class="fu">:</span> <span class="st">"2026-05"</span><span class="fu">,</span></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"sha256"</span><span class="fu">:</span> <span class="st">"9f2c1a7b4e0d8c5f3a6b2e1d9c0f4a7b8e3d2c1f0a9b8c7d6e5f4a3b2c1d0e9f"</span><span class="fu">,</span></span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"isid"</span><span class="fu">:</span> <span class="ot">[</span><span class="st">"DATAFLOW"</span><span class="ot">,</span> <span class="st">"REF_AREA"</span><span class="ot">,</span> <span class="st">"INDICATOR"</span><span class="ot">,</span> <span class="st">"TIME_PERIOD"</span><span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"schema"</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"rows"</span><span class="fu">:</span> <span class="dv">48213</span><span class="fu">,</span></span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"cols"</span><span class="fu">:</span> <span class="dv">9</span><span class="fu">,</span></span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"columns"</span><span class="fu">:</span> <span class="ot">[</span><span class="st">"DATAFLOW"</span><span class="ot">,</span> <span class="st">"REF_AREA"</span><span class="ot">,</span> <span class="st">"INDICATOR"</span><span class="ot">,</span> <span class="st">"SEX"</span><span class="ot">,</span></span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>                <span class="st">"WEALTH_QUINTILE"</span><span class="ot">,</span> <span class="st">"RESIDENCE"</span><span class="ot">,</span> <span class="st">"TIME_PERIOD"</span><span class="ot">,</span></span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>                <span class="st">"OBS_VALUE"</span><span class="ot">,</span> <span class="st">"DATA_SOURCE"</span><span class="ot">]</span></span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"metadata"</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"title"</span><span class="fu">:</span> <span class="st">"Education indicators — UNICEF DW format"</span><span class="fu">,</span></span>
-<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"producer"</span><span class="fu">:</span> <span class="st">"01_dw_prep/012_codes/ed/02_aggregate_uis_sdg.R"</span><span class="fu">,</span></span>
-<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"sources"</span><span class="fu">:</span> <span class="ot">[</span><span class="st">"UIS bulk SDG_092025"</span><span class="ot">,</span> <span class="st">"WPP 2024"</span><span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"contact"</span><span class="fu">:</span> <span class="st">"@karavan88"</span></span>
-<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
-<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"path"</span><span class="fu">:</span> <span class="st">"C:/Users/.../teamsWrkData/ed/dw_ed_edu.csv"</span><span class="fu">,</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"format"</span><span class="fu">:</span> <span class="st">"csv"</span><span class="fu">,</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"written_at"</span><span class="fu">:</span> <span class="st">"2026-06-28T14:03:51+0000"</span><span class="fu">,</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"user"</span><span class="fu">:</span> <span class="st">"jpazevedo"</span><span class="fu">,</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"dw_mode"</span><span class="fu">:</span> <span class="st">"producer"</span><span class="fu">,</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"vintage"</span><span class="fu">:</span> <span class="st">"2026-05"</span><span class="fu">,</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"sha256"</span><span class="fu">:</span> <span class="st">"9f2c1a7b4e0d8c5f3a6b2e1d9c0f4a7b8e3d2c1f0a9b8c7d6e5f4a3b2c1d0e9f"</span><span class="fu">,</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"isid"</span><span class="fu">:</span> <span class="ot">[</span><span class="st">"DATAFLOW"</span><span class="ot">,</span> <span class="st">"REF_AREA"</span><span class="ot">,</span> <span class="st">"INDICATOR"</span><span class="ot">,</span> <span class="st">"TIME_PERIOD"</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"schema"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"rows"</span><span class="fu">:</span> <span class="dv">48213</span><span class="fu">,</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"cols"</span><span class="fu">:</span> <span class="dv">9</span><span class="fu">,</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"columns"</span><span class="fu">:</span> <span class="ot">[</span><span class="st">"DATAFLOW"</span><span class="ot">,</span> <span class="st">"REF_AREA"</span><span class="ot">,</span> <span class="st">"INDICATOR"</span><span class="ot">,</span> <span class="st">"SEX"</span><span class="ot">,</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>                <span class="st">"WEALTH_QUINTILE"</span><span class="ot">,</span> <span class="st">"RESIDENCE"</span><span class="ot">,</span> <span class="st">"TIME_PERIOD"</span><span class="ot">,</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>                <span class="st">"OBS_VALUE"</span><span class="ot">,</span> <span class="st">"DATA_SOURCE"</span><span class="ot">]</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"metadata"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"title"</span><span class="fu">:</span> <span class="st">"Education indicators — UNICEF DW format"</span><span class="fu">,</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"producer"</span><span class="fu">:</span> <span class="st">"01_dw_prep/012_codes/ed/02_aggregate_uis_sdg.R"</span><span class="fu">,</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"sources"</span><span class="fu">:</span> <span class="ot">[</span><span class="st">"UIS bulk SDG_092025"</span><span class="ot">,</span> <span class="st">"WPP 2024"</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"contact"</span><span class="fu">:</span> <span class="st">"@karavan88"</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>The Python sidecar is the same shape: the helper builds the identical key set, serialises with <code>json.dump(..., indent=2)</code>, and computes <code>sha256</code> by streaming the file in 64-KiB blocks. R serialises with <code>jsonlite::write_json(..., auto_unbox = TRUE, pretty = TRUE)</code>. The two pretty-printers differ in whitespace, and <code>auto_unbox</code> means a single-key <code>isid</code> in R collapses to a bare string rather than a one-element array — but the keys, types, and values otherwise match.</p>
 </section>
 <section id="the-stata-sidecar-same-shape-one-difference-that-matters" class="level2" data-number="B.4">
 <h2 data-number="B.4" class="anchored" data-anchor-id="the-stata-sidecar-same-shape-one-difference-that-matters"><span class="header-section-number">B.4</span> The Stata sidecar: same shape, one difference that matters</h2>
 <p>Stata emits a sidecar built to interoperate with the R and Python siblings — the comment in <code>dw_save.ado</code> states the intent plainly: “Write a sibling .provenance.json sidecar with the same shape the R helpers emit, so reviewer-mode integrity checks work across both languages.” Two fields nonetheless cannot be identical, for reasons rooted in the Stata environment:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"format"</span><span class="fu">:</span> <span class="st">"dw_save.provenance/1"</span><span class="fu">,</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"path"</span><span class="fu">:</span> <span class="st">"C:</span><span class="ch">\\</span><span class="st">Users</span><span class="ch">\\</span><span class="st">...</span><span class="ch">\\</span><span class="st">teamsWrkData</span><span class="ch">\\</span><span class="st">ed</span><span class="ch">\\</span><span class="st">dw_ed_edu.dta"</span><span class="fu">,</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"written_at"</span><span class="fu">:</span> <span class="st">"28 Jun 2026 14:03:51"</span><span class="fu">,</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"user"</span><span class="fu">:</span> <span class="st">"jpazevedo"</span><span class="fu">,</span></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"dw_mode"</span><span class="fu">:</span> <span class="st">"producer"</span><span class="fu">,</span></span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"datasignature"</span><span class="fu">:</span> <span class="st">"9:9(12345):1234567890:0987654321"</span><span class="fu">,</span></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"schema"</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">"rows"</span><span class="fu">:</span> <span class="dv">48213</span><span class="fu">,</span> <span class="dt">"cols"</span><span class="fu">:</span> <span class="dv">9</span> <span class="fu">},</span></span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"idvars"</span><span class="fu">:</span> <span class="st">"DATAFLOW REF_AREA INDICATOR TIME_PERIOD"</span><span class="fu">,</span></span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"metadata"</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"title"</span><span class="fu">:</span> <span class="st">"Education indicators — UNICEF DW format"</span><span class="fu">,</span></span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"producer"</span><span class="fu">:</span> <span class="st">"01_dw_prep/012_codes/ed/02_aggregate_uis_sdg.R"</span><span class="fu">,</span></span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"vintage"</span><span class="fu">:</span> <span class="st">"2026-05"</span><span class="fu">,</span></span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"_end"</span><span class="fu">:</span> <span class="st">"true"</span></span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"format"</span><span class="fu">:</span> <span class="st">"dw_save.provenance/1"</span><span class="fu">,</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"path"</span><span class="fu">:</span> <span class="st">"C:</span><span class="ch">\\</span><span class="st">Users</span><span class="ch">\\</span><span class="st">...</span><span class="ch">\\</span><span class="st">teamsWrkData</span><span class="ch">\\</span><span class="st">ed</span><span class="ch">\\</span><span class="st">dw_ed_edu.dta"</span><span class="fu">,</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"written_at"</span><span class="fu">:</span> <span class="st">"28 Jun 2026 14:03:51"</span><span class="fu">,</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"user"</span><span class="fu">:</span> <span class="st">"jpazevedo"</span><span class="fu">,</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"dw_mode"</span><span class="fu">:</span> <span class="st">"producer"</span><span class="fu">,</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"datasignature"</span><span class="fu">:</span> <span class="st">"9:9(12345):1234567890:0987654321"</span><span class="fu">,</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"schema"</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">"rows"</span><span class="fu">:</span> <span class="dv">48213</span><span class="fu">,</span> <span class="dt">"cols"</span><span class="fu">:</span> <span class="dv">9</span> <span class="fu">},</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"idvars"</span><span class="fu">:</span> <span class="st">"DATAFLOW REF_AREA INDICATOR TIME_PERIOD"</span><span class="fu">,</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"metadata"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"title"</span><span class="fu">:</span> <span class="st">"Education indicators — UNICEF DW format"</span><span class="fu">,</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"producer"</span><span class="fu">:</span> <span class="st">"01_dw_prep/012_codes/ed/02_aggregate_uis_sdg.R"</span><span class="fu">,</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"vintage"</span><span class="fu">:</span> <span class="st">"2026-05"</span><span class="fu">,</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"_end"</span><span class="fu">:</span> <span class="st">"true"</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>The <code>datasignature</code> value above — <code>"9:9(12345):..."</code> — is a colon-delimited string of variable count, observation count, and two checksums, opaque by design. It is what stands in for <code>sha256</code>.</p>
 <div class="callout callout-style-simple callout-warning callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -764,32 +781,35 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="consuming-the-sidecar" class="level2" data-number="B.6">
 <h2 data-number="B.6" class="anchored" data-anchor-id="consuming-the-sidecar"><span class="header-section-number">B.6</span> Consuming the sidecar</h2>
-<p>A reviewer or a CI check typically does three things with a sidecar: read it, confirm the recorded <code>sha256</code> still matches the file on disk, and inspect <code>dw_mode</code> / <code>metadata</code> for lineage. Reading is plain JSON:</p>
+<p>A reviewer or a CI check typically does three things with a sidecar: read it, confirm the recorded <code>sha256</code> still matches the file on disk, and inspect <code>dw_mode</code> / <code>metadata</code> for lineage. Reading is plain JSON; in R, <code>dw_read_provenance()</code> does it for you (output path or sidecar path; <code>NULL</code> when there is no sidecar):</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-3" role="tab" aria-controls="tabset-2-3" aria-selected="false" href="">Stata</a></li></ul>
 <div class="tab-content">
 <div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>prov <span class="ot">&lt;-</span> jsonlite<span class="sc">::</span><span class="fu">read_json</span>(<span class="st">"ed/dw_ed_edu.csv.provenance.json"</span>,</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>                            <span class="at">simplifyVector =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">identical</span>(prov<span class="sc">$</span>sha256, digest<span class="sc">::</span><span class="fu">digest</span>(<span class="at">file =</span> <span class="st">"ed/dw_ed_edu.csv"</span>,</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">algo =</span> <span class="st">"sha256"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>prov <span class="ot">&lt;-</span> <span class="fu">dw_read_provenance</span>(<span class="st">"ed/dw_ed_edu.csv"</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">identical</span>(prov<span class="sc">$</span>sha256, digest<span class="sc">::</span><span class="fu">digest</span>(<span class="at">file =</span> <span class="st">"ed/dw_ed_edu.csv"</span>,</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">algo =</span> <span class="st">"sha256"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> json, hashlib</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>prov <span class="op">=</span> json.load(<span class="bu">open</span>(<span class="st">"ed/dw_ed_edu.csv.provenance.json"</span>))</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>h <span class="op">=</span> hashlib.sha256(<span class="bu">open</span>(<span class="st">"ed/dw_ed_edu.csv"</span>, <span class="st">"rb"</span>).read()).hexdigest()</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>prov[<span class="st">"sha256"</span>] <span class="op">==</span> h</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> json, hashlib</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>prov <span class="op">=</span> json.load(<span class="bu">open</span>(<span class="st">"ed/dw_ed_edu.csv.provenance.json"</span>))</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>h <span class="op">=</span> hashlib.sha256(<span class="bu">open</span>(<span class="st">"ed/dw_ed_edu.csv"</span>, <span class="st">"rb"</span>).read()).hexdigest()</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>prov[<span class="st">"sha256"</span>] <span class="op">==</span> h</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div id="tabset-2-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-3-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>* Stata has no JSON reader <span class="kw">in</span> the toolkit; verify via the native signature</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="st">"ed/dw_ed_edu.dta"</span>, <span class="kw">clear</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>datasignature</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>* <span class="kw">compare</span> <span class="fu">r</span>(datasignature) against the sidecar's <span class="st">"datasignature"</span> <span class="ot">value</span> <span class="kw">by</span> eye</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>* <span class="kw">or</span> with a small <span class="bn">text</span>-parsing <span class="kw">do</span>-file</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>* Stata has no JSON reader <span class="kw">in</span> the toolkit; verify via the native signature</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="st">"ed/dw_ed_edu.dta"</span>, <span class="kw">clear</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>datasignature</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>* <span class="kw">compare</span> <span class="fu">r</span>(datasignature) against the sidecar's <span class="st">"datasignature"</span> <span class="ot">value</span> <span class="kw">by</span> eye</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>* <span class="kw">or</span> with a small <span class="bn">text</span>-parsing <span class="kw">do</span>-file</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 </div>
 <p>A <code>FALSE</code> / <code>False</code> result here means the file changed since it was written — the lineage record no longer describes the bytes on disk, so the sidecar can no longer vouch for the artifact. R and Python can run this byte-integrity check directly because they recorded a byte hash. Stata verification is intra-Stata: re-open the dataset, recompute <code>datasignature</code>, and compare against the value in the sidecar. There is no toolkit-provided JSON reader on the Stata side — a real coverage gap, consistent with Stata’s lack of an API wrapper and parquet support documented in the cross-language coverage matrix appendix.</p>
+<section id="comparing-the-sidecars-of-two-runs" class="level3" data-number="B.6.1">
+<h3 data-number="B.6.1" class="anchored" data-anchor-id="comparing-the-sidecars-of-two-runs"><span class="header-section-number">B.6.1</span> Comparing the sidecars of two runs</h3>
+<p>Two sidecars of the same output answer a fourth question: did the new run reproduce the previous one? In R, <code>dw_provenance_diff(previous, current)</code> compares the <code>metadata.inputs</code> records (inputs) and the <code>sha256</code> fields (outputs) and returns <code>reproduced</code>, <code>inputs_changed</code> (with the input files added, removed, and changed), <code>output_changed</code> (same inputs, different output; warns), <code>first_run</code>, or <code>no_input_record</code>. Read the previous sidecar with <code>dw_read_provenance()</code> before the new run overwrites the output. Python and Stata siblings are planned (#152).</p>
+</section>
 </section>
 <section id="summary" class="level2" data-number="B.7">
 <h2 data-number="B.7" class="anchored" data-anchor-id="summary"><span class="header-section-number">B.7</span> Summary</h2>
@@ -797,6 +817,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Relevant source files (all under <code>C:/GitHub/myados/cso-toolkit</code>):</p>
 <ul>
 <li><code>r/R/dw_io.R</code> — <code>.write_provenance()</code> (R write sidecar) and <code>.write_remote_provenance()</code> (API-fetch sidecar)</li>
+<li><code>r/R/dw_provenance.R</code> — <code>dw_read_provenance()</code> and <code>dw_provenance_diff()</code> (read a sidecar; compare two runs)</li>
+<li><code>r/R/dw_deposit.R</code> — <code>dw_fetch_inputs()</code> (returns the input manifest recorded as <code>metadata.inputs</code>)</li>
 <li><code>python/src/dw_io.py</code> — <code>_write_provenance()</code>, <code>_sha256_file()</code>, <code>_utc_now_iso()</code> (Python write sidecar); <code>_write_remote_provenance()</code> (API-fetch sidecar)</li>
 <li><code>stata/src/dw_save.ado</code> — Stata sidecar emission (<code>datasignature</code>, <code>idvars</code>, <code>format: dw_save.provenance/1</code>)</li>
 <li><code>docs/dw_io_reference.md</code> — sidecar field overview</li>
