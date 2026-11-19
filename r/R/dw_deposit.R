@@ -20,8 +20,8 @@
 # `<repo>/<rel_dir>` corresponds to `<teamsFolderCanonical>/<rel_dir>` on
 # Teams and `<dwZDrive>/<rel_dir>` on Z:.
 #
-# R only. TODO: Python and Stata siblings (cross-language parity to be
-# tracked in a GitHub issue opened with this function's PR).
+# R only. TODO: Python and Stata siblings; cross-language parity tracked at
+# GitHub issue #152.
 
 # -----------------------------------------------------------------------------
 # Internal helpers

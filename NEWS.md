@@ -19,7 +19,18 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
   an input manifest (file, path, SHA-256, origin) to pass to `dw_save()`'s
   `metadata`. `dw_check_deposit()` proves every local input has an identical
   copy on Teams or Z:. Both only read the deposit, so they behave the same in
-  producer and reviewer sessions. Python and Stata siblings are planned.
+  producer and reviewer sessions. Python and Stata siblings are planned
+  ([#152](https://github.com/unicef-drp/cso-toolkit/issues/152)).
+- **`dw_read_provenance()` and `dw_provenance_diff()` (R only)** — read the
+  `.provenance.json` sidecar that `dw_save()` writes, and compare two runs of
+  the same output from their sidecars alone: `reproduced` (same inputs and a
+  byte-identical output), `output_changed` (same inputs, different output;
+  warns), `inputs_changed` (lists added / removed / changed inputs),
+  `first_run`, or `no_input_record`. Inputs are compared through a
+  `metadata$inputs` record (file + SHA-256), such as the manifest returned by
+  `dw_fetch_inputs()`. Use `dw_compare()` next for the record-level diff.
+  Python and Stata siblings are planned
+  ([#152](https://github.com/unicef-drp/cso-toolkit/issues/152)).
 
 ## v0.8.0 (2026-07-13)
 

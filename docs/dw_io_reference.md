@@ -281,4 +281,27 @@ file's Teams / Z: status (`match`, `differs`, `missing`, `no access`);
 Both functions only read the deposit and write only under `local_root`, so
 they behave identically in producer and reviewer sessions. For a gitignored
 inputs folder, add `!<rel_dir>/**/` and `!<rel_dir>/**/.gitkeep` exceptions so
-Git tracks the placeholders.
+Git tracks the placeholders. Python and Stata siblings: #152.
+
+## `dw_read_provenance(path)` and `dw_provenance_diff(previous, current)` (Unreleased, R only)
+
+Run-level comparison of two `dw_save()` outputs through their
+`.provenance.json` sidecars. Read the previous sidecar **before** the new run
+overwrites the output:
+
+```r
+previous <- dw_read_provenance(out_csv)          # NULL on the first run
+dw_save(result, path = out_csv,
+        metadata = list(inputs = manifest[, c("file", "sha256", "origin")]))
+run <- dw_provenance_diff(previous, out_csv)
+run$status   # "reproduced", "output_changed", "inputs_changed",
+             # "first_run" or "no_input_record"
+```
+
+Inputs are compared through `metadata$inputs` (one row per input with `file`
+and `sha256`; the `dw_fetch_inputs()` manifest has that shape) and outputs
+through the sidecars' `sha256`. `output_changed` (same inputs, different
+output) warns with a `[cso_toolkit.dw_provenance_diff]` envelope;
+`inputs_changed` returns `inputs_added`, `inputs_removed` and
+`inputs_changed`. Follow with `dw_compare()` for the records that moved.
+Python and Stata siblings: #152.
