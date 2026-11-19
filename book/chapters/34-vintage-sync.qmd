@@ -43,6 +43,7 @@ The fields:
 | `pulled_by` | Who ran the pull. A breadcrumb, not used by any helper. |
 | `vendored` | The list of files copied from the toolkit into this repo. The planned `cso_toolkit_pull` iterates this list. |
 | `local_edits` | Files in `vendored` that have intentional local divergence. `cso_toolkit_pull` will skip these on update so a refresh does not clobber a deliberate patch. |
+| `target_version` | Optional. The version this repo has decided it must run on, e.g. `"v0.9.1"`. `cso_toolkit_check` compares `pulled_version` against it **offline** and warns loudly when the vendored copy is behind (v0.9.2). |
 
 Two values of `pulled_version` carry special meaning:
 
@@ -55,7 +56,9 @@ The helpers compute manifest hashes against working-tree content, so line ending
 
 ## `cso_toolkit_check` — am I behind?
 
-`cso_toolkit_check` is the only one of the three helpers that runs end to end today. It is designed to be called quietly at session start: by default it returns a result structure and prints nothing, so a profile can wire it into startup without spamming the console. Pass `quiet = FALSE` (R) / `quiet=False` (Python) to log a human-readable verdict.
+`cso_toolkit_check` is the only one of the three helpers that runs end to end today. It is designed to be called at session start: by default it returns a result structure and prints nothing, so a profile can wire it into startup without spamming the console. Pass `quiet = FALSE` (R) / `quiet=False` (Python) to log a human-readable verdict.
+
+It compares the vendored version (`pulled_version`) with two references. A **target version** — the `target_version` argument, or else the manifest's `target_version:` key — is a requirement: the comparison is offline, runs in producer and reviewer mode alike, and being behind is never silent (see "A target version" below). The **latest upstream tag** is information: producer mode polls GitHub for it and, with `quiet` off, shows a boxed notice when a newer release exists.
 
 ::: {.panel-tabset}
 #### R {.unnumbered .unlisted}
@@ -65,6 +68,9 @@ res <- cso_toolkit_check()
 
 # Loud: logs the verdict to the console
 res <- cso_toolkit_check(quiet = FALSE)
+
+# Require a version (also read from the manifest's target_version: key)
+cso_toolkit_check(quiet = FALSE, target_version = "v0.9.1")
 if (!is.null(res) && isTRUE(res$updates_available)) {
   cso_toolkit_diff()
 }
@@ -78,6 +84,9 @@ res = cso_toolkit_check()
 
 # Loud: logs the verdict
 res = cso_toolkit_check(quiet=False)
+
+# Require a version (also read from the manifest's target_version: key)
+cso_toolkit_check(quiet=False, target_version="v0.9.1")
 if res is not None and res["updates_available"]:
     cso_toolkit_diff()
 ```
@@ -95,30 +104,69 @@ The R and Python implementations are deliberate ports of one another. Both retur
 |---|---|
 | `source` | The upstream slug from the manifest. |
 | `pinned_version` | The manifest's `pulled_version`. |
-| `upstream_version` | The latest release tag found upstream. |
-| `updates_available` | `TRUE`/`True` when pinned and upstream differ **and** the pin is not an `inrepo` pin. |
+| `upstream_version` | The latest release tag found upstream; `NA`/`None` when not polled (reviewer mode, or upstream unreachable). |
+| `updates_available` | `TRUE`/`True` when the pinned version is numerically older than the upstream tag; never for an `inrepo` pin; `NA`/`None` when not polled. |
+| `target_version` | The target in effect, from the argument or the manifest; `NA`/`None` when there is none. |
+| `target_source` | `"argument"`, `"manifest"`, or `NA`/`None`. |
+| `behind_target` | `TRUE`/`True` when the pinned version is older than the target; `NA`/`None` when there is no target or the pin is `inrepo`. |
 | `updated_files` | Always `NULL`/`None` here — reserved to be populated by `cso_toolkit_diff`. |
 
 ### What the check guards against
 
-The order of these guards matters. The function returns `NULL`/`None` — silently, unless `quiet` is off — in any of the following cases:
+The function returns `NULL`/`None` — silently, unless `quiet` is off — when there is nothing it can check:
 
-1. **Reviewer mode.** This is the very first check. Reviewer mode — the offline, no-network role defined in the roles and mode-contract chapter — forbids external network calls, and a GitHub release lookup is exactly such a call. If `dw_apis_allowed` is not `TRUE`, the function returns immediately. Reviewers therefore never see sync chatter; they run against whatever vintage the producer pinned.
+1. **Reviewer mode without a target.** Reviewer mode — the offline, no-network role defined in the roles and mode-contract chapter — forbids external network calls, and a GitHub release lookup is exactly such a call, so the upstream poll is skipped. With no target version to compare offline, there is nothing left to check. (With a target, reviewers *do* get the comparison: it needs no network.)
 2. **Missing or unreadable manifest.** If the `yaml`/PyYAML package is absent, or no `.toolkit_manifest.yml` exists next to the helpers, the helper warns and bails. Helpers that are not vendored from any upstream simply have nothing to check.
 3. **Manifest with no `source`.** A manifest that does not name an upstream repo cannot be checked.
 4. **Upstream unreachable or has no releases.** The release lookup is wrapped so that a blocked proxy, an absent repo, or a repo with zero releases all resolve to "no result" rather than an error.
 
-Only when all four guards pass does the function compare versions. The comparison is intentionally crude: both the pinned and upstream tags are stripped of a leading `v` and compared as strings for inequality. There is no semantic-version ordering — a difference is a difference. This is enough for the signal the helper exists to give: you are not on the latest tag. It does not distinguish newer from older, and is not meant to.
+Versions are compared **numerically**: a leading `v` and any pre-release suffix (`-rc1`) are stripped and the dotted numbers compared, so `0.10.0` is newer than `0.9.1`, and a vendored copy that is *ahead* of the latest tag is not reported as behind. (Before v0.9.2 the tags were compared as strings for inequality, which could not tell newer from older.)
 
-When an update *is* available and `quiet` is off, the producer sees a yellow alert (an ANSI escape in R; a log line in Python) naming the pinned and upstream versions and suggesting the next two commands:
+When a newer upstream release exists and `quiet` is off, the producer sees a boxed notice (an R message; a WARNING-level log record in Python) with the exact next commands. It is informational — no warning is raised:
 
 ```text
-[cso-toolkit] unicef-drp/cso-toolkit: pinned v0.4.0 -> upstream v0.5.0 (newer tag available)
-              Run cso_toolkit_diff() to see what changed.
-              Run cso_toolkit_pull('v0.5.0') to refresh.
++-----------------------------------------------+
+| A newer cso-toolkit release is available      |
+|   vendored : v0.9.0                           |
+|   latest   : v0.9.1  (unicef-drp/cso-toolkit) |
+|                                               |
+| To see the changes and update:                |
+|   cso_toolkit_diff(target_version = "v0.9.1") |
+|   cso_toolkit_pull(target_version = "v0.9.1") |
++-----------------------------------------------+
 ```
 
-One rendering quirk distinguishes the two ports. The format string is `pinned v%s` in both, but the R port interpolates the raw `pulled_version` while the Python port first strips a leading `v` (`pinned_norm`, a Copilot fix on PR #7). Because the shipped manifest pins `pulled_version: "v0.4.0"`, the R alert actually reads `pinned vv0.4.0` whereas Python reads `pinned v0.4.0`. The text above shows the Python form; expect a doubled `v` from R when the pin carries the `v` prefix. The comparison logic is unaffected — both strip the `v` before testing for difference.
+### A target version: loud when behind
+
+A project that has decided to run on a given version — say, after a release that fixes a bug it depends on — records that version as `target_version:` in its manifest (or passes `target_version =` from the profile). The comparison is offline, so it runs in **both** modes. When the vendored copy is behind the target, the check is deliberately loud:
+
+- it raises a **warning** in the error-envelope shape, `[cso_toolkit.cso_toolkit_check] … Fix: … cso_toolkit_pull(target_version = "v0.9.1") …`, even with `quiet` on, so a required re-vendor is never silent;
+- with `quiet` off it also prints a boxed alert, titled `cso-toolkit is BEHIND its target version`, with the vendored, target and (in producer mode) latest versions and the exact `cso_toolkit_diff()` / `cso_toolkit_pull()` commands;
+- in **reviewer mode** it only warns: no network call is made and no file changes; the warning tells the reviewer to ask the producer to re-vendor.
+
+In a reviewer session with `target_version: "v0.9.1"` in the manifest and `v0.9.0` vendored, `cso_toolkit_check(quiet = FALSE)` prints:
+
+```text
++---------------------------------------------------------------+
+| cso-toolkit is BEHIND its target version                      |
+|   vendored : v0.9.0                                           |
+|   target   : v0.9.1  (manifest target_version)                |
+|                                                               |
+| Producer mode is needed to update (reviewer mode only warns): |
+|   cso_toolkit_diff(target_version = "v0.9.1")                 |
+|   cso_toolkit_pull(target_version = "v0.9.1")                 |
++---------------------------------------------------------------+
+```
+
+and raises:
+
+```text
+[cso_toolkit.cso_toolkit_check] The vendored cso-toolkit (v0.9.0) is behind its target version v0.9.1 (from the manifest's target_version key).
+ Reviewer mode: no network call was made and nothing was changed; ask the producer to re-vendor.
+ Fix: in producer mode, run cso_toolkit_pull(target_version = "v0.9.1") (or re-vendor v0.9.1 by hand) and update pulled_version in .toolkit_manifest.yml.
+```
+
+An `inrepo` pin is never behind a target, and a pin at or above the target passes silently. The target alert was added in v0.9.2 (#106, item 4); the R and Python ports behave the same.
 
 ### How the upstream tag is resolved
 
@@ -208,7 +256,7 @@ The arguments are parallel across the two implemented ports:
 
 The guard sequence, in order, is the spine of the function:
 
-1. **Reviewer mode is a hard stop, not a silent skip.** Unlike `cso_toolkit_check`, which quietly returns `NULL` for reviewers, `cso_toolkit_pull` raises. A pull requires hitting GitHub, which the reviewer-mode contract forbids, and the error explains the fix — switch the profile to producer mode (`dw_mode: producer` in `user_config.yml` for R; `_state.configure(dw_mode="producer", dw_apis_allowed=True)` in Python). A reviewer who wants a different vintage must do it in a separate producer-mode session, never by silently mutating the pin.
+1. **Reviewer mode is a hard stop, not a silent skip.** Unlike `cso_toolkit_check`, which in reviewer mode skips the upstream poll (and only compares against a target version, offline), `cso_toolkit_pull` raises. A pull requires hitting GitHub, which the reviewer-mode contract forbids, and the error explains the fix — switch the profile to producer mode (`dw_mode: producer` in `user_config.yml` for R; `_state.configure(dw_mode="producer", dw_apis_allowed=True)` in Python). A reviewer who wants a different vintage must do it in a separate producer-mode session, never by silently mutating the pin.
 2. **No manifest -> error.** The function names the path it looked under and points at the template schema.
 3. **Manifest with no `source` -> error.** It cannot pull from an unnamed upstream.
 4. **Upstream unreachable -> error.** Resolved via the same `.cso_upstream_latest_tag` helper as the check. The error enumerates the likely causes — repo does not exist yet, a UNICEF corporate proxy is blocking `api.github.com`, or no `gh`/HTTP client is installed — and the fix.
