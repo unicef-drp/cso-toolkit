@@ -6,6 +6,12 @@ _Entries land here as PRs merge into `develop`. When the next release
 is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
+## v0.10.0 (2026-11-19)
+
+`cso_toolkit_check()` warns loudly when the vendored copy is behind a
+target version, offline and in both modes; versions now compare
+numerically. MINOR: a new optional argument and manifest key, no breaks.
+
 ### Added
 
 - **`cso_toolkit_check()` warns loudly when the vendored copy is behind a

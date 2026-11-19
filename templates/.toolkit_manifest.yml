@@ -23,7 +23,7 @@
 #                    consumer's 00_functions/.
 #   local_edits    — files in `vendored:` that have local divergence;
 #                    `cso_toolkit_pull()` skips these on update.
-#   target_version — optional (v0.9.2+). The version this repo must run on
+#   target_version — optional (v0.10.0+). The version this repo must run on
 #                    (e.g. "v0.9.1"). cso_toolkit_check() compares
 #                    pulled_version against it offline, in producer and
 #                    reviewer mode, and warns loudly when behind.

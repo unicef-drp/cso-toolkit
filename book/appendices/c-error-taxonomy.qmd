@@ -292,7 +292,7 @@ Run comparison is informational: a difference between two runs is a **status**, 
 
 The toolkit is **vendored**, not installed over the network: consumers copy the helpers into their own `00_functions/` and pin a version in `.toolkit_manifest.yml` (see the vendoring-model chapter). Drift is the gap between that pinned version and the upstream latest tag.
 
-`cso_toolkit_check()` reads the local manifest and compares the pinned version with two references (v0.9.2):
+`cso_toolkit_check()` reads the local manifest and compares the pinned version with two references (v0.10.0):
 
 - **The latest upstream tag** (producer mode only; it calls the GitHub API). A newer tag is informational: with `quiet = FALSE` a boxed notice names the versions and the exact `cso_toolkit_diff()` / `cso_toolkit_pull()` commands, but nothing is raised.
 - **A target version** (the `target_version` argument, or the manifest's `target_version:` key). The comparison is offline and runs in both modes. Being behind the target raises a **warning** in envelope shape, even with `quiet` on:
