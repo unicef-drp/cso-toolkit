@@ -95,7 +95,7 @@ flowchart TD
 
     subgraph TK["cso-toolkit (this repo)"]
         direction TB
-        IO["IO contract<br/>dw_save · dw_use<br/>dw_compare · dw_merge<br/>dw_isid · dw_verify_z"]
+        IO["IO contract<br/>dw_save · dw_use<br/>dw_compare · dw_merge<br/>dw_isid · dw_verify_z<br/>dw_fetch_inputs · dw_check_deposit<br/>dw_read_provenance · dw_provenance_diff"]
         API["API contract<br/>dw_api_fetch<br/>dw_api_cached<br/>dw_api_inventory"]
         SYNC["Sync contract<br/>cso_toolkit_check<br/>cso_toolkit_pull"]
         AGG["Aggregation<br/>aggregate_data_v2<br/>apply_time_window<br/>dw_nestweight"]
@@ -196,12 +196,14 @@ Each capability family is implemented in all three language siblings
 unless flagged. Per-function reference docs are linked in the right
 column.
 
-### IO contract — `dw_save`, `dw_use`, `dw_compare`, `dw_merge`, `dw_isid`, `dw_verify_z`
+### IO contract — `dw_save`, `dw_use`, `dw_compare`, `dw_merge`, `dw_isid`, `dw_verify_z`, `dw_fetch_inputs`, `dw_check_deposit`, `dw_read_provenance`, `dw_provenance_diff`
 
 Uniform file IO with auto-dispatch by extension
 (CSV / TSV / XLSX / RDS-or-PKL / DTA / Parquet / JSON / YAML), `isid`
 uniqueness check, automatic `.provenance.json` sidecar, Z: drive mirror
-on canonical writes, integrity check on canonical reads.
+on canonical writes, integrity check on canonical reads; for inputs kept
+out of Git, fetch-and-verify against the Teams / Z: deposit, and a
+run-level comparison of two outputs from their sidecars.
 
 | Function | R | Python | Stata | Reference |
 |---|---|---|---|---|
@@ -211,6 +213,10 @@ on canonical writes, integrity check on canonical reads.
 | `dw_merge` | ✅ | ✅ | — | R + Python only |
 | `dw_isid` | ✅ | ✅ | (embedded in `dw_save`) | same |
 | `dw_verify_z` | ✅ | ✅ | — | R + Python only |
+| `dw_fetch_inputs` | ✅ | ⏳ (#152) | ⏳ (#152) | R only — fill a gitignored inputs folder from the Teams / Z: deposit ([R](docs/dw_io_reference.md)) |
+| `dw_check_deposit` | ✅ | ⏳ (#152) | ⏳ (#152) | R only — every local input has an identical copy on Teams or Z: |
+| `dw_read_provenance` | ✅ | ⏳ (#152) | ⏳ (#152) | R only — read an output's `.provenance.json` sidecar |
+| `dw_provenance_diff` | ✅ | ⏳ (#152) | ⏳ (#152) | R only — did this run reproduce the last one? |
 
 `dw_use` accepts **HTTPS URLs** since v0.4.0 — producer downloads
 once and freezes the response under `_frozen/<host>/<path>` with a
