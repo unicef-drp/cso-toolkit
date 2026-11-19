@@ -12,7 +12,7 @@ troubleshooting. `NULL` (default) inherits `getOption("dw.debug", FALSE)`.
 See [dw_verbosity()].}
 }
 \value{
-Character. Currently `"0.6.0"`.
+Character. Currently `"0.9.0"`.
 }
 \description{
 Returns the upstream `cso-toolkit` tag the current `dw_io.R` /
@@ -32,11 +32,15 @@ stop("This script requires cso-toolkit >= 0.4.0; ",
 [cso_toolkit_check()] for upstream drift detection.
 
 Other io: 
+\code{\link{dw_check_deposit}()},
 \code{\link{dw_compare}()},
 \code{\link{dw_default_unicef_allowlist}()},
+\code{\link{dw_fetch_inputs}()},
 \code{\link{dw_is_canonical}()},
 \code{\link{dw_isid}()},
 \code{\link{dw_merge}()},
+\code{\link{dw_provenance_diff}()},
+\code{\link{dw_read_provenance}()},
 \code{\link{dw_resolve_path}()},
 \code{\link{dw_root}()},
 \code{\link{dw_save}()},

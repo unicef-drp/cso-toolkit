@@ -78,6 +78,20 @@ The following fields appear in every sidecar. The table gives the JSON key, its 
 | `sources` | array\<string\> (R/Py) / string (Stata) | Upstream data sources (e.g. `"UIS bulk SDG_092025"`, `"WPP 2024"`). |
 | `contact` | string | Owner handle (e.g. `@karavan88`). |
 | `vintage` | string | Data vintage; in Stata this lives inside `metadata`, in R/Python it is a top-level field as well. |
+| `inputs` | array\<object\> (R) | The exact input files the output was built from, one record per input: `file` (path relative to the inputs folder), `sha256`, and optionally `origin`. Pass the manifest returned by `dw_fetch_inputs()` (`manifest[, c("file", "sha256", "origin")]`). `dw_provenance_diff()` reads this record to tell whether two runs used the same inputs. R only for now (#152). |
+
+The `inputs` record serialises as an array of objects:
+
+```json
+"metadata": {
+  "title": "Global Child Targets 2030 - consolidated dataset",
+  "producer": "02_consultations/023_targets/consolidate_targets.R",
+  "inputs": [
+    { "file": "2024/NUTRITION_2024.csv", "sha256": "5e1f…", "origin": "local" },
+    { "file": "2025/WASH_2025.csv",      "sha256": "a07c…", "origin": "copied from Teams" }
+  ]
+}
+```
 
 ## A real example (R / Python)
 
@@ -171,13 +185,12 @@ The other differences are smaller but worth cataloguing:
 
 ## Consuming the sidecar
 
-A reviewer or a CI check typically does three things with a sidecar: read it, confirm the recorded `sha256` still matches the file on disk, and inspect `dw_mode` / `metadata` for lineage. Reading is plain JSON:
+A reviewer or a CI check typically does three things with a sidecar: read it, confirm the recorded `sha256` still matches the file on disk, and inspect `dw_mode` / `metadata` for lineage. Reading is plain JSON; in R, `dw_read_provenance()` does it for you (output path or sidecar path; `NULL` when there is no sidecar):
 
 ::: {.panel-tabset}
 #### R {.unnumbered .unlisted}
 ```r
-prov <- jsonlite::read_json("ed/dw_ed_edu.csv.provenance.json",
-                            simplifyVector = TRUE)
+prov <- dw_read_provenance("ed/dw_ed_edu.csv")
 identical(prov$sha256, digest::digest(file = "ed/dw_ed_edu.csv",
                                       algo = "sha256"))
 ```
@@ -200,6 +213,10 @@ datasignature
 
 A `FALSE` / `False` result here means the file changed since it was written — the lineage record no longer describes the bytes on disk, so the sidecar can no longer vouch for the artifact. R and Python can run this byte-integrity check directly because they recorded a byte hash. Stata verification is intra-Stata: re-open the dataset, recompute `datasignature`, and compare against the value in the sidecar. There is no toolkit-provided JSON reader on the Stata side — a real coverage gap, consistent with Stata's lack of an API wrapper and parquet support documented in the cross-language coverage matrix appendix.
 
+### Comparing the sidecars of two runs
+
+Two sidecars of the same output answer a fourth question: did the new run reproduce the previous one? In R, `dw_provenance_diff(previous, current)` compares the `metadata.inputs` records (inputs) and the `sha256` fields (outputs) and returns `reproduced`, `inputs_changed` (with the input files added, removed, and changed), `output_changed` (same inputs, different output; warns), `first_run`, or `no_input_record`. Read the previous sidecar with `dw_read_provenance()` before the new run overwrites the output. Python and Stata siblings are planned (#152).
+
 ## Summary
 
 Across R and Python the sidecar is effectively identical — same keys, same types, a byte-level `sha256`, ISO-8601 UTC timestamps, an `isid` array, and a full `schema.columns` list. Stata emits a parallel file with the same intent and most of the same keys, but substitutes `datasignature` for `sha256`, `idvars` for `isid`, a local timestamp for the UTC one, and a version tag for `format`, and omits `schema.columns`. A cross-language consumer must therefore key off the right integrity field per language, normalise the timestamp, and treat a Stata sidecar's hash as non-comparable to an R or Python one.
@@ -207,6 +224,8 @@ Across R and Python the sidecar is effectively identical — same keys, same typ
 Relevant source files (all under `C:/GitHub/myados/cso-toolkit`):
 
 - `r/R/dw_io.R` — `.write_provenance()` (R write sidecar) and `.write_remote_provenance()` (API-fetch sidecar)
+- `r/R/dw_provenance.R` — `dw_read_provenance()` and `dw_provenance_diff()` (read a sidecar; compare two runs)
+- `r/R/dw_deposit.R` — `dw_fetch_inputs()` (returns the input manifest recorded as `metadata.inputs`)
 - `python/src/dw_io.py` — `_write_provenance()`, `_sha256_file()`, `_utc_now_iso()` (Python write sidecar); `_write_remote_provenance()` (API-fetch sidecar)
 - `stata/src/dw_save.ado` — Stata sidecar emission (`datasignature`, `idvars`, `format: dw_save.provenance/1`)
 - `docs/dw_io_reference.md` — sidecar field overview

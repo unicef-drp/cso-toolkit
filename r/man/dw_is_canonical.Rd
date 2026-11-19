@@ -27,10 +27,14 @@ and by [dw_use()] to decide whether to run a Z: integrity check.
 [dw_resolve_path()], [dw_verify_z()].
 
 Other io: 
+\code{\link{dw_check_deposit}()},
 \code{\link{dw_compare}()},
 \code{\link{dw_default_unicef_allowlist}()},
+\code{\link{dw_fetch_inputs}()},
 \code{\link{dw_isid}()},
 \code{\link{dw_merge}()},
+\code{\link{dw_provenance_diff}()},
+\code{\link{dw_read_provenance}()},
 \code{\link{dw_resolve_path}()},
 \code{\link{dw_root}()},
 \code{\link{dw_save}()},

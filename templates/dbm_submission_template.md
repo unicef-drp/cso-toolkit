@@ -227,6 +227,7 @@ accepted with a rationale).
 - [ ] Sector lead has signed off on the §5 deltas they own (`@karavan88` for ed; etc.).
 - [ ] `dw_verify_z` shows Teams == Z: byte-equal for every canonical write (§7), or Z: state explicitly flagged.
 - [ ] `dw_api_inventory()` shows every cache used by this run was either fresh or knowingly kept.
+- [ ] For pipelines that keep inputs out of Git: `dw_fetch_inputs()` / `dw_check_deposit()` passed (every input has an identical SHA-256 copy on Teams or Z:), and the `dw_provenance_diff()` status against the prior run (`reproduced`, `inputs_changed`, `output_changed`) is recorded in §4.
 - [ ] `00_functions/.toolkit_manifest.yml` is on a tagged cso-toolkit version (no `inrepo` or `unreleased` suffixes).
 - [ ] `CHANGELOG.md` has an entry for this vintage.
 - [ ] Promotion done: `cp finaldir/<sector>_tocopy.csv teamsWrkData/dw_<sector>.csv`

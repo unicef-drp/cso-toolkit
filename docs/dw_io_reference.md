@@ -246,3 +246,62 @@ enriched <- dw_merge(
 Lower-level helpers exposed for standalone use. `dw_isid` is the uniqueness
 check invoked automatically by `dw_save(..., isid = ...)`. `dw_verify_z` is
 the integrity check invoked automatically by `dw_use` on canonical reads.
+
+## `dw_fetch_inputs(local_root, rel_dir, pattern, copy, gitkeep)` and `dw_check_deposit(paths, local_root, rel_dir)` (Unreleased, R only)
+
+For pipelines whose raw inputs are kept out of Git in a local folder that
+mirrors a deposit folder: `<repo>/<rel_dir>` locally corresponds to
+`<teamsFolderCanonical>/<rel_dir>` on Teams and `<dwZDrive>/<rel_dir>` on Z:.
+
+```r
+rel <- "02_consultations/023_targets/inputs"
+manifest <- dw_fetch_inputs(
+  local_root = file.path(projectFolder, rel),
+  rel_dir    = rel,
+  pattern    = "_20(23|24|25)\\.(csv|txt)$"
+)
+data <- lapply(manifest$path, readr::read_csv)
+dw_save(result, path = out_csv,
+        metadata = list(inputs = manifest[, c("file", "sha256", "origin")]))
+```
+
+`dw_fetch_inputs` lists inputs locally and on Teams / Z:, stops if Teams and
+Z: disagree, copies deposit-only files into `local_root` (Z: preferred,
+SHA-256-verified, atomic rename) or reads them in place with `copy = FALSE`,
+creates a `.gitkeep` in `local_root` and every local or deposit subfolder
+(`gitkeep = TRUE`, the default), and then calls `dw_check_deposit`. It
+returns the input manifest: `file`, `path`, `sha256`, `origin`, `teams`, `z`.
+
+`dw_check_deposit` passes a file when an identical copy exists on Teams or Z:
+and no existing copy differs; Z: being unmounted is fine when Teams matches.
+Failures stop with a `[cso_toolkit.dw_check_deposit]` envelope listing each
+file's Teams / Z: status (`match`, `differs`, `missing`, `no access`);
+`stop_on_fail = FALSE` returns the report instead.
+
+Both functions only read the deposit and write only under `local_root`, so
+they behave identically in producer and reviewer sessions. For a gitignored
+inputs folder, add `!<rel_dir>/**/` and `!<rel_dir>/**/.gitkeep` exceptions so
+Git tracks the placeholders. Python and Stata siblings: #152.
+
+## `dw_read_provenance(path)` and `dw_provenance_diff(previous, current)` (Unreleased, R only)
+
+Run-level comparison of two `dw_save()` outputs through their
+`.provenance.json` sidecars. Read the previous sidecar **before** the new run
+overwrites the output:
+
+```r
+previous <- dw_read_provenance(out_csv)          # NULL on the first run
+dw_save(result, path = out_csv,
+        metadata = list(inputs = manifest[, c("file", "sha256", "origin")]))
+run <- dw_provenance_diff(previous, out_csv)
+run$status   # "reproduced", "output_changed", "inputs_changed",
+             # "first_run" or "no_input_record"
+```
+
+Inputs are compared through `metadata$inputs` (one row per input with `file`
+and `sha256`; the `dw_fetch_inputs()` manifest has that shape) and outputs
+through the sidecars' `sha256`. `output_changed` (same inputs, different
+output) warns with a `[cso_toolkit.dw_provenance_diff]` envelope;
+`inputs_changed` returns `inputs_added`, `inputs_removed` and
+`inputs_changed`. Follow with `dw_compare()` for the records that moved.
+Python and Stata siblings: #152.

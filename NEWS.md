@@ -6,6 +6,58 @@ _Entries land here as PRs merge into `develop`. When the next release
 is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
+## v0.9.0 (2026-11-19)
+
+Inputs kept out of Git, verified against the deposit; runs compared from
+their provenance sidecars.
+
+### Added
+
+- **`dw_fetch_inputs()` and `dw_check_deposit()` (R only)** — for pipelines
+  whose raw inputs are kept out of Git in a local folder that mirrors a
+  folder of the canonical deposit (Teams `060.DW-MASTER` and its Z: mirror).
+  `dw_fetch_inputs()` copies deposit-only inputs into the local folder
+  (Z: preferred, each copy SHA-256-verified, atomic rename as in
+  `dw_stage()`), or reads them in place with `copy = FALSE`; stops when Teams
+  and Z: disagree; by default (`gitkeep = TRUE`) mirrors the folder layout
+  locally with a `.gitkeep` in every folder so it stays visible; and returns
+  an input manifest (file, path, SHA-256, origin) to pass to `dw_save()`'s
+  `metadata`. `dw_check_deposit()` proves every local input has an identical
+  copy on Teams or Z:. Both only read the deposit, so they behave the same in
+  producer and reviewer sessions. Python and Stata siblings are planned
+  ([#152](https://github.com/unicef-drp/cso-toolkit/issues/152)).
+- **`dw_read_provenance()` and `dw_provenance_diff()` (R only)** — read the
+  `.provenance.json` sidecar that `dw_save()` writes, and compare two runs of
+  the same output from their sidecars alone: `reproduced` (same inputs and a
+  byte-identical output), `output_changed` (same inputs, different output;
+  warns), `inputs_changed` (lists added / removed / changed inputs),
+  `first_run`, or `no_input_record`. Inputs are compared through a
+  `metadata$inputs` record (file + SHA-256), such as the manifest returned by
+  `dw_fetch_inputs()`. Use `dw_compare()` next for the record-level diff.
+  Python and Stata siblings are planned
+  ([#152](https://github.com/unicef-drp/cso-toolkit/issues/152)).
+  ([#153](https://github.com/unicef-drp/cso-toolkit/pull/153))
+
+### Documentation
+
+- **The four functions are documented wherever their IO-contract siblings
+  are** — the IO contract chapter (with R / Python / Stata tabs), the error
+  taxonomy (each envelope and its Fix), the provenance schema (the
+  `metadata.inputs` record), the glossary (new "Deposit check" and "Input
+  manifest" entries), the roles tables, the README and the DBM submission
+  template. ([#155](https://github.com/unicef-drp/cso-toolkit/pull/155))
+
+### Fixed
+
+- **`dw_toolkit_version()` reported `"0.6.0"` in v0.7.0 and v0.8.0** — the
+  R (`r/R/dw_io.R` header, docstring, return value) and Python
+  (`python/src/dw_io.py` `_TOOLKIT_VERSION`) stamps were not bumped in those
+  two releases, so `dw_stage()`'s `.staged.json` sidecars and `dw_publish()`
+  payloads written under them record `0.6.0` (`dw_save()`'s
+  `.provenance.json` does not carry the toolkit version). Both now report
+  `0.9.0`; a `0.6.0` stamp written after 2026-07-12 means "v0.6.0, v0.7.0 or
+  v0.8.0".
+
 ## v0.8.0 (2026-07-13)
 
 Python parity: the canonical `dw_*` surface now resolves in Python.

@@ -95,7 +95,7 @@ flowchart TD
 
     subgraph TK["cso-toolkit (this repo)"]
         direction TB
-        IO["IO contract<br/>dw_save · dw_use<br/>dw_compare · dw_merge<br/>dw_isid · dw_verify_z"]
+        IO["IO contract<br/>dw_save · dw_use<br/>dw_compare · dw_merge<br/>dw_isid · dw_verify_z<br/>dw_fetch_inputs · dw_check_deposit<br/>dw_read_provenance · dw_provenance_diff"]
         API["API contract<br/>dw_api_fetch<br/>dw_api_cached<br/>dw_api_inventory"]
         SYNC["Sync contract<br/>cso_toolkit_check<br/>cso_toolkit_pull"]
         AGG["Aggregation<br/>aggregate_data_v2<br/>apply_time_window<br/>dw_nestweight"]
@@ -196,12 +196,14 @@ Each capability family is implemented in all three language siblings
 unless flagged. Per-function reference docs are linked in the right
 column.
 
-### IO contract — `dw_save`, `dw_use`, `dw_compare`, `dw_merge`, `dw_isid`, `dw_verify_z`
+### IO contract — `dw_save`, `dw_use`, `dw_compare`, `dw_merge`, `dw_isid`, `dw_verify_z`, `dw_fetch_inputs`, `dw_check_deposit`, `dw_read_provenance`, `dw_provenance_diff`
 
 Uniform file IO with auto-dispatch by extension
 (CSV / TSV / XLSX / RDS-or-PKL / DTA / Parquet / JSON / YAML), `isid`
 uniqueness check, automatic `.provenance.json` sidecar, Z: drive mirror
-on canonical writes, integrity check on canonical reads.
+on canonical writes, integrity check on canonical reads; for inputs kept
+out of Git, fetch-and-verify against the Teams / Z: deposit, and a
+run-level comparison of two outputs from their sidecars.
 
 | Function | R | Python | Stata | Reference |
 |---|---|---|---|---|
@@ -211,6 +213,10 @@ on canonical writes, integrity check on canonical reads.
 | `dw_merge` | ✅ | ✅ | — | R + Python only |
 | `dw_isid` | ✅ | ✅ | (embedded in `dw_save`) | same |
 | `dw_verify_z` | ✅ | ✅ | — | R + Python only |
+| `dw_fetch_inputs` | ✅ | ⏳ (#152) | ⏳ (#152) | R only — fill a gitignored inputs folder from the Teams / Z: deposit ([R](docs/dw_io_reference.md)) |
+| `dw_check_deposit` | ✅ | ⏳ (#152) | ⏳ (#152) | R only — every local input has an identical copy on Teams or Z: |
+| `dw_read_provenance` | ✅ | ⏳ (#152) | ⏳ (#152) | R only — read an output's `.provenance.json` sidecar |
+| `dw_provenance_diff` | ✅ | ⏳ (#152) | ⏳ (#152) | R only — did this run reproduce the last one? |
 
 `dw_use` accepts **HTTPS URLs** since v0.4.0 — producer downloads
 once and freezes the response under `_frozen/<host>/<path>` with a
@@ -406,6 +412,7 @@ Semantic versioning (MAJOR.MINOR.PATCH).
 | `v0.6.0` | 2026-07-01 | `dw_api_fetch(api = "csv")` fetcher for flat CSV-at-a-URL endpoints; fixes the `dw_api_fetch` producer cache write (removed `mirror_to_z`) and adds a `dw_save` atomic-rename retry-with-backoff. |
 | `v0.7.0` | 2026-07-12 | Handbook + ecosystem + executed parity: the book becomes **The CSO Handbook** with Part V (microdata archive / datalib) and Part VI (three-tier ecosystem + unicefData); the cross-language **conformance harness** runs R↔Python parity in CI; new `dw_map_drive` (+ `dwZDriveUNC` config key); `dw_load_config` indent-guard + quoted-value fix. No public API breaks. |
 | `v0.8.0` | 2026-07-13 | Python parity release: Python exports the canonical `dw_*` aliases (previously they raised `ImportError`; PR [#143](https://github.com/unicef-drp/cso-toolkit/pull/143)), plus `dw_root()` and `dw_default_unicef_allowlist()`; the dashboard workflow deploys from `develop` only (stops the post-release failure on `main`, PR [#142](https://github.com/unicef-drp/cso-toolkit/pull/142)). No public API breaks. |
+| `v0.9.0` | 2026-11-19 | Inputs kept out of Git and run comparison (R only; Python / Stata siblings in [#152](https://github.com/unicef-drp/cso-toolkit/issues/152)): `dw_fetch_inputs()` fills a gitignored inputs folder from the Teams / Z: deposit (SHA-256-verified copies, `.gitkeep` per folder, input manifest) and `dw_check_deposit()` proves every input matches it; `dw_read_provenance()` and `dw_provenance_diff()` tell from two sidecars whether a run reproduced the last one ([#153](https://github.com/unicef-drp/cso-toolkit/pull/153), docs [#155](https://github.com/unicef-drp/cso-toolkit/pull/155)). Fixes `dw_toolkit_version()` still reporting `0.6.0`. No public API breaks. |
 | `v1.0.0` | _committed API_ | After the `ed` sector pilot lands and a second sector vendors the helpers without modification. |
 
 **Changelog.** Per-release notes — including breaking-change migration

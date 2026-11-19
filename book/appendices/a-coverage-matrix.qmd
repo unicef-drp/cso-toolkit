@@ -52,6 +52,10 @@ The table below is grouped by the five capability families. Each row is one publ
 | `dw_isid` | Yes | Yes | Embedded in `dw_save` (no standalone command) |
 | `dw_verify_z` | Yes | Yes | n/a (integrity via `datasignature` inside `dw_use`) |
 | `dw_stage` | Yes | n/a | n/a |
+| `dw_fetch_inputs` | Yes | Planned (#152) | Planned (#152) |
+| `dw_check_deposit` | Yes | Planned (#152) | Planned (#152) |
+| `dw_read_provenance` | Yes | Planned (#152) | Planned (#152) |
+| `dw_provenance_diff` | Yes | Planned (#152) | Planned (#152) |
 | `dw_root` | Yes | Yes | n/a |
 | `dw_resolve_path` | Yes | Yes | Internal to `dw_use` / `dw_save` |
 | `dw_is_canonical` | Yes | Yes | Internal to the mode guard |
@@ -66,6 +70,8 @@ A few caveats sit behind the "Yes" cells:
 - **`dw_merge` and `dw_verify_z` are R-and-Python only.** There is no Stata sibling and none is planned. `dw_merge` is a join-with-duplicate-key guard (it warns when left/right duplicate structure does not match the declared `how`); `dw_verify_z` compares a file against its Z:-drive mirror, by file size (default, fast) or by deep SHA-256. A Stata pipeline needing either routes through R or Python.
 - **`dw_mkdir` is the mirror image.** It is a first-class *Stata* helper because Stata's built-in `mkdir` does not accept nested paths; R and Python have no need for it because their standard libraries already create directories recursively.
 - **`dw_root` is R + Python; `dw_stage` is R-only.** `dw_root` resolves the mode-aware repo/canonical root for a vendored `kind` (`"wrk"` / `"raw"` / `"meta"`) so a sector script can build paths without knowing whether the session is producer or reviewer; `dw_stage` copies a reviewer-mode sandbox file into place with a `.staged.json` integrity sidecar. `dw_stage` has no Python or Stata sibling yet.
+- **`dw_fetch_inputs` and `dw_check_deposit` are R-only for now.** They serve pipelines that keep raw inputs out of Git in a local folder mirroring a deposit folder: `dw_fetch_inputs` copies deposit-only inputs locally (or reads them in place), keeps the folder layout visible with `.gitkeep` placeholders, and returns an input manifest; `dw_check_deposit` proves every local input has an identical SHA-256 copy on Teams or Z:. Python and Stata siblings are planned (#152).
+- **`dw_read_provenance` and `dw_provenance_diff` are R-only for now.** They read the `dw_save` sidecar and compare two runs of an output from their sidecars (`reproduced`, `output_changed`, `inputs_changed`, `first_run`, `no_input_record`). Python and Stata siblings are planned (#152).
 
 ::: {.callout-note}
 `dw_isid` is not a missing Stata feature. The uniqueness check it performs is built directly into `dw_save.ado` via Stata's native `isid`, so the guarantee runs at every write — there is simply no separately callable `dw_isid` command. Declare your key with `idvars(...)` and the check fires.
@@ -258,8 +264,8 @@ The headline gaps:
 
 ## Summary: how complete is each sibling?
 
-- **R** is the reference implementation: every capability family, the full format set including `.rds` and gzipped CSV/TSV, the only generated reference site, and the only CI-gated test suite. Its version stamp is v0.8.0, level with Python. If a behaviour is ambiguous, R defines it.
-- **Python** is a near-complete functional port — core IO (including `.pkl`), all ten external-API dispatch keys, aggregation, vintage sync, and scaffolding — with full type hints, but no generated reference site, CI-manual-only testing, a couple of R-only helpers it has not yet picked up (`dw_stage`, `dw_regions`; `dw_root` now ships in Python too). Its version stamp matches R at 0.8.0, though those helper gaps remain.
+- **R** is the reference implementation: every capability family, the full format set including `.rds` and gzipped CSV/TSV, the only generated reference site, and the only CI-gated test suite. Its version stamp is v0.9.0, level with Python. If a behaviour is ambiguous, R defines it.
+- **Python** is a near-complete functional port — core IO (including `.pkl`), all ten external-API dispatch keys, aggregation, vintage sync, and scaffolding — with full type hints, but no generated reference site, CI-manual-only testing, a couple of R-only helpers it has not yet picked up (`dw_stage`, `dw_regions`; `dw_root` now ships in Python too). Its version stamp matches R at 0.9.0, though those helper gaps remain.
 - **Stata** is a deliberately scoped subset: full IO and mode contract for `.dta` / `.csv` / `.xlsx`, the reviewer no-API gate, recursive `mkdir`, and config loading — but **no external-API wrapper, no aggregation, no vintage-sync helpers, no contract auditor, no Parquet/binary formats, and no automated tests**. It enforces every half of the mode contract it can reach, and routes everything else through R or Python.
 
 When you vendor, choose the language that fits the pipeline — and where a Stata pipeline needs a capability this matrix marks "Route via R/Python," plan that crossing explicitly. The vendoring-model and onboarding chapters walk through how to wire a multi-language sector so the crossings are clean.
