@@ -6,6 +6,11 @@ _Entries land here as PRs merge into `develop`. When the next release
 is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
+## v0.9.1 (2026-11-19)
+
+Patch: generated profiles no longer risk hanging on a dead-mapped Z:
+drive, and the vendored package READMEs keep working links.
+
 ### Fixed
 
 - **Generated profiles no longer risk hanging on a dead-mapped Z: drive (R +
