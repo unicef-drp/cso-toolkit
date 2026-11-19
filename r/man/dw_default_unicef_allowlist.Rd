@@ -48,7 +48,9 @@ dw_url_allowlist <- c(
 [dw_use()] for the consumer that reads `dw_url_allowlist`.
 
 Other io: 
+\code{\link{dw_check_deposit}()},
 \code{\link{dw_compare}()},
+\code{\link{dw_fetch_inputs}()},
 \code{\link{dw_is_canonical}()},
 \code{\link{dw_isid}()},
 \code{\link{dw_merge}()},

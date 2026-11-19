@@ -45,8 +45,10 @@ dw_isid(df, keys = "REF_AREA")
 is passed).
 
 Other io: 
+\code{\link{dw_check_deposit}()},
 \code{\link{dw_compare}()},
 \code{\link{dw_default_unicef_allowlist}()},
+\code{\link{dw_fetch_inputs}()},
 \code{\link{dw_is_canonical}()},
 \code{\link{dw_merge}()},
 \code{\link{dw_resolve_path}()},

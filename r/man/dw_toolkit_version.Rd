@@ -32,8 +32,10 @@ stop("This script requires cso-toolkit >= 0.4.0; ",
 [cso_toolkit_check()] for upstream drift detection.
 
 Other io: 
+\code{\link{dw_check_deposit}()},
 \code{\link{dw_compare}()},
 \code{\link{dw_default_unicef_allowlist}()},
+\code{\link{dw_fetch_inputs}()},
 \code{\link{dw_is_canonical}()},
 \code{\link{dw_isid}()},
 \code{\link{dw_merge}()},

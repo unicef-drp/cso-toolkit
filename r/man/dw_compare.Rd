@@ -72,7 +72,9 @@ supplied); [dw_merge()] for a Stata-style join with cardinality
 assertion.
 
 Other io: 
+\code{\link{dw_check_deposit}()},
 \code{\link{dw_default_unicef_allowlist}()},
+\code{\link{dw_fetch_inputs}()},
 \code{\link{dw_is_canonical}()},
 \code{\link{dw_isid}()},
 \code{\link{dw_merge}()},
