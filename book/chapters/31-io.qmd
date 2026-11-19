@@ -14,7 +14,7 @@ Before the mechanics, five load-bearing terms. The whole argument of the chapter
 - An **error envelope** is the toolkit's structured failure message: it always states WHAT failed, WHY, and HOW to fix it. The same shape is used for hard stops and for non-blocking warnings (see the error-taxonomy appendix).
 - **AppLocker** is the Windows policy on locked-down UNICEF laptops that blocks unsigned executables. It is why the Stata side never shells out to an external binary — a constraint that shapes two of the design boundaries below.
 
-The `kind` argument that appears throughout selects which of three data roots a path resolves against: `raw` (inputs), `wrk` (working outputs), or `meta` (metadata). The functions covered here are `dw_save`, `dw_use`, `dw_compare`, `dw_merge`, `dw_isid`, `dw_verify_z`, `dw_stage`, and `dw_root`. They live in `r/R/dw_io.R`, `python/src/dw_io.py`, and the `.ado` files under `stata/src/`.
+The `kind` argument that appears throughout selects which of three data roots a path resolves against: `raw` (inputs), `wrk` (working outputs), or `meta` (metadata). The functions covered here are `dw_save`, `dw_use`, `dw_compare`, `dw_merge`, `dw_isid`, `dw_verify_z`, `dw_stage`, `dw_root`, `dw_fetch_inputs`, `dw_check_deposit`, `dw_read_provenance`, and `dw_provenance_diff`. They live in `r/R/dw_io.R`, `python/src/dw_io.py`, and the `.ado` files under `stata/src/`.
 
 ## Auto-dispatch by extension
 
@@ -365,6 +365,43 @@ dw_use , filename("dw_nut.dta") path("$teamsWrkData/nt")
 
 `dw_stage` and `dw_use`'s `stage =` integration are R-only. The `.staged.json` sidecar is deliberately distinct from `dw_save`'s `.provenance.json`, so a file that is both written by `dw_save` and staged by `dw_stage` carries both metadata blocks side by side; each reader refuses to misread the other's schema by checking a `type` discriminator.
 
+### `dw_fetch_inputs` and `dw_check_deposit` — inputs kept out of Git
+
+Some pipelines keep their raw inputs out of Git — Consult-tool exports, licensed microdata, large deliveries — in a gitignored folder of the consumer repository. The copy that makes such a run reproducible is the one deposited in the canonical store, so the toolkit treats the deposit as the source of truth. The local folder mirrors a deposit folder: `<repo>/<rel_dir>` corresponds to `<teamsFolderCanonical>/<rel_dir>` on Teams and `<dwZDrive>/<rel_dir>` on Z:.
+
+`dw_fetch_inputs` (R only) runs at the top of such a pipeline:
+
+- it lists the input files (matching `pattern`) locally and in the deposit folder on Teams and on Z:;
+- it stops when Teams and Z: hold different versions of the same file (the same canonical-integrity rule as `dw_stage`);
+- it copies deposit-only files into the local folder — Z: preferred, each copy SHA-256-verified and moved into place by atomic rename — or, with `copy = FALSE`, leaves the folder untouched and returns the deposit paths to read in place;
+- with `gitkeep = TRUE` (the default) it creates the local folder and every local or deposit subfolder, each with an empty `.gitkeep`, so the layout stays visible even though the data files are gitignored (the consumer's `.gitignore` needs `!<rel_dir>/**/` and `!<rel_dir>/**/.gitkeep` exceptions); `.gitkeep` files are never treated as inputs;
+- it finishes with `dw_check_deposit`, so any local file that is missing from the deposit, or differs from it, stops the run.
+
+It returns the **input manifest**: one row per input with `file`, `path` (what to read), `sha256`, `origin` (`local`, `copied from Z:`, `copied from Teams`, `read from …`), and the Teams and Z: status. `dw_check_deposit` can also be called on its own: a file passes when an identical copy exists on Teams or Z: and no existing copy differs, so an unmounted Z: is fine when Teams matches; `stop_on_fail = FALSE` returns the per-file report (`match`, `differs`, `missing`, `no access`) instead of stopping. Both functions only read the deposit and write only under the local folder, so they behave identically in producer and reviewer sessions.
+
+::: {.panel-tabset}
+#### R {.unnumbered .unlisted}
+```r
+rel <- "02_consultations/023_targets/inputs"
+manifest <- dw_fetch_inputs(
+  local_root = file.path(projectFolder, rel),
+  rel_dir    = rel,
+  pattern    = "_20(23|24|25)\\.(csv|txt)$"
+)
+inputs <- lapply(manifest$path, readr::read_csv)
+```
+#### Python {.unnumbered .unlisted}
+```python
+# Not available — dw_fetch_inputs and dw_check_deposit are R-only (#152).
+```
+#### Stata {.unnumbered .unlisted}
+```stata
+* Not available — dw_fetch_inputs and dw_check_deposit are R-only (#152).
+```
+:::
+
+Record the manifest in the outputs' sidecars — `dw_save(..., metadata = list(inputs = manifest[, c("file", "sha256", "origin")]))` — so each output names the exact inputs it was built from; `dw_provenance_diff` (below) reads that record back.
+
 ## Comparing and joining
 
 ### `dw_compare` — three-way diff against a reference
@@ -411,6 +448,40 @@ dw_compare , current("dw_ed_edu.dta") reference("ref_dw_ed_edu.dta") ///
 :::
 
 `dw_compare` tolerates a degenerate first deposit gracefully: in R and Python a missing or unreadable reference is treated as empty (with a warning), so every current row reports as added rather than crashing the run. Note the divergences. R and Python name the arguments `value_cols` / `numeric_value_cols`; Stata uses `valuevars` and infers numeric-versus-string comparison from each variable's storage type. The numeric tolerance defaults differ too — `1e-5` in R and Python, `1e-8` in Stata — so set `tol` explicitly when it matters. The Stata `dw_compare` prints a console summary and, via `report()`, an optional Markdown file of row counts and per-column change counts; it is sized for a publication-gate diff, not the rich row-level Markdown of its upstream `comparefiles` ancestor.
+
+### `dw_read_provenance` and `dw_provenance_diff` — did this run reproduce the last one?
+
+`dw_compare` says which records moved; `dw_provenance_diff` (R only) answers the question before it, from the `dw_save` sidecars alone and without reading any data: did the new run reproduce the previous one? `dw_read_provenance` reads the `<path>.provenance.json` sidecar of an output (or returns `NULL` when there is none); read the previous one **before** the new run overwrites the output. `dw_provenance_diff` then compares the two sidecars — inputs through the `metadata$inputs` record (`file` + `sha256` per input, the shape of the `dw_fetch_inputs` manifest), outputs through `sha256` — and returns a status:
+
+- **`reproduced`** — same inputs and a byte-identical output;
+- **`inputs_changed`** — input files were added, removed, or changed; the three lists are returned;
+- **`output_changed`** — the same inputs but a different output, which only the code or the environment can explain; it warns with an envelope;
+- **`first_run`** — there is no previous sidecar;
+- **`no_input_record`** — a sidecar predates the input record, so only the output hashes are compared.
+
+::: {.panel-tabset}
+#### R {.unnumbered .unlisted}
+```r
+previous <- dw_read_provenance(out_csv)      # NULL on the first run
+dw_save(result, path = out_csv, isid = key,
+        metadata = list(inputs = manifest[, c("file", "sha256", "origin")]))
+run <- dw_provenance_diff(previous, out_csv)
+run$status                                   # e.g. "reproduced"
+
+# then, record by record
+dw_compare(current = result, reference = previous_df, by = key)
+```
+#### Python {.unnumbered .unlisted}
+```python
+# Not available — dw_read_provenance and dw_provenance_diff are R-only (#152).
+```
+#### Stata {.unnumbered .unlisted}
+```stata
+* Not available — dw_read_provenance and dw_provenance_diff are R-only (#152).
+```
+:::
+
+`dw_provenance_diff` never stops on a difference; only a missing current sidecar or an invalid one is an error. The status is the caller's to act on — log it, fail a CI job on `output_changed`, or follow up with `dw_compare`.
 
 ### `dw_merge` — Stata-style join with cardinality assertion
 
