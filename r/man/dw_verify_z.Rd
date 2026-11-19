@@ -36,11 +36,15 @@ immediate `stop()`.
 (runs an automatic size check on canonical reads).
 
 Other io: 
+\code{\link{dw_check_deposit}()},
 \code{\link{dw_compare}()},
 \code{\link{dw_default_unicef_allowlist}()},
+\code{\link{dw_fetch_inputs}()},
 \code{\link{dw_is_canonical}()},
 \code{\link{dw_isid}()},
 \code{\link{dw_merge}()},
+\code{\link{dw_provenance_diff}()},
+\code{\link{dw_read_provenance}()},
 \code{\link{dw_resolve_path}()},
 \code{\link{dw_root}()},
 \code{\link{dw_save}()},
