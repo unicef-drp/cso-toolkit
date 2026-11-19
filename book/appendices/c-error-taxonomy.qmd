@@ -27,7 +27,7 @@ Most toolkit errors are *deliberate stops that protect reproducibility*, not bug
 | Mode-contract violation | `[cso_toolkit.dw_save]`, `[cso_toolkit.dw_use:remote]`, `[cso_toolkit.dw_api]` | A session in the wrong role tried a forbidden action (reviewer writing canonical, reviewer reaching the network). | IO contract, external-API contract |
 | Unsupported / mismatched format | `[cso_toolkit.dw_save]`, `[cso_toolkit.dw_use]` | A file extension the toolkit does not dispatch, or a format unavailable in the language sibling you are using. | IO contract |
 | API failure / blocked | `[cso_toolkit.dw_api]` | Reviewer-mode lockout with no cache, or a live HTTP failure (timeout, connection, non-2xx status). | External-API contract |
-| Integrity / `isid` failure | `[cso_toolkit.dw_isid]`, `[cso_toolkit.dw_save]`, `[cso_toolkit.dw_stage]`, `[cso_toolkit.dw_verify_z]` | Declared keys are not unique, or two copies of a "frozen" artefact disagree by hash. | IO contract, staging |
+| Integrity / `isid` failure | `[cso_toolkit.dw_isid]`, `[cso_toolkit.dw_save]`, `[cso_toolkit.dw_stage]`, `[cso_toolkit.dw_verify_z]`, `[cso_toolkit.dw_fetch_inputs]`, `[cso_toolkit.dw_check_deposit]`, `[cso_toolkit.dw_read_provenance]`, `[cso_toolkit.dw_provenance_diff]` | Declared keys are not unique, two copies of a "frozen" artefact disagree by hash, a local input is missing from or differs from the deposit, or a provenance sidecar is missing or unreadable. | IO contract, staging, input deposit, run comparison |
 | Vendor drift | `[cso-toolkit]` (sync log), `[cso_toolkit.cso_toolkit_pull]` | The vendored helper version trails the upstream tag pinned in the manifest. | Vintage-sync contract |
 
 ## 1. Mode-contract violation
@@ -143,6 +143,7 @@ The real gap, though, is **coverage asymmetry across siblings** (see the coverag
 - **Stata `dw_save` writes `.dta` only.** It does not dispatch on extension — it always saves a Stata dataset, so there is no Parquet, RDS, or CSV write path on the Stata side. Pipelines that need those formats produce them in R or Python and let Stata consume the `.dta`.
 - **Stata `dw_use` reads `.dta`, `.csv`, and `.xlsx` only.** Parquet, RDS, and RData reads are out of scope on the Stata side; route them through R or Python.
 - **`dw_merge`, `dw_verify_z`, `dw_stage`, and the standalone `dw_isid` are R + Python only.** Calling a name that exists in R but not in Stata fails as an *unknown command*, not as a toolkit envelope — so a "command not found" from Stata is itself a coverage signal, not a bug.
+- **`dw_fetch_inputs`, `dw_check_deposit`, `dw_read_provenance`, and `dw_provenance_diff` are R only** (Python and Stata siblings: #152). Their envelopes are raised by R alone; from Python or Stata the names are simply undefined.
 - **`.RData` / `.rda` writes skip the provenance sidecar** — not an error, but expect it: the write succeeds silently, with no `.provenance.json` companion.
 
 The fix is to choose an extension the target sibling supports, or move the step to the language whose sibling implements the format. The contract is identical *where the format is implemented*; the gaps are in coverage, not in semantics. When in doubt, the coverage matrix appendix is the authoritative source for what each sibling can read and write.
@@ -265,6 +266,27 @@ An upstream-changed condition (the sandbox still matches its own archive, but th
 ### Z: mirror integrity (`dw_verify_z`)
 
 On a canonical read in producer mode, `dw_use()` compares the Teams and Z: copies (by file size by default; `verify_z = "sha256"` for a deep check). A mismatch emits a **warning** and the read still completes — this is intentionally non-fatal, because a size difference is often a benign line-ending artefact rather than a content divergence. Pass `verify_z = FALSE` to skip the check, or `verify_z = "sha256"` when you need certainty. (`dw_verify_z` is R + Python only; the Stata `dw_use` runs an equivalent non-blocking size/`datasignature` check inline.)
+
+### Input-deposit integrity (`dw_fetch_inputs`, `dw_check_deposit`)
+
+For pipelines whose inputs are kept out of Git, the deposit on Teams / Z: is the source of truth, and every local input must have an identical copy there. The stops (R only):
+
+- `[cso_toolkit.dw_fetch_inputs] No input files … were found locally or in the deposit.` — nothing matches the pattern in the local folder, on Teams, or on Z:. Fix: deposit the inputs in the Teams folder named in the message (same relative layout) and rerun; if the deposit is unreachable too, source the consumer profile, sync Teams, or connect to Z:.
+- `[cso_toolkit.dw_fetch_inputs] Teams and Z: hold different versions of '<file>'.` — a canonical-integrity stop, as in `dw_stage`: nothing is copied. Fix: decide which version is correct and replace the other.
+- `[cso_toolkit.dw_fetch_inputs] Could not copy '<file>' from the deposit.` — the copy failed or its SHA-256 did not match the source, twice; the temporary `<file>.dw_fetch.tmp` is removed. Fix: make sure the source is fully synced (OneDrive) or Z: is reachable, and that the local folder is writable.
+- `[cso_toolkit.dw_check_deposit] Deposit check failed for N of M input file(s).` — the message tabulates each file's Teams and Z: status. `missing`: copy the file to the Teams deposit (same relative path) and let OneDrive sync. `differs`: the local file and the deposited copy are not the same; decide which is correct and replace the other.
+- `[cso_toolkit.dw_check_deposit] Cannot verify the inputs: neither the Teams deposit nor Z: is available.` — Fix: source the consumer profile (it sets `teamsFolderCanonical`, `dwZDrive`, `dw_z_available`), sync Teams, or connect to Z:.
+- `[cso_toolkit.dw_check_deposit] N path(s) are not under local_root …` — a caller error: the deposit location of such a path is undefined.
+
+`dw_check_deposit(..., stop_on_fail = FALSE)` returns the per-file report instead of stopping on missing or differing files.
+
+### Run comparison (`dw_read_provenance`, `dw_provenance_diff`)
+
+Run comparison is informational: a difference between two runs is a **status**, not an error. Only these conditions raise (R only):
+
+- `[cso_toolkit.dw_read_provenance] The provenance sidecar is not valid JSON` — Fix: rewrite the output with `dw_save()` to regenerate its sidecar, or restore the sidecar from version control. A *missing* sidecar is not an error: `dw_read_provenance` returns `NULL`.
+- `[cso_toolkit.dw_provenance_diff] The current output has no provenance sidecar.` — Fix: write the output with `dw_save()` (`provenance = TRUE`, the default) before comparing runs.
+- `[cso_toolkit.dw_provenance_diff] Same inputs as the previous run but a different output` — a **warning** (status `output_changed`): the code or the environment changed between two runs on identical inputs. Fix: if intended, record the change; otherwise run `dw_compare()` on the two outputs. Pass `warn = FALSE` to silence it.
 
 ## 5. Vendor drift
 

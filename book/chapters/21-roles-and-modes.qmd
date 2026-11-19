@@ -220,6 +220,8 @@ The same functions serve all three roles, but each role exercises a different su
 | `dw_compare` | runs on every production run | runs on every reviewer run | reads compare reports as a publication gate |
 | `dw_verify_z` | runs after a canonical write to confirm the mirror landed | runs on canonical reads to verify integrity | runs as a final pre-publication check |
 | `dw_isid` | enforces row uniqueness pre-write | spot-checks reproduced data | optional spot-check |
+| `dw_fetch_inputs` / `dw_check_deposit` | fetches gitignored inputs from the deposit and verifies them before a run (read-only on the deposit) | same: reproduces from the deposited inputs, never writes to Teams / Z: | n/a |
+| `dw_read_provenance` / `dw_provenance_diff` | checks each run against the previous one | confirms a reproduction is byte-identical | reads the sidecars as lineage evidence |
 | `dw_publish` | n/a | refused in reviewer mode | submits to Helix (R only; dry-run stub today) |
 
 The cross-language coverage of these helpers is uneven, and the chapters on the IO and external-API contracts cover the gaps honestly. Two are worth flagging here because they bear directly on the role split. First, Stata has **no API wrapper** — `dw_api_fetch` and `dw_api_cached` exist only in R and Python — so the producer's cache-refresh leg is an R/Python responsibility, and Stata's contribution to the reviewer guard is the standalone `dw_require_no_api` assertion alone. Second, `dw_publish` exists only in R. The coverage matrix appendix gives the full per-function picture.

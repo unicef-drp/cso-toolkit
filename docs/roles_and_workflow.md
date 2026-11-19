@@ -141,6 +141,8 @@ The `00_functions/` helpers (`dw_io.R`, `dw_api.R`) are shared. Each role uses a
 | `dw_verify_z(path)` | runs after canonical write to verify mirror landed | runs on canonical reads to verify integrity | runs as a final pre-publication check |
 | `dw_isid(df, keys)` | enforces row uniqueness pre-write | spot-checks reproduced data | optional spot-check |
 | `dw_merge(x, using, by, how)` | used in sector pipelines | used in reproduction | n/a |
+| `dw_fetch_inputs(local_root, rel_dir, ...)` / `dw_check_deposit(...)` | fetches gitignored inputs from the deposit and verifies them before a run | same; read-only on Teams / Z: | n/a |
+| `dw_read_provenance(path)` / `dw_provenance_diff(previous, current)` | checks each run against the previous one | confirms a reproduction is byte-identical | reads sidecars as lineage evidence |
 
 ## Workflow per role
 
