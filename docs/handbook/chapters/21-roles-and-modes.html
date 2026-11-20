@@ -434,7 +434,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </ul></li>
   <li><a href="#the-helper-subset-each-role-uses" id="toc-the-helper-subset-each-role-uses" class="nav-link" data-scroll-target="#the-helper-subset-each-role-uses"><span class="header-section-number">4.5</span> The helper subset each role uses</a></li>
   <li><a href="#a-note-on-the-publisher-role" id="toc-a-note-on-the-publisher-role" class="nav-link" data-scroll-target="#a-note-on-the-publisher-role"><span class="header-section-number">4.6</span> A note on the PUBLISHER role</a></li>
-  <li><a href="#why-this-matters" id="toc-why-this-matters" class="nav-link" data-scroll-target="#why-this-matters"><span class="header-section-number">4.7</span> Why this matters</a></li>
+  <li><a href="#collaboration-model-single--and-multi-producer-projects" id="toc-collaboration-model-single--and-multi-producer-projects" class="nav-link" data-scroll-target="#collaboration-model-single--and-multi-producer-projects"><span class="header-section-number">4.7</span> Collaboration model: single- and multi-producer projects</a>
+  <ul class="collapse">
+  <li><a href="#modes-are-per-session-the-collaboration-model-is-per-project" id="toc-modes-are-per-session-the-collaboration-model-is-per-project" class="nav-link" data-scroll-target="#modes-are-per-session-the-collaboration-model-is-per-project"><span class="header-section-number">4.7.1</span> Modes are per session; the collaboration model is per project</a></li>
+  <li><a href="#why-not-a-third-mode-or-a-new-role" id="toc-why-not-a-third-mode-or-a-new-role" class="nav-link" data-scroll-target="#why-not-a-third-mode-or-a-new-role"><span class="header-section-number">4.7.2</span> Why not a third mode or a new role</a></li>
+  <li><a href="#what-multi-producer-changes" id="toc-what-multi-producer-changes" class="nav-link" data-scroll-target="#what-multi-producer-changes"><span class="header-section-number">4.7.3</span> What <code>multi-producer</code> changes</a></li>
+  <li><a href="#how-to-switch-and-why-switching-midway-is-safe" id="toc-how-to-switch-and-why-switching-midway-is-safe" class="nav-link" data-scroll-target="#how-to-switch-and-why-switching-midway-is-safe"><span class="header-section-number">4.7.4</span> How to switch, and why switching midway is safe</a></li>
+  <li><a href="#a-worked-example-two-co-authors-who-swap-roles" id="toc-a-worked-example-two-co-authors-who-swap-roles" class="nav-link" data-scroll-target="#a-worked-example-two-co-authors-who-swap-roles"><span class="header-section-number">4.7.5</span> A worked example: two co-authors who swap roles</a></li>
+  <li><a href="#what-a-new-co-author-sets-on-first-clone" id="toc-what-a-new-co-author-sets-on-first-clone" class="nav-link" data-scroll-target="#what-a-new-co-author-sets-on-first-clone"><span class="header-section-number">4.7.6</span> What a new co-author sets on first clone</a></li>
+  </ul></li>
+  <li><a href="#why-this-matters" id="toc-why-this-matters" class="nav-link" data-scroll-target="#why-this-matters"><span class="header-section-number">4.8</span> Why this matters</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/unicef-drp/cso-toolkit/edit/main/book/chapters/21-roles-and-modes.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/unicef-drp/cso-toolkit/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
@@ -829,8 +838,159 @@ Canonical deposit ── 013_wrkdata ── carbon copy ──► Z: mirror (int
 <p>Of the three roles, PRODUCER and REVIEWER are fully wired into the mode contract; PUBLISHER is only partly so. The role is documented in full — its inputs, its pre-publication gates, its targets (Helix, SDMX endpoints, data.unicef.org, the State of the World’s Children tables), and its rollback procedure — and one piece of it is now code. The R package ships <code>dw_publish(path, indicator, vintage, sector, endpoint = "helix", dry_run = TRUE)</code>, parallel to <code>dw_save</code> and <code>dw_api_fetch</code>. It already enforces the call-site contract a publisher needs: a reviewer-mode call raises before any I/O, required arguments are validated, the artifact must exist on disk, and the endpoint allowlist currently admits only <code>"helix"</code>.</p>
 <p>What <code>dw_publish</code> does <em>not</em> yet do is submit. As of v0.5.0 it is a dry-run-only stub: <code>dry_run = TRUE</code> validates the call site and assembles the exact payload the live branch will POST, while <code>dry_run = FALSE</code> raises an envelope-shaped error pointing at the issue where the Helix endpoint contract is being negotiated with sector leads. There is no Python or Stata equivalent. So the publisher’s <em>transport</em> — the actual push to Helix, SDMX, the data portal, and the SoWC tables — and its remaining boundaries (read only blessed <code>013_wrkdata</code>, require a provenance chain back to original API fetches, never roll back without amending the source) are still enforced by procedure and review rather than by code. Treat the PUBLISHER role as a contract honoured mostly by hand, with the mechanical version arriving one helper at a time.</p>
 </section>
-<section id="why-this-matters" class="level2" data-number="4.7">
-<h2 data-number="4.7" class="anchored" data-anchor-id="why-this-matters"><span class="header-section-number">4.7</span> Why this matters</h2>
+<section id="collaboration-model-single--and-multi-producer-projects" class="level2" data-number="4.7">
+<h2 data-number="4.7" class="anchored" data-anchor-id="collaboration-model-single--and-multi-producer-projects"><span class="header-section-number">4.7</span> Collaboration model: single- and multi-producer projects</h2>
+<p>Everything above assumes one producer per deposit: a Database Manager who owns the outputs while reviewers reproduce them. Co-authored research projects do not work like that. Several people produce code and results, and who produces and who reviews changes over time: JP produces while Karen reviews, and a month later they swap. The toolkit handles this with a second setting that sits beside <code>dw_mode</code> rather than inside it.</p>
+<section id="modes-are-per-session-the-collaboration-model-is-per-project" class="level3" data-number="4.7.1">
+<h3 data-number="4.7.1" class="anchored" data-anchor-id="modes-are-per-session-the-collaboration-model-is-per-project"><span class="header-section-number">4.7.1</span> Modes are per session; the collaboration model is per project</h3>
+<p>The two settings answer different questions and live in different places.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Setting</th>
+<th>Question</th>
+<th>Where it lives</th>
+<th>Who sets it</th>
+<th>Values</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>dw_mode</code></td>
+<td>Is <em>this session</em> producing or reviewing?</td>
+<td><code>~/.config/user_config.yml</code> (personal, never committed)</td>
+<td>each person, as often as their role changes</td>
+<td><code>producer</code>, <code>reviewer</code></td>
+</tr>
+<tr class="even">
+<td><code>collaboration</code></td>
+<td>How many people may <em>produce</em> in this project?</td>
+<td><code>cso_project.yml</code> at the repository root (committed)</td>
+<td>the project, in one reviewed commit</td>
+<td><code>single-producer</code>, <code>multi-producer</code></td>
+</tr>
+</tbody>
+</table>
+<p>A missing <code>cso_project.yml</code> means <code>single-producer</code>, which is how the toolkit behaved before the file existed, so existing projects need no change. The file is short:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">schema</span><span class="kw">:</span><span class="at"> cso_project/1</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">collaboration</span><span class="kw">:</span><span class="at"> multi-producer</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">collaboration_since</span><span class="kw">:</span><span class="at"> 2026-11-20</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="fu">members</span><span class="kw">:</span><span class="co">          # optional, informational</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> jpazevedo</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> kbarnes</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The toolkit finds it by walking up from the working directory (or from the profile’s <code>rootFolder</code>) and stops at the repository root, so a repository without the file never picks up a parent folder’s. The model is resolved once per session; <code>dw_collaboration()</code> returns it, and a profile generated by <code>create_profile()</code> prints it at load. A template is in <code>templates/cso_project.yml</code>.</p>
+</section>
+<section id="why-not-a-third-mode-or-a-new-role" class="level3" data-number="4.7.2">
+<h3 data-number="4.7.2" class="anchored" data-anchor-id="why-not-a-third-mode-or-a-new-role"><span class="header-section-number">4.7.2</span> Why not a third mode or a new role</h3>
+<p>The obvious alternative was a third session mode (say, <code>co-producer</code>) or a fourth role. It was rejected because a mode cannot be coordinated. Modes are per person: each collaborator sets their own in a file nobody else sees. If the number of producers were a mode, two co-authors could run under different rules on the same outputs, and the protections one of them relied on would not exist for the other. A producer session that knew nothing of the other producer would overwrite their work without a trace.</p>
+<p>The number of producers is a fact about the project, not about a person, so it belongs in the repository, where it is the same for everyone, is changed in one reviewed commit, and has a history. Modes keep their meaning: a producer session writes, a reviewer session reads and writes only to its sandbox.</p>
+</section>
+<section id="what-multi-producer-changes" class="level3" data-number="4.7.3">
+<h3 data-number="4.7.3" class="anchored" data-anchor-id="what-multi-producer-changes"><span class="header-section-number">4.7.3</span> What <code>multi-producer</code> changes</h3>
+<p>Only <code>dw_save()</code> behaves differently, and only for an output that already exists and has a provenance sidecar. Reviewer sessions write to their sandbox and are not affected.</p>
+<ol type="1">
+<li><strong>Out-of-band change.</strong> If the file’s SHA-256 no longer matches the <code>sha256</code> in its sidecar, someone changed it without <code>dw_save()</code>. Replacing it would discard a change nobody recorded, so <code>dw_save()</code> stops with the standard <code>[cso_toolkit.dw_save] ... Why ... Fix</code> envelope.</li>
+<li><strong>Concurrent write.</strong> If the sidecar says another user wrote the file <em>after this session started</em>, two producers are writing the same output in the same window, and one would silently overwrite the other. <code>dw_save()</code> stops.</li>
+<li><strong>Otherwise it writes.</strong> When the previous writer was someone else, it prints a note, not an error. Handing the producer role back and forth is normal in a co-authored project; a guard that fired on every handover would teach people to override it without reading it.</li>
+</ol>
+<p>Either stop can be overridden with <code>takeover = TRUE</code> once you have checked what happened, and the override is recorded in the new sidecar. Every sidecar written in a multi-producer project also records its lineage: <code>collaboration</code>, <code>previous_sha256</code>, <code>previous_user</code>, <code>previous_written_at</code>, <code>git_branch</code> and <code>git_commit</code> (Appendix B lists them). Single-producer sidecars are unchanged.</p>
+<p>The API cache follows the same rule. An existing cache is read, never replaced, unless the producer passes <code>refresh = TRUE</code>; in a multi-producer project a refresh over another user’s fetch says so and keeps the previous fetch (<code>metadata.previous_fetch</code>) in the new provenance.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false" href="">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-3" role="tab" aria-controls="tabset-3-3" aria-selected="false" href="">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dw_collaboration</span>()</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "multi-producer"</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Karen changed the file by hand after her last dw_save():</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="fu">dw_save</span>(df, <span class="at">path =</span> <span class="st">"outputs/table2.csv"</span>, <span class="at">overwrite =</span> <span class="cn">TRUE</span>, <span class="at">force =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Error: [cso_toolkit.dw_save] Multi-producer project: refusing to replace outputs/table2.csv.</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Why (out-of-band change): the file's SHA-256 (5e1f0c...) no longer matches its</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  provenance sidecar (a07c9b...): someone changed it without dw_save(), so</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  replacing it now would discard a change nobody recorded.</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Fix:</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  1. Reconcile first: sync or pull the other change, check the file's history</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     (git log, the sidecar's user and written_at), and re-run, OR</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  2. If you have checked it and mean to replace it, pass `takeover = TRUE`;</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     the takeover is recorded in the new sidecar.</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="fu">dw_save</span>(df, <span class="at">path =</span> <span class="st">"outputs/table2.csv"</span>, <span class="at">overwrite =</span> <span class="cn">TRUE</span>, <span class="at">force =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>        <span class="at">takeover =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>dw_collaboration()</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="co"># 'multi-producer'</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>dw_save(df, path<span class="op">=</span><span class="st">"outputs/table2.csv"</span>, overwrite<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="co"># PermissionError: [cso_toolkit.dw_save] Multi-producer project: refusing to</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="co">#   replace outputs/table2.csv.</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="co">#   Why (out-of-band change): ...</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="co">#   Fix: ... pass `takeover=True`; the takeover is recorded in the new sidecar.</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>dw_save(df, path<span class="op">=</span><span class="st">"outputs/table2.csv"</span>, overwrite<span class="op">=</span><span class="va">True</span>, takeover<span class="op">=</span><span class="va">True</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="tabset-3-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-3-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>* Not yet implemented <span class="kw">in</span> Stata (issue #168): dw_save.ado neither applies</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>* the multi-producer guards nor records the lineage fields. In a</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>* multi-producer project, <span class="kw">run</span> the legs that write shared outputs from R</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>* <span class="kw">or</span> Python, <span class="kw">or</span> coordinate Stata writes <span class="kw">by</span> hand.</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+</section>
+<section id="how-to-switch-and-why-switching-midway-is-safe" class="level3" data-number="4.7.4">
+<h3 data-number="4.7.4" class="anchored" data-anchor-id="how-to-switch-and-why-switching-midway-is-safe"><span class="header-section-number">4.7.4</span> How to switch, and why switching midway is safe</h3>
+<p>Switch with <code>dw_set_collaboration()</code>, never by editing the file alone, and commit the result as one pull request that a co-author reviews:</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content">
+<div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dw_set_collaboration</span>(<span class="st">"multi-producer"</span>, <span class="at">root =</span> rootFolder,</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>                     <span class="at">members =</span> <span class="fu">c</span>(<span class="st">"jpazevedo"</span>, <span class="st">"kbarnes"</span>))</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [cso_toolkit.dw_set_collaboration] wrote .../cso_project.yml: collaboration = multi-producer</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [cso_toolkit.dw_set_collaboration] baselined 37 of 37 provenance sidecar(s) under ...</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>dw_set_collaboration(<span class="st">"multi-producer"</span>, root<span class="op">=</span>root_folder,</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>                     members<span class="op">=</span>[<span class="st">"jpazevedo"</span>, <span class="st">"kbarnes"</span>])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<p>The call writes <code>cso_project.yml</code> and adds a <code>baseline</code> object (<code>collaboration</code>, <code>at</code>, <code>by</code>) to every existing <code>*.provenance.json</code> under the root. The baseline is inserted as text: the sidecar’s <code>sha256</code> and every other field stay exactly as they were. It refuses to run in reviewer mode, because it writes. It is idempotent: a second call changes nothing.</p>
+<p>The switch is a non-event for three reasons.</p>
+<ul>
+<li><strong>No mixed rules.</strong> The setting is in the repository, so every collaborator moves to the new rules at the same commit, when they pull it. Nobody’s session can still run the old rules on the new branch.</li>
+<li><strong>No flood of alarms.</strong> Without the baseline, the first write over every artefact produced before the switch would report a change of producer. The baseline marks those artefacts as project-owned, so the first multi-producer write over them is quiet.</li>
+<li><strong>No lineage gap.</strong> The baseline leaves <code>sha256</code> untouched, so the first multi-producer write records that hash as its <code>previous_sha256</code>, and the chain starts from the last single-producer state of each file.</li>
+</ul>
+<p>Switching back to <code>single-producer</code> is the same call with the other value.</p>
+</section>
+<section id="a-worked-example-two-co-authors-who-swap-roles" class="level3" data-number="4.7.5">
+<h3 data-number="4.7.5" class="anchored" data-anchor-id="a-worked-example-two-co-authors-who-swap-roles"><span class="header-section-number">4.7.5</span> A worked example: two co-authors who swap roles</h3>
+<p>JP and Karen co-author a paper in one repository. Until now JP has produced every table; Karen has reviewed.</p>
+<ol type="1">
+<li><strong>The switch.</strong> Karen will start producing the robustness tables, so JP runs <code>dw_set_collaboration("multi-producer", members = c("jpazevedo", "kbarnes"))</code> in a producer session and opens a pull request with <code>cso_project.yml</code> and the baselined sidecars. Karen reviews and merges it.</li>
+<li><strong>Karen produces.</strong> Karen switches her <code>dw_mode</code> to <code>producer</code> in her own <code>user_config.yml</code>, pulls, and re-runs <code>03_robustness.R</code>. Her first write over <code>table3.csv</code> (last written by JP before the switch) is quiet, because the sidecar carries a baseline; the new sidecar records JP’s hash as <code>previous_sha256</code>.</li>
+<li><strong>JP reviews.</strong> JP sets his <code>dw_mode</code> to <code>reviewer</code> and reproduces Karen’s tables in his sandbox. Reviewer writes never touch the shared outputs, so no guard is involved.</li>
+<li><strong>They overlap by accident.</strong> One afternoon both run <code>02_main.R</code> in producer mode against the shared project folder. Karen’s run finishes first. When JP’s run reaches <code>dw_save()</code> for <code>table2.csv</code>, the sidecar shows that Karen wrote it after JP’s session started, and <code>dw_save()</code> stops. JP pulls Karen’s change, compares, and either re-runs or, if his version is the one to keep, passes <code>takeover = TRUE</code>, which is recorded.</li>
+<li><strong>The roles swap back.</strong> A month later JP produces again. His first write over a table Karen last wrote prints a note (“last written by kbarnes; your write follows theirs in its lineage”) and proceeds.</li>
+</ol>
+<p>At no point did either of them change the project setting again. Who produces is a session matter; how many may produce was settled once, in review.</p>
+</section>
+<section id="what-a-new-co-author-sets-on-first-clone" class="level3" data-number="4.7.6">
+<h3 data-number="4.7.6" class="anchored" data-anchor-id="what-a-new-co-author-sets-on-first-clone"><span class="header-section-number">4.7.6</span> What a new co-author sets on first clone</h3>
+<p>A new co-author needs only their personal block in <code>~/.config/user_config.yml</code>, with <code>dw_mode: reviewer</code> until they start producing. The project file decides the rest: once they pull the repository, every session they open follows the same collaboration model as everyone else’s. They do not need to add anything about the project to their personal configuration, and they could not override it there if they tried.</p>
+</section>
+</section>
+<section id="why-this-matters" class="level2" data-number="4.8">
+<h2 data-number="4.8" class="anchored" data-anchor-id="why-this-matters"><span class="header-section-number">4.8</span> Why this matters</h2>
 <p>The whole point of the relay is <em>reproducibility with permanence</em>. A reviewer must be able to run the producer’s exact scripts and get the producer’s exact numbers — which means the reviewer must read the same frozen caches the producer deposited, never a fresher pull from a live API that has moved on. Each cache is a <em>vintage</em>: the exact snapshot of the data as it stood when the producer pulled it. And a reviewer must be able to reproduce those numbers without any risk of overwriting the very deposit they are auditing. The two guards deliver exactly this: the API guard keeps the reviewer reading frozen vintages, and the <code>dw_save</code> reviewer guard keeps the reviewer’s output quarantined in a sandbox. Set <code>dw_mode</code> correctly once, and the same code base behaves as a producer or as a reviewer — safely, and without editing a single sector script.</p>
 
 
