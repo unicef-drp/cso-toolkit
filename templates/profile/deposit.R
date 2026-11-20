@@ -71,12 +71,13 @@ if (!(is.character(network_root) && length(network_root) == 1 && nzchar(network_
   network_root <- "Z:/"
 }
 dw_z_available <- .dw_drive_available(network_root)
-dwZDrive <- if (dw_z_available) file.path(network_root, "060.DW-MASTER") else NA_character_
+dwZDrive <- if (dw_z_available) file.path(sub("/+$", "", network_root), "060.DW-MASTER") else NA_character_
 if (dw_z_available && !dir.exists(dwZDrive)) {
   dw_z_available <- FALSE
   dwZDrive <- NA_character_
 }
 if (!dw_z_available) {
-  message("[!] profile: the Z: mirror (", network_root, "060.DW-MASTER) is not available -- non-blocking.")
+  message("[!] profile: the Z: mirror (", file.path(sub("/+$", "", network_root), "060.DW-MASTER"),
+          ") is not available -- non-blocking.")
 }
 
