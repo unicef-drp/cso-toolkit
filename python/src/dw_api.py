@@ -47,6 +47,7 @@ import pandas as pd
 
 from . import _state
 from .dw_io import dw_save, dw_use
+from .dw_project import _current_user, _str1, dw_collaboration
 
 _log = logging.getLogger(__name__)
 
@@ -166,6 +167,7 @@ def dw_api_fetch(
     refresh: bool = False,
     ext: Optional[str] = None,
     metadata: Optional[Mapping[str, Any]] = None,
+    takeover: bool = False,
     **kwargs: Any,
 ) -> Any:
     """Fetch from an external API, mode-aware, with deposit cache.
@@ -194,6 +196,13 @@ def dw_api_fetch(
         Cache file extension.  Defaults to the per-API default.
     metadata
         Mapping merged into the cache's ``.provenance.json`` sidecar.
+    takeover
+        Multi-producer projects only: forwarded to :func:`dw_save` to
+        replace a cache that was changed outside ``dw_save`` or fetched by
+        another user after this session started.  In a multi-producer
+        project a cache fetched by another user is only ever replaced
+        through ``refresh=True``; the new provenance keeps the previous
+        fetch (``metadata["previous_fetch"]``: sha256, user, fetched_at).
     **kwargs
         API-specific arguments — see the per-API helpers below.
 
@@ -289,6 +298,31 @@ def dw_api_fetch(
     # refresh an existing cache is a hit (above) and is never replaced.
     replacing = bool(refresh) and Path(cache_path).exists()
 
+    # Multi-producer projects (cso_project.yml): replacing a cache only ever
+    # happens through that explicit refresh.  When the cache was fetched by
+    # another user, say so and keep the previous fetch in the new provenance
+    # (``metadata["previous_fetch"]``; dw_save adds ``previous_sha256`` too).
+    # dw_save's out-of-band / concurrent guards still apply (``takeover``).
+    previous_fetch = None
+    if replacing and dw_collaboration() == "multi-producer":
+        try:
+            with open(f"{cache_path}.provenance.json", encoding="utf-8") as f:
+                prev = json.load(f)
+        except (OSError, ValueError):
+            prev = None
+        if isinstance(prev, dict):
+            prev_meta = prev.get("metadata") if isinstance(prev.get("metadata"), dict) else {}
+            previous_fetch = {
+                "sha256": _str1(prev.get("sha256")),
+                "user": _str1(prev.get("user")),
+                "fetched_at": _str1(prev_meta.get("fetched_at") or prev.get("written_at")),
+            }
+            if previous_fetch["user"] and previous_fetch["user"] != _current_user():
+                _log.info("[dw_api/%s/%s] refresh replaces the fetch by %s at %s; "
+                          "its sha256 is kept as previous_fetch in the new "
+                          "provenance", api, cache_key, previous_fetch["user"],
+                          previous_fetch["fetched_at"])
+
     api_metadata = {
         "api": api,
         "cache_key": cache_key,
@@ -301,11 +335,13 @@ def dw_api_fetch(
         # (token=..., headers={"Authorization": ...}) never land on disk.
         "fetch_args": _redact_sensitive(dict(kwargs)),
     }
+    if previous_fetch is not None:
+        api_metadata["previous_fetch"] = previous_fetch
     if metadata is not None:
         api_metadata.update(metadata)
 
     dw_save(result, path=cache_path, metadata=api_metadata,
-            overwrite=replacing, mirror_to_z=True)
+            overwrite=replacing, takeover=takeover, mirror_to_z=True)
     return result
 
 
