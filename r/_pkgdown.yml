@@ -26,6 +26,14 @@ reference:
   contents:
   - has_concept("io")
 
+- title: Collaboration model
+  desc: >
+    Project-level setting committed in `cso_project.yml`: single- or
+    multi-producer. Session modes (producer / reviewer) stay per person;
+    the number of producers is the same for every collaborator.
+  contents:
+  - has_concept("collaboration")
+
 - title: Cached API access
   desc: >
     Mode-aware wrappers around external APIs.  Producer fetches live and

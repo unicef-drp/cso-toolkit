@@ -80,6 +80,58 @@ dw_save(df, name = "dw_ed_edu.csv", sector = "ed", kind = "wrk",
         ))
 ```
 
+**Multi-producer projects (`takeover`, Unreleased).** When the repository's
+`cso_project.yml` sets `collaboration: multi-producer` (see
+`dw_collaboration()` below), a non-reviewer write over an existing output
+that has a sidecar stops with a `[cso_toolkit.dw_save]` envelope when:
+
+- the file's SHA-256 no longer matches its sidecar (**out-of-band change**:
+  someone edited it without `dw_save()`), or
+- the sidecar says another user wrote it after this session started
+  (**concurrent write**).
+
+Pass `takeover = TRUE` (Python: `takeover=True`) after checking what
+happened; the override is recorded in the new sidecar as `takeover`
+(`user`, `at`, `overrode`). A write that only follows another producer's
+prints a note and proceeds. Multi-producer sidecars also carry
+`collaboration`, `previous_sha256`, `previous_user`, `previous_written_at`,
+`git_branch` and `git_commit`. Reviewer sandbox writes skip the guards.
+Single-producer projects are unaffected. Stata: issue #168.
+
+```r
+dw_save(df, path = out_csv, overwrite = TRUE, force = TRUE, takeover = TRUE)
+```
+
+## `dw_collaboration(root = NULL, refresh = FALSE)` and `dw_set_collaboration(model, root = NULL, members = NULL, baseline = TRUE)` (Unreleased, R + Python)
+
+The number of producers is a **project** property, committed in
+`cso_project.yml` at the repository root; session modes (`dw_mode`) stay per
+person. No file means `single-producer`.
+
+```r
+dw_collaboration()          # "single-producer" | "multi-producer"
+                            # resolved once per session (discovery walks up from
+                            # rootFolder / the working directory to the
+                            # repository root); cached as dw_collaboration_model,
+                            # with dw_project_file and dw_session_start
+
+dw_set_collaboration("multi-producer", root = rootFolder,
+                     members = c("jpazevedo", "kbarnes"))
+# writes cso_project.yml and adds a `baseline` object to every existing
+# *.provenance.json under root without changing sha256 or any other field;
+# returns (invisibly) project_file, collaboration, project_file_changed,
+# sidecars_found, sidecars_updated, updated
+```
+
+`dw_set_collaboration()` is idempotent and refuses in reviewer mode. Commit
+its result as one reviewed pull request. `dw_collaboration()` stops with a
+`[cso_toolkit.dw_collaboration]` envelope when the file is not valid YAML,
+declares another `schema`, or sets an unknown model. A template is in
+`templates/cso_project.yml`. `dw_collaboration()` and the `dw_save()` guards
+live in `dw_io.R`; `dw_set_collaboration()` lives in `dw_project.R` (vendor
+it to switch a project). Python: `cso_toolkit.dw_collaboration`,
+`cso_toolkit.dw_set_collaboration`.
+
 ## `dw_use(...)`
 
 Read a file. Same path resolution as `dw_save`. Auto-dispatches on extension.

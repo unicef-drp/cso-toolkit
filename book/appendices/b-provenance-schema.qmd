@@ -140,6 +140,44 @@ produces a sidecar of this shape:
 
 The Python sidecar is the same shape: the helper builds the identical key set, serialises with `json.dump(..., indent=2)`, and computes `sha256` by streaming the file in 64-KiB blocks. R serialises with `jsonlite::write_json(..., auto_unbox = TRUE, pretty = TRUE)`. The two pretty-printers differ in whitespace, and `auto_unbox` means a single-key `isid` in R collapses to a bare string rather than a one-element array — but the keys, types, and values otherwise match.
 
+## Multi-producer lineage fields
+
+In a project whose `cso_project.yml` sets `collaboration: multi-producer` (see the roles and mode-contract chapter), every R or Python write adds lineage fields after `schema` and before `metadata`. Single-producer sidecars, including every sidecar written in a repository without `cso_project.yml`, keep exactly the key set in the core schema above.
+
+| Key | Type | Meaning | Languages |
+|---|---|---|---|
+| `collaboration` | string | Always `"multi-producer"`; marks a sidecar written under the multi-producer rules. | R / Py |
+| `previous_sha256` | string \| null | SHA-256 of the file this write replaced, computed from its bytes just before the write (so after a `takeover` over an out-of-band change it is the hash of the bytes actually replaced). `null` when the output is new. | R / Py |
+| `previous_user` | string \| null | `user` of the replaced file's sidecar; `null` when there was none. | R / Py |
+| `previous_written_at` | string \| null | `written_at` of the replaced file's sidecar; `null` when there was none. | R / Py |
+| `git_branch` | string \| null | `git rev-parse --abbrev-ref HEAD` in the output's folder, best effort; `null` outside a repository or without git. | R / Py |
+| `git_commit` | string \| null | `git rev-parse HEAD`, likewise. | R / Py |
+| `takeover` | object | Present only when the write passed `takeover = TRUE`: `user`, `at` (ISO-8601 UTC) and `overrode`, the guards it overrode (`"out_of_band"`, `"concurrent"`, or an empty array when none fired). | R / Py |
+
+`previous_sha256` chains the sidecars: each one names the bytes its write replaced, so the history of an output can be walked back without the earlier files. The guards in `dw_save()` read the same sidecar: a file whose bytes no longer match its sidecar's `sha256` was changed outside `dw_save()`, and a sidecar whose `written_at` is later than the session start and whose `user` is someone else records a concurrent write.
+
+An API-cache write made with `refresh = TRUE` over a cache fetched by another user also records `metadata.previous_fetch` (`sha256`, `user`, `fetched_at` of the replaced fetch).
+
+### The `baseline` object
+
+`dw_set_collaboration()` adds one object to every sidecar that existed when the project switched, as its last key:
+
+```json
+"baseline": {
+  "collaboration": "multi-producer",
+  "at": "2026-11-20T10:02:17+0000",
+  "by": "jpazevedo"
+}
+```
+
+| Key | Type | Meaning |
+|---|---|---|
+| `baseline.collaboration` | string | The model the project switched to. |
+| `baseline.at` | string | When the switch ran (ISO-8601 UTC). |
+| `baseline.by` | string | Who ran it. |
+
+The object is inserted as text, before the sidecar's closing brace, so `sha256` and every other field keep their bytes and the out-of-band check still holds. It marks the artefact as project-owned: the first multi-producer write over it does not report a change of producer, and that write's `previous_sha256` is the baselined hash, so the lineage chain starts from the last single-producer state. Sidecars that already carry a `baseline`, or that were written under the multi-producer rules (they have `collaboration`), are left alone, which is what makes the call idempotent. A new multi-producer sidecar never carries a `baseline`. Stata sidecars receive the object too, since it is added to every `*.provenance.json`; Stata itself neither writes nor reads the lineage fields yet (#168).
+
 ## The Stata sidecar: same shape, one difference that matters
 
 Stata emits a sidecar built to interoperate with the R and Python siblings — the comment in `dw_save.ado` states the intent plainly: "Write a sibling .provenance.json sidecar with the same shape the R helpers emit, so reviewer-mode integrity checks work across both languages." Two fields nonetheless cannot be identical, for reasons rooted in the Stata environment:
@@ -224,6 +262,9 @@ Across R and Python the sidecar is effectively identical — same keys, same typ
 Relevant source files (all under `C:/GitHub/myados/cso-toolkit`):
 
 - `r/R/dw_io.R` — `.write_provenance()` (R write sidecar) and `.write_remote_provenance()` (API-fetch sidecar)
+- `r/R/dw_io.R` — also the multi-producer guards and lineage fields (`.dw_collab_preflight()`) and `dw_collaboration()`
+- `r/R/dw_project.R` — `dw_set_collaboration()` (writes `cso_project.yml`, inserts the `baseline` object)
+- `python/src/dw_project.py` — the Python siblings of both
 - `r/R/dw_provenance.R` — `dw_read_provenance()` and `dw_provenance_diff()` (read a sidecar; compare two runs)
 - `r/R/dw_deposit.R` — `dw_fetch_inputs()` (returns the input manifest recorded as `metadata.inputs`)
 - `python/src/dw_io.py` — `_write_provenance()`, `_sha256_file()`, `_utc_now_iso()` (Python write sidecar); `_write_remote_provenance()` (API-fetch sidecar)

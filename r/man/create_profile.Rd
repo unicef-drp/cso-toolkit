@@ -72,8 +72,10 @@ Writes a `profile_<repo_name>.R` template to disk. The template wires up
 the standard CSO building blocks: user identification (USERNAME / USER
 for Windows / Mac), reproducibility seed, optional Z: drive integrity
 check, YAML user config load, optional producer / reviewer dw_mode
-resolution, a placeholder packages block, and the profile sentinel object
-downstream sector scripts assert against.
+resolution, a block that resolves and prints the project's collaboration
+model ([dw_collaboration()], read from `cso_project.yml`; single-producer
+when the file is absent), a placeholder packages block, and the profile
+sentinel object downstream sector scripts assert against.
 }
 \examples{
 \dontrun{

@@ -103,6 +103,28 @@ dw_frozen_root: Optional[str] = None
 #: fallback for ``dw_frozen_root`` resolution.
 githubFolder: Optional[str] = None
 
+# ---------------------------------------------------------------------------
+# Collaboration model (cso_project.yml) — see cso_toolkit.dw_project
+# ---------------------------------------------------------------------------
+
+#: Repository root of the project.  Where :func:`cso_toolkit.dw_collaboration`
+#: starts looking for ``cso_project.yml`` (else the working directory).
+#: Mirrors the R profile's ``rootFolder`` global.
+rootFolder: Optional[str] = None
+
+#: ``"single-producer"`` or ``"multi-producer"``.  Resolved once per session
+#: from ``cso_project.yml`` by :func:`cso_toolkit.dw_collaboration` (absent
+#: file = single-producer).  Named like the R global, which cannot be called
+#: ``dw_collaboration`` without shadowing the getter in a vendored session.
+dw_collaboration_model: Optional[str] = None
+
+#: Path of the ``cso_project.yml`` in force, or ``None``.
+dw_project_file: Optional[str] = None
+
+#: ISO-8601 UTC time the session state was set up; dates the
+#: multi-producer concurrent-write guard in :func:`cso_toolkit.dw_save`.
+dw_session_start: Optional[str] = None
+
 
 # ---------------------------------------------------------------------------
 # Configure helper
@@ -116,6 +138,8 @@ _PUBLIC_KEYS = (
     "dwZDrive", "dw_z_available",
     "dwFunct",
     "dw_url_allowlist", "dw_frozen_root", "githubFolder",
+    "rootFolder", "dw_collaboration_model", "dw_project_file",
+    "dw_session_start",
 )
 
 
