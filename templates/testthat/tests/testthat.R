@@ -4,8 +4,10 @@
 # Template from unicef-drp/cso-toolkit: templates/testthat/
 # Guidance: docs/ci_cd_guidelines.md (Tier 1, R tests).
 #
-# Run from the repo root (CI runs the same command, ci-r-tests.yml):
-#   Rscript tests/testthat.R
+# Run from the repo root, on its own or with every other check:
+#   Rscript --no-init-file tests/testthat.R
+#   Rscript --no-init-file tools/check.R      # templates/tools/check.R; CI
+#                                             # (ci-r-tests.yml) runs this too
 #
 # What it does:
 #   1. puts the session in reviewer mode, so a test that reaches for the
