@@ -25,15 +25,22 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
   artefacts (`sandbox/`, `*.staged.json`); their shared blocks are tagged
   `[shared]` and `r/tests/testthat/test-gitignore-templates.R` keeps them
   identical. `docs/ci_cd_guidelines.md` sets ten design
-  principles (CI never needs real data, fast checks runnable locally,
-  required checks on `develop` / `main`, a regression test per bug fix,
-  least privilege, Linux by default) and a tiered menu with ready-to-copy
-  workflows in `templates/workflows/`: `ci-hygiene.yml` (tracked data, files
-  over 50 MB, gitleaks secret scan, sidecar validation), `ci-contract-audit.yml`
-  (`test_scripts()` and the `.toolkit_manifest.yml` / `cso_toolkit_check()`
-  vintage check, both from the vendored `00_functions/`), `ci-r-tests.yml`
-  (testthat, advisory lintr, R CMD check variant) and `ci-manuscript.yml`
-  (LaTeX build with a page limit). `templates/testthat/` is a runnable
+  principles, local first (checks run locally with one command; CI never
+  needs real data; merges gated by the check record, required status
+  checks opt-in; a regression test per bug fix; least privilege; Linux by
+  default) and a tiered menu. `templates/tools/check.R` runs every check
+  with `Rscript --no-init-file tools/check.R` (tracked data, secrets and
+  embargoed outputs; files over 50 MB; gitleaks secret scan when
+  installed; sidecar validation; `test_scripts()` contract audit and the
+  `.toolkit_manifest.yml` / `cso_toolkit_check()` vintage check from the
+  vendored `00_functions/`; testthat; opt-in lintr and manuscript build),
+  with PASS / FAIL lines and a non-zero exit on failure;
+  `templates/hooks/pre-push` runs it before every push. The workflows in
+  `templates/workflows/` (`ci-hygiene.yml`, `ci-contract-audit.yml`,
+  `ci-r-tests.yml` with an R CMD check variant, `ci-manuscript.yml`) call
+  the same script and are opt-in: by default they run on manual dispatch
+  and on pull requests into `main` only, with the block that switches every
+  push and pull request back on. `templates/testthat/` is a runnable
   testthat skeleton for non-package projects (reviewer-mode runner, helpers,
   an example regression test, a synthetic fixture). New handbook chapter
   45, *Continuous integration and repository hygiene*.

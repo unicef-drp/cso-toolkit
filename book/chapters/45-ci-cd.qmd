@@ -1,6 +1,6 @@
 # Continuous integration and repository hygiene
 
-The contract auditor chapter showed one check — `test_scripts()` — turning a documented rule into a build gate. This chapter widens the view to everything a consumer repository should check on every push: that no data slipped into git, that no secret did either, that the provenance sidecars it commits are well-formed, that the analysis code honours the contract, that the vendored toolkit is the vintage the repo claims, and that the project's own functions still do what their tests say. It also sets out how the repository's `.gitignore` keeps data out in the first place, because continuous integration (CI) can only catch what the ignore rules let through.
+The contract auditor chapter showed one check — `test_scripts()` — turning a documented rule into a build gate. This chapter widens the view to everything a consumer repository should check before its changes merge: that no data slipped into git, that no secret did either, that the provenance sidecars it commits are well-formed, that the analysis code honours the contract, that the vendored toolkit is the vintage the repo claims, and that the project's own functions still do what their tests say. Those checks run **locally first**, with one command; GitHub Actions run the same script, but only when a repository opts in. The chapter also sets out how the repository's `.gitignore` keeps data out in the first place, because no check can catch what the ignore rules let through unnoticed.
 
 Everything here ships as copyable material in the toolkit repository, so a new project adopts it by copying files rather than by reading this chapter twice:
 
@@ -9,7 +9,9 @@ Everything here ships as copyable material in the toolkit repository, so a new p
 | `.gitignore` rules, with the reasoning and the checks | [`docs/gitignore_guidelines.md`](https://github.com/unicef-drp/cso-toolkit/blob/develop/docs/gitignore_guidelines.md) |
 | `.gitignore` templates | `templates/gitignore/research-project.gitignore`, `templates/gitignore/official-stats.gitignore` |
 | CI principles and the full menu | [`docs/ci_cd_guidelines.md`](https://github.com/unicef-drp/cso-toolkit/blob/develop/docs/ci_cd_guidelines.md) |
-| GitHub Actions workflows | `templates/workflows/ci-hygiene.yml`, `ci-contract-audit.yml`, `ci-r-tests.yml`, `ci-manuscript.yml` |
+| Every check, run locally with one command | `templates/tools/check.R` |
+| Pre-push hook that runs it | `templates/hooks/pre-push` |
+| GitHub Actions workflows (opt-in; they call `check.R`) | `templates/workflows/ci-hygiene.yml`, `ci-contract-audit.yml`, `ci-r-tests.yml`, `ci-manuscript.yml` |
 | testthat skeleton for a non-package project | `templates/testthat/` |
 
 ## Data stay out; their provenance goes in
@@ -54,53 +56,89 @@ Both templates ignore a reviewer's local artefacts — `sandbox/` and the `*.sta
 `git check-ignore -v <path>` prints the line that decides a path. `git ls-files -i -c --exclude-standard` lists tracked files the rules now say should be ignored — after adopting a template it must print nothing. `git rm --cached -- <path>` untracks a file without deleting it. History still holds anything committed before; removing it from history is a separate decision, taken with the repository owner (and the data owner, for confidential microdata), and a leaked secret is rotated first, whatever happens to history.
 :::
 
-The ignore file is the safety net, not the first line of defence. That is the staging habit: never `git add -A` or `git add .`; stage by path (`git add -- R/clean.R results/t1.csv results/t1.csv.provenance.json`) and read `git diff --cached --stat` before committing. CI is the backstop that catches what both miss.
+The ignore file is the safety net, not the first line of defence. That is the staging habit: never `git add -A` or `git add .`; stage by path (`git add -- R/clean.R results/t1.csv results/t1.csv.provenance.json`) and read `git diff --cached --stat` before committing. The checks below are the backstop that catches what both miss.
 
 ## Design principles
 
 Ten principles shape the menu. Each earns its place by a failure it prevents.
 
-1. **CI never needs real data.** Tests use tiny synthetic fixtures. Reproduction against real data runs locally in reviewer mode, and its evidence — the `dw_provenance_diff()` status, `dw_check_deposit()` output, a `dw_compare()` summary — goes in the pull request. Data must not be on a hosted runner, and a check that needs data cannot run on every push.
-2. **Default checks are fast, under ten minutes.** A check people wait for gets skipped.
-3. **The same checks run locally with one command.** A failure reproducible on your machine gets fixed before the push.
-4. **Required checks gate the protected branches.** A check that can be merged around is advice, not a gate.
+1. **Checks run locally first.** Every check in the menu runs on your machine with one command from the repository root, `Rscript --no-init-file tools/check.R`, which prints a `PASS` / `FAIL` / `SKIP` line per check and exits non-zero on any failure; a pre-push hook can run it before every push. The pull request carries its output. GitHub Actions are opt-in and call the same script, so they add an independent run, never a different check. Actions minutes run out, and a failure reproduced on your machine gets fixed before the push.
+2. **CI never needs real data.** Tests use tiny synthetic fixtures. Reproduction against real data runs locally in reviewer mode, and its evidence — the `dw_provenance_diff()` status, `dw_check_deposit()` output, a `dw_compare()` summary — goes in the pull request. Data must not be on a hosted runner, and a check that needs data cannot run on every push.
+3. **Default checks are fast, under ten minutes.** A check people wait for gets skipped, and a pre-push hook that takes too long gets bypassed.
+4. **Merges are gated by the check record.** By default the gate is the `check.R` output for the pull request's head commit and a reviewer who does not merge without it. Required status checks become available when a repository switches its workflows on for every pull request. A check that can be merged around is advice, not a gate.
 5. **Every bug fix ships a regression test** that fails on the old code and names the issue. The bug cannot return silently, and the test records what went wrong.
 6. **Least privilege, pinned actions.** Workflows start from `permissions: contents: read`; actions are pinned to a version. A compromised dependency should not be able to write to the repository or alter results unnoticed.
-7. **No secrets in logs.** Prefer checks that need no secret; scanners redact. Logs are readable by everyone with access to the repository.
+7. **No secrets in logs.** Prefer checks that need no secret; scanners redact. Logs, and check output pasted into a pull request, are readable by everyone with access to the repository.
 8. **Fail with an actionable message**, in the toolkit's WHAT / Why / Fix envelope (see the provenance and errors chapter). A red check that says how to turn it green costs minutes.
-9. **Spend minutes where they buy something.** Default to `ubuntu-latest`; run Windows and macOS on a schedule or on release. Private repositories pay for minutes, and Windows minutes count double and macOS minutes ten times.
-10. **CI is documentation.** A badge and a short README section listing what runs and how to run it locally.
+9. **Spend minutes where they buy something.** When Actions run, default to `ubuntu-latest` and few jobs (each is billed by the started minute); run Windows and macOS on a schedule or on release. Private repositories pay for minutes, and Windows minutes count double and macOS minutes ten times.
+10. **CI is documentation.** A short README section listing the checks, the local command, and which workflows are switched on.
 
 ## The default menu
 
-The checks come in three tiers. Tier 0 goes in every repository; Tier 1 in every repository with code; Tier 2 when it earns its keep.
+The checks come in three tiers. Tier 0 goes in every repository; Tier 1 in every repository with code; Tier 2 when it earns its keep. Every row runs locally as a named check of `tools/check.R`; the workflow column is the opt-in GitHub Actions template that runs the same check.
 
-| Tier | Check | Template | Gate |
+| Tier | Check | `tools/check.R` | Workflow (opt-in) |
 |---|---|---|---|
-| 0 | No data or secrets tracked outside the allowlist | `ci-hygiene.yml` | required |
-| 0 | No tracked file over 50 MB | `ci-hygiene.yml` | required |
-| 0 | Secret scan of the full history (gitleaks, redacted) | `ci-hygiene.yml` | required |
-| 0 | Provenance sidecars parse and carry the core keys | `ci-hygiene.yml` | required |
-| 0 | Contract audit, `test_scripts(error_on_violation = TRUE)` | `ci-contract-audit.yml` | required |
-| 0 | Toolkit vintage: manifest well-formed, `cso_toolkit_check()` offline | `ci-contract-audit.yml` | required |
-| 1 | R tests (testthat; R CMD check for a package) | `ci-r-tests.yml` | required |
-| 1 | lintr | `ci-r-tests.yml` | advisory |
-| 2 | Manuscript build and page limit | `ci-manuscript.yml` | advisory |
-| 2 | Site deploy, `renv` status, cross-language conformance, scheduled drift checks | see `docs/ci_cd_guidelines.md` | advisory |
+| 0 | No data, secrets or embargoed outputs tracked outside the allowlist | `tracked-data` | `ci-hygiene.yml` |
+| 0 | No tracked file over 50 MB | `large-files` | `ci-hygiene.yml` |
+| 0 | Secret scan of the full history (gitleaks, redacted; skipped locally without gitleaks) | `secret-scan` | `ci-hygiene.yml` |
+| 0 | Provenance sidecars parse and carry the core keys | `sidecars` | `ci-hygiene.yml` |
+| 0 | Contract audit, `test_scripts()` on the vendored helpers | `contract-audit` | `ci-contract-audit.yml` |
+| 0 | Toolkit vintage: manifest well-formed, `cso_toolkit_check()` offline | `vintage` | `ci-contract-audit.yml` |
+| 1 | R tests (testthat; R CMD check for a package) | `tests` | `ci-r-tests.yml` |
+| 1 | lintr (advisory) | `lint` | `ci-r-tests.yml`, manual runs |
+| 2 | Manuscript build and page limit (advisory) | `manuscript` | `ci-manuscript.yml` |
+| 2 | Site deploy, `renv` status, cross-language conformance, scheduled drift checks | — | see `docs/ci_cd_guidelines.md` |
 
-Three of the Tier 0 checks lean on earlier chapters. The **sidecar check** validates the shape [Appendix B](../appendices/b-provenance-schema.qmd) documents: `path`, `format`, `written_at`, `dw_mode`, and a 64-character hex `sha256` for an R or Python sidecar; `datasignature` in place of the hash for a Stata one; `url`, `fetched_at`, `dw_mode` and `sha256` for an API-fetch sidecar. It does not re-compute hashes: the data are not in the repository, so the bytes are checked locally or in reviewer mode, where `dw_read_provenance()`, `dw_check_deposit()` and `dw_provenance_diff()` have the files to hash. The **contract audit** is the job [the contract auditor chapter](43-contract-auditor-ci.qmd) sketched, with one change: it sources the helpers *vendored* in `00_functions/` instead of installing the toolkit from GitHub, so CI audits with exactly the vintage the repository runs ([the vendoring model](41-vendoring.qmd)). The **vintage check** reads `.toolkit_manifest.yml`, confirms every `vendored:` file is present, and runs `cso_toolkit_check()` in reviewer mode, failing when `pulled_version` is behind `target_version`. A newer upstream tag is not a failure — refreshing remains the producer's decision ([versioning and releases](44-versioning-release.qmd)).
-
-## testthat in every R repository
-
-A sector pipeline or a paper is not an R package, so it has no `R CMD check` to run its tests. The `templates/testthat/` skeleton fills that gap with a runner, `tests/testthat.R`, that works without a `DESCRIPTION`: it puts the session in reviewer mode (so a test that reaches for the network or a canonical deposit fails instead of fetching), sources the vendored helpers and the project's function files, and calls `testthat::test_dir()`, exiting non-zero on any failure. The same command runs locally and in CI.
+By default the workflow templates run only when started by hand and on release pull requests into `main`, so routine pushes cost no Actions minutes. Each carries a commented `on:` block that switches it back on for every push and pull request.
 
 ::: {.panel-tabset}
 
 #### R {.unnumbered .unlisted}
 
 ```r
-# Locally, from the repository root (CI runs the same):
-#   Rscript tests/testthat.R
+# From the repository root:
+#   Rscript --no-init-file tools/check.R                 # every default check
+#   Rscript --no-init-file tools/check.R --only tests    # one check
+#   Rscript --no-init-file tools/check.R --list          # the names
+#
+# Before every push (once per clone):
+#   mkdir -p .githooks && cp pre-push .githooks/ && chmod +x .githooks/pre-push
+#   git config core.hooksPath .githooks
+```
+
+#### Python {.unnumbered .unlisted}
+
+```python
+# tools/check.R is R. A Python-only repository runs the same hygiene and
+# sidecar checks with it (they read files only; R and jsonlite suffice),
+# with contract-audit, vintage and tests dropped from CHECKS and pytest run
+# alongside.
+```
+
+#### Stata {.unnumbered .unlisted}
+
+```stata
+* tools/check.R is R. A Stata repository runs the hygiene and sidecar
+* checks with it; Stata has no contract auditor or test runner yet.
+```
+
+:::
+
+Three of the Tier 0 checks lean on earlier chapters. The **sidecar check** validates the shape [Appendix B](../appendices/b-provenance-schema.qmd) documents: `path`, `format`, `written_at`, `dw_mode`, and a 64-character hex `sha256` for an R or Python sidecar; `datasignature` in place of the hash for a Stata one; `url`, `fetched_at`, `dw_mode` and `sha256` for an API-fetch sidecar. It does not re-compute hashes: the data are not in the repository, so the bytes are checked locally or in reviewer mode, where `dw_read_provenance()`, `dw_check_deposit()` and `dw_provenance_diff()` have the files to hash. The **contract audit** is the job [the contract auditor chapter](43-contract-auditor-ci.qmd) sketched, with one change: it sources the helpers *vendored* in `00_functions/` instead of installing the toolkit from GitHub, so CI audits with exactly the vintage the repository runs ([the vendoring model](41-vendoring.qmd)). The **vintage check** reads `.toolkit_manifest.yml`, confirms every `vendored:` file is present, and runs `cso_toolkit_check()` in reviewer mode, failing when `pulled_version` is behind `target_version`. A newer upstream tag is not a failure — refreshing remains the producer's decision ([versioning and releases](44-versioning-release.qmd)).
+
+## testthat in every R repository
+
+A sector pipeline or a paper is not an R package, so it has no `R CMD check` to run its tests. The `templates/testthat/` skeleton fills that gap with a runner, `tests/testthat.R`, that works without a `DESCRIPTION`: it puts the session in reviewer mode (so a test that reaches for the network or a canonical deposit fails instead of fetching), sources the vendored helpers and the project's function files, and calls `testthat::test_dir()`, exiting non-zero on any failure. `tools/check.R` runs it as its `tests` check, locally and, when switched on, in CI.
+
+::: {.panel-tabset}
+
+#### R {.unnumbered .unlisted}
+
+```r
+# Locally, from the repository root:
+#   Rscript --no-init-file tools/check.R --only tests
+# (or the runner on its own: Rscript --no-init-file tests/testthat.R)
 
 # A regression test names the issue and fails on the pre-fix code.
 test_that("regression #12: codes with stray whitespace or lower case are kept", {
@@ -137,10 +175,12 @@ test_that("an unknown code fails with a WHAT / Why / Fix error", {
 
 The example in the skeleton is the pattern to copy rather than the function to keep: a small project function, a fixture that carries the very codes that once broke it, and a test whose title names the issue. Run against the old implementation — an inner join on raw codes — that test fails; against the fix it passes. The skeleton follows the toolkit's own suite: helpers in `helper-*.R`, session state set through a local setter that restores on exit, errors asserted with `expect_envelope()`.
 
-## Required checks and the gitflow
+## Gating merges and the gitflow
 
-Tier 0 and Tier 1 jobs are marked as required status checks on both `develop` and `main`, so neither a feature pull request nor a release pull request can merge red (see `docs/git_workflow.md` for the gitflow itself). Advisory checks — lintr, the manuscript build, scheduled jobs — report on the pull request but never block it. Two operational details matter. GitHub matches a required check by its job name, so the templates give each job a stable `name:`. And a required workflow must not carry a `paths:` filter: when a pull request touches no matching path the workflow never runs, and its required check waits forever. Path filters belong on advisory workflows only, which is why the manuscript template is advisory.
+By default nothing on GitHub enforces the checks; the record does (see `docs/git_workflow.md` for the gitflow itself). The pull request author runs `tools/check.R` on the branch's head commit and pastes its output into the pull request; the header line names the commit and flags uncommitted changes, so the reviewer can confirm it matches the head and that every line passed. A new push needs a new run. The release pull request into `main` also triggers the workflows, which gives every release an independent run on a clean runner for a few minutes of Actions time.
+
+Required status checks are therefore not the default: with the default triggers the workflows do not run on pull requests into `develop`, and a required check that never runs blocks the merge forever. A repository that has the minutes switches each workflow's `on:` block to every push and pull request, lets the workflows run green once, and then marks the Tier 0 and Tier 1 jobs as required on `develop` and `main`. Two operational details matter then. GitHub matches a required check by its job name, so the templates give each job a stable `name:`. And a required workflow must not carry a `paths:` filter: when a pull request touches no matching path the workflow never runs, and its required check waits forever. Path filters belong on advisory workflows only, which is why the manuscript template is advisory.
 
 ---
 
-The contract auditor made one rule enforceable; this chapter makes the rest of the repository's floor enforceable in the same way. The `.gitignore` keeps data out, the committed sidecars keep their provenance in, and a handful of fast checks — none of which needs data, credentials or network — turn both, and the contract, into gates a pull request has to pass.
+The contract auditor made one rule enforceable; this chapter makes the rest of the repository's floor enforceable in the same way. The `.gitignore` keeps data out, the committed sidecars keep their provenance in, and a handful of fast checks — none of which needs data, credentials or network, and all of which run on the author's own machine — turn both, and the contract, into gates a pull request has to pass.

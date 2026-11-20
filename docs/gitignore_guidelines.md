@@ -13,9 +13,12 @@ The two kinds of repository differ in where results live; the
 [side-by-side comparison](#research-projects-and-official-statistics)
 below sets out what follows from that.
 
-The CI side of the same rules (a check that fails when data are tracked)
-is in [`ci_cd_guidelines.md`](ci_cd_guidelines.md) and
-[`templates/workflows/ci-hygiene.yml`](../templates/workflows/ci-hygiene.yml).
+The check side of the same rules (a check that fails when data are
+tracked) is the `tracked-data` check of
+[`templates/tools/check.R`](../templates/tools/check.R), run locally and,
+when a repo switches it on, by
+[`templates/workflows/ci-hygiene.yml`](../templates/workflows/ci-hygiene.yml);
+see [`ci_cd_guidelines.md`](ci_cd_guidelines.md).
 
 ## The rule
 
@@ -272,9 +275,11 @@ whatever happens to history.
   results/t1.csv results/t1.csv.provenance.json`.
 - Read `git status` and `git diff --cached --stat` before every commit.
 - The `.gitignore` is the safety net, the staging habit is the first line of
-  defence, and the CI hygiene check
-  ([`ci-hygiene.yml`](../templates/workflows/ci-hygiene.yml)) is the backstop
-  that catches what both miss.
+  defence, and the hygiene check (`tracked-data` in
+  [`tools/check.R`](../templates/tools/check.R), run by the pre-push hook)
+  is the backstop that catches what both miss. In an official-statistics
+  repo, set its `OUTPUT_DIRS` so it also fails on a tracked pre-release
+  output.
 
 ## Adopting a template in an existing repo
 

@@ -450,8 +450,12 @@ pull requests:
   never enter git, their `.provenance.json` sidecars always do; templates
   in [`templates/gitignore/`](templates/gitignore/).
 - [`docs/ci_cd_guidelines.md`](docs/ci_cd_guidelines.md) — design
-  principles and the default check menu; ready-to-copy GitHub Actions in
-  [`templates/workflows/`](templates/workflows/) and a testthat skeleton
+  principles and the default check menu, local first: every check runs
+  with `Rscript --no-init-file tools/check.R`
+  ([`templates/tools/check.R`](templates/tools/check.R)), optionally from a
+  pre-push hook ([`templates/hooks/`](templates/hooks/)); opt-in GitHub
+  Actions that call the same script in
+  [`templates/workflows/`](templates/workflows/), and a testthat skeleton
   in [`templates/testthat/`](templates/testthat/).
 
 ---
