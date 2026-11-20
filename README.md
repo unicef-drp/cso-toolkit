@@ -40,6 +40,7 @@
 - [Install / vendor](#install--vendor)
 - [Versioning and roadmap](#versioning-and-roadmap)
 - [Testing and CI](#testing-and-ci)
+- [Repository hygiene and CI for consumer repos](#repository-hygiene-and-ci-for-consumer-repos)
 - [License and citation](#license-and-citation)
 
 ---
@@ -437,6 +438,21 @@ locally and on CI (`.github/workflows/r-check.yml`).
 | **Python error-envelope test** (`python/tests/manual/error_envelope_test.py`, 30 paths) | Every public raise carries the standard envelope. **Manual-only.** |
 | **R manual smoke** (`r/tests/manual/check_consumer_side.R`) | End-to-end vendoring scenario against `api.github.com`. **Manual-only.** |
 | **GitHub Actions** (`.github/workflows/r-check.yml`) | Runs `R CMD check` (which invokes the R `testthat` suite) across `ubuntu-latest` (R release + devel), `macos-latest` (release), and `windows-latest` (release) on every push / PR. The Python and R-manual layers above are **not yet wired into CI** — tracked as a follow-up. |
+
+---
+
+## Repository hygiene and CI for consumer repos
+
+How a repo that vendors the toolkit keeps data out of git and gates its
+pull requests:
+
+- [`docs/gitignore_guidelines.md`](docs/gitignore_guidelines.md) — data
+  never enter git, their `.provenance.json` sidecars always do; templates
+  in [`templates/gitignore/`](templates/gitignore/).
+- [`docs/ci_cd_guidelines.md`](docs/ci_cd_guidelines.md) — design
+  principles and the default check menu; ready-to-copy GitHub Actions in
+  [`templates/workflows/`](templates/workflows/) and a testthat skeleton
+  in [`templates/testthat/`](templates/testthat/).
 
 ---
 

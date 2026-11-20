@@ -6,6 +6,30 @@ _Entries land here as PRs merge into `develop`. When the next release
 is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
+### Added
+
+- **Repository hygiene and CI guidance for consumer repos (docs and
+  templates only; no helper code changes).**
+  `docs/gitignore_guidelines.md` sets the rule (data never enter git; their
+  `.provenance.json` sidecars always do; sidecars of microdata kept outside
+  the repo go under `data/provenance/<path>/`), explains the
+  `data/**` + `!data/**/` re-include pattern, and shows how to verify
+  (`git check-ignore -v`, `git ls-files -i -c --exclude-standard`,
+  `git rm --cached`). Templates: `templates/gitignore/research-project.gitignore`
+  and `pipeline.gitignore`. `docs/ci_cd_guidelines.md` sets ten design
+  principles (CI never needs real data, fast checks runnable locally,
+  required checks on `develop` / `main`, a regression test per bug fix,
+  least privilege, Linux by default) and a tiered menu with ready-to-copy
+  workflows in `templates/workflows/`: `ci-hygiene.yml` (tracked data, files
+  over 50 MB, gitleaks secret scan, sidecar validation), `ci-contract-audit.yml`
+  (`test_scripts()` and the `.toolkit_manifest.yml` / `cso_toolkit_check()`
+  vintage check, both from the vendored `00_functions/`), `ci-r-tests.yml`
+  (testthat, advisory lintr, R CMD check variant) and `ci-manuscript.yml`
+  (LaTeX build with a page limit). `templates/testthat/` is a runnable
+  testthat skeleton for non-package projects (reviewer-mode runner, helpers,
+  an example regression test, a synthetic fixture). New handbook chapter
+  45, *Continuous integration and repository hygiene*.
+
 ## v0.10.0 (2026-11-19)
 
 `cso_toolkit_check()` warns loudly when the vendored copy is behind a
