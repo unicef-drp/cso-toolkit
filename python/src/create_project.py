@@ -240,6 +240,7 @@ def _project_files(kind: str, project_name: str, title: str, collaboration: str,
     files[f"profile_{project_name}.R"] = _fill(prof, variables)
 
     files[".gitignore"] = (tpl / "gitignore" / k["gitignore"]).read_bytes()
+    files[".gitattributes"] = (tpl / "gitattributes" / "project.gitattributes").read_bytes()
     files[".githooks/pre-push"] = (tpl / "hooks" / "pre-push").read_bytes()
 
     chk = (tpl / "tools" / "check.R").read_bytes()
@@ -493,6 +494,7 @@ def create_research_project(
     Layout::
 
         .gitignore               templates/gitignore/research-project.gitignore
+        .gitattributes           LF for the hook, vendored helpers and sidecars
         profile_<project>.R      sourced first: user, dw_mode, vendored helpers
         .githooks/pre-push       runs tools/check.R before every push
         cso_project.yml          collaboration model (committed)
@@ -603,6 +605,7 @@ def create_official_stats_project(
     Layout::
 
         .gitignore                templates/gitignore/official-stats.gitignore
+        .gitattributes            LF for the hook, vendored helpers and sidecars
         profile_<project>.R       sourced first: user, dw_mode, deposit paths,
                                   Z: mirror, vendored helpers
         .githooks/pre-push        runs tools/check.R before every push

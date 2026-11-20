@@ -252,6 +252,7 @@
 	files[[paste0("profile_", project_name, ".R")]] <- .cso_fill(prof, vars)
 
 	files[[".gitignore"]] <- .cso_bytes(file.path(tpl, "gitignore", k$gitignore))
+	files[[".gitattributes"]] <- .cso_bytes(file.path(tpl, "gitattributes", "project.gitattributes"))
 	files[[".githooks/pre-push"]] <- .cso_bytes(file.path(tpl, "hooks", "pre-push"))
 
 	chk <- .cso_bytes(file.path(tpl, "tools", "check.R"))
@@ -487,6 +488,7 @@
 #' The layout (handbook chapter "Starting a new repository"):
 #' \preformatted{
 #' .gitignore               templates/gitignore/research-project.gitignore
+#' .gitattributes           LF for the hook, vendored helpers and sidecars
 #' profile_<project>.R      sourced first: user, dw_mode, vendored helpers
 #' .githooks/pre-push       runs tools/check.R before every push
 #' cso_project.yml          collaboration model (committed)
@@ -625,6 +627,7 @@ create_research_project <- function(path, collaboration, members = NULL,
 #' The layout (handbook chapter "Starting a new repository"):
 #' \preformatted{
 #' .gitignore                templates/gitignore/official-stats.gitignore
+#' .gitattributes            LF for the hook, vendored helpers and sidecars
 #' profile_<project>.R       sourced first: user, dw_mode, deposit paths,
 #'                           Z: mirror, vendored helpers
 #' .githooks/pre-push        runs tools/check.R before every push

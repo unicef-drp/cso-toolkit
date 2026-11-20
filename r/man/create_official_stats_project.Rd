@@ -107,6 +107,7 @@ deposit's stage numbering (`01_dw_prep/010_metadata`, `011_rawdata`,
 The layout (handbook chapter "Starting a new repository"):
 \preformatted{
 .gitignore                templates/gitignore/official-stats.gitignore
+.gitattributes            LF for the hook, vendored helpers and sidecars
 profile_<project>.R       sourced first: user, dw_mode, deposit paths,
                           Z: mirror, vendored helpers
 .githooks/pre-push        runs tools/check.R before every push

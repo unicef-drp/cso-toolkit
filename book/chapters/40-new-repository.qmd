@@ -77,6 +77,7 @@ A research project:
 ```
 learning-mobility/
 ├── .gitignore                 research-project.gitignore, unchanged
+├── .gitattributes             LF for the hook, vendored helpers and sidecars
 ├── profile_learning-mobility.R  sourced first by every script and session
 ├── .githooks/pre-push         runs tools/check.R before every push
 ├── cso_project.yml            collaboration: multi-producer (committed)
@@ -107,6 +108,7 @@ An official-statistics repository follows DW-Production and the deposit's stage 
 ```
 DW-Nutrition/
 ├── .gitignore                       official-stats.gitignore, unchanged
+├── .gitattributes                   LF for the hook, vendored helpers and sidecars
 ├── profile_DW-Nutrition.R           sourced first: mode, deposit paths, Z:, helpers
 ├── .githooks/pre-push
 ├── cso_project.yml                  collaboration: single-producer

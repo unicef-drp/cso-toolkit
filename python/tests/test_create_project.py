@@ -24,7 +24,7 @@ REPO = Path(__file__).resolve().parents[2]
 PKG_TEMPLATES = Path(cp.__file__).resolve().parent / "templates"
 
 RESEARCH_FILES = sorted([
-    ".githooks/pre-push", ".gitignore", "00_functions/README.md", "CONTRIBUTING.md",
+    ".gitattributes", ".githooks/pre-push", ".gitignore", "00_functions/README.md", "CONTRIBUTING.md",
     "R/README.md", "README.md", "cso_project.yml", "data/README.md",
     "data/input_manifest.csv", "data/provenance/README.md", "docs/README.md",
     "output/README.md", "paper/README.md", "profile_proj.R", "references/README.md",
@@ -32,7 +32,7 @@ RESEARCH_FILES = sorted([
     "tests/testthat/test-project.R", "tools/check.R",
 ])
 OFFICIAL_FILES = sorted([
-    ".githooks/pre-push", ".gitignore", "00_documentation/README.md",
+    ".gitattributes", ".githooks/pre-push", ".gitignore", "00_documentation/README.md",
     "00_functions/README.md", "01_dw_prep/README.md", "01_dw_prep/010_metadata/README.md",
     "01_dw_prep/011_rawdata/README.md", "01_dw_prep/012_codes/README.md", "CONTRIBUTING.md",
     "README.md", "_config_template/user_config.yml", "cso_project.yml",
@@ -109,6 +109,9 @@ def test_template_bytes(tmp_path):
         (PKG_TEMPLATES / "gitignore" / "research-project.gitignore").read_bytes()
     assert (r / ".githooks" / "pre-push").read_bytes() == \
         (PKG_TEMPLATES / "hooks" / "pre-push").read_bytes()
+    assert (r / ".gitattributes").read_bytes() == \
+        (PKG_TEMPLATES / "gitattributes" / "project.gitattributes").read_bytes()
+    assert b"\r" not in (r / ".githooks" / "pre-push").read_bytes()
     o = tmp_path / "o"
     m.create_official_stats_project(o, "single-producer")
     assert (o / ".gitignore").read_bytes() == \

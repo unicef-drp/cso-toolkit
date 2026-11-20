@@ -103,6 +103,7 @@ the toolkit's own.
 The layout (handbook chapter "Starting a new repository"):
 \preformatted{
 .gitignore               templates/gitignore/research-project.gitignore
+.gitattributes           LF for the hook, vendored helpers and sidecars
 profile_<project>.R      sourced first: user, dw_mode, vendored helpers
 .githooks/pre-push       runs tools/check.R before every push
 cso_project.yml          collaboration model (committed)

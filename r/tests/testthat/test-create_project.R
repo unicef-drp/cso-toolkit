@@ -49,7 +49,7 @@ fake_clone <- function(files, tag = "v9.8.7", .frame = parent.frame()) {
 }
 
 RESEARCH_FILES <- c(
-	".githooks/pre-push", ".gitignore", "00_functions/README.md", "CONTRIBUTING.md",
+	".gitattributes", ".githooks/pre-push", ".gitignore", "00_functions/README.md", "CONTRIBUTING.md",
 	"R/README.md", "README.md", "cso_project.yml", "data/README.md",
 	"data/input_manifest.csv", "data/provenance/README.md", "docs/README.md",
 	"output/README.md", "paper/README.md", "profile_proj.R", "references/README.md",
@@ -57,7 +57,7 @@ RESEARCH_FILES <- c(
 	"tests/testthat/test-project.R", "tools/check.R")
 
 OFFICIAL_FILES <- c(
-	".githooks/pre-push", ".gitignore", "00_documentation/README.md",
+	".gitattributes", ".githooks/pre-push", ".gitignore", "00_documentation/README.md",
 	"00_functions/README.md", "01_dw_prep/README.md", "01_dw_prep/010_metadata/README.md",
 	"01_dw_prep/011_rawdata/README.md", "01_dw_prep/012_codes/README.md", "CONTRIBUTING.md",
 	"README.md", "_config_template/user_config.yml", "cso_project.yml",
@@ -89,6 +89,12 @@ test_that(".gitignore, the hook and the test helper are the template bytes", {
 	                 bytes(scaffold_tpl("gitignore", "research-project.gitignore")))
 	expect_identical(bytes(file.path(root, ".githooks", "pre-push")),
 	                 bytes(scaffold_tpl("hooks", "pre-push")))
+	expect_identical(bytes(file.path(root, ".gitattributes")),
+	                 bytes(scaffold_tpl("gitattributes", "project.gitattributes")))
+	# The hook and the vendored helpers stay LF in every clone.
+	ga <- readLines(file.path(root, ".gitattributes"))
+	expect_true(all(c(".githooks/**        text eol=lf", "00_functions/**     text eol=lf") %in% ga))
+	expect_false(as.raw(13) %in% bytes(file.path(root, ".githooks", "pre-push")))
 	expect_identical(bytes(file.path(root, "tests", "testthat", "helper-project.R")),
 	                 bytes(scaffold_tpl("testthat", "tests", "testthat", "helper-project.R")))
 

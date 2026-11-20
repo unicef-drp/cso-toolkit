@@ -27,6 +27,7 @@ SHIPPED = [
     "cso_project.yml",
     "gitignore/research-project.gitignore",
     "gitignore/official-stats.gitignore",
+    "gitattributes/project.gitattributes",
     "hooks/pre-push",
     "tools/check.R",
     "testthat/tests/testthat.R",

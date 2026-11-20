@@ -87,7 +87,9 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 - **Start a new repository: `create_research_project()` and
   `create_official_stats_project()` (R + Python, same files byte for
   byte).** One call writes the toolkit's floor for a new repository from
-  the shipped templates: the matching `.gitignore` (template bytes),
+  the shipped templates: the matching `.gitignore` (template bytes), a
+  `.gitattributes` that keeps the hook, the vendored helpers and the
+  provenance sidecars LF in every clone,
   `tools/check.R` and `.githooks/pre-push`, `tests/testthat.R` with the
   helper and a starter `test-project.R` (cso_project.yml parses; every
   input manifest row has a sidecar with the same sha256; reviewer mode),
