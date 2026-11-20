@@ -23,6 +23,10 @@
 .CSO_PROJECT_KINDS <- list(
 	research = list(
 		fn = "create_research_project",
+		# A paper's first scripts read data directly: the contract audit
+		# reports them, and does not fail the checks, until the project moves
+		# to dw_use() and sets AUDIT_MODE to "blocking".
+		audit_mode = "advisory",
 		gitignore = "research-project.gitignore",
 		input_manifest = "data/input_manifest.csv",
 		source_dirs = 'SOURCE_DIRS <- c("R/functions")',
@@ -33,6 +37,7 @@
 	),
 	`official-stats` = list(
 		fn = "create_official_stats_project",
+		audit_mode = "blocking",
 		gitignore = "official-stats.gitignore",
 		input_manifest = "inputs/input_manifest.csv",
 		source_dirs = "SOURCE_DIRS <- character(0)",
@@ -56,6 +61,7 @@
 	'  CHECKS      = "tracked-data large-files secret-scan sidecars tests",')
 .CSO_OUTPUT_DIRS_LINE <- '  OUTPUT_DIRS = "",'
 .CSO_AUDIT_PATHS_LINE <- '  AUDIT_PATHS = "R",'
+.CSO_AUDIT_MODE_LINE <- '  AUDIT_MODE  = "blocking",'
 .CSO_SOURCE_DIRS <- 'SOURCE_DIRS <- c("R")'
 .CSO_MEMBERS_EXAMPLE <- "# members:\n#   - jpazevedo\n#   - kbarnes\n"
 
@@ -240,6 +246,8 @@
 		chk <- .cso_edit(chk, .CSO_AUDIT_PATHS_LINE, '  AUDIT_PATHS = "01_dw_prep/012_codes",',
 		                 "tools/check.R", fn)
 	}
+	chk <- .cso_edit(chk, .CSO_AUDIT_MODE_LINE,
+	                 sprintf('  AUDIT_MODE  = "%s",', k$audit_mode), "tools/check.R", fn)
 	if (!length(vendor_files)) {
 		chk <- .cso_edit(chk, .CSO_CHECKS_LINE, .CSO_CHECKS_UNVENDORED, "tools/check.R", fn)
 	}

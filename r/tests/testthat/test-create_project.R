@@ -108,6 +108,10 @@ test_that("tools/check.R and tests/testthat.R carry the per-kind settings", {
 	expect_true('  OUTPUT_DIRS = "output outputs results wrk",' %in% ochk)
 	expect_true('  AUDIT_PATHS = "R",' %in% rchk)
 	expect_true('  AUDIT_PATHS = "01_dw_prep/012_codes",' %in% ochk)
+	# The contract audit reports in a research project, blocks in official stats.
+	expect_true('  AUDIT_MODE  = "advisory",' %in% rchk)
+	expect_true('  AUDIT_MODE  = "blocking",' %in% ochk)
+	expect_true(.CSO_AUDIT_MODE_LINE %in% readLines(scaffold_tpl("tools", "check.R")))
 	# Not vendored: the two checks that need 00_functions/ are left out.
 	expect_true('  CHECKS      = "tracked-data large-files secret-scan sidecars tests",' %in% rchk)
 	expect_true(any(grepl('^SOURCE_DIRS <- c\\("R/functions"\\)', readLines(file.path(r, "tests", "testthat.R")))))
@@ -118,6 +122,40 @@ test_that("tools/check.R and tests/testthat.R carry the per-kind settings", {
 	}
 	expect_true(any(grepl("data/input_manifest.csv", readLines(file.path(r, "tests", "testthat", "test-project.R")), fixed = TRUE)))
 	expect_true(any(grepl("inputs/input_manifest.csv", readLines(file.path(o, "tests", "testthat", "test-project.R")), fixed = TRUE)))
+})
+
+test_that("AUDIT_MODE: a violation warns in a research project, fails in official stats", {
+	skip_if(!nzchar(Sys.which("git")), "git not installed")
+	rscript <- file.path(R.home("bin"), if (.Platform$OS.type == "windows") "Rscript.exe" else "Rscript")
+	run_audit <- function(create, code_dir, env = character()) {
+		root <- new_root(.frame = parent.frame())
+		create(root, collaboration = "single-producer", git = TRUE, verbose = FALSE)
+		# Stand-ins for the vendored helpers: an auditor that always finds
+		# one violation.
+		td <- file.path(root, "00_functions")
+		writeLines("# dw_io stand-in", file.path(td, "dw_io.R"))
+		writeLines(c("test_scripts <- function(path, ...) {",
+		             "  data.frame(file = file.path(path, 'a.R'), line = 1L, rule = 'io-read-csv')",
+		             "}"), file.path(td, "test_scripts.R"))
+		dir.create(file.path(root, code_dir), recursive = TRUE, showWarnings = FALSE)
+		out <- withr::with_dir(root, withr::with_envvar(env, suppressWarnings(
+			system2(rscript, c("--no-init-file", "tools/check.R", "--only", "contract-audit"),
+			        stdout = TRUE, stderr = TRUE))))
+		list(status = attr(out, "status") %||% 0L, out = out)
+	}
+	r <- run_audit(create_research_project, "R")
+	expect_identical(r$status, 0L)
+	expect_true(any(grepl("^\\[WARN\\] contract-audit", r$out)))
+	expect_true(any(grepl("AUDIT_MODE = \"advisory\"", r$out, fixed = TRUE)))
+	o <- run_audit(create_official_stats_project, "01_dw_prep/012_codes")
+	expect_identical(o$status, 1L)
+	expect_true(any(grepl("^\\[FAIL\\] contract-audit", o$out)))
+	# The environment variable of the same name overrides the file.
+	r2 <- run_audit(create_research_project, "R", c(AUDIT_MODE = "blocking"))
+	expect_identical(r2$status, 1L)
+	bad <- run_audit(create_research_project, "R", c(AUDIT_MODE = "strict"))
+	expect_identical(bad$status, 1L)
+	expect_true(any(grepl("AUDIT_MODE is \"strict\"", bad$out, fixed = TRUE)))
 })
 
 test_that("cso_project.yml records the collaboration model, date and members", {

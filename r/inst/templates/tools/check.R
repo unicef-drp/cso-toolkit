@@ -46,6 +46,12 @@ CONFIG <- list(
   # Vendored cso-toolkit helpers and the code the contract audit reads.
   TOOLKIT_DIR = "00_functions",
   AUDIT_PATHS = "R",
+  # What contract-audit does with a violation (a raw read, write or HTTP
+  # call that bypasses the dw_* wrappers): "blocking" fails the run;
+  # "advisory" lists the violations as [WARN] and does not fail. Official
+  # statistics keep "blocking"; a research project starts "advisory" and
+  # moves to "blocking" once its code reads through dw_use().
+  AUDIT_MODE  = "blocking",
   # manuscript check
   PAPER_DIR   = "paper",
   ROOT_FILE   = "main.tex",
@@ -284,6 +290,11 @@ load_toolkit <- function(files) {
 
 check[["contract-audit"]] <- function(name) {
   td <- cfg("TOOLKIT_DIR")
+  mode <- cfg("AUDIT_MODE")
+  if (!mode %in% c("blocking", "advisory")) {
+    return(report("FAIL", name, sprintf("AUDIT_MODE is \"%s\"", mode),
+                  fix = "set AUDIT_MODE at the top of tools/check.R to \"blocking\" or \"advisory\"."))
+  }
   missing <- load_toolkit(c("dw_io.R", "test_scripts.R"))
   if (!is.null(missing)) {
     return(report("FAIL", name, sprintf("%s not found", missing),
@@ -303,7 +314,11 @@ check[["contract-audit"]] <- function(name) {
   if (!is.null(hits) && nrow(hits) > 0) {
     cols <- intersect(c("file", "line", "rule"), names(hits))
     detail <- apply(hits[, cols, drop = FALSE], 1, paste, collapse = "  ")
-    report("FAIL", name, detail,
+    if (identical(mode, "advisory")) {
+      detail <- c(sprintf("%d violation(s); AUDIT_MODE = \"advisory\", so the run does not fail", nrow(hits)),
+                  detail)
+    }
+    report(if (identical(mode, "advisory")) "WARN" else "FAIL", name, detail,
            why = "raw IO and HTTP calls bypass the dw_* wrappers, so they leave no provenance and ignore reviewer mode.",
            fix = "route the call through the dw_* wrapper the rule names, or mark a documented exception with `# cso-allow: <rule>` (handbook chapter 43).")
   } else {

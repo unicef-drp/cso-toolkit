@@ -123,6 +123,10 @@ def test_per_kind_settings(tmp_path):
     assert '  OUTPUT_DIRS = "",' in rchk
     assert '  OUTPUT_DIRS = "output outputs results wrk",' in ochk
     assert '  AUDIT_PATHS = "01_dw_prep/012_codes",' in ochk
+    assert '  AUDIT_MODE  = "advisory",' in rchk
+    assert '  AUDIT_MODE  = "blocking",' in ochk
+    assert cp._AUDIT_MODE_LINE in (PKG_TEMPLATES / "tools" / "check.R").read_text(
+        encoding="utf-8").splitlines()
     assert '  CHECKS      = "tracked-data large-files secret-scan sidecars tests",' in rchk
     for root in (r, o):
         for p in root.rglob("*"):

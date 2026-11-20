@@ -100,7 +100,11 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
   `paper/`, `references/`, `docs/`. Official-statistics layout:
   `00_documentation/`, `01_dw_prep/012_codes/`, `inputs/`, `releases/`,
   `_config_template/user_config.yml`, with `OUTPUT_DIRS` (embargo) and
-  `AUDIT_PATHS` set in `tools/check.R`. Options: `vendor = TRUE` copies
+  `AUDIT_PATHS` set in `tools/check.R`. `tools/check.R` gains
+  `AUDIT_MODE`: `"blocking"` (the template default, kept for official
+  statistics) fails the run on a contract-audit violation, `"advisory"`
+  (set for research projects, whose first scripts read data directly)
+  reports the violations as `[WARN]` without failing. Options: `vendor = TRUE` copies
   the helpers into `00_functions/` from a release tag of a git clone of
   cso-toolkit (`toolkit_source`, or `CSO_TOOLKIT_ROOT`; the tag is
   `toolkit_version`, by default the clone's latest `vX.Y.Z` tag), reading

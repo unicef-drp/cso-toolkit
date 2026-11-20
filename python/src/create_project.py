@@ -37,6 +37,10 @@ _COLLAB_MODELS = ("single-producer", "multi-producer")
 _KINDS: Dict[str, dict] = {
     "research": {
         "fn": "create_research_project",
+        # A paper's first scripts read data directly: the contract audit
+        # reports them, and does not fail the checks, until the project moves
+        # to dw_use() and sets AUDIT_MODE to "blocking".
+        "audit_mode": "advisory",
         "gitignore": "research-project.gitignore",
         "input_manifest": "data/input_manifest.csv",
         "source_dirs": 'SOURCE_DIRS <- c("R/functions")',
@@ -47,6 +51,7 @@ _KINDS: Dict[str, dict] = {
     },
     "official-stats": {
         "fn": "create_official_stats_project",
+        "audit_mode": "blocking",
         "gitignore": "official-stats.gitignore",
         "input_manifest": "inputs/input_manifest.csv",
         "source_dirs": "SOURCE_DIRS <- character(0)",
@@ -69,6 +74,7 @@ _CHECKS_UNVENDORED = (
 )
 _OUTPUT_DIRS_LINE = '  OUTPUT_DIRS = "",'
 _AUDIT_PATHS_LINE = '  AUDIT_PATHS = "R",'
+_AUDIT_MODE_LINE = '  AUDIT_MODE  = "blocking",'
 _SOURCE_DIRS = 'SOURCE_DIRS <- c("R")'
 _MEMBERS_EXAMPLE = "# members:\n#   - jpazevedo\n#   - kbarnes\n"
 
@@ -227,6 +233,8 @@ def _project_files(kind: str, project_name: str, title: str, collaboration: str,
                     "tools/check.R", fn)
         chk = _edit(chk, _AUDIT_PATHS_LINE, '  AUDIT_PATHS = "01_dw_prep/012_codes",',
                     "tools/check.R", fn)
+    chk = _edit(chk, _AUDIT_MODE_LINE, f'  AUDIT_MODE  = "{k["audit_mode"]}",',
+                "tools/check.R", fn)
     if not vendor_files:
         chk = _edit(chk, _CHECKS_LINE, _CHECKS_UNVENDORED, "tools/check.R", fn)
     files["tools/check.R"] = chk
