@@ -82,6 +82,12 @@ from .profile_helpers import (
     review_profile,
 )
 
+# Repository scaffolding (create_project.py)
+from .create_project import (
+    create_official_stats_project,
+    create_research_project,
+)
+
 # Contract auditor
 from .test_scripts import test_scripts
 
@@ -122,6 +128,7 @@ __all__ = [
     "generate_markdown_report", "process_all_csv_files",
     "create_sector_script", "create_dw_sector_script",
     "create_profile", "review_profile",
+    "create_research_project", "create_official_stats_project",
     "test_scripts",
     # dw_-prefixed aliases (mirror the R dual names)
     "dw_aggregate_data", "dw_aggregate_data_v2", "dw_apply_time_window",
