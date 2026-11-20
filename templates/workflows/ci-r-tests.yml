@@ -5,10 +5,11 @@
 # Guidance: docs/ci_cd_guidelines.md. Test skeleton: templates/testthat/.
 # Copy to .github/workflows/.
 #
-# Non-package project (papers, pipelines): runs `Rscript tests/testthat.R`,
-# the runner from templates/testthat/, which sources 00_functions/ and the
-# project's functions and then calls testthat::test_dir().
-# Same command locally, from the repo root:  Rscript tests/testthat.R
+# LOCAL FIRST. Non-package project (papers, pipelines): the tests run through
+# tools/check.R (templates/tools/check.R), which calls tests/testthat.R, the
+# runner from templates/testthat/. The same command locally, from the root:
+#   Rscript --no-init-file tools/check.R --only tests
+# (or `Rscript --no-init-file tools/check.R` for every check).
 #
 # R package (a DESCRIPTION file at the root or in a subfolder): use the
 # commented `r-package` job at the end instead; it mirrors cso-toolkit's own
@@ -16,15 +17,24 @@
 #
 # Tests use tiny synthetic fixtures only and run in reviewer mode: no data,
 # no network, no secrets.
+#
+# OPT-IN BY DEFAULT: manual runs and pull requests into main only. To run on
+# every push and pull request, use the commented `on:` block below; only
+# then make the job a required status check.
 # ---------------------------------------------------------------------------
 name: r-tests
 
 on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main, develop]
   workflow_dispatch:
+  pull_request:
+    branches: [main]
+# Opt in to every push and pull request (costs Actions minutes):
+# on:
+#   workflow_dispatch:
+#   push:
+#     branches: [main, develop]
+#   pull_request:
+#     branches: [main, develop]
 
 permissions:
   contents: read
@@ -61,11 +71,14 @@ jobs:
             any::yaml
             any::jsonlite
 
-      - name: Run testthat
-        run: Rscript tests/testthat.R
+      - name: tools/check.R (tests)
+        run: Rscript --no-init-file tools/check.R --only tests
 
+  # Advisory, and on manual runs only: lintr costs an install per run.
+  # Locally: Rscript --no-init-file tools/check.R --only lint (WARN, never FAIL)
   lintr:
     name: R lint (advisory)
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     continue-on-error: true   # advisory: reported, never blocks a merge

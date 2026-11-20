@@ -9,19 +9,31 @@
 # exceeds the journal's page limit. Uploads the PDF as a build artifact.
 # Quarto variant: see the commented job at the end.
 #
-# Advisory by default: it has a `paths:` filter, so do NOT make it a
-# required status check (a required check that does not run blocks merges).
+# LOCAL FIRST: `Rscript --no-init-file tools/check.R --only manuscript`
+# builds with the local latexmk and checks the page count (PAPER_DIR,
+# ROOT_FILE, MAX_PAGES at the top of tools/check.R).
+#
+# OPT-IN BY DEFAULT: manual runs, and pull requests into main that touch the
+# paper. Advisory: it has a `paths:` filter, so do NOT make it a required
+# status check (a required check that does not run blocks merges). To build
+# on every change to the paper, use the commented `on:` block below.
 # ---------------------------------------------------------------------------
 name: manuscript
 
 on:
-  pull_request:
-    branches: [main, develop]
-    paths: ['paper/**', '.github/workflows/ci-manuscript.yml']
-  push:
-    branches: [develop]
-    paths: ['paper/**', '.github/workflows/ci-manuscript.yml']
   workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths: ['paper/**', '.github/workflows/ci-manuscript.yml']
+# Opt in to every change to the paper (costs Actions minutes):
+# on:
+#   workflow_dispatch:
+#   pull_request:
+#     branches: [main, develop]
+#     paths: ['paper/**', '.github/workflows/ci-manuscript.yml']
+#   push:
+#     branches: [develop]
+#     paths: ['paper/**', '.github/workflows/ci-manuscript.yml']
 
 permissions:
   contents: read
