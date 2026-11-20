@@ -40,8 +40,10 @@ def create_profile(
     wires up the standard CSO building blocks: cross-platform user
     identification, reproducibility seed, optional Z: drive integrity
     check, YAML user config load, optional producer / reviewer
-    ``dw_mode`` resolution, a placeholder imports block, and a profile
-    sentinel boolean.
+    ``dw_mode`` resolution, a block that resolves and prints the
+    project's collaboration model (:func:`cso_toolkit.dw_collaboration`,
+    read from ``cso_project.yml``; single-producer when the file is
+    absent), a placeholder imports block, and a profile sentinel boolean.
 
     Parameters
     ----------
@@ -220,15 +222,33 @@ def dw_require_no_api(context: str | None = None) -> None:
 
 '''
 
+    collab_block = '''# ----------------------------------------
+# 7. Collaboration model (cso_project.yml, committed in the repo)
+# ----------------------------------------
+# dw_mode above is per person; how many people may PRODUCE is a project
+# property set in cso_project.yml at the repository root (no file =
+# single-producer).  Resolve it once per session and show it.
+try:
+    from cso_toolkit import dw_collaboration  # noqa: E402
+except ImportError:
+    print("[!] cso-toolkit not importable yet: the collaboration model "
+          "(cso_project.yml) is resolved on the first dw_save().")
+else:
+    dw_collaboration_model = dw_collaboration(
+        root=globals().get("rootFolder") or os.getcwd(), refresh=True)
+    print(f"[OK] Collaboration model: {dw_collaboration_model}")
+
+'''
+
     packages_block = '''# ----------------------------------------
-# 7. Imports (extend as needed by the pipeline)
+# 8. Imports (extend as needed by the pipeline)
 # ----------------------------------------
 import pandas as pd  # noqa: F401  E402
 
 '''
 
     sentinel_block = f'''# ----------------------------------------
-# 8. Profile sentinel
+# 9. Profile sentinel
 # ----------------------------------------
 {sentinel} = True
 
@@ -241,7 +261,8 @@ print(f"[OK] {filename} loaded")
 '''
 
     path.write_text(
-        header + z_block + config_block + mode_block + packages_block + sentinel_block,
+        header + z_block + config_block + mode_block + collab_block
+        + packages_block + sentinel_block,
         encoding="utf-8",
     )
     print(f"[OK] Profile written: {path}")
@@ -275,7 +296,9 @@ def review_profile(
     depends on (profile sentinel, cross-platform user identification,
     YAML config load, producer / reviewer ``dw_mode`` resolution, the
     ``dw_require_no_api`` guard, a reproducibility seed, and a packages
-    block).
+    block).  It also warns when the repository's ``cso_project.yml`` sets
+    ``collaboration: multi-producer`` but the profile never calls
+    ``dw_collaboration()``.
 
     Pattern-based (not parse-based), so it tolerates stylistic variation
     across profiles written before this helper existed.
@@ -391,7 +414,36 @@ def review_profile(
         level="fail" if require_z_drive_check else "warn",
     ))
 
-    # 8. Imports block
+    # 8. Collaboration-model block (cso_project.yml).  Warn when the project
+    #    is multi-producer but the profile never resolves / shows the model.
+    from .dw_project import _find_project_file, _read_project
+    proj_file = _find_project_file(path.resolve().parent)
+    if proj_file is None:
+        proj_model = "single-producer"
+    else:
+        try:
+            proj_model = _read_project(proj_file)["collaboration"]
+        except (ValueError, ImportError):
+            proj_model = "invalid"
+    check = "Collaboration model block"
+    if has(r"dw_collaboration\s*\("):
+        checks.append({"check": check, "status": "pass",
+                       "detail": "Resolves the collaboration model with dw_collaboration()."})
+    elif proj_model == "multi-producer":
+        checks.append({"check": check, "status": "warn",
+                       "detail": f"{proj_file} sets multi-producer but the profile never "
+                                 "calls dw_collaboration() -- add the block create_profile() "
+                                 "emits so every session shows the model at load."})
+    elif proj_model == "invalid":
+        checks.append({"check": check, "status": "warn",
+                       "detail": f"{proj_file} cannot be read -- run dw_collaboration() "
+                                 "to see the error."})
+    else:
+        checks.append({"check": check, "status": "pass",
+                       "detail": "Single-producer project (no multi-producer "
+                                 "cso_project.yml); the block is optional."})
+
+    # 9. Imports block
     checks.append(_check(
         "Imports block",
         has(r"^\s*import\s+\w") or has(r"^\s*from\s+\w"),

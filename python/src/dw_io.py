@@ -57,6 +57,7 @@ from typing import Any, Iterable, Mapping, Optional, Sequence, Union
 import pandas as pd
 
 from . import _state
+from .dw_project import _collab_preflight
 
 _log = logging.getLogger(__name__)
 
@@ -674,8 +675,14 @@ def _write_provenance(
     path: str, x: Any, fmt: str,
     vintage: Optional[str], metadata: Optional[Mapping[str, Any]],
     isid: Optional[Sequence[str]],
+    lineage: Optional[Mapping[str, Any]] = None,
 ) -> None:
-    """Emit a ``.provenance.json`` sidecar alongside a saved file."""
+    """Emit a ``.provenance.json`` sidecar alongside a saved file.
+
+    ``lineage`` carries the multi-producer fields from
+    :func:`cso_toolkit.dw_project._collab_preflight`; ``None`` (single-producer)
+    adds nothing, so the key set is unchanged.
+    """
     schema: dict = {}
     if isinstance(x, pd.DataFrame):
         schema = {"rows": int(len(x)), "cols": int(len(x.columns)),
@@ -691,6 +698,8 @@ def _write_provenance(
         "isid": list(isid) if isid else None,
         "schema": schema,
     }
+    if lineage:
+        prov.update(lineage)
     if metadata is not None:
         prov["metadata"] = dict(metadata)
     # Wrap the sidecar write so a non-JSON-serialisable metadata value
@@ -727,6 +736,7 @@ def dw_save(
     provenance: bool = True,
     vintage: Optional[str] = None,
     allow_canonical_write: bool = False,
+    takeover: bool = False,
     **kwargs: Any,
 ) -> str:
     """Save an object to disk, dispatching on the file extension.
@@ -776,6 +786,17 @@ def dw_save(
     carbon-copied to each remote mirror so reviewer sessions can verify
     provenance without round-tripping through the producer.
 
+    Collaboration model: in a project whose ``cso_project.yml`` sets
+    ``collaboration: multi-producer`` (see :func:`dw_collaboration`), a
+    non-reviewer write over an existing output that has a sidecar raises
+    ``PermissionError`` when the file was changed outside ``dw_save``
+    (out-of-band change) or was written by another user after this
+    session started (concurrent write), unless ``takeover=True``.  A write
+    that simply follows another producer's only logs a note.  The sidecar
+    gains ``collaboration``, ``previous_sha256``, ``previous_user``,
+    ``previous_written_at``, ``git_branch``, ``git_commit`` (and
+    ``takeover`` when used).  Single-producer projects are unaffected.
+
     Parameters
     ----------
     x
@@ -801,6 +822,12 @@ def dw_save(
         Optional vintage tag recorded in the sidecar.
     allow_canonical_write
         Bypass the reviewer-mode guard.
+    takeover
+        Multi-producer projects only: replace an existing output although
+        it was changed outside ``dw_save`` or written by another user after
+        this session started.  Recorded in the new sidecar (``takeover``:
+        user, time, guards overridden).  Ignored in single-producer
+        projects.
     **kwargs
         Format-specific arguments passed through to the underlying writer.
 
@@ -918,6 +945,19 @@ def dw_save(
     elif not compress and path_ends_in_gz:
         compress = True
 
+    # --- Multi-producer guards + lineage (cso_project.yml) ---
+    # None in a single-producer project (the sidecar is then unchanged).  In
+    # a multi-producer project an existing output with a sidecar is refused
+    # when it was changed outside dw_save or written by another user after
+    # this session started, unless takeover=True; reviewer sessions write to
+    # the sandbox and skip the guards.  See dw_project.py.  Skipped when the
+    # overwrite gate below will refuse anyway (same order as R: overwrite
+    # gate first, then the collaboration guards).
+    lineage = None
+    if overwrite or not Path(path).exists():
+        lineage = _collab_preflight(path, takeover=takeover,
+                                    is_reviewer=is_reviewer)
+
     try:
         Path(path).parent.mkdir(parents=True, exist_ok=True)
     except PermissionError as exc:
@@ -1005,7 +1045,8 @@ def dw_save(
 
     if provenance and fmt_dispatch not in ("",):
         _write_provenance(path, x, fmt=fmt_dispatch,
-                          vintage=vintage, metadata=metadata, isid=isid)
+                          vintage=vintage, metadata=metadata, isid=isid,
+                          lineage=lineage)
 
     # --- v0.4.0 redundant mirror fan-out ---
     # Only producer-mode writes (and DBM-bootstrap canonical writes) fan

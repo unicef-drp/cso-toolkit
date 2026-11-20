@@ -368,6 +368,45 @@ expect(
     lambda: cso_toolkit.cso_toolkit_pull(target_version="v0.2.0"),
 )
 
+# --- Collaboration model (cso_project.yml) ---
+with tempfile.TemporaryDirectory() as tdir:
+    (Path(tdir) / ".git").mkdir()
+    (Path(tdir) / "cso_project.yml").write_text(
+        "schema: cso_project/1\ncollaboration: everyone-produces\n", encoding="utf-8")
+    expect(
+        "dw_collaboration unknown model",
+        ValueError,
+        lambda: cso_toolkit.dw_collaboration(root=tdir, refresh=True),
+    )
+
+state.configure(dw_mode="reviewer")
+with tempfile.TemporaryDirectory() as tdir:
+    expect(
+        "dw_set_collaboration reviewer mode",
+        PermissionError,
+        lambda: cso_toolkit.dw_set_collaboration("multi-producer", root=tdir),
+    )
+
+# Multi-producer dw_save: an output changed outside dw_save() is refused.
+with tempfile.TemporaryDirectory() as tdir:
+    state.configure(
+        dw_mode=None, teamsWrkData=tdir, teamsWrkDataCanonical=None,
+        teamsFolderCanonical=None, dwZDrive=None, dw_z_available=False,
+        dw_collaboration_model="multi-producer",
+        dw_session_start="2999-01-01T00:00:00+0000",
+    )
+    p = Path(tdir) / "x.csv"
+    cso_toolkit.dw_save(pd.DataFrame({"a": [1]}), path=str(p), overwrite=True)
+    with open(p, "a", encoding="utf-8") as f:
+        f.write("9\n")
+    expect(
+        "dw_save multi-producer out-of-band change",
+        PermissionError,
+        lambda: cso_toolkit.dw_save(pd.DataFrame({"a": [2]}), path=str(p),
+                                    overwrite=True),
+    )
+    state.configure(dw_collaboration_model=None, dw_session_start=None)
+
 print("-" * 72)
 print(f"{_passed} passed, {len(_failed)} failed")
 if _failed:

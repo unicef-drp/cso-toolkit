@@ -86,3 +86,24 @@ test_that(".api_fetch_csv parses a CSV source into a data frame", {
   expect_equal(names(out), c("a", "b"))
   expect_equal(out$a, c(1, 2))
 })
+
+test_that("dw_api_fetch(refresh = TRUE) replaces an existing cache in producer mode", {
+  # Before the fix, the refresh reached dw_save() with overwrite = NULL
+  # (FALSE in producer mode) and stopped at the overwrite gate, so the
+  # documented refresh never replaced an existing cache.
+  raw <- local_tempdir()
+  local_state(teamsRawData = raw, teamsRawDataCanonical = raw,
+              teamsWrkDataCanonical = raw, dw_mode = "producer",
+              dw_apis_allowed = TRUE)
+  src <- file.path(local_tempdir(), "src.csv")
+  writeLines(c("a,b", "1,x"), src)
+  suppressMessages(dw_api_fetch("csv", cache_key = "k", url = src))
+  writeLines(c("a,b", "2,y"), src)
+  # Without refresh the existing cache is a hit: never replaced.
+  hit <- suppressMessages(dw_api_fetch("csv", cache_key = "k", url = src))
+  expect_equal(hit$a, 1)
+  out <- suppressMessages(dw_api_fetch("csv", cache_key = "k", url = src, refresh = TRUE))
+  expect_equal(out$a, 2)
+  prov <- dw_read_provenance(file.path(raw, "_apis", "csv", "k.csv"), verbose = FALSE)
+  expect_true(isTRUE(prov$metadata$refresh_flag))
+})

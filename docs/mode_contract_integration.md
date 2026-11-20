@@ -129,7 +129,57 @@ sandbox in reviewer mode without per-call edits — same shadow trick as R.
 
 This Stata work ships in cso-toolkit v0.2.
 
-## 7. Verification checklist for a new sector
+## 7. Collaboration model: single- and multi-producer projects
+
+`dw_mode` is per person and per session. How many people may *produce* is a
+property of the project, set in `cso_project.yml` at the repository root and
+committed, so it is the same for every collaborator:
+
+```yaml
+schema: cso_project/1
+collaboration: multi-producer      # single-producer | multi-producer
+collaboration_since: 2026-11-20
+members: [jpazevedo, kbarnes]      # optional, informational
+```
+
+No file means `single-producer`: one Database Manager owns the deposit and
+the toolkit behaves as it always has. Use `multi-producer` for co-authored
+projects where several people produce and the producer and reviewer roles
+swap over time. It is not a third mode: modes are per person, so a mode
+could not guarantee that every collaborator runs under the same rules.
+
+Wiring:
+
+1. **Profile.** `create_profile()` emits a block that calls
+   `dw_collaboration(root = rootFolder, refresh = TRUE)` and prints the
+   model at load; `review_profile()` warns when the repository is
+   multi-producer and the profile lacks the block. `dw_collaboration()`
+   caches `dw_collaboration_model`, `dw_project_file` and
+   `dw_session_start` as session globals (Python: `_state`). A profile
+   without the block still works: the model is resolved on the first
+   `dw_save()`.
+2. **Switching.** Run `dw_set_collaboration("multi-producer", root =
+   rootFolder, members = ...)` in a producer session and open one pull
+   request with `cso_project.yml` and the baselined sidecars. The baseline
+   marks earlier artefacts as project-owned without touching their
+   `sha256`, so the switch raises no alarms and leaves no lineage gap.
+3. **What changes.** In a multi-producer project, `dw_save()` (non-reviewer
+   sessions) refuses to replace an output whose bytes no longer match its
+   sidecar, or that another user wrote after the session started, unless
+   `takeover = TRUE`; it records `previous_sha256`, `previous_user`,
+   `previous_written_at`, `git_branch` and `git_commit` in every sidecar.
+   `dw_api_fetch()` replaces another user's cache only with
+   `refresh = TRUE` and keeps the previous fetch in the new provenance.
+4. **New co-authors** set `dw_mode: reviewer` in their own
+   `user_config.yml` until they start producing; the project file decides
+   the rest.
+5. **Stata.** `dw_save.ado` does not read `cso_project.yml` yet (#168):
+   Stata writes in a multi-producer project are unguarded.
+
+See the handbook chapter "Roles and the mode contract", section
+"Collaboration model", for the rationale and a worked example.
+
+## 8. Verification checklist for a new sector
 
 When a sector adopts the contract:
 

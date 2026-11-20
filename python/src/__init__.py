@@ -32,6 +32,12 @@ from .dw_io import (
     dw_verify_z,
 )
 
+# Collaboration model (dw_project.py)
+from .dw_project import (
+    dw_collaboration,
+    dw_set_collaboration,
+)
+
 # API helpers (dw_api.py)
 from .dw_api import (
     dw_api_cached,
@@ -101,6 +107,8 @@ __all__ = [
     "dw_verify_z", "dw_resolve_path", "dw_is_canonical",
     "dw_root", "dw_default_unicef_allowlist",
     "dw_toolkit_version",
+    # Collaboration model
+    "dw_collaboration", "dw_set_collaboration",
     # API
     "dw_api_fetch", "dw_api_cached", "dw_api_inventory",
     # Sync
