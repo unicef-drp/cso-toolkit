@@ -81,9 +81,10 @@ reference:
 
 - title: Project scaffolding
   desc: >
-    Generate the standard CSO building blocks — sector run scripts
-    and profile scripts — and audit existing profiles for the blocks
-    the toolkit contract relies on.
+    Generate the standard CSO building blocks — a new research or
+    official-statistics repository, sector run scripts and profile
+    scripts — and audit existing profiles for the blocks the toolkit
+    contract relies on.
   contents:
   - has_concept("scaffolding")
 

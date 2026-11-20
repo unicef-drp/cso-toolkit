@@ -69,7 +69,9 @@ review_profile("profile_my-project.R", require_dw_mode = FALSE)
 
 Other scaffolding: 
 \code{\link{create_dw_sector_script}()},
+\code{\link{create_official_stats_project}()},
 \code{\link{create_profile}()},
+\code{\link{create_research_project}()},
 \code{\link{create_sector_script}()}
 }
 \concept{scaffolding}
