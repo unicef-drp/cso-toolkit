@@ -13,7 +13,12 @@
 # dw_save(); the repo holds code, vendored helpers (00_functions/), the
 # manifest, and the provenance sidecars of inputs kept out of git.
 # Check after copying:  git ls-files -i -c --exclude-standard  (prints nothing)
+# Later rules override earlier ones, so keep the order of the blocks.
+#
+# Blocks marked [shared] are identical in both templates; the toolkit's
+# test suite checks that they stay so. Edit both copies together.
 # ---------------------------------------------------------------------------
+
 
 # ---- 1. Input folders anywhere (e.g. 02_consultations/023_targets/inputs) --
 # Folders are re-included (`!**/inputs/**/`) because git cannot re-include a
@@ -24,6 +29,7 @@
 !**/inputs/**/.gitkeep
 !**/inputs/**/*.provenance.json
 !**/inputs/**/input_manifest.*
+
 
 # ---- 2. API cache and frozen downloads --------------------------------------
 _apis/**
@@ -37,7 +43,8 @@ _frozen/**
 !_frozen/**/.gitkeep
 !_frozen/**/*.provenance.json
 
-# ---- 3. Data formats, wherever they appear ----------------------------------
+
+# ---- 3. Data and cache formats, wherever they appear [shared] -------------
 *.sav
 *.dta
 *.rds
@@ -49,32 +56,70 @@ _frozen/**
 *.zip
 *.7z
 *.gz
+*.tar
+*.h5
+*.duckdb
+*.sqlite
+*.db
 
-# ---- 4. Secrets and personal configuration ---------------------------------
+
+# ---- 4. Secrets and personal configuration [shared] -----------------------
 .env
 .env.*
 !.env.example
 *.pem
 *.key
-.Renviron
+*.p12
+*.pfx
+.netrc
 user_config.yml
-# The placeholder template stays tracked:
+.Renviron
+# A placeholder template may be re-included after this block with an
+# explicit `!` line (the official-stats template keeps
+# _config_template/user_config.yml that way).
+# Do NOT ignore .Rprofile: renv writes its activation line there.
+
+
+# ---- 5. Tracked configuration -----------------------------------------------
+# The placeholder user_config.yml template stays tracked (no real paths or
+# credentials in it):
 !_config_template/user_config.yml
 
-# ---- 5. Logs and language noise ---------------------------------------------
-*.log
-*.smcl
+
+# ---- 6. Language noise: R, Python, Stata [shared] -------------------------
+# R
 .Rhistory
 .RData
+.Ruserdata
 .Rproj.user/
 renv/library/
+renv/local/
+renv/staging/
+renv/python/
+# Python
 __pycache__/
 *.py[cod]
 .venv/
+venv/
+.ipynb_checkpoints/
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+# Stata
+*.log
+*.smcl
+*.stswp
+*.dta~
 
-# ---- 6. OS and editors -------------------------------------------------------
+
+# ---- 7. OS and editors [shared] -------------------------------------------
 .DS_Store
 Thumbs.db
+desktop.ini
 ~$*
 .idea/
 .vscode/
+*.bak
+*.swp
+*.tmp
