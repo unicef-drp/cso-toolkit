@@ -122,6 +122,7 @@ tracked <- local({
 })
 
 head_sha <- git("rev-parse", "--short", "HEAD")
+if (attr(head_sha, "status") != 0L) head_sha <- "(none yet)"   # a new repository
 dirty <- length(git("status", "--porcelain", "--untracked-files=no")) > 0
 cat(sprintf("== tools/check.R  %s  commit %s%s  R %s  %s ==\n",
             basename(getwd()), head_sha[1], if (dirty) " (+ uncommitted changes)" else "",
