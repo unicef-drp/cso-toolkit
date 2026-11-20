@@ -1,0 +1,77 @@
+# ---------------------------------------------------------------------------
+# .gitignore -- DW sector pipeline repo (e.g. DW-Production and siblings)
+# ---------------------------------------------------------------------------
+#
+# Template from unicef-drp/cso-toolkit: templates/gitignore/pipeline.gitignore
+# Guidance: docs/gitignore_guidelines.md. For papers and analysis projects
+# use templates/gitignore/research-project.gitignore instead.
+#
+# Pipeline outputs are deposited to the canonical Teams / Z: store by
+# dw_save(); the repo holds code, vendored helpers (00_functions/), the
+# manifest, and the provenance sidecars of inputs kept out of git.
+# Check after copying:  git ls-files -i -c --exclude-standard  (prints nothing)
+# ---------------------------------------------------------------------------
+
+# ---- 1. Input folders anywhere (e.g. 02_consultations/023_targets/inputs) --
+# Folders are re-included (`!**/inputs/**/`) because git cannot re-include a
+# file whose parent directory is excluded; then only these files come back.
+**/inputs/**
+!**/inputs/**/
+!**/inputs/**/README.md
+!**/inputs/**/.gitkeep
+!**/inputs/**/*.provenance.json
+!**/inputs/**/input_manifest.*
+
+# ---- 2. API cache and frozen downloads --------------------------------------
+_apis/**
+!_apis/**/
+!_apis/**/README.md
+!_apis/**/.gitkeep
+!_apis/**/*.provenance.json
+_frozen/**
+!_frozen/**/
+!_frozen/**/README.md
+!_frozen/**/.gitkeep
+!_frozen/**/*.provenance.json
+
+# ---- 3. Data formats, wherever they appear ----------------------------------
+*.sav
+*.dta
+*.rds
+*.RData
+*.rda
+*.parquet
+*.feather
+*.sas7bdat
+*.zip
+*.7z
+*.gz
+
+# ---- 4. Secrets and personal configuration ---------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.Renviron
+user_config.yml
+# The placeholder template stays tracked:
+!_config_template/user_config.yml
+
+# ---- 5. Logs and language noise ---------------------------------------------
+*.log
+*.smcl
+.Rhistory
+.RData
+.Rproj.user/
+renv/library/
+__pycache__/
+*.py[cod]
+.venv/
+
+# ---- 6. OS and editors -------------------------------------------------------
+.DS_Store
+Thumbs.db
+~$*
+.idea/
+.vscode/
