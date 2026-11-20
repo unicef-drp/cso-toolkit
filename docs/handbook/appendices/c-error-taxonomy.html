@@ -505,9 +505,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>Mode-contract violation</td>
-<td><code>[cso_toolkit.dw_save]</code>, <code>[cso_toolkit.dw_use:remote]</code>, <code>[cso_toolkit.dw_api]</code></td>
-<td>A session in the wrong role tried a forbidden action (reviewer writing canonical, reviewer reaching the network).</td>
-<td>IO contract, external-API contract</td>
+<td><code>[cso_toolkit.dw_save]</code>, <code>[cso_toolkit.dw_use:remote]</code>, <code>[cso_toolkit.dw_api]</code>, <code>[cso_toolkit.dw_set_collaboration]</code>, <code>[cso_toolkit.dw_collaboration]</code></td>
+<td>A session in the wrong role tried a forbidden action (reviewer writing canonical, reviewer reaching the network, reviewer changing the collaboration model), or, in a multi-producer project, a write would replace an output changed outside <code>dw_save()</code> or written by another user during the session (fix: reconcile, or <code>takeover = TRUE</code>).</td>
+<td>IO contract, external-API contract, roles and modes (collaboration model)</td>
 </tr>
 <tr class="even">
 <td>Unsupported / mismatched format</td>
