@@ -16,7 +16,8 @@
 #
 # Public entry points:
 # dw_save(x, path|name, ..., isid = NULL, metadata = NULL,
-# overwrite = FALSE) # <- default flipped in v0.4.0
+# overwrite = FALSE, takeover = FALSE) # <- overwrite default flipped in v0.4.0
+#   (takeover: multi-producer projects only; see dw_project.R)
 # dw_use(path|name, ..., as = "tibble")
 # dw_compare(current, reference, by, value_cols, ...)
 # dw_resolve_path(name, sector, kind, vintage)
@@ -24,6 +25,7 @@
 # dw_verify_z(path, compare = "size" | "sha256")
 # dw_merge(x, using, by, how)
 # dw_toolkit_version() # <- new in v0.4.0
+# dw_collaboration() # <- project collaboration model (cso_project.yml)
 #
 # Added: 2026-05-23 (reviewer-mode audit).
 # v0.4.0 (2026-05-26): mode-contract tightening per issue #14 -- 
@@ -137,6 +139,26 @@ dw_verbosity <- function(verbose = NULL, debug = NULL) {
 #' @noRd
 .try_get <- function(name) tryCatch(get(name, envir = .GlobalEnv),
  error = function(e) NA_character_)
+
+#' Bind a session-level global (the counterpart of `.try_get()`)
+#'
+#' Session state lives in the global environment, where the profile puts
+#' `dw_mode` and the path globals and where `.try_get()` reads them. This is
+#' the toolkit's one deliberate write there (session sentinels and the
+#' collaboration-model cache); keep any new session state behind it.
+#'
+#' @param name Character. Name of the global.
+#' @param value Value to bind.
+#'
+#' @return Invisibly, `value`.
+#'
+#' @keywords internal
+#' @noRd
+.dw_set_global <- function(name, value) {
+	genv <- globalenv()
+	genv[[name]] <- value
+	invisible(value)
+}
 
 #' Filesystem root for a given data kind
 #'
@@ -825,6 +847,17 @@ dw_isid <- function(df, keys, where = "<unknown>", verbose = NULL, debug = NULL)
 #' and the user-supplied `metadata = list(...)` (title, abstract, producer,
 #' sources, contact, vintage, ...).
 #'
+#' **Collaboration model** -- in a project whose `cso_project.yml` sets
+#' `collaboration: multi-producer` (see [dw_collaboration()]), a
+#' non-reviewer write over an existing output that has a sidecar stops when
+#' the file was changed outside `dw_save()` (out-of-band change) or was
+#' written by another user after this session started (concurrent write),
+#' unless `takeover = TRUE`. A write that simply follows another
+#' producer's only prints a note. The sidecar gains the lineage fields
+#' `collaboration`, `previous_sha256`, `previous_user`,
+#' `previous_written_at`, `git_branch`, `git_commit` (and `takeover` when
+#' used). Single-producer projects are unaffected.
+#'
 #' @param x Object to write (data frame for tabular formats; `Workbook` or
 #' named list of data frames for `.xlsx`; any R object for `.rds`).
 #' @param path Character. Literal output path. Mutually exclusive with
@@ -874,6 +907,12 @@ dw_isid <- function(df, keys, where = "<unknown>", verbose = NULL, debug = NULL)
 #' recorded in the sidecar and used by [dw_resolve_path()].
 #' @param allow_canonical_write Logical. Bypass the reviewer-mode guard
 #' that forbids writes to canonical / Z: roots. Default `FALSE`.
+#' @param takeover Logical. Multi-producer projects only (see
+#' [dw_collaboration()]). Replace an existing output although it was
+#' changed outside `dw_save()` (its SHA-256 no longer matches its sidecar)
+#' or written by another user after this session started. The takeover is
+#' recorded in the new sidecar (`takeover`: user, time, guards overridden).
+#' Default `FALSE`. Ignored in single-producer projects.
 #' @param ... Format-specific arguments passed through to the underlying
 #' writer (`fwrite`, `write_xlsx`, `saveRDS`, ...). The legacy
 #' `mirror_to_z` keyword (v0.3.0) is silently dropped with a
@@ -918,6 +957,7 @@ dw_save <- function(x,
  provenance = TRUE,
  vintage = NULL,
  allow_canonical_write = FALSE,
+ takeover = FALSE,
  verbose = NULL,
  debug = NULL,
  ...) {
@@ -1058,6 +1098,16 @@ dw_save <- function(x,
 		}
 	}
 
+	# === Multi-producer guards + lineage (cso_project.yml) ===
+	# NULL in a single-producer project (no cso_project.yml, or
+	# `collaboration: single-producer`): the sidecar is then unchanged. In a
+	# multi-producer project, an existing output with a sidecar is refused
+	# when it was changed outside dw_save() or written by another user after
+	# this session started, unless `takeover = TRUE`; reviewer sessions write
+	# to the sandbox and skip the guards. See dw_project.R.
+	lineage <- .dw_collab_preflight(path, takeover = takeover,
+	                                is_reviewer = is_reviewer, v = v, d = d)
+
 	# === Producer overwrite confirmation ===
 	# Overwriting an EXISTING producer deposit is destructive, so it requires
 	# explicit confirmation: an interactive [y/N] prompt, or `force = TRUE` for a
@@ -1147,7 +1197,8 @@ dw_save <- function(x,
 	# Provenance sidecar
 	if (isTRUE(provenance) && !fmt_for_dispatch %in% c("rdata", "rda")) {
 		.write_provenance(path, x, fmt = fmt_for_dispatch,
-		 vintage = vintage, metadata = metadata, isid = isid)
+		 vintage = vintage, metadata = metadata, isid = isid,
+		 lineage = lineage)
 	}
 
 	# === Producer-mode redundant mirror writes (v0.4.0) ===
@@ -1353,13 +1404,15 @@ dw_save <- function(x,
 #' @param vintage Character. Optional vintage tag.
 #' @param metadata Named list of user-supplied metadata.
 #' @param isid Character vector of key columns used (if any).
+#' @param lineage Named list of multi-producer lineage fields from
+#' `.dw_collab_preflight()`, or `NULL` (single-producer: nothing added).
 #'
 #' @return Invisibly, `NULL`.
 #'
 #' @keywords internal
 #' @noRd
 .write_provenance <- function(path, x, fmt, vintage = NULL,
- metadata = NULL, isid = NULL) {
+ metadata = NULL, isid = NULL, lineage = NULL) {
 	if (!requireNamespace("jsonlite", quietly = TRUE)) return(invisible(NULL))
 	sha <- if (requireNamespace("digest", quietly = TRUE)) {
 		digest::digest(file = path, algo = "sha256")
@@ -1379,6 +1432,9 @@ dw_save <- function(x,
 			isid = isid,
 			schema = schema
 		),
+		# Multi-producer projects only (NULL otherwise, so single-producer
+		# sidecars keep exactly the key set they always had).
+		lineage,
 		if (!is.null(metadata)) list(metadata = metadata) else list()
 	)
 	# Wrap the sidecar write so a non-JSON-serialisable metadata value
@@ -2104,7 +2160,7 @@ dw_default_unicef_allowlist <- function(debug = NULL) {
 	if (identical(resolved$source, "dw_frozen_root")) return(invisible(NULL))
 	sentinel <- ".__cso_toolkit_frozen_root_notified__"
 	if (isTRUE(.try_get(sentinel))) return(invisible(NULL))
-	assign(sentinel, TRUE, envir = .GlobalEnv)
+	.dw_set_global(sentinel, TRUE)
 	msg <- sprintf(
 		"[dw_use:remote] `dw_frozen_root` global not set; falling back to %s ('%s' tier). %s",
 		resolved$path,
@@ -2616,3 +2672,287 @@ dw_merge <- function(x, using, by, how = c("m:1", "1:1", "1:m", "m:m"), verbose 
 # numeric_value_cols = "OBS_VALUE",
 # tol = 1e-5
 # )
+
+# ============================================================================
+# Collaboration model (cso_project.yml) -- read side + dw_save() guards
+# ============================================================================
+#
+# Session MODES stay per person: `dw_mode` (producer | reviewer) comes from
+# each user's ~/.config/user_config.yml. How many people may PRODUCE is a
+# property of the PROJECT, committed in the repository as `cso_project.yml`:
+#
+#   schema: cso_project/1
+#   collaboration: single-producer | multi-producer
+#   collaboration_since: 2026-11-20
+#   members:            # optional, informational
+#     - jpazevedo
+#
+# An absent file means `single-producer`: the toolkit behaves exactly as it
+# did before the file existed. In a `multi-producer` project, dw_save()
+# guards an existing output against out-of-band changes and concurrent
+# writes, and records the lineage (previous sha256 / user / time, git
+# branch and commit) in the provenance sidecar.
+#
+# Session state (globals, like dw_mode):
+#   dw_collaboration_model  "single-producer" | "multi-producer"
+#   dw_project_file         path of the cso_project.yml in force, or NA
+#   dw_session_start        ISO-8601 UTC time the session state was set up
+#
+# The model is cached as `dw_collaboration_model`, not `dw_collaboration`:
+# vendored consumers source() this file into the global environment, where
+# a global named `dw_collaboration` would overwrite the getter function.
+#
+# The setter, dw_set_collaboration(), lives in dw_project.R. Python sibling:
+# python/src/dw_project.py. Stata: not yet (issue #168).
+
+.DW_COLLAB_MODELS <- c("single-producer", "multi-producer")
+.DW_PROJECT_FILE <- "cso_project.yml"
+.DW_PROJECT_SCHEMA <- "cso_project/1"
+
+#' Current time as ISO-8601 UTC (the sidecar `written_at` format)
+#' @keywords internal
+#' @noRd
+.dw_now_iso <- function() format(Sys.time(), "%Y-%m-%dT%H:%M:%S%z", tz = "UTC")
+
+#' Parse a sidecar timestamp (`YYYY-MM-DDTHH:MM:SS+0000`); NA when unparseable
+#' @keywords internal
+#' @noRd
+.dw_parse_iso <- function(x) {
+	if (is.null(x) || length(x) != 1 || is.na(x) || !is.character(x) || !nzchar(x)) {
+		return(as.POSIXct(NA))
+	}
+	as.POSIXct(x, format = "%Y-%m-%dT%H:%M:%S%z", tz = "UTC")
+}
+
+#' The user name recorded in sidecars (same source as `.write_provenance()`)
+#' @keywords internal
+#' @noRd
+.dw_current_user <- function() Sys.getenv("USERNAME")
+
+#' A non-empty character scalar, or NA_character_ (for sidecar fields that
+#' may be missing, `{}` or null)
+#' @keywords internal
+#' @noRd
+.dw_str1 <- function(x) {
+	if (is.character(x) && length(x) == 1 && !is.na(x) && nzchar(x)) x else NA_character_
+}
+
+#' Session start time (ISO-8601 UTC); set on first use
+#' @keywords internal
+#' @noRd
+.dw_session_start <- function() {
+	s <- .try_get("dw_session_start")
+	if (is.character(s) && length(s) == 1 && !is.na(s) && nzchar(s)) return(s)
+	s <- .dw_now_iso()
+	.dw_set_global("dw_session_start", s)
+	s
+}
+
+#' Walk up from `start` to the first cso_project.yml
+#'
+#' Stops at the repository root (the first folder holding `.git`) so a
+#' repository without the file never picks up a parent folder's.
+#' @return The file path, or `NA_character_`.
+#' @keywords internal
+#' @noRd
+.dw_find_project_file <- function(start) {
+	dir <- normalizePath(start, winslash = "/", mustWork = FALSE)
+	if (file.exists(dir) && !dir.exists(dir)) dir <- dirname(dir)
+	repeat {
+		cand <- file.path(dir, .DW_PROJECT_FILE)
+		if (file.exists(cand)) return(cand)
+		if (file.exists(file.path(dir, ".git"))) return(NA_character_)
+		parent <- dirname(dir)
+		if (identical(parent, dir)) return(NA_character_)
+		dir <- parent
+	}
+}
+
+#' Read and validate a cso_project.yml
+#' @return A list (`schema`, `collaboration`, `collaboration_since`,
+#'   `members`, `file`, plus any other keys).
+#' @keywords internal
+#' @noRd
+.dw_read_project <- function(file) {
+	proj <- tryCatch(yaml::read_yaml(file), error = function(e) {
+		stop(sprintf(
+			"[cso_toolkit.dw_collaboration] %s is not valid YAML.\n Parser said: %s\n Fix: restore the file from version control, or rewrite it with dw_set_collaboration().",
+			file, conditionMessage(e)), call. = FALSE)
+	})
+	if (is.null(proj)) proj <- list()
+	if (!is.list(proj)) {
+		stop(sprintf(
+			"[cso_toolkit.dw_collaboration] %s must be a YAML mapping (key: value lines).\n Fix: start from templates/cso_project.yml, or rewrite it with dw_set_collaboration().",
+			file), call. = FALSE)
+	}
+	schema <- proj$schema %||% .DW_PROJECT_SCHEMA
+	if (!identical(as.character(schema), .DW_PROJECT_SCHEMA)) {
+		stop(sprintf(
+			"[cso_toolkit.dw_collaboration] %s declares schema '%s'; this toolkit reads '%s'.\n Fix: upgrade cso-toolkit, or correct the `schema:` line.",
+			file, schema, .DW_PROJECT_SCHEMA), call. = FALSE)
+	}
+	collab <- proj$collaboration %||% "single-producer"
+	if (!(is.character(collab) && length(collab) == 1 && collab %in% .DW_COLLAB_MODELS)) {
+		stop(sprintf(
+			"[cso_toolkit.dw_collaboration] %s sets `collaboration: %s`; it must be 'single-producer' or 'multi-producer'.\n Fix: correct the value, or set it with dw_set_collaboration().",
+			file, paste(collab, collapse = " ")), call. = FALSE)
+	}
+	proj$schema <- .DW_PROJECT_SCHEMA
+	proj$collaboration <- collab
+	if (!is.null(proj$collaboration_since)) proj$collaboration_since <- as.character(proj$collaboration_since)
+	if (!is.null(proj$members)) proj$members <- as.character(unlist(proj$members))
+	proj$file <- file
+	proj
+}
+
+#' Resolve the collaboration model of the current project
+#'
+#' Returns whether the project is `"single-producer"` or `"multi-producer"`.
+#' The model is a **project** property, committed in `cso_project.yml` at
+#' the repository root, the same for every collaborator; the session
+#' **mode** (`dw_mode`: producer or reviewer) stays per person. An absent
+#' file means `"single-producer"`, the toolkit's behaviour before the file
+#' existed.
+#'
+#' The model is resolved once per session and cached in the session state
+#' (`dw_collaboration_model`, `dw_project_file`), together with the session
+#' start time (`dw_session_start`) that [dw_save()] uses to detect
+#' concurrent writes. Discovery walks up from `root` (default: the
+#' profile's `rootFolder` global, else the working directory) to the first
+#' `cso_project.yml`, stopping at the repository root (the first folder
+#' holding `.git`).
+#'
+#' @param root Character or `NULL`. Folder to start the search from.
+#'   Passing it (or `refresh = TRUE`) re-resolves and re-caches the model.
+#' @param refresh Logical. Ignore the cached value and read the file again.
+#'   Default `FALSE`.
+#' @param verbose Logical or `NULL`. Show high-level progress and result
+#'   messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
+#'   set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].
+#' @param debug Logical or `NULL`. Show internal troubleshooting detail
+#'   (resolved paths, branch decisions). `NULL` (default) inherits
+#'   `getOption("dw.debug", FALSE)`; implies `verbose`. See [dw_verbosity()].
+#'
+#' @return Character: `"single-producer"` or `"multi-producer"`.
+#'
+#' @section Errors:
+#' Stops with a `[cso_toolkit.dw_collaboration]` envelope when the file is
+#' not valid YAML, declares another schema, or sets an unknown model.
+#'
+#' @seealso [dw_set_collaboration()] (writes the file); [dw_save()] (the
+#'   multi-producer guards and lineage fields).
+#' @family collaboration
+#' @export
+#' @examples
+#' \dontrun{
+#' dw_collaboration()                     # "single-producer" without a file
+#' dw_collaboration(root = rootFolder)    # what a generated profile calls
+#' }
+dw_collaboration <- function(root = NULL, refresh = FALSE, verbose = NULL, debug = NULL) {
+	vd <- .dw_vd(verbose, debug); d <- vd$d
+	cached <- .try_get("dw_collaboration_model")
+	if (is.null(root) && !isTRUE(refresh) && is.character(cached) &&
+	    length(cached) == 1 && cached %in% .DW_COLLAB_MODELS) {
+		return(cached)
+	}
+	start <- root %||% .try_get("rootFolder") %||% getwd()
+	file <- .dw_find_project_file(start)
+	proj <- if (is.na(file)) NULL else .dw_read_project(file)
+	model <- if (is.null(proj)) "single-producer" else proj$collaboration
+	.dw_set_global("dw_collaboration_model", model)
+	.dw_set_global("dw_project_file", file)
+	.dw_session_start()
+	.dw_dbg("dw_collaboration", "start=", start, " | file=", file, " | model=", model,
+	        " | session_start=", .dw_session_start(), d = d)
+	model
+}
+
+#' Best-effort git branch and commit of the folder holding `path`
+#' @return list(branch, commit); NA for each when git is unavailable.
+#' @keywords internal
+#' @noRd
+.dw_git_info <- function(path) {
+	dir <- dirname(normalizePath(path, winslash = "/", mustWork = FALSE))
+	run <- function(args) {
+		out <- tryCatch(
+			suppressWarnings(system2("git", c("-C", shQuote(dir), args),
+			                         stdout = TRUE, stderr = FALSE)),
+			error = function(e) character(0))
+		status <- attr(out, "status")
+		if (length(out) != 1 || (!is.null(status) && status != 0) || !nzchar(out)) NA_character_ else out
+	}
+	list(branch = run(c("rev-parse", "--abbrev-ref", "HEAD")),
+	     commit = run(c("rev-parse", "HEAD")))
+}
+
+#' Multi-producer pre-flight for dw_save()
+#'
+#' Applies the out-of-band and concurrent-write guards (non-reviewer
+#' sessions only) and returns the lineage fields for the new sidecar.
+#' Returns `NULL` in a single-producer project, so the sidecar is unchanged.
+#' @keywords internal
+#' @noRd
+.dw_collab_preflight <- function(path, takeover = FALSE, is_reviewer = FALSE, v = TRUE, d = FALSE) {
+	if (!identical(dw_collaboration(), "multi-producer")) return(NULL)
+	me <- .dw_current_user()
+	sidecar <- paste0(path, ".provenance.json")
+	file_sha <- NA_character_
+	prev <- NULL
+	if (file.exists(path)) {
+		file_sha <- digest::digest(file = path, algo = "sha256")
+		if (file.exists(sidecar)) {
+			prev <- tryCatch(jsonlite::read_json(sidecar), error = function(e) NULL)
+		}
+	}
+	prev_sha <- .dw_str1(prev$sha256)
+	prev_user <- .dw_str1(prev$user)
+	prev_at <- .dw_str1(prev$written_at)
+	fired <- character(0)
+
+	if (!is_reviewer && !is.null(prev)) {
+		why <- character(0)
+		if (!is.na(prev_sha) && !is.na(file_sha) && !identical(prev_sha, file_sha)) {
+			fired <- c(fired, "out_of_band")
+			why <- c(why, sprintf(
+				" Why (out-of-band change): the file's SHA-256 (%s) no longer matches its provenance sidecar (%s): someone changed it without dw_save(), so replacing it now would discard a change nobody recorded.",
+				substr(file_sha, 1, 12), substr(prev_sha, 1, 12)))
+		}
+		start <- .dw_session_start()
+		if (!is.na(prev_user) && !identical(prev_user, me) &&
+		    isTRUE(.dw_parse_iso(prev_at) > .dw_parse_iso(start))) {
+			fired <- c(fired, "concurrent")
+			why <- c(why, sprintf(
+				" Why (concurrent write): %s wrote it at %s, after this session started (%s); two producers writing the same output in the same window would silently overwrite each other.",
+				prev_user, prev_at, start))
+		}
+		.dw_dbg("dw_save", "multi-producer guards on ", basename(path), ": ",
+		        if (length(fired)) paste(fired, collapse = ", ") else "none", d = d)
+		if (length(fired) && !isTRUE(takeover)) {
+			stop(sprintf(
+				"[cso_toolkit.dw_save] Multi-producer project: refusing to replace %s.\n%s\n Fix:\n 1. Reconcile first: sync or pull the other change, check the file's history (git log, the sidecar's user and written_at), and re-run, OR\n 2. If you have checked it and mean to replace it, pass `takeover = TRUE`; the takeover is recorded in the new sidecar.",
+				path, paste(why, collapse = "\n")), call. = FALSE)
+		}
+		if (length(fired)) {
+			.dw_msg("dw_save", "takeover: replacing ", basename(path), " despite ",
+			        paste(fired, collapse = " + "), " (recorded in the sidecar)", v = v)
+		} else if (!is.na(prev_user) && !identical(prev_user, me) && is.null(prev$baseline)) {
+			.dw_msg("dw_save", "note: ", basename(path), " was last written by ", prev_user,
+			        if (!is.na(prev_at)) paste0(" at ", prev_at) else "",
+			        "; your write follows theirs in its lineage.", v = v)
+		}
+	}
+
+	git <- .dw_git_info(path)
+	lineage <- list(
+		collaboration = "multi-producer",
+		previous_sha256 = if (!is.na(file_sha)) file_sha else prev_sha,
+		previous_user = prev_user,
+		previous_written_at = prev_at,
+		git_branch = git$branch,
+		git_commit = git$commit
+	)
+	if (isTRUE(takeover)) {
+		lineage$takeover <- list(user = me, at = .dw_now_iso(), overrode = I(fired))
+	}
+	lineage
+}

@@ -147,6 +147,12 @@
 #'   default via `.dw_api_default_ext`).
 #' @param metadata Named list merged into the cache's
 #'   `.provenance.json` sidecar.
+#' @param takeover Logical. Multi-producer projects only: forwarded to
+#'   [dw_save()] to replace a cache that was changed outside `dw_save()` or
+#'   fetched by another user after this session started. Default `FALSE`.
+#'   In a multi-producer project a cache fetched by another user is only
+#'   ever replaced through `refresh = TRUE`; the new provenance keeps the
+#'   previous fetch (`metadata$previous_fetch`: sha256, user, fetched_at).
 #' @param ... API-specific arguments — see the per-API helpers
 #'   (`.api_fetch_uis`, `.api_fetch_sdmx`, etc.).
 #'
@@ -178,6 +184,7 @@ dw_api_fetch <- function(api,
                          refresh = FALSE,
                          ext = NULL,
                          metadata = NULL,
+                         takeover = FALSE,
                          verbose = NULL,
                          debug = NULL,
                          ...) {
@@ -241,6 +248,28 @@ dw_api_fetch <- function(api,
 	# and is never replaced.
 	replacing <- isTRUE(refresh) && file.exists(cache_path)
 
+	# Multi-producer projects (cso_project.yml): replacing a cache only ever
+	# happens through that explicit refresh. When the cache was fetched by
+	# another user, say so and keep the previous fetch in the new provenance
+	# (`metadata$previous_fetch`; dw_save() adds `previous_sha256` too).
+	# dw_save()'s out-of-band / concurrent guards still apply (`takeover`).
+	previous_fetch <- NULL
+	if (replacing && identical(dw_collaboration(), "multi-producer")) {
+		prev <- tryCatch(jsonlite::read_json(paste0(cache_path, ".provenance.json")),
+		                 error = function(e) NULL)
+		if (!is.null(prev)) {
+			previous_fetch <- list(
+				sha256 = .dw_str1(prev$sha256),
+				user = .dw_str1(prev$user),
+				fetched_at = .dw_str1(prev$metadata$fetched_at %||% prev$written_at))
+			if (!is.na(previous_fetch$user) && !identical(previous_fetch$user, .dw_current_user())) {
+				.dw_msg("dw_api_fetch", "refresh replaces ", api, "/", cache_key, " fetched by ",
+				        previous_fetch$user, " at ", previous_fetch$fetched_at,
+				        "; its sha256 is kept as previous_fetch in the new provenance", v = v)
+			}
+		}
+	}
+
 	# Cache to deposit (writes via dw_save -> mode-aware path + Z: mirror +
 	# provenance sidecar).
 	api_metadata <- c(
@@ -252,11 +281,12 @@ dw_api_fetch <- function(api,
 			refresh_flag  = isTRUE(refresh),
 			fetch_args    = args
 		),
+		if (!is.null(previous_fetch)) list(previous_fetch = previous_fetch),
 		metadata
 	)
 	dw_save(result, path = cache_path, metadata = api_metadata,
 	        overwrite = if (replacing) TRUE else NULL, force = replacing,
-	        verbose = v, debug = d)
+	        takeover = takeover, verbose = v, debug = d)
 
 	.dw_msg("dw_api_fetch", "done: ", api, "/", cache_key, " (", if (is.data.frame(result)) paste0(nrow(result), " rows") else class(result)[1], ")", v = v)
 	result

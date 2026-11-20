@@ -20,8 +20,10 @@
 #' the standard CSO building blocks: user identification (USERNAME / USER
 #' for Windows / Mac), reproducibility seed, optional Z: drive integrity
 #' check, YAML user config load, optional producer / reviewer dw_mode
-#' resolution, a placeholder packages block, and the profile sentinel object
-#' downstream sector scripts assert against.
+#' resolution, a block that resolves and prints the project's collaboration
+#' model ([dw_collaboration()], read from `cso_project.yml`; single-producer
+#' when the file is absent), a placeholder packages block, and the profile
+#' sentinel object downstream sector scripts assert against.
 #'
 #' @param repo_name Character. Repository folder name, used in the sentinel
 #'   object name (`profile_<repo_name>` with `-` and `.` converted to `_`)
@@ -198,9 +200,27 @@ create_profile <- function(repo_name,
     ""
   ) else character(0)
 
+  collab_block <- c(
+    "#----------------------------------------",
+    "# 7. Collaboration model (cso_project.yml, committed in the repo)",
+    "#----------------------------------------",
+    "# dw_mode above is per person; how many people may PRODUCE is a project",
+    "# property set in cso_project.yml at the repository root (no file =",
+    "# single-producer). Resolve it once per session and show it.",
+    "if (exists(\"dw_collaboration\", mode = \"function\")) {",
+    "  dw_collaboration_model <- dw_collaboration(",
+    "    root = if (exists(\"rootFolder\")) rootFolder else getwd(), refresh = TRUE)",
+    "  message(\"[OK] Collaboration model: \", dw_collaboration_model)",
+    "} else {",
+    "  message(\"[!] cso-toolkit not loaded yet: the collaboration model \",",
+    "          \"(cso_project.yml) is resolved on the first dw_save().\")",
+    "}",
+    ""
+  )
+
   packages_block <- c(
     "#----------------------------------------",
-    "# 7. Packages",
+    "# 8. Packages",
     "#----------------------------------------",
     "# Add the packages your pipeline needs here.",
     "required_pkgs <- c(\"dplyr\", \"tidyr\", \"readr\", \"yaml\")",
@@ -213,7 +233,7 @@ create_profile <- function(repo_name,
 
   sentinel_block <- c(
     "#----------------------------------------",
-    "# 8. Profile sentinel",
+    "# 9. Profile sentinel",
     "#----------------------------------------",
     "# Downstream sector scripts assert against this object so they can",
     "# refuse to run if the profile was not sourced.",
@@ -221,7 +241,7 @@ create_profile <- function(repo_name,
     paste0("message(\"[OK] ", filename, " loaded\")")
   )
 
-  lines <- c(header, z_block, config_block, mode_block,
+  lines <- c(header, z_block, config_block, mode_block, collab_block,
              packages_block, sentinel_block)
   writeLines(lines, con = path)
   .dw_dbg("create_profile", "wrote ", length(lines), " lines", d = d)
@@ -236,7 +256,9 @@ create_profile <- function(repo_name,
 #' the building blocks the cso-toolkit IO + API contract depends on (the
 #' profile sentinel, cross-platform user identification, YAML config load,
 #' producer / reviewer `dw_mode` resolution, the `dw_require_no_api` guard,
-#' a reproducibility seed, and a packages block).
+#' a reproducibility seed, and a packages block). It also warns when the
+#' repository's `cso_project.yml` sets `collaboration: multi-producer` but the
+#' profile never calls `dw_collaboration()`.
 #'
 #' This is intentionally pattern-based, not parse-based: it greps for the
 #' load-bearing lines so it tolerates stylistic variation across profiles
@@ -360,7 +382,28 @@ review_profile <- function(path,
     level = if (require_z_drive_check) "fail" else "warn"
   )
 
-  # 8. Required packages block
+  # 8. Collaboration-model block (cso_project.yml). Warn when the project
+  #    is multi-producer but the profile never resolves / shows the model.
+  proj_file <- .dw_find_project_file(dirname(normalizePath(path, winslash = "/", mustWork = FALSE)))
+  proj_model <- if (is.na(proj_file)) "single-producer" else
+    tryCatch(.dw_read_project(proj_file)$collaboration, error = function(e) "invalid")
+  has_collab_block <- has("dw_collaboration\\s*\\(")
+  checks[[length(checks) + 1]] <- if (has_collab_block) {
+    list(check = "Collaboration model block", status = "pass",
+         detail = "Resolves the collaboration model with dw_collaboration().")
+  } else if (identical(proj_model, "multi-producer")) {
+    list(check = "Collaboration model block", status = "warn",
+         detail = paste0(proj_file, " sets multi-producer but the profile never calls dw_collaboration() -- ",
+                         "add the block create_profile() emits so every session shows the model at load."))
+  } else if (identical(proj_model, "invalid")) {
+    list(check = "Collaboration model block", status = "warn",
+         detail = paste0(proj_file, " cannot be read -- run dw_collaboration() to see the error."))
+  } else {
+    list(check = "Collaboration model block", status = "pass",
+         detail = "Single-producer project (no multi-producer cso_project.yml); the block is optional.")
+  }
+
+  # 9. Required packages block
   checks[[length(checks) + 1]] <- result(
     "Packages block",
     has("requireNamespace\\(") || has("install\\.packages\\(") || has("library\\("),

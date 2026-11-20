@@ -10,6 +10,7 @@ dw_api_fetch(
   refresh = FALSE,
   ext = NULL,
   metadata = NULL,
+  takeover = FALSE,
   verbose = NULL,
   debug = NULL,
   ...
@@ -32,6 +33,13 @@ default via `.dw_api_default_ext`).}
 
 \item{metadata}{Named list merged into the cache's
 `.provenance.json` sidecar.}
+
+\item{takeover}{Logical. Multi-producer projects only: forwarded to
+[dw_save()] to replace a cache that was changed outside `dw_save()` or
+fetched by another user after this session started. Default `FALSE`.
+In a multi-producer project a cache fetched by another user is only
+ever replaced through `refresh = TRUE`; the new provenance keeps the
+previous fetch (`metadata$previous_fetch`: sha256, user, fetched_at).}
 
 \item{verbose}{Logical or `NULL`. Show high-level progress and result
 messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;

@@ -47,7 +47,9 @@ Reads a `profile_<repo>.R` file and runs a series of presence checks for
 the building blocks the cso-toolkit IO + API contract depends on (the
 profile sentinel, cross-platform user identification, YAML config load,
 producer / reviewer `dw_mode` resolution, the `dw_require_no_api` guard,
-a reproducibility seed, and a packages block).
+a reproducibility seed, and a packages block). It also warns when the
+repository's `cso_project.yml` sets `collaboration: multi-producer` but the
+profile never calls `dw_collaboration()`.
 }
 \details{
 This is intentionally pattern-based, not parse-based: it greps for the

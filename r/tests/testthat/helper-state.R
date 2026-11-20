@@ -16,6 +16,10 @@
   "dwZDrive", "dw_z_available",
   "dwFunct",
   "dw_url_allowlist", "dw_frozen_root", "githubFolder",
+  # Collaboration model (cso_project.yml), resolved once per session by
+  # dw_collaboration(); dw_session_start dates the concurrent-write guard.
+  "dw_collaboration_model", "dw_project_file", "dw_session_start",
+  "rootFolder",
   # v0.4.4+: session-scoped sentinel for the once-per-session
   # frozen-root fallback notice. Kept in the state-reset list so
   # consecutive tests don't pollute each other when exercising the
