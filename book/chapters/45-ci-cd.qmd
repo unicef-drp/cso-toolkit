@@ -14,6 +14,8 @@ Everything here ships as copyable material in the toolkit repository, so a new p
 | GitHub Actions workflows (opt-in; they call `check.R`) | `templates/workflows/ci-hygiene.yml`, `ci-contract-audit.yml`, `ci-r-tests.yml`, `ci-manuscript.yml` |
 | testthat skeleton for a non-package project | `templates/testthat/` |
 
+A new repository gets all of them, set for its kind, from `create_research_project()` or `create_official_stats_project()` ([Starting a new repository](40-new-repository.qmd)).
+
 ## Data stay out; their provenance goes in
 
 The rule the rest of the chapter enforces fits in one line: **data never enter git, and the provenance sidecars that say exactly which bytes each result came from always do.** Data live in the deposit — the Teams folder and its Z: mirror, the microdata archive, Gitea LFS — and `dw_fetch_inputs()` fills a local, gitignored inputs folder from it, checking each copy's SHA-256 (see the IO chapter). What git holds is the record. Every `dw_save()` output carries a `<file>.provenance.json` sidecar with the file's hash, schema, writer and mode, and through `metadata.inputs` the hashes of the inputs it was built from ([Appendix B](../appendices/b-provenance-schema.qmd)). Committing the sidecars puts that record under version control while the data stay out, so a reviewer can tell from git alone which bytes produced a result, and `dw_provenance_diff()` can tell whether a re-run reproduced it.

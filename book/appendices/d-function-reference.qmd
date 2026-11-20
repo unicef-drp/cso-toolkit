@@ -159,13 +159,15 @@ These three keep the `cso_toolkit_` prefix in both R and Python (no `dw_` alias)
 
 ## Scaffolding and the contract auditor
 
-Generators for the standard CSO building blocks (profile scripts, sector run-scripts), an auditor for existing profiles, and the raw-call contract auditor. See the scaffolding and contract auditor chapter.
+Generators for the standard CSO building blocks (new repositories, profile scripts, sector run-scripts), an auditor for existing profiles, and the raw-call contract auditor. See the scaffolding and contract auditor chapter.
 
 | Function (R canonical) | R | Python | Stata | Notes |
 |---|---|---|---|---|
 | `dw_create_profile` | ✅ | ✅ | — | Scaffold `profile_<repo>.R` / `.py`; bare name `create_profile` |
 | `dw_create_sector_script` | ✅ | ✅ | — | Scaffold a sector run-script template; bare name `create_sector_script` |
 | `create_dw_sector_script` | ✅ | ✅ | — | DW-Production convenience wrapper (no `dw_`-prefixed alias by design — it already carries a `dw` infix) |
+| `create_research_project` | ✅ | ✅ | — | Unreleased: scaffold a research repository (layout, `.gitignore`, `tools/check.R`, hook, tests, `cso_project.yml`); no `dw_` alias. See "Starting a new repository" |
+| `create_official_stats_project` | ✅ | ✅ | — | Unreleased: scaffold an official-statistics repository (embargo settings, `releases/`, `01_dw_prep/012_codes/`); no `dw_` alias |
 | `dw_review_profile` | ✅ | ✅ | — | Audit a profile for required blocks (pass/warn/fail); bare name `review_profile` |
 | `dw_test_scripts` | ✅ | ✅ | — | Contract auditor: flag raw IO / API calls; bare name `test_scripts` |
 

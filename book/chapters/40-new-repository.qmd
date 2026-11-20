@@ -1,0 +1,166 @@
+# Starting a new repository
+
+Every repository that uses the toolkit needs the same floor before its first line of analysis: a `.gitignore` that keeps data out and provenance in, the local checks and the hook that runs them, a test suite, the project's collaboration setting, a home for the vendored helpers, and a README and contributing guide that tell a co-author what to do on their first clone. The chapters that follow explain each piece. This one starts a repository with all of them in one call, from the toolkit's own templates, so a new project begins where the rest of the handbook expects it to be.
+
+There are two functions, because there are two kinds of repository:
+
+| | `create_research_project()` | `create_official_stats_project()` |
+|---|---|---|
+| For | a paper, an analysis, a replication package | a DW sector pipeline, an SDMX or data.unicef.org publication pipeline, a survey-processing repository |
+| Canonical store for results | git: small tables and figures, each with its sidecar | the deposit (Teams and Z:), then SDMX and data.unicef.org |
+| Results in the repository | committed | never: embargoed until publication |
+| What is committed after a release | the results themselves; tag the submitted version | a release record, `releases/<vintage>/` |
+| Code lives in | `R/` (numbered scripts) | `01_dw_prep/012_codes/<sector>/` |
+| Inputs | `data/` | `inputs/`, filled from the deposit by `dw_fetch_inputs()` |
+| `.gitignore` | `research-project.gitignore` | `official-stats.gitignore` |
+
+## Which one?
+
+Ask where the results live and who may see them before publication. If the answer is "in git, and anyone with access to the repository may read them", it is a research project. If the results are deposited and published by the office, and nobody may see a figure before its release date, it is an official-statistics repository, however small. The difference is not cosmetic: the official-statistics template ignores output folders outright, sidecars included, and its `tools/check.R` fails on anything tracked in them, because a pre-release table committed by accident stays in git history ([Continuous integration and repository hygiene](45-ci-cd.qmd)).
+
+A paper written from official figures after their release is a research project. A research team that also runs a production pipeline keeps the two in separate repositories.
+
+## What each function writes
+
+Both functions take the folder of the new repository and the collaboration model, which is required and has no default, as `dw_mode` has none: how many people may produce results is a decision for the project, not something the toolkit guesses.
+
+::: {.panel-tabset}
+
+#### R {.unnumbered .unlisted}
+
+```r
+create_research_project(
+  "C:/GitHub/learning-mobility",
+  collaboration  = "multi-producer",          # or "single-producer"
+  members        = c("jpazvd", "kavanesian"), # optional, informational
+  title          = "Schooling Mobility Is Not Learning Mobility",
+  vendor         = TRUE,                      # copy helpers from a clone
+  toolkit_source = "C:/GitHub/cso-toolkit",   # ... at a release tag
+  git            = TRUE)                      # git init, develop, hook path
+
+create_official_stats_project(
+  "C:/GitHub/DW-Nutrition",
+  collaboration = "single-producer",
+  vendor = TRUE, toolkit_source = "C:/GitHub/cso-toolkit")
+```
+
+#### Python {.unnumbered .unlisted}
+
+```python
+from cso_toolkit import create_research_project, create_official_stats_project
+
+create_research_project(
+    "C:/GitHub/learning-mobility", "multi-producer",
+    members=["jpazvd", "kavanesian"],
+    title="Schooling Mobility Is Not Learning Mobility",
+    vendor=True, toolkit_source="C:/GitHub/cso-toolkit", git=True)
+
+create_official_stats_project(
+    "C:/GitHub/DW-Nutrition", "single-producer",
+    vendor=True, toolkit_source="C:/GitHub/cso-toolkit")
+```
+
+#### Stata {.unnumbered .unlisted}
+
+```stata
+* No Stata function. Create the repository once from R or Python: the
+* files are the same whichever language writes them, the .gitignore
+* covers Stata's files, and the checks in tools/check.R read only files.
+```
+
+:::
+
+A research project:
+
+```
+learning-mobility/
+├── .gitignore                 research-project.gitignore, unchanged
+├── .githooks/pre-push         runs tools/check.R before every push
+├── cso_project.yml            collaboration: multi-producer (committed)
+├── README.md                  quick start for a new co-author, layout
+├── CONTRIBUTING.md            ground rules, first clone, workflow, checks
+├── 00_functions/              README.md; with vendor = TRUE the helpers
+│                              and .toolkit_manifest.yml
+├── R/README.md                numbered scripts; R/functions/ for tested code
+├── data/
+│   ├── README.md              the provenance policy and the inputs table
+│   ├── input_manifest.csv     file, sha256, bytes, origin, sidecar
+│   └── provenance/README.md   sidecars of microdata kept outside the repo
+├── output/README.md           tables and figures, each with its sidecar
+├── paper/README.md            the manuscript, paper/main.tex
+├── references/README.md
+├── docs/README.md
+├── tests/
+│   ├── testthat.R             the runner (reviewer mode; sources R/functions/)
+│   └── testthat/
+│       ├── helper-project.R   fixtures, local state, expect_envelope()
+│       └── test-project.R     cso_project.yml, manifest vs sidecars, mode
+├── tools/check.R              every local check
+└── .github/workflows/         only with workflows = TRUE (four, opt-in)
+```
+
+An official-statistics repository:
+
+```
+DW-Nutrition/
+├── .gitignore                       official-stats.gitignore, unchanged
+├── .githooks/pre-push
+├── cso_project.yml                  collaboration: single-producer
+├── README.md, CONTRIBUTING.md       embargo, release record, first clone
+├── _config_template/user_config.yml placeholder per-person configuration
+├── 00_documentation/README.md       SOPs, data flows, release checklist
+├── 00_functions/                    README.md (+ helpers and manifest)
+├── 01_dw_prep/012_codes/README.md   pipeline code, one folder per sector
+├── inputs/
+│   ├── README.md                    filled from the deposit, verified
+│   └── input_manifest.csv
+├── releases/README.md               releases/<vintage>/, after publication
+├── tests/testthat.R, tests/testthat/helper-project.R, test-project.R
+├── tools/check.R                    OUTPUT_DIRS and AUDIT_PATHS set
+└── .github/workflows/               only with workflows = TRUE (three)
+```
+
+Raw data, API caches and promoted work data (`011_rawdata`, `013_wrkdata`) are not created in the repository: they are deposit folders, which the profile's `teamsRawData` and `teamsWrkData` point to in producer mode and redirect to the sandbox in reviewer mode ([Wiring the contract](22-wiring-the-contract.qmd)). Generate the profile itself with `create_profile()` and each sector's driver with `create_dw_sector_script()` ([Scaffolding and the contract auditor](35-scaffolding-audit.qmd)).
+
+The `.gitignore`, the hook, the test helper and the workflows are the toolkit's templates byte for byte, so the rules a repository starts with are the ones the toolkit tests. Three files are set for the kind of project: `tools/check.R` (an official-statistics repository gets `OUTPUT_DIRS = "output outputs results wrk"`, the embargo check, and `AUDIT_PATHS = "01_dw_prep/012_codes"`), `tests/testthat.R` (which folder of function files the tests source) and `cso_project.yml` (the model, today's date and the members).
+
+The functions never replace a file silently. Before writing anything they compare every target with what they would write: a file with the same bytes is left alone and reported as `unchanged`, and a file with different content stops the whole call, with nothing written, unless `overwrite = TRUE`. Both return the list of files with their status (`written`, `overwritten`, `unchanged`), so a second identical call changes nothing and says so. To adopt the conventions in an existing repository, follow [Onboarding a repo](42-onboarding-example.qmd), or create a scaffold in an empty folder and copy what you need.
+
+### The options
+
+- **`vendor`.** `FALSE` by default. `TRUE` copies the helpers from a cso-toolkit clone's `r/R/` into `00_functions/` and writes `.toolkit_manifest.yml` with the clone's version; check the clone out at a release tag first, so `pulled_version` names a real release ([The vendoring model](41-vendoring.qmd)). The default set is `dw_io.R`, `dw_api.R`, `cso_toolkit_sync.R`, `dw_provenance.R`, `dw_deposit.R`, `dw_project.R`, `test_scripts.R` and `zzz.R`, plus `profile_helpers.R` and `create_sector_script.R` for official statistics; a character vector picks the files, and the three that `tools/check.R` needs are always added. Without vendoring, `tools/check.R` leaves out the `contract-audit` and `vintage` checks, with a comment saying to add them back once `00_functions/` is filled.
+- **`workflows`.** `FALSE` by default: checks run locally. `TRUE` adds the GitHub Actions workflows, which call the same `tools/check.R` and by default run only when started by hand and on pull requests into `main`.
+- **`git`.** `FALSE` by default. `TRUE` runs `git init` with `develop` as the first branch (`main` is created at the first release), sets `core.hooksPath` to `.githooks`, and stages the hook with its executable bit so it also runs on macOS and Linux clones. It never commits, creates a remote or pushes.
+
+## First steps for the person who created it
+
+1. Fill in the paragraphs the README leaves as comments: the question or the indicators, the authors, the outlet or the publication channel.
+2. Vendor the helpers if you did not (`00_functions/README.md`), and run `Rscript --no-init-file tools/check.R`. Every line should pass.
+3. Stage by path and make the first commit on `develop`; create `main` from it when you first release or circulate a version.
+4. Create the remote (private unless the project says otherwise), push both branches, make `develop` the default branch and protect both trunks, so changes reach them only through pull requests (`docs/git_workflow.md`).
+
+## First clone, for a co-author
+
+The generated `README.md` and `CONTRIBUTING.md` carry these steps, so a co-author can follow them without this chapter:
+
+1. Clone, then `git config core.hooksPath .githooks`, once, so the checks run on every push.
+2. In `~/.config/user_config.yml`, under their user name, set `dw_mode: reviewer`. They switch to `producer` only for a session in which they deliberately produce or refresh results. In an official-statistics repository they copy `_config_template/user_config.yml` there first and set a `sandboxRoot` outside the repository.
+3. Obtain the inputs under their own licence (research) or fill `inputs/` with `dw_fetch_inputs()` (official statistics), and verify that the bytes match the manifest: then their results are built from the same inputs.
+4. Run `Rscript --no-init-file tools/check.R`.
+5. In a multi-producer project, add their handle under `members:` in `cso_project.yml` in their first pull request.
+
+## The collaboration setting
+
+`cso_project.yml` records how many people may produce results. In a `single-producer` project one person produces and the others review; in a `multi-producer` project every co-author may produce, always through a pull request, and `dw_save()` refuses to replace an output that was changed outside it or written by someone else during the session, unless the producer passes `takeover = TRUE` after checking. The setting is committed, so it is the same for everyone; a person's `dw_mode` stays in their own configuration. Change it later with `dw_set_collaboration()`, in one reviewed pull request ([Roles and the mode contract](21-roles-and-modes.qmd), "Collaboration model").
+
+## Local checks first
+
+The repository starts with checks that run on the author's machine: `tools/check.R` runs every check with one command and the pre-push hook runs it before each push. GitHub Actions are opt-in (`workflows = TRUE`) and run the same script; by default they run only when started by hand and on release pull requests into `main`, so routine work costs no Actions minutes. The pull request carries the output of `tools/check.R` for its head commit, and that record is the gate.
+
+## Where to read more
+
+- The `.gitignore` rules and the reasoning behind each block: [`docs/gitignore_guidelines.md`](https://github.com/unicef-drp/cso-toolkit/blob/develop/docs/gitignore_guidelines.md).
+- The checks, the testthat skeleton, the workflows and merge gating: [Continuous integration and repository hygiene](45-ci-cd.qmd).
+- The collaboration model: [Roles and the mode contract](21-roles-and-modes.qmd).
+- Vendoring and the manifest: [The vendoring model](41-vendoring.qmd) and [Vintage sync](34-vintage-sync.qmd).
+- The provenance sidecar: [Appendix B](../appendices/b-provenance-schema.qmd).

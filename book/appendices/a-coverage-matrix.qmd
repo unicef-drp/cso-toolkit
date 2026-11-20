@@ -198,6 +198,8 @@ The version-drift helpers are R-and-Python only. They read the consumer's `.tool
 | `review_profile` | Yes | Yes | n/a |
 | `create_sector_script` | Yes | Yes | n/a |
 | `create_dw_sector_script` | Yes | Yes | n/a |
+| `create_research_project` | Yes | Yes (same files) | n/a (run once from R or Python) |
+| `create_official_stats_project` | Yes | Yes (same files) | n/a (run once from R or Python) |
 | `generate_markdown_report` | Yes | Yes | n/a |
 | `process_all_csv_files` | Yes (folder mode of the report) | Yes | n/a |
 | `test_scripts` (contract auditor) | Yes (`.R` scripts) | Yes (`.py` scripts) | n/a (no Stata auditor) |
