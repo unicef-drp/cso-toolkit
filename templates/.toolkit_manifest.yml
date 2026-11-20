@@ -44,6 +44,8 @@ vendored:
   - dw_api.R
   - cso_toolkit_sync.R
   # Optional — copy only the ones your pipeline uses:
+  # - dw_project.R      # dw_set_collaboration(): switch cso_project.yml
+  #                     # (reading it and the dw_save() guards are in dw_io.R)
   # - aggregate_data.R
   # - aggregate_data_v2.R
   # - dw_nestweight.R
