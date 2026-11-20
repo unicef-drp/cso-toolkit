@@ -12,6 +12,7 @@ import os
 import shutil
 import subprocess
 from pathlib import Path
+from typing import Optional
 
 import pytest
 import yaml
@@ -45,12 +46,38 @@ def on_disk(root: Path) -> list:
                   if p.is_file() and ".git" not in p.relative_to(root).parts[:1])
 
 
-def fake_clone(tmp_path: Path, files) -> Path:
-    d = tmp_path / "clone"
-    (d / "r" / "R").mkdir(parents=True)
-    (d / "r" / "DESCRIPTION").write_text("Package: csotoolkit\nVersion: 9.8.7\n", encoding="utf-8")
+def clone_git(d: Path, *args: str) -> str:
+    """git in a test clone, with a fixed identity and no line-ending conversion."""
+    res = subprocess.run(["git", "-C", str(d), "-c", "user.name=test",
+                          "-c", "user.email=test@example.org", "-c", "core.autocrlf=false",
+                          *args], capture_output=True, text=True)
+    assert res.returncode == 0, res.stderr
+    return res.stdout.strip()
+
+
+def stub_bytes(f: str, tag: str) -> bytes:
+    return f"# stub {f} at {tag}\n".encode("utf-8")
+
+
+def write_stubs(d: Path, files, tag: str) -> None:
     for f in files:
-        (d / "r" / "R" / f).write_text(f"# stub {f}\n", encoding="utf-8")
+        (d / "r" / "R" / f).write_bytes(stub_bytes(f, tag))
+
+
+def fake_clone(tmp_path: Path, files, tag: Optional[str] = "v9.8.7", name: str = "clone") -> Path:
+    """A git repository holding r/DESCRIPTION and stub r/R/*.R files,
+    committed and tagged ``tag`` (None: committed, not tagged)."""
+    if shutil.which("git") is None:
+        pytest.skip("git not installed")
+    d = tmp_path / name
+    (d / "r" / "R").mkdir(parents=True)
+    (d / "r" / "DESCRIPTION").write_bytes(b"Package: csotoolkit\nVersion: 9.9.9\n")
+    write_stubs(d, files, tag or "untagged")
+    clone_git(d, "init", "--quiet")
+    clone_git(d, "add", "--", "r")
+    clone_git(d, "commit", "--quiet", "-m", "stubs")
+    if tag:
+        clone_git(d, "tag", tag)
     return d
 
 
@@ -166,6 +193,10 @@ def test_workflows(tmp_path):
     assert sum(p.startswith(".github/workflows/") for p in res2["path"]) == 3
 
 
+def _manifest(root: Path) -> dict:
+    return yaml.safe_load((root / "00_functions" / ".toolkit_manifest.yml").read_text(encoding="utf-8"))
+
+
 def test_vendor(tmp_path):
     files = cp._KINDS["research"]["vendor"]
     clone = fake_clone(tmp_path, files)
@@ -173,12 +204,81 @@ def test_vendor(tmp_path):
     res = m.create_research_project(root, "single-producer", vendor=True, toolkit_source=clone)
     for f in files:
         assert f"00_functions/{f}" in list(res["path"])
-        assert (root / "00_functions" / f).read_bytes() == (clone / "r" / "R" / f).read_bytes()
-    man = yaml.safe_load((root / "00_functions" / ".toolkit_manifest.yml").read_text(encoding="utf-8"))
+        assert (root / "00_functions" / f).read_bytes() == stub_bytes(f, "v9.8.7")
+    man = _manifest(root)
+    # The tag, not r/DESCRIPTION's version (9.9.9 here).
     assert man["pulled_version"] == "v9.8.7"
+    assert man["pulled_commit"] == clone_git(clone, "rev-list", "-n", "1", "v9.8.7")
     assert man["vendored"] == files
     assert man["local_edits"] == []
     assert cp._CHECKS_LINE in (root / "tools" / "check.R").read_text(encoding="utf-8").splitlines()
+
+
+def test_vendor_reads_the_tag_not_the_working_tree(tmp_path):
+    files = cp._KINDS["research"]["vendor"]
+    clone = fake_clone(tmp_path, files)
+    clone_git(clone, "checkout", "--quiet", "-b", "feature/other")
+    write_stubs(clone, files, "feature/other")
+    clone_git(clone, "commit", "--quiet", "-a", "-m", "newer")
+    write_stubs(clone, files, "local edit")
+    root = tmp_path / "proj"
+    m.create_research_project(root, "single-producer", vendor=True, toolkit_source=clone,
+                              toolkit_version="v9.8.7")
+    for f in files:
+        assert (root / "00_functions" / f).read_bytes() == stub_bytes(f, "v9.8.7")
+    man = _manifest(root)
+    assert man["pulled_commit"] == clone_git(clone, "rev-list", "-n", "1", "v9.8.7")
+    assert man["pulled_commit"] != clone_git(clone, "rev-parse", "HEAD")
+
+
+def test_vendor_version_choice(tmp_path):
+    k = list(cp._VENDOR_REQUIRED)
+    clone = fake_clone(tmp_path, k, tag="v1.2.0")
+    for tag in ("v1.10.0", "v2.0.0-rc1"):
+        write_stubs(clone, k, tag)
+        clone_git(clone, "commit", "--quiet", "-a", "-m", tag)
+        clone_git(clone, "tag", tag)
+
+    def pulled(name, **kw):
+        root = tmp_path / name
+        m.create_research_project(root, "single-producer", vendor=k, toolkit_source=clone, **kw)
+        return _manifest(root)["pulled_version"], (root / "00_functions" / "dw_io.R").read_bytes()
+
+    # v1.10.0 sorts after v1.2.0 (version order), and the -rc1 tag is passed over.
+    assert pulled("a") == ("v1.10.0", stub_bytes("dw_io.R", "v1.10.0"))
+    assert pulled("b", toolkit_version="1.2.0") == ("v1.2.0", stub_bytes("dw_io.R", "v1.2.0"))
+    assert pulled("c", toolkit_version="v2.0.0-rc1")[0] == "v2.0.0-rc1"
+
+
+def test_vendor_missing_tag(tmp_path):
+    clone = fake_clone(tmp_path, cp._VENDOR_REQUIRED)
+    root = tmp_path / "proj"
+    with pytest.raises(LookupError, match=r"\[cso_toolkit\.create_research_project\] Tag v0\.0\.1 "
+                                          r"does not exist(.|\n)*Fix:(.|\n)*latest: v9\.8\.7"):
+        m.create_research_project(root, "single-producer", vendor=True, toolkit_source=clone,
+                                  toolkit_version="v0.0.1")
+    untagged = fake_clone(tmp_path, cp._VENDOR_REQUIRED, tag=None, name="untagged")
+    with pytest.raises(LookupError, match="has no release tag"):
+        m.create_research_project(root, "single-producer", vendor=True, toolkit_source=untagged)
+    assert not root.exists()
+
+
+def test_vendor_default_set_skips_newer_helpers(tmp_path, caplog):
+    clone = fake_clone(tmp_path, cp._VENDOR_REQUIRED)
+    root = tmp_path / "proj"
+    with caplog.at_level("INFO", logger="cso_toolkit.create_project"):
+        m.create_research_project(root, "single-producer", vendor=True, toolkit_source=clone)
+    assert "not in v9.8.7, so not vendored" in caplog.text and "dw_project.R" in caplog.text
+    assert _manifest(root)["vendored"] == [f for f in cp._KINDS["research"]["vendor"]
+                                           if f in cp._VENDOR_REQUIRED]
+    root2 = tmp_path / "proj2"
+    with pytest.raises(FileNotFoundError, match=r"Not in r/R/ at v9\.8\.7(.|\n)*dw_pop.R"):
+        m.create_research_project(root2, "single-producer", vendor=["dw_pop.R"],
+                                  toolkit_source=clone)
+    clone2 = fake_clone(tmp_path, ["dw_io.R"], name="clone2")
+    with pytest.raises(FileNotFoundError, match="cso_toolkit_sync.R"):
+        m.create_research_project(root2, "single-producer", vendor=True, toolkit_source=clone2)
+    assert not root2.exists()
 
 
 def test_vendor_list_adds_required(tmp_path):
@@ -186,18 +286,21 @@ def test_vendor_list_adds_required(tmp_path):
     root = tmp_path / "proj"
     m.create_official_stats_project(root, "single-producer", vendor=["dw_pop.R"],
                                     toolkit_source=clone)
-    man = yaml.safe_load((root / "00_functions" / ".toolkit_manifest.yml").read_text(encoding="utf-8"))
-    assert man["vendored"] == [*cp._VENDOR_REQUIRED, "dw_pop.R"]
+    assert _manifest(root)["vendored"] == [*cp._VENDOR_REQUIRED, "dw_pop.R"]
 
 
-def test_vendor_errors(tmp_path, monkeypatch):
+def test_vendor_errors(tmp_path):
     root = tmp_path / "proj"
     with pytest.raises(FileNotFoundError, match="No cso-toolkit clone"):
         m.create_research_project(root, "single-producer", vendor=True,
                                   toolkit_source=tmp_path / "nowhere")
-    clone = fake_clone(tmp_path, ["dw_io.R"])
-    with pytest.raises(FileNotFoundError, match="cso_toolkit_sync.R"):
-        m.create_research_project(root, "single-producer", vendor=True, toolkit_source=clone)
+    # A copy of the files without git history is not enough.
+    plain = tmp_path / "plain"
+    (plain / "r" / "R").mkdir(parents=True)
+    (plain / "r" / "DESCRIPTION").write_text("Version: 1.0.0\n", encoding="utf-8")
+    (plain / "r" / "R" / "dw_io.R").write_text("# dw_io\n", encoding="utf-8")
+    with pytest.raises(FileNotFoundError, match="is not a git clone"):
+        m.create_research_project(root, "single-producer", vendor=True, toolkit_source=plain)
     assert not root.exists()
 
 

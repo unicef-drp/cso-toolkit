@@ -34,9 +34,10 @@ create_research_project(
   collaboration  = "multi-producer",          # or "single-producer"
   members        = c("jpazvd", "kavanesian"), # optional, informational
   title          = "Schooling Mobility Is Not Learning Mobility",
-  vendor         = TRUE,                      # copy helpers from a clone
-  toolkit_source = "C:/GitHub/cso-toolkit",   # ... at a release tag
-  git            = TRUE)                      # git init, develop, hook path
+  vendor          = TRUE,                     # copy helpers from a clone ...
+  toolkit_source  = "C:/GitHub/cso-toolkit",
+  toolkit_version = "v0.9.1",                 # ... at this tag (default: latest)
+  git             = TRUE)                     # git init, develop, hook path
 
 create_official_stats_project(
   "C:/GitHub/DW-Nutrition",
@@ -53,7 +54,8 @@ create_research_project(
     "C:/GitHub/learning-mobility", "multi-producer",
     members=["jpazvd", "kavanesian"],
     title="Schooling Mobility Is Not Learning Mobility",
-    vendor=True, toolkit_source="C:/GitHub/cso-toolkit", git=True)
+    vendor=True, toolkit_source="C:/GitHub/cso-toolkit",
+    toolkit_version="v0.9.1", git=True)
 
 create_official_stats_project(
     "C:/GitHub/DW-Nutrition", "single-producer",
@@ -128,7 +130,7 @@ The functions never replace a file silently. Before writing anything they compar
 
 ### The options
 
-- **`vendor`.** `FALSE` by default. `TRUE` copies the helpers from a cso-toolkit clone's `r/R/` into `00_functions/` and writes `.toolkit_manifest.yml` with the clone's version; check the clone out at a release tag first, so `pulled_version` names a real release ([The vendoring model](41-vendoring.qmd)). The default set is `dw_io.R`, `dw_api.R`, `cso_toolkit_sync.R`, `dw_provenance.R`, `dw_deposit.R`, `dw_project.R`, `test_scripts.R` and `zzz.R`, plus `profile_helpers.R` and `create_sector_script.R` for official statistics; a character vector picks the files, and the three that `tools/check.R` needs are always added. Without vendoring, `tools/check.R` leaves out the `contract-audit` and `vintage` checks, with a comment saying to add them back once `00_functions/` is filled.
+- **`vendor`, `toolkit_source`, `toolkit_version`.** `vendor` is `FALSE` by default. `TRUE` copies the helpers into `00_functions/` from a release tag of a git clone of cso-toolkit (`toolkit_source`, or `CSO_TOOLKIT_ROOT`), and writes `.toolkit_manifest.yml` with that tag as `pulled_version` and the commit it points to as `pulled_commit` ([The vendoring model](41-vendoring.qmd)). The tag is `toolkit_version`, by default the clone's latest release tag (`v0.9.1`, never a pre-release such as `v1.0.0-rc1`). The files are read from the tag's commit in the clone's history, never from its working tree, so a clone on another branch or with local edits still vendors exactly the released bytes; a tag the clone does not have stops the call before anything is written (`git fetch --tags` first). The default set is `dw_io.R`, `dw_api.R`, `cso_toolkit_sync.R`, `dw_provenance.R`, `dw_deposit.R`, `dw_project.R`, `test_scripts.R` and `zzz.R`, plus `profile_helpers.R` and `create_sector_script.R` for official statistics; a helper of that set which the tag does not have yet (`dw_project.R` before the release that adds it) is skipped and named in a message. A character vector picks the files, all of which must exist at the tag, and the three that `tools/check.R` needs are always added. Without vendoring, `tools/check.R` leaves out the `contract-audit` and `vintage` checks, with a comment saying to add them back once `00_functions/` is filled.
 - **`workflows`.** `FALSE` by default: checks run locally. `TRUE` adds the GitHub Actions workflows, which call the same `tools/check.R` and by default run only when started by hand and on pull requests into `main`.
 - **`git`.** `FALSE` by default. `TRUE` runs `git init` with `develop` as the first branch (`main` is created at the first release), sets `core.hooksPath` to `.githooks`, and stages the hook with its executable bit so it also runs on macOS and Linux clones. It never commits, creates a remote or pushes.
 

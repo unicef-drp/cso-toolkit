@@ -16,6 +16,10 @@
 #   pulled_version — the tag at the time of the most recent pull
 #                    (e.g. "v0.2.0"). Use "inrepo" if the helpers were
 #                    edited locally and you do not want sync warnings.
+#   pulled_commit  — optional: the commit pulled_version points to (40-hex
+#                    SHA), so a moved or re-created tag can be noticed.
+#                    create_research_project() and
+#                    create_official_stats_project() write it.
 #   pulled_date    — ISO-8601 date of the pull. Free-form; the helper
 #                    does not parse it.
 #   pulled_by      — human breadcrumb for who ran the pull.

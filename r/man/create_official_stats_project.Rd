@@ -11,6 +11,7 @@ create_official_stats_project(
   title = NULL,
   vendor = FALSE,
   toolkit_source = NULL,
+  toolkit_version = NULL,
   workflows = FALSE,
   git = FALSE,
   overwrite = FALSE,
@@ -34,18 +35,30 @@ GitHub handles, listed under `members:` in `cso_project.yml`
 folder name.}
 
 \item{vendor}{`FALSE` (default), `TRUE`, or a character vector of file
-names. `TRUE` copies the default helper set from a cso-toolkit clone's
-`r/R/` into `00_functions/` and writes `00_functions/.toolkit_manifest.yml`
-(`pulled_version` from the clone's `DESCRIPTION`). A character vector
-names the files; `dw_io.R`, `cso_toolkit_sync.R` and `test_scripts.R`
-are always added, because `tools/check.R` needs them. With `FALSE`,
-`tools/check.R` leaves out the `contract-audit` and `vintage` checks
-until the helpers are vendored (a comment there says so).}
+names. `TRUE` copies the default helper set, as it is at the release
+tag `toolkit_version`, from a cso-toolkit clone's `r/R/` into
+`00_functions/` and writes `00_functions/.toolkit_manifest.yml`
+(`pulled_version` = the tag, `pulled_commit` = the commit it points
+to). Helpers of the default set that the tag does not have yet are
+skipped and named in a message. A character vector names the files,
+all of which must exist at the tag; `dw_io.R`, `cso_toolkit_sync.R`
+and `test_scripts.R` are always added, because `tools/check.R` needs
+them. With `FALSE`, `tools/check.R` leaves out the `contract-audit`
+and `vintage` checks until the helpers are vendored (a comment there
+says so).}
 
-\item{toolkit_source}{Character or `NULL`. Root of a cso-toolkit clone to
-vendor from, ideally checked out at a release tag. `NULL` uses the
+\item{toolkit_source}{Character or `NULL`. Root of a git clone of
+cso-toolkit, with its tags, to vendor from. Its working tree may be on
+any branch and carry local edits: the files are read from the tag's
+commit (`git cat-file`), never from the working tree. `NULL` uses the
 `CSO_TOOLKIT_ROOT` environment variable, else the source checkout the
 package was loaded from (`devtools::load_all()`). Only needed when
+vendoring.}
+
+\item{toolkit_version}{Character or `NULL`. The release tag to vendor,
+e.g. `"v0.9.1"` (`"0.9.1"` is read as `"v0.9.1"`). `NULL` (default)
+takes the clone's latest release tag (`v` and numbers only, so
+pre-release tags such as `v1.0.0-rc1` are passed over). Only used when
 vendoring.}
 
 \item{workflows}{Logical. Also write the GitHub Actions workflows to
@@ -123,7 +136,8 @@ create_official_stats_project("C:/GitHub/DW-Nutrition",
                               collaboration = "single-producer",
                               title = "Nutrition indicators pipeline",
                               vendor = TRUE,
-                              toolkit_source = "C:/GitHub/cso-toolkit")
+                              toolkit_source = "C:/GitHub/cso-toolkit",
+                              toolkit_version = "v0.9.1")
 }
 }
 \seealso{

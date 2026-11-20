@@ -117,37 +117,95 @@ def _toolkit_source(toolkit_source: Optional[Union[str, Path]], fn: str) -> Path
         root = Path(__file__).resolve().parents[2]
         if (root / "r" / "R" / "dw_io.R").is_file():
             src = str(root)
-    ok = bool(src) and (Path(src) / "r" / "R" / "dw_io.R").is_file() \
+    # A clone: the helpers are read from its git history (a release tag), so
+    # the working tree only has to be a git repository of the toolkit.
+    ok = bool(src) and (Path(src) / ".git").exists() \
         and (Path(src) / "r" / "DESCRIPTION").is_file()
     if not ok:
-        where = f" ({src} has no r/R/dw_io.R)" if src else ""
+        where = f" ({src} is not a git clone of cso-toolkit)" if src else ""
         raise FileNotFoundError(
             f"[cso_toolkit.{fn}] No cso-toolkit clone to vendor the helpers from{where}.\n"
-            "  Why: vendoring copies the helper files from a clone's r/R/ folder; "
-            "the installed package does not carry them.\n"
-            "  Fix: clone unicef-drp/cso-toolkit, check out a release tag, and pass "
+            "  Why: vendoring copies the helper files of a release tag from a git "
+            "clone of the toolkit (git history, r/R/); the installed package does "
+            "not carry them.\n"
+            "  Fix: clone unicef-drp/cso-toolkit (with its tags) and pass "
             "toolkit_source=\"<clone>\" (or set CSO_TOOLKIT_ROOT); or pass "
             "vendor=False and vendor by hand later."
         )
+    if shutil.which("git") is None:
+        raise RuntimeError(
+            f"[cso_toolkit.{fn}] Vendoring reads the helpers from the clone's git "
+            "history, but git is not on the PATH.\n"
+            "  Fix: install git, or pass vendor=False and vendor by hand later."
+        )
     return Path(src).resolve()
+
+
+def _git_out(src: Path, *args: str) -> Optional[List[str]]:
+    """Run git in a clone; stdout lines, or None when git exits non-zero."""
+    res = subprocess.run(["git", "-C", str(src), *args], capture_output=True)
+    if res.returncode != 0:
+        return None
+    return res.stdout.decode("utf-8", "replace").splitlines()
+
+
+def _resolve_tag(src: Path, toolkit_version: Optional[str], fn: str) -> Dict[str, str]:
+    """The release tag to vendor and the commit it points to.
+
+    ``None`` takes the clone's latest release tag (``v`` and dot-separated
+    numbers; pre-release tags are passed over). A version without the
+    leading ``v`` gets one.
+    """
+    if toolkit_version is None:
+        tags = [t for t in (_git_out(src, "tag", "--list", "v*", "--sort=-v:refname") or [])
+                if re.fullmatch(r"v[0-9]+(\.[0-9]+)*", t)]
+        if not tags:
+            raise LookupError(
+                f"[cso_toolkit.{fn}] The clone at {src} has no release tag "
+                "(v<major>.<minor>.<patch>).\n"
+                "  Why: vendored helpers come from a release tag, never from a working "
+                "tree, so the manifest names a real release.\n"
+                f"  Fix: fetch the tags (git -C \"{src}\" fetch --tags), or pass "
+                "toolkit_version=\"vX.Y.Z\"."
+            )
+        tag = tags[0]
+    else:
+        if not isinstance(toolkit_version, str) or not toolkit_version:
+            raise ValueError(
+                f"[cso_toolkit.{fn}] `toolkit_version` must be one tag name, e.g. "
+                "\"v0.9.1\".\n  Fix: pass a release tag of the clone, or None for its latest."
+            )
+        tag = "v" + toolkit_version if toolkit_version[:1].isdigit() else toolkit_version
+    sha = _git_out(src, "rev-list", "-n", "1", f"refs/tags/{tag}")
+    if not sha or not re.fullmatch(r"[0-9a-f]{40}", sha[0]):
+        have = _git_out(src, "tag", "--list", "v*", "--sort=-v:refname") or []
+        raise LookupError(
+            f"[cso_toolkit.{fn}] Tag {tag} does not exist in the clone at {src}.\n"
+            "  Why: vendored helpers come from a release tag, never from a working "
+            "tree or a branch.\n"
+            f"  Fix: pass one of the clone's tags (latest: "
+            f"{', '.join(have[:5]) if have else 'none'}), or fetch the tags first "
+            f"(git -C \"{src}\" fetch --tags)."
+        )
+    return {"tag": tag, "sha": sha[0]}
+
+
+def _git_blob(src: Path, sha: str, path: str) -> Optional[bytes]:
+    """Bytes of a file at a commit (git cat-file blob), or None if absent."""
+    res = subprocess.run(["git", "-C", str(src), "cat-file", "blob", f"{sha}:{path}"],
+                         capture_output=True)
+    return res.stdout if res.returncode == 0 else None
 
 
 def _user() -> str:
     return os.environ.get("USERNAME") or os.environ.get("USER") or "unknown"
 
 
-def _description_version(src: Path) -> str:
-    for line in (src / "r" / "DESCRIPTION").read_text(encoding="utf-8").splitlines():
-        if line.startswith("Version:"):
-            return line.split(":", 1)[1].strip()
-    raise ValueError(f"no Version: line in {src / 'r' / 'DESCRIPTION'}")
-
-
 def _project_files(kind: str, project_name: str, title: str, collaboration: str,
-                   members: Sequence[str], vendor_files: Sequence[str],
-                   src: Optional[Path], tpl: Path, workflows: bool,
-                   fn: str) -> Dict[str, bytes]:
+                   members: Sequence[str], vendored: dict, tpl: Path,
+                   workflows: bool, fn: str) -> Dict[str, bytes]:
     k = _KINDS[kind]
+    vendor_files = list(vendored["files"])
     today = _dt.date.today().strftime("%Y-%m-%d")
     variables = {"project_name": project_name, "title": title,
                  "collaboration": collaboration, "date": today,
@@ -197,21 +255,20 @@ def _project_files(kind: str, project_name: str, title: str, collaboration: str,
             files[f".github/workflows/{w}"] = (tpl / "workflows" / w).read_bytes()
 
     if vendor_files:
-        assert src is not None
-        version = _description_version(src)
         for f in vendor_files:
-            files[f"00_functions/{f}"] = (src / "r" / "R" / f).read_bytes()
+            files[f"00_functions/{f}"] = vendored["files"][f]
         manifest = [
             "# .toolkit_manifest.yml -- the cso-toolkit vintage this repository vendors.",
             f"# Written by {fn}(); fields: cso-toolkit templates/.toolkit_manifest.yml.",
             "# Update it every time you re-vendor, in the same pull request.",
             'source: "unicef-drp/cso-toolkit"',
-            f'pulled_version: "v{version}"',
+            f'pulled_version: "{vendored["tag"]}"',
+            f'pulled_commit: "{vendored["sha"]}"',
             f'pulled_date: "{today}"',
             f'pulled_by: "{_user()}"',
-            f'# target_version: "v{version}"   # optional: warn when pulled_version is behind',
+            f'# target_version: "{vendored["tag"]}"   # optional: warn when pulled_version is behind',
             "",
-            "# Files vendored from cso-toolkit/r/R/ into 00_functions/",
+            "# Files vendored from cso-toolkit/r/R/ at pulled_version into 00_functions/",
             "vendored:",
             *[f"  - {f}" for f in vendor_files],
             "",
@@ -248,7 +305,8 @@ def _git_setup(path: Path, fn: str) -> None:
 def _create_project(kind: str, path: Union[str, Path], collaboration: Optional[str],
                     members: Optional[Sequence[str]], title: Optional[str],
                     vendor: Union[bool, Sequence[str]],
-                    toolkit_source: Optional[Union[str, Path]], workflows: bool,
+                    toolkit_source: Optional[Union[str, Path]],
+                    toolkit_version: Optional[str], workflows: bool,
                     git: bool, overwrite: bool) -> pd.DataFrame:
     k = _KINDS[kind]
     fn = k["fn"]
@@ -292,24 +350,42 @@ def _create_project(kind: str, path: Union[str, Path], collaboration: Optional[s
     else:
         vendor_files = []
     src: Optional[Path] = Path(toolkit_source) if toolkit_source else None
+    vendored: dict = {"files": {}, "tag": None, "sha": None}
     if vendor_files:
         src = _toolkit_source(toolkit_source, fn)
-        missing = [f for f in vendor_files if not (src / "r" / "R" / f).is_file()]
+        # Always a release tag, read from git history: never the working tree,
+        # which may be on another branch or carry local edits.
+        rel = _resolve_tag(src, toolkit_version, fn)
+        blobs = {f: _git_blob(src, rel["sha"], f"r/R/{f}") for f in vendor_files}
+        absent = [f for f, b in blobs.items() if b is None]
+        # The default set may name helpers newer than an older tag: those are
+        # skipped (and named). A file the caller listed, or one that
+        # tools/check.R needs, must be there.
+        optional = [f for f in absent if f not in _VENDOR_REQUIRED] if vendor is True else []
+        missing = [f for f in absent if f not in optional]
         if missing:
             raise FileNotFoundError(
-                f"[cso_toolkit.{fn}] Not in {src}/r/R/: {', '.join(missing)}\n"
-                "  Fix: check the file names, or use a clone at a release that has them."
+                f"[cso_toolkit.{fn}] Not in r/R/ at {rel['tag']} ({rel['sha'][:7]}): "
+                f"{', '.join(missing)}\n"
+                "  Nothing was written.\n"
+                "  Fix: check the file names, or pass a `toolkit_version` that has them."
             )
+        if optional:
+            _log.info("[%s] not in %s, so not vendored: %s (re-vendor from a later "
+                      "release to add them)", fn, rel["tag"], ", ".join(optional))
+        vendored = {"files": {f: b for f, b in blobs.items() if b is not None},
+                    "tag": rel["tag"], "sha": rel["sha"]}
     if git and shutil.which("git") is None:
         raise RuntimeError(
             f"[cso_toolkit.{fn}] git=True, but git is not on the PATH.\n"
             "  Fix: install git, or pass git=False and run git init yourself."
         )
     tpl = _templates_dir(src, fn)
-    _log.debug("[%s] templates: %s; toolkit source: %s", fn, tpl, src)
+    _log.debug("[%s] templates: %s; toolkit source: %s %s", fn, tpl, src,
+               f"at {vendored['tag']} ({vendored['sha']})" if vendored["tag"] else "")
 
     files = _project_files(kind, project_name, title, collaboration, members,
-                           vendor_files, src, tpl, workflows, fn)
+                           vendored, tpl, workflows, fn)
 
     # Decide every file before writing any: never a half-written project.
     dirs = [rel for rel in files if (root / rel).is_dir()]
@@ -357,6 +433,9 @@ def _create_project(kind: str, path: Union[str, Path], collaboration: Optional[s
     _log.info("[%s] %s project at %s: %d file(s) written, %d overwritten, %d unchanged",
               fn, kind, root.resolve(), status.count("written"),
               status.count("overwritten"), status.count("unchanged"))
+    if vendored["tag"]:
+        _log.info("[%s] vendored %d helper(s) from cso-toolkit %s (commit %s)", fn,
+                  len(vendored["files"]), vendored["tag"], vendored["sha"][:7])
     _log.info("[%s] next: README.md > Quick start%s", fn,
               "" if vendor_files else
               "; vendor the toolkit into 00_functions/ (00_functions/README.md)")
@@ -371,6 +450,7 @@ def create_research_project(
     title: Optional[str] = None,
     vendor: Union[bool, Sequence[str]] = False,
     toolkit_source: Optional[Union[str, Path]] = None,
+    toolkit_version: Optional[str] = None,
     workflows: bool = False,
     git: bool = False,
     overwrite: bool = False,
@@ -418,15 +498,24 @@ def create_research_project(
         Title for the README; ``None`` uses the folder name.
     vendor
         ``False`` (default), ``True``, or a list of file names. ``True``
-        copies the default helper set from a cso-toolkit clone's ``r/R/``
-        into ``00_functions/`` and writes ``.toolkit_manifest.yml``. A list
-        names the files; ``dw_io.R``, ``cso_toolkit_sync.R`` and
-        ``test_scripts.R`` are always added. With ``False``,
-        ``tools/check.R`` leaves out ``contract-audit`` and ``vintage``
-        until the helpers are vendored.
+        copies the default helper set, as it is at the release tag
+        ``toolkit_version``, from a cso-toolkit clone's ``r/R/`` into
+        ``00_functions/`` and writes ``.toolkit_manifest.yml``
+        (``pulled_version`` = the tag, ``pulled_commit`` = its commit).
+        Default helpers the tag does not have yet are skipped and logged. A
+        list names the files, which must all exist at the tag; ``dw_io.R``,
+        ``cso_toolkit_sync.R`` and ``test_scripts.R`` are always added. With
+        ``False``, ``tools/check.R`` leaves out ``contract-audit`` and
+        ``vintage`` until the helpers are vendored.
     toolkit_source
-        Root of a cso-toolkit clone to vendor from. ``None`` uses
+        Root of a git clone of cso-toolkit, with its tags. Its working tree
+        may be on any branch and carry local edits: the files are read from
+        the tag's commit, never from the working tree. ``None`` uses
         ``CSO_TOOLKIT_ROOT``, else the source checkout of an editable install.
+    toolkit_version
+        The release tag to vendor, e.g. ``"v0.9.1"`` (``"0.9.1"`` is read as
+        ``"v0.9.1"``). ``None`` (default) takes the clone's latest release
+        tag (pre-release tags such as ``v1.0.0-rc1`` are passed over).
     workflows
         Also write the opt-in GitHub Actions workflows to
         ``.github/workflows/``. Default ``False``.
@@ -451,10 +540,13 @@ def create_research_project(
     FileExistsError
         A target file exists with different content and ``overwrite=False``.
     FileNotFoundError
-        Vendoring without a clone to copy from.
+        Vendoring without a git clone to copy from, or a requested file is
+        not at the tag.
+    LookupError
+        The tag does not exist in the clone, or the clone has no release tag.
     """
     return _create_project("research", path, collaboration, members, title, vendor,
-                           toolkit_source, workflows, git, overwrite)
+                           toolkit_source, toolkit_version, workflows, git, overwrite)
 
 
 def create_official_stats_project(
@@ -465,6 +557,7 @@ def create_official_stats_project(
     title: Optional[str] = None,
     vendor: Union[bool, Sequence[str]] = False,
     toolkit_source: Optional[Union[str, Path]] = None,
+    toolkit_version: Optional[str] = None,
     workflows: bool = False,
     git: bool = False,
     overwrite: bool = False,
@@ -500,4 +593,4 @@ def create_official_stats_project(
     set adds ``profile_helpers.R`` and ``create_sector_script.R``.
     """
     return _create_project("official-stats", path, collaboration, members, title,
-                           vendor, toolkit_source, workflows, git, overwrite)
+                           vendor, toolkit_source, toolkit_version, workflows, git, overwrite)

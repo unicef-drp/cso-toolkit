@@ -101,10 +101,15 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
   `00_documentation/`, `01_dw_prep/012_codes/`, `inputs/`, `releases/`,
   `_config_template/user_config.yml`, with `OUTPUT_DIRS` (embargo) and
   `AUDIT_PATHS` set in `tools/check.R`. Options: `vendor = TRUE` copies
-  the helpers from a cso-toolkit clone (`toolkit_source`, or
-  `CSO_TOOLKIT_ROOT`) into `00_functions/` and writes
-  `.toolkit_manifest.yml` (without it, `tools/check.R` leaves out
-  `contract-audit` and `vintage` until the helpers are vendored);
+  the helpers into `00_functions/` from a release tag of a git clone of
+  cso-toolkit (`toolkit_source`, or `CSO_TOOLKIT_ROOT`; the tag is
+  `toolkit_version`, by default the clone's latest `vX.Y.Z` tag), reading
+  them from the tag's commit with `git cat-file`, never from the working
+  tree, and writes `.toolkit_manifest.yml` with the tag as
+  `pulled_version` and its commit as `pulled_commit`; a missing tag stops
+  the call before anything is written (without vendoring, `tools/check.R`
+  leaves out `contract-audit` and `vintage` until the helpers are
+  vendored);
   `workflows = TRUE` adds the opt-in GitHub Actions workflows (default
   off); `git = TRUE` runs `git init` with `develop` as the first branch,
   sets `core.hooksPath` and stages the hook as executable (no commit,

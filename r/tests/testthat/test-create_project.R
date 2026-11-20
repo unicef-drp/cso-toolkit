@@ -11,17 +11,42 @@ new_root <- function(.frame = parent.frame()) {
 	file.path(d, "proj")
 }
 
-# A minimal stand-in for a cso-toolkit clone: r/DESCRIPTION and r/R/*.R.
-fake_clone <- function(files, .frame = parent.frame()) {
+bytes <- function(f) readBin(f, "raw", n = file.info(f)$size)
+
+# git in a test clone, with a fixed identity and no line-ending conversion;
+# stops on failure.
+clone_git <- function(d, ...) {
+	out <- suppressWarnings(system2("git", c("-C", shQuote(d), "-c", "user.name=test",
+	                                         "-c", "user.email=test@example.org",
+	                                         "-c", "core.autocrlf=false", ...),
+	                                stdout = TRUE, stderr = TRUE))
+	if ((attr(out, "status") %||% 0L) != 0L) stop(paste(out, collapse = "\n"))
+	out
+}
+
+# The bytes a stub helper has at `tag` (LF, written with writeBin).
+stub_bytes <- function(f, tag) charToRaw(sprintf("# stub %s at %s\n", f, tag))
+
+write_stubs <- function(d, files, tag) {
+	for (f in files) writeBin(stub_bytes(f, tag), file.path(d, "r", "R", f))
+}
+
+# A minimal stand-in for a cso-toolkit clone: a git repository holding
+# r/DESCRIPTION and stub r/R/*.R files, committed and tagged `tag` (NULL:
+# committed, not tagged).
+fake_clone <- function(files, tag = "v9.8.7", .frame = parent.frame()) {
+	skip_if(!nzchar(Sys.which("git")), "git not installed")
 	d <- tempfile("clone_")
 	withr::defer(unlink(d, recursive = TRUE, force = TRUE), envir = .frame)
 	dir.create(file.path(d, "r", "R"), recursive = TRUE)
-	writeLines(c("Package: csotoolkit", "Version: 9.8.7"), file.path(d, "r", "DESCRIPTION"))
-	for (f in files) writeLines(sprintf("# stub %s", f), file.path(d, "r", "R", f))
+	writeBin(charToRaw("Package: csotoolkit\nVersion: 9.9.9\n"), file.path(d, "r", "DESCRIPTION"))
+	write_stubs(d, files, if (is.null(tag)) "untagged" else tag)
+	clone_git(d, "init", "--quiet")
+	clone_git(d, "add", "--", "r")
+	clone_git(d, "commit", "--quiet", "-m", "stubs")
+	if (!is.null(tag)) clone_git(d, "tag", tag)
 	d
 }
-
-bytes <- function(f) readBin(f, "raw", n = file.info(f)$size)
 
 RESEARCH_FILES <- c(
 	".githooks/pre-push", ".gitignore", "00_functions/README.md", "CONTRIBUTING.md",
@@ -178,7 +203,7 @@ test_that("workflows = TRUE adds the opt-in workflows, byte for byte", {
 	expect_length(grep("^\\.github/workflows/", res2$path), 3)
 })
 
-test_that("vendor = TRUE copies the helpers and writes the manifest", {
+test_that("vendor = TRUE copies the helpers of the latest tag and records it", {
 	k <- .CSO_PROJECT_KINDS$research$vendor
 	clone <- fake_clone(k)
 	root <- new_root()
@@ -186,16 +211,97 @@ test_that("vendor = TRUE copies the helpers and writes the manifest", {
 	                               toolkit_source = clone, verbose = FALSE)
 	expect_true(all(file.path("00_functions", c(k, ".toolkit_manifest.yml")) %in% res$path))
 	for (f in k) {
-		expect_identical(bytes(file.path(root, "00_functions", f)),
-		                 bytes(file.path(clone, "r", "R", f)))
+		expect_identical(bytes(file.path(root, "00_functions", f)), stub_bytes(f, "v9.8.7"))
 	}
 	m <- yaml::read_yaml(file.path(root, "00_functions", ".toolkit_manifest.yml"))
 	expect_identical(m$source, "unicef-drp/cso-toolkit")
+	# The tag, not r/DESCRIPTION's version (9.9.9 here).
 	expect_identical(m$pulled_version, "v9.8.7")
+	expect_identical(m$pulled_commit, clone_git(clone, "rev-list", "-n", "1", "v9.8.7"))
 	expect_identical(unlist(m$vendored), k)
 	expect_length(m$local_edits, 0)
 	# Vendored: check.R keeps every default check.
 	expect_true(.CSO_CHECKS_LINE %in% readLines(file.path(root, "tools", "check.R")))
+})
+
+test_that("vendoring reads the tag, whatever the clone's branch and working tree", {
+	k <- .CSO_PROJECT_KINDS$research$vendor
+	clone <- fake_clone(k)
+	# Another branch with a newer commit, then uncommitted edits on top.
+	clone_git(clone, "checkout", "--quiet", "-b", "feature/other")
+	write_stubs(clone, k, "feature/other")
+	clone_git(clone, "commit", "--quiet", "-a", "-m", "newer")
+	write_stubs(clone, k, "local edit")
+	root <- new_root()
+	create_research_project(root, collaboration = "single-producer", vendor = TRUE,
+	                        toolkit_source = clone, toolkit_version = "v9.8.7", verbose = FALSE)
+	for (f in k) {
+		expect_identical(bytes(file.path(root, "00_functions", f)), stub_bytes(f, "v9.8.7"))
+	}
+	m <- yaml::read_yaml(file.path(root, "00_functions", ".toolkit_manifest.yml"))
+	expect_identical(m$pulled_commit, clone_git(clone, "rev-list", "-n", "1", "v9.8.7"))
+	expect_false(identical(m$pulled_commit, clone_git(clone, "rev-parse", "HEAD")))
+})
+
+test_that("toolkit_version picks the tag; the default is the latest release tag", {
+	k <- .CSO_VENDOR_REQUIRED
+	clone <- fake_clone(k, tag = "v1.2.0")
+	for (tag in c("v1.10.0", "v2.0.0-rc1")) {
+		write_stubs(clone, k, tag)
+		clone_git(clone, "commit", "--quiet", "-a", "-m", tag)
+		clone_git(clone, "tag", tag)
+	}
+	pulled <- function(...) {
+		root <- new_root(.frame = parent.frame())
+		create_research_project(root, collaboration = "single-producer", vendor = k,
+		                        toolkit_source = clone, verbose = FALSE, ...)
+		m <- yaml::read_yaml(file.path(root, "00_functions", ".toolkit_manifest.yml"))
+		list(version = m$pulled_version, bytes = bytes(file.path(root, "00_functions", "dw_io.R")))
+	}
+	# v1.10.0 sorts after v1.2.0 (version order), and the -rc1 tag is passed over.
+	expect_identical(pulled()$version, "v1.10.0")
+	expect_identical(pulled()$bytes, stub_bytes("dw_io.R", "v1.10.0"))
+	p <- pulled(toolkit_version = "1.2.0")
+	expect_identical(p$version, "v1.2.0")
+	expect_identical(p$bytes, stub_bytes("dw_io.R", "v1.2.0"))
+	expect_identical(pulled(toolkit_version = "v2.0.0-rc1")$version, "v2.0.0-rc1")
+})
+
+test_that("a tag that does not exist, or a clone without tags, stops before writing", {
+	clone <- fake_clone(.CSO_VENDOR_REQUIRED)
+	root <- new_root()
+	err <- tryCatch(create_research_project(root, collaboration = "single-producer", vendor = TRUE,
+	                                        toolkit_source = clone, toolkit_version = "v0.0.1",
+	                                        verbose = FALSE), error = identity)
+	expect_envelope(err, "create_research_project")
+	expect_match(conditionMessage(err), "Tag v0.0.1 does not exist.*latest: v9.8.7")
+	untagged <- fake_clone(.CSO_VENDOR_REQUIRED, tag = NULL)
+	expect_error(create_research_project(root, collaboration = "single-producer", vendor = TRUE,
+	                                     toolkit_source = untagged, verbose = FALSE),
+	             "has no release tag")
+	expect_false(dir.exists(root))
+})
+
+test_that("the default set skips helpers the tag lacks; a listed file must exist", {
+	clone <- fake_clone(.CSO_VENDOR_REQUIRED)       # no dw_api.R, dw_project.R, ...
+	root <- new_root()
+	expect_message(
+		create_research_project(root, collaboration = "single-producer", vendor = TRUE,
+		                        toolkit_source = clone, verbose = TRUE),
+		"not in v9.8.7, so not vendored: .*dw_project.R")
+	m <- yaml::read_yaml(file.path(root, "00_functions", ".toolkit_manifest.yml"))
+	expect_identical(unlist(m$vendored),
+	                 intersect(.CSO_PROJECT_KINDS$research$vendor, .CSO_VENDOR_REQUIRED))
+
+	root2 <- new_root()
+	expect_error(create_research_project(root2, collaboration = "single-producer", vendor = "dw_pop.R",
+	                                     toolkit_source = clone, verbose = FALSE),
+	             "Not in r/R/ at v9.8.7.*dw_pop.R")
+	clone2 <- fake_clone("dw_io.R")
+	expect_error(create_research_project(root2, collaboration = "single-producer", vendor = TRUE,
+	                                     toolkit_source = clone2, verbose = FALSE),
+	             "Not in r/R/ at v9.8.7.*cso_toolkit_sync.R")
+	expect_false(dir.exists(root2))
 })
 
 test_that("a vendor list always includes what tools/check.R needs", {
@@ -207,15 +313,20 @@ test_that("a vendor list always includes what tools/check.R needs", {
 	expect_identical(unlist(m$vendored), c(.CSO_VENDOR_REQUIRED, "dw_pop.R"))
 })
 
-test_that("vendoring without a clone, or with missing files, stops before writing", {
+test_that("vendoring without a git clone stops before writing", {
 	root <- new_root()
 	expect_error(create_research_project(root, collaboration = "single-producer", vendor = TRUE,
 	                                     toolkit_source = tempdir(), verbose = FALSE),
 	             "No cso-toolkit clone")
-	clone <- fake_clone("dw_io.R")
+	# A copy of the files without git history is not enough.
+	plain <- tempfile("plain_")
+	withr::defer(unlink(plain, recursive = TRUE, force = TRUE))
+	dir.create(file.path(plain, "r", "R"), recursive = TRUE)
+	writeLines("Version: 1.0.0", file.path(plain, "r", "DESCRIPTION"))
+	writeLines("# dw_io", file.path(plain, "r", "R", "dw_io.R"))
 	expect_error(create_research_project(root, collaboration = "single-producer", vendor = TRUE,
-	                                     toolkit_source = clone, verbose = FALSE),
-	             "Not in .*cso_toolkit_sync.R")
+	                                     toolkit_source = plain, verbose = FALSE),
+	             "is not a git clone")
 	expect_false(dir.exists(root))
 })
 
