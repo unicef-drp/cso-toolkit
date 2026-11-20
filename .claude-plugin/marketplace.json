@@ -1,0 +1,16 @@
+{
+  "name": "unicef-cso",
+  "description": "Claude Code plugins from UNICEF's Chief Statistician Office (CSO).",
+  "owner": {
+    "name": "UNICEF Chief Statistician Office",
+    "url": "https://github.com/unicef-drp/cso-toolkit"
+  },
+  "plugins": [
+    {
+      "name": "cso-toolkit",
+      "source": "./plugins/cso-toolkit",
+      "description": "Skills that walk an agent through the cso-toolkit procedures: start a repository, record an input's provenance, run the local checks, review in reviewer mode, update the vendored toolkit.",
+      "category": "productivity"
+    }
+  ]
+}

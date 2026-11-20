@@ -8,6 +8,16 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 
 ### Added
 
+- **Claude Code plugin with five skills (#173).** The repository is now a
+  Claude Code marketplace (`.claude-plugin/marketplace.json`, name
+  `unicef-cso`) with one plugin, `plugins/cso-toolkit/`: `new-project`,
+  `provenance`, `check`, `review` and `update-toolkit`. Each skill is a short
+  procedure that links to the handbook chapter holding the rules. Install
+  with `claude plugin marketplace add unicef-drp/cso-toolkit` and
+  `claude plugin install cso-toolkit@unicef-cso`; the plugin README has a
+  test prompt per skill. `update-toolkit` copies files from the release tag
+  by hand while `cso_toolkit_pull()` remains a stub.
+
 - **Repository hygiene and CI guidance for consumer repos (docs and
   templates only; no helper code changes).**
   `docs/gitignore_guidelines.md` sets the rule (data never enter git; their
