@@ -105,7 +105,9 @@ create_sector_script("Nutrition", "nt", base_dir = "pipelines/sectors")
 
 Other scaffolding: 
 \code{\link{create_dw_sector_script}()},
+\code{\link{create_official_stats_project}()},
 \code{\link{create_profile}()},
+\code{\link{create_research_project}()},
 \code{\link{review_profile}()}
 }
 \concept{scaffolding}

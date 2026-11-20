@@ -84,7 +84,82 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
     "Collaboration model"), Appendices A–D, `docs/mode_contract_integration.md`,
     `docs/dw_io_reference.md`, README.
 
+- **Start a new repository: `create_research_project()` and
+  `create_official_stats_project()` (R + Python, same files byte for
+  byte).** One call writes the toolkit's floor for a new repository from
+  the shipped templates: the matching `.gitignore` (template bytes), a
+  `.gitattributes` that keeps the hook, the vendored helpers and the
+  provenance sidecars LF in every clone,
+  `tools/check.R` and `.githooks/pre-push`, `tests/testthat.R` with the
+  helper and a starter `test-project.R` (cso_project.yml parses; every
+  input manifest row has a sidecar with the same sha256; reviewer mode),
+  `cso_project.yml` (`collaboration` is required, with no default, as
+  `dw_mode` has none; optional `members`), `profile_<project>.R` (from
+  `templates/profile/`: reads the user's block of `user_config.yml`,
+  resolves `dw_mode` as `dw_mode_by_project[[<project>]]` then `dw_mode`
+  with no default, sources the vendored helpers with `zzz.R` first, never
+  installs packages, sets the sentinel; the official-statistics profile
+  also derives the deposit paths from `dw_mode` and checks the Z: mirror;
+  `review_profile()` passes both), README and CONTRIBUTING
+  skeletons with the first-clone steps, and the provenance policy
+  (`data/README.md` + `data/input_manifest.csv` for research,
+  `inputs/README.md` + `inputs/input_manifest.csv` for official
+  statistics). Research layout: `R/`, `data/provenance/`, `output/`,
+  `paper/`, `references/`, `docs/`. Official-statistics layout, aligned
+  with DW-Production and the deposit's stage numbering:
+  `00_documentation/`, `00_functions/`, `01_dw_prep/` (`010_metadata/`
+  committed, `011_rawdata/` ignored but for READMEs, sidecars and
+  manifests, `012_codes/`, `013_wrkdata/` ignored outright), `inputs/`,
+  `releases/`, `_config_template/user_config.yml`, with `OUTPUT_DIRS`
+  (embargo, `013_wrkdata` included), `DATA_DIRS` (`011_rawdata` added)
+  and `AUDIT_PATHS` set in `tools/check.R`. `official-stats.gitignore`
+  now ignores `**/013_wrkdata/**` with the other output folders and keeps
+  only the provenance of `**/011_rawdata/**`, the folders where
+  `create_sector_script()` drivers read and write. `tools/check.R` gains
+  `AUDIT_MODE`: `"blocking"` (the template default, kept for official
+  statistics) fails the run on a contract-audit violation, `"advisory"`
+  (set for research projects, whose first scripts read data directly)
+  reports the violations as `[WARN]` without failing. Options: `vendor = TRUE` copies
+  the helpers into `00_functions/` from a release tag of a git clone of
+  cso-toolkit (`toolkit_source`, or `CSO_TOOLKIT_ROOT`; the tag is
+  `toolkit_version`, by default the clone's latest `vX.Y.Z` tag), reading
+  them from the tag's commit with `git cat-file`, never from the working
+  tree, and writes `.toolkit_manifest.yml` with the tag as
+  `pulled_version` and its commit as `pulled_commit`; a missing tag stops
+  the call before anything is written (without vendoring, `tools/check.R`
+  leaves out `contract-audit` and `vintage` until the helpers are
+  vendored);
+  `workflows = TRUE` adds the opt-in GitHub Actions workflows (default
+  off); `git = TRUE` runs `git init` with `develop` as the first branch,
+  sets `core.hooksPath` and stages the hook as executable (no commit,
+  remote or push). Nothing is written if a target file exists with
+  different content unless `overwrite = TRUE`; identical files are left
+  alone. Returns the files with their status. The skeleton files live in
+  `templates/project/`; the R and Python packages ship copies
+  (`r/inst/templates/`, `python/src/templates/`), refreshed by
+  `python tools/sync_templates.py`, and both test suites fail while a
+  copy differs. Stata: none (run R or Python once). New handbook chapter
+  *Starting a new repository*.
+
 ### Fixed
+
+- **`create_profile()` reads the user block of `user_config.yml` (R +
+  Python)** — the generated profile read `user_config$dw_mode` at the top
+  level, while DW-Production's `_config_template/user_config.yml` (the
+  file every CSO project shares) nests each person's settings under their
+  user name, so a profile generated for a new project stopped with "must
+  set dw_mode" for a correctly configured user. The profile now reads
+  `user_config[[USERNAME]]` first and top-level keys as a fallback,
+  resolves `dw_mode` as `dw_mode_by_project[[<repo>]]`, then `dw_mode`
+  (mirroring DW-Production's `dw_mode_by_sector` precedence; still no
+  default), sets `dw_apis_allowed`, and stops with an error that shows the
+  exact YAML to add, user name filled in. The R profile no longer calls
+  `install.packages()`: a missing package (yaml included) stops the session
+  with the list to install. `review_profile()` gains a check, "User block
+  in user_config.yml", that warns on a profile reading top-level keys only.
+  Tests run generated profiles in a child process against user-block,
+  per-project, flat and missing configurations. Handbook chapters 22 and
+  35 updated (chapter 22 had documented the flat layout).
 
 - **`dw_api_fetch(refresh = TRUE)` replaces an existing cache (R + Python)** —
   the refresh reached `dw_save()` with the default overwrite setting and
@@ -92,6 +167,10 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
   never replaced an existing cache. A refresh now passes `overwrite = TRUE`
   (and `force = TRUE` in R) when the cache exists. Without `refresh` an
   existing cache is still read and never replaced.
+
+- **`tools/check.R` template: header in a repository without commits** —
+  the header line printed git's "fatal: Needed a single revision" in place
+  of the commit; it now says `(none yet)`.
 
 ## v0.10.0 (2026-11-19)
 

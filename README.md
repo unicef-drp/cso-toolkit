@@ -272,7 +272,18 @@ R port of World Bank EduAnalyticsToolkit's
 (Diana Goldemberg) — redistributes survey weights from missing nested
 observations so per-stratum totals are preserved (R + Python).
 
-### Project scaffolding — `create_profile`, `create_sector_script`, `review_profile`
+### Project scaffolding — `create_research_project`, `create_official_stats_project`, `create_profile`, `create_sector_script`, `review_profile`
+
+`create_research_project()` and `create_official_stats_project()` (R and
+Python, same files) start a new repository with the toolkit's floor in
+place: the matching `.gitignore`, `tools/check.R` and the pre-push hook, a
+testthat suite, `cso_project.yml` (the collaboration model, required),
+README and CONTRIBUTING skeletons with first-clone steps, the data or
+inputs README and manifest, and optionally the vendored helpers
+(`vendor = TRUE`), the opt-in workflows (`workflows = TRUE`) and
+`git init` with `develop` and the hook path (`git = TRUE`). They never
+replace an existing file unless `overwrite = TRUE`. See the handbook
+chapter *Starting a new repository*.
 
 `create_profile()` scaffolds a `profile_<repo>.R` (or `.py`) with the
 standard CSO building blocks: cross-platform user identification, YAML
@@ -459,7 +470,8 @@ locally and on CI (`.github/workflows/r-check.yml`).
 ## Repository hygiene and CI for consumer repos
 
 How a repo that vendors the toolkit keeps data out of git and gates its
-pull requests:
+pull requests (a new repo gets all of it from `create_research_project()`
+or `create_official_stats_project()`):
 
 - [`docs/gitignore_guidelines.md`](docs/gitignore_guidelines.md) — data
   never enter git, their `.provenance.json` sidecars always do; templates

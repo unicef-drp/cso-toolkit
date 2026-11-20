@@ -1,0 +1,176 @@
+# ---------------------------------------------------------------------------
+# .gitignore -- CSO research project (paper, analysis, replication package)
+# ---------------------------------------------------------------------------
+#
+# Template from unicef-drp/cso-toolkit: templates/gitignore/research-project.gitignore
+# Guidance: docs/gitignore_guidelines.md (why each block exists, how to test it).
+# For official-statistics production repos (DW sector pipelines, SDMX /
+# data.unicef.org publication, survey processing) use
+# templates/gitignore/official-stats.gitignore instead.
+#
+# Copy to <repo>/.gitignore, then check nothing tracked is now ignored:
+#   git ls-files -i -c --exclude-standard     # should print nothing
+#   git check-ignore -v <path>                # which rule matched a path
+#
+# The rule in one line: data never enter git; the provenance sidecars that
+# say exactly which bytes each result came from always do.
+# Later rules override earlier ones, so keep the order of the blocks.
+#
+# Blocks marked [shared] are identical in both templates; the toolkit's
+# test suite checks that they stay so. Edit both copies together.
+# ---------------------------------------------------------------------------
+
+
+# ---- 1. Data folders: ignore the contents, keep structure and provenance ---
+#
+# `data/**` ignores everything below data/, sub-folders included. Git cannot
+# re-include a file whose parent directory is excluded, so `!data/**/`
+# re-includes the directories (a trailing slash matches directories only);
+# after that, only the files named below come back.
+
+data/**
+!data/**/
+!data/**/README.md
+!data/**/.gitkeep
+!data/**/*.provenance.json
+!data/**/input_manifest.*
+
+inputs/**
+!inputs/**/
+!inputs/**/README.md
+!inputs/**/.gitkeep
+!inputs/**/*.provenance.json
+!inputs/**/input_manifest.*
+
+# dw_api_fetch() cache and dw_use() frozen URL downloads
+_apis/**
+!_apis/**/
+!_apis/**/README.md
+!_apis/**/.gitkeep
+!_apis/**/*.provenance.json
+
+_frozen/**
+!_frozen/**/
+!_frozen/**/README.md
+!_frozen/**/.gitkeep
+!_frozen/**/*.provenance.json
+
+# Microdata kept outside the repo (S:, Z:, Teams, Gitea LFS) get their
+# sidecars under data/provenance/<path>/, mirroring where the file lives;
+# the block above already tracks them.
+
+
+# ---- 2. Data and cache formats, wherever they appear [shared] -------------
+*.sav
+*.dta
+*.rds
+*.RData
+*.rda
+*.parquet
+*.feather
+*.sas7bdat
+*.zip
+*.7z
+*.gz
+*.tar
+*.h5
+*.duckdb
+*.sqlite
+*.db
+
+
+# ---- 3. Secrets and personal configuration [shared] -----------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+.netrc
+user_config.yml
+.Renviron
+# A placeholder template may be re-included after this block with an
+# explicit `!` line (the official-stats template keeps
+# _config_template/user_config.yml that way).
+# Do NOT ignore .Rprofile: renv writes its activation line there.
+
+
+# ---- 4. Results -------------------------------------------------------------
+# Small text results (csv, tsv, tex, md, json) and figures used by the paper
+# are tracked, each with its .provenance.json sidecar. Large binaries are not
+# (section 2 already covers the data formats). Scratch output stays local:
+results/tmp/
+results/cache/
+output/tmp/
+output/cache/
+
+
+# ---- 5. Language noise: R, Python, Stata [shared] -------------------------
+# R
+.Rhistory
+.RData
+.Ruserdata
+.Rproj.user/
+renv/library/
+renv/local/
+renv/staging/
+renv/python/
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ipynb_checkpoints/
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+# Stata
+*.log
+*.smcl
+*.stswp
+*.dta~
+
+
+# ---- 6. Quarto and LaTeX build files ---------------------------------------
+.quarto/
+_freeze/
+_book/
+_site/
+*_files/
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.lof
+*.lot
+*.nav
+*.out
+*.run.xml
+*.snm
+*.synctex.gz
+*.toc
+*.xdv
+
+
+# ---- 7. OS and editors [shared] -------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+~$*
+.idea/
+.vscode/
+*.bak
+*.swp
+*.tmp
+
+
+# ---- 8. Reviewer-mode artefacts ---------------------------------------------
+# A reviewer re-run writes into its sandbox (sandboxRoot in user_config.yml);
+# keep it outside the repo, or call it sandbox/ if it must sit inside.
+sandbox/
+# dw_stage() integrity sidecars: local to one reviewer's sandbox, never shared.
+**/*.staged.json
