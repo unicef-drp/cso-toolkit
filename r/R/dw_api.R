@@ -141,7 +141,8 @@
 #' @param cache_key Character. Short snake_case identifier used as the
 #'   cache filename basename.
 #' @param refresh Logical. If `TRUE`, hit the API even when a cache exists
-#'   (producer only). Default `FALSE`.
+#'   and replace that cache (producer only). Default `FALSE`: an existing
+#'   cache is read and never replaced.
 #' @param ext Character. Cache file extension. Default `NULL` (= per-API
 #'   default via `.dw_api_default_ext`).
 #' @param metadata Named list merged into the cache's
@@ -233,6 +234,13 @@ dw_api_fetch <- function(api,
 	elapsed <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
 	.dw_dbg("dw_api_fetch", "fetched in ", round(elapsed, 2), "s; rows=", if (is.data.frame(result)) nrow(result) else NA, d = d)
 
+	# `refresh = TRUE` over an existing cache is the explicit confirmation to
+	# replace it: pass overwrite + force so dw_save()'s producer overwrite gate
+	# (overwrite = NULL -> FALSE in producer mode) does not refuse the
+	# documented refresh. Without refresh an existing cache is a hit (above)
+	# and is never replaced.
+	replacing <- isTRUE(refresh) && file.exists(cache_path)
+
 	# Cache to deposit (writes via dw_save -> mode-aware path + Z: mirror +
 	# provenance sidecar).
 	api_metadata <- c(
@@ -246,7 +254,9 @@ dw_api_fetch <- function(api,
 		),
 		metadata
 	)
-	dw_save(result, path = cache_path, metadata = api_metadata, verbose = v, debug = d)
+	dw_save(result, path = cache_path, metadata = api_metadata,
+	        overwrite = if (replacing) TRUE else NULL, force = replacing,
+	        verbose = v, debug = d)
 
 	.dw_msg("dw_api_fetch", "done: ", api, "/", cache_key, " (", if (is.data.frame(result)) paste0(nrow(result), " rows") else class(result)[1], ")", v = v)
 	result

@@ -24,7 +24,8 @@ dw_api_fetch(
 cache filename basename.}
 
 \item{refresh}{Logical. If `TRUE`, hit the API even when a cache exists
-(producer only). Default `FALSE`.}
+and replace that cache (producer only). Default `FALSE`: an existing
+cache is read and never replaced.}
 
 \item{ext}{Character. Cache file extension. Default `NULL` (= per-API
 default via `.dw_api_default_ext`).}

@@ -187,7 +187,9 @@ def dw_api_fetch(
     cache_key
         Short snake_case identifier used as the cache filename basename.
     refresh
-        Hit the API even when a cache exists (producer only).
+        Hit the API even when a cache exists and replace that cache
+        (producer only).  Default ``False``: an existing cache is read
+        and never replaced.
     ext
         Cache file extension.  Defaults to the per-API default.
     metadata
@@ -281,6 +283,12 @@ def dw_api_fetch(
         ) from exc
     elapsed = time.time() - t0
 
+    # ``refresh=True`` over an existing cache is the explicit confirmation
+    # to replace it: pass ``overwrite=True`` so dw_save's overwrite gate
+    # (default False) does not refuse the documented refresh.  Without
+    # refresh an existing cache is a hit (above) and is never replaced.
+    replacing = bool(refresh) and Path(cache_path).exists()
+
     api_metadata = {
         "api": api,
         "cache_key": cache_key,
@@ -296,7 +304,8 @@ def dw_api_fetch(
     if metadata is not None:
         api_metadata.update(metadata)
 
-    dw_save(result, path=cache_path, metadata=api_metadata, mirror_to_z=True)
+    dw_save(result, path=cache_path, metadata=api_metadata,
+            overwrite=replacing, mirror_to_z=True)
     return result
 
 
