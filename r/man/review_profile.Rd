@@ -47,7 +47,9 @@ Reads a `profile_<repo>.R` file and runs a series of presence checks for
 the building blocks the cso-toolkit IO + API contract depends on (the
 profile sentinel, cross-platform user identification, YAML config load,
 producer / reviewer `dw_mode` resolution, the `dw_require_no_api` guard,
-a reproducibility seed, and a packages block). It also warns when the
+a reproducibility seed, and a packages block). It warns when the profile
+reads only top-level keys of `user_config.yml`, which nests each person's
+settings under their user name (DW-Production's template), and when the
 repository's `cso_project.yml` sets `collaboration: multi-producer` but the
 profile never calls `dw_collaboration()`.
 }

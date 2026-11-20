@@ -77,6 +77,22 @@ model ([dw_collaboration()], read from `cso_project.yml`; single-producer
 when the file is absent), a placeholder packages block, and the profile
 sentinel object downstream sector scripts assert against.
 }
+\details{
+`~/.config/user_config.yml` follows DW-Production's template: each
+person's settings sit in a block named after their user name, and the
+generated profile reads that block first, then top-level keys. `dw_mode`
+has no default; it resolves as `dw_mode_by_project[[repo_name]]`, then
+`dw_mode`, and the profile stops with the exact YAML to add, user name
+filled in, when neither is set:
+\preformatted{
+jpazevedo:
+  dw_mode: "reviewer"
+  dw_mode_by_project:
+    My-Sector-Project: "producer"
+}
+The profile never installs packages: a missing one stops the session
+with the list to install.
+}
 \examples{
 \dontrun{
 create_profile("My-Sector-Project", project_title = "My Sector Project")

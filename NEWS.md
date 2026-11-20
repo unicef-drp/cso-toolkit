@@ -128,6 +128,24 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 
 ### Fixed
 
+- **`create_profile()` reads the user block of `user_config.yml` (R +
+  Python)** — the generated profile read `user_config$dw_mode` at the top
+  level, while DW-Production's `_config_template/user_config.yml` (the
+  file every CSO project shares) nests each person's settings under their
+  user name, so a profile generated for a new project stopped with "must
+  set dw_mode" for a correctly configured user. The profile now reads
+  `user_config[[USERNAME]]` first and top-level keys as a fallback,
+  resolves `dw_mode` as `dw_mode_by_project[[<repo>]]`, then `dw_mode`
+  (mirroring DW-Production's `dw_mode_by_sector` precedence; still no
+  default), sets `dw_apis_allowed`, and stops with an error that shows the
+  exact YAML to add, user name filled in. The R profile no longer calls
+  `install.packages()`: a missing package (yaml included) stops the session
+  with the list to install. `review_profile()` gains a check, "User block
+  in user_config.yml", that warns on a profile reading top-level keys only.
+  Tests run generated profiles in a child process against user-block,
+  per-project, flat and missing configurations. Handbook chapters 22 and
+  35 updated (chapter 22 had documented the flat layout).
+
 - **`dw_api_fetch(refresh = TRUE)` replaces an existing cache (R + Python)** —
   the refresh reached `dw_save()` with the default overwrite setting and
   stopped at the overwrite gate in producer mode, so the documented refresh
