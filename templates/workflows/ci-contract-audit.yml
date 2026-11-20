@@ -1,0 +1,130 @@
+# ---------------------------------------------------------------------------
+# ci-contract-audit.yml -- Tier 0 contract audit + toolkit vintage check
+# ---------------------------------------------------------------------------
+# Template from unicef-drp/cso-toolkit: templates/workflows/ci-contract-audit.yml
+# Guidance: docs/ci_cd_guidelines.md; handbook chapters 43 (auditor) and
+# 34 / 44 (vintage sync, versioning). Copy to .github/workflows/.
+#
+# Uses the helpers VENDORED in 00_functions/ -- the exact code the repo runs
+# -- not a fresh install from GitHub, so CI audits with the pinned vintage.
+# Both jobs run in reviewer mode (no network calls from the toolkit).
+#
+# Local equivalent (repo root):
+#   Rscript -e 'for (f in c("dw_io.R","test_scripts.R")) source(file.path("00_functions", f)); test_scripts("R", error_on_violation = TRUE)'
+# ---------------------------------------------------------------------------
+name: contract-audit
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: contract-audit-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Where the vendored helpers and .toolkit_manifest.yml live.
+  TOOLKIT_DIR: "00_functions"
+  # Analysis code to audit, space-separated. Scope it tightly (chapter 43):
+  # e.g. "R scripts" for a paper, "01_dw_prep 02_consultations" for DW.
+  AUDIT_PATHS: "R"
+
+jobs:
+  audit:
+    name: contract audit (test_scripts)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+
+      # test_scripts() needs base R only; yaml is for the vintage job.
+      - name: Run the contract auditor on the analysis code
+        shell: Rscript {0}
+        run: |
+          dw_mode <- "reviewer"; dw_apis_allowed <- FALSE
+          td <- Sys.getenv("TOOLKIT_DIR")
+          for (f in c("dw_io.R", "test_scripts.R")) {
+            p <- file.path(td, f)
+            if (!file.exists(p)) stop(
+              "[contract-audit] ", p, " not found.\n",
+              "  Why: the audit runs the vendored toolkit, not a network install.\n",
+              "  Fix: vendor dw_io.R and test_scripts.R into ", td, "/ (chapter 41)\n",
+              "       or set TOOLKIT_DIR in this workflow.", call. = FALSE)
+            source(p)
+          }
+          paths <- strsplit(trimws(Sys.getenv("AUDIT_PATHS")), "\\s+")[[1]]
+          paths <- paths[dir.exists(paths) | file.exists(paths)]
+          if (length(paths) == 0) stop(
+            "[contract-audit] none of AUDIT_PATHS exists: ", Sys.getenv("AUDIT_PATHS"), "\n",
+            "  Fix: set AUDIT_PATHS in this workflow to the folders holding analysis code.",
+            call. = FALSE)
+          ign <- c(".git", "renv", "packrat", "node_modules", ".Rproj.user",
+                   basename(td))
+          for (p in paths) test_scripts(p, ignore_dirs = ign, error_on_violation = TRUE)
+
+  vintage:
+    name: toolkit vintage (manifest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+
+      - name: Install yaml
+        shell: Rscript {0}
+        run: install.packages("yaml")
+
+      # Offline check: manifest present and well-formed, vendored files
+      # present, and pulled_version not behind target_version. The upstream
+      # poll is skipped (reviewer mode); a newer tag is the producer's call.
+      - name: Check .toolkit_manifest.yml and cso_toolkit_check()
+        shell: Rscript {0}
+        run: |
+          dw_mode <- "reviewer"; dw_apis_allowed <- FALSE
+          td <- Sys.getenv("TOOLKIT_DIR")
+          dwFunct <- td
+          mpath <- file.path(td, ".toolkit_manifest.yml")
+          fail <- function(what, fix) stop(
+            "[contract-audit.vintage] ", what, "\n",
+            "  Why: the manifest is the record of which toolkit vintage this repo runs.\n",
+            "  Fix: ", fix, call. = FALSE)
+          if (!file.exists(mpath))
+            fail(paste("no manifest at", mpath),
+                 "copy templates/.toolkit_manifest.yml from cso-toolkit and fill it in.")
+          m <- tryCatch(yaml::read_yaml(mpath),
+                        error = function(e) fail(paste("manifest does not parse:", conditionMessage(e)),
+                                                 "fix the YAML syntax."))
+          need <- c("source", "pulled_version", "vendored")
+          miss <- setdiff(need, names(m))
+          if (length(miss)) fail(paste("manifest lacks:", paste(miss, collapse = ", ")),
+                                 "add the keys; see templates/.toolkit_manifest.yml.")
+          absent <- unlist(m$vendored)[!file.exists(file.path(td, unlist(m$vendored)))]
+          if (length(absent)) fail(paste("listed in vendored: but missing:", paste(absent, collapse = ", ")),
+                                   "re-vendor the files or remove them from vendored:.")
+          for (f in c("dw_io.R", "cso_toolkit_sync.R")) source(file.path(td, f))
+          behind <- FALSE
+          res <- withCallingHandlers(
+            cso_toolkit_check(quiet = FALSE),
+            warning = function(w) {
+              if (grepl("[cso_toolkit.cso_toolkit_check]", conditionMessage(w), fixed = TRUE))
+                behind <<- TRUE
+            })
+          if (behind) fail("the vendored toolkit is behind target_version (message above)",
+                           "a producer re-vendors with cso_toolkit_pull(target_version = ...).")
+          cat("[OK] manifest well-formed; pinned", m$pulled_version,
+              if (!is.null(m$target_version)) paste("; target", m$target_version) else "", "\n")

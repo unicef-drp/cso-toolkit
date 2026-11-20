@@ -1,0 +1,212 @@
+# ---------------------------------------------------------------------------
+# ci-hygiene.yml -- Tier 0 repository hygiene (every CSO repo)
+# ---------------------------------------------------------------------------
+# Template from unicef-drp/cso-toolkit: templates/workflows/ci-hygiene.yml
+# Guidance: docs/ci_cd_guidelines.md. Copy to .github/workflows/.
+#
+# Four checks, none needs data, credentials or network beyond the runner:
+#   1. tracked-data   no data files tracked outside the allowlist
+#   2. large-files    no tracked file over MAX_FILE_MB
+#   3. secret-scan    gitleaks over the full history (findings redacted)
+#   4. sidecars       every tracked *.provenance.json parses and has the
+#                     core keys; hashes are verified locally in reviewer
+#                     mode, not here, because the data are not in the repo
+# Run the same scripts locally from Git Bash: copy the `run:` block.
+# Mark the job names below as required status checks (no `paths:` filter
+# here on purpose: a required check that never runs blocks the merge).
+# ---------------------------------------------------------------------------
+name: hygiene
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hygiene-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Folders whose contents stay out of git (any depth, matched per path part).
+  DATA_DIRS: "data inputs _apis _frozen"
+  # Formats that are data wherever they appear.
+  DATA_EXTS: "sav dta rds RData rda parquet feather sas7bdat zip 7z"
+  # Paths exempt from checks 1 and 2 (extended regex on the repo path).
+  # Default: test fixtures (tiny, synthetic) and the user_config template.
+  ALLOW_PATHS: "^tests/|^_config_template/"
+  MAX_FILE_MB: "50"
+
+jobs:
+  tracked-data:
+    name: "hygiene: tracked data"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: No data or secrets tracked outside the allowlist
+        shell: bash
+        run: |
+          set -euo pipefail
+          bad=0
+          while IFS= read -r -d '' f; do
+            [[ -n "$ALLOW_PATHS" && "$f" =~ $ALLOW_PATHS ]] && continue
+            base="${f##*/}"
+            ext="${base##*.}"
+            # (a) anything inside a data folder except the allowlist
+            IFS=/ read -r -a parts <<< "$f"
+            for d in $DATA_DIRS; do
+              for p in "${parts[@]:0:${#parts[@]}-1}"; do
+                if [[ "$p" == "$d" ]]; then
+                  case "$base" in
+                    README.md|.gitkeep|*.provenance.json|input_manifest.*) ;;
+                    *) echo "::error file=$f::data file tracked inside '$d/'"; bad=1 ;;
+                  esac
+                  break 2
+                fi
+              done
+            done
+            # (b) data formats anywhere
+            if [[ "$base" == *.* ]]; then
+              for e in $DATA_EXTS; do
+                if [[ "$ext" == "$e" ]]; then
+                  echo "::error file=$f::data format .$e is tracked"; bad=1
+                fi
+              done
+            fi
+            # (c) secrets and personal configuration
+            case "$base" in
+              .env|*.pem|*.key|*.p12|*.pfx|.netrc|.Renviron|user_config.yml)
+                echo "::error file=$f::secret or personal config is tracked"; bad=1 ;;
+              .env.example) ;;
+              .env.*)
+                echo "::error file=$f::secret or personal config is tracked"; bad=1 ;;
+            esac
+          done < <(git ls-files -z)
+          if [[ $bad -ne 0 ]]; then
+            echo "[hygiene.tracked-data] Data or secrets are tracked in git."
+            echo "  Why: data stay in the deposit; git holds code and provenance sidecars."
+            echo "  Fix: git rm --cached -- <path>   (keeps the file on disk), add the"
+            echo "       rule to .gitignore (docs/gitignore_guidelines.md), commit."
+            echo "       The file is still in history: see the guidelines before rewriting it."
+            exit 1
+          fi
+          echo "[OK] No data or secrets tracked."
+
+  large-files:
+    name: "hygiene: large files"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: No tracked file over the size limit
+        shell: bash
+        run: |
+          set -euo pipefail
+          limit=$(( MAX_FILE_MB * 1024 * 1024 ))
+          bad=0
+          while IFS= read -r -d '' f; do
+            [[ -f "$f" ]] || continue
+            [[ -n "$ALLOW_PATHS" && "$f" =~ $ALLOW_PATHS ]] && continue
+            size=$(stat -c %s -- "$f")
+            if (( size > limit )); then
+              echo "::error file=$f::$(( size / 1024 / 1024 )) MB exceeds ${MAX_FILE_MB} MB"
+              bad=1
+            fi
+          done < <(git ls-files -z)
+          if [[ $bad -ne 0 ]]; then
+            echo "[hygiene.large-files] Tracked files exceed ${MAX_FILE_MB} MB."
+            echo "  Why: git keeps every version forever; GitHub rejects files over 100 MB."
+            echo "  Fix: move the file to the deposit (Teams / Z: / Gitea LFS), commit its"
+            echo "       .provenance.json sidecar instead, and git rm --cached -- <path>."
+            exit 1
+          fi
+          echo "[OK] No tracked file over ${MAX_FILE_MB} MB."
+
+  secret-scan:
+    name: "hygiene: secret scan"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      # Pinned release of the gitleaks binary (the gitleaks GitHub Action
+      # needs a licence key for organisation repos; the binary does not).
+      GITLEAKS_VERSION: "8.21.2"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # scan every commit, not only the tip
+      - name: Install gitleaks
+        shell: bash
+        run: |
+          set -euo pipefail
+          url="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -sSfL "$url" | tar -xz -C "$RUNNER_TEMP" gitleaks
+          "$RUNNER_TEMP/gitleaks" version
+      - name: Scan history (findings redacted)
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! "$RUNNER_TEMP/gitleaks" git --redact --no-banner --exit-code 1 .; then
+            echo "[hygiene.secret-scan] A secret-like string is in the git history."
+            echo "  Why: anything pushed is readable by everyone with access, forever."
+            echo "  Fix: treat the secret as compromised and rotate it first; then remove"
+            echo "       it from the code. A known false positive goes in .gitleaksignore"
+            echo "       (fingerprint from the report) with a comment saying why."
+            exit 1
+          fi
+
+  sidecars:
+    name: "hygiene: provenance sidecars"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Every tracked .provenance.json is well-formed
+        shell: bash
+        run: |
+          set -euo pipefail
+          git ls-files -z -- '*.provenance.json' > "$RUNNER_TEMP/sidecars.lst"
+          python3 - "$RUNNER_TEMP/sidecars.lst" <<'PY'
+          import json, re, sys
+          files = [f for f in open(sys.argv[1], "rb").read().decode().split("\0") if f]
+          hexsha = re.compile(r"^[0-9a-f]{64}$")
+          bad = 0
+          def fail(path, msg):
+              global bad
+              bad += 1
+              print(f"::error file={path}::{msg}")
+          for path in files:
+              try:
+                  with open(path, encoding="utf-8") as fh:
+                      p = json.load(fh)
+              except Exception as e:
+                  fail(path, f"not valid JSON ({e})")
+                  continue
+              if not isinstance(p, dict):
+                  fail(path, "top level is not a JSON object")
+                  continue
+              if "url" in p and "fetched_at" in p:          # dw_api / frozen-URL sidecar
+                  need, hash_key = ["url", "fetched_at", "dw_mode", "sha256"], "sha256"
+              elif p.get("format") == "dw_save.provenance/1":  # Stata dw_save sidecar
+                  need, hash_key = ["path", "format", "written_at", "dw_mode", "datasignature"], None
+              else:                                            # R / Python dw_save sidecar
+                  need, hash_key = ["path", "format", "written_at", "dw_mode", "sha256"], "sha256"
+              missing = [k for k in need if k not in p]
+              if missing:
+                  fail(path, "missing key(s): " + ", ".join(missing))
+              if hash_key and hash_key in p:
+                  v = p[hash_key]
+                  if not (isinstance(v, str) and hexsha.match(v)):
+                      fail(path, f"{hash_key} is not a 64-character hex digest: {v!r}")
+          print(f"Sidecars checked: {len(files)}; problems: {bad}")
+          if bad:
+              print("[hygiene.sidecars] Provenance sidecars are malformed.")
+              print("  Why: the committed sidecar is the record of which bytes a result came from.")
+              print("  Fix: re-write the output with dw_save() (R: install the digest package so")
+              print("       sha256 is filled), or regenerate the sidecar; schema: Appendix B.")
+              sys.exit(1)
+          PY

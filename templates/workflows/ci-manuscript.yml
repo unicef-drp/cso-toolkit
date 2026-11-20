@@ -1,0 +1,92 @@
+# ---------------------------------------------------------------------------
+# ci-manuscript.yml -- Tier 2 (optional) manuscript build + page limit
+# ---------------------------------------------------------------------------
+# Template from unicef-drp/cso-toolkit: templates/workflows/ci-manuscript.yml
+# Guidance: docs/ci_cd_guidelines.md. Copy to .github/workflows/.
+#
+# Compiles the LaTeX manuscript from the tables and figures COMMITTED in the
+# repo (never re-runs the analysis: CI has no data) and fails when the PDF
+# exceeds the journal's page limit. Uploads the PDF as a build artifact.
+# Quarto variant: see the commented job at the end.
+#
+# Advisory by default: it has a `paths:` filter, so do NOT make it a
+# required status check (a required check that does not run blocks merges).
+# ---------------------------------------------------------------------------
+name: manuscript
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths: ['paper/**', '.github/workflows/ci-manuscript.yml']
+  push:
+    branches: [develop]
+    paths: ['paper/**', '.github/workflows/ci-manuscript.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: manuscript-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PAPER_DIR: "paper"
+  ROOT_FILE: "main.tex"
+  MAX_PAGES: "40"          # the journal's limit; "0" disables the check
+
+jobs:
+  latex:
+    name: manuscript build (LaTeX)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compile with latexmk
+        uses: xu-cheng/latex-action@v3
+        with:
+          working_directory: ${{ env.PAPER_DIR }}
+          root_file: ${{ env.ROOT_FILE }}
+
+      - name: Check page count
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v pdfinfo > /dev/null; then
+            sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils > /dev/null
+          fi
+          pdf="$PAPER_DIR/${ROOT_FILE%.tex}.pdf"
+          pages=$(pdfinfo "$pdf" | awk '/^Pages:/ {print $2}')
+          echo "$pdf: $pages page(s); limit $MAX_PAGES"
+          echo "### Manuscript: $pages page(s) (limit $MAX_PAGES)" >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$MAX_PAGES" != "0" && "$pages" -gt "$MAX_PAGES" ]]; then
+            echo "::error file=$PAPER_DIR/$ROOT_FILE::$pages pages exceeds the limit of $MAX_PAGES"
+            echo "[manuscript] The PDF is over the page limit."
+            echo "  Why: the target journal rejects over-length submissions."
+            echo "  Fix: cut text or move material to the supplement; or update MAX_PAGES"
+            echo "       if the target journal changed."
+            exit 1
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: manuscript-pdf
+          path: ${{ env.PAPER_DIR }}/*.pdf
+          retention-days: 14
+
+  # --- Quarto variant -------------------------------------------------------
+  # quarto:
+  #   name: manuscript build (Quarto)
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 20
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: quarto-dev/quarto-actions/setup@v2
+  #       with:
+  #         tinytex: true
+  #     - run: quarto render paper/manuscript.qmd --to pdf
+  #     - uses: actions/upload-artifact@v4
+  #       with:
+  #         name: manuscript-pdf
+  #         path: paper/*.pdf
