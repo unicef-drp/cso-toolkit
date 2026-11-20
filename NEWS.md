@@ -6,6 +6,56 @@ _Entries land here as PRs merge into `develop`. When the next release
 is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
+### Added
+
+- **Project-level collaboration setting: single- or multi-producer (R +
+  Python)** — session modes stay per person (`dw_mode: producer | reviewer`);
+  how many people may produce is now a property of the project, committed
+  as `cso_project.yml` at the repository root (`schema: cso_project/1`,
+  `collaboration: single-producer | multi-producer`, `collaboration_since`,
+  optional `members`; template in `templates/cso_project.yml`). No file means
+  `single-producer`: existing projects and their sidecars are unchanged.
+  - `dw_collaboration()` resolves the model once per session (walking up
+    from `rootFolder` / the working directory to the repository root) and
+    caches `dw_collaboration_model`, `dw_project_file` and
+    `dw_session_start`.
+  - In a `multi-producer` project, `dw_save()` (non-reviewer sessions) stops
+    with a `[cso_toolkit.dw_save]` envelope before replacing an output whose
+    bytes no longer match its sidecar (out-of-band change) or that another
+    user wrote after the session started (concurrent write), unless the new
+    `takeover = TRUE`. A write that follows another producer's only prints a
+    note. Sidecars gain `collaboration`, `previous_sha256`, `previous_user`,
+    `previous_written_at`, `git_branch`, `git_commit` and, when used,
+    `takeover`.
+  - `dw_set_collaboration(model, root, members, baseline = TRUE)` writes the
+    file and adds a `baseline` object to every existing `*.provenance.json`
+    without changing `sha256` or any other field, so switching midway raises
+    no alarms and leaves no lineage gap. Idempotent; refused in reviewer
+    mode. Commit its result as one reviewed PR.
+  - `dw_api_fetch()`: in a multi-producer project, a refresh over another
+    user's cache says so and keeps `metadata.previous_fetch`; new `takeover`
+    argument forwarded to `dw_save()`.
+  - `create_profile()` emits a block that resolves and prints the model;
+    `review_profile()` warns when a multi-producer repository's profile lacks
+    it.
+  - `dw_collaboration()` and the guards live in `dw_io.R`, so consumers that
+    vendor only `dw_io.R` honour a multi-producer project;
+    `dw_set_collaboration()` is in the new optional `dw_project.R`.
+  - Stata: not yet; `dw_save.ado` ignores `cso_project.yml`
+    ([#168](https://github.com/unicef-drp/cso-toolkit/issues/168)).
+  - Docs: handbook chapter "Roles and the mode contract" (new section
+    "Collaboration model"), Appendices A–D, `docs/mode_contract_integration.md`,
+    `docs/dw_io_reference.md`, README.
+
+### Fixed
+
+- **`dw_api_fetch(refresh = TRUE)` replaces an existing cache (R + Python)** —
+  the refresh reached `dw_save()` with the default overwrite setting and
+  stopped at the overwrite gate in producer mode, so the documented refresh
+  never replaced an existing cache. A refresh now passes `overwrite = TRUE`
+  (and `force = TRUE` in R) when the cache exists. Without `refresh` an
+  existing cache is still read and never replaced.
+
 ## v0.10.0 (2026-11-19)
 
 `cso_toolkit_check()` warns loudly when the vendored copy is behind a

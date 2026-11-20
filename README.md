@@ -188,6 +188,21 @@ The mode is a **session property** read once at profile load time
 argument. See [`docs/mode_contract_integration.md`](docs/mode_contract_integration.md)
 for the wiring.
 
+**Co-authored projects: single- or multi-producer.** The mode says what
+*a session* does; how many people may *produce* is a property of the
+*project*, committed as `cso_project.yml` at the repository root
+(`collaboration: single-producer | multi-producer`; no file means
+single-producer, the behaviour above). In a multi-producer project, where
+co-authors swap the producer and reviewer roles over time, `dw_save()`
+refuses to replace an output changed outside `dw_save()` or written by
+another user during your session (unless `takeover = TRUE`) and records
+the lineage of every write in its sidecar. Switch with
+`dw_set_collaboration()` in one reviewed pull request; it baselines the
+existing sidecars so the switch is a non-event. R and Python; Stata is
+tracked in [#168](https://github.com/unicef-drp/cso-toolkit/issues/168).
+See the handbook chapter
+[Roles and the mode contract](https://unicef-drp.github.io/cso-toolkit/handbook/chapters/21-roles-and-modes.html#collaboration-model-single--and-multi-producer-projects).
+
 ---
 
 ## What's inside — by capability
