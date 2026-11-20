@@ -93,12 +93,17 @@ test_that("the embargo and release-record rules stay in official-stats only", {
   research <- unlist(gitignore_blocks(file.path(dir, "research-project.gitignore")),
                      use.names = FALSE)
 
-  embargo <- c("**/output/**", "**/outputs/**", "**/results/**", "**/wrk/**")
+  embargo <- c("**/output/**", "**/outputs/**", "**/results/**", "**/wrk/**",
+               "**/013_wrkdata/**")
   release <- c("releases/**", "!releases/**/", "!releases/**/output_manifest.*",
                "!releases/**/*.provenance.json")
   expect_true(all(embargo %in% official))
   expect_true(all(release %in% official))
   expect_false(any(c(embargo, release) %in% research))
+  # The raw-data stage of the deposit layout keeps only its provenance.
+  rawdata <- c("**/011_rawdata/**", "!**/011_rawdata/**/", "!**/011_rawdata/**/*.provenance.json")
+  expect_true(all(rawdata %in% official))
+  expect_false(any(rawdata %in% research))
 
   # The release record is re-included after the embargo, or block 1 would
   # swallow sidecars kept in an output/ sub-folder of a release.

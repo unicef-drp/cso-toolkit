@@ -29,7 +29,8 @@ CONFIG <- list(
   # Checks run by default, in this order. Optional extras: lint (advisory,
   # never fails), manuscript (LaTeX build + page limit).
   CHECKS      = "tracked-data large-files secret-scan sidecars contract-audit vintage tests",
-  # Folders whose contents stay out of git, at any depth.
+  # Folders whose contents stay out of git, at any depth. Official
+  # statistics add the raw-data stage of the deposit layout, 011_rawdata.
   DATA_DIRS   = "data inputs _apis _frozen",
   # Files allowed inside DATA_DIRS (shell-style globs on the file name).
   DATA_ALLOW  = "README.md .gitkeep *.provenance.json input_manifest.*",
@@ -37,7 +38,8 @@ CONFIG <- list(
   DATA_EXTS   = "sav dta rds RData rda parquet feather sas7bdat zip 7z gz tar h5 duckdb sqlite db",
   # Official-statistics repos: output folders that must hold nothing tracked
   # (the embargo; docs/gitignore_guidelines.md). Set to
-  # "output outputs results wrk" there; empty for a research project.
+  # "output outputs results wrk 013_wrkdata" there (013_wrkdata: the work-data
+  # stage of the deposit layout); empty for a research project.
   # releases/ (the post-publication release record) is always exempt.
   OUTPUT_DIRS = "",
   # Paths exempt from tracked-data and large-files (extended regex).

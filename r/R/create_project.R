@@ -60,6 +60,9 @@
 	"  # add them back here once it is vendored (see 00_functions/README.md).\n",
 	'  CHECKS      = "tracked-data large-files secret-scan sidecars tests",')
 .CSO_OUTPUT_DIRS_LINE <- '  OUTPUT_DIRS = "",'
+.CSO_OUTPUT_DIRS_OFFICIAL <- '  OUTPUT_DIRS = "output outputs results wrk 013_wrkdata",'
+.CSO_DATA_DIRS_LINE <- '  DATA_DIRS   = "data inputs _apis _frozen",'
+.CSO_DATA_DIRS_OFFICIAL <- '  DATA_DIRS   = "data inputs _apis _frozen 011_rawdata",'
 .CSO_AUDIT_PATHS_LINE <- '  AUDIT_PATHS = "R",'
 .CSO_AUDIT_MODE_LINE <- '  AUDIT_MODE  = "blocking",'
 .CSO_SOURCE_DIRS <- 'SOURCE_DIRS <- c("R")'
@@ -241,7 +244,11 @@
 
 	chk <- .cso_bytes(file.path(tpl, "tools", "check.R"))
 	if (kind == "official-stats") {
-		chk <- .cso_edit(chk, .CSO_OUTPUT_DIRS_LINE, '  OUTPUT_DIRS = "output outputs results wrk",',
+		# The deposit layout's stages: 013_wrkdata is embargoed like any output
+		# folder, 011_rawdata holds data like any input folder.
+		chk <- .cso_edit(chk, .CSO_OUTPUT_DIRS_LINE, .CSO_OUTPUT_DIRS_OFFICIAL,
+		                 "tools/check.R", fn)
+		chk <- .cso_edit(chk, .CSO_DATA_DIRS_LINE, .CSO_DATA_DIRS_OFFICIAL,
 		                 "tools/check.R", fn)
 		chk <- .cso_edit(chk, .CSO_AUDIT_PATHS_LINE, '  AUDIT_PATHS = "01_dw_prep/012_codes",',
 		                 "tools/check.R", fn)
@@ -583,12 +590,14 @@ create_research_project <- function(path, collaboration, members = NULL,
 #' survey-processing repository -- into `path`. Outputs live in the deposit
 #' (Teams and Z:, then SDMX and data.unicef.org) and are **embargoed until
 #' publication**, so the `.gitignore` ignores output folders outright and
-#' `tools/check.R` is set to fail on anything tracked in `output/`,
-#' `outputs/`, `results/` or `wrk/` (`OUTPUT_DIRS`). What the repository
-#' commits instead, after publication, is a release record under
-#' `releases/<vintage>/`. Pipeline code follows the deposit's stage
-#' numbering (`01_dw_prep/012_codes/<sector>/`), and the contract audit
-#' reads that folder (`AUDIT_PATHS`).
+#' `tools/check.R` is set to fail on anything tracked in `013_wrkdata/`,
+#' `output/`, `outputs/`, `results/` or `wrk/` (`OUTPUT_DIRS`), and on data
+#' tracked in `011_rawdata/` (`DATA_DIRS`). What the repository commits
+#' instead, after publication, is a release record under
+#' `releases/<vintage>/`. The layout follows DW-Production and the
+#' deposit's stage numbering (`01_dw_prep/010_metadata`, `011_rawdata`,
+#' `012_codes`, `013_wrkdata`), and the contract audit reads the code in
+#' `01_dw_prep/012_codes/` (`AUDIT_PATHS`, blocking).
 #'
 #' The layout (handbook chapter "Starting a new repository"):
 #' \preformatted{
@@ -599,11 +608,15 @@ create_research_project <- function(path, collaboration, members = NULL,
 #' _config_template/user_config.yml   placeholder per-person configuration
 #' 00_documentation/README.md
 #' 00_functions/README.md    (+ helpers and .toolkit_manifest.yml if vendored)
-#' 01_dw_prep/012_codes/README.md
+#' 01_dw_prep/README.md      the stages: what each holds, what reaches git
+#' 01_dw_prep/010_metadata/README.md   reference metadata, committed
+#' 01_dw_prep/011_rawdata/README.md    local raw inputs: ignored, sidecars kept
+#' 01_dw_prep/012_codes/README.md      pipeline code, one folder per sector
+#'                           (013_wrkdata/ has no tracked file: embargoed)
 #' inputs/README.md, inputs/input_manifest.csv
 #' releases/README.md        release records, committed after publication
 #' tests/testthat.R, tests/testthat/helper-project.R, test-project.R
-#' tools/check.R             OUTPUT_DIRS and AUDIT_PATHS set
+#' tools/check.R             OUTPUT_DIRS, DATA_DIRS and AUDIT_PATHS set
 #' .github/workflows/*.yml   only with workflows = TRUE (no manuscript job)
 #' }
 #'

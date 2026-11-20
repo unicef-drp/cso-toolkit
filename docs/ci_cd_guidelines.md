@@ -155,8 +155,8 @@ Rscript --no-init-file tools/check.R --only lint     # an opt-in check
   `DATA_DIRS`, `OUTPUT_DIRS`, `ALLOW_PATHS`, `MAX_FILE_MB`, `TOOLKIT_DIR`,
   `AUDIT_PATHS`, …); an environment variable of the same name overrides a
   value for one run. An official-statistics repo sets
-  `OUTPUT_DIRS = "output outputs results wrk"`, so a tracked pre-release
-  output fails the check ([the embargo rule](gitignore_guidelines.md#the-embargo-rule)).
+  `OUTPUT_DIRS = "output outputs results wrk 013_wrkdata"`, so a tracked
+  pre-release output fails the check, and adds `011_rawdata` to `DATA_DIRS` ([the embargo rule](gitignore_guidelines.md#the-embargo-rule)).
 - Needs R, git, and the packages testthat, jsonlite (installed with
   testthat) and yaml; gitleaks for the secret scan (skipped without it).
 

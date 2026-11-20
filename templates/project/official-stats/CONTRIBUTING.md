@@ -8,12 +8,12 @@ conventions are in The CSO Handbook (unicef-drp/cso-toolkit).
 - **Outputs are embargoed until their publication date.** They go to the
   deposit through `dw_save()`, never into git: not a small CSV, and not its
   `.provenance.json` sidecar either (hashes and row counts of a small table
-  can confirm a guessed figure). `.gitignore` ignores `output/`, `outputs/`,
-  `results/` and `wrk/` at any depth, and `tools/check.R` fails on anything
-  tracked inside them.
+  can confirm a guessed figure). `.gitignore` ignores `013_wrkdata/`,
+  `output/`, `outputs/`, `results/` and `wrk/` at any depth, and
+  `tools/check.R` fails on anything tracked inside them.
 - **Never commit data; always commit their provenance.** Inputs stay in the
-  deposit; `inputs/` holds local copies (git-ignored), their sidecars and
-  `inputs/input_manifest.csv` (committed).
+  deposit; `inputs/` and `01_dw_prep/011_rawdata/` hold local copies
+  (git-ignored), their sidecars and input manifests (committed).
 - **Release records after publication only.** The release pull request adds
   `releases/<vintage>/output_manifest.csv` and the deposited files' sidecars,
   after the publication date and never before (`releases/README.md`).

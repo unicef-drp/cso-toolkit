@@ -58,7 +58,8 @@ RESEARCH_FILES <- c(
 
 OFFICIAL_FILES <- c(
 	".githooks/pre-push", ".gitignore", "00_documentation/README.md",
-	"00_functions/README.md", "01_dw_prep/012_codes/README.md", "CONTRIBUTING.md",
+	"00_functions/README.md", "01_dw_prep/README.md", "01_dw_prep/010_metadata/README.md",
+	"01_dw_prep/011_rawdata/README.md", "01_dw_prep/012_codes/README.md", "CONTRIBUTING.md",
 	"README.md", "_config_template/user_config.yml", "cso_project.yml",
 	"inputs/README.md", "inputs/input_manifest.csv", "releases/README.md",
 	"tests/testthat.R", "tests/testthat/helper-project.R",
@@ -105,7 +106,9 @@ test_that("tools/check.R and tests/testthat.R carry the per-kind settings", {
 	rchk <- readLines(file.path(r, "tools", "check.R"))
 	ochk <- readLines(file.path(o, "tools", "check.R"))
 	expect_true('  OUTPUT_DIRS = "",' %in% rchk)
-	expect_true('  OUTPUT_DIRS = "output outputs results wrk",' %in% ochk)
+	expect_true('  OUTPUT_DIRS = "output outputs results wrk 013_wrkdata",' %in% ochk)
+	expect_true(.CSO_DATA_DIRS_LINE %in% rchk)
+	expect_true('  DATA_DIRS   = "data inputs _apis _frozen 011_rawdata",' %in% ochk)
 	expect_true('  AUDIT_PATHS = "R",' %in% rchk)
 	expect_true('  AUDIT_PATHS = "01_dw_prep/012_codes",' %in% ochk)
 	# The contract audit reports in a research project, blocks in official stats.
@@ -156,6 +159,35 @@ test_that("AUDIT_MODE: a violation warns in a research project, fails in officia
 	bad <- run_audit(create_research_project, "R", c(AUDIT_MODE = "strict"))
 	expect_identical(bad$status, 1L)
 	expect_true(any(grepl("AUDIT_MODE is \"strict\"", bad$out, fixed = TRUE)))
+})
+
+test_that("official stats: the deposit stages are ignored, their sidecars kept", {
+	skip_if(!nzchar(Sys.which("git")), "git not installed")
+	root <- new_root()
+	create_official_stats_project(root, collaboration = "single-producer", git = TRUE, verbose = FALSE)
+	ignored <- function(path) {
+		st <- attr(suppressWarnings(system2("git", c("-C", shQuote(root), "check-ignore", "-q", "--no-index", path),
+		                                    stdout = TRUE, stderr = TRUE)), "status") %||% 0L
+		identical(as.integer(st), 0L)
+	}
+	# Work data and outputs: embargoed, sidecars included.
+	expect_true(ignored("01_dw_prep/013_wrkdata/nt/dw_nt.csv"))
+	expect_true(ignored("01_dw_prep/013_wrkdata/nt/dw_nt.csv.provenance.json"))
+	expect_true(ignored("01_dw_prep/013_wrkdata/README.md"))
+	# Raw data: ignored; READMEs, sidecars and manifests are kept.
+	expect_true(ignored("01_dw_prep/011_rawdata/nt/input/survey.csv"))
+	expect_true(ignored("01_dw_prep/011_rawdata/_apis/uis/abc.json"))
+	expect_false(ignored("01_dw_prep/011_rawdata/nt/input/survey.csv.provenance.json"))
+	expect_false(ignored("01_dw_prep/011_rawdata/README.md"))
+	expect_false(ignored("01_dw_prep/011_rawdata/nt/.gitkeep"))
+	# Code and metadata are tracked.
+	expect_false(ignored("01_dw_prep/012_codes/nt/00_run_nt.R"))
+	expect_false(ignored("01_dw_prep/010_metadata/region_codes.csv"))
+	# Every file the scaffolder wrote can be committed.
+	for (f in list.files(root, recursive = TRUE, all.files = TRUE)) {
+		if (startsWith(f, ".git/")) next
+		expect_false(ignored(f), info = f)
+	}
 })
 
 test_that("cso_project.yml records the collaboration model, date and members", {

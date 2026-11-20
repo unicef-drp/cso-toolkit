@@ -11,7 +11,7 @@ There are two functions, because there are two kinds of repository:
 | Results in the repository | committed | never: embargoed until publication |
 | What is committed after a release | the results themselves; tag the submitted version | a release record, `releases/<vintage>/` |
 | Code lives in | `R/` (numbered scripts) | `01_dw_prep/012_codes/<sector>/` |
-| Inputs | `data/` | `inputs/`, filled from the deposit by `dw_fetch_inputs()` |
+| Inputs | `data/` | the deposit's `011_rawdata`; local copies in `01_dw_prep/011_rawdata/<sector>/` and `inputs/` (filled by `dw_fetch_inputs()`) |
 | `.gitignore` | `research-project.gitignore` | `official-stats.gitignore` |
 
 ## Which one?
@@ -101,7 +101,7 @@ learning-mobility/
 └── .github/workflows/         only with workflows = TRUE (four, opt-in)
 ```
 
-An official-statistics repository:
+An official-statistics repository follows DW-Production and the deposit's stage numbering:
 
 ```
 DW-Nutrition/
@@ -112,19 +112,24 @@ DW-Nutrition/
 ├── _config_template/user_config.yml placeholder per-person configuration
 ├── 00_documentation/README.md       SOPs, data flows, release checklist
 ├── 00_functions/                    README.md (+ helpers and manifest)
-├── 01_dw_prep/012_codes/README.md   pipeline code, one folder per sector
+├── 01_dw_prep/
+│   ├── README.md                    the stages: what each holds, what reaches git
+│   ├── 010_metadata/README.md       reference metadata (codelists, maps), committed
+│   ├── 011_rawdata/README.md        local raw inputs: ignored, sidecars committed
+│   ├── 012_codes/README.md          pipeline code, one folder per sector
+│   └── (013_wrkdata/)               local work data and outputs: ignored, embargoed
 ├── inputs/
 │   ├── README.md                    filled from the deposit, verified
 │   └── input_manifest.csv
 ├── releases/README.md               releases/<vintage>/, after publication
 ├── tests/testthat.R, tests/testthat/helper-project.R, test-project.R
-├── tools/check.R                    OUTPUT_DIRS and AUDIT_PATHS set
+├── tools/check.R                    OUTPUT_DIRS, DATA_DIRS, AUDIT_PATHS set
 └── .github/workflows/               only with workflows = TRUE (three)
 ```
 
-Raw data, API caches and promoted work data (`011_rawdata`, `013_wrkdata`) are not created in the repository: they are deposit folders, which the profile's `teamsRawData` and `teamsWrkData` point to in producer mode and redirect to the sandbox in reviewer mode ([Wiring the contract](22-wiring-the-contract.qmd)). Generate the profile itself with `create_profile()` and each sector's driver with `create_dw_sector_script()` ([Scaffolding and the contract auditor](35-scaffolding-audit.qmd)).
+The canonical raw data, API caches and promoted work data live in the deposit (Teams `060.DW-MASTER/01_dw_prep/011_rawdata` and `013_wrkdata`), which the profile's `teamsRawData` and `teamsWrkData` point to in producer mode and redirect to the sandbox in reviewer mode ([Wiring the contract](22-wiring-the-contract.qmd)). The repository keeps folders of the same names for local work, as DW-Production does, because a sector script made by `create_sector_script()` reads `01_dw_prep/011_rawdata/<sector>/` and writes `01_dw_prep/013_wrkdata/<sector>/` relative to the repository ([Scaffolding and the contract auditor](35-scaffolding-audit.qmd)). Their contents never reach git: `.gitignore` ignores `013_wrkdata/` outright, like every output folder, and keeps only the READMEs, sidecars and manifests of `011_rawdata/`; `tools/check.R` fails on anything tracked in `013_wrkdata/` (`OUTPUT_DIRS`) and on data tracked in `011_rawdata/` (`DATA_DIRS`). `013_wrkdata/` has no tracked file at all, so it appears with the first run. `01_dw_prep/012_codes/README.md` shows how to scaffold a sector's driver against the project's own profile.
 
-The `.gitignore`, the hook, the test helper and the workflows are the toolkit's templates byte for byte, so the rules a repository starts with are the ones the toolkit tests. Three files are set for the kind of project: `tools/check.R` (an official-statistics repository gets `OUTPUT_DIRS = "output outputs results wrk"`, the embargo check, and `AUDIT_PATHS = "01_dw_prep/012_codes"`; the contract audit is `AUDIT_MODE = "advisory"` in a research project, where it reports raw reads such as `haven::read_dta()` without failing the checks, and `"blocking"` in official statistics, where any of them fails; see [Continuous integration and repository hygiene](45-ci-cd.qmd)), `tests/testthat.R` (which folder of function files the tests source) and `cso_project.yml` (the model, today's date and the members).
+The `.gitignore`, the hook, the test helper and the workflows are the toolkit's templates byte for byte, so the rules a repository starts with are the ones the toolkit tests. Three files are set for the kind of project: `tools/check.R` (an official-statistics repository gets `OUTPUT_DIRS = "output outputs results wrk 013_wrkdata"`, the embargo check, `011_rawdata` added to `DATA_DIRS`, and `AUDIT_PATHS = "01_dw_prep/012_codes"`; the contract audit is `AUDIT_MODE = "advisory"` in a research project, where it reports raw reads such as `haven::read_dta()` without failing the checks, and `"blocking"` in official statistics, where any of them fails; see [Continuous integration and repository hygiene](45-ci-cd.qmd)), `tests/testthat.R` (which folder of function files the tests source) and `cso_project.yml` (the model, today's date and the members).
 
 The functions never replace a file silently. Before writing anything they compare every target with what they would write: a file with the same bytes is left alone and reported as `unchanged`, and a file with different content stops the whole call, with nothing written, unless `overwrite = TRUE`. Both return the list of files with their status (`written`, `overwritten`, `unchanged`), so a second identical call changes nothing and says so. To adopt the conventions in an existing repository, follow [Onboarding a repo](42-onboarding-example.qmd), or create a scaffold in an empty folder and copy what you need.
 

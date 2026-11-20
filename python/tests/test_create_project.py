@@ -33,7 +33,8 @@ RESEARCH_FILES = sorted([
 ])
 OFFICIAL_FILES = sorted([
     ".githooks/pre-push", ".gitignore", "00_documentation/README.md",
-    "00_functions/README.md", "01_dw_prep/012_codes/README.md", "CONTRIBUTING.md",
+    "00_functions/README.md", "01_dw_prep/README.md", "01_dw_prep/010_metadata/README.md",
+    "01_dw_prep/011_rawdata/README.md", "01_dw_prep/012_codes/README.md", "CONTRIBUTING.md",
     "README.md", "_config_template/user_config.yml", "cso_project.yml",
     "inputs/README.md", "inputs/input_manifest.csv", "releases/README.md",
     "tests/testthat.R", "tests/testthat/helper-project.R",
@@ -121,7 +122,9 @@ def test_per_kind_settings(tmp_path):
     rchk = (r / "tools" / "check.R").read_text(encoding="utf-8").splitlines()
     ochk = (o / "tools" / "check.R").read_text(encoding="utf-8").splitlines()
     assert '  OUTPUT_DIRS = "",' in rchk
-    assert '  OUTPUT_DIRS = "output outputs results wrk",' in ochk
+    assert '  OUTPUT_DIRS = "output outputs results wrk 013_wrkdata",' in ochk
+    assert cp._DATA_DIRS_LINE in rchk
+    assert '  DATA_DIRS   = "data inputs _apis _frozen 011_rawdata",' in ochk
     assert '  AUDIT_PATHS = "01_dw_prep/012_codes",' in ochk
     assert '  AUDIT_MODE  = "advisory",' in rchk
     assert '  AUDIT_MODE  = "blocking",' in ochk

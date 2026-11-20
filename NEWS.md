@@ -97,10 +97,17 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
   (`data/README.md` + `data/input_manifest.csv` for research,
   `inputs/README.md` + `inputs/input_manifest.csv` for official
   statistics). Research layout: `R/`, `data/provenance/`, `output/`,
-  `paper/`, `references/`, `docs/`. Official-statistics layout:
-  `00_documentation/`, `01_dw_prep/012_codes/`, `inputs/`, `releases/`,
-  `_config_template/user_config.yml`, with `OUTPUT_DIRS` (embargo) and
-  `AUDIT_PATHS` set in `tools/check.R`. `tools/check.R` gains
+  `paper/`, `references/`, `docs/`. Official-statistics layout, aligned
+  with DW-Production and the deposit's stage numbering:
+  `00_documentation/`, `00_functions/`, `01_dw_prep/` (`010_metadata/`
+  committed, `011_rawdata/` ignored but for READMEs, sidecars and
+  manifests, `012_codes/`, `013_wrkdata/` ignored outright), `inputs/`,
+  `releases/`, `_config_template/user_config.yml`, with `OUTPUT_DIRS`
+  (embargo, `013_wrkdata` included), `DATA_DIRS` (`011_rawdata` added)
+  and `AUDIT_PATHS` set in `tools/check.R`. `official-stats.gitignore`
+  now ignores `**/013_wrkdata/**` with the other output folders and keeps
+  only the provenance of `**/011_rawdata/**`, the folders where
+  `create_sector_script()` drivers read and write. `tools/check.R` gains
   `AUDIT_MODE`: `"blocking"` (the template default, kept for official
   statistics) fails the run on a contract-audit violation, `"advisory"`
   (set for research projects, whose first scripts read data directly)

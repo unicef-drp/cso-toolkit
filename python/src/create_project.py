@@ -73,6 +73,9 @@ _CHECKS_UNVENDORED = (
     '  CHECKS      = "tracked-data large-files secret-scan sidecars tests",'
 )
 _OUTPUT_DIRS_LINE = '  OUTPUT_DIRS = "",'
+_OUTPUT_DIRS_OFFICIAL = '  OUTPUT_DIRS = "output outputs results wrk 013_wrkdata",'
+_DATA_DIRS_LINE = '  DATA_DIRS   = "data inputs _apis _frozen",'
+_DATA_DIRS_OFFICIAL = '  DATA_DIRS   = "data inputs _apis _frozen 011_rawdata",'
 _AUDIT_PATHS_LINE = '  AUDIT_PATHS = "R",'
 _AUDIT_MODE_LINE = '  AUDIT_MODE  = "blocking",'
 _SOURCE_DIRS = 'SOURCE_DIRS <- c("R")'
@@ -229,8 +232,10 @@ def _project_files(kind: str, project_name: str, title: str, collaboration: str,
 
     chk = (tpl / "tools" / "check.R").read_bytes()
     if kind == "official-stats":
-        chk = _edit(chk, _OUTPUT_DIRS_LINE, '  OUTPUT_DIRS = "output outputs results wrk",',
-                    "tools/check.R", fn)
+        # The deposit layout's stages: 013_wrkdata is embargoed like any output
+        # folder, 011_rawdata holds data like any input folder.
+        chk = _edit(chk, _OUTPUT_DIRS_LINE, _OUTPUT_DIRS_OFFICIAL, "tools/check.R", fn)
+        chk = _edit(chk, _DATA_DIRS_LINE, _DATA_DIRS_OFFICIAL, "tools/check.R", fn)
         chk = _edit(chk, _AUDIT_PATHS_LINE, '  AUDIT_PATHS = "01_dw_prep/012_codes",',
                     "tools/check.R", fn)
     chk = _edit(chk, _AUDIT_MODE_LINE, f'  AUDIT_MODE  = "{k["audit_mode"]}",',
@@ -576,9 +581,11 @@ def create_official_stats_project(
     or a survey-processing repository. Outputs live in the deposit and are
     embargoed until publication, so the ``.gitignore`` ignores output folders
     outright, ``tools/check.R`` sets ``OUTPUT_DIRS`` to fail on anything
-    tracked in them and ``AUDIT_PATHS`` to ``01_dw_prep/012_codes``, and the
-    repository commits a release record under ``releases/<vintage>/`` after
-    publication. Same files as R's ``create_official_stats_project()``.
+    tracked in them (``013_wrkdata`` included), ``DATA_DIRS`` to fail on data
+    tracked in ``011_rawdata`` and ``AUDIT_PATHS`` to ``01_dw_prep/012_codes``,
+    and the repository commits a release record under ``releases/<vintage>/``
+    after publication. The layout follows DW-Production and the deposit's
+    stage numbering. Same files as R's ``create_official_stats_project()``.
 
     Layout::
 
@@ -589,11 +596,15 @@ def create_official_stats_project(
         _config_template/user_config.yml   placeholder per-person configuration
         00_documentation/README.md
         00_functions/README.md    (+ helpers and .toolkit_manifest.yml if vendored)
-        01_dw_prep/012_codes/README.md
+        01_dw_prep/README.md      the stages: what each holds, what reaches git
+        01_dw_prep/010_metadata/README.md   reference metadata, committed
+        01_dw_prep/011_rawdata/README.md    local raw inputs: ignored, sidecars kept
+        01_dw_prep/012_codes/README.md      pipeline code, one folder per sector
+                                  (013_wrkdata/ has no tracked file: embargoed)
         inputs/README.md, inputs/input_manifest.csv
         releases/README.md        release records, committed after publication
         tests/testthat.R, tests/testthat/helper-project.R, test-project.R
-        tools/check.R             OUTPUT_DIRS and AUDIT_PATHS set
+        tools/check.R             OUTPUT_DIRS, DATA_DIRS and AUDIT_PATHS set
         .github/workflows/*.yml   only with workflows=True (no manuscript job)
 
     Parameters, return value and errors are those of

@@ -37,7 +37,7 @@ Git cannot re-include a file whose parent directory is excluded: to save time it
 
 ### Research projects and official statistics
 
-The two templates differ where results live. In a research project git is the canonical store for results: the small tables and figures a reader checks the paper against are tracked, each with its sidecar. In an official-statistics repository — a DW sector pipeline, an SDMX or data.unicef.org publication pipeline, a survey-processing repository — the canonical store is the deposit (Teams and Z:, then SDMX and data.unicef.org), and **pre-release figures are embargoed**: access to the repository is not authorization to release what is in it, and git history keeps whatever was committed. So `official-stats.gitignore` ignores output folders outright (`**/output/**`, `**/outputs/**`, `**/results/**`, `**/wrk/**`), sidecars included, and a small pre-release CSV cannot be committed by accident.
+The two templates differ where results live. In a research project git is the canonical store for results: the small tables and figures a reader checks the paper against are tracked, each with its sidecar. In an official-statistics repository — a DW sector pipeline, an SDMX or data.unicef.org publication pipeline, a survey-processing repository — the canonical store is the deposit (Teams and Z:, then SDMX and data.unicef.org), and **pre-release figures are embargoed**: access to the repository is not authorization to release what is in it, and git history keeps whatever was committed. So `official-stats.gitignore` ignores output folders outright (`**/output/**`, `**/outputs/**`, `**/results/**`, `**/wrk/**`, and `**/013_wrkdata/**`, the work-data stage of the deposit layout), sidecars included, and a small pre-release CSV cannot be committed by accident; the raw-data stage, `**/011_rawdata/**`, keeps only its READMEs, sidecars and manifests, like `inputs/`.
 
 What such a repository commits instead is a release record. After publication, as part of the release pull request, it adds `releases/<vintage>/output_manifest.csv` — one row per deposited file with `file`, `sha256`, `bytes`, `deposited_at` and the path relative to the deposit root — and copies of the deposited files' `.provenance.json` sidecars. The template re-includes exactly those files under `releases/`. A release record is never committed before the publication date: its hashes describe embargoed figures.
 
@@ -47,7 +47,7 @@ What such a repository commits instead is a release record. After publication, a
 | Results in the repository | small tables and figures, with sidecars | none; output folders ignored |
 | Confidentiality | results public with the paper | embargoed until the publication date |
 | Release record | the tracked results | `releases/<vintage>/` manifest and sidecars, after publication |
-| Folder layout | `data/`, `inputs/` at the root | `inputs/`, `_apis/`, `_frozen/` at any depth; `releases/` |
+| Folder layout | `data/`, `inputs/` at the root | `01_dw_prep/010_metadata`, `011_rawdata`, `012_codes`, `013_wrkdata`; `inputs/`, `_apis/`, `_frozen/` at any depth; `releases/` |
 | Extra noise | Quarto and LaTeX builds | reviewer sandbox, local copies of the deposit |
 | Tracked configuration | none by default | `_config_template/user_config.yml` |
 

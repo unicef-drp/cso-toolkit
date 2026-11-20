@@ -35,21 +35,26 @@ not even a small table or its sidecar, is ever committed.
 ## Layout
 
 ```
-cso_project.yml        project setting: {{collaboration}} (committed, same for everyone)
-_config_template/      user_config.yml template (placeholders only; your copy lives in ~/.config/)
-00_documentation/      SOPs, data flows, decisions, the release checklist
-00_functions/          vendored cso-toolkit helpers, pinned in .toolkit_manifest.yml
-01_dw_prep/012_codes/  pipeline code, one folder per sector
-inputs/                README.md, input_manifest.csv and sidecars (committed); the inputs are git-ignored
-releases/<vintage>/    release record: output_manifest.csv and sidecars, committed AFTER publication
-tests/                 testthat suite; tests/testthat.R runs it
-tools/check.R          every local check, embargo included; .githooks/pre-push runs it
+cso_project.yml          project setting: {{collaboration}} (committed, same for everyone)
+_config_template/        user_config.yml template (placeholders only; your copy lives in ~/.config/)
+00_documentation/        SOPs, data flows, decisions, the release checklist
+00_functions/            vendored cso-toolkit helpers, pinned in .toolkit_manifest.yml
+01_dw_prep/
+  010_metadata/          reference metadata (codelists, maps), committed
+  011_rawdata/<sector>/  local copies of raw inputs: git-ignored, sidecars committed
+  012_codes/<sector>/    pipeline code, one folder per sector
+  013_wrkdata/<sector>/  local work data and outputs: git-ignored, embargoed
+inputs/                  README.md, input_manifest.csv and sidecars (committed); the inputs are git-ignored
+releases/<vintage>/      release record: output_manifest.csv and sidecars, committed AFTER publication
+tests/                   testthat suite; tests/testthat.R runs it
+tools/check.R            every local check, embargo included; .githooks/pre-push runs it
 ```
 
-Raw data and API caches (`01_dw_prep/011_rawdata/`) and the promoted work
-data (`01_dw_prep/013_wrkdata/`) live in the deposit, not here: the
-profile's `teamsRawData` and `teamsWrkData` point there in producer mode and
-to the sandbox in reviewer mode.
+The canonical raw data, API caches and promoted work data live in the
+deposit (Teams `060.DW-MASTER/01_dw_prep/011_rawdata/` and `013_wrkdata/`):
+the profile's `teamsRawData` and `teamsWrkData` point there in producer
+mode and to the sandbox in reviewer mode. The folders of the same name in
+this repository hold local copies only (`01_dw_prep/README.md`).
 
 ## Releases
 
