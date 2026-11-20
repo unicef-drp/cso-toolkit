@@ -1,0 +1,24 @@
+# user_config.yml -- per-person configuration (TEMPLATE: placeholders only)
+#
+# Copy this file to ~/.config/user_config.yml
+#   Windows: C:/Users/<you>/.config/user_config.yml
+#   macOS:   /Users/<you>/.config/user_config.yml
+# rename the block to your user name (in R: Sys.getenv("USERNAME"); on macOS
+# and Linux: Sys.getenv("USER")) and fill it in. Never commit your filled-in
+# copy: .gitignore and tools/check.R block user_config.yml everywhere except
+# this template folder.
+#
+# Rules: indent with two spaces, never tabs; quote every path; no trailing
+# slash on folder paths.
+#
+# dw_mode is REQUIRED and has no default: "producer" writes the canonical
+# deposit and may call external APIs; "reviewer" reads the deposit and
+# writes only to sandboxRoot. Start as a reviewer.
+# The project's collaboration model is NOT set here: it is in
+# cso_project.yml at the repository root, the same for everyone.
+
+your_user_name:
+  githubFolder: "C:/GitHub"                                # folder that CONTAINS this clone
+  teamsRoot: "C:/Users/your_user_name/UNICEF/Documents"    # folder that contains 060.DW-MASTER
+  dw_mode: "reviewer"                                      # producer | reviewer
+  sandboxRoot: "C:/Users/your_user_name/dw-repro"          # reviewer writes; outside the repo and OneDrive

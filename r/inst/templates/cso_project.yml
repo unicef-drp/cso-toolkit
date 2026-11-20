@@ -1,0 +1,41 @@
+# cso_project.yml -- project-level cso-toolkit settings. Commit this file.
+#
+# Copy this template to the ROOT of your repository (next to README.md).
+# The toolkit finds it by walking up from the working directory (or the
+# profile's `rootFolder`) and stops at the repository root.
+#
+# Session MODES stay per person: `dw_mode: producer | reviewer` lives in each
+# user's ~/.config/user_config.yml and can differ between collaborators and
+# over time. This file sets a PROJECT property instead -- how many people may
+# produce -- and is the same for everyone because it is committed.
+#
+# Without this file the project is `single-producer` (one Database Manager
+# owns every deposit): the toolkit's behaviour before this file existed.
+#
+# Change the setting with dw_set_collaboration() (R and Python), not by hand:
+# it also baselines the existing provenance sidecars, so the switch is a
+# non-event. Commit the result as ONE reviewed pull request.
+#
+#   dw_set_collaboration("multi-producer", root = rootFolder,
+#                        members = c("jpazevedo", "kbarnes"))
+#
+# See the handbook, "Roles and the mode contract" > "Collaboration model".
+
+schema: cso_project/1
+
+# single-producer | multi-producer
+#   single-producer: one producer per deposit; dw_save() behaves as before.
+#   multi-producer:  several people produce. dw_save() refuses to replace an
+#                    output changed outside dw_save() or written by another
+#                    user during your session (unless takeover = TRUE), and
+#                    records the lineage (previous sha256 / user / time, git
+#                    branch and commit) in each provenance sidecar.
+collaboration: single-producer
+
+# Date the current setting took effect (YYYY-MM-DD).
+collaboration_since: 2026-11-20
+
+# Optional, informational: the collaborators' user names or handles.
+# members:
+#   - jpazevedo
+#   - kbarnes

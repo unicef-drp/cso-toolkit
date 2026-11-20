@@ -1,0 +1,63 @@
+# ---------------------------------------------------------------------------
+# ci-contract-audit.yml -- Tier 0 contract audit + toolkit vintage check
+# ---------------------------------------------------------------------------
+# Template from unicef-drp/cso-toolkit: templates/workflows/ci-contract-audit.yml
+# Guidance: docs/ci_cd_guidelines.md; handbook chapters 43 (auditor) and
+# 34 / 44 (vintage sync, versioning). Copy to .github/workflows/, with
+# templates/tools/check.R copied to tools/check.R.
+#
+# LOCAL FIRST. Both checks live in tools/check.R:
+#   Rscript --no-init-file tools/check.R --only contract-audit,vintage
+# This workflow runs the same script. It uses the helpers VENDORED in
+# 00_functions/ (the exact code the repo runs), not a fresh install from
+# GitHub, so CI audits with the pinned vintage; reviewer mode throughout (no
+# network calls from the toolkit). Set TOOLKIT_DIR and AUDIT_PATHS at the
+# top of tools/check.R.
+#
+# OPT-IN BY DEFAULT: manual runs and pull requests into main only. To run on
+# every push and pull request, use the commented `on:` block below; only
+# then make the job a required status check.
+# ---------------------------------------------------------------------------
+name: contract-audit
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+# Opt in to every push and pull request (costs Actions minutes):
+# on:
+#   workflow_dispatch:
+#   push:
+#     branches: [main, develop]
+#   pull_request:
+#     branches: [main, develop]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: contract-audit-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    name: "contract audit and toolkit vintage (tools/check.R)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CHECK_NO_RENV: "true"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+
+      # test_scripts() needs base R only; yaml is for the vintage check.
+      - name: Install yaml
+        shell: Rscript {0}
+        run: install.packages("yaml")
+
+      - name: tools/check.R (contract audit, toolkit vintage)
+        run: Rscript --no-init-file tools/check.R --only contract-audit,vintage

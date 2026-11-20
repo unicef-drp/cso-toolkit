@@ -1,0 +1,58 @@
+#!/bin/sh
+# ---------------------------------------------------------------------------
+# pre-push -- run tools/check.R before every push; a failure stops the push
+# ---------------------------------------------------------------------------
+# Template from unicef-drp/cso-toolkit: templates/hooks/pre-push
+# Guidance: docs/ci_cd_guidelines.md ("checks run locally first").
+#
+# Install, either:
+#   mkdir -p .githooks && cp pre-push .githooks/ && chmod +x .githooks/pre-push
+#   git config core.hooksPath .githooks      # once per clone; hook is tracked
+# or, untracked and for this clone only:
+#   cp pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
+#
+# Rscript not on the PATH (common on Windows)? Set RSCRIPT, e.g. in Git Bash:
+#   export RSCRIPT="/c/Program Files/R/R-4.5.1/bin/Rscript.exe"
+# Skip once, when you must (say so in the pull request):
+#   git push --no-verify          or   CHECK_SKIP=1 git push
+# Run a subset:  CHECK_ARGS="--skip tests" git push
+# ---------------------------------------------------------------------------
+
+if [ -n "$CHECK_SKIP" ]; then
+  echo "pre-push: CHECK_SKIP is set; tools/check.R not run." >&2
+  exit 0
+fi
+
+root=$(git rev-parse --show-toplevel) || exit 1
+cd "$root" || exit 1
+
+if [ ! -f tools/check.R ]; then
+  echo "pre-push: tools/check.R not found; copy it from cso-toolkit templates/tools/." >&2
+  exit 1
+fi
+
+rs="${RSCRIPT:-}"
+if [ -z "$rs" ]; then
+  if command -v Rscript > /dev/null 2>&1; then
+    rs=Rscript
+  else
+    # Windows default install location (Git Bash); the last match in glob
+    # order is usually the newest version.
+    for cand in "/c/Program Files/R"/R-*/bin/Rscript.exe; do
+      [ -f "$cand" ] && rs="$cand"
+    done
+  fi
+fi
+if [ -z "$rs" ]; then
+  echo "pre-push: Rscript not found. Set RSCRIPT to its path, or put R on the PATH." >&2
+  exit 1
+fi
+
+echo "pre-push: running tools/check.R (skip once with git push --no-verify)" >&2
+# shellcheck disable=SC2086  # CHECK_ARGS is split into words on purpose
+"$rs" --no-init-file tools/check.R $CHECK_ARGS
+status=$?
+if [ $status -ne 0 ]; then
+  echo "pre-push: checks failed; push stopped. Fix them, or push with --no-verify and say why in the PR." >&2
+fi
+exit $status
