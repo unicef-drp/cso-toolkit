@@ -84,6 +84,39 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
     "Collaboration model"), Appendices A–D, `docs/mode_contract_integration.md`,
     `docs/dw_io_reference.md`, README.
 
+- **Start a new repository: `create_research_project()` and
+  `create_official_stats_project()` (R + Python, same files byte for
+  byte).** One call writes the toolkit's floor for a new repository from
+  the shipped templates: the matching `.gitignore` (template bytes),
+  `tools/check.R` and `.githooks/pre-push`, `tests/testthat.R` with the
+  helper and a starter `test-project.R` (cso_project.yml parses; every
+  input manifest row has a sidecar with the same sha256; reviewer mode),
+  `cso_project.yml` (`collaboration` is required, with no default, as
+  `dw_mode` has none; optional `members`), README and CONTRIBUTING
+  skeletons with the first-clone steps, and the provenance policy
+  (`data/README.md` + `data/input_manifest.csv` for research,
+  `inputs/README.md` + `inputs/input_manifest.csv` for official
+  statistics). Research layout: `R/`, `data/provenance/`, `output/`,
+  `paper/`, `references/`, `docs/`. Official-statistics layout:
+  `00_documentation/`, `01_dw_prep/012_codes/`, `inputs/`, `releases/`,
+  `_config_template/user_config.yml`, with `OUTPUT_DIRS` (embargo) and
+  `AUDIT_PATHS` set in `tools/check.R`. Options: `vendor = TRUE` copies
+  the helpers from a cso-toolkit clone (`toolkit_source`, or
+  `CSO_TOOLKIT_ROOT`) into `00_functions/` and writes
+  `.toolkit_manifest.yml` (without it, `tools/check.R` leaves out
+  `contract-audit` and `vintage` until the helpers are vendored);
+  `workflows = TRUE` adds the opt-in GitHub Actions workflows (default
+  off); `git = TRUE` runs `git init` with `develop` as the first branch,
+  sets `core.hooksPath` and stages the hook as executable (no commit,
+  remote or push). Nothing is written if a target file exists with
+  different content unless `overwrite = TRUE`; identical files are left
+  alone. Returns the files with their status. The skeleton files live in
+  `templates/project/`; the R and Python packages ship copies
+  (`r/inst/templates/`, `python/src/templates/`), refreshed by
+  `python tools/sync_templates.py`, and both test suites fail while a
+  copy differs. Stata: none (run R or Python once). New handbook chapter
+  *Starting a new repository*.
+
 ### Fixed
 
 - **`dw_api_fetch(refresh = TRUE)` replaces an existing cache (R + Python)** —
@@ -92,6 +125,10 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
   never replaced an existing cache. A refresh now passes `overwrite = TRUE`
   (and `force = TRUE` in R) when the cache exists. Without `refresh` an
   existing cache is still read and never replaced.
+
+- **`tools/check.R` template: header in a repository without commits** —
+  the header line printed git's "fatal: Needed a single revision" in place
+  of the commit; it now says `(none yet)`.
 
 ## v0.10.0 (2026-11-19)
 
