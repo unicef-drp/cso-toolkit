@@ -9,9 +9,16 @@
 # Guidance: docs/gitignore_guidelines.md. For papers and analysis projects
 # use templates/gitignore/research-project.gitignore instead.
 #
-# Pipeline outputs are deposited to the canonical Teams / Z: store by
-# dw_save(); the repo holds code, vendored helpers (00_functions/), the
-# manifest, and the provenance sidecars of inputs kept out of git.
+# What differs from a research project: there, git is the canonical store
+# for results. Here the canonical store is the deposit (Teams / Z:, then
+# SDMX / data.unicef.org), and figures are EMBARGOED until their publication
+# date: access to this repository is not authorization to release them.
+# So output folders are ignored outright (block 1), even a small CSV and
+# even its sidecar; after publication, the release PR commits a record of
+# what was deposited under releases/<vintage>/ (block 10).
+#
+# The repo holds code, vendored helpers (00_functions/), the manifests, the
+# provenance sidecars of inputs kept out of git, and the release records.
 # Check after copying:  git ls-files -i -c --exclude-standard  (prints nothing)
 # Later rules override earlier ones, so keep the order of the blocks.
 #
@@ -20,7 +27,20 @@
 # ---------------------------------------------------------------------------
 
 
-# ---- 1. Input folders anywhere (e.g. 02_consultations/023_targets/inputs) --
+# ---- 1. Output folders, at any depth: embargoed, never tracked ------------
+# Pre-release figures must not reach git, not even as a small CSV, and not
+# their .provenance.json sidecars either (hashes and row counts of a small
+# table can confirm a guessed figure). Outputs go to the deposit through
+# dw_save(). `x/**` rather than `x/` so that blocks 2, 3 and 10 can still
+# re-include input sidecars, frozen-download sidecars and release records
+# that sit under a folder with one of these names.
+**/output/**
+**/outputs/**
+**/results/**
+**/wrk/**
+
+
+# ---- 2. Input folders anywhere (e.g. 02_consultations/023_targets/inputs) --
 # Folders are re-included (`!**/inputs/**/`) because git cannot re-include a
 # file whose parent directory is excluded; then only these files come back.
 **/inputs/**
@@ -31,20 +51,22 @@
 !**/inputs/**/input_manifest.*
 
 
-# ---- 2. API cache and frozen downloads --------------------------------------
-_apis/**
-!_apis/**/
-!_apis/**/README.md
-!_apis/**/.gitkeep
-!_apis/**/*.provenance.json
-_frozen/**
-!_frozen/**/
-!_frozen/**/README.md
-!_frozen/**/.gitkeep
-!_frozen/**/*.provenance.json
+# ---- 3. API cache and frozen downloads, at any depth -----------------------
+# (e.g. 01_dw_prep/011_rawdata/_frozen). A frozen download of another repo's
+# output/ folder keeps its sidecars: these lines come after block 1.
+**/_apis/**
+!**/_apis/**/
+!**/_apis/**/README.md
+!**/_apis/**/.gitkeep
+!**/_apis/**/*.provenance.json
+**/_frozen/**
+!**/_frozen/**/
+!**/_frozen/**/README.md
+!**/_frozen/**/.gitkeep
+!**/_frozen/**/*.provenance.json
 
 
-# ---- 3. Data and cache formats, wherever they appear [shared] -------------
+# ---- 4. Data and cache formats, wherever they appear [shared] -------------
 *.sav
 *.dta
 *.rds
@@ -63,7 +85,7 @@ _frozen/**
 *.db
 
 
-# ---- 4. Secrets and personal configuration [shared] -----------------------
+# ---- 5. Secrets and personal configuration [shared] -----------------------
 .env
 .env.*
 !.env.example
@@ -80,13 +102,13 @@ user_config.yml
 # Do NOT ignore .Rprofile: renv writes its activation line there.
 
 
-# ---- 5. Tracked configuration -----------------------------------------------
+# ---- 6. Tracked configuration -----------------------------------------------
 # The placeholder user_config.yml template stays tracked (no real paths or
 # credentials in it):
 !_config_template/user_config.yml
 
 
-# ---- 6. Language noise: R, Python, Stata [shared] -------------------------
+# ---- 7. Language noise: R, Python, Stata [shared] -------------------------
 # R
 .Rhistory
 .RData
@@ -113,7 +135,7 @@ dist/
 *.dta~
 
 
-# ---- 7. OS and editors [shared] -------------------------------------------
+# ---- 8. OS and editors [shared] -------------------------------------------
 .DS_Store
 Thumbs.db
 desktop.ini
@@ -123,3 +145,32 @@ desktop.ini
 *.bak
 *.swp
 *.tmp
+
+
+# ---- 9. Reviewer-mode artefacts and local copies of the deposit -----------
+# A reviewer session writes into its sandbox (sandboxRoot in
+# user_config.yml), which holds full copies of canonical and pre-release
+# files. Keep sandboxRoot outside the repo; if it sits inside, these names
+# keep it out of git (add yours if you chose another).
+sandbox/
+dw-repro/
+# dw_stage() integrity sidecars: local to one reviewer's sandbox, never shared.
+**/*.staged.json
+# Local copies of the deposit (the Teams 060.DW-MASTER library, a Z: copy):
+060.DW-MASTER/
+_deposit/
+
+
+# ---- 10. Release record: tracked, committed AFTER publication -------------
+# releases/<vintage>/ holds, per published vintage, output_manifest.csv
+# (file, sha256, bytes, deposited_at, deposit_path relative to the deposit
+# root) and the .provenance.json sidecars of the deposited files. Commit it
+# in the release PR, never before the publication date. Only these files are
+# re-included; any data file copied here stays ignored. This block comes
+# last so it wins over block 1 for sidecars kept in an output/ sub-folder.
+releases/**
+!releases/**/
+!releases/**/output_manifest.*
+!releases/**/*.provenance.json
+!releases/**/README.md
+!releases/**/.gitkeep

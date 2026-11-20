@@ -166,3 +166,11 @@ desktop.ini
 *.bak
 *.swp
 *.tmp
+
+
+# ---- 8. Reviewer-mode artefacts ---------------------------------------------
+# A reviewer re-run writes into its sandbox (sandboxRoot in user_config.yml);
+# keep it outside the repo, or call it sandbox/ if it must sit inside.
+sandbox/
+# dw_stage() integrity sidecars: local to one reviewer's sandbox, never shared.
+**/*.staged.json
