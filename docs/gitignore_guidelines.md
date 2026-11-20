@@ -1,13 +1,13 @@
 # `.gitignore` guidelines for consumer repos
 
-How a CSO repository (a paper, an analysis project, a DW sector pipeline)
-should write its `.gitignore`, and how to check that it works. Two
-ready-to-copy templates implement these rules:
+How a CSO repository (a paper, an analysis project, an official-statistics
+production pipeline) should write its `.gitignore`, and how to check that
+it works. Two ready-to-copy templates implement these rules:
 
 | Template | For |
 |---|---|
 | [`templates/gitignore/research-project.gitignore`](../templates/gitignore/research-project.gitignore) | Papers, analysis projects, replication packages. Data folders at the repo root. |
-| [`templates/gitignore/pipeline.gitignore`](../templates/gitignore/pipeline.gitignore) | DW sector pipelines (DW-Production and siblings). `inputs/` folders at any depth, `_config_template/user_config.yml` kept. |
+| [`templates/gitignore/official-stats.gitignore`](../templates/gitignore/official-stats.gitignore) | Official-statistics production repos: DW sector pipelines (DW-Production and siblings), SDMX / data.unicef.org publication pipelines, survey-processing repos. `inputs/` folders at any depth, `_config_template/user_config.yml` kept. |
 
 The CI side of the same rules (a check that fails when data are tracked)
 is in [`ci_cd_guidelines.md`](ci_cd_guidelines.md) and
@@ -72,7 +72,7 @@ Two consequences:
 
 `a/**/b` also matches `a/b`, so `!data/**/README.md` covers `data/README.md`
 itself. Patterns containing a slash are anchored to the folder of the
-`.gitignore`; `**/inputs/**` (as in the pipeline template) matches an
+`.gitignore`; `**/inputs/**` (as in the official-stats template) matches an
 `inputs/` folder at any depth, such as `02_consultations/023_targets/inputs/`.
 
 `dw_fetch_inputs(gitkeep = TRUE)` writes a `.gitkeep` into the inputs

@@ -1,8 +1,11 @@
 # ---------------------------------------------------------------------------
-# .gitignore -- DW sector pipeline repo (e.g. DW-Production and siblings)
+# .gitignore -- official-statistics production repo
 # ---------------------------------------------------------------------------
 #
-# Template from unicef-drp/cso-toolkit: templates/gitignore/pipeline.gitignore
+# For: DW sector pipelines (DW-Production and siblings), SDMX /
+# data.unicef.org publication pipelines, survey-processing repos.
+#
+# Template from unicef-drp/cso-toolkit: templates/gitignore/official-stats.gitignore
 # Guidance: docs/gitignore_guidelines.md. For papers and analysis projects
 # use templates/gitignore/research-project.gitignore instead.
 #

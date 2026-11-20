@@ -7,7 +7,7 @@ Everything here ships as copyable material in the toolkit repository, so a new p
 | What | Where |
 |---|---|
 | `.gitignore` rules, with the reasoning and the checks | [`docs/gitignore_guidelines.md`](https://github.com/unicef-drp/cso-toolkit/blob/develop/docs/gitignore_guidelines.md) |
-| `.gitignore` templates | `templates/gitignore/research-project.gitignore`, `templates/gitignore/pipeline.gitignore` |
+| `.gitignore` templates | `templates/gitignore/research-project.gitignore`, `templates/gitignore/official-stats.gitignore` |
 | CI principles and the full menu | [`docs/ci_cd_guidelines.md`](https://github.com/unicef-drp/cso-toolkit/blob/develop/docs/ci_cd_guidelines.md) |
 | GitHub Actions workflows | `templates/workflows/ci-hygiene.yml`, `ci-contract-audit.yml`, `ci-r-tests.yml`, `ci-manuscript.yml` |
 | testthat skeleton for a non-package project | `templates/testthat/` |

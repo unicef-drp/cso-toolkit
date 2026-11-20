@@ -16,7 +16,7 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
   `data/**` + `!data/**/` re-include pattern, and shows how to verify
   (`git check-ignore -v`, `git ls-files -i -c --exclude-standard`,
   `git rm --cached`). Templates: `templates/gitignore/research-project.gitignore`
-  and `pipeline.gitignore`. `docs/ci_cd_guidelines.md` sets ten design
+  and `official-stats.gitignore`. `docs/ci_cd_guidelines.md` sets ten design
   principles (CI never needs real data, fast checks runnable locally,
   required checks on `develop` / `main`, a regression test per bug fix,
   least privilege, Linux by default) and a tiered menu with ready-to-copy
