@@ -41,6 +41,7 @@ _KINDS: Dict[str, dict] = {
         # reports them, and does not fail the checks, until the project moves
         # to dw_use() and sets AUDIT_MODE to "blocking".
         "audit_mode": "advisory",
+        "deposit": False,
         "gitignore": "research-project.gitignore",
         "input_manifest": "data/input_manifest.csv",
         "source_dirs": 'SOURCE_DIRS <- c("R/functions")',
@@ -52,6 +53,8 @@ _KINDS: Dict[str, dict] = {
     "official-stats": {
         "fn": "create_official_stats_project",
         "audit_mode": "blocking",
+        # The profile derives the deposit paths and checks the Z: mirror.
+        "deposit": True,
         "gitignore": "official-stats.gitignore",
         "input_manifest": "inputs/input_manifest.csv",
         "source_dirs": "SOURCE_DIRS <- character(0)",
@@ -80,6 +83,7 @@ _AUDIT_PATHS_LINE = '  AUDIT_PATHS = "R",'
 _AUDIT_MODE_LINE = '  AUDIT_MODE  = "blocking",'
 _SOURCE_DIRS = 'SOURCE_DIRS <- c("R")'
 _MEMBERS_EXAMPLE = "# members:\n#   - jpazevedo\n#   - kbarnes\n"
+_DEPOSIT_BLOCK = "{{deposit_block}}\n"
 
 
 def _edit(data: bytes, old: str, new: str, what: str, fn: str) -> bytes:
@@ -218,7 +222,8 @@ def _project_files(kind: str, project_name: str, title: str, collaboration: str,
     today = _dt.date.today().strftime("%Y-%m-%d")
     variables = {"project_name": project_name, "title": title,
                  "collaboration": collaboration, "date": today,
-                 "input_manifest": k["input_manifest"]}
+                 "input_manifest": k["input_manifest"],
+                 "sentinel": re.sub(r"[^A-Za-z0-9_]+", "_", project_name), "fn": fn}
     files: Dict[str, bytes] = {}
 
     for layer in ("common", kind):
@@ -226,6 +231,13 @@ def _project_files(kind: str, project_name: str, title: str, collaboration: str,
         for p in sorted(base.rglob("*")):
             if p.is_file():
                 files[p.relative_to(base).as_posix()] = _fill(p.read_bytes(), variables)
+
+    # profile_<project>.R: one template for both kinds; official statistics
+    # add the deposit paths and the Z: mirror check.
+    deposit = (tpl / "profile" / "deposit.R").read_text(encoding="utf-8") if k["deposit"] else ""
+    prof = _edit((tpl / "profile" / "profile.R").read_bytes(), _DEPOSIT_BLOCK, deposit,
+                 "profile/profile.R", fn)
+    files[f"profile_{project_name}.R"] = _fill(prof, variables)
 
     files[".gitignore"] = (tpl / "gitignore" / k["gitignore"]).read_bytes()
     files[".githooks/pre-push"] = (tpl / "hooks" / "pre-push").read_bytes()
@@ -481,6 +493,7 @@ def create_research_project(
     Layout::
 
         .gitignore               templates/gitignore/research-project.gitignore
+        profile_<project>.R      sourced first: user, dw_mode, vendored helpers
         .githooks/pre-push       runs tools/check.R before every push
         cso_project.yml          collaboration model (committed)
         README.md, CONTRIBUTING.md
@@ -590,6 +603,8 @@ def create_official_stats_project(
     Layout::
 
         .gitignore                templates/gitignore/official-stats.gitignore
+        profile_<project>.R       sourced first: user, dw_mode, deposit paths,
+                                  Z: mirror, vendored helpers
         .githooks/pre-push        runs tools/check.R before every push
         cso_project.yml           collaboration model (committed)
         README.md, CONTRIBUTING.md

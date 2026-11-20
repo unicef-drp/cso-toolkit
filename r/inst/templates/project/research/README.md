@@ -13,22 +13,29 @@ each result came from always do.**
 1. **Clone**, then enable the local checks once:
    `git config core.hooksPath .githooks`. Work on a branch off `develop`
    (see `CONTRIBUTING.md`).
-2. **Session mode.** In your `~/.config/user_config.yml` set
-   `dw_mode: reviewer` (no network refreshes, no writes outside your
-   sandbox). Switch to `producer` only for a session in which you
-   deliberately produce or refresh results. `cso_project.yml` declares the
-   project **{{collaboration}}**.
-3. **Data.** The data are never in the repository. Obtain each input under
+2. **Session mode.** In your `~/.config/user_config.yml`, in the block
+   named after your user name, set `dw_mode: "reviewer"` (no network
+   refreshes, no writes outside your sandbox). Switch to `producer` only
+   for a session in which you deliberately produce or refresh results, or
+   for this project alone with `dw_mode_by_project:` /
+   `{{project_name}}: "producer"`. `cso_project.yml` declares the project
+   **{{collaboration}}**.
+3. **Profile.** Every script and session starts with
+   `source("profile_{{project_name}}.R")`: it reads that file, sets
+   `dw_mode`, loads the vendored helpers and stops, saying what to add,
+   when something is missing.
+4. **Data.** The data are never in the repository. Obtain each input under
    your own licence; `data/README.md` says where each comes from and where
    it goes.
-4. **Verify** that your copies are byte-identical to the inputs the results
+5. **Verify** that your copies are byte-identical to the inputs the results
    were built from (`data/README.md`, "Verify") before running anything.
-5. **Checks**, before every push, on your machine:
+6. **Checks**, before every push, on your machine:
    `Rscript --no-init-file tools/check.R`.
 
 ## Layout
 
 ```
+profile_{{project_name}}.R   sourced first by every script: user, dw_mode, helpers
 cso_project.yml   project setting: {{collaboration}} (committed, same for everyone)
 00_functions/     vendored cso-toolkit helpers, pinned in .toolkit_manifest.yml
 R/                analysis scripts, numbered in run order; R/functions/ for tested functions

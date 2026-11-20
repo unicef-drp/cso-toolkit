@@ -77,6 +77,7 @@ A research project:
 ```
 learning-mobility/
 ├── .gitignore                 research-project.gitignore, unchanged
+├── profile_learning-mobility.R  sourced first by every script and session
 ├── .githooks/pre-push         runs tools/check.R before every push
 ├── cso_project.yml            collaboration: multi-producer (committed)
 ├── README.md                  quick start for a new co-author, layout
@@ -106,6 +107,7 @@ An official-statistics repository follows DW-Production and the deposit's stage 
 ```
 DW-Nutrition/
 ├── .gitignore                       official-stats.gitignore, unchanged
+├── profile_DW-Nutrition.R           sourced first: mode, deposit paths, Z:, helpers
 ├── .githooks/pre-push
 ├── cso_project.yml                  collaboration: single-producer
 ├── README.md, CONTRIBUTING.md       embargo, release record, first clone
@@ -139,6 +141,18 @@ The functions never replace a file silently. Before writing anything they compar
 - **`workflows`.** `FALSE` by default: checks run locally. `TRUE` adds the GitHub Actions workflows, which call the same `tools/check.R` and by default run only when started by hand and on pull requests into `main`.
 - **`git`.** `FALSE` by default. `TRUE` runs `git init` with `develop` as the first branch (`main` is created at the first release), sets `core.hooksPath` to `.githooks`, and stages the hook with its executable bit so it also runs on macOS and Linux clones. It never commits, creates a remote or pushes.
 
+### The profile
+
+Every repository gets `profile_<project>.R`, named after its folder, the script every analysis script and interactive session sources first, as `profile_DW-Production.R` is in DW-Production ([Scaffolding and the contract auditor](35-scaffolding-audit.qmd)). Both kinds are written from one template, `templates/profile/profile.R`, and both pass `review_profile()`:
+
+- it reads `~/.config/user_config.yml` the way DW-Production's template lays it out, the user's block first (`user_config[[USERNAME]]`), top-level keys as a fallback;
+- it resolves `dw_mode` as `dw_mode_by_project[["<project>"]]`, then `dw_mode`, with no default; when neither is set it stops and shows the lines to add, with the user name filled in;
+- it sources the vendored helpers from `00_functions/`, `zzz.R` first, and reads the vintage from `.toolkit_manifest.yml`;
+- it never installs a package: a missing one stops the session with the list to install;
+- it resolves the collaboration model from `cso_project.yml` and ends with the sentinel `profile_<project> <- TRUE`, which sector scripts test before they run.
+
+The official-statistics profile adds the deposit paths of [Wiring the contract](22-wiring-the-contract.qmd): `teamsRawData` and `teamsWrkData` point to Teams `060.DW-MASTER` under the user's `teamsRoot` for a producer, and to `sandboxRoot` for a reviewer, with the `*Canonical` aliases kept for reads; and it checks the Z: mirror with a probe that cannot hang on a disconnected drive, without stopping when the mirror is missing. Its `user_config.yml` keys are in `_config_template/user_config.yml`.
+
 ## First steps for the person who created it
 
 1. Fill in the paragraphs the README leaves as comments: the question or the indicators, the authors, the outlet or the publication channel.
@@ -151,7 +165,7 @@ The functions never replace a file silently. Before writing anything they compar
 The generated `README.md` and `CONTRIBUTING.md` carry these steps, so a co-author can follow them without this chapter:
 
 1. Clone, then `git config core.hooksPath .githooks`, once, so the checks run on every push.
-2. In `~/.config/user_config.yml`, under their user name, set `dw_mode: reviewer`. They switch to `producer` only for a session in which they deliberately produce or refresh results. In an official-statistics repository they copy `_config_template/user_config.yml` there first and set a `sandboxRoot` outside the repository.
+2. In `~/.config/user_config.yml`, under their user name, set `dw_mode: reviewer`. They switch to `producer` only for a session in which they deliberately produce or refresh results (for this repository alone: `dw_mode_by_project:` with the repository's name). In an official-statistics repository they also set `teamsRoot` and a `sandboxRoot` outside the repository (`_config_template/user_config.yml`). `source("profile_<project>.R")` then tells them what is still missing.
 3. Obtain the inputs under their own licence (research) or fill `inputs/` with `dw_fetch_inputs()` (official statistics), and verify that the bytes match the manifest: then their results are built from the same inputs.
 4. Run `Rscript --no-init-file tools/check.R`.
 5. In a multi-producer project, add their handle under `members:` in `cso_project.yml` in their first pull request.

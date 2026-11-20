@@ -52,7 +52,7 @@ RESEARCH_FILES <- c(
 	".githooks/pre-push", ".gitignore", "00_functions/README.md", "CONTRIBUTING.md",
 	"R/README.md", "README.md", "cso_project.yml", "data/README.md",
 	"data/input_manifest.csv", "data/provenance/README.md", "docs/README.md",
-	"output/README.md", "paper/README.md", "references/README.md",
+	"output/README.md", "paper/README.md", "profile_proj.R", "references/README.md",
 	"tests/testthat.R", "tests/testthat/helper-project.R",
 	"tests/testthat/test-project.R", "tools/check.R")
 
@@ -61,7 +61,7 @@ OFFICIAL_FILES <- c(
 	"00_functions/README.md", "01_dw_prep/README.md", "01_dw_prep/010_metadata/README.md",
 	"01_dw_prep/011_rawdata/README.md", "01_dw_prep/012_codes/README.md", "CONTRIBUTING.md",
 	"README.md", "_config_template/user_config.yml", "cso_project.yml",
-	"inputs/README.md", "inputs/input_manifest.csv", "releases/README.md",
+	"inputs/README.md", "inputs/input_manifest.csv", "profile_proj.R", "releases/README.md",
 	"tests/testthat.R", "tests/testthat/helper-project.R",
 	"tests/testthat/test-project.R", "tools/check.R")
 
@@ -188,6 +188,90 @@ test_that("official stats: the deposit stages are ignored, their sidecars kept",
 		if (startsWith(f, ".git/")) next
 		expect_false(ignored(f), info = f)
 	}
+})
+
+test_that("both kinds get profile_<project>.R, and review_profile() passes it", {
+	r <- new_root()
+	create_research_project(r, collaboration = "multi-producer", verbose = FALSE)
+	o <- new_root()
+	create_official_stats_project(o, collaboration = "single-producer", verbose = FALSE)
+	for (root in c(r, o)) {
+		p <- file.path(root, "profile_proj.R")
+		expect_true(file.exists(p))
+		expect_silent(parse(p))
+		src <- readLines(p)
+		expect_true("profile_proj <- TRUE" %in% src)
+		expect_true('repo_name <- "proj"' %in% src)
+		expect_false("install.packages" %in% all.names(parse(p)))
+		rev <- review_profile(p, verbose = FALSE)
+		expect_false(any(rev$status == "fail"), info = paste(rev$check[rev$status == "fail"], collapse = ", "))
+		expect_identical(rev$status[rev$check == "User block in user_config.yml"], "pass")
+		expect_identical(rev$status[rev$check == "Collaboration model block"], "pass")
+	}
+	# Official statistics add the deposit paths and the Z: check.
+	ro <- review_profile(file.path(o, "profile_proj.R"), require_z_drive_check = TRUE, verbose = FALSE)
+	expect_false(any(ro$status == "fail"))
+	osrc <- readLines(file.path(o, "profile_proj.R"))
+	rsrc <- readLines(file.path(r, "profile_proj.R"))
+	expect_true(any(grepl("^teamsWrkData <- ", trimws(osrc))))
+	expect_false(any(grepl("teamsWrkData|dw_z_available", rsrc)))
+	# A folder name that is not a valid R name still gives a valid sentinel.
+	d <- tempfile("scaffold_")
+	withr::defer(unlink(d, recursive = TRUE, force = TRUE))
+	create_research_project(file.path(d, "my-paper.v2"), collaboration = "single-producer", verbose = FALSE)
+	expect_true("profile_my_paper_v2 <- TRUE" %in% readLines(file.path(d, "my-paper.v2", "profile_my-paper.v2.R")))
+})
+
+test_that("the generated profiles load against a user-block user_config.yml", {
+	skip_if_not_installed("yaml")
+	rscript <- file.path(R.home("bin"), if (.Platform$OS.type == "windows") "Rscript.exe" else "Rscript")
+	home <- withr::local_tempdir()
+	dir.create(file.path(home, ".config"))
+	cfg <- file.path(home, ".config", "user_config.yml")
+	load_profile <- function(root, config) {
+		writeLines(config, cfg)
+		code <- "source('profile_proj.R'); cat('MODE=', dw_mode, ' WRK=', if (exists('teamsWrkData')) teamsWrkData else '-', '\\n', sep = '')"
+		out <- withr::with_dir(root, withr::with_envvar(
+			c(USERNAME = "tester", USER = "tester", USERPROFILE = normalizePath(home, winslash = "/")),
+			suppressWarnings(system2(rscript, c("--no-init-file", "-e", shQuote(code)),
+			                         stdout = TRUE, stderr = TRUE))))
+		list(status = attr(out, "status") %||% 0L, out = paste(out, collapse = "\n"))
+	}
+	r <- new_root()
+	create_research_project(r, collaboration = "single-producer", verbose = FALSE)
+	res <- load_profile(r, c("tester:", '  dw_mode: "reviewer"'))
+	expect_identical(res$status, 0L, info = res$out)
+	expect_match(res$out, "MODE=reviewer WRK=-")
+	expect_match(res$out, "profile_proj.R loaded: user tester, dw_mode reviewer, single-producer", fixed = TRUE)
+	res <- load_profile(r, c("tester:", '  dw_mode: "reviewer"', "  dw_mode_by_project:", '    proj: "producer"'))
+	expect_match(res$out, "MODE=producer")
+	res <- load_profile(r, c("someone_else:", '  dw_mode: "reviewer"'))
+	expect_false(identical(res$status, 0L))
+	expect_match(res$out, 'tester:\n        dw_mode: "reviewer"', fixed = TRUE)
+
+	o <- new_root()
+	create_official_stats_project(o, collaboration = "single-producer", verbose = FALSE)
+	# Forward slashes: a backslash inside a double-quoted YAML scalar is an escape.
+	fwd <- function(p) gsub("\\", "/", p, fixed = TRUE)
+	sandbox <- fwd(file.path(home, "dw-repro"))
+	teams <- fwd(file.path(home, "teams"))
+	no_mirror <- fwd(file.path(home, "no-mirror"))
+	res <- load_profile(o, c("tester:", '  dw_mode: "reviewer"',
+	                         sprintf('  teamsRoot: "%s"', teams), sprintf('  sandboxRoot: "%s"', sandbox),
+	                         sprintf('  zDrive: "%s"', no_mirror)))
+	expect_identical(res$status, 0L, info = res$out)
+	expect_match(res$out, sprintf("MODE=reviewer WRK=%s/01_dw_prep/013_wrkdata", sandbox), fixed = TRUE)
+	expect_true(dir.exists(file.path(sandbox, "01_dw_prep", "013_wrkdata")))
+	expect_match(res$out, "not available -- non-blocking", fixed = TRUE)
+	# zDrive points at a folder, never at a drive letter: probing a mapped but
+	# unreachable Z: leaves a hung `vol` process behind on the test machine.
+	res <- load_profile(o, c("tester:", '  dw_mode: "producer"', sprintf('  teamsRoot: "%s"', teams),
+	                         sprintf('  zDrive: "%s"', no_mirror)))
+	expect_identical(res$status, 0L, info = res$out)
+	expect_match(res$out, sprintf("MODE=producer WRK=%s/060.DW-MASTER/01_dw_prep/013_wrkdata", teams), fixed = TRUE)
+	res <- load_profile(o, c("tester:", '  dw_mode: "reviewer"', sprintf('  teamsRoot: "%s"', teams)))
+	expect_false(identical(res$status, 0L))
+	expect_match(res$out, "reviewer mode needs a sandboxRoot for tester", fixed = TRUE)
 })
 
 test_that("cso_project.yml records the collaboration model, date and members", {

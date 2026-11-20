@@ -33,6 +33,7 @@ SHIPPED = [
     "testthat/tests/testthat/helper-project.R",
     "workflows/",
     "project/",
+    "profile/",
 ]
 
 

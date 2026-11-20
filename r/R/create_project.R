@@ -27,6 +27,7 @@
 		# reports them, and does not fail the checks, until the project moves
 		# to dw_use() and sets AUDIT_MODE to "blocking".
 		audit_mode = "advisory",
+		deposit = FALSE,
 		gitignore = "research-project.gitignore",
 		input_manifest = "data/input_manifest.csv",
 		source_dirs = 'SOURCE_DIRS <- c("R/functions")',
@@ -38,6 +39,8 @@
 	`official-stats` = list(
 		fn = "create_official_stats_project",
 		audit_mode = "blocking",
+		# The profile derives the deposit paths and checks the Z: mirror.
+		deposit = TRUE,
 		gitignore = "official-stats.gitignore",
 		input_manifest = "inputs/input_manifest.csv",
 		source_dirs = "SOURCE_DIRS <- character(0)",
@@ -67,6 +70,7 @@
 .CSO_AUDIT_MODE_LINE <- '  AUDIT_MODE  = "blocking",'
 .CSO_SOURCE_DIRS <- 'SOURCE_DIRS <- c("R")'
 .CSO_MEMBERS_EXAMPLE <- "# members:\n#   - jpazevedo\n#   - kbarnes\n"
+.CSO_DEPOSIT_BLOCK <- "{{deposit_block}}\n"
 
 #' Read a file as raw bytes
 #' @keywords internal
@@ -228,7 +232,8 @@
 	today <- format(Sys.Date(), "%Y-%m-%d")
 	vars <- list(project_name = project_name, title = title,
 	             collaboration = collaboration, date = today,
-	             input_manifest = k$input_manifest)
+	             input_manifest = k$input_manifest,
+	             sentinel = gsub("[^A-Za-z0-9_]+", "_", project_name), fn = fn)
 	files <- list()
 
 	# Skeleton files: common/ then the kind's own folder (same path wins).
@@ -238,6 +243,13 @@
 			files[[rel]] <- .cso_fill(.cso_bytes(file.path(base, rel)), vars)
 		}
 	}
+
+	# profile_<project>.R: one template for both kinds; official statistics
+	# add the deposit paths and the Z: mirror check.
+	prof <- .cso_edit(.cso_bytes(file.path(tpl, "profile", "profile.R")), .CSO_DEPOSIT_BLOCK,
+	                  if (isTRUE(k$deposit)) rawToChar(.cso_bytes(file.path(tpl, "profile", "deposit.R"))) else "",
+	                  "profile/profile.R", fn)
+	files[[paste0("profile_", project_name, ".R")]] <- .cso_fill(prof, vars)
 
 	files[[".gitignore"]] <- .cso_bytes(file.path(tpl, "gitignore", k$gitignore))
 	files[[".githooks/pre-push"]] <- .cso_bytes(file.path(tpl, "hooks", "pre-push"))
@@ -475,6 +487,7 @@
 #' The layout (handbook chapter "Starting a new repository"):
 #' \preformatted{
 #' .gitignore               templates/gitignore/research-project.gitignore
+#' profile_<project>.R      sourced first: user, dw_mode, vendored helpers
 #' .githooks/pre-push       runs tools/check.R before every push
 #' cso_project.yml          collaboration model (committed)
 #' README.md, CONTRIBUTING.md
@@ -492,6 +505,16 @@
 #' content, unless `overwrite = TRUE`; a file that already holds exactly
 #' the bytes to be written is left alone and reported as `"unchanged"`, so
 #' a second identical call changes nothing.
+#'
+#' `profile_<project>.R` (`<project>` is the folder name) is the script
+#' every session sources first, from the template `templates/profile/`:
+#' it reads the user's block of `~/.config/user_config.yml` (top-level keys
+#' as a fallback), resolves `dw_mode` as `dw_mode_by_project[[<project>]]`
+#' then `dw_mode` and stops, showing the YAML to add, when neither is set;
+#' sources the vendored helpers from `00_functions/` (`zzz.R` first); never
+#' installs packages; and sets the sentinel `profile_<project> <- TRUE`.
+#' [review_profile()] passes it. The official-statistics profile also
+#' derives the deposit paths from `dw_mode` and checks the Z: mirror.
 #'
 #' @param path Character. Folder of the new repository; created if missing.
 #' @param collaboration Character, required (no default, as `dw_mode` has
@@ -602,6 +625,8 @@ create_research_project <- function(path, collaboration, members = NULL,
 #' The layout (handbook chapter "Starting a new repository"):
 #' \preformatted{
 #' .gitignore                templates/gitignore/official-stats.gitignore
+#' profile_<project>.R       sourced first: user, dw_mode, deposit paths,
+#'                           Z: mirror, vendored helpers
 #' .githooks/pre-push        runs tools/check.R before every push
 #' cso_project.yml           collaboration model (committed)
 #' README.md, CONTRIBUTING.md

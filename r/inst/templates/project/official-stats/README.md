@@ -19,12 +19,16 @@ not even a small table or its sidecar, is ever committed.
    `git config core.hooksPath .githooks`. Work on a branch off `develop`
    (see `CONTRIBUTING.md`).
 2. **Configuration.** Copy `_config_template/user_config.yml` to
-   `~/.config/user_config.yml`, rename the block to your user name and fill
-   it in, with `dw_mode: reviewer` and a `sandboxRoot` outside the
-   repository and outside OneDrive. Never commit your filled-in copy.
-3. **Profile.** The pipeline's profile reads that file and derives the path
-   globals from `dw_mode`. Generate one with
-   `create_profile("{{project_name}}")` if the repository has none yet.
+   `~/.config/user_config.yml` (or add its block to the file you already
+   have, for DW-Production say), rename the block to your user name and
+   fill it in, with `dw_mode: "reviewer"`, your `teamsRoot` and a
+   `sandboxRoot` outside the repository and outside OneDrive. Never commit
+   your filled-in copy.
+3. **Profile.** Every script and session starts with
+   `source("profile_{{project_name}}.R")`: it reads that file, sets
+   `dw_mode`, derives the deposit paths from it (`teamsRawData`,
+   `teamsWrkData`: the deposit for a producer, your sandbox for a
+   reviewer), checks the Z: mirror and loads the vendored helpers.
 4. **Inputs.** Fill `inputs/` from the deposit with `dw_fetch_inputs()`; it
    checks every copy's sha256 against the deposit (`inputs/README.md`).
 5. **Checks**, before every push, on your machine:
@@ -35,6 +39,7 @@ not even a small table or its sidecar, is ever committed.
 ## Layout
 
 ```
+profile_{{project_name}}.R   sourced first by every script: user, dw_mode, deposit paths, helpers
 cso_project.yml          project setting: {{collaboration}} (committed, same for everyone)
 _config_template/        user_config.yml template (placeholders only; your copy lives in ~/.config/)
 00_documentation/        SOPs, data flows, decisions, the release checklist

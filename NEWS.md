@@ -92,7 +92,13 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
   helper and a starter `test-project.R` (cso_project.yml parses; every
   input manifest row has a sidecar with the same sha256; reviewer mode),
   `cso_project.yml` (`collaboration` is required, with no default, as
-  `dw_mode` has none; optional `members`), README and CONTRIBUTING
+  `dw_mode` has none; optional `members`), `profile_<project>.R` (from
+  `templates/profile/`: reads the user's block of `user_config.yml`,
+  resolves `dw_mode` as `dw_mode_by_project[[<project>]]` then `dw_mode`
+  with no default, sources the vendored helpers with `zzz.R` first, never
+  installs packages, sets the sentinel; the official-statistics profile
+  also derives the deposit paths from `dw_mode` and checks the Z: mirror;
+  `review_profile()` passes both), README and CONTRIBUTING
   skeletons with the first-clone steps, and the provenance policy
   (`data/README.md` + `data/input_manifest.csv` for research,
   `inputs/README.md` + `inputs/input_manifest.csv` for official

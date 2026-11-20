@@ -103,6 +103,7 @@ the toolkit's own.
 The layout (handbook chapter "Starting a new repository"):
 \preformatted{
 .gitignore               templates/gitignore/research-project.gitignore
+profile_<project>.R      sourced first: user, dw_mode, vendored helpers
 .githooks/pre-push       runs tools/check.R before every push
 cso_project.yml          collaboration model (committed)
 README.md, CONTRIBUTING.md
@@ -120,6 +121,16 @@ Nothing is written if any target file already exists with different
 content, unless `overwrite = TRUE`; a file that already holds exactly
 the bytes to be written is left alone and reported as `"unchanged"`, so
 a second identical call changes nothing.
+
+`profile_<project>.R` (`<project>` is the folder name) is the script
+every session sources first, from the template `templates/profile/`:
+it reads the user's block of `~/.config/user_config.yml` (top-level keys
+as a fallback), resolves `dw_mode` as `dw_mode_by_project[[<project>]]`
+then `dw_mode` and stops, showing the YAML to add, when neither is set;
+sources the vendored helpers from `00_functions/` (`zzz.R` first); never
+installs packages; and sets the sentinel `profile_<project> <- TRUE`.
+[review_profile()] passes it. The official-statistics profile also
+derives the deposit paths from `dw_mode` and checks the Z: mirror.
 }
 \section{Errors}{
 

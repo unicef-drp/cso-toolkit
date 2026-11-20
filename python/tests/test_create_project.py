@@ -27,7 +27,7 @@ RESEARCH_FILES = sorted([
     ".githooks/pre-push", ".gitignore", "00_functions/README.md", "CONTRIBUTING.md",
     "R/README.md", "README.md", "cso_project.yml", "data/README.md",
     "data/input_manifest.csv", "data/provenance/README.md", "docs/README.md",
-    "output/README.md", "paper/README.md", "references/README.md",
+    "output/README.md", "paper/README.md", "profile_proj.R", "references/README.md",
     "tests/testthat.R", "tests/testthat/helper-project.R",
     "tests/testthat/test-project.R", "tools/check.R",
 ])
@@ -36,7 +36,7 @@ OFFICIAL_FILES = sorted([
     "00_functions/README.md", "01_dw_prep/README.md", "01_dw_prep/010_metadata/README.md",
     "01_dw_prep/011_rawdata/README.md", "01_dw_prep/012_codes/README.md", "CONTRIBUTING.md",
     "README.md", "_config_template/user_config.yml", "cso_project.yml",
-    "inputs/README.md", "inputs/input_manifest.csv", "releases/README.md",
+    "inputs/README.md", "inputs/input_manifest.csv", "profile_proj.R", "releases/README.md",
     "tests/testthat.R", "tests/testthat/helper-project.R",
     "tests/testthat/test-project.R", "tools/check.R",
 ])
@@ -135,6 +135,26 @@ def test_per_kind_settings(tmp_path):
         for p in root.rglob("*"):
             if p.is_file():
                 assert "{{" not in p.read_text(encoding="utf-8"), p
+
+
+def test_profile(tmp_path):
+    r, o = tmp_path / "r" / "proj", tmp_path / "o" / "proj"
+    m.create_research_project(r, "multi-producer")
+    m.create_official_stats_project(o, "single-producer")
+    for root in (r, o):
+        p = root / "profile_proj.R"
+        src = p.read_text(encoding="utf-8").splitlines()
+        assert "profile_proj <- TRUE" in src
+        assert 'repo_name <- "proj"' in src
+        # An R profile, the same bytes as R writes (test_r_python_parity);
+        # R's review_profile() audits it in test-create_project.R.
+        assert "user_block <- " in "\n".join(src)
+    assert any(line.strip().startswith("teamsWrkData <- ") for line in
+               (o / "profile_proj.R").read_text(encoding="utf-8").splitlines())
+    assert "teamsWrkData" not in (r / "profile_proj.R").read_text(encoding="utf-8")
+    m.create_research_project(tmp_path / "my-paper.v2", "single-producer")
+    assert "profile_my_paper_v2 <- TRUE" in (
+        tmp_path / "my-paper.v2" / "profile_my-paper.v2.R").read_text(encoding="utf-8").splitlines()
 
 
 def test_cso_project_yml(tmp_path):
