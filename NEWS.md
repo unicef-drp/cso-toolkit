@@ -16,7 +16,15 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
   `data/**` + `!data/**/` re-include pattern, and shows how to verify
   (`git check-ignore -v`, `git ls-files -i -c --exclude-standard`,
   `git rm --cached`). Templates: `templates/gitignore/research-project.gitignore`
-  and `official-stats.gitignore`. `docs/ci_cd_guidelines.md` sets ten design
+  (git is the canonical store for results: small tables and figures tracked
+  with sidecars) and `official-stats.gitignore` (DW sector pipelines, SDMX /
+  data.unicef.org publication, survey processing: pre-release figures are
+  embargoed, so output folders are ignored outright, sidecars included, and
+  the release PR commits `releases/<vintage>/output_manifest.csv` plus the
+  deposited files' sidecars after publication). Both ignore reviewer
+  artefacts (`sandbox/`, `*.staged.json`); their shared blocks are tagged
+  `[shared]` and `r/tests/testthat/test-gitignore-templates.R` keeps them
+  identical. `docs/ci_cd_guidelines.md` sets ten design
   principles (CI never needs real data, fast checks runnable locally,
   required checks on `develop` / `main`, a regression test per bug fix,
   least privilege, Linux by default) and a tiered menu with ready-to-copy

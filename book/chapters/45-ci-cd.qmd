@@ -31,6 +31,24 @@ data/**                       # ignore everything below data/
 
 Git cannot re-include a file whose parent directory is excluded: to save time it never looks inside an excluded directory, so a `!` rule for a file in one is never consulted. Because `data/**` also matches the sub-directories, `!data/**/` (the trailing slash means "directories only") is what lets git look inside them again; the files there stay ignored unless a later `!` line names them. For the same reason the folder rule is `data/**`, never `data/` — the latter excludes the directory itself and nothing below it can come back. The templates repeat the block for `inputs/`, `_apis/` (the API cache) and `_frozen/` (frozen URL downloads), then ignore data formats wherever they appear (`*.dta`, `*.rds`, `*.parquet`, …), secrets and personal configuration (`.env`, `*.pem`, `*.key`, `user_config.yml`, `.Renviron`), and the build noise of R, Python, Stata, Quarto and LaTeX.
 
+### Research projects and official statistics
+
+The two templates differ where results live. In a research project git is the canonical store for results: the small tables and figures a reader checks the paper against are tracked, each with its sidecar. In an official-statistics repository — a DW sector pipeline, an SDMX or data.unicef.org publication pipeline, a survey-processing repository — the canonical store is the deposit (Teams and Z:, then SDMX and data.unicef.org), and **pre-release figures are embargoed**: access to the repository is not authorization to release what is in it, and git history keeps whatever was committed. So `official-stats.gitignore` ignores output folders outright (`**/output/**`, `**/outputs/**`, `**/results/**`, `**/wrk/**`), sidecars included, and a small pre-release CSV cannot be committed by accident.
+
+What such a repository commits instead is a release record. After publication, as part of the release pull request, it adds `releases/<vintage>/output_manifest.csv` — one row per deposited file with `file`, `sha256`, `bytes`, `deposited_at` and the path relative to the deposit root — and copies of the deposited files' `.provenance.json` sidecars. The template re-includes exactly those files under `releases/`. A release record is never committed before the publication date: its hashes describe embargoed figures.
+
+| | Research project | Official statistics |
+|---|---|---|
+| Canonical store for results | git | the deposit, then SDMX / data.unicef.org |
+| Results in the repository | small tables and figures, with sidecars | none; output folders ignored |
+| Confidentiality | results public with the paper | embargoed until the publication date |
+| Release record | the tracked results | `releases/<vintage>/` manifest and sidecars, after publication |
+| Folder layout | `data/`, `inputs/` at the root | `inputs/`, `_apis/`, `_frozen/` at any depth; `releases/` |
+| Extra noise | Quarto and LaTeX builds | reviewer sandbox, local copies of the deposit |
+| Tracked configuration | none by default | `_config_template/user_config.yml` |
+
+Both templates ignore a reviewer's local artefacts — `sandbox/` and the `*.staged.json` sidecars `dw_stage()` writes — and the blocks they share (data formats, secrets, language noise, OS and editors) are kept identical by a test in the toolkit's own suite. [`docs/gitignore_guidelines.md`](https://github.com/unicef-drp/cso-toolkit/blob/develop/docs/gitignore_guidelines.md) has the full comparison.
+
 ::: {.callout-tip}
 ## Check the rules, not your memory of them
 `git check-ignore -v <path>` prints the line that decides a path. `git ls-files -i -c --exclude-standard` lists tracked files the rules now say should be ignored — after adopting a template it must print nothing. `git rm --cached -- <path>` untracks a file without deleting it. History still holds anything committed before; removing it from history is a separate decision, taken with the repository owner (and the data owner, for confidential microdata), and a leaked secret is rotated first, whatever happens to history.
