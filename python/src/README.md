@@ -38,7 +38,7 @@ cso_state.configure(
 | ------------------------------- | ------------------- |
 | `dw_io.py`                      | `dw_save`, `dw_use`, `dw_compare`, `dw_merge`, `dw_isid`, `dw_verify_z`, `dw_resolve_path`, `dw_is_canonical` |
 | `dw_api.py`                     | `dw_api_fetch`, `dw_api_cached`, `dw_api_inventory` |
-| `cso_toolkit_sync.py`           | `cso_toolkit_check`, `cso_toolkit_diff`, `cso_toolkit_pull` |
+| `cso_toolkit_sync.py`           | `cso_toolkit_check`, `cso_toolkit_diff`, `cso_toolkit_pull`, `cso_toolkit_sync` |
 | `aggregate_data.py`             | `aggregate_data`, `aggregate_data_v2`, `generate_agg_footnote`, `apply_time_window` |
 | `dw_nestweight.py`              | `dw_nestweight` |
 | `dw_pop.py`                     | `dw_pop` (World Bank population wrapper) |

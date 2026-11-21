@@ -187,8 +187,9 @@ out = aggregate_data_v2(df, value="OBS_VALUE", by="REGION",
 | `cso_toolkit_check` | Yes | Yes | n/a |
 | `cso_toolkit_diff` | Yes | Yes | n/a |
 | `cso_toolkit_pull` | Yes | Yes | n/a |
+| `cso_toolkit_sync` | Yes | Yes | n/a |
 
-The version-drift helpers are R-and-Python only. They read the consumer's `.toolkit_manifest.yml`, query the upstream GitHub API for the latest tag, and warn or refresh when the pin is behind. Stata vendoring pins the same manifest, but the drift check has no Stata sibling — a Stata-only consumer either runs the check from R/Python or compares its `pulled_version` against the upstream tag list by hand. See the vintage-sync chapter for the manifest schema and upgrade flow.
+The version-drift helpers are R-and-Python only. They read the consumer's `.toolkit_manifest.yml`, ask GitHub for the latest tag, and warn when the pin is behind; `cso_toolkit_sync` (or `_diff` + `_pull`) refreshes the vendored files from a release tag and re-pins the manifest. Stata vendoring pins the same manifest, but the drift check has no Stata sibling — a Stata-only consumer either runs the check from R/Python or compares its `pulled_version` against the upstream tag list by hand. See the vintage-sync chapter for the manifest schema and upgrade flow.
 
 ### Scaffolding and contract auditor
 

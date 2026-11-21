@@ -152,10 +152,11 @@ Consumer-side helpers that read the local `.toolkit_manifest.yml`, query upstrea
 | Function | R | Python | Stata | Notes |
 |---|---|---|---|---|
 | `cso_toolkit_check` | ✅ | ✅ | — | Compare the pinned vintage against a target version (offline; warns when behind, v0.10.0) and, in producer mode, the latest upstream tag |
-| `cso_toolkit_diff` | ✅ | ✅ | — | Show what changed between vintages |
-| `cso_toolkit_pull` | ✅ | ✅ | — | Refresh the vendored copy |
+| `cso_toolkit_diff` | ✅ | ✅ | — | Compare each vendored file with a release tag (unchanged / changed / local_edit / missing_upstream / missing_local) |
+| `cso_toolkit_pull` | ✅ | ✅ | — | Refresh the vendored copy to a release tag and re-pin the manifest |
+| `cso_toolkit_sync` | ✅ | ✅ | — | The one call: latest release, its NEWS since the pin, diff, then pull |
 
-These three keep the `cso_toolkit_` prefix in both R and Python (no `dw_` alias).
+These four keep the `cso_toolkit_` prefix in both R and Python (no `dw_` alias).
 
 ## Scaffolding and the contract auditor
 
