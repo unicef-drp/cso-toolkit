@@ -5,23 +5,39 @@
 # Vendor this file into <consumer-repo>/00_functions/.toolkit_manifest.yml
 # and pin the version that matches the vendored helpers.
 #
-# cso_toolkit_check() reads this file, queries the GitHub API for the
-# latest tag on `source:`, and warns if the consumer is behind.
-# cso_toolkit_pull() (planned) will refresh `vendored:` files to a target
-# tag and update `pulled_version` / `pulled_date`.
+# cso_toolkit_check() reads this file, warns if `pulled_version` is behind
+# `target_version` (offline), and in producer mode asks GitHub for the
+# latest tag on `source:` and reports a newer release.
+# cso_toolkit_sync() updates: it prints the NEWS since `pulled_version`,
+# compares each `vendored:` file with the new tag (cso_toolkit_diff()),
+# writes the changed ones (cso_toolkit_pull()) and edits this file in
+# place: `pulled_version`, `pulled_commit`, `pulled_date` (or an existing
+# `pulled_at`) and `pulled_by`. Comments and other keys are kept.
 #
 # Fields:
 #   source         — GitHub owner/repo of the upstream toolkit.
 #   pulled_version — the tag at the time of the most recent pull
 #                    (e.g. "v0.2.0"). Use "inrepo" if the helpers were
 #                    edited locally and you do not want sync warnings.
+#   pulled_commit  — optional: the commit pulled_version points to (40-hex
+#                    SHA), so a moved or re-created tag can be noticed.
+#                    create_research_project(),
+#                    create_official_stats_project() and
+#                    cso_toolkit_pull() write it.
 #   pulled_date    — ISO-8601 date of the pull. Free-form; the helper
 #                    does not parse it.
 #   pulled_by      — human breadcrumb for who ran the pull.
-#   vendored       — list of files copied from cso-toolkit/r/R/ into the
-#                    consumer's 00_functions/.
+#   vendored       — list of files copied from cso-toolkit into the
+#                    consumer's 00_functions/: *.R from r/R/, *.py from
+#                    python/src/.
 #   local_edits    — files in `vendored:` that have local divergence;
-#                    `cso_toolkit_pull()` skips these on update.
+#                    `cso_toolkit_pull()` skips these on update (it also
+#                    skips a file that differs from what pulled_version
+#                    shipped, listed or not).
+#   target_version — optional (v0.10.0+). The version this repo must run on
+#                    (e.g. "v0.9.1"). cso_toolkit_check() compares
+#                    pulled_version against it offline, in producer and
+#                    reviewer mode, and warns loudly when behind.
 #
 # Keep this file in version control alongside the vendored helpers.
 # Update it every time you re-pull the toolkit.
@@ -31,6 +47,7 @@ source: "unicef-drp/cso-toolkit"
 pulled_version: "v0.4.0"
 pulled_date: "2026-05-26"
 pulled_by: "<your-name>"
+# target_version: "v0.4.0"   # optional: warn when pulled_version is behind
 
 # Files vendored from cso-toolkit/r/R/ into consumer's 00_functions/
 vendored:
@@ -38,6 +55,8 @@ vendored:
   - dw_api.R
   - cso_toolkit_sync.R
   # Optional — copy only the ones your pipeline uses:
+  # - dw_project.R      # dw_set_collaboration(): switch cso_project.yml
+  #                     # (reading it and the dw_save() guards are in dw_io.R)
   # - aggregate_data.R
   # - aggregate_data_v2.R
   # - dw_nestweight.R

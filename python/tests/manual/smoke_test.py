@@ -536,6 +536,34 @@ def main() -> int:
             )
         print("[#14.8] reviewer file-missing-everywhere -> hard-stop OK")
 
+    # --- Collaboration model: single -> multi-producer switch is a non-event
+    import json
+    with tempfile.TemporaryDirectory() as tdir:
+        root = Path(tdir)
+        (root / ".git").mkdir()
+        state.configure(
+            dw_mode=None, teamsWrkData=tdir, teamsWrkDataCanonical=None,
+            teamsFolderCanonical=None, dwZDrive=None, dw_z_available=False,
+            dw_collaboration_model=None, dw_project_file=None,
+            dw_session_start=None, rootFolder=tdir,
+        )
+        assert cso_toolkit.dw_collaboration(refresh=True) == "single-producer"
+        out = root / "x.csv"
+        cso_toolkit.dw_save(pd.DataFrame({"a": [1]}), path=str(out), overwrite=True)
+        single = json.loads(Path(f"{out}.provenance.json").read_text(encoding="utf-8"))
+        assert "collaboration" not in single
+        res = cso_toolkit.dw_set_collaboration("multi-producer", root=tdir)
+        assert res["sidecars_updated"] == 1
+        based = json.loads(Path(f"{out}.provenance.json").read_text(encoding="utf-8"))
+        assert based["sha256"] == single["sha256"] and "baseline" in based
+        cso_toolkit.dw_save(pd.DataFrame({"a": [2]}), path=str(out), overwrite=True)
+        multi = json.loads(Path(f"{out}.provenance.json").read_text(encoding="utf-8"))
+        assert multi["collaboration"] == "multi-producer"
+        assert multi["previous_sha256"] == single["sha256"]
+        state.configure(dw_collaboration_model=None, dw_project_file=None,
+                        dw_session_start=None, rootFolder=None)
+        print("[collab] single -> multi-producer switch: baseline + lineage OK")
+
     # Reset for any downstream checks (caller convention)
     state.configure(dw_mode="producer", dw_apis_allowed=True)
 

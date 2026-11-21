@@ -56,6 +56,9 @@ The table below is grouped by the five capability families. Each row is one publ
 | `dw_check_deposit` | Yes | Planned (#152) | Planned (#152) |
 | `dw_read_provenance` | Yes | Planned (#152) | Planned (#152) |
 | `dw_provenance_diff` | Yes | Planned (#152) | Planned (#152) |
+| `dw_collaboration` | Yes | Yes | Planned (#168) |
+| `dw_set_collaboration` | Yes | Yes | Planned (#168) |
+| `dw_save` multi-producer guards + lineage fields (`takeover`) | Yes | Yes | Planned (#168): `dw_save.ado` ignores `cso_project.yml` |
 | `dw_root` | Yes | Yes | n/a |
 | `dw_resolve_path` | Yes | Yes | Internal to `dw_use` / `dw_save` |
 | `dw_is_canonical` | Yes | Yes | Internal to the mode guard |
@@ -72,6 +75,7 @@ A few caveats sit behind the "Yes" cells:
 - **`dw_root` is R + Python; `dw_stage` is R-only.** `dw_root` resolves the mode-aware repo/canonical root for a vendored `kind` (`"wrk"` / `"raw"` / `"meta"`) so a sector script can build paths without knowing whether the session is producer or reviewer; `dw_stage` copies a reviewer-mode sandbox file into place with a `.staged.json` integrity sidecar. `dw_stage` has no Python or Stata sibling yet.
 - **`dw_fetch_inputs` and `dw_check_deposit` are R-only for now.** They serve pipelines that keep raw inputs out of Git in a local folder mirroring a deposit folder: `dw_fetch_inputs` copies deposit-only inputs locally (or reads them in place), keeps the folder layout visible with `.gitkeep` placeholders, and returns an input manifest; `dw_check_deposit` proves every local input has an identical SHA-256 copy on Teams or Z:. Python and Stata siblings are planned (#152).
 - **`dw_read_provenance` and `dw_provenance_diff` are R-only for now.** They read the `dw_save` sidecar and compare two runs of an output from their sidecars (`reproduced`, `output_changed`, `inputs_changed`, `first_run`, `no_input_record`). Python and Stata siblings are planned (#152).
+- **The collaboration model is R + Python; Stata is a known gap (#168).** `dw_collaboration()` reads the project's `cso_project.yml` (`single-producer` or `multi-producer`), `dw_set_collaboration()` writes it and baselines the existing sidecars, and in a multi-producer project `dw_save()` refuses out-of-band and concurrent writes (unless `takeover`) and records lineage fields in the sidecar. `dw_save.ado` does none of this yet: Stata sidecars carry `datasignature` rather than a byte `sha256` and a local rather than ISO-8601 UTC timestamp, so neither guard can be checked against them as they stand. Until #168 lands, Stata writes in a multi-producer project are unguarded; run the legs that write shared outputs from R or Python, or coordinate them by hand. See the roles and mode-contract chapter.
 
 ::: {.callout-note}
 `dw_isid` is not a missing Stata feature. The uniqueness check it performs is built directly into `dw_save.ado` via Stata's native `isid`, so the guarantee runs at every write — there is simply no separately callable `dw_isid` command. Declare your key with `idvars(...)` and the check fires.
@@ -183,8 +187,9 @@ out = aggregate_data_v2(df, value="OBS_VALUE", by="REGION",
 | `cso_toolkit_check` | Yes | Yes | n/a |
 | `cso_toolkit_diff` | Yes | Yes | n/a |
 | `cso_toolkit_pull` | Yes | Yes | n/a |
+| `cso_toolkit_sync` | Yes | Yes | n/a |
 
-The version-drift helpers are R-and-Python only. They read the consumer's `.toolkit_manifest.yml`, query the upstream GitHub API for the latest tag, and warn or refresh when the pin is behind. Stata vendoring pins the same manifest, but the drift check has no Stata sibling — a Stata-only consumer either runs the check from R/Python or compares its `pulled_version` against the upstream tag list by hand. See the vintage-sync chapter for the manifest schema and upgrade flow.
+The version-drift helpers are R-and-Python only. They read the consumer's `.toolkit_manifest.yml`, ask GitHub for the latest tag, and warn when the pin is behind; `cso_toolkit_sync` (or `_diff` + `_pull`) refreshes the vendored files from a release tag and re-pins the manifest. Stata vendoring pins the same manifest, but the drift check has no Stata sibling — a Stata-only consumer either runs the check from R/Python or compares its `pulled_version` against the upstream tag list by hand. See the vintage-sync chapter for the manifest schema and upgrade flow.
 
 ### Scaffolding and contract auditor
 
@@ -194,6 +199,8 @@ The version-drift helpers are R-and-Python only. They read the consumer's `.tool
 | `review_profile` | Yes | Yes | n/a |
 | `create_sector_script` | Yes | Yes | n/a |
 | `create_dw_sector_script` | Yes | Yes | n/a |
+| `create_research_project` | Yes | Yes (same files) | n/a (run once from R or Python) |
+| `create_official_stats_project` | Yes | Yes (same files) | n/a (run once from R or Python) |
 | `generate_markdown_report` | Yes | Yes | n/a |
 | `process_all_csv_files` | Yes (folder mode of the report) | Yes | n/a |
 | `test_scripts` (contract auditor) | Yes (`.R` scripts) | Yes (`.py` scripts) | n/a (no Stata auditor) |
@@ -264,8 +271,8 @@ The headline gaps:
 
 ## Summary: how complete is each sibling?
 
-- **R** is the reference implementation: every capability family, the full format set including `.rds` and gzipped CSV/TSV, the only generated reference site, and the only CI-gated test suite. Its version stamp is v0.9.1, level with Python. If a behaviour is ambiguous, R defines it.
-- **Python** is a near-complete functional port — core IO (including `.pkl`), all ten external-API dispatch keys, aggregation, vintage sync, and scaffolding — with full type hints, but no generated reference site, CI-manual-only testing, a couple of R-only helpers it has not yet picked up (`dw_stage`, `dw_regions`; `dw_root` now ships in Python too). Its version stamp matches R at 0.9.1, though those helper gaps remain.
+- **R** is the reference implementation: every capability family, the full format set including `.rds` and gzipped CSV/TSV, the only generated reference site, and the only CI-gated test suite. Its version stamp is v0.10.0, level with Python. If a behaviour is ambiguous, R defines it.
+- **Python** is a near-complete functional port — core IO (including `.pkl`), all ten external-API dispatch keys, aggregation, vintage sync, and scaffolding — with full type hints, but no generated reference site, CI-manual-only testing, a couple of R-only helpers it has not yet picked up (`dw_stage`, `dw_regions`; `dw_root` now ships in Python too). Its version stamp matches R at 0.10.0, though those helper gaps remain.
 - **Stata** is a deliberately scoped subset: full IO and mode contract for `.dta` / `.csv` / `.xlsx`, the reviewer no-API gate, recursive `mkdir`, and config loading — but **no external-API wrapper, no aggregation, no vintage-sync helpers, no contract auditor, no Parquet/binary formats, and no automated tests**. It enforces every half of the mode contract it can reach, and routes everything else through R or Python.
 
 When you vendor, choose the language that fits the pipeline — and where a Stata pipeline needs a capability this matrix marks "Route via R/Python," plan that crossing explicitly. The vendoring-model and onboarding chapters walk through how to wire a multi-language sector so the crossings are clean.

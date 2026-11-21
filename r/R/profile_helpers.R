@@ -20,8 +20,25 @@
 #' the standard CSO building blocks: user identification (USERNAME / USER
 #' for Windows / Mac), reproducibility seed, optional Z: drive integrity
 #' check, YAML user config load, optional producer / reviewer dw_mode
-#' resolution, a placeholder packages block, and the profile sentinel object
-#' downstream sector scripts assert against.
+#' resolution, a block that resolves and prints the project's collaboration
+#' model ([dw_collaboration()], read from `cso_project.yml`; single-producer
+#' when the file is absent), a placeholder packages block, and the profile
+#' sentinel object downstream sector scripts assert against.
+#'
+#' `~/.config/user_config.yml` follows DW-Production's template: each
+#' person's settings sit in a block named after their user name, and the
+#' generated profile reads that block first, then top-level keys. `dw_mode`
+#' has no default; it resolves as `dw_mode_by_project[[repo_name]]`, then
+#' `dw_mode`, and the profile stops with the exact YAML to add, user name
+#' filled in, when neither is set:
+#' \preformatted{
+#' jpazevedo:
+#'   dw_mode: "reviewer"
+#'   dw_mode_by_project:
+#'     My-Sector-Project: "producer"
+#' }
+#' The profile never installs packages: a missing one stops the session
+#' with the list to install.
 #'
 #' @param repo_name Character. Repository folder name, used in the sentinel
 #'   object name (`profile_<repo_name>` with `-` and `.` converted to `_`)
@@ -162,16 +179,26 @@ create_profile <- function(repo_name,
     "#----------------------------------------",
     "# 5. Load user config (YAML required)",
     "#----------------------------------------",
+    "# ~/.config/user_config.yml serves every cso-toolkit project (template:",
+    "# DW-Production's _config_template/user_config.yml). Settings sit in a",
+    "# block named after the user (USERNAME on Windows, USER elsewhere);",
+    "# top-level keys are read as a fallback.",
     "config_path <- file.path(USERPROFILE, \".config\", \"user_config.yml\")",
-    "if (!requireNamespace(\"yaml\", quietly = TRUE)) install.packages(\"yaml\")",
-    "library(yaml)",
+    "if (!requireNamespace(\"yaml\", quietly = TRUE)) {",
+    "  stop(\"[X] The yaml package is needed to read \", config_path, \".\\n\",",
+    "       \"    Install it once with install.packages(\\\"yaml\\\") and rerun.\", call. = FALSE)",
+    "}",
     "if (!file.exists(config_path)) {",
     "  stop(paste0(",
     "    \"[X] Configuration file not found at: \", config_path, \"\\n\",",
-    "    \"=> Create or move your 'user_config.yml' to this location.\"",
-    "  ))",
+    "    \"=> Create it, with your settings in a block named \", USERNAME, \":\"",
+    "  ), call. = FALSE)",
     "}",
-    "user_config <- yaml::read_yaml(config_path)",
+    "user_config <- yaml::read_yaml(config_path)  # cso-allow: io-yaml",
+    "user_block <- if (is.list(user_config[[USERNAME]])) user_config[[USERNAME]] else list()",
+    "user_setting <- function(key) {",
+    "  if (!is.null(user_block[[key]])) user_block[[key]] else user_config[[key]]",
+    "}",
     ""
   )
 
@@ -181,11 +208,27 @@ create_profile <- function(repo_name,
     "#----------------------------------------",
     "# dw_mode is a SESSION property read from user_config.yml; downstream",
     "# helpers (dw_save / dw_use / dw_api_fetch) route writes and forbid",
-    "# external API calls based on this single setting.",
-    "dw_mode <- user_config$dw_mode",
-    "if (is.null(dw_mode) || !dw_mode %in% c(\"producer\", \"reviewer\")) {",
-    "  stop(\"[X] user_config.yml must set dw_mode to 'producer' or 'reviewer'.\")",
+    "# external API calls based on this single setting. No default.",
+    "# Precedence (as DW-Production's dw_mode_by_sector): dw_mode_by_project",
+    "# for this repository, then dw_mode; each from the user block first.",
+    "dw_mode_by_project <- user_setting(\"dw_mode_by_project\")",
+    "if (!is.null(dw_mode_by_project) && !is.list(dw_mode_by_project)) {",
+    "  stop(\"[X] dw_mode_by_project in \", config_path, \" must map project names to \",",
+    "       \"\\\"producer\\\" or \\\"reviewer\\\", not a single value.\", call. = FALSE)",
     "}",
+    "dw_mode <- dw_mode_by_project[[repo_name]]",
+    "if (is.null(dw_mode)) dw_mode <- user_setting(\"dw_mode\")",
+    "if (!(is.character(dw_mode) && length(dw_mode) == 1 &&",
+    "      dw_mode %in% c(\"producer\", \"reviewer\"))) {",
+    "  stop(sprintf(paste0(",
+    "    \"[X] No valid dw_mode (\\\"producer\\\" or \\\"reviewer\\\") for %s.\\n\",",
+    "    \"    Add it to %s, in your user block:\\n\",",
+    "    \"      %s:\\n        dw_mode: \\\"reviewer\\\"\\n\",",
+    "    \"    or, for this project only:\\n\",",
+    "    \"      %s:\\n        dw_mode_by_project:\\n          %s: \\\"producer\\\"\"),",
+    "    repo_name, config_path, USERNAME, USERNAME, repo_name), call. = FALSE)",
+    "}",
+    "dw_apis_allowed <- identical(dw_mode, \"producer\")",
     "",
     "# Guard used by dw_api_fetch and analysis scripts in reviewer mode.",
     "dw_require_no_api <- function(context = NULL) {",
@@ -198,22 +241,46 @@ create_profile <- function(repo_name,
     ""
   ) else character(0)
 
+  collab_block <- c(
+    "#----------------------------------------",
+    "# 7. Collaboration model (cso_project.yml, committed in the repo)",
+    "#----------------------------------------",
+    "# dw_mode above is per person; how many people may PRODUCE is a project",
+    "# property set in cso_project.yml at the repository root (no file =",
+    "# single-producer). Resolve it once per session and show it.",
+    "if (exists(\"dw_collaboration\", mode = \"function\")) {",
+    "  dw_collaboration_model <- dw_collaboration(",
+    "    root = if (exists(\"rootFolder\")) rootFolder else getwd(), refresh = TRUE)",
+    "  message(\"[OK] Collaboration model: \", dw_collaboration_model)",
+    "} else {",
+    "  message(\"[!] cso-toolkit not loaded yet: the collaboration model \",",
+    "          \"(cso_project.yml) is resolved on the first dw_save().\")",
+    "}",
+    ""
+  )
+
   packages_block <- c(
     "#----------------------------------------",
-    "# 7. Packages",
+    "# 8. Packages",
     "#----------------------------------------",
-    "# Add the packages your pipeline needs here.",
+    "# Add the packages your pipeline needs here. They are never installed",
+    "# from here: a missing package stops the session with the list, so a",
+    "# run's environment never changes without its user knowing.",
     "required_pkgs <- c(\"dplyr\", \"tidyr\", \"readr\", \"yaml\")",
-    "for (pkg in required_pkgs) {",
-    "  if (!requireNamespace(pkg, quietly = TRUE)) install.packages(pkg)",
-    "  library(pkg, character.only = TRUE)",
+    "missing_pkgs <- required_pkgs[!vapply(required_pkgs, requireNamespace,",
+    "                                      logical(1), quietly = TRUE)]",
+    "if (length(missing_pkgs)) {",
+    "  stop(\"[X] Missing R package(s): \", paste(missing_pkgs, collapse = \", \"), \"\\n\",",
+    "       \"    Install them once with install.packages(c(\",",
+    "       paste0(\"\\\"\", missing_pkgs, \"\\\"\", collapse = \", \"), \")) and rerun.\", call. = FALSE)",
     "}",
+    "for (pkg in required_pkgs) library(pkg, character.only = TRUE)",
     ""
   )
 
   sentinel_block <- c(
     "#----------------------------------------",
-    "# 8. Profile sentinel",
+    "# 9. Profile sentinel",
     "#----------------------------------------",
     "# Downstream sector scripts assert against this object so they can",
     "# refuse to run if the profile was not sourced.",
@@ -221,7 +288,7 @@ create_profile <- function(repo_name,
     paste0("message(\"[OK] ", filename, " loaded\")")
   )
 
-  lines <- c(header, z_block, config_block, mode_block,
+  lines <- c(header, z_block, config_block, mode_block, collab_block,
              packages_block, sentinel_block)
   writeLines(lines, con = path)
   .dw_dbg("create_profile", "wrote ", length(lines), " lines", d = d)
@@ -236,7 +303,11 @@ create_profile <- function(repo_name,
 #' the building blocks the cso-toolkit IO + API contract depends on (the
 #' profile sentinel, cross-platform user identification, YAML config load,
 #' producer / reviewer `dw_mode` resolution, the `dw_require_no_api` guard,
-#' a reproducibility seed, and a packages block).
+#' a reproducibility seed, and a packages block). It warns when the profile
+#' reads only top-level keys of `user_config.yml`, which nests each person's
+#' settings under their user name (DW-Production's template), and when the
+#' repository's `cso_project.yml` sets `collaboration: multi-producer` but the
+#' profile never calls `dw_collaboration()`.
 #'
 #' This is intentionally pattern-based, not parse-based: it greps for the
 #' load-bearing lines so it tolerates stylistic variation across profiles
@@ -332,6 +403,21 @@ review_profile <- function(path,
     "Profile never reads user_config.yml -- per-user paths and dw_mode cannot resolve."
   )
 
+  # 4b. The user's block. DW-Production's user_config.yml template nests each
+  #     person's settings under their user name; a profile that reads only
+  #     top-level keys (user_config$dw_mode) finds no dw_mode in such a file.
+  reads_user_block <- has("\\[\\[\\s*USERNAME\\s*\\]\\]") || has("\\$\\s*`?USERNAME") ||
+    has("\\buser_block\\b")
+  checks[[length(checks) + 1]] <- result(
+    "User block in user_config.yml",
+    reads_user_block,
+    "Reads the settings under the user's name (user_config[[USERNAME]]).",
+    paste0("Reads top-level keys only -- with the user_config.yml template (settings nested under ",
+           "the user name, as in DW-Production) dw_mode and the paths resolve to NULL. Read ",
+           "user_config[[USERNAME]] first, then top-level keys (create_profile() emits this)."),
+    level = "warn"
+  )
+
   # 5. dw_mode block
   dw_mode_present <- has("dw_mode") && has("producer") && has("reviewer")
   checks[[length(checks) + 1]] <- result(
@@ -360,7 +446,28 @@ review_profile <- function(path,
     level = if (require_z_drive_check) "fail" else "warn"
   )
 
-  # 8. Required packages block
+  # 8. Collaboration-model block (cso_project.yml). Warn when the project
+  #    is multi-producer but the profile never resolves / shows the model.
+  proj_file <- .dw_find_project_file(dirname(normalizePath(path, winslash = "/", mustWork = FALSE)))
+  proj_model <- if (is.na(proj_file)) "single-producer" else
+    tryCatch(.dw_read_project(proj_file)$collaboration, error = function(e) "invalid")
+  has_collab_block <- has("dw_collaboration\\s*\\(")
+  checks[[length(checks) + 1]] <- if (has_collab_block) {
+    list(check = "Collaboration model block", status = "pass",
+         detail = "Resolves the collaboration model with dw_collaboration().")
+  } else if (identical(proj_model, "multi-producer")) {
+    list(check = "Collaboration model block", status = "warn",
+         detail = paste0(proj_file, " sets multi-producer but the profile never calls dw_collaboration() -- ",
+                         "add the block create_profile() emits so every session shows the model at load."))
+  } else if (identical(proj_model, "invalid")) {
+    list(check = "Collaboration model block", status = "warn",
+         detail = paste0(proj_file, " cannot be read -- run dw_collaboration() to see the error."))
+  } else {
+    list(check = "Collaboration model block", status = "pass",
+         detail = "Single-producer project (no multi-producer cso_project.yml); the block is optional.")
+  }
+
+  # 9. Required packages block
   checks[[length(checks) + 1]] <- result(
     "Packages block",
     has("requireNamespace\\(") || has("install\\.packages\\(") || has("library\\("),

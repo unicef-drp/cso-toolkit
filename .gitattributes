@@ -1,0 +1,47 @@
+# ---------------------------------------------------------------------------
+# Line endings: stored AND checked out as LF on every platform.
+# ---------------------------------------------------------------------------
+# Without this file a Windows clone with core.autocrlf=true (the Git for
+# Windows default, and the setting on GitHub's Windows runners) checks text
+# files out with CRLF. r/.gitattributes pins LF inside r/ only, so templates/
+# came out CRLF while its copy in r/inst/templates/ stayed LF: the
+# byte-for-byte template test failed on Windows, and a repository scaffolded
+# from such a clone received CRLF files, including a pre-push hook that sh on
+# macOS and Linux cannot run.
+#
+# `text=auto` lets git decide what is text (files it detects as binary are
+# never converted); `eol=lf` keeps LF in every working tree, so a file has the
+# same bytes on every platform as in the repository.
+* text=auto eol=lf
+
+# Copied byte for byte into new repositories, run by sh, or compared by
+# tests: LF whatever the rule above becomes.
+templates/**            text eol=lf
+r/inst/templates/**     text eol=lf
+python/src/templates/** text eol=lf
+*.sh                    text eol=lf
+pre-push                text eol=lf
+.githooks/**            text eol=lf
+
+# Binary: never converted. Last, so these win over the rules above.
+*.png     binary
+*.jpg     binary
+*.jpeg    binary
+*.gif     binary
+*.ico     binary
+*.pdf     binary
+*.ttf     binary
+*.otf     binary
+*.woff    binary
+*.woff2   binary
+*.rds     binary
+*.RData   binary
+*.rda     binary
+*.dta     binary
+*.sav     binary
+*.parquet binary
+*.xlsx    binary
+*.xls     binary
+*.zip     binary
+*.gz      binary
+*.7z      binary

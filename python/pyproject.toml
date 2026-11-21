@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cso-toolkit"
-version = "0.9.1"
+version = "0.10.0"
 description = "Shared Python helpers for UNICEF DW-Production Database Managers"
 readme = "src/README.md"
 requires-python = ">=3.9"
@@ -64,4 +64,5 @@ Source = "https://github.com/unicef-drp/cso-toolkit"
 package-dir = {"cso_toolkit" = "src"}
 
 [tool.setuptools.package-data]
-cso_toolkit = ["py.typed"]
+# templates/: copies of the repository's templates/ (tools/sync_templates.py)
+cso_toolkit = ["py.typed", "templates/**/*"]

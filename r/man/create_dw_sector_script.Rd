@@ -56,7 +56,9 @@ create_dw_sector_script("WASH", "ws")
 [create_sector_script()] (the generic underlying helper).
 
 Other scaffolding: 
+\code{\link{create_official_stats_project}()},
 \code{\link{create_profile}()},
+\code{\link{create_research_project}()},
 \code{\link{create_sector_script}()},
 \code{\link{review_profile}()}
 }

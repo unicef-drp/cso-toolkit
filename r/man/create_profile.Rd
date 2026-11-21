@@ -72,8 +72,26 @@ Writes a `profile_<repo_name>.R` template to disk. The template wires up
 the standard CSO building blocks: user identification (USERNAME / USER
 for Windows / Mac), reproducibility seed, optional Z: drive integrity
 check, YAML user config load, optional producer / reviewer dw_mode
-resolution, a placeholder packages block, and the profile sentinel object
-downstream sector scripts assert against.
+resolution, a block that resolves and prints the project's collaboration
+model ([dw_collaboration()], read from `cso_project.yml`; single-producer
+when the file is absent), a placeholder packages block, and the profile
+sentinel object downstream sector scripts assert against.
+}
+\details{
+`~/.config/user_config.yml` follows DW-Production's template: each
+person's settings sit in a block named after their user name, and the
+generated profile reads that block first, then top-level keys. `dw_mode`
+has no default; it resolves as `dw_mode_by_project[[repo_name]]`, then
+`dw_mode`, and the profile stops with the exact YAML to add, user name
+filled in, when neither is set:
+\preformatted{
+jpazevedo:
+  dw_mode: "reviewer"
+  dw_mode_by_project:
+    My-Sector-Project: "producer"
+}
+The profile never installs packages: a missing one stops the session
+with the list to install.
 }
 \examples{
 \dontrun{
@@ -91,6 +109,8 @@ create_profile("DW-Production",
 
 Other scaffolding: 
 \code{\link{create_dw_sector_script}()},
+\code{\link{create_official_stats_project}()},
+\code{\link{create_research_project}()},
 \code{\link{create_sector_script}()},
 \code{\link{review_profile}()}
 }

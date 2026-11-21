@@ -1,0 +1,32 @@
+# user_config.yml -- per-person configuration (TEMPLATE: placeholders only)
+#
+# Your copy lives at ~/.config/user_config.yml
+#   Windows: C:/Users/<you>/.config/user_config.yml
+#   macOS:   /Users/<you>/.config/user_config.yml
+# One file serves every cso-toolkit project on the machine (it follows
+# DW-Production's _config_template/user_config.yml): if you have one
+# already, add the keys below to your block instead of copying this file.
+# Rename the block to your user name (in R: Sys.getenv("USERNAME"); on
+# macOS and Linux: Sys.getenv("USER")) and fill it in. Never commit your
+# filled-in copy: .gitignore and tools/check.R block user_config.yml
+# everywhere except this template folder.
+#
+# Rules: indent with two spaces, never tabs; quote every path; no trailing
+# slash on folder paths (a bare drive root such as "Z:/" keeps its slash).
+#
+# dw_mode is REQUIRED and has no default: "producer" writes the canonical
+# deposit and may call external APIs; "reviewer" reads the deposit and
+# writes only to sandboxRoot. Start as a reviewer. dw_mode_by_project sets
+# the mode for one repository (its folder name) and wins over dw_mode.
+# The project's collaboration model is NOT set here: it is in
+# cso_project.yml at the repository root, the same for everyone.
+# profile_{{project_name}}.R reads this block; it stops, showing what to
+# add, when a key it needs is missing.
+
+your_user_name:
+  teamsRoot: "C:/Users/your_user_name/UNICEF/Documents"    # folder that contains 060.DW-MASTER
+  dw_mode: "reviewer"                                      # producer | reviewer
+  sandboxRoot: "C:/Users/your_user_name/dw-repro"          # reviewer writes; outside the repo and OneDrive
+  # dw_mode_by_project:                                    # optional, per repository
+  #   {{project_name}}: "producer"
+  # zDrive: "Z:/"                                          # optional: where the Z: mirror is mapped

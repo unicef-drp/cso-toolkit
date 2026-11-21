@@ -10,14 +10,19 @@ Throughout, the load-bearing idea is *single-switch routing*. A user sets `dw_mo
 
 ## The single switch: `dw_mode` in `user_config.yml`
 
-Every user of a CSO pipeline keeps a personal configuration file at `~/.config/user_config.yml` (on Windows, `%USERPROFILE%/.config/user_config.yml`). This file is per-machine and per-user; it is never committed to the repository. The keys sit at the top level — the profile that `create_profile` scaffolds reads `user_config$dw_mode` (R) or `user_config.get("dw_mode")` (Python) directly, with no per-user wrapping mapping. A minimal file looks like this:
+Every user of a CSO pipeline keeps a personal configuration file at `~/.config/user_config.yml` (on Windows, `%USERPROFILE%/.config/user_config.yml`). This file is per-machine and per-user; it is never committed to the repository. One file serves every CSO project on the machine. Following DW-Production's template (`_config_template/user_config.yml`), each person's settings sit in a block named after their user name — `Sys.getenv("USERNAME")` on Windows, `USER` on macOS and Linux — and the profile that `create_profile` scaffolds reads that block first and top-level keys only as a fallback. A minimal file looks like this:
 
 ```yaml
-githubFolder: "C:/GitHub/mytasks"
-teamsRoot: "C:/Users/jpazevedo/UNICEF/Chief Statistician Office - Documents"
-dw_mode: "reviewer"                                  # producer | reviewer
-sandboxRoot: "C:/Users/jpazevedo/dw-repro"           # used only when dw_mode = reviewer
+jpazevedo:
+  githubFolder: "C:/GitHub/mytasks"
+  teamsRoot: "C:/Users/jpazevedo/UNICEF/Chief Statistician Office - Documents"
+  dw_mode: "reviewer"                                # producer | reviewer
+  sandboxRoot: "C:/Users/jpazevedo/dw-repro"         # used only when dw_mode = reviewer
+  dw_mode_by_project:                                # optional, per repository
+    learning-mobility: "producer"
 ```
+
+`dw_mode_by_project` sets the mode for one repository, named as the profile's `repo_name`, and wins over `dw_mode`, as DW-Production's `dw_mode_by_sector` wins for the active sector.
 
 The one required key is `dw_mode`. It takes exactly one of two values, `"producer"` or `"reviewer"`. Loading the profile must hard-fail if `dw_mode` is missing or set to anything else. Defaulting either way is unsafe. Defaulting to `producer` would let a reviewer corrupt the canonical deposit the first time they forget to set the key; defaulting to `reviewer` would surprise a database manager in the middle of a legitimate deposit by silently diverting their writes into a sandbox. There is no safe default, so the loader refuses to guess.
 
@@ -26,19 +31,29 @@ All three language ports enforce this identically. The `create_profile` scaffold
 ::: {.panel-tabset}
 #### R {.unnumbered .unlisted}
 ```r
-dw_mode <- user_config$dw_mode
-if (is.null(dw_mode) || !dw_mode %in% c("producer", "reviewer")) {
-  stop("[X] user_config.yml must set dw_mode to 'producer' or 'reviewer'.")
+user_block <- if (is.list(user_config[[USERNAME]])) user_config[[USERNAME]] else list()
+user_setting <- function(key) {
+  if (!is.null(user_block[[key]])) user_block[[key]] else user_config[[key]]
+}
+dw_mode <- user_setting("dw_mode_by_project")[[repo_name]]
+if (is.null(dw_mode)) dw_mode <- user_setting("dw_mode")
+if (!(is.character(dw_mode) && length(dw_mode) == 1 &&
+      dw_mode %in% c("producer", "reviewer"))) {
+  stop(...)  # names the file and shows the YAML to add, user name filled in
 }
 ```
 
 #### Python {.unnumbered .unlisted}
 ```python
-dw_mode = user_config.get("dw_mode")
+user_block = user_config.get(USERNAME) if isinstance(user_config.get(USERNAME), dict) else {}
+def user_setting(key):
+    value = user_block.get(key)
+    return value if value is not None else user_config.get(key)
+dw_mode = (user_setting("dw_mode_by_project") or {}).get(repo_name)
+if dw_mode is None:
+    dw_mode = user_setting("dw_mode")
 if dw_mode not in ("producer", "reviewer"):
-    raise ValueError(
-        "[X] user_config.yml must set dw_mode to 'producer' or 'reviewer'."
-    )
+    raise ValueError(...)  # names the file and shows the YAML to add
 ```
 
 #### Stata {.unnumbered .unlisted}
@@ -50,7 +65,7 @@ dw_load_config
 ```
 :::
 
-A note on the Stata path. Stata cannot link an external YAML library on AppLocker-locked corporate Windows installs, so `dw_load_config.ado` ships a minimal hand-rolled `key: value` parser. It handles the documented subset of the config schema — one pair per line, optional quoting, inline `#` comments stripped — but not nested mappings, lists, anchors, or multi-line strings. (The R and Python profiles lean on a real YAML library and so could parse a richer file, but in practice all three ports read the same flat top-level keys.) The Stata loader reads exactly the keys the YAML provides into `$`-globals and validates `dw_mode` (hard-stopping with error 459 if it is missing or out of range). Unknown keys are silently ignored, since the file may hold entries other helpers consume.
+A note on the Stata path. Stata cannot link an external YAML library on AppLocker-locked corporate Windows installs, so `dw_load_config.ado` ships a minimal hand-rolled `key: value` parser. It handles the documented subset of the config schema — one pair per line, optional quoting, inline `#` comments stripped — but not nested mappings, lists, anchors, or multi-line strings. (The R and Python profiles lean on a real YAML library and read the user's block; the Stata loader reads flat top-level keys only, so a Stata profile on a shared, block-structured file needs its own handling.) The Stata loader reads exactly the keys the YAML provides into `$`-globals and validates `dw_mode` (hard-stopping with error 459 if it is missing or out of range). Unknown keys are silently ignored, since the file may hold entries other helpers consume.
 
 ::: {.callout-note}
 One key the loaders do *not* validate is `sandboxRoot`, even though it is mandatory in reviewer mode (it is the base the reviewer's write globals are derived from). If `dw_mode: reviewer` is set but `sandboxRoot` is absent, the derivation below produces empty or malformed paths rather than a clean error at load time. Until the loaders gain an explicit check, a profile author should validate `sandboxRoot` themselves alongside `dw_mode`.

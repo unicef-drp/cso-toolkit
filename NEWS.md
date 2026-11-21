@@ -6,6 +6,287 @@ _Entries land here as PRs merge into `develop`. When the next release
 is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
+## v0.10.0 (2026-11-21)
+
+The first release a consumer repository can update *to* in one call,
+and the first that can start one. `cso_toolkit_sync()`, with working
+`cso_toolkit_diff()` and `cso_toolkit_pull()`, updates a vendored copy
+from a release tag; `create_research_project()` and
+`create_official_stats_project()` write a new repository's floor; a
+project can declare itself multi-producer in `cso_project.yml`, and
+`dw_save()` then guards against out-of-band and concurrent writes;
+templates and guidance cover repository hygiene and local-first CI; and
+`cso_toolkit_check()` warns when the vendored copy is behind a target
+version. MINOR: new functions, arguments and optional files. The
+behaviour a consumer may notice is listed under Changed. The v0.10.0
+section prepared on 2026-11-19 was never tagged; it is folded in here.
+PRs #163, #165, #167, #169, #172, #181 and #182.
+
+### Changed
+
+- **Python: `cso_toolkit.cso_toolkit_sync` is now the function**, not the
+  module (see Fixed, `cso_toolkit_diff()` and `cso_toolkit_pull()`).
+  Import the module with
+  `importlib.import_module("cso_toolkit.cso_toolkit_sync")`.
+- **Generated profiles read the user's block of `user_config.yml`, and
+  the R profile no longer calls `install.packages()`**: a missing package
+  stops the session with the list to install (see Fixed,
+  `create_profile()`). Profiles generated earlier keep the old behaviour
+  until regenerated.
+- **`official-stats.gitignore` ignores `**/013_wrkdata/**` outright and
+  keeps only the provenance of `**/011_rawdata/**`** (see Added, the
+  repository scaffolders). Files a repository already tracks there stay
+  tracked; new ones are ignored.
+
+### Added
+
+- **Repository hygiene and CI guidance for consumer repos (docs and
+  templates only; no helper code changes).**
+  `docs/gitignore_guidelines.md` sets the rule (data never enter git; their
+  `.provenance.json` sidecars always do; sidecars of microdata kept outside
+  the repo go under `data/provenance/<path>/`), explains the
+  `data/**` + `!data/**/` re-include pattern, and shows how to verify
+  (`git check-ignore -v`, `git ls-files -i -c --exclude-standard`,
+  `git rm --cached`). Templates: `templates/gitignore/research-project.gitignore`
+  (git is the canonical store for results: small tables and figures tracked
+  with sidecars) and `official-stats.gitignore` (DW sector pipelines, SDMX /
+  data.unicef.org publication, survey processing: pre-release figures are
+  embargoed, so output folders are ignored outright, sidecars included, and
+  the release PR commits `releases/<vintage>/output_manifest.csv` plus the
+  deposited files' sidecars after publication). Both ignore reviewer
+  artefacts (`sandbox/`, `*.staged.json`); their shared blocks are tagged
+  `[shared]` and `r/tests/testthat/test-gitignore-templates.R` keeps them
+  identical. `docs/ci_cd_guidelines.md` sets ten design
+  principles, local first (checks run locally with one command; CI never
+  needs real data; merges gated by the check record, required status
+  checks opt-in; a regression test per bug fix; least privilege; Linux by
+  default) and a tiered menu. `templates/tools/check.R` runs every check
+  with `Rscript --no-init-file tools/check.R` (tracked data, secrets and
+  embargoed outputs; files over 50 MB; gitleaks secret scan when
+  installed; sidecar validation; `test_scripts()` contract audit and the
+  `.toolkit_manifest.yml` / `cso_toolkit_check()` vintage check from the
+  vendored `00_functions/`; testthat; opt-in lintr and manuscript build),
+  with PASS / FAIL lines and a non-zero exit on failure;
+  `templates/hooks/pre-push` runs it before every push. The workflows in
+  `templates/workflows/` (`ci-hygiene.yml`, `ci-contract-audit.yml`,
+  `ci-r-tests.yml` with an R CMD check variant, `ci-manuscript.yml`) call
+  the same script and are opt-in: by default they run on manual dispatch
+  and on pull requests into `main` only, with the block that switches every
+  push and pull request back on. `templates/testthat/` is a runnable
+  testthat skeleton for non-package projects (reviewer-mode runner, helpers,
+  an example regression test, a synthetic fixture). New handbook chapter
+  45, *Continuous integration and repository hygiene*.
+
+- **Project-level collaboration setting: single- or multi-producer (R +
+  Python)** — session modes stay per person (`dw_mode: producer | reviewer`);
+  how many people may produce is now a property of the project, committed
+  as `cso_project.yml` at the repository root (`schema: cso_project/1`,
+  `collaboration: single-producer | multi-producer`, `collaboration_since`,
+  optional `members`; template in `templates/cso_project.yml`). No file means
+  `single-producer`: existing projects and their sidecars are unchanged.
+  - `dw_collaboration()` resolves the model once per session (walking up
+    from `rootFolder` / the working directory to the repository root) and
+    caches `dw_collaboration_model`, `dw_project_file` and
+    `dw_session_start`.
+  - In a `multi-producer` project, `dw_save()` (non-reviewer sessions) stops
+    with a `[cso_toolkit.dw_save]` envelope before replacing an output whose
+    bytes no longer match its sidecar (out-of-band change) or that another
+    user wrote after the session started (concurrent write), unless the new
+    `takeover = TRUE`. A write that follows another producer's only prints a
+    note. Sidecars gain `collaboration`, `previous_sha256`, `previous_user`,
+    `previous_written_at`, `git_branch`, `git_commit` and, when used,
+    `takeover`.
+  - `dw_set_collaboration(model, root, members, baseline = TRUE)` writes the
+    file and adds a `baseline` object to every existing `*.provenance.json`
+    without changing `sha256` or any other field, so switching midway raises
+    no alarms and leaves no lineage gap. Idempotent; refused in reviewer
+    mode. Commit its result as one reviewed PR.
+  - `dw_api_fetch()`: in a multi-producer project, a refresh over another
+    user's cache says so and keeps `metadata.previous_fetch`; new `takeover`
+    argument forwarded to `dw_save()`.
+  - `create_profile()` emits a block that resolves and prints the model;
+    `review_profile()` warns when a multi-producer repository's profile lacks
+    it.
+  - `dw_collaboration()` and the guards live in `dw_io.R`, so consumers that
+    vendor only `dw_io.R` honour a multi-producer project;
+    `dw_set_collaboration()` is in the new optional `dw_project.R`.
+  - Stata: not yet; `dw_save.ado` ignores `cso_project.yml`
+    ([#168](https://github.com/unicef-drp/cso-toolkit/issues/168)).
+  - Docs: handbook chapter "Roles and the mode contract" (new section
+    "Collaboration model"), Appendices A–D, `docs/mode_contract_integration.md`,
+    `docs/dw_io_reference.md`, README.
+
+- **Start a new repository: `create_research_project()` and
+  `create_official_stats_project()` (R + Python, same files byte for
+  byte).** One call writes the toolkit's floor for a new repository from
+  the shipped templates: the matching `.gitignore` (template bytes), a
+  `.gitattributes` that keeps the hook, the vendored helpers and the
+  provenance sidecars LF in every clone,
+  `tools/check.R` and `.githooks/pre-push`, `tests/testthat.R` with the
+  helper and a starter `test-project.R` (cso_project.yml parses; every
+  input manifest row has a sidecar with the same sha256; reviewer mode),
+  `cso_project.yml` (`collaboration` is required, with no default, as
+  `dw_mode` has none; optional `members`), `profile_<project>.R` (from
+  `templates/profile/`: reads the user's block of `user_config.yml`,
+  resolves `dw_mode` as `dw_mode_by_project[[<project>]]` then `dw_mode`
+  with no default, sources the vendored helpers with `zzz.R` first, never
+  installs packages, sets the sentinel; the official-statistics profile
+  also derives the deposit paths from `dw_mode` and checks the Z: mirror;
+  `review_profile()` passes both), README and CONTRIBUTING
+  skeletons with the first-clone steps, and the provenance policy
+  (`data/README.md` + `data/input_manifest.csv` for research,
+  `inputs/README.md` + `inputs/input_manifest.csv` for official
+  statistics). Research layout: `R/`, `data/provenance/`, `output/`,
+  `paper/`, `references/`, `docs/`. Official-statistics layout, aligned
+  with DW-Production and the deposit's stage numbering:
+  `00_documentation/`, `00_functions/`, `01_dw_prep/` (`010_metadata/`
+  committed, `011_rawdata/` ignored but for READMEs, sidecars and
+  manifests, `012_codes/`, `013_wrkdata/` ignored outright), `inputs/`,
+  `releases/`, `_config_template/user_config.yml`, with `OUTPUT_DIRS`
+  (embargo, `013_wrkdata` included), `DATA_DIRS` (`011_rawdata` added)
+  and `AUDIT_PATHS` set in `tools/check.R`. `official-stats.gitignore`
+  now ignores `**/013_wrkdata/**` with the other output folders and keeps
+  only the provenance of `**/011_rawdata/**`, the folders where
+  `create_sector_script()` drivers read and write. `tools/check.R` gains
+  `AUDIT_MODE`: `"blocking"` (the template default, kept for official
+  statistics) fails the run on a contract-audit violation, `"advisory"`
+  (set for research projects, whose first scripts read data directly)
+  reports the violations as `[WARN]` without failing. Options: `vendor = TRUE` copies
+  the helpers into `00_functions/` from a release tag of a git clone of
+  cso-toolkit (`toolkit_source`, or `CSO_TOOLKIT_ROOT`; the tag is
+  `toolkit_version`, by default the clone's latest `vX.Y.Z` tag), reading
+  them from the tag's commit with `git cat-file`, never from the working
+  tree, and writes `.toolkit_manifest.yml` with the tag as
+  `pulled_version` and its commit as `pulled_commit`; a missing tag stops
+  the call before anything is written (without vendoring, `tools/check.R`
+  leaves out `contract-audit` and `vintage` until the helpers are
+  vendored);
+  `workflows = TRUE` adds the opt-in GitHub Actions workflows (default
+  off); `git = TRUE` runs `git init` with `develop` as the first branch,
+  sets `core.hooksPath` and stages the hook as executable (no commit,
+  remote or push). Nothing is written if a target file exists with
+  different content unless `overwrite = TRUE`; identical files are left
+  alone. Returns the files with their status. The skeleton files live in
+  `templates/project/`; the R and Python packages ship copies
+  (`r/inst/templates/`, `python/src/templates/`), refreshed by
+  `python tools/sync_templates.py`, and both test suites fail while a
+  copy differs. Stata: none (run R or Python once). New handbook chapter
+  *Starting a new repository*.
+
+- **`cso_toolkit_sync()`: update the vendored toolkit in one call (R +
+  Python).** Resolves the target (the latest release, or `target_version`);
+  says "up to date" and stops when `pulled_version` is already there;
+  otherwise prints the upstream `NEWS.md` sections, read from the target
+  tag, for every version after `pulled_version` up to the target, marking
+  with `!!` the entries under Breaking or Changed headings; then compares
+  and pulls as `cso_toolkit_pull()` does. It is the call the docs point
+  to. Stata: none.
+
+- **Latest-tag lookup falls back to `git ls-remote` (R + Python).** After
+  the gh CLI and the GitHub API, the lookup used by `cso_toolkit_check()`
+  and the sync helpers runs `git ls-remote --tags --refs
+  https://github.com/<source>.git` and takes the highest `vX.Y.Z` (no
+  pre-releases; compared numerically, so `v0.10.0` > `v0.9.1`). Git over
+  HTTPS works where UNICEF proxies block `api.github.com`.
+
+- **`cso_toolkit_check()` warns loudly when the vendored copy is behind a
+  target version (R + Python)** — new `target_version` argument and optional
+  manifest key `target_version:`. The comparison is offline, so it runs in
+  producer **and** reviewer mode. When the pinned `pulled_version` is behind
+  the target, it raises a `[cso_toolkit.cso_toolkit_check]` warning carrying
+  the exact `cso_toolkit_pull(target_version = "...")` command (even with
+  `quiet = TRUE`) and, with `quiet = FALSE`, prints a boxed alert. Reviewer
+  mode only warns: no network call, no file change. A newer upstream tag
+  (producer mode) now also shows a boxed notice with the commands, but does
+  not warn. The result gains `target_version`, `target_source` and
+  `behind_target`. Documented in the manifest template, the vintage-sync
+  chapter and the error taxonomy.
+  ([#106](https://github.com/unicef-drp/cso-toolkit/issues/106), item 4)
+
+### Fixed
+
+- **`cso_toolkit_diff()` and `cso_toolkit_pull()` are implemented (R +
+  Python)** — both were stubs that printed "not yet implemented" /
+  "implementation TBD". They read a release tag, never a working tree:
+  from a local clone given as `toolkit_source` (or `CSO_TOOLKIT_ROOT`)
+  with `git cat-file`, without fetching or changing it, or else from a
+  shallow `--no-checkout` clone of the tag from GitHub into a temporary
+  folder. `*.R` files map to `r/R/`, `*.py` to `python/src/`.
+  `cso_toolkit_diff()` returns one row per vendored file with status
+  `unchanged` / `changed` / `local_edit` / `missing_upstream` /
+  `missing_local` and both sha256s (CRLF-only differences are not
+  changes; a file that differs from what `pulled_version` shipped is a
+  local edit); with a local clone it also runs in reviewer mode.
+  `cso_toolkit_pull()` gains `toolkit_source` and `allow_downgrade`;
+  refuses uncommitted changes in the vendored folder, a downgrade, and
+  `confirm = TRUE` in a non-interactive session; reports "already at" for
+  the same tag (warning when the tag moved from `pulled_commit`); skips
+  local edits, keeps files gone upstream (warning), writes the rest
+  atomically, asking per file; and re-pins the manifest by editing lines
+  in place (`pulled_version`, `pulled_commit`, the existing `pulled_date`
+  or `pulled_at`, `pulled_by`, hashes of an existing `files:` block), so
+  comments and other keys survive. The git and release-tag helpers moved
+  from `create_project.R` / `.py` into `cso_toolkit_sync.R` / `.py`, which
+  consumers vendor on their own. In Python, `cso_toolkit.cso_toolkit_sync`
+  is now the exported function; import the module with
+  `importlib.import_module("cso_toolkit.cso_toolkit_sync")`.
+
+- **Multi-producer guards: two false alarms and an empty user (R + Python;
+  #178).** `dw_save()` in a multi-producer project no longer stops on:
+  - a text output that differs from its sidecar only in line endings (a
+    CRLF checkout of an LF file, or the reverse, from `core.autocrlf` or
+    from R writing CRLF on Windows). It prints a note instead. A real
+    change is still an out-of-band change;
+  - a newer write by a co-author whose output and sidecar are committed
+    and unmodified in git. That write reached the session through a pull,
+    so the session builds on it. Untracked or modified outputs, such as
+    deposits and shared folders, keep the concurrent-write check.
+
+  R now records the user from `USERNAME`, then `LOGNAME`, `USER`, `LNAME`
+  and the system user, the same order as Python. On macOS and Linux, R
+  sidecars used to record `"user": ""`, so the concurrent-write check
+  never fired there. Scaffolded repositories' `.gitattributes` adds
+  `output/** -text`, so tracked outputs keep the bytes their sidecars
+  hash.
+
+- **`create_profile()` reads the user block of `user_config.yml` (R +
+  Python)** — the generated profile read `user_config$dw_mode` at the top
+  level, while DW-Production's `_config_template/user_config.yml` (the
+  file every CSO project shares) nests each person's settings under their
+  user name, so a profile generated for a new project stopped with "must
+  set dw_mode" for a correctly configured user. The profile now reads
+  `user_config[[USERNAME]]` first and top-level keys as a fallback,
+  resolves `dw_mode` as `dw_mode_by_project[[<repo>]]`, then `dw_mode`
+  (mirroring DW-Production's `dw_mode_by_sector` precedence; still no
+  default), sets `dw_apis_allowed`, and stops with an error that shows the
+  exact YAML to add, user name filled in. The R profile no longer calls
+  `install.packages()`: a missing package (yaml included) stops the session
+  with the list to install. `review_profile()` gains a check, "User block
+  in user_config.yml", that warns on a profile reading top-level keys only.
+  Tests run generated profiles in a child process against user-block,
+  per-project, flat and missing configurations. Handbook chapters 22 and
+  35 updated (chapter 22 had documented the flat layout).
+
+- **`dw_api_fetch(refresh = TRUE)` replaces an existing cache (R + Python)** —
+  the refresh reached `dw_save()` with the default overwrite setting and
+  stopped at the overwrite gate in producer mode, so the documented refresh
+  never replaced an existing cache. A refresh now passes `overwrite = TRUE`
+  (and `force = TRUE` in R) when the cache exists. Without `refresh` an
+  existing cache is still read and never replaced.
+
+- **`tools/check.R` template: header in a repository without commits** —
+  the header line printed git's "fatal: Needed a single revision" in place
+  of the commit; it now says `(none yet)`.
+
+- **`cso_toolkit_check()` compares versions numerically (R + Python)** — tags
+  were compared as strings for inequality, so `0.10.0` vs `0.9.1` and a
+  vendored copy *ahead* of the latest tag were both reported as "newer tag
+  available". Versions now compare as dotted numbers (leading `v` and
+  pre-release suffix stripped); `inrepo` pins are never behind. The R alert
+  no longer prints `pinned vv0.9.0`.
+- **Reviewer mode no longer skips the whole check** — it skips only the
+  upstream poll. Without a target version it still returns `NULL`, as before.
+
 ## v0.9.1 (2026-11-19)
 
 Patch: generated profiles no longer risk hanging on a dead-mapped Z:

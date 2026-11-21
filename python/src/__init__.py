@@ -32,6 +32,12 @@ from .dw_io import (
     dw_verify_z,
 )
 
+# Collaboration model (dw_project.py)
+from .dw_project import (
+    dw_collaboration,
+    dw_set_collaboration,
+)
+
 # API helpers (dw_api.py)
 from .dw_api import (
     dw_api_cached,
@@ -44,6 +50,7 @@ from .cso_toolkit_sync import (
     cso_toolkit_check,
     cso_toolkit_diff,
     cso_toolkit_pull,
+    cso_toolkit_sync,
 )
 
 # Aggregation helpers (aggregate_data.py)
@@ -76,6 +83,12 @@ from .profile_helpers import (
     review_profile,
 )
 
+# Repository scaffolding (create_project.py)
+from .create_project import (
+    create_official_stats_project,
+    create_research_project,
+)
+
 # Contract auditor
 from .test_scripts import test_scripts
 
@@ -101,10 +114,12 @@ __all__ = [
     "dw_verify_z", "dw_resolve_path", "dw_is_canonical",
     "dw_root", "dw_default_unicef_allowlist",
     "dw_toolkit_version",
+    # Collaboration model
+    "dw_collaboration", "dw_set_collaboration",
     # API
     "dw_api_fetch", "dw_api_cached", "dw_api_inventory",
     # Sync
-    "cso_toolkit_check", "cso_toolkit_diff", "cso_toolkit_pull",
+    "cso_toolkit_check", "cso_toolkit_diff", "cso_toolkit_pull", "cso_toolkit_sync",
     # Aggregation
     "aggregate_data", "aggregate_data_v2",
     "apply_time_window", "generate_agg_footnote",
@@ -114,6 +129,7 @@ __all__ = [
     "generate_markdown_report", "process_all_csv_files",
     "create_sector_script", "create_dw_sector_script",
     "create_profile", "review_profile",
+    "create_research_project", "create_official_stats_project",
     "test_scripts",
     # dw_-prefixed aliases (mirror the R dual names)
     "dw_aggregate_data", "dw_aggregate_data_v2", "dw_apply_time_window",
@@ -122,4 +138,4 @@ __all__ = [
     "dw_create_profile", "dw_review_profile", "dw_test_scripts",
 ]
 
-__version__ = "0.9.1"
+__version__ = "0.10.0"

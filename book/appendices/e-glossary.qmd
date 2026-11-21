@@ -1,6 +1,6 @@
 # Glossary
 
-This glossary documents `cso-toolkit` as of **v0.9.1** (2026-11-19); version notes mark when a behaviour was added. It defines the load-bearing terms used throughout the handbook. The toolkit's vocabulary is deliberately small, but several of the terms carry precise, contractual meaning — *canonical deposit*, *reviewer mode*, *provenance sidecar* — and the most common misreading is to take one of these in its everyday sense: to treat a *canonical deposit* as merely a file location, say, rather than as a status that depends on which role is acting. Definitions are listed alphabetically. Where a term names a function and the cross-language story is non-trivial, a tabset shows how it appears in R, Python, and Stata; where a sibling does not yet implement a term, the gap is stated explicitly.
+This glossary documents `cso-toolkit` as of **v0.10.0** (2026-11-21); version notes mark when a behaviour was added. It defines the load-bearing terms used throughout the handbook. The toolkit's vocabulary is deliberately small, but several of the terms carry precise, contractual meaning — *canonical deposit*, *reviewer mode*, *provenance sidecar* — and the most common misreading is to take one of these in its everyday sense: to treat a *canonical deposit* as merely a file location, say, rather than as a status that depends on which role is acting. Definitions are listed alphabetically. Where a term names a function and the cross-language story is non-trivial, a tabset shows how it appears in R, Python, and Stata; where a sibling does not yet implement a term, the gap is stated explicitly.
 
 For the function-by-function reference, see the function reference appendix; for the on-disk shape of the provenance sidecar, see the provenance sidecar schema appendix; for the full vocabulary of failures, see the error taxonomy appendix.
 
@@ -194,7 +194,7 @@ dw_save, filename("out.dta") path("$teamsWrkData/ed") idvars(REF_AREA INDICATOR 
 
 ## Manifest (`.toolkit_manifest.yml`)
 
-The small YAML file that records which toolkit vintage a consumer repo has vendored; it lives at `00_functions/.toolkit_manifest.yml`. Its fields are `source` (the upstream `owner/repo`), `pulled_version` (the pinned tag — or the literal `inrepo`, which marks a helper this repo maintains itself and so silences sync warnings on it), `pulled_date`, `pulled_by`, `vendored` (the list of copied files), and `local_edits` (vendored files with local divergence, which `cso_toolkit_pull()` skips on update). It is version-controlled alongside the helpers and updated on every re-pull. The vintage-sync helpers read it. See the vendoring model chapter.
+The small YAML file that records which toolkit vintage a consumer repo has vendored; it lives at `00_functions/.toolkit_manifest.yml`. Its fields are `source` (the upstream `owner/repo`), `pulled_version` (the pinned tag — or the literal `inrepo`, which marks a helper this repo maintains itself and so silences sync warnings on it), `pulled_commit` (the commit that tag points to), `pulled_date`, `pulled_by`, `vendored` (the list of copied files), and `local_edits` (vendored files with local divergence, which `cso_toolkit_pull()` skips on update). It is version-controlled alongside the helpers and updated on every re-pull. The vintage-sync helpers read it. See the vendoring model chapter.
 
 ## Master vintage
 
@@ -229,7 +229,7 @@ The `<path>.provenance.json` file the toolkit writes next to every primary outpu
 The role (Database Publisher, DBP) that takes producer-blessed deposits from `013_wrkdata/` and pushes them into downstream infrastructure — Helix, SDMX endpoints, data.unicef.org, and the State of the World's Children tables. It reads canonical, writes only to infrastructure outside the deposit repo, and is gated on the producer's checklist plus the reviewer's compare report.
 
 ::: {.callout-note}
-The publisher role is documented, and `dw_publish()` ships as a deliberate dry-run-only stub: `dry_run = TRUE` validates inputs and assembles a payload (`sha256`, `bytes`, `built_at`, `built_by`, version stamp), while `dry_run = FALSE` raises an envelope-shaped *"Live submission not yet implemented"* error pointing at issue #15. Despite the version number reaching v0.9.1, the live Helix submission branch has not yet landed — it remains gated on the sector leads finalising the submission contract. (Formerly INGESTOR.)
+The publisher role is documented, and `dw_publish()` ships as a deliberate dry-run-only stub: `dry_run = TRUE` validates inputs and assembles a payload (`sha256`, `bytes`, `built_at`, `built_by`, version stamp), while `dry_run = FALSE` raises an envelope-shaped *"Live submission not yet implemented"* error pointing at issue #15. Despite the version number reaching v0.10.0, the live Helix submission branch has not yet landed — it remains gated on the sector leads finalising the submission contract. (Formerly INGESTOR.)
 :::
 
 ## Review gate
@@ -270,7 +270,7 @@ A dated snapshot of a data source or of a piece of code. Two senses recur: the *
 
 ## Vintage sync
 
-The capability family of consumer-side helpers that keep a vendored copy from silently falling behind upstream: `cso_toolkit_check()` reads the local manifest, queries upstream for the latest tag, and warns when the consumer is behind; `cso_toolkit_diff()` shows what changed; `cso_toolkit_pull()` refreshes vendored files to a target tag and updates the manifest. Only producer mode can run the check — reviewer mode's network lockout (`dw_apis_allowed = FALSE`) blocks the upstream lookup, so reviewers always run against whatever vintage the producer pinned. See the vintage sync chapter.
+The capability family of consumer-side helpers that keep a vendored copy from silently falling behind upstream: `cso_toolkit_check()` reads the local manifest, queries upstream for the latest tag, and warns when the consumer is behind; `cso_toolkit_diff()` compares each vendored file with a release tag; `cso_toolkit_pull()` refreshes vendored files to a target tag and updates the manifest; `cso_toolkit_sync()` does the update in one call, after printing the release notes. Only producer mode can run the check — reviewer mode's network lockout (`dw_apis_allowed = FALSE`) blocks the upstream lookup, so reviewers always run against whatever vintage the producer pinned. See the vintage sync chapter.
 
 ## Z: mirror
 

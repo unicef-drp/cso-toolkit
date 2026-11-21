@@ -1,0 +1,23 @@
+# ---------------------------------------------------------------------------
+# .gitattributes -- line endings for the files whose bytes matter
+# ---------------------------------------------------------------------------
+# Template from unicef-drp/cso-toolkit: templates/gitattributes/project.gitattributes
+#
+# A Windows clone with core.autocrlf=true (the Git for Windows default)
+# checks text files out with CRLF. For most files that is harmless; for
+# these it is not, so they stay LF on every platform:
+#   - the pre-push hook: sh on macOS and Linux cannot run a script whose
+#     lines end in \r;
+#   - the vendored cso-toolkit helpers: their bytes must stay those of the
+#     release named in 00_functions/.toolkit_manifest.yml;
+#   - provenance sidecars: they are read and compared as committed;
+#   - tracked outputs (output/): dw_save() hashes them into their
+#     sidecars, so a CRLF checkout would no longer match (#178). They
+#     are kept exactly as committed (-text: no line-ending conversion).
+# ---------------------------------------------------------------------------
+
+.githooks/**        text eol=lf
+*.sh                text eol=lf
+00_functions/**     text eol=lf
+*.provenance.json   text eol=lf
+output/**           -text

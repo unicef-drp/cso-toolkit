@@ -2,13 +2,23 @@
 % Please edit documentation in R/cso_toolkit_sync.R
 \name{cso_toolkit_check}
 \alias{cso_toolkit_check}
-\title{Check if a newer cso-toolkit version is available upstream}
+\title{Check whether the vendored toolkit is behind a target or upstream}
 \usage{
-cso_toolkit_check(quiet = TRUE, verbose = NULL, debug = NULL)
+cso_toolkit_check(
+  quiet = TRUE,
+  target_version = NULL,
+  verbose = NULL,
+  debug = NULL
+)
 }
 \arguments{
-\item{quiet}{Logical. If `TRUE` (default), suppress all `message()`
-output and just return the result list invisibly.}
+\item{quiet}{Logical. If `TRUE` (default), print no messages and return
+the result invisibly. Being behind a target version still raises a
+warning, so a required re-vendor is never silent.}
+
+\item{target_version}{Character or `NULL`. Tag the vendored copy must be
+at or above (e.g. `"v0.9.1"`). Overrides the manifest's
+`target_version:` key. `NULL` (default) uses the manifest key, if any.}
 
 \item{verbose}{Logical or `NULL`. Show high-level progress and result
 messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
@@ -20,36 +30,64 @@ set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].}
 }
 \value{
 Invisibly, a named list with `source`, `pinned_version`,
-  `upstream_version`, `updates_available`, `updated_files`, or `NULL`.
+  `upstream_version` (`NA` when not polled), `updates_available`
+  (`NA` when not polled), `target_version`, `target_source`
+  (`"argument"`, `"manifest"` or `NA`), `behind_target` (`NA` when there
+  is no target), and `updated_files`; or `NULL` (see above).
 }
 \description{
-Quiet by default: returns a list describing the state and prints nothing.
-Pass `quiet = FALSE` to log the result.
+Compares the version recorded in the consumer's
+`.toolkit_manifest.yml` (`pulled_version`) with two references:
 }
 \details{
-Returns `NULL` (invisibly) when any of the following apply:
-\itemize{
-  \item Manifest is missing.
-  \item Upstream repo does not exist (e.g., the toolkit has not been
-        created yet).
-  \item Network is unavailable.
-  \item We're in reviewer mode (the mode contract forbids API calls).
+\describe{
+  \item{A target version}{The `target_version` argument, or else the
+    manifest's optional `target_version:` key: the version a project
+    has decided it must run on. The comparison is offline, so it runs in
+    **both** producer and reviewer mode. When the vendored copy is
+    behind the target, the check is loud: it raises a warning (error
+    envelope) carrying the exact `cso_toolkit_pull(target_version = ...)`
+    command and, with `quiet = FALSE`, prints a boxed alert. Reviewer
+    mode only warns: it never polls GitHub or changes any file.}
+  \item{The latest upstream tag}{Producer mode only (the mode contract
+    forbids API calls in reviewer mode). The lookup tries the gh CLI,
+    the GitHub API, then `git ls-remote --tags` over HTTPS (for networks
+    that block api.github.com). A newer tag is informational: with
+    `quiet = FALSE` it prints a boxed notice with the same commands, but
+    it does not warn.}
 }
+
+Versions are compared numerically (`0.10.0` is newer than `0.9.1`); a
+`pulled_version` of `"inrepo"` is never reported as behind.
+
+Returns `NULL` (invisibly) when the manifest is missing, and in reviewer
+mode when no target version is set (nothing can be checked offline).
 }
+\section{Warnings}{
+
+`[cso_toolkit.cso_toolkit_check]` when the vendored copy is behind the
+target version, with the `cso_toolkit_pull()` command in its `Fix:`.
+}
+
 \examples{
 \dontrun{
+# in a profile: fail loudly (warning) if this repo runs below its target
+cso_toolkit_check(quiet = FALSE)                      # manifest target_version
+cso_toolkit_check(quiet = FALSE, target_version = "v0.9.1")
+
 res <- cso_toolkit_check(quiet = FALSE)
 if (!is.null(res) && isTRUE(res$updates_available)) {
-  cso_toolkit_diff()
+  cso_toolkit_sync()
 }
 }
 }
 \seealso{
-[cso_toolkit_diff()] for per-file diffs;
-  [cso_toolkit_pull()] for the refresh workflow.
+[cso_toolkit_sync()] to update (release notes, diff, pull);
+  [cso_toolkit_diff()] for per-file differences.
 
 Other sync: 
 \code{\link{cso_toolkit_diff}()},
-\code{\link{cso_toolkit_pull}()}
+\code{\link{cso_toolkit_pull}()},
+\code{\link{cso_toolkit_sync}()}
 }
 \concept{sync}

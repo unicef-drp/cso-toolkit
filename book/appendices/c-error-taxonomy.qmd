@@ -24,7 +24,7 @@ Most toolkit errors are *deliberate stops that protect reproducibility*, not bug
 
 | Category | Typical prefix | Root cause | Where it is raised |
 |---|---|---|---|
-| Mode-contract violation | `[cso_toolkit.dw_save]`, `[cso_toolkit.dw_use:remote]`, `[cso_toolkit.dw_api]` | A session in the wrong role tried a forbidden action (reviewer writing canonical, reviewer reaching the network). | IO contract, external-API contract |
+| Mode-contract violation | `[cso_toolkit.dw_save]`, `[cso_toolkit.dw_use:remote]`, `[cso_toolkit.dw_api]`, `[cso_toolkit.dw_set_collaboration]`, `[cso_toolkit.dw_collaboration]` | A session in the wrong role tried a forbidden action (reviewer writing canonical, reviewer reaching the network, reviewer changing the collaboration model), or, in a multi-producer project, a write would replace an output changed outside `dw_save()` or written by another user during the session (fix: reconcile, or `takeover = TRUE`). | IO contract, external-API contract, roles and modes (collaboration model) |
 | Unsupported / mismatched format | `[cso_toolkit.dw_save]`, `[cso_toolkit.dw_use]` | A file extension the toolkit does not dispatch, or a format unavailable in the language sibling you are using. | IO contract |
 | API failure / blocked | `[cso_toolkit.dw_api]` | Reviewer-mode lockout with no cache, or a live HTTP failure (timeout, connection, non-2xx status). | External-API contract |
 | Integrity / `isid` failure | `[cso_toolkit.dw_isid]`, `[cso_toolkit.dw_save]`, `[cso_toolkit.dw_stage]`, `[cso_toolkit.dw_verify_z]`, `[cso_toolkit.dw_fetch_inputs]`, `[cso_toolkit.dw_check_deposit]`, `[cso_toolkit.dw_read_provenance]`, `[cso_toolkit.dw_provenance_diff]` | Declared keys are not unique, two copies of a "frozen" artefact disagree by hash, a local input is missing from or differs from the deposit, or a provenance sidecar is missing or unreadable. | IO contract, staging, input deposit, run comparison |
@@ -292,35 +292,42 @@ Run comparison is informational: a difference between two runs is a **status**, 
 
 The toolkit is **vendored**, not installed over the network: consumers copy the helpers into their own `00_functions/` and pin a version in `.toolkit_manifest.yml` (see the vendoring-model chapter). Drift is the gap between that pinned version and the upstream latest tag.
 
-`cso_toolkit_check()` reads the local manifest, asks the GitHub API for the latest tag, and surfaces a log line when the consumer is behind. The message is a `message()` (a yellow console log), not a hard stop:
+`cso_toolkit_check()` reads the local manifest and compares the pinned version with two references (v0.10.0):
+
+- **The latest upstream tag** (producer mode only; it calls the GitHub API). A newer tag is informational: with `quiet = FALSE` a boxed notice names the versions and the exact `cso_toolkit_diff()` / `cso_toolkit_pull()` commands, but nothing is raised.
+- **A target version** (the `target_version` argument, or the manifest's `target_version:` key). The comparison is offline and runs in both modes. Being behind the target raises a **warning** in envelope shape, even with `quiet` on:
 
 ```text
-[cso-toolkit] unicef-drp/cso-toolkit: pinned v0.4.0 -> upstream 0.5.0 (newer tag available)
+[cso_toolkit.cso_toolkit_check] The vendored cso-toolkit (v0.9.0) is behind its target version v0.9.1 (from the manifest's target_version key).
+ Reviewer mode: no network call was made and nothing was changed; ask the producer to re-vendor.
+ Fix: in producer mode, run cso_toolkit_pull(target_version = "v0.9.1") (or re-vendor v0.9.1 by hand) and update pulled_version in .toolkit_manifest.yml.
 ```
 
-When the pin matches the upstream tag, the log reads `(up to date)` instead.
+In producer mode the second line reads `Pipelines run on the older helpers until the re-vendor.` instead. When the pin is at or above both references, the log reads `(up to date)`.
 
 ::: {.panel-tabset}
 #### R {.unnumbered .unlisted}
 
 ```r
-cso_toolkit_check()       # logs if the pinned version trails the upstream tag
-cso_toolkit_diff()        # what changed between pinned and latest
-cso_toolkit_pull()        # refresh the vendored copy (producer / online only)
+cso_toolkit_check()       # warns if behind the target; logs if behind upstream
+cso_toolkit_sync()        # release notes, per-file diff, then pull (producer only)
+cso_toolkit_diff()        # or step by step: what changed between pinned and latest
+cso_toolkit_pull("v0.10.0") # refresh the vendored copy to a tag
 ```
 
 #### Python {.unnumbered .unlisted}
 
 ```python
 cso_toolkit_check()
+cso_toolkit_sync()
 cso_toolkit_diff()
-cso_toolkit_pull()
+cso_toolkit_pull("v0.10.0")
 ```
 
 #### Stata {.unnumbered .unlisted}
 
 ```stata
-* The vintage-sync family (cso_toolkit_check / _diff / _pull) is R + Python
+* The vintage-sync family (cso_toolkit_check / _diff / _pull / _sync) is R + Python
 * only; the Stata sibling has no manifest-sync helper (coverage matrix appendix).
 ```
 :::
@@ -328,23 +335,27 @@ cso_toolkit_pull()
 Two limits to note:
 
 - **Drift detection is tag-level, not file-level.** `cso_toolkit_check()` compares the pinned manifest version against the upstream latest tag; per-file hash drift (catching a hand-edited vendored copy that *claims* a clean version) is planned, not shipped. A consumer that locally edited `dw_io.R` but kept the manifest pin is **not** flagged.
-- **The check itself needs the network.** `cso_toolkit_check()` calls the GitHub API, so it is unavailable in reviewer mode (it skips with a notice). Run the drift check as a producer, or in CI, not from a locked reviewer session. `cso_toolkit_pull()` goes further and *stops* in reviewer mode:
+- **The upstream poll needs the network.** `cso_toolkit_check()` calls the GitHub API only in producer mode; in reviewer mode it skips the poll with a notice. The target-version comparison needs no network, so set `target_version:` in the manifest to have reviewer sessions warn when they run below it. `cso_toolkit_pull()` and `cso_toolkit_sync()` go further and *stop* in reviewer mode (a diff against a local clone, `cso_toolkit_diff(toolkit_source = ...)`, still works offline):
 
 ```text
 [cso_toolkit.cso_toolkit_pull] Forbidden in reviewer mode.
-  Reason: pulling a new toolkit version requires hitting GitHub, which the
-  reviewer-mode contract forbids.
-  Fix: switch the profile to producer mode (set dw_mode: producer in
-  user_config.yml) before re-running.
+ Why: an update changes the vendored helpers and re-pins the manifest, a
+ producer's decision (and reading a release from GitHub is a network call,
+ which reviewer mode forbids).
+ Fix: switch the profile to producer mode (set dw_mode: producer in
+ user_config.yml) before re-running; to inspect only, use
+ cso_toolkit_diff(toolkit_source = "<a local clone>").
 ```
 
-When behind, run `cso_toolkit_diff()` to read the changes, then `cso_toolkit_pull()` to refresh the vendored copy and re-pin the manifest. Because vendoring exists precisely to guarantee vintage permanence, treat a pull as a deliberate version bump in the consumer repo — review the diff, do not auto-pull on every session.
+The pull also stops, with the same envelope, when the vendored folder has uncommitted changes (commit or stash first), for a downgrade without `allow_downgrade = TRUE`, for a tag that does not exist (for a local clone the fix is `git -C <clone> fetch --tags`), and with `confirm = TRUE` in a non-interactive session (the fix is `confirm = FALSE`).
+
+When behind, run `cso_toolkit_sync()`: it prints the release notes since the pin, the per-file diff, and then refreshes the vendored copy and re-pins the manifest (or run `cso_toolkit_diff()` and `cso_toolkit_pull()` yourself). Because vendoring exists precisely to guarantee vintage permanence, treat a pull as a deliberate version bump in the consumer repo — review the diff, do not auto-pull on every session.
 
 ## Reading any envelope: a debugging recipe
 
 When you hit a `[cso_toolkit.*]` stop and are not sure which category it is:
 
-1. **Read the `<func>` token** — it tells you the contract layer: `dw_save` / `dw_use` (IO), `dw_api` / `dw_require_no_api` (external API), `dw_isid` / `dw_stage` / `dw_verify_z` (integrity), `cso_toolkit_pull` (drift).
+1. **Read the `<func>` token** — it tells you the contract layer: `dw_save` / `dw_use` (IO), `dw_api` / `dw_require_no_api` (external API), `dw_isid` / `dw_stage` / `dw_verify_z` (integrity), `cso_toolkit_pull` / `cso_toolkit_sync` (drift).
 2. **Read the second word of the `WHAT` line.** `Reviewer mode forbids` → category 1. `COPY INTEGRITY` / `SANDBOX DRIFT` / `CANONICAL INTEGRITY` → category 4. `duplicate row(s)` → category 4 (`isid`). `HTTP ... returned status` → category 3. `newer tag available` → category 5.
 3. **Check your `dw_mode` first.** A large share of these stops dissolve once you confirm whether the session is a producer or a reviewer and whether that role is *correct* for the step you are running.
 4. **Grep the consumer project for the prefix** (for example `[cso_toolkit.dw_save]`) to find every other site that can hit the same class — useful when one fix should be applied repo-wide. Remember the R transport errors (category 3) and the Stata `isid` message are the two cases that do *not* carry the prefix.

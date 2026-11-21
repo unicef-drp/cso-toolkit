@@ -19,6 +19,7 @@ dw_save(
   provenance = TRUE,
   vintage = NULL,
   allow_canonical_write = FALSE,
+  takeover = FALSE,
   verbose = NULL,
   debug = NULL,
   ...
@@ -87,6 +88,13 @@ recorded in the sidecar and used by [dw_resolve_path()].}
 
 \item{allow_canonical_write}{Logical. Bypass the reviewer-mode guard
 that forbids writes to canonical / Z: roots. Default `FALSE`.}
+
+\item{takeover}{Logical. Multi-producer projects only (see
+[dw_collaboration()]). Replace an existing output although it was
+changed outside `dw_save()` (its SHA-256 no longer matches its sidecar)
+or written by another user after this session started. The takeover is
+recorded in the new sidecar (`takeover`: user, time, guards overridden).
+Default `FALSE`. Ignored in single-producer projects.}
 
 \item{verbose}{Logical or `NULL`. Show high-level progress and result
 messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
@@ -171,6 +179,17 @@ before writing.
 `<path>.provenance.json` with timestamp, user, dw_mode, sha256, schema,
 and the user-supplied `metadata = list(...)` (title, abstract, producer,
 sources, contact, vintage, ...).
+
+**Collaboration model** -- in a project whose `cso_project.yml` sets
+`collaboration: multi-producer` (see [dw_collaboration()]), a
+non-reviewer write over an existing output that has a sidecar stops when
+the file was changed outside `dw_save()` (out-of-band change) or was
+written by another user after this session started (concurrent write),
+unless `takeover = TRUE`. A write that simply follows another
+producer's only prints a note. The sidecar gains the lineage fields
+`collaboration`, `previous_sha256`, `previous_user`,
+`previous_written_at`, `git_branch`, `git_commit` (and `takeover` when
+used). Single-producer projects are unaffected.
 }
 \examples{
 \dontrun{
