@@ -124,6 +124,34 @@ cases <- list(
 		})), id)
 	},
 
+	config_user_block = function(id) {
+		case <- jsonlite::fromJSON(file.path(repo, "conformance", "cases", paste0(id, ".json")),
+		                           simplifyVector = FALSE)
+		d <- file.path(work, id)
+		dir.create(d, showWarnings = FALSE, recursive = TRUE)
+		p <- create_profile(case$project, output_path = d, verbose = FALSE)
+		src <- readLines(p, warn = FALSE)
+		src <- sub('^required_pkgs <- c\\(.*\\)$', 'required_pkgs <- c("yaml")', src)
+		writeLines(src, p)
+		p <- normalizePath(p, winslash = "/")
+		rscript <- file.path(R.home("bin"), if (.Platform$OS.type == "windows") "Rscript.exe" else "Rscript")
+		modes <- lapply(seq_along(case$fixtures), function(i) {
+			home <- file.path(d, paste0("home", i))
+			dir.create(file.path(home, ".config"), recursive = TRUE, showWarnings = FALSE)
+			file.copy(fx(case$fixtures[[i]]), file.path(home, ".config", "user_config.yml"), overwrite = TRUE)
+			code <- sprintf("source('%s'); cat('MODE=', dw_mode, '\\n', sep = '')", p)
+			old <- Sys.getenv(c("USERNAME", "USER", "USERPROFILE"), unset = NA)
+			Sys.setenv(USERNAME = case$user, USER = case$user,
+			           USERPROFILE = normalizePath(home, winslash = "/"))
+			out <- suppressWarnings(system2(rscript, c("--no-init-file", "-e", shQuote(code)),
+			                                stdout = TRUE, stderr = TRUE))
+			for (k in names(old)) if (is.na(old[[k]])) Sys.unsetenv(k) else do.call(Sys.setenv, as.list(old[k]))
+			hit <- grep("^MODE=", out, value = TRUE)
+			if ((attr(out, "status") %||% 0L) != 0L || !length(hit)) NULL else sub("^MODE=", "", hit[[1]])
+		})
+		out_json(list(modes = modes), id)
+	},
+
 	collab_out_of_band = function(id) {
 		set_state(dw_mode = NULL, dw_apis_allowed = NULL,
 		          dw_collaboration_model = "multi-producer",

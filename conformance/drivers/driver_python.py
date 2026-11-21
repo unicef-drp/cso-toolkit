@@ -28,14 +28,15 @@ from pathlib import Path
 REPO = Path(os.environ.get("CERT_REPO", ".")).resolve()
 
 
-def _bootstrap() -> None:
+def _bootstrap() -> Path:
     """Import python/src of this tree as cso_toolkit, ahead of any install."""
     tmp = Path(tempfile.mkdtemp(prefix="cso_cert_pypkg_"))
     shutil.copytree(REPO / "python" / "src", tmp / "cso_toolkit")
     sys.path.insert(0, str(tmp))
+    return tmp
 
 
-_bootstrap()
+PKG_ROOT = _bootstrap()
 import pandas as pd  # noqa: E402
 
 import cso_toolkit as m  # noqa: E402
@@ -152,6 +153,28 @@ def version_compare(cid: str) -> None:
     out_json({"behind": [sync._cso_version_behind(a, b) for a, b in case["pairs"]]}, cid)
 
 
+def config_user_block(cid: str) -> None:
+    import subprocess
+    case = json.loads((REPO / "conformance" / "cases" / f"{cid}.json").read_text(encoding="utf-8"))
+    d = work / cid
+    (d / "repo" / ".git").mkdir(parents=True, exist_ok=True)
+    profile = Path(m.create_profile(case["project"], output_path=d / "repo"))
+    modes = []
+    for i, f in enumerate(case["fixtures"], start=1):
+        home = d / f"home{i}"
+        (home / ".config").mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(fx(f), home / ".config" / "user_config.yml")
+        env = dict(os.environ, USERNAME=case["user"], USER=case["user"], USERPROFILE=str(home),
+                   PYTHONPATH=str(PKG_ROOT) + os.pathsep + os.environ.get("PYTHONPATH", ""))
+        code = (f"exec(compile(open({str(profile)!r}, encoding='utf-8').read(), 'profile', 'exec'));"
+                "print(f'MODE={dw_mode}')")
+        res = subprocess.run([sys.executable, "-c", code], cwd=d / "repo", env=env,
+                             capture_output=True, text=True)
+        hit = [ln for ln in res.stdout.splitlines() if ln.startswith("MODE=")]
+        modes.append(hit[0][len("MODE="):] if res.returncode == 0 and hit else None)
+    out_json({"modes": modes}, cid)
+
+
 def collab_out_of_band(cid: str) -> None:
     plain()
     state.configure(dw_collaboration_model="multi-producer",
@@ -192,6 +215,7 @@ CASES = {
     "compare_counts": compare_counts,
     "aggregate_weighted_mean": aggregate_weighted_mean,
     "version_compare": version_compare,
+    "config_user_block": config_user_block,
     "collab_out_of_band": collab_out_of_band,
 }
 

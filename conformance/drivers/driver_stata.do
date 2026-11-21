@@ -187,6 +187,23 @@ program define case_compare_counts
     _cert_json, id(`id') body(`"{"added": `=r(n_added)', "removed": `=r(n_removed)', "changed": `=r(n_changed)'}"')
 end
 
+program define case_config_user_block
+    * The fixtures, user and project of cases/config_user_block.json, in
+    * its order (Stata reads no JSON; a reordered case fails visibly).
+    local id config_user_block
+    local body ""
+    foreach f in user_block project_override other_project flat top_level_map missing {
+        macro drop dw_mode
+        capture dw_load_config, filepath("$CERT_FIX/config/`f'.yml") user(tester) project(proj-x)
+        local rc = _rc
+        if `"`body'"' != "" local body `"`body', "'
+        if `rc' local body `"`body'null"'
+        else local body `"`body'"$dw_mode""'
+    }
+    global dw_mode ""
+    _cert_json, id(`id') body(`"{"modes": [`body']}"')
+end
+
 * ---- run -----------------------------------------------------------
 
 foreach id of global CERT_CASES {
