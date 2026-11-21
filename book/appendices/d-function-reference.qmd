@@ -53,8 +53,8 @@ Uniform read / write / compare / merge helpers with mode-aware path routing (pat
 | `dw_check_deposit` | ✅ | — | — | R export (Unreleased): every local input has an identical SHA-256 copy on Teams or Z: |
 | `dw_read_provenance` | ✅ | — | — | R export (Unreleased): read the `.provenance.json` sidecar of an output |
 | `dw_provenance_diff` | ✅ | — | — | R export (Unreleased): compare two runs from their sidecars (reproduced / output changed / inputs changed) |
-| `dw_collaboration` | ✅ | ✅ | — | Unreleased: the project's collaboration model (`single-producer` / `multi-producer`) from `cso_project.yml`, resolved once per session; Stata planned (#168) |
-| `dw_set_collaboration` | ✅ | ✅ | — | Unreleased: write `cso_project.yml` and baseline the existing sidecars (one reviewed PR); refused in reviewer mode; Stata planned (#168) |
+| `dw_collaboration` | ✅ | ✅ | ✅ | Unreleased: the project's collaboration model (`single-producer` / `multi-producer`) from `cso_project.yml`, resolved once per session; Stata `dw_collaboration.ado` (#168) |
+| `dw_set_collaboration` | ✅ | ✅ | — | Unreleased: write `cso_project.yml` and baseline the existing sidecars (one reviewed PR); refused in reviewer mode; not in Stata (switch from R or Python) |
 | `dw_publish` | ✅ (stub) | — | — | STUB / dry-run only — see callout below |
 | `dw_toolkit_version` | ✅ | ✅ | — | Reports the installed toolkit version |
 | `dw_verbosity` | ✅ | — | — | Sets session verbosity / debug options (v0.4.10) |

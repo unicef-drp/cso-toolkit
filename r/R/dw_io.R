@@ -2703,7 +2703,7 @@ dw_merge <- function(x, using, by, how = c("m:1", "1:1", "1:m", "m:m"), verbose 
 # a global named `dw_collaboration` would overwrite the getter function.
 #
 # The setter, dw_set_collaboration(), lives in dw_project.R. Python sibling:
-# python/src/dw_project.py. Stata: not yet (issue #168).
+# python/src/dw_project.py. Stata: dw_collaboration.ado, dw_save.ado (#168).
 
 .DW_COLLAB_MODELS <- c("single-producer", "multi-producer")
 .DW_PROJECT_FILE <- "cso_project.yml"

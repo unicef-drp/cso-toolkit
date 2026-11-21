@@ -23,7 +23,7 @@ The first ten cases cover:
 
 Not every language implements every function, and some known differences take time to fix. The register in each case says so explicitly:
 
-- `gaps`: languages that do not implement the case yet, with the issue or the reason. For example, Stata has no `aggregate_data_v2`, and Stata's `dw_save` ignores `cso_project.yml` (#168).
+- `gaps`: languages that do not implement the case yet, with the issue or the reason. For example, Stata has no `aggregate_data_v2`.
 - `divergences`: languages that implement it but are known to disagree, with the issue. For example, Stata's sidecar has no `sha256` (#191).
 
 A gap or divergence that disappears also needs attention. If a gapped language starts writing output, or a divergent one starts agreeing, the run reports **UPDATE-REGISTER**, which fails until the entry is removed. A closed gap or a resolved divergence is therefore visible in the next certificate.
