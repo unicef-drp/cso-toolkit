@@ -185,4 +185,4 @@ Required status checks are therefore not the default: with the default triggers 
 
 ---
 
-The contract auditor made one rule enforceable; this chapter makes the rest of the repository's floor enforceable in the same way. The `.gitignore` keeps data out, the committed sidecars keep their provenance in, and a handful of fast checks — none of which needs data, credentials or network, and all of which run on the author's own machine — turn both, and the contract, into gates a pull request has to pass.
+The contract auditor made one rule enforceable; this chapter makes the rest of the repository's floor enforceable in the same way. The `.gitignore` keeps data out, the committed sidecars keep their provenance in, and a handful of fast checks — none of which needs data, credentials or network, and all of which run on the author's own machine — turn both, and the contract, into gates a pull request has to pass. A repository worked on with AI coding agents adds one more file, `AGENTS.md`, which tells every agent to run these checks before it pushes; [the next chapter](46-ai-agents.qmd) sets out that file and the rest of working with agents.
