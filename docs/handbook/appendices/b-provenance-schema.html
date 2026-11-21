@@ -699,8 +699,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td><code>inputs</code></td>
-<td>array&lt;object&gt; (R)</td>
-<td>The exact input files the output was built from, one record per input: <code>file</code> (path relative to the inputs folder), <code>sha256</code>, and optionally <code>origin</code>. Pass the manifest returned by <code>dw_fetch_inputs()</code> (<code>manifest[, c("file", "sha256", "origin")]</code>). <code>dw_provenance_diff()</code> reads this record to tell whether two runs used the same inputs. R only for now (#152).</td>
+<td>array&lt;object&gt; (R, Python)</td>
+<td>The exact input files the output was built from, one record per input: <code>file</code> (path relative to the inputs folder), <code>sha256</code>, and optionally <code>origin</code>. Pass the manifest returned by <code>dw_fetch_inputs()</code> (<code>manifest[, c("file", "sha256", "origin")]</code>). In Python pass <code>manifest[["file", "sha256", "origin"]]</code>; <code>dw_save</code> writes a DataFrame in <code>metadata</code> as an array of records, as R does. <code>dw_provenance_diff()</code> reads this record to tell whether two runs used the same inputs.</td>
 </tr>
 </tbody>
 </table>
@@ -937,7 +937,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>A <code>FALSE</code> / <code>False</code> result here means the file changed since it was written — the lineage record no longer describes the bytes on disk, so the sidecar can no longer vouch for the artifact. R and Python can run this byte-integrity check directly because they recorded a byte hash. Stata verification is intra-Stata: re-open the dataset, recompute <code>datasignature</code>, and compare against the value in the sidecar. There is no toolkit-provided JSON reader on the Stata side — a real coverage gap, consistent with Stata’s lack of an API wrapper and parquet support documented in the cross-language coverage matrix appendix.</p>
 <section id="comparing-the-sidecars-of-two-runs" class="level3" data-number="B.7.1">
 <h3 data-number="B.7.1" class="anchored" data-anchor-id="comparing-the-sidecars-of-two-runs"><span class="header-section-number">B.7.1</span> Comparing the sidecars of two runs</h3>
-<p>Two sidecars of the same output answer a fourth question: did the new run reproduce the previous one? In R, <code>dw_provenance_diff(previous, current)</code> compares the <code>metadata.inputs</code> records (inputs) and the <code>sha256</code> fields (outputs) and returns <code>reproduced</code>, <code>inputs_changed</code> (with the input files added, removed, and changed), <code>output_changed</code> (same inputs, different output; warns), <code>first_run</code>, or <code>no_input_record</code>. Read the previous sidecar with <code>dw_read_provenance()</code> before the new run overwrites the output. Python and Stata siblings are planned (#152).</p>
+<p>Two sidecars of the same output answer a fourth question: did the new run reproduce the previous one? In R and Python, <code>dw_provenance_diff(previous, current)</code> compares the <code>metadata.inputs</code> records (inputs) and the <code>sha256</code> fields (outputs) and returns <code>reproduced</code>, <code>inputs_changed</code> (with the input files added, removed, and changed), <code>output_changed</code> (same inputs, different output; warns), <code>first_run</code>, or <code>no_input_record</code>. Read the previous sidecar with <code>dw_read_provenance()</code> before the new run overwrites the output. Stata routes via R or Python (#152).</p>
 </section>
 </section>
 <section id="summary" class="level2" data-number="B.8">
