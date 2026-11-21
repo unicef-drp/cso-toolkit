@@ -83,7 +83,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-7f6c64e0d652c61cb9aac081886fc576.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-554944da459c622dc457c1ed647c448c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -924,18 +924,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>✅</td>
 <td>✅</td>
 <td>—</td>
-<td>Show what changed between vintages</td>
+<td>Compare each vendored file with a release tag (unchanged / changed / local_edit / missing_upstream / missing_local)</td>
 </tr>
 <tr class="odd">
 <td><code>cso_toolkit_pull</code></td>
 <td>✅</td>
 <td>✅</td>
 <td>—</td>
-<td>Refresh the vendored copy</td>
+<td>Refresh the vendored copy to a release tag and re-pin the manifest</td>
+</tr>
+<tr class="even">
+<td><code>cso_toolkit_sync</code></td>
+<td>✅</td>
+<td>✅</td>
+<td>—</td>
+<td>The one call: latest release, its NEWS since the pin, diff, then pull</td>
 </tr>
 </tbody>
 </table>
-<p>These three keep the <code>cso_toolkit_</code> prefix in both R and Python (no <code>dw_</code> alias).</p>
+<p>These four keep the <code>cso_toolkit_</code> prefix in both R and Python (no <code>dw_</code> alias).</p>
 </section>
 <section id="scaffolding-and-the-contract-auditor" class="level2" data-number="D.8">
 <h2 data-number="D.8" class="anchored" data-anchor-id="scaffolding-and-the-contract-auditor"><span class="header-section-number">D.8</span> Scaffolding and the contract auditor</h2>
