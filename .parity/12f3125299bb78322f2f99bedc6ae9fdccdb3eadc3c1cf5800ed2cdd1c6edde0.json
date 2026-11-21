@@ -1,0 +1,352 @@
+{
+  "schema": "cso_toolkit.parity/1",
+  "content_hash": "12f3125299bb78322f2f99bedc6ae9fdccdb3eadc3c1cf5800ed2cdd1c6edde0",
+  "trees": {
+    "r/R": "33a00a7afb5539a60880f6c8a842847df4c1f6b8",
+    "python/src": "009d1b8d56249d108cc8dd6b933179c852d1fc5b",
+    "stata/src": "dd27f1b91a7e41c6c8f67e4a02e44f4b333e641e",
+    "conformance/certify.py": "0551b4aad9dd02f754115f3e431d4497027b99b2",
+    "conformance/cases": "1028f548789bfb3846471ddc1e83d2b3f8e031d0",
+    "conformance/drivers": "dd716ce4da05535d56f038b6f097ae174cd63cce",
+    "conformance/fixtures": "18ede67c81f32e66e06bab94293ba9f8e254e9a4"
+  },
+  "commit": "0b6976679f5fa90901d15d871ab4bb8b64f8a57d",
+  "created_at": "2026-11-21T23:49:54Z",
+  "created_by": "Joao Pedro Azevedo",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "versions": {
+    "r": {
+      "language": "r",
+      "version": "R version 4.6.1 (2026-06-24 ucrt)",
+      "toolkit": "0.10.0"
+    },
+    "python": {
+      "language": "python",
+      "version": "3.14.6",
+      "toolkit": "0.10.0"
+    },
+    "stata": {
+      "language": "stata",
+      "version": "17",
+      "edition": "MP",
+      "toolkit": null
+    }
+  },
+  "result": "pass",
+  "summary": {
+    "gap": 5,
+    "pass": 40
+  },
+  "cases": {
+    "aggregate_weighted_mean": {
+      "title": "aggregate_data_v2 weighted means by region and for the world",
+      "kind": "values",
+      "results": {
+        "r": {
+          "status": "pass",
+          "note": "",
+          "sha256": "6404d787b49b5bbbc9f73ee7ade2c7f519017bae67b28186bcf770f275cd1f1e"
+        },
+        "python": {
+          "status": "pass",
+          "note": "",
+          "sha256": "87db43563505d45173bb56cf66aab85a6bb83662a65ad135e7b547349c022149"
+        },
+        "stata": {
+          "status": "gap",
+          "note": "coverage matrix: Stata has no aggregate_data_v2."
+        }
+      }
+    },
+    "collab_out_of_band": {
+      "title": "Multi-producer: dw_save stops on an out-of-band change; takeover overrides",
+      "kind": "json",
+      "results": {
+        "r": {
+          "status": "pass",
+          "note": "",
+          "sha256": "c2b8f5d61aa40e8562b6c1d388fdfd61622b569558a9210bab315c67777f7869"
+        },
+        "python": {
+          "status": "pass",
+          "note": "",
+          "sha256": "5fac5524f5e3e38a60acfd62271af6f37ff60a5c3ba1c1a35915c04ca5e70237"
+        },
+        "stata": {
+          "status": "pass",
+          "note": "",
+          "sha256": "55fe1575c658280b97d056d294297a353440ec1901171fa2e6ff1d43b03178d3"
+        }
+      }
+    },
+    "compare_counts": {
+      "title": "dw_compare counts added, removed and changed rows the same way (tolerance 1e-6)",
+      "kind": "json",
+      "results": {
+        "r": {
+          "status": "pass",
+          "note": "",
+          "sha256": "fc81d1160239a5d3b2eef5b819d151722831a9b7164506702eea8ddfc5f7f867"
+        },
+        "python": {
+          "status": "pass",
+          "note": "",
+          "sha256": "53d5e6ed5b2f1a9cc9f25927efbafa99af5940f77ab6c120cf06c482d84c490e"
+        },
+        "stata": {
+          "status": "pass",
+          "note": "",
+          "sha256": "df10581cd73c3cd4bd67b8952561bac5997e1b11d11a22be5265ad37fb55b10d"
+        }
+      }
+    },
+    "compare_diagnose": {
+      "title": "dw_compare(diagnose = TRUE) profiles the mismatch the same way",
+      "kind": "json",
+      "results": {
+        "r": {
+          "status": "pass",
+          "note": "",
+          "sha256": "32aeaa3264c03c4a6179fa511543eae859fba4ba69646d00ae3cb0337b1985c8"
+        },
+        "python": {
+          "status": "pass",
+          "note": "",
+          "sha256": "47a66f02d5588a0e7835bf97674c10e7a5a719863f9109e0b390bef711722c3c"
+        },
+        "stata": {
+          "status": "gap",
+          "note": "#111: Stata's dw_compare reports per-column counts (r(col_changed)), not the profile."
+        }
+      }
+    },
+    "compare_same_file": {
+      "title": "dw_compare refuses to compare a file with itself",
+      "kind": "json",
+      "results": {
+        "r": {
+          "status": "pass",
+          "note": "",
+          "sha256": "94e1f0eb5c049216c85732372a18e7e2590c34044c4d4ebc02fbd2f2f53d3fe4"
+        },
+        "python": {
+          "status": "pass",
+          "note": "",
+          "sha256": "ab45de5281bfac2546040aca6353a6ca64114424c74b213dc2852d0ce1c242f6"
+        },
+        "stata": {
+          "status": "pass",
+          "note": "",
+          "sha256": "52ce8e27b94bd7cae4b8cfc0d21108db63c1760e7b2519cac88ac78bc6588355"
+        }
+      }
+    },
+    "config_user_block": {
+      "title": "dw_mode from user_config.yml: the user's block, dw_mode_by_project, the top-level fallback, no default",
+      "kind": "json",
+      "results": {
+        "r": {
+          "status": "pass",
+          "note": "",
+          "sha256": "17c80b990de8ee737059d764e7e113aa6bc14d0c2004d1aac93ca4fe68320cdc"
+        },
+        "python": {
+          "status": "pass",
+          "note": "",
+          "sha256": "eee535e5a03917d7a308899670012327fc9db9d0b8a04d3212189bf822dde4e9"
+        },
+        "stata": {
+          "status": "pass",
+          "note": "",
+          "sha256": "520f577c4abac804e4e6ab2a26c2dbd06ff6bca1e683fb30abf2386e962d9911"
+        }
+      }
+    },
+    "deposit_fetch_inputs": {
+      "title": "dw_fetch_inputs fills an empty local folder from the deposit: the same manifest",
+      "kind": "values",
+      "results": {
+        "r": {
+          "status": "pass",
+          "note": "",
+          "sha256": "75df2c7aaea4e0eaab9b1f78b68e285c3bc8178446de12dc3569cf42bf270c5a"
+        },
+        "python": {
+          "status": "pass",
+          "note": "",
+          "sha256": "c373fd01032a9d28c891b7aaea4474ba6ffb839fe41267defd449ff9646f8777"
+        },
+        "stata": {
+          "status": "gap",
+          "note": "#152: Route via R or Python: Stata reads the fetched inputs with dw_use."
+        }
+      }
+    },
+    "io_edge_values": {
+      "title": "Edge values survive a round trip: commas, quotes, accents, empty, tiny, large and negative numbers",
+      "kind": "values",
+      "results": {
+        "r": {
+          "status": "pass",
+          "note": "",
+          "sha256": "6a811f3e7a7dacd4408015029dd07ed1a7915e8102d0eaea4ddd2a196580ecb4"
+        },
+        "python": {
+          "status": "pass",
+          "note": "",
+          "sha256": "3df3c2465132160bc427fd51a21889b0abd24e3ff9215643c785b3e8275f7e18"
+        },
+        "stata": {
+          "status": "pass",
+          "note": "",
+          "sha256": "6f42ea6dcd6b33782ed51603b2366b263f1122a61b810c557ac9782f4a1f6b4b"
+        }
+      }
+    },
+    "io_roundtrip_csv": {
+      "title": "Read a CSV, save it with dw_save, read it back: the values survive",
+      "kind": "values",
+      "results": {
+        "r": {
+          "status": "pass",
+          "note": "",
+          "sha256": "1afba036dab229f9e1d9d2350bf061f5b8401e18852c4e3ae7796caf921c942d"
+        },
+        "python": {
+          "status": "pass",
+          "note": "",
+          "sha256": "2338cbf6b614e718a4fbfe288d5a90d7965bd4e86baf3ff86a171c5a4636c59e"
+        },
+        "stata": {
+          "status": "pass",
+          "note": "",
+          "sha256": "726429db2797495c4374675d061e386a6b0b336d07989f3f953dbf0458212af2"
+        }
+      }
+    },
+    "io_roundtrip_dta": {
+      "title": "Read a CSV, save it as .dta, read the .dta back: the values survive",
+      "kind": "values",
+      "results": {
+        "r": {
+          "status": "pass",
+          "note": "",
+          "sha256": "1afba036dab229f9e1d9d2350bf061f5b8401e18852c4e3ae7796caf921c942d"
+        },
+        "python": {
+          "status": "pass",
+          "note": "",
+          "sha256": "2338cbf6b614e718a4fbfe288d5a90d7965bd4e86baf3ff86a171c5a4636c59e"
+        },
+        "stata": {
+          "status": "pass",
+          "note": "",
+          "sha256": "726429db2797495c4374675d061e386a6b0b336d07989f3f953dbf0458212af2"
+        }
+      }
+    },
+    "provenance_diff_status": {
+      "title": "dw_provenance_diff tells first run, reproduced, output changed, inputs changed and no input record apart",
+      "kind": "json",
+      "results": {
+        "r": {
+          "status": "pass",
+          "note": "",
+          "sha256": "6d13a3aea17497198913728070d284e59abf7c7d01091f6c0ac6651c87cbba0e"
+        },
+        "python": {
+          "status": "pass",
+          "note": "",
+          "sha256": "324a56f2817d68588c6176307f7c00e72b65935a170debc7e1381e1ca774ab24"
+        },
+        "stata": {
+          "status": "gap",
+          "note": "#152: Route via R or Python: run-level comparison of sidecars."
+        }
+      }
+    },
+    "provenance_sidecar": {
+      "title": "dw_save writes a sidecar with the shared keys, and its sha256 is the file's",
+      "kind": "json",
+      "results": {
+        "r": {
+          "status": "pass",
+          "note": "",
+          "sha256": "3d5b91a7ba1af5a6a25ae066ef0039ae57a630d73a1588d4ec2c9791848a7eba"
+        },
+        "python": {
+          "status": "pass",
+          "note": "",
+          "sha256": "e194dcd7c84525c26acb8cfec3bb096c6c71ca8295af847365ef70fe1f4f3ec4"
+        },
+        "stata": {
+          "status": "pass",
+          "note": "",
+          "sha256": "1dc4e2617486a90f70c3b6899fcd4ed972bde8322a010254fca48af0b76790a6"
+        }
+      }
+    },
+    "reviewer_refuses_api": {
+      "title": "Reviewer mode refuses a live API call with the envelope",
+      "kind": "json",
+      "results": {
+        "r": {
+          "status": "pass",
+          "note": "",
+          "sha256": "94e1f0eb5c049216c85732372a18e7e2590c34044c4d4ebc02fbd2f2f53d3fe4"
+        },
+        "python": {
+          "status": "pass",
+          "note": "",
+          "sha256": "ab45de5281bfac2546040aca6353a6ca64114424c74b213dc2852d0ce1c242f6"
+        },
+        "stata": {
+          "status": "pass",
+          "note": "",
+          "sha256": "52ce8e27b94bd7cae4b8cfc0d21108db63c1760e7b2519cac88ac78bc6588355"
+        }
+      }
+    },
+    "save_isid_duplicate": {
+      "title": "dw_save refuses data whose isid keys are not unique, writes nothing, and says so in the envelope",
+      "kind": "json",
+      "results": {
+        "r": {
+          "status": "pass",
+          "note": "",
+          "sha256": "5786310cff359bf5289010522be7a69a81c80ff8c8fe6299c94be3d1076f04d5"
+        },
+        "python": {
+          "status": "pass",
+          "note": "",
+          "sha256": "cc9b138445d4358690cb93f4c04de20a7a3043892d34aee18138128246155213"
+        },
+        "stata": {
+          "status": "pass",
+          "note": "",
+          "sha256": "395189edf77c0c1a861423777eecdb06eb4424cd6358316ca12d41a22f95f1a4"
+        }
+      }
+    },
+    "version_compare": {
+      "title": "Toolkit versions compare numerically (0.10.0 is newer than 0.9.1)",
+      "kind": "json",
+      "results": {
+        "r": {
+          "status": "pass",
+          "note": "",
+          "sha256": "bea378558a0eca3a74c01b1933fe87666ab689267fdd91598603d6dc3b34c39a"
+        },
+        "python": {
+          "status": "pass",
+          "note": "",
+          "sha256": "33a478e2677e0fc62d24ccc76bf21d5ee1eecf1e35d6e4af01c1bd254305243a"
+        },
+        "stata": {
+          "status": "gap",
+          "note": "coverage matrix: Stata has no vendoring helpers."
+        }
+      }
+    }
+  }
+}
