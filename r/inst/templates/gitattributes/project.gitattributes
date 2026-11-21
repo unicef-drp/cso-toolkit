@@ -10,10 +10,14 @@
 #     lines end in \r;
 #   - the vendored cso-toolkit helpers: their bytes must stay those of the
 #     release named in 00_functions/.toolkit_manifest.yml;
-#   - provenance sidecars: they are read and compared as committed.
+#   - provenance sidecars: they are read and compared as committed;
+#   - tracked outputs (output/): dw_save() hashes them into their
+#     sidecars, so a CRLF checkout would no longer match (#178). They
+#     are kept exactly as committed (-text: no line-ending conversion).
 # ---------------------------------------------------------------------------
 
 .githooks/**        text eol=lf
 *.sh                text eol=lf
 00_functions/**     text eol=lf
 *.provenance.json   text eol=lf
+output/**           -text

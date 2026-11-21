@@ -94,6 +94,8 @@ test_that(".gitignore, the hook and the test helper are the template bytes", {
 	# The hook and the vendored helpers stay LF in every clone.
 	ga <- readLines(file.path(root, ".gitattributes"))
 	expect_true(all(c(".githooks/**        text eol=lf", "00_functions/**     text eol=lf") %in% ga))
+	# Tracked outputs keep their committed bytes, so they match their sidecars (#178).
+	expect_true("output/**           -text" %in% ga)
 	expect_false(as.raw(13) %in% bytes(file.path(root, ".githooks", "pre-push")))
 	expect_identical(bytes(file.path(root, "tests", "testthat", "helper-project.R")),
 	                 bytes(scaffold_tpl("testthat", "tests", "testthat", "helper-project.R")))
