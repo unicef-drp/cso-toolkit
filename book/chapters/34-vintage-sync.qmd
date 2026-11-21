@@ -188,7 +188,7 @@ If no path yields a tag (no `gh`, no HTTP client, no git, blocked network, or a 
 
 When no tag is given, the latest release is used: the clone's highest `vX.Y.Z` tag, or GitHub's latest release (the `gh` CLI, then the API, then `git ls-remote --tags` over HTTPS). Pre-release tags such as `v1.0.0-rc1` are passed over, and tags compare numerically, so `v0.10.0` is newer than `v0.9.1`.
 
-A vendored file's place in the toolkit follows from its extension: `*.R` comes from `r/R/`, `*.py` from `python/src/`. Any other file under `vendored:` stops the call with an error naming it; vendor such files by hand.
+A vendored file's place in the toolkit follows from its extension: `*.R` comes from `r/R/`, `*.py` from `python/src/`. `README.md` follows the other vendored files: `r/R/README.md` when they are all R, `python/src/README.md` when they are all Python; a list with both stops the call. A README is updated only when `vendored:` lists it, because a scaffolded repository's `00_functions/README.md` comes from the project template, not from the toolkit's package folders. Any other file under `vendored:` stops the call with an error naming it; vendor such files by hand.
 
 ## `cso_toolkit_diff` — what changed?
 

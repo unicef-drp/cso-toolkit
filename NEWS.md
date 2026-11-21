@@ -6,6 +6,17 @@ _Entries land here as PRs merge into `develop`. When the next release
 is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
+### Fixed
+
+- **`cso_toolkit_diff()`, `cso_toolkit_pull()` and `cso_toolkit_sync()`
+  can update a vendored `README.md` (R + Python).** Listed under
+  `vendored:`, it follows the other files: `r/R/README.md` when they are
+  all `*.R`, `python/src/README.md` when they are all `*.py`; a list with
+  both stops with an envelope. It used to stop the call ("Cannot tell
+  where the vendored file README.md lives"), so the first sync of
+  DW-Production left its README at v0.9.1. A README the manifest does not
+  list is left alone, as before: scaffolded repositories keep their own.
+
 ## v0.10.0 (2026-11-21)
 
 The first release a consumer repository can update *to* in one call,

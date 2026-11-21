@@ -29,7 +29,10 @@
 #   pulled_by      — human breadcrumb for who ran the pull.
 #   vendored       — list of files copied from cso-toolkit into the
 #                    consumer's 00_functions/: *.R from r/R/, *.py from
-#                    python/src/.
+#                    python/src/. README.md, if listed, follows the other
+#                    files (r/R/README.md when they are all *.R,
+#                    python/src/README.md when all *.py); leave it out when
+#                    the repo keeps its own README (as scaffolded ones do).
 #   local_edits    — files in `vendored:` that have local divergence;
 #                    `cso_toolkit_pull()` skips these on update (it also
 #                    skips a file that differs from what pulled_version

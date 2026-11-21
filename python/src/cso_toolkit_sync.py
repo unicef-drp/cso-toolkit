@@ -310,15 +310,39 @@ def _cso_local_source(toolkit_source) -> Optional[str]:
     return os.environ.get("CSO_TOOLKIT_ROOT") or None
 
 
-def _cso_upstream_path(f: str, fn: str) -> str:
-    """Where a vendored file lives in the toolkit repository."""
+def _cso_upstream_path(f: str, fn: str, files: Optional[List[str]] = None) -> str:
+    """Where a vendored file lives in the toolkit repository.
+
+    ``*.R`` maps to ``r/R/``, ``*.py`` to ``python/src/``. ``README.md`` maps
+    to the folder of the other vendored files (``files``): ``r/R/README.md``
+    when they are all R, ``python/src/README.md`` when they are all Python.
+    A README is synced only when the manifest lists it: a scaffolded
+    repository's ``00_functions/README.md`` comes from the project template.
+    """
     if re.search(r"\.[Rr]$", f):
         return f"r/R/{f}"
     if f.endswith(".py"):
         return f"python/src/{f}"
+    if f == "README.md":
+        others = files if files is not None else [f]
+        has_r = any(re.search(r"\.[Rr]$", x) for x in others)
+        has_py = any(x.endswith(".py") for x in others)
+        if has_r and not has_py:
+            return "r/R/README.md"
+        if has_py and not has_r:
+            return "python/src/README.md"
+        raise ValueError(
+            f"[cso_toolkit.{fn}] Cannot tell which README.md the vendored copy follows.\n"
+            "  Why: README.md maps to the folder of the other vendored files, r/R/ when "
+            "they are all *.R and python/src/ when they are all *.py; `vendored:` lists "
+            f"{'both' if has_r else 'neither'}.\n"
+            "  Fix: remove README.md from `vendored:` in .toolkit_manifest.yml and update "
+            "it by hand."
+        )
     raise ValueError(
         f"[cso_toolkit.{fn}] Cannot tell where the vendored file {f} lives in cso-toolkit.\n"
-        "  Why: vendored files are mapped by extension: *.R to r/R/, *.py to python/src/.\n"
+        "  Why: vendored files are mapped by extension: *.R to r/R/, *.py to python/src/ "
+        "(and README.md to the folder of the others).\n"
         f"  Fix: remove {f} from `vendored:` in .toolkit_manifest.yml (vendor it by "
         "hand), or fix the file name."
     )
@@ -452,7 +476,7 @@ def _cso_sha256(x: Optional[bytes]) -> Optional[str]:
 def _cso_diff_core(m: dict, mdir: Path, tree: _Tree, fn: str):
     """Compare every vendored file with the tag: (rows, target bytes)."""
     files = [str(f) for f in (m.get("vendored") or [])]
-    up = [_cso_upstream_path(f, fn) for f in files]
+    up = [_cso_upstream_path(f, fn, files) for f in files]
     edits = [str(e) for e in (m.get("local_edits") or [])]
     edits = set(edits) | {os.path.basename(e) for e in edits}
     rows, target = [], {}
