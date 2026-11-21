@@ -355,6 +355,7 @@ def test_sync_prints_news_between(env, capsys):
     for ln in ("!! ### Breaking", "!! - b.R drops an argument", "!! ### Changed", "   ### Fixed"):
         assert ln in news
     assert "flagged:\n   v0.10.0: ### Breaking\n   v0.2.0: ### Changed" in out
+    assert not any(ln != ln.rstrip() for ln in news)   # blank lines carry no padding
     assert by_file(res, "action")["a.R"] == "would_update"
     assert res.attrs["target_version"] == "v0.10.0"
     nw = sync._cso_news_between(NEWS_0100, "v0.2.0", "v0.10.0")["lines"]

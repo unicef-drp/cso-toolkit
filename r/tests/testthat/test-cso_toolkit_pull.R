@@ -360,6 +360,7 @@ test_that("sync prints the NEWS sections between the versions, flagging Breaking
 	expect_true("!! - b.R drops an argument" %in% news)
 	expect_true("!! ### Changed" %in% news)
 	expect_true("   ### Fixed" %in% news)
+	expect_false(any(grepl("[[:space:]]$", news)))      # blank lines carry no padding
 	expect_match(out, "flagged:\n   v0.10.0: ### Breaking\n   v0.2.0: ### Changed", fixed = TRUE)
 	expect_identical(res$action[res$file == "a.R"], "would_update")
 	expect_identical(attr(res, "target_version"), "v0.10.0")

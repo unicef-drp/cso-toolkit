@@ -720,7 +720,7 @@
 			if (!flag && grepl("BREAKING", ln, fixed = TRUE)) {
 				flagged <- c(flagged, sprintf("v%s: %s", ver, substr(trimws(ln), 1, 70)))
 			}
-			sec[j] <- paste0(if (hit) "!! " else "   ", ln)
+			sec[j] <- if (!nzchar(trimws(ln))) "" else paste0(if (hit) "!! " else "   ", ln)
 		}
 		out <- c(out, sec, "")
 	}

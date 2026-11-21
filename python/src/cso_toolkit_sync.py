@@ -622,7 +622,7 @@ def _cso_news_between(text: str, frm: Optional[str], to: str) -> Dict[str, List[
             hit = flag or "BREAKING" in ln
             if not flag and "BREAKING" in ln:
                 flagged.append(f"v{vs}: {ln.strip()[:70]}")
-            sec[j] = ("!! " if hit else "   ") + ln
+            sec[j] = "" if not ln.strip() else ("!! " if hit else "   ") + ln
         out += sec + [""]
     return {"lines": out, "flagged": flagged}
 
