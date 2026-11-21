@@ -195,6 +195,66 @@ def test_unknown_extension(env):
         m.cso_toolkit_diff("v0.2.0", toolkit_source=up, verbose=False)
 
 
+def test_listed_readme_follows_the_other_files(tmp_path, monkeypatch):
+    """A listed README.md maps to r/R/ or python/src/ by the other vendored files."""
+    if shutil.which("git") is None:
+        pytest.skip("git not installed")
+    monkeypatch.delenv("CSO_TOOLKIT_ROOT", raising=False)
+    up = tmp_path / "upstream_readme"
+    up.mkdir()
+    put(up, "r/DESCRIPTION", "Package: csotoolkit\nVersion: 0.0.1\n")
+    put(up, "r/R/a.R", "# a\n")
+    put(up, "python/src/p.py", "# p\n")
+    put(up, "r/R/README.md", "# R helpers v1\n")
+    put(up, "python/src/README.md", "# Python helpers v1\n")
+    put(up, "NEWS.md", NEWS_010)
+    git(up, "init", "--quiet")
+    git(up, "add", "-A")
+    git(up, "commit", "--quiet", "-m", "v0.1.0")
+    git(up, "tag", "v0.1.0")
+    put(up, "r/R/README.md", "# R helpers v2\n")
+    put(up, "python/src/README.md", "# Python helpers v2\n")
+    git(up, "commit", "--quiet", "-a", "-m", "v0.2.0")
+    git(up, "tag", "v0.2.0")
+    sha = git(up, "rev-list", "-n", "1", "v0.1.0")
+
+    def consumer(name: str, files: list) -> Path:
+        d = tmp_path / name
+        fd = d / "00_functions"
+        fd.mkdir(parents=True)
+        for f in files:
+            src = "r/R/README.md" if f == "README.md" else sync._cso_upstream_path(f, "test")
+            (fd / f).write_bytes(sync._cso_git_blob(up, sha, src))
+        put(fd, ".toolkit_manifest.yml",
+            'source: "unicef-drp/cso-toolkit"\npulled_version: "v0.1.0"\n'
+            'pulled_date: "2026-01-02"\npulled_by: "someone"\nvendored:\n'
+            + "".join(f"  - {f}\n" for f in files) + "local_edits: []\n")
+        git(d, "init", "--quiet")
+        git(d, "add", "-A")
+        git(d, "commit", "--quiet", "-m", "vendor")
+        monkeypatch.setattr(_state, "dwFunct", str(fd), raising=False)
+        monkeypatch.setattr(_state, "dw_apis_allowed", True, raising=False)
+        return fd
+
+    # All R: README.md is r/R/README.md, compared and pulled like the rest.
+    fd = consumer("r_only", ["a.R", "README.md"])
+    d = m.cso_toolkit_diff("v0.2.0", toolkit_source=up, verbose=False)
+    assert by_file(d)["README.md"] == "changed"
+    m.cso_toolkit_pull("v0.2.0", confirm=False, toolkit_source=up, verbose=False)
+    assert (fd / "README.md").read_bytes() == tag_blob(up, "v0.2.0", "r/R/README.md")
+
+    # All Python: python/src/README.md.
+    consumer("py_only", ["p.py", "README.md"])
+    d = m.cso_toolkit_diff("v0.2.0", toolkit_source=up, verbose=False)
+    want = hashlib.sha256(tag_blob(up, "v0.2.0", "python/src/README.md")).hexdigest()
+    assert d.loc[d.file == "README.md", "sha256_target"].item() == want
+
+    # Both languages: no way to tell; stops before anything is read.
+    consumer("mixed", ["a.R", "p.py", "README.md"])
+    with pytest.raises(ValueError, match=r"\[cso_toolkit\.cso_toolkit_diff\].*README\.md"):
+        m.cso_toolkit_diff("v0.2.0", toolkit_source=up, verbose=False)
+
+
 def test_dry_run_writes_nothing(env):
     up, consumer = env
     fd = consumer()

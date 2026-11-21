@@ -363,13 +363,28 @@
 }
 
 #' Where a vendored file lives in the toolkit repository
+#'
+#' `*.R` maps to `r/R/`, `*.py` to `python/src/`. `README.md` maps to the
+#' folder of the other vendored files (`files`): `r/R/README.md` when they
+#' are all R, `python/src/README.md` when they are all Python. A README is
+#' synced only when the manifest lists it: a scaffolded repository's
+#' `00_functions/README.md` comes from the project template instead.
 #' @keywords internal
 #' @noRd
-.cso_upstream_path <- function(f, fn) {
+.cso_upstream_path <- function(f, fn, files = f) {
 	if (grepl("\\.[Rr]$", f)) return(paste0("r/R/", f))
 	if (grepl("\\.py$", f)) return(paste0("python/src/", f))
+	if (identical(f, "README.md")) {
+		has_r <- any(grepl("\\.[Rr]$", files))
+		has_py <- any(grepl("\\.py$", files))
+		if (has_r && !has_py) return("r/R/README.md")
+		if (has_py && !has_r) return("python/src/README.md")
+		stop(sprintf(
+			"[cso_toolkit.%s] Cannot tell which README.md the vendored copy follows.\n Why: README.md maps to the folder of the other vendored files, r/R/ when they are all *.R and python/src/ when they are all *.py; `vendored:` lists %s.\n Fix: remove README.md from `vendored:` in .toolkit_manifest.yml and update it by hand.",
+			fn, if (has_r) "both" else "neither"), call. = FALSE)
+	}
 	stop(sprintf(
-		"[cso_toolkit.%s] Cannot tell where the vendored file %s lives in cso-toolkit.\n Why: vendored files are mapped by extension: *.R to r/R/, *.py to python/src/.\n Fix: remove %s from `vendored:` in .toolkit_manifest.yml (vendor it by hand), or fix the file name.",
+		"[cso_toolkit.%s] Cannot tell where the vendored file %s lives in cso-toolkit.\n Why: vendored files are mapped by extension: *.R to r/R/, *.py to python/src/ (and README.md to the folder of the others).\n Fix: remove %s from `vendored:` in .toolkit_manifest.yml (vendor it by hand), or fix the file name.",
 		fn, f, f), call. = FALSE)
 }
 
@@ -503,7 +518,8 @@
 #' @noRd
 .cso_diff_core <- function(m, mdir, tree, fn) {
 	files <- as.character(unlist(m$vendored))
-	up <- vapply(files, .cso_upstream_path, character(1), fn = fn, USE.NAMES = FALSE)
+	up <- vapply(files, .cso_upstream_path, character(1), fn = fn, files = files,
+	             USE.NAMES = FALSE)
 	edits <- as.character(unlist(m$local_edits))
 	edits <- unique(c(edits, basename(edits)))
 	target <- stats::setNames(vector("list", length(files)), files)
