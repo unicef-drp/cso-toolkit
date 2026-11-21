@@ -415,6 +415,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text"><span class="chapter-number">F</span>&nbsp; <span class="chapter-title">Curated third-party functions</span></span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/g-parity-certificate.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">G</span>&nbsp; <span class="chapter-title">Cross-language parity</span></span></a>
+  </div>
+</li>
       </ul>
   </li>
     </ul>
@@ -440,7 +446,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#tags-and-the-release-cut" id="toc-tags-and-the-release-cut" class="nav-link" data-scroll-target="#tags-and-the-release-cut"><span class="header-section-number">16.3</span> Tags and the release cut</a>
   <ul class="collapse">
   <li><a href="#the-version-is-stamped-in-more-than-one-place" id="toc-the-version-is-stamped-in-more-than-one-place" class="nav-link" data-scroll-target="#the-version-is-stamped-in-more-than-one-place"><span class="header-section-number">16.3.1</span> The version is stamped in more than one place</a></li>
-  <li><a href="#the-tag-is-immutable-consumers-pin-to-it" id="toc-the-tag-is-immutable-consumers-pin-to-it" class="nav-link" data-scroll-target="#the-tag-is-immutable-consumers-pin-to-it"><span class="header-section-number">16.3.2</span> The tag is immutable; consumers pin to it</a></li>
+  <li><a href="#the-three-languages-must-agree-before-the-tag" id="toc-the-three-languages-must-agree-before-the-tag" class="nav-link" data-scroll-target="#the-three-languages-must-agree-before-the-tag"><span class="header-section-number">16.3.2</span> The three languages must agree before the tag</a></li>
+  <li><a href="#the-tag-is-immutable-consumers-pin-to-it" id="toc-the-tag-is-immutable-consumers-pin-to-it" class="nav-link" data-scroll-target="#the-tag-is-immutable-consumers-pin-to-it"><span class="header-section-number">16.3.3</span> The tag is immutable; consumers pin to it</a></li>
   </ul></li>
   <li><a href="#the-road-to-v1.0.0" id="toc-the-road-to-v1.0.0" class="nav-link" data-scroll-target="#the-road-to-v1.0.0"><span class="header-section-number">16.4</span> The road to v1.0.0</a></li>
   </ul>
@@ -592,8 +599,12 @@ python/pyproject.toml    Python package version</code></pre>
 <p>The release-cut checklist for the next minor (v0.5.0) should include a <code>grep -rn '0\.[0-9]\.[0-9]' r/R/</code> step to catch any future stamp drift before tagging.</p>
 </blockquote>
 </section>
-<section id="the-tag-is-immutable-consumers-pin-to-it" class="level3" data-number="16.3.2">
-<h3 data-number="16.3.2" class="anchored" data-anchor-id="the-tag-is-immutable-consumers-pin-to-it"><span class="header-section-number">16.3.2</span> The tag is immutable; consumers pin to it</h3>
+<section id="the-three-languages-must-agree-before-the-tag" class="level3" data-number="16.3.2">
+<h3 data-number="16.3.2" class="anchored" data-anchor-id="the-three-languages-must-agree-before-the-tag"><span class="header-section-number">16.3.2</span> The three languages must agree before the tag</h3>
+<p>From v0.10.1 on, the commit being tagged also needs a <strong>parity certificate</strong>. Run <code>sh tools/certify --record</code> on a machine with R, Python and Stata. It runs the shared cases in all three languages and commits <code>.parity/&lt;content-hash&gt;.json</code> when they agree, known gaps and divergences aside. <code>sh tools/certify --verify</code>, which the <code>Parity certificate</code> workflow runs on pull requests into <code>main</code>, must pass on the release commit. The GitHub release notes link the certificate. The cases, the register of gaps and divergences, and the content hash are described in the appendix <em>Cross-language parity</em>.</p>
+</section>
+<section id="the-tag-is-immutable-consumers-pin-to-it" class="level3" data-number="16.3.3">
+<h3 data-number="16.3.3" class="anchored" data-anchor-id="the-tag-is-immutable-consumers-pin-to-it"><span class="header-section-number">16.3.3</span> The tag is immutable; consumers pin to it</h3>
 <p>A published tag is never moved. Consumers vendor the helper <em>files</em> into their own <code>00_functions/</code> and record the tag in <code>00_functions/.toolkit_manifest.yml</code> (see the vendoring model chapter). The manifest’s <code>pulled_version</code> field is the consumer’s pin:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span><span class="kw">:</span><span class="at"> </span><span class="st">"unicef-drp/cso-toolkit"</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">pulled_version</span><span class="kw">:</span><span class="at"> </span><span class="st">"v0.4.0"</span></span>
