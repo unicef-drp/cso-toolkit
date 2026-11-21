@@ -2,23 +2,34 @@
 % Please edit documentation in R/cso_toolkit_sync.R
 \name{cso_toolkit_pull}
 \alias{cso_toolkit_pull}
-\title{Refresh the vendored copies to a specific cso-toolkit tag}
+\title{Refresh the vendored copies to a cso-toolkit release}
 \usage{
 cso_toolkit_pull(
   target_version,
   confirm = TRUE,
   dry_run = FALSE,
+  toolkit_source = NULL,
+  allow_downgrade = FALSE,
   verbose = NULL,
   debug = NULL
 )
 }
 \arguments{
-\item{target_version}{Character. Tag to pull (e.g. `"v0.2.0"`).}
+\item{target_version}{Character. Release tag to pull (e.g. `"v0.10.0"`;
+`"0.10.0"` gets a `v`).}
 
-\item{confirm}{Logical. Prompt per file. Default `TRUE`.}
+\item{confirm}{Logical. Ask per file (overwrite / skip / show diff).
+Default `TRUE`; needs an interactive session.}
 
-\item{dry_run}{Logical. Show what would change without writing. Default
+\item{dry_run}{Logical. Report what would change; write nothing. Default
 `FALSE`.}
+
+\item{toolkit_source}{Character or `NULL`. A local git clone of
+cso-toolkit to read the tag from (offline); `NULL` uses
+`CSO_TOOLKIT_ROOT`, and GitHub when that is unset too.}
+
+\item{allow_downgrade}{Logical. Allow a tag older than `pulled_version`.
+Default `FALSE`.}
 
 \item{verbose}{Logical or `NULL`. Show high-level progress and result
 messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
@@ -29,27 +40,69 @@ set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].}
 `getOption("dw.debug", FALSE)`; implies `verbose`. See [dw_verbosity()].}
 }
 \value{
-Invisibly, `NULL` for the stub.
+Invisibly, the [cso_toolkit_diff()] data frame with an `action`
+  column: `updated`, `added`, `skipped` (declined at the prompt),
+  `skipped_local_edit`, `kept` (missing upstream), `none` (unchanged or
+  already at the tag), or, with `dry_run = TRUE`, `would_update` /
+  `would_add`.
 }
 \description{
-Stub for v0.0.0. Planned behaviour:
+Updates the files listed under `vendored:` in `.toolkit_manifest.yml` to
+their versions at the release tag `target_version`, and re-pins the
+manifest. [cso_toolkit_sync()] is the usual way in: it picks the latest
+tag and shows its release notes first.
+}
+\details{
+In order:
 \enumerate{
-  \item Read `.toolkit_manifest.yml`.
-  \item For each file in `m$files`: fetch it from `m$source` at
-        `target_version`; compute sha256 against the current vendored
-        copy; if different, prompt the user (overwrite / skip / show
-        diff).
-  \item Update the manifest with the new version + hashes.
-  \item Log a summary.
+  \item Refuses in reviewer mode, without a manifest, or without a
+    `source:` key.
+  \item Refuses when the vendored folder has uncommitted changes (`git
+    status --porcelain`, when it is inside a git repository): an update
+    must be one reviewable commit. `dry_run = TRUE` skips this.
+  \item Refuses a downgrade (a tag older than `pulled_version`) unless
+    `allow_downgrade = TRUE`. The same tag reports "already at" and
+    writes nothing; if the manifest's `pulled_commit` differs from the
+    tag's commit it warns that the tag moved.
+  \item Compares every file as [cso_toolkit_diff()] does (same sources:
+    a local clone, or a shallow clone of the tag from GitHub).
+    `local_edit` files are skipped and listed; `missing_upstream` files
+    are kept, with a warning; `changed` and `missing_local` files are
+    written atomically (a temporary file, then a rename).
+  \item With `confirm = TRUE` it asks, per file, overwrite / skip / show
+    diff. In a non-interactive session `confirm = TRUE` stops before
+    writing anything; pass `confirm = FALSE` there.
+  \item Re-pins the manifest by editing its lines in place (comments and
+    unknown keys survive): `pulled_version`, `pulled_commit` (added after
+    `pulled_version` if absent), the date key it already has
+    (`pulled_date` or `pulled_at`; `pulled_date` if neither), `pulled_by`,
+    and the hashes of an existing `files:` block. `vendored`,
+    `local_edits` and `target_version` are never touched.
+}
+}
+\section{Errors}{
+
+`[cso_toolkit.cso_toolkit_pull]` in reviewer mode; without a manifest
+or `source:`; with uncommitted changes in the vendored folder; for a
+downgrade without `allow_downgrade = TRUE`; for a tag that does not
+exist (Fix: `git -C <clone> fetch --tags`, for a local clone); with
+`confirm = TRUE` in a non-interactive session.
+}
+
+\examples{
+\dontrun{
+cso_toolkit_pull("v0.10.0", dry_run = TRUE)    # what would change
+cso_toolkit_pull("v0.10.0")                    # asks per file
+cso_toolkit_pull("v0.10.0", confirm = FALSE)   # scripts, Rscript
 }
 }
 \seealso{
-[cso_toolkit_check()] to first determine whether a pull is
-  needed; [cso_toolkit_diff()] to inspect per-file changes before
-  overwriting.
+[cso_toolkit_sync()] (latest tag, release notes, diff, pull);
+  [cso_toolkit_diff()]; [cso_toolkit_check()].
 
 Other sync: 
 \code{\link{cso_toolkit_check}()},
-\code{\link{cso_toolkit_diff}()}
+\code{\link{cso_toolkit_diff}()},
+\code{\link{cso_toolkit_sync}()}
 }
 \concept{sync}
