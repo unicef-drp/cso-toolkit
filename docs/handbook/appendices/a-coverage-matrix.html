@@ -83,7 +83,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-7f6c64e0d652c61cb9aac081886fc576.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-554944da459c622dc457c1ed647c448c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -912,9 +912,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Yes</td>
 <td>n/a</td>
 </tr>
+<tr class="even">
+<td><code>cso_toolkit_sync</code></td>
+<td>Yes</td>
+<td>Yes</td>
+<td>n/a</td>
+</tr>
 </tbody>
 </table>
-<p>The version-drift helpers are R-and-Python only. They read the consumer’s <code>.toolkit_manifest.yml</code>, query the upstream GitHub API for the latest tag, and warn or refresh when the pin is behind. Stata vendoring pins the same manifest, but the drift check has no Stata sibling — a Stata-only consumer either runs the check from R/Python or compares its <code>pulled_version</code> against the upstream tag list by hand. See the vintage-sync chapter for the manifest schema and upgrade flow.</p>
+<p>The version-drift helpers are R-and-Python only. They read the consumer’s <code>.toolkit_manifest.yml</code>, ask GitHub for the latest tag, and warn when the pin is behind; <code>cso_toolkit_sync</code> (or <code>_diff</code> + <code>_pull</code>) refreshes the vendored files from a release tag and re-pins the manifest. Stata vendoring pins the same manifest, but the drift check has no Stata sibling — a Stata-only consumer either runs the check from R/Python or compares its <code>pulled_version</code> against the upstream tag list by hand. See the vintage-sync chapter for the manifest schema and upgrade flow.</p>
 </section>
 <section id="scaffolding-and-contract-auditor" class="level3" data-number="A.3.5">
 <h3 data-number="A.3.5" class="anchored" data-anchor-id="scaffolding-and-contract-auditor"><span class="header-section-number">A.3.5</span> Scaffolding and contract auditor</h3>

@@ -83,7 +83,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-7f6c64e0d652c61cb9aac081886fc576.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-554944da459c622dc457c1ed647c448c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -653,7 +653,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="manifest-.toolkit_manifest.yml" class="level2" data-number="E.23">
 <h2 data-number="E.23" class="anchored" data-anchor-id="manifest-.toolkit_manifest.yml"><span class="header-section-number">E.23</span> Manifest (<code>.toolkit_manifest.yml</code>)</h2>
-<p>The small YAML file that records which toolkit vintage a consumer repo has vendored; it lives at <code>00_functions/.toolkit_manifest.yml</code>. Its fields are <code>source</code> (the upstream <code>owner/repo</code>), <code>pulled_version</code> (the pinned tag — or the literal <code>inrepo</code>, which marks a helper this repo maintains itself and so silences sync warnings on it), <code>pulled_date</code>, <code>pulled_by</code>, <code>vendored</code> (the list of copied files), and <code>local_edits</code> (vendored files with local divergence, which <code>cso_toolkit_pull()</code> skips on update). It is version-controlled alongside the helpers and updated on every re-pull. The vintage-sync helpers read it. See the vendoring model chapter.</p>
+<p>The small YAML file that records which toolkit vintage a consumer repo has vendored; it lives at <code>00_functions/.toolkit_manifest.yml</code>. Its fields are <code>source</code> (the upstream <code>owner/repo</code>), <code>pulled_version</code> (the pinned tag — or the literal <code>inrepo</code>, which marks a helper this repo maintains itself and so silences sync warnings on it), <code>pulled_commit</code> (the commit that tag points to), <code>pulled_date</code>, <code>pulled_by</code>, <code>vendored</code> (the list of copied files), and <code>local_edits</code> (vendored files with local divergence, which <code>cso_toolkit_pull()</code> skips on update). It is version-controlled alongside the helpers and updated on every re-pull. The vintage-sync helpers read it. See the vendoring model chapter.</p>
 </section>
 <section id="master-vintage" class="level2" data-number="E.24">
 <h2 data-number="E.24" class="anchored" data-anchor-id="master-vintage"><span class="header-section-number">E.24</span> Master vintage</h2>
@@ -735,7 +735,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="vintage-sync" class="level2" data-number="E.41">
 <h2 data-number="E.41" class="anchored" data-anchor-id="vintage-sync"><span class="header-section-number">E.41</span> Vintage sync</h2>
-<p>The capability family of consumer-side helpers that keep a vendored copy from silently falling behind upstream: <code>cso_toolkit_check()</code> reads the local manifest, queries upstream for the latest tag, and warns when the consumer is behind; <code>cso_toolkit_diff()</code> shows what changed; <code>cso_toolkit_pull()</code> refreshes vendored files to a target tag and updates the manifest. Only producer mode can run the check — reviewer mode’s network lockout (<code>dw_apis_allowed = FALSE</code>) blocks the upstream lookup, so reviewers always run against whatever vintage the producer pinned. See the vintage sync chapter.</p>
+<p>The capability family of consumer-side helpers that keep a vendored copy from silently falling behind upstream: <code>cso_toolkit_check()</code> reads the local manifest, queries upstream for the latest tag, and warns when the consumer is behind; <code>cso_toolkit_diff()</code> compares each vendored file with a release tag; <code>cso_toolkit_pull()</code> refreshes vendored files to a target tag and updates the manifest; <code>cso_toolkit_sync()</code> does the update in one call, after printing the release notes. Only producer mode can run the check — reviewer mode’s network lockout (<code>dw_apis_allowed = FALSE</code>) blocks the upstream lookup, so reviewers always run against whatever vintage the producer pinned. See the vintage sync chapter.</p>
 </section>
 <section id="z-mirror" class="level2" data-number="E.42">
 <h2 data-number="E.42" class="anchored" data-anchor-id="z-mirror"><span class="header-section-number">E.42</span> Z: mirror</h2>
