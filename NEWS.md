@@ -35,6 +35,17 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
   - New handbook appendix *Cross-language parity*; chapter 44 adds the
     certificate to the release checklist.
 
+- **Stata `dw_load_config` reads the user's block of `user_config.yml`
+  (#180).** It reads the block named after the user first (`user()`, else
+  `USERNAME`, `USER`, `c(username)`) and top-level keys as the fallback,
+  as the R and Python profiles do. `dw_mode` resolves as
+  `dw_mode_by_project` for the project (`project()`, else the repository
+  folder's name), then `dw_mode`, with no default. A missing or invalid
+  mode stops with error 459 and the YAML to add. Other blocks, such as
+  `datalib:`, are still skipped. New parity case `config_user_block`: six
+  configurations, the same mode in R, Python and Stata. New local test
+  `stata/tests/test_config_user_block.do`.
+
 ### Fixed
 
 - **Stata `dw_compare` stopped on every call** with "code follows on the

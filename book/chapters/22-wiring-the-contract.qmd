@@ -58,14 +58,15 @@ if dw_mode not in ("producer", "reviewer"):
 
 #### Stata {.unnumbered .unlisted}
 ```stata
-* dw_load_config validates dw_mode while parsing the YAML and
-* hard-stops with error 459 if it is missing or out of range.
-dw_load_config
+* dw_load_config reads your user block (then top-level keys), resolves
+* dw_mode as dw_mode_by_project for the project, then dw_mode, and
+* hard-stops with error 459 and the YAML to add if neither is valid.
+dw_load_config, project(my-project)
 * -> sets the global $dw_mode
 ```
 :::
 
-A note on the Stata path. Stata cannot link an external YAML library on AppLocker-locked corporate Windows installs, so `dw_load_config.ado` ships a minimal hand-rolled `key: value` parser. It handles the documented subset of the config schema — one pair per line, optional quoting, inline `#` comments stripped — but not nested mappings, lists, anchors, or multi-line strings. (The R and Python profiles lean on a real YAML library and read the user's block; the Stata loader reads flat top-level keys only, so a Stata profile on a shared, block-structured file needs its own handling.) The Stata loader reads exactly the keys the YAML provides into `$`-globals and validates `dw_mode` (hard-stopping with error 459 if it is missing or out of range). Unknown keys are silently ignored, since the file may hold entries other helpers consume.
+A note on the Stata path. Stata cannot link an external YAML library on AppLocker-locked corporate Windows installs, so `dw_load_config.ado` ships a minimal hand-rolled `key: value` parser. It handles the subset the config schema needs: `key: value` lines, nesting by indentation two levels deep (the user block, then `dw_mode_by_project`), optional quoting, inline `#` comments stripped; not lists, anchors, or multi-line strings. Like the R and Python profiles, it reads the user's block first (the user is `USERNAME`, then `USER`, then `c(username)`) and top-level keys as the fallback, and resolves `dw_mode` as `dw_mode_by_project` for the project, then `dw_mode`, with no default. Pass the project name with `project()`: by default it is the name of the repository's folder, which in a git worktree is not the project. Since v0.10.1 (#180) the parity certificate's `config_user_block` case checks that the three languages resolve the same six configurations alike. The loader sets exactly the keys the YAML provides as `$`-globals; a missing or invalid `dw_mode` stops with error 459 and the YAML to add. Unknown keys are silently ignored, since the file may hold entries other helpers consume.
 
 ::: {.callout-note}
 One key the loaders do *not* validate is `sandboxRoot`, even though it is mandatory in reviewer mode (it is the base the reviewer's write globals are derived from). If `dw_mode: reviewer` is set but `sandboxRoot` is absent, the derivation below produces empty or malformed paths rather than a clean error at load time. Until the loaders gain an explicit check, a profile author should validate `sandboxRoot` themselves alongside `dw_mode`.
