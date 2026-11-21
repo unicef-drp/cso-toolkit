@@ -50,6 +50,7 @@ from .cso_toolkit_sync import (
     cso_toolkit_check,
     cso_toolkit_diff,
     cso_toolkit_pull,
+    cso_toolkit_sync,
 )
 
 # Aggregation helpers (aggregate_data.py)
@@ -118,7 +119,7 @@ __all__ = [
     # API
     "dw_api_fetch", "dw_api_cached", "dw_api_inventory",
     # Sync
-    "cso_toolkit_check", "cso_toolkit_diff", "cso_toolkit_pull",
+    "cso_toolkit_check", "cso_toolkit_diff", "cso_toolkit_pull", "cso_toolkit_sync",
     # Aggregation
     "aggregate_data", "aggregate_data_v2",
     "apply_time_window", "generate_agg_footnote",
