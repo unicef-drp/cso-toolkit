@@ -83,7 +83,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-554944da459c622dc457c1ed647c448c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-7f6c64e0d652c61cb9aac081886fc576.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -902,8 +902,8 @@ Canonical deposit ── 013_wrkdata ── carbon copy ──► Z: mirror (int
 <h3 data-number="4.7.3" class="anchored" data-anchor-id="what-multi-producer-changes"><span class="header-section-number">4.7.3</span> What <code>multi-producer</code> changes</h3>
 <p>Only <code>dw_save()</code> behaves differently, and only for an output that already exists and has a provenance sidecar. Reviewer sessions write to their sandbox and are not affected.</p>
 <ol type="1">
-<li><strong>Out-of-band change.</strong> If the file’s SHA-256 no longer matches the <code>sha256</code> in its sidecar, someone changed it without <code>dw_save()</code>. Replacing it would discard a change nobody recorded, so <code>dw_save()</code> stops with the standard <code>[cso_toolkit.dw_save] ... Why ... Fix</code> envelope.</li>
-<li><strong>Concurrent write.</strong> If the sidecar says another user wrote the file <em>after this session started</em>, two producers are writing the same output in the same window, and one would silently overwrite the other. <code>dw_save()</code> stops.</li>
+<li><strong>Out-of-band change.</strong> If the file’s SHA-256 no longer matches the <code>sha256</code> in its sidecar, someone changed it without <code>dw_save()</code>. Replacing it would discard a change nobody recorded, so <code>dw_save()</code> stops with the standard <code>[cso_toolkit.dw_save] ... Why ... Fix</code> envelope. A text output that differs from its sidecar only in line endings is not a change: a Windows clone with <code>core.autocrlf=true</code> checks tracked files out with CRLF. <code>dw_save()</code> then prints a note instead of stopping. To keep tracked outputs byte-exact on every platform, add <code>output/** -text</code> to <code>.gitattributes</code>; the scaffolders write it.</li>
+<li><strong>Concurrent write.</strong> If the sidecar says another user wrote the file <em>after this session started</em>, two producers may be writing the same output in the same window, and one would silently overwrite the other. <code>dw_save()</code> stops. The exception is an output whose file and sidecar are both committed and unmodified in git: the other write then reached this session through git (a pull or a merge), so this write builds on it. Outputs outside git, such as deposits, keep the check.</li>
 <li><strong>Otherwise it writes.</strong> When the previous writer was someone else, it prints a note, not an error. Handing the producer role back and forth is normal in a co-authored project; a guard that fired on every handover would teach people to override it without reading it.</li>
 </ol>
 <p>Either stop can be overridden with <code>takeover = TRUE</code> once you have checked what happened, and the override is recorded in the new sidecar. Every sidecar written in a multi-producer project also records its lineage: <code>collaboration</code>, <code>previous_sha256</code>, <code>previous_user</code>, <code>previous_written_at</code>, <code>git_branch</code> and <code>git_commit</code> (Appendix B lists them). Single-producer sidecars are unchanged.</p>
