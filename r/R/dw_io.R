@@ -1906,14 +1906,33 @@ dw_stage <- function(path, overwrite = FALSE, verbose = NULL, debug = NULL) {
 #' @param cols Character vector. Optional column subset.
 #' @param ... Passed to `data.table::fread`.
 #'
+#' `fread()` keeps a doubled quote inside a quoted field as two characters:
+#' the field `"say ""hi"""` reads as `say ""hi""`, not `say "hi"`
+#' (data.table #1109, #4779, open upstream). Every `""` in a character column
+#' is therefore turned back into `"`, the RFC 4180 value that Python and
+#' Stata read, so a dw_save() / dw_use() round trip no longer doubles the
+#' quotes each time (#192). Skipped when the caller turns quoting off
+#' (`quote = ""`). A non-standard file with `""` in an unquoted field is
+#' collapsed too.
+#'
 #' @return A `data.table`.
 #'
 #' @keywords internal
 #' @noRd
 .read_csv <- function(path, sep, cols = NULL, ...) {
 	.require("data.table")
-	data.table::fread(input = path, sep = sep,
+	dt <- data.table::fread(input = path, sep = sep,
 	 select = cols, showProgress = FALSE, ...)
+	if (identical(list(...)$quote, "")) return(dt)
+	for (j in which(vapply(dt, is.character, logical(1)))) {
+		x <- dt[[j]]
+		hit <- !is.na(x) & grepl('""', x, fixed = TRUE)
+		if (any(hit)) {
+			x[hit] <- gsub('""', '"', x[hit], fixed = TRUE)
+			data.table::set(dt, j = j, value = x)
+		}
+	}
+	dt
 }
 
 #' Cheap schema-only introspection for the `cols_lenient` path in dw_use

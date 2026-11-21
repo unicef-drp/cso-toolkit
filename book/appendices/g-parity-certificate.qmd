@@ -68,4 +68,4 @@ The first full run, in November 2026, found three defects that had been in the t
 - **Stata's `dw_save` failed on every call that wrote a sidecar, the default:** its JSON escaping expanded to invalid syntax, and the sidecar's `file write` lines used a `_q` directive that does not exist.
 - **R's `dw_api_fetch` lacked the envelope in reviewer mode:** it called a profile-only function with arguments the profile's version does not take, so the error said "could not find function" or "unused arguments".
 
-It also registered two divergences, now open issues: Stata's sidecar has no `sha256` (#191), and R misreads a doubled quote in CSV (#192).
+It also registered two divergences, both fixed since: Stata's sidecar had no `sha256` (#191, fixed with #168 through Stata's Python integration), and R read a doubled quote in CSV as two quotes (#192: `data.table::fread()` keeps them, a long-standing upstream limitation, so `dw_use()` now unescapes them).

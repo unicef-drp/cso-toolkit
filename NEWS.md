@@ -68,6 +68,14 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 
 ### Fixed
 
+- **R `dw_use()` read a doubled quote in a quoted CSV field as two quotes
+  (#192).** `data.table::fread()` keeps `""` as two characters (data.table
+  #1109, #4779, open upstream since 2015), so `"say ""hi"""` read as
+  `say ""hi""`, and every `dw_save()` / `dw_use()` round trip doubled the
+  quotes again. Python and Stata read `say "hi"`. `dw_use()` now turns each
+  `""` in a character column back into `"` (CSV, TSV, TXT; skipped with
+  `quote = ""`). Found by the parity certificate; its R divergence on
+  `io_edge_values` is gone.
 - **Stata `dw_compare` stopped on every call** with "code follows on the
   same line as close brace": a `} else {` on one line, there since the
   command was added in May 2026. Found by the parity certificate.
