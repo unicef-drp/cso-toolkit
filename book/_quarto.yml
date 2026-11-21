@@ -63,6 +63,7 @@ book:
     - appendices/d-function-reference.qmd
     - appendices/e-glossary.qmd
     - appendices/f-third-party-functions.qmd
+    - appendices/g-parity-certificate.qmd
 
 format:
   html:
