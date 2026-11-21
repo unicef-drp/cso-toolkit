@@ -143,6 +143,24 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 
 ### Fixed
 
+- **Multi-producer guards: two false alarms and an empty user (R + Python;
+  #178).** `dw_save()` in a multi-producer project no longer stops on:
+  - a text output that differs from its sidecar only in line endings (a
+    CRLF checkout of an LF file, or the reverse, from `core.autocrlf` or
+    from R writing CRLF on Windows). It prints a note instead. A real
+    change is still an out-of-band change;
+  - a newer write by a co-author whose output and sidecar are committed
+    and unmodified in git. That write reached the session through a pull,
+    so the session builds on it. Untracked or modified outputs, such as
+    deposits and shared folders, keep the concurrent-write check.
+
+  R now records the user from `USERNAME`, then `LOGNAME`, `USER`, `LNAME`
+  and the system user, the same order as Python. On macOS and Linux, R
+  sidecars used to record `"user": ""`, so the concurrent-write check
+  never fired there. Scaffolded repositories' `.gitattributes` adds
+  `output/** -text`, so tracked outputs keep the bytes their sidecars
+  hash.
+
 - **`create_profile()` reads the user block of `user_config.yml` (R +
   Python)** — the generated profile read `user_config$dw_mode` at the top
   level, while DW-Production's `_config_template/user_config.yml` (the
