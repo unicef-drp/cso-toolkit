@@ -1,0 +1,22 @@
+{
+  "id": "reviewer_refuses_api",
+  "title": "Reviewer mode refuses a live API call with the envelope",
+  "surface": [
+    "dw_api_fetch (R, Python)",
+    "dw_require_no_api (Stata)"
+  ],
+  "kind": "json",
+  "fixtures": [],
+  "expect": {
+    "refused": true,
+    "envelope": true
+  },
+  "languages": [
+    "r",
+    "python",
+    "stata"
+  ],
+  "notes": "R and Python: dw_api_fetch() with no cache in reviewer mode. Stata has no dw_api_fetch; dw_require_no_api is its guard.",
+  "gaps": {},
+  "divergences": {}
+}
