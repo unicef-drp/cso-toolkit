@@ -439,3 +439,117 @@ cso_toolkit_pull <- function(target_version,
 	}
 	NULL
 }
+
+# ---------------------------------------------------------------------------
+# git and release-tag helpers (create_project.R uses them too)
+# ---------------------------------------------------------------------------
+
+#' Read a file as raw bytes
+#' @keywords internal
+#' @noRd
+.cso_bytes <- function(f) readBin(f, "raw", n = file.info(f)$size)
+
+#' Resolve the cso-toolkit clone to vendor helpers from
+#' @keywords internal
+#' @noRd
+.cso_toolkit_source <- function(toolkit_source, fn) {
+	src <- toolkit_source
+	if (is.null(src) || !nzchar(src)) src <- Sys.getenv("CSO_TOOLKIT_ROOT")
+	if (!nzchar(src)) {
+		# A source checkout (devtools::load_all()): the package folder is
+		# <clone>/r, and system.file() may point at it or at <clone>/r/inst.
+		dir <- system.file(package = "csotoolkit")
+		for (i in 1:3) {
+			if (!nzchar(dir)) break
+			dir <- dirname(dir)
+			if (file.exists(file.path(dir, "r", "R", "dw_io.R"))) {
+				src <- dir
+				break
+			}
+		}
+	}
+	# A clone: the helpers are read from its git history (a release tag), so
+	# the working tree only has to be a git repository of the toolkit.
+	if (!nzchar(src) || !file.exists(file.path(src, ".git")) ||
+	    !file.exists(file.path(src, "r", "DESCRIPTION"))) {
+		stop(sprintf(
+			"[cso_toolkit.%s] No cso-toolkit clone to vendor the helpers from%s.\n Why: vendoring copies the helper files of a release tag from a git clone of the toolkit (git history, r/R/); the installed package does not carry them as source.\n Fix: clone unicef-drp/cso-toolkit (with its tags) and pass `toolkit_source = \"<clone>\"` (or set CSO_TOOLKIT_ROOT); or pass `vendor = FALSE` and vendor by hand later.",
+			fn, if (nzchar(src)) paste0(" (", src, " is not a git clone of cso-toolkit)") else ""),
+		     call. = FALSE)
+	}
+	if (!nzchar(Sys.which("git"))) {
+		stop(sprintf(
+			"[cso_toolkit.%s] Vendoring reads the helpers from the clone's git history, but git is not on the PATH.\n Fix: install git, or pass `vendor = FALSE` and vendor by hand later.",
+			fn), call. = FALSE)
+	}
+	normalizePath(src, winslash = "/")
+}
+
+#' Run git in a clone; stdout lines, or NULL when git exits non-zero
+#' @keywords internal
+#' @noRd
+.cso_git_out <- function(src, ...) {
+	out <- suppressWarnings(system2("git", c("-C", shQuote(src), ...),
+	                                stdout = TRUE, stderr = FALSE))
+	if ((attr(out, "status") %||% 0L) != 0L) return(NULL)
+	out
+}
+
+#' The release tag to vendor and the commit it points to
+#'
+#' `toolkit_version = NULL` takes the clone's latest release tag (`v` and
+#' dot-separated numbers; pre-release tags such as `v1.0.0-rc1` are left
+#' out). A version without the leading `v` gets one.
+#' @keywords internal
+#' @noRd
+.cso_resolve_tag <- function(src, toolkit_version, fn) {
+	if (is.null(toolkit_version)) {
+		tags <- .cso_git_out(src, "tag", "--list", shQuote("v*"), "--sort=-v:refname")
+		tags <- tags[grepl("^v[0-9]+(\\.[0-9]+)*$", tags)]
+		if (!length(tags)) {
+			stop(sprintf(
+				"[cso_toolkit.%s] The clone at %s has no release tag (v<major>.<minor>.<patch>).\n Why: vendored helpers come from a release tag, never from a working tree, so the manifest names a real release.\n Fix: fetch the tags (git -C \"%s\" fetch --tags), or pass `toolkit_version = \"vX.Y.Z\"`.",
+				fn, src, src), call. = FALSE)
+		}
+		tag <- tags[1]
+	} else {
+		if (!(is.character(toolkit_version) && length(toolkit_version) == 1 &&
+		      !is.na(toolkit_version) && nzchar(toolkit_version))) {
+			stop(sprintf("[cso_toolkit.%s] `toolkit_version` must be one tag name, e.g. \"v0.9.1\".\n Fix: pass a release tag of the clone, or NULL for its latest.", fn),
+			     call. = FALSE)
+		}
+		tag <- if (grepl("^[0-9]", toolkit_version)) paste0("v", toolkit_version) else toolkit_version
+	}
+	sha <- .cso_git_out(src, "rev-list", "-n", "1", paste0("refs/tags/", tag))
+	if (is.null(sha) || !length(sha) || !grepl("^[0-9a-f]{40}$", sha[1])) {
+		have <- .cso_git_out(src, "tag", "--list", shQuote("v*"), "--sort=-v:refname")
+		stop(sprintf(
+			"[cso_toolkit.%s] Tag %s does not exist in the clone at %s.\n Why: vendored helpers come from a release tag, never from a working tree or a branch.\n Fix: pass one of the clone's tags (latest: %s), or fetch the tags first (git -C \"%s\" fetch --tags).",
+			fn, tag, src, if (length(have)) paste(utils::head(have, 5), collapse = ", ") else "none", src),
+		     call. = FALSE)
+	}
+	list(tag = tag, sha = sha[1])
+}
+
+#' Bytes of a file at a commit (git cat-file blob), or NULL if absent
+#' @keywords internal
+#' @noRd
+.cso_git_blob <- function(src, sha, path) {
+	tmp <- tempfile("blob_")
+	on.exit(unlink(tmp))
+	st <- suppressWarnings(system2("git", c("-C", shQuote(src), "cat-file", "blob",
+	                                        paste0(sha, ":", path)),
+	                               stdout = tmp, stderr = FALSE))
+	if (!identical(as.integer(st), 0L) || !file.exists(tmp)) return(NULL)
+	.cso_bytes(tmp)
+}
+
+#' The user name recorded as `pulled_by`
+#' @keywords internal
+#' @noRd
+.cso_user <- function() {
+	u <- Sys.getenv("USERNAME")
+	if (!nzchar(u)) u <- Sys.getenv("USER")
+	if (!nzchar(u)) u <- "unknown"
+	u
+}

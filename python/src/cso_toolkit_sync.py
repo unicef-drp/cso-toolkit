@@ -24,7 +24,7 @@ import shutil
 import subprocess
 import warnings
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from . import _state
 
@@ -357,3 +357,98 @@ def cso_toolkit_pull(target_version: str, confirm: bool = True,
         target_version, dry_run,
     )
     return None
+
+
+# ---------------------------------------------------------------------------
+# git and release-tag helpers (create_project.py uses them too)
+# ---------------------------------------------------------------------------
+
+def _cso_toolkit_source(toolkit_source: Optional[Union[str, Path]], fn: str) -> Path:
+    src = str(toolkit_source) if toolkit_source else os.environ.get("CSO_TOOLKIT_ROOT", "")
+    if not src:
+        # A source checkout (pip install -e python/): this file is <clone>/python/src/.
+        root = Path(__file__).resolve().parents[2]
+        if (root / "r" / "R" / "dw_io.R").is_file():
+            src = str(root)
+    # A clone: the helpers are read from its git history (a release tag), so
+    # the working tree only has to be a git repository of the toolkit.
+    ok = bool(src) and (Path(src) / ".git").exists() \
+        and (Path(src) / "r" / "DESCRIPTION").is_file()
+    if not ok:
+        where = f" ({src} is not a git clone of cso-toolkit)" if src else ""
+        raise FileNotFoundError(
+            f"[cso_toolkit.{fn}] No cso-toolkit clone to vendor the helpers from{where}.\n"
+            "  Why: vendoring copies the helper files of a release tag from a git "
+            "clone of the toolkit (git history, r/R/); the installed package does "
+            "not carry them.\n"
+            "  Fix: clone unicef-drp/cso-toolkit (with its tags) and pass "
+            "toolkit_source=\"<clone>\" (or set CSO_TOOLKIT_ROOT); or pass "
+            "vendor=False and vendor by hand later."
+        )
+    if shutil.which("git") is None:
+        raise RuntimeError(
+            f"[cso_toolkit.{fn}] Vendoring reads the helpers from the clone's git "
+            "history, but git is not on the PATH.\n"
+            "  Fix: install git, or pass vendor=False and vendor by hand later."
+        )
+    return Path(src).resolve()
+
+
+def _cso_git_out(src: Path, *args: str) -> Optional[List[str]]:
+    """Run git in a clone; stdout lines, or None when git exits non-zero."""
+    res = subprocess.run(["git", "-C", str(src), *args], capture_output=True)
+    if res.returncode != 0:
+        return None
+    return res.stdout.decode("utf-8", "replace").splitlines()
+
+
+def _cso_resolve_tag(src: Path, toolkit_version: Optional[str], fn: str) -> Dict[str, str]:
+    """The release tag to vendor and the commit it points to.
+
+    ``None`` takes the clone's latest release tag (``v`` and dot-separated
+    numbers; pre-release tags are passed over). A version without the
+    leading ``v`` gets one.
+    """
+    if toolkit_version is None:
+        tags = [t for t in (_cso_git_out(src, "tag", "--list", "v*", "--sort=-v:refname") or [])
+                if re.fullmatch(r"v[0-9]+(\.[0-9]+)*", t)]
+        if not tags:
+            raise LookupError(
+                f"[cso_toolkit.{fn}] The clone at {src} has no release tag "
+                "(v<major>.<minor>.<patch>).\n"
+                "  Why: vendored helpers come from a release tag, never from a working "
+                "tree, so the manifest names a real release.\n"
+                f"  Fix: fetch the tags (git -C \"{src}\" fetch --tags), or pass "
+                "toolkit_version=\"vX.Y.Z\"."
+            )
+        tag = tags[0]
+    else:
+        if not isinstance(toolkit_version, str) or not toolkit_version:
+            raise ValueError(
+                f"[cso_toolkit.{fn}] `toolkit_version` must be one tag name, e.g. "
+                "\"v0.9.1\".\n  Fix: pass a release tag of the clone, or None for its latest."
+            )
+        tag = "v" + toolkit_version if toolkit_version[:1].isdigit() else toolkit_version
+    sha = _cso_git_out(src, "rev-list", "-n", "1", f"refs/tags/{tag}")
+    if not sha or not re.fullmatch(r"[0-9a-f]{40}", sha[0]):
+        have = _cso_git_out(src, "tag", "--list", "v*", "--sort=-v:refname") or []
+        raise LookupError(
+            f"[cso_toolkit.{fn}] Tag {tag} does not exist in the clone at {src}.\n"
+            "  Why: vendored helpers come from a release tag, never from a working "
+            "tree or a branch.\n"
+            f"  Fix: pass one of the clone's tags (latest: "
+            f"{', '.join(have[:5]) if have else 'none'}), or fetch the tags first "
+            f"(git -C \"{src}\" fetch --tags)."
+        )
+    return {"tag": tag, "sha": sha[0]}
+
+
+def _cso_git_blob(src: Path, sha: str, path: str) -> Optional[bytes]:
+    """Bytes of a file at a commit (git cat-file blob), or None if absent."""
+    res = subprocess.run(["git", "-C", str(src), "cat-file", "blob", f"{sha}:{path}"],
+                         capture_output=True)
+    return res.stdout if res.returncode == 0 else None
+
+
+def _cso_user() -> str:
+    return os.environ.get("USERNAME") or os.environ.get("USER") or "unknown"
