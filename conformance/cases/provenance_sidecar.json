@@ -28,11 +28,7 @@
     "python",
     "stata"
   ],
-  "divergences": {
-    "stata": {
-      "issue": "#191",
-      "reason": "Stata's sidecar records datasignature, not the file's sha256."
-    }
-  },
-  "gaps": {}
+  "notes": "Stata records sha256 through its Python integration (Stata 16+); without it the key is absent (#191).",
+  "gaps": {},
+  "divergences": {}
 }
