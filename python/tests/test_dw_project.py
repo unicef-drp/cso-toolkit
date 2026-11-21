@@ -354,3 +354,125 @@ def test_review_profile_warns_for_multi_producer_without_block(tmp_path):
     rev = m.review_profile(p, verbose=False)
     row = rev[rev["check"] == "Collaboration model block"].iloc[0]
     assert row["status"] == "warn" and "multi-producer" in row["detail"]
+
+
+# --- #178: false alarms and the empty user -------------------------------------
+
+import shutil
+import subprocess
+
+from cso_toolkit import dw_project
+
+
+def git_repo(d: Path):
+    if shutil.which("git") is None:
+        pytest.skip("git not available")
+
+    def git(*args):
+        subprocess.run(["git", "-C", str(d), *args], check=True,
+                       capture_output=True)
+    git("init", "-q")
+    git("config", "user.name", "test")
+    git("config", "user.email", "test@example.org")
+    git("config", "core.autocrlf", "false")
+    return git
+
+
+def test_178_write_arrived_through_git_is_not_concurrent(tmp_path, monkeypatch):
+    git = git_repo(tmp_path)
+    multi(monkeypatch, start=PAST)                  # karen writes after this start
+    out = tmp_path / "x.csv"
+    save_as(monkeypatch, "karen", pd.DataFrame({"a": [1, 2]}), out)
+    git("add", "--", "x.csv", "x.csv.provenance.json")
+    git("commit", "-q", "-m", "karen-output")       # what a pull would bring in
+    save_as(monkeypatch, "jp", pd.DataFrame({"a": [5]}), out)
+    assert sidecar(out)["previous_user"] == "karen"
+
+
+def test_178_uncommitted_or_modified_write_is_still_concurrent(tmp_path, monkeypatch):
+    git = git_repo(tmp_path)
+    multi(monkeypatch, start=PAST)
+    out = tmp_path / "x.csv"
+    save_as(monkeypatch, "karen", pd.DataFrame({"a": [1, 2]}), out)
+    with pytest.raises(PermissionError, match="concurrent write"):
+        save_as(monkeypatch, "jp", pd.DataFrame({"a": [5]}), out)
+    git("add", "--", "x.csv", "x.csv.provenance.json")
+    git("commit", "-q", "-m", "karen-output")
+    save_as(monkeypatch, "karen", pd.DataFrame({"a": [3, 4]}), out)
+    with pytest.raises(PermissionError, match="concurrent write"):
+        save_as(monkeypatch, "jp", pd.DataFrame({"a": [5]}), out)
+
+
+def test_178_other_line_endings_are_not_out_of_band(tmp_path, monkeypatch, caplog):
+    multi(monkeypatch, start=FUTURE)
+    out = tmp_path / "x.csv"
+    save_as(monkeypatch, "jp", pd.DataFrame({"a": [1, 2, 3], "b": ["x", "y", "z"]}), out)
+    data = out.read_bytes()
+    flipped = (data.replace(b"\r\n", b"\n") if b"\r" in data
+               else data.replace(b"\n", b"\r\n"))
+    out.write_bytes(flipped)
+    with caplog.at_level(logging.INFO):
+        save_as(monkeypatch, "jp", pd.DataFrame({"a": [5]}), out)
+    assert "only in line endings" in caplog.text
+    assert pd.read_csv(out)["a"].tolist() == [5]
+
+
+def test_178_lf_checkout_of_crlf_output(tmp_path, monkeypatch):
+    multi(monkeypatch, start=FUTURE)
+    out = tmp_path / "x.txt"
+    out.write_bytes(b"a\r\nb\r\n")
+    Path(f"{out}.provenance.json").write_text(json.dumps({
+        "path": str(out), "sha256": sha(out), "user": "karen",
+        "written_at": "2001-01-01T00:00:00+0000"}), encoding="utf-8")
+    out.write_bytes(b"a\nb\n")
+    monkeypatch.setenv("USERNAME", "jp")
+    dw_project._collab_preflight(str(out))           # no error
+
+
+def test_178_real_change_in_crlf_checkout_is_still_out_of_band(tmp_path, monkeypatch):
+    multi(monkeypatch, start=FUTURE)
+    out = tmp_path / "x.csv"
+    save_as(monkeypatch, "jp", pd.DataFrame({"a": [1, 2]}), out)
+    lines = out.read_bytes().replace(b"\r\n", b"\n").splitlines()
+    out.write_bytes(b"\r\n".join(lines + [b"9"]) + b"\r\n")
+    with pytest.raises(PermissionError, match="out-of-band change"):
+        save_as(monkeypatch, "jp", pd.DataFrame({"a": [5]}), out)
+
+
+def test_178_binary_formats_get_no_line_ending_leniency(tmp_path):
+    f = tmp_path / "x.parquet"
+    f.write_bytes(bytes([1, 13, 10, 2]))
+    assert dw_project._sha256_eol_variants(f) == []
+
+
+def test_178_eol_variants_match_r(tmp_path):
+    # Same bytes as the R test: the two variants are the LF and CRLF forms.
+    f = tmp_path / "x.txt"
+    f.write_bytes(b"a\r\nb\nc")
+    lf, crlf = dw_project._sha256_eol_variants(f)
+    assert lf == hashlib.sha256(b"a\nb\nc").hexdigest()
+    assert crlf == hashlib.sha256(b"a\r\nb\r\nc").hexdigest()
+
+
+def test_178_user_falls_back_when_username_is_unset(monkeypatch):
+    for var in ("USERNAME", "LOGNAME", "USER", "LNAME"):
+        monkeypatch.delenv(var, raising=False)
+    monkeypatch.setenv("USER", "macuser")
+    assert dw_project._current_user() == "macuser"
+    monkeypatch.setenv("LOGNAME", "loguser")
+    assert dw_project._current_user() == "loguser"
+    monkeypatch.setenv("USERNAME", "winuser")
+    assert dw_project._current_user() == "winuser"
+
+
+def test_178_sidecar_records_user_without_username(tmp_path, monkeypatch):
+    multi(monkeypatch, start=PAST)
+    for var in ("USERNAME", "LOGNAME", "LNAME"):
+        monkeypatch.delenv(var, raising=False)
+    out = tmp_path / "x.csv"
+    monkeypatch.setenv("USER", "karen")
+    m.dw_save(pd.DataFrame({"a": [1, 2]}), path=str(out), overwrite=True)
+    assert sidecar(out)["user"] == "karen"
+    monkeypatch.setenv("USER", "jp")
+    with pytest.raises(PermissionError, match="concurrent write"):
+        m.dw_save(pd.DataFrame({"a": [5]}), path=str(out), overwrite=True)

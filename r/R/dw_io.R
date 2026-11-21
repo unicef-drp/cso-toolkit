@@ -1425,7 +1425,7 @@ dw_save <- function(x,
 			path = path,
 			format = fmt,
 			written_at = format(Sys.time(), "%Y-%m-%dT%H:%M:%S%z", tz = "UTC"),
-			user = Sys.getenv("USERNAME"),
+			user = .dw_current_user(),
 			dw_mode = .try_get("dw_mode"),
 			vintage = vintage,
 			sha256 = sha,
@@ -2724,10 +2724,22 @@ dw_merge <- function(x, using, by, how = c("m:1", "1:1", "1:m", "m:m"), verbose 
 	as.POSIXct(x, format = "%Y-%m-%dT%H:%M:%S%z", tz = "UTC")
 }
 
-#' The user name recorded in sidecars (same source as `.write_provenance()`)
+#' The user name recorded in sidecars and compared by the multi-producer guards
+#'
+#' `USERNAME` (Windows), then `LOGNAME`, `USER`, `LNAME` (macOS, Linux), then
+#' the operating system's user: the order of Python's
+#' `os.environ.get("USERNAME") or getpass.getuser()`, so R and Python record
+#' the same name on every platform (#178). `""` only when nothing is set.
 #' @keywords internal
 #' @noRd
-.dw_current_user <- function() Sys.getenv("USERNAME")
+.dw_current_user <- function() {
+	for (var in c("USERNAME", "LOGNAME", "USER", "LNAME")) {
+		u <- Sys.getenv(var, unset = "")
+		if (nzchar(u)) return(u)
+	}
+	u <- tryCatch(Sys.info()[["user"]], error = function(e) "")
+	if (is.character(u) && length(u) == 1 && !is.na(u) && nzchar(u) && u != "unknown") u else ""
+}
 
 #' A non-empty character scalar, or NA_character_ (for sidecar fields that
 #' may be missing, `{}` or null)
@@ -2885,6 +2897,63 @@ dw_collaboration <- function(root = NULL, refresh = FALSE, verbose = NULL, debug
 	     commit = run(c("rev-parse", "HEAD")))
 }
 
+#' Is an output settled in git (#178)?
+#'
+#' `TRUE` when `path` and its sidecar are both tracked and identical to
+#' `HEAD` (no staged or unstaged change). The previous write then reached
+#' this session through git (a pull, a merge, a checkout), so it is the
+#' state this session builds on, not a concurrent write. `FALSE` outside a
+#' repository, when git is missing, or when either file is untracked or
+#' modified.
+#' @keywords internal
+#' @noRd
+.dw_git_settled <- function(path, sidecar) {
+	dir <- dirname(normalizePath(path, winslash = "/", mustWork = FALSE))
+	files <- c(basename(path), basename(sidecar))
+	run <- function(args) {
+		out <- tryCatch(
+			suppressWarnings(system2("git", c("-C", shQuote(dir), args),
+			                         stdout = TRUE, stderr = FALSE)),
+			error = function(e) structure(character(0), status = 127L))
+		status <- attr(out, "status")
+		if (is.null(status)) 0L else as.integer(status)
+	}
+	run(c("ls-files", "--error-unmatch", "--", shQuote(files))) == 0L &&
+		run(c("diff", "--quiet", "HEAD", "--", shQuote(files))) == 0L
+}
+
+#' SHA-256 of a text file with its line endings converted (#178)
+#'
+#' A Windows clone with `core.autocrlf=true` checks a tracked output out with
+#' CRLF line endings, so its bytes no longer match the sidecar written on a
+#' machine with LF (and the other way round). Returns the hashes of the file
+#' with every CRLF turned into LF and with every lone LF turned into CRLF;
+#' `character(0)` for formats that are not line-based text.
+#' @keywords internal
+#' @noRd
+.dw_sha256_eol_variants <- function(path) {
+	ext <- tolower(tools::file_ext(path))
+	if (!ext %in% c("csv", "tsv", "txt", "json", "md", "tex", "yml", "yaml", "xml", "html")) {
+		return(character(0))
+	}
+	b <- tryCatch(readBin(path, "raw", n = file.info(path)$size), error = function(e) NULL)
+	if (is.null(b)) return(character(0))
+	n <- length(b)
+	is_cr <- b == as.raw(0x0d)
+	is_lf <- b == as.raw(0x0a)
+	crlf_cr <- is_cr & c(is_lf[-1], FALSE)            # CR followed by LF
+	lf <- b[!crlf_cr]                                  # CRLF -> LF
+	lone_lf <- is_lf & !c(FALSE, is_cr[-n])            # LF not preceded by CR
+	crlf <- if (any(lone_lf)) {
+		idx <- rep(seq_len(n), times = 1L + lone_lf)
+		out <- b[idx]
+		out[c(which(lone_lf) + seq_along(which(lone_lf)) - 1L)] <- as.raw(0x0d)
+		out
+	} else b
+	vapply(list(lf, crlf), function(x) digest::digest(x, algo = "sha256", serialize = FALSE),
+	       character(1))
+}
+
 #' Multi-producer pre-flight for dw_save()
 #'
 #' Applies the out-of-band and concurrent-write guards (non-reviewer
@@ -2912,13 +2981,27 @@ dw_collaboration <- function(root = NULL, refresh = FALSE, verbose = NULL, debug
 	if (!is_reviewer && !is.null(prev)) {
 		why <- character(0)
 		if (!is.na(prev_sha) && !is.na(file_sha) && !identical(prev_sha, file_sha)) {
-			fired <- c(fired, "out_of_band")
-			why <- c(why, sprintf(
-				" Why (out-of-band change): the file's SHA-256 (%s) no longer matches its provenance sidecar (%s): someone changed it without dw_save(), so replacing it now would discard a change nobody recorded.",
-				substr(file_sha, 1, 12), substr(prev_sha, 1, 12)))
+			if (prev_sha %in% .dw_sha256_eol_variants(path)) {
+				# Same content, other line endings: a CRLF checkout, not a change (#178).
+				.dw_msg("dw_save", "note: ", basename(path), " differs from its sidecar only in line endings ",
+				        "(a CRLF checkout of an LF file, or the reverse); not an out-of-band change. ",
+				        "Keep tracked outputs byte-exact with `output/** -text` in .gitattributes.", v = v)
+			} else {
+				fired <- c(fired, "out_of_band")
+				why <- c(why, sprintf(
+					" Why (out-of-band change): the file's SHA-256 (%s) no longer matches its provenance sidecar (%s): someone changed it without dw_save(), so replacing it now would discard a change nobody recorded.",
+					substr(file_sha, 1, 12), substr(prev_sha, 1, 12)))
+			}
 		}
 		start <- .dw_session_start()
 		if (!is.na(prev_user) && !identical(prev_user, me) &&
+		    isTRUE(.dw_parse_iso(prev_at) > .dw_parse_iso(start)) &&
+		    .dw_git_settled(path, sidecar)) {
+			# Written after this session started, but committed and unmodified:
+			# it arrived through git (a pull), so this write builds on it (#178).
+			.dw_dbg("dw_save", basename(path), ": ", prev_user, "'s write at ", prev_at,
+			        " is committed and unmodified (arrived through git); not concurrent", d = d)
+		} else if (!is.na(prev_user) && !identical(prev_user, me) &&
 		    isTRUE(.dw_parse_iso(prev_at) > .dw_parse_iso(start))) {
 			fired <- c(fired, "concurrent")
 			why <- c(why, sprintf(
