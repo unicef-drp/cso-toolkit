@@ -152,6 +152,47 @@ cases <- list(
 		out_json(list(modes = modes), id)
 	},
 
+	deposit_fetch_inputs = function(id) {
+		plain()
+		set_state(teamsFolderCanonical = NULL, dw_z_available = FALSE)
+		local <- file.path(work, id, "local")
+		unlink(local, recursive = TRUE)
+		m <- dw_fetch_inputs(local, "inputs", pattern = "_20(23|24|25)\\.csv$",
+		                     teams_root = fx("deposit/teams"), z_root = NA_character_,
+		                     verbose = FALSE)
+		out_csv(m[, c("file", "sha256", "origin", "teams", "z")], id)
+	},
+
+	provenance_diff_status = function(id) {
+		plain()
+		d <- file.path(work, id)
+		dir.create(d, showWarnings = FALSE, recursive = TRUE)
+		p <- file.path(d, "out.csv")
+		unlink(c(p, paste0(p, ".provenance.json")))
+		inp <- function(files, shas) data.frame(file = files, sha256 = shas, stringsAsFactors = FALSE)
+		run <- function(df, inputs) {
+			meta <- list(title = "parity")
+			if (!is.null(inputs)) meta$inputs <- inputs
+			dw_save(df, path = p, metadata = meta, overwrite = TRUE, verbose = FALSE)
+		}
+		df1 <- data.frame(k = c("x", "y"), v = c(1, 2), stringsAsFactors = FALSE)
+		in1 <- inp(c("a.csv", "b.csv"), c("aaa", "bbb"))
+		st <- character(0)
+		run(df1, in1)
+		st[1] <- dw_provenance_diff(NULL, p, verbose = FALSE)$status
+		prev <- dw_read_provenance(p, verbose = FALSE); run(df1, in1)
+		st[2] <- dw_provenance_diff(prev, p, verbose = FALSE)$status
+		prev <- dw_read_provenance(p, verbose = FALSE); run(transform(df1, v = v * 10), in1)
+		st[3] <- dw_provenance_diff(prev, p, warn = FALSE, verbose = FALSE)$status
+		prev <- dw_read_provenance(p, verbose = FALSE); run(df1, inp(c("a.csv", "c.csv"), c("aaa2", "ccc")))
+		r4 <- dw_provenance_diff(prev, p, verbose = FALSE)
+		st[4] <- r4$status
+		prev <- dw_read_provenance(p, verbose = FALSE); run(df1, NULL)
+		st[5] <- dw_provenance_diff(prev, p, verbose = FALSE)$status
+		out_json(list(statuses = I(st), inputs_added = I(r4$inputs_added),
+		              inputs_removed = I(r4$inputs_removed), inputs_changed = I(r4$inputs_changed)), id)
+	},
+
 	collab_out_of_band = function(id) {
 		set_state(dw_mode = NULL, dw_apis_allowed = NULL,
 		          dw_collaboration_model = "multi-producer",
