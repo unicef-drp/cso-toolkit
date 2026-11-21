@@ -259,7 +259,7 @@ Parity is about more than the functions. The scaffolding around each language â€
 | Type/interface metadata | NAMESPACE exports (~44, incl. aliases) | PEP 561 `py.typed`, full type hints | n/a |
 | Unit/regression test suite | Yes (`testthat`: 32 test files, 370+ `expect_*` assertions) | Manual smoke test + error-envelope test | No automated suite |
 | Wired into CI | Yes (`r-check.yml`: Ubuntu release+devel, macOS, Windows) | Conformance driver only (`conformance.yml`); unit tests manual-only | No (Stata conformance driver pending license provisioning, issue #133) |
-| Cross-language conformance gate | Yes (driver + comparator in `conformance.yml`) | Yes (driver + comparator in `conformance.yml`) | Pending (issue #133) |
+| Cross-language conformance gate | Yes (driver + comparator in `conformance.yml`; parity certificate) | Yes (driver + comparator in `conformance.yml`; parity certificate) | Parity certificate, run locally (`sh tools/certify`, #190); CI pending (issue #133) |
 | Error-envelope verification | `expect_envelope()` helper used across the suite | dedicated `error_envelope_test.py` | Enforced at call site; not separately tested |
 
 The headline gaps:
