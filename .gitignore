@@ -14,6 +14,8 @@ __pycache__/
 .venv/
 venv/
 .pytest_cache/
+# pip install -e python/ (setuptools editable install metadata)
+*.egg-info/
 
 # Stata
 *.smcl
