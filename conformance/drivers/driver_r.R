@@ -152,6 +152,26 @@ cases <- list(
 		out_json(list(modes = modes), id)
 	},
 
+	compare_diagnose = function(id) {
+		plain()
+		ref <- as.data.frame(dw_use(fx("compare_reference.csv")))
+		cur <- as.data.frame(dw_use(fx("compare_current.csv")))
+		p <- dw_compare(cur, ref, by = c("REF_AREA", "TIME_PERIOD"), value_cols = "OBS_VALUE",
+		                numeric_value_cols = "OBS_VALUE", tol = 1e-6, diagnose = TRUE)$profile
+		out_json(list(columns = I(p$columns$column), n_changed = I(p$columns$n_changed),
+		              rel_q50 = p$magnitude$rel_q50[p$magnitude$column == "OBS_VALUE"],
+		              keys = I(p$keys$value[p$keys$key == "REF_AREA"]),
+		              added = I(p$added$value[p$added$key == "REF_AREA"]),
+		              removed = I(p$removed$value[p$removed$key == "REF_AREA"])), id)
+	},
+
+	compare_same_file = function(id) {
+		plain()
+		p <- fx("compare_reference.csv")
+		e <- tryCatch({dw_compare(p, p, by = c("REF_AREA", "TIME_PERIOD")); NULL}, error = identity)
+		out_json(list(refused = !is.null(e), envelope = !is.null(e) && is_envelope(e)), id)
+	},
+
 	deposit_fetch_inputs = function(id) {
 		plain()
 		set_state(teamsFolderCanonical = NULL, dw_z_available = FALSE)

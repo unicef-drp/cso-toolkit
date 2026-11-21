@@ -175,6 +175,32 @@ def config_user_block(cid: str) -> None:
     out_json({"modes": modes}, cid)
 
 
+def compare_diagnose(cid: str) -> None:
+    plain()
+    ref = m.dw_use(fx("compare_reference.csv"))
+    cur = m.dw_use(fx("compare_current.csv"))
+    p = m.dw_compare(cur, ref, by=["REF_AREA", "TIME_PERIOD"], value_cols=["OBS_VALUE"],
+                     numeric_value_cols=["OBS_VALUE"], tol=1e-6, diagnose=True)["profile"]
+    mag = p["magnitude"].set_index("column")
+    def vals(df):
+        return df.loc[df["key"] == "REF_AREA", "value"].tolist()
+    out_json({"columns": p["columns"]["column"].tolist(),
+              "n_changed": [int(x) for x in p["columns"]["n_changed"]],
+              "rel_q50": float(mag.loc["OBS_VALUE", "rel_q50"]),
+              "keys": vals(p["keys"]), "added": vals(p["added"]), "removed": vals(p["removed"])}, cid)
+
+
+def compare_same_file(cid: str) -> None:
+    plain()
+    p = fx("compare_reference.csv")
+    err = None
+    try:
+        m.dw_compare(p, p, by=["REF_AREA", "TIME_PERIOD"])
+    except Exception as e:  # noqa: BLE001
+        err = e
+    out_json({"refused": err is not None, "envelope": err is not None and is_envelope(err)}, cid)
+
+
 def deposit_fetch_inputs(cid: str) -> None:
     plain()
     local = work / cid / "local"
@@ -265,6 +291,8 @@ CASES = {
     "aggregate_weighted_mean": aggregate_weighted_mean,
     "version_compare": version_compare,
     "config_user_block": config_user_block,
+    "compare_diagnose": compare_diagnose,
+    "compare_same_file": compare_same_file,
     "deposit_fetch_inputs": deposit_fetch_inputs,
     "provenance_diff_status": provenance_diff_status,
     "collab_out_of_band": collab_out_of_band,
