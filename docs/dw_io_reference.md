@@ -335,7 +335,9 @@ file's Teams / Z: status (`match`, `differs`, `missing`, `no access`);
 Both functions only read the deposit and write only under `local_root`, so
 they behave identically in producer and reviewer sessions. For a gitignored
 inputs folder, add `!<rel_dir>/**/` and `!<rel_dir>/**/.gitkeep` exceptions so
-Git tracks the placeholders. Python and Stata siblings: #152.
+Git tracks the placeholders. Python: the same functions and arguments
+(`cso_toolkit.dw_fetch_inputs`, `dw_check_deposit`), returning DataFrames.
+Stata: route via R or Python (#152).
 
 ## `dw_read_provenance(path)` and `dw_provenance_diff(previous, current)` (Unreleased, R only)
 
@@ -358,4 +360,5 @@ through the sidecars' `sha256`. `output_changed` (same inputs, different
 output) warns with a `[cso_toolkit.dw_provenance_diff]` envelope;
 `inputs_changed` returns `inputs_added`, `inputs_removed` and
 `inputs_changed`. Follow with `dw_compare()` for the records that moved.
-Python and Stata siblings: #152.
+Python: the same functions (`dw_read_provenance` returns a dict, with
+`metadata["inputs"]` as a DataFrame). Stata: route via R or Python (#152).

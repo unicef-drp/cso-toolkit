@@ -231,10 +231,10 @@ run-level comparison of two outputs from their sidecars.
 | `dw_merge` | ✅ | ✅ | — | R + Python only |
 | `dw_isid` | ✅ | ✅ | (embedded in `dw_save`) | same |
 | `dw_verify_z` | ✅ | ✅ | — | R + Python only |
-| `dw_fetch_inputs` | ✅ | ⏳ (#152) | ⏳ (#152) | R only — fill a gitignored inputs folder from the Teams / Z: deposit ([R](docs/dw_io_reference.md)) |
-| `dw_check_deposit` | ✅ | ⏳ (#152) | ⏳ (#152) | R only — every local input has an identical copy on Teams or Z: |
-| `dw_read_provenance` | ✅ | ⏳ (#152) | ⏳ (#152) | R only — read an output's `.provenance.json` sidecar |
-| `dw_provenance_diff` | ✅ | ⏳ (#152) | ⏳ (#152) | R only — did this run reproduce the last one? |
+| `dw_fetch_inputs` | ✅ | ✅ | ➖ via R/Python (#152) | Fill a gitignored inputs folder from the Teams / Z: deposit ([reference](docs/dw_io_reference.md)) |
+| `dw_check_deposit` | ✅ | ✅ | ➖ via R/Python (#152) | Every local input has an identical copy on Teams or Z: |
+| `dw_read_provenance` | ✅ | ✅ | ➖ via R/Python (#152) | Read an output's `.provenance.json` sidecar |
+| `dw_provenance_diff` | ✅ | ✅ | ➖ via R/Python (#152) | Did this run reproduce the last one? |
 
 `dw_use` accepts **HTTPS URLs** since v0.4.0 — producer downloads
 once and freezes the response under `_frozen/<host>/<path>` with a

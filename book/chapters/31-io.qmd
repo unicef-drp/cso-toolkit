@@ -392,11 +392,22 @@ inputs <- lapply(manifest$path, readr::read_csv)
 ```
 #### Python {.unnumbered .unlisted}
 ```python
-# Not available — dw_fetch_inputs and dw_check_deposit are R-only (#152).
+import pandas as pd
+from cso_toolkit import dw_fetch_inputs
+
+rel = "02_consultations/023_targets/inputs"
+manifest = dw_fetch_inputs(
+    local_root=f"{project_folder}/{rel}",
+    rel_dir=rel,
+    pattern=r"_20(23|24|25)\.(csv|txt)$",
+)
+inputs = [pd.read_csv(p) for p in manifest["path"]]
 ```
 #### Stata {.unnumbered .unlisted}
 ```stata
-* Not available — dw_fetch_inputs and dw_check_deposit are R-only (#152).
+* Route via R or Python (#152): run dw_fetch_inputs there once, then read
+* the fetched inputs from the local folder.
+dw_use, filename(NUTRITION_2024.csv) path("$projectFolder/02_consultations/023_targets/inputs/2024")
 ```
 :::
 
@@ -473,11 +484,21 @@ dw_compare(current = result, reference = previous_df, by = key)
 ```
 #### Python {.unnumbered .unlisted}
 ```python
-# Not available — dw_read_provenance and dw_provenance_diff are R-only (#152).
+from cso_toolkit import dw_compare, dw_provenance_diff, dw_read_provenance, dw_save
+
+previous = dw_read_provenance(out_csv)       # None on the first run
+dw_save(result, path=out_csv, isid=key,
+        metadata={"inputs": manifest[["file", "sha256", "origin"]]})
+run = dw_provenance_diff(previous, out_csv)
+run["status"]                                # e.g. "reproduced"
+
+# then, record by record
+dw_compare(current=result, reference=previous_df, by=key)
 ```
 #### Stata {.unnumbered .unlisted}
 ```stata
-* Not available — dw_read_provenance and dw_provenance_diff are R-only (#152).
+* Route via R or Python (#152). Stata sidecars record sha256 (through
+* Stata's Python integration), so dw_provenance_diff can compare them.
 ```
 :::
 

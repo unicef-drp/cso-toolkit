@@ -66,6 +66,17 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
   the parity cases `collab_out_of_band` and `provenance_sidecar` now pass
   in Stata.
 
+- **Python: `dw_fetch_inputs()`, `dw_check_deposit()`,
+  `dw_read_provenance()` and `dw_provenance_diff()` (#152).** Ports of the R
+  helpers, with the same arguments, statuses and envelopes; they return
+  DataFrames (the manifest, the report) and dicts (the sidecar, the diff).
+  `dw_save()` now writes a DataFrame in `metadata` as an array of records,
+  as R does, so the manifest can be recorded as `metadata={"inputs": ...}`;
+  `dw_read_provenance()` reads arrays of records back as DataFrames. Tests
+  mirror R's D1-D14 and P1-P9. Stata routes via R or Python, recorded in the
+  coverage matrix. New parity cases `deposit_fetch_inputs` and
+  `provenance_diff_status` (R and Python agree; Stata a listed gap).
+
 ### Fixed
 
 - **R `dw_use()` read a doubled quote in a quoted CSV field as two quotes
