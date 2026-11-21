@@ -141,7 +141,49 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
   copy differs. Stata: none (run R or Python once). New handbook chapter
   *Starting a new repository*.
 
+- **`cso_toolkit_sync()`: update the vendored toolkit in one call (R +
+  Python).** Resolves the target (the latest release, or `target_version`);
+  says "up to date" and stops when `pulled_version` is already there;
+  otherwise prints the upstream `NEWS.md` sections, read from the target
+  tag, for every version after `pulled_version` up to the target, marking
+  with `!!` the entries under Breaking or Changed headings; then compares
+  and pulls as `cso_toolkit_pull()` does. It is the call the docs point
+  to. Stata: none.
+
+- **Latest-tag lookup falls back to `git ls-remote` (R + Python).** After
+  the gh CLI and the GitHub API, the lookup used by `cso_toolkit_check()`
+  and the sync helpers runs `git ls-remote --tags --refs
+  https://github.com/<source>.git` and takes the highest `vX.Y.Z` (no
+  pre-releases; compared numerically, so `v0.10.0` > `v0.9.1`). Git over
+  HTTPS works where UNICEF proxies block `api.github.com`.
+
 ### Fixed
+
+- **`cso_toolkit_diff()` and `cso_toolkit_pull()` are implemented (R +
+  Python)** — both were stubs that printed "not yet implemented" /
+  "implementation TBD". They read a release tag, never a working tree:
+  from a local clone given as `toolkit_source` (or `CSO_TOOLKIT_ROOT`)
+  with `git cat-file`, without fetching or changing it, or else from a
+  shallow `--no-checkout` clone of the tag from GitHub into a temporary
+  folder. `*.R` files map to `r/R/`, `*.py` to `python/src/`.
+  `cso_toolkit_diff()` returns one row per vendored file with status
+  `unchanged` / `changed` / `local_edit` / `missing_upstream` /
+  `missing_local` and both sha256s (CRLF-only differences are not
+  changes; a file that differs from what `pulled_version` shipped is a
+  local edit); with a local clone it also runs in reviewer mode.
+  `cso_toolkit_pull()` gains `toolkit_source` and `allow_downgrade`;
+  refuses uncommitted changes in the vendored folder, a downgrade, and
+  `confirm = TRUE` in a non-interactive session; reports "already at" for
+  the same tag (warning when the tag moved from `pulled_commit`); skips
+  local edits, keeps files gone upstream (warning), writes the rest
+  atomically, asking per file; and re-pins the manifest by editing lines
+  in place (`pulled_version`, `pulled_commit`, the existing `pulled_date`
+  or `pulled_at`, `pulled_by`, hashes of an existing `files:` block), so
+  comments and other keys survive. The git and release-tag helpers moved
+  from `create_project.R` / `.py` into `cso_toolkit_sync.R` / `.py`, which
+  consumers vendor on their own. In Python, `cso_toolkit.cso_toolkit_sync`
+  is now the exported function; import the module with
+  `importlib.import_module("cso_toolkit.cso_toolkit_sync")`.
 
 - **Multi-producer guards: two false alarms and an empty user (R + Python;
   #178).** `dw_save()` in a multi-producer project no longer stops on:

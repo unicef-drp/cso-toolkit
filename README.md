@@ -304,11 +304,14 @@ wraps (e.g. `read_csv`, `pd.read_csv`, `httr::GET`, `requests.get`,
 `# cso-allow: <rule-id>`; CI-mode via `error_on_violation = TRUE`
 fails the build on any violation.
 
-### Vintage sync — `cso_toolkit_check`, `cso_toolkit_diff`, `cso_toolkit_pull`
+### Vintage sync — `cso_toolkit_check`, `cso_toolkit_diff`, `cso_toolkit_pull`, `cso_toolkit_sync`
 
 Consumer-side helpers that read the local `.toolkit_manifest.yml`,
-query upstream for the latest tag, and warn / refresh when the
-consumer is behind. Reviewer mode forbids the network call.
+query upstream for the latest tag, and warn when the consumer is
+behind. `cso_toolkit_sync()` updates in one call: the release notes
+since the pin, a per-file diff against the release tag, then the pull
+(asking per file) and a re-pinned manifest. Reviewer mode forbids the
+network call and the update.
 
 ### Graceful error envelopes — across every helper
 

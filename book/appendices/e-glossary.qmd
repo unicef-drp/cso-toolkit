@@ -194,7 +194,7 @@ dw_save, filename("out.dta") path("$teamsWrkData/ed") idvars(REF_AREA INDICATOR 
 
 ## Manifest (`.toolkit_manifest.yml`)
 
-The small YAML file that records which toolkit vintage a consumer repo has vendored; it lives at `00_functions/.toolkit_manifest.yml`. Its fields are `source` (the upstream `owner/repo`), `pulled_version` (the pinned tag — or the literal `inrepo`, which marks a helper this repo maintains itself and so silences sync warnings on it), `pulled_date`, `pulled_by`, `vendored` (the list of copied files), and `local_edits` (vendored files with local divergence, which `cso_toolkit_pull()` skips on update). It is version-controlled alongside the helpers and updated on every re-pull. The vintage-sync helpers read it. See the vendoring model chapter.
+The small YAML file that records which toolkit vintage a consumer repo has vendored; it lives at `00_functions/.toolkit_manifest.yml`. Its fields are `source` (the upstream `owner/repo`), `pulled_version` (the pinned tag — or the literal `inrepo`, which marks a helper this repo maintains itself and so silences sync warnings on it), `pulled_commit` (the commit that tag points to), `pulled_date`, `pulled_by`, `vendored` (the list of copied files), and `local_edits` (vendored files with local divergence, which `cso_toolkit_pull()` skips on update). It is version-controlled alongside the helpers and updated on every re-pull. The vintage-sync helpers read it. See the vendoring model chapter.
 
 ## Master vintage
 
@@ -270,7 +270,7 @@ A dated snapshot of a data source or of a piece of code. Two senses recur: the *
 
 ## Vintage sync
 
-The capability family of consumer-side helpers that keep a vendored copy from silently falling behind upstream: `cso_toolkit_check()` reads the local manifest, queries upstream for the latest tag, and warns when the consumer is behind; `cso_toolkit_diff()` shows what changed; `cso_toolkit_pull()` refreshes vendored files to a target tag and updates the manifest. Only producer mode can run the check — reviewer mode's network lockout (`dw_apis_allowed = FALSE`) blocks the upstream lookup, so reviewers always run against whatever vintage the producer pinned. See the vintage sync chapter.
+The capability family of consumer-side helpers that keep a vendored copy from silently falling behind upstream: `cso_toolkit_check()` reads the local manifest, queries upstream for the latest tag, and warns when the consumer is behind; `cso_toolkit_diff()` compares each vendored file with a release tag; `cso_toolkit_pull()` refreshes vendored files to a target tag and updates the manifest; `cso_toolkit_sync()` does the update in one call, after printing the release notes. Only producer mode can run the check — reviewer mode's network lockout (`dw_apis_allowed = FALSE`) blocks the upstream lookup, so reviewers always run against whatever vintage the producer pinned. See the vintage sync chapter.
 
 ## Z: mirror
 

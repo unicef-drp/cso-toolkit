@@ -50,9 +50,11 @@ Compares the version recorded in the consumer's
     command and, with `quiet = FALSE`, prints a boxed alert. Reviewer
     mode only warns: it never polls GitHub or changes any file.}
   \item{The latest upstream tag}{Producer mode only (the mode contract
-    forbids API calls in reviewer mode). A newer tag is informational:
-    with `quiet = FALSE` it prints a boxed notice with the same commands,
-    but it does not warn.}
+    forbids API calls in reviewer mode). The lookup tries the gh CLI,
+    the GitHub API, then `git ls-remote --tags` over HTTPS (for networks
+    that block api.github.com). A newer tag is informational: with
+    `quiet = FALSE` it prints a boxed notice with the same commands, but
+    it does not warn.}
 }
 
 Versions are compared numerically (`0.10.0` is newer than `0.9.1`); a
@@ -75,16 +77,17 @@ cso_toolkit_check(quiet = FALSE, target_version = "v0.9.1")
 
 res <- cso_toolkit_check(quiet = FALSE)
 if (!is.null(res) && isTRUE(res$updates_available)) {
-  cso_toolkit_diff()
+  cso_toolkit_sync()
 }
 }
 }
 \seealso{
-[cso_toolkit_diff()] for per-file diffs;
-  [cso_toolkit_pull()] for the refresh workflow.
+[cso_toolkit_sync()] to update (release notes, diff, pull);
+  [cso_toolkit_diff()] for per-file differences.
 
 Other sync: 
 \code{\link{cso_toolkit_diff}()},
-\code{\link{cso_toolkit_pull}()}
+\code{\link{cso_toolkit_pull}()},
+\code{\link{cso_toolkit_sync}()}
 }
 \concept{sync}
