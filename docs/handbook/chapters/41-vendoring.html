@@ -493,7 +493,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <i class="callout-icon"></i>
 </div>
 <div class="callout-body-container">
-<p>The same manifest schema applies to every language. R and Python consumers vendor into <code>00_functions/</code>; Stata consumers copy <code>.ado</code> and <code>.sthlp</code> files into the project’s <code>ado/</code> directory (or <code>PERSONAL</code> adopath) and pin the same <code>pulled_version</code>. The contract is identical; only the destination directory differs by language idiom.</p>
+<p>The same manifest schema applies to every language. R and Python consumers vendor into <code>00_functions/</code>; Stata consumers copy the <code>.ado</code> and <code>.sthlp</code> files, and <code>dw_stata_helpers.py</code> (the Python side of <code>dw_save</code>’s sidecar and guards), into the project’s <code>ado/</code> directory (or <code>PERSONAL</code> adopath) and pin the same <code>pulled_version</code>. The contract is identical; only the destination directory differs by language idiom.</p>
 </div>
 </div>
 </div>

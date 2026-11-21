@@ -538,13 +538,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td><code>written_at</code></td>
 <td>string</td>
-<td>Write timestamp. R/Python: ISO-8601 UTC, <code>YYYY-MM-DDTHH:MM:SS+0000</code>. Stata: its local <code>c(current_date) c(current_time)</code>, e.g.&nbsp;<code>28 Jun 2026 14:03:51</code>.</td>
-<td>R / Py / Stata (different format)</td>
+<td>Write timestamp: ISO-8601 UTC, <code>YYYY-MM-DDTHH:MM:SS+0000</code>. Stata writes it through Stata’s Python integration (Stata 16+); without it, its local <code>c(current_date) c(current_time)</code>, e.g.&nbsp;<code>28 Jun 2026 14:03:51</code>, which the concurrent-write guard cannot compare.</td>
+<td>R / Py / Stata</td>
 </tr>
 <tr class="even">
 <td><code>user</code></td>
 <td>string</td>
-<td>The writing user. R/Python read <code>USERNAME</code> (Python falls back to <code>getpass.getuser()</code>); Stata reads <code>c(username)</code>.</td>
+<td>The writing user: <code>USERNAME</code>, then <code>LOGNAME</code>, <code>USER</code>, <code>LNAME</code>, then the operating system’s user, in all three languages (Python: <code>USERNAME</code>, then <code>getpass.getuser()</code>, the same order).</td>
 <td>R / Py / Stata</td>
 </tr>
 <tr class="odd">
@@ -556,13 +556,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td><code>sha256</code></td>
 <td>string | null</td>
-<td>Hex SHA-256 of the primary file’s bytes, computed after the file is written. <strong>R/Python only.</strong> In R it is <code>null</code> when the optional <code>digest</code> package is not installed.</td>
-<td>R / Py</td>
+<td>Hex SHA-256 of the primary file’s bytes, computed after the file is written. In R it is <code>null</code> when the optional <code>digest</code> package is not installed; Stata writes it through Stata’s Python integration (Stata 16+) and omits the key without it (#191).</td>
+<td>R / Py / Stata</td>
 </tr>
 <tr class="odd">
 <td><code>datasignature</code></td>
 <td>string</td>
-<td>Stata’s native <code>datasignature</code> content hash (a checksum of variable names and values), used in place of <code>sha256</code>. <strong>Stata only.</strong></td>
+<td>Stata’s native <code>datasignature</code> content hash (a checksum of variable names and values), written alongside <code>sha256</code>. <strong>Stata only.</strong></td>
 <td>Stata</td>
 </tr>
 <tr class="even">

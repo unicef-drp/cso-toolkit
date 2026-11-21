@@ -627,19 +627,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><code>dw_collaboration</code></td>
 <td>Yes</td>
 <td>Yes</td>
-<td>Planned (#168)</td>
+<td>Yes (<code>dw_collaboration.ado</code>, #168)</td>
 </tr>
 <tr class="odd">
 <td><code>dw_set_collaboration</code></td>
 <td>Yes</td>
 <td>Yes</td>
-<td>Planned (#168)</td>
+<td>No: switch from R or Python (one reviewed PR)</td>
 </tr>
 <tr class="even">
 <td><code>dw_save</code> multi-producer guards + lineage fields (<code>takeover</code>)</td>
 <td>Yes</td>
 <td>Yes</td>
-<td>Planned (#168): <code>dw_save.ado</code> ignores <code>cso_project.yml</code></td>
+<td>Yes, through Stata’s Python integration (Stata 16+) (#168); without it a multi-producer write stops unless <code>takeover</code></td>
 </tr>
 <tr class="odd">
 <td><code>dw_root</code></td>
@@ -693,7 +693,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong><code>dw_root</code> is R + Python; <code>dw_stage</code> is R-only.</strong> <code>dw_root</code> resolves the mode-aware repo/canonical root for a vendored <code>kind</code> (<code>"wrk"</code> / <code>"raw"</code> / <code>"meta"</code>) so a sector script can build paths without knowing whether the session is producer or reviewer; <code>dw_stage</code> copies a reviewer-mode sandbox file into place with a <code>.staged.json</code> integrity sidecar. <code>dw_stage</code> has no Python or Stata sibling yet.</li>
 <li><strong><code>dw_fetch_inputs</code> and <code>dw_check_deposit</code> are R-only for now.</strong> They serve pipelines that keep raw inputs out of Git in a local folder mirroring a deposit folder: <code>dw_fetch_inputs</code> copies deposit-only inputs locally (or reads them in place), keeps the folder layout visible with <code>.gitkeep</code> placeholders, and returns an input manifest; <code>dw_check_deposit</code> proves every local input has an identical SHA-256 copy on Teams or Z:. Python and Stata siblings are planned (#152).</li>
 <li><strong><code>dw_read_provenance</code> and <code>dw_provenance_diff</code> are R-only for now.</strong> They read the <code>dw_save</code> sidecar and compare two runs of an output from their sidecars (<code>reproduced</code>, <code>output_changed</code>, <code>inputs_changed</code>, <code>first_run</code>, <code>no_input_record</code>). Python and Stata siblings are planned (#152).</li>
-<li><strong>The collaboration model is R + Python; Stata is a known gap (#168).</strong> <code>dw_collaboration()</code> reads the project’s <code>cso_project.yml</code> (<code>single-producer</code> or <code>multi-producer</code>), <code>dw_set_collaboration()</code> writes it and baselines the existing sidecars, and in a multi-producer project <code>dw_save()</code> refuses out-of-band and concurrent writes (unless <code>takeover</code>) and records lineage fields in the sidecar. <code>dw_save.ado</code> does none of this yet: Stata sidecars carry <code>datasignature</code> rather than a byte <code>sha256</code> and a local rather than ISO-8601 UTC timestamp, so neither guard can be checked against them as they stand. Until #168 lands, Stata writes in a multi-producer project are unguarded; run the legs that write shared outputs from R or Python, or coordinate them by hand. See the roles and mode-contract chapter.</li>
+<li><strong>The collaboration model is in all three languages (Stata since #168).</strong> <code>dw_collaboration()</code> reads the project’s <code>cso_project.yml</code> (<code>single-producer</code> or <code>multi-producer</code>), <code>dw_set_collaboration()</code> writes it and baselines the existing sidecars, and in a multi-producer project <code>dw_save()</code> refuses out-of-band and concurrent writes (unless <code>takeover</code>) and records lineage fields in the sidecar. Stata’s <code>dw_collaboration.ado</code> and <code>dw_save.ado</code> apply the same rules (<code>takeover</code> option) and write the same lineage fields. Stata has no SHA-256, UTC clock, JSON reader or portable git call of its own, so the hashing, timestamps, sidecar reading and git checks run through Stata’s Python integration (Stata 16+), in <code>dw_stata_helpers.py</code> shipped next to the <code>.ado</code> files; with it, every Stata sidecar also records <code>sha256</code> and an ISO-8601 UTC <code>written_at</code>. Without Python a multi-producer write stops (it cannot be guarded) unless <code>takeover</code> is passed; single-producer projects are unaffected. <code>dw_set_collaboration</code> stays R and Python: the switch is a one-off, reviewed pull request. The parity certificate’s <code>collab_out_of_band</code> case checks the three agree. See the roles and mode-contract chapter.</li>
 </ul>
 <div class="callout callout-style-simple callout-note">
 <div class="callout-body d-flex">
