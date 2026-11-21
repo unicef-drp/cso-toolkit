@@ -69,8 +69,19 @@ def _parse_iso(value: Any) -> Optional[_dt.datetime]:
 
 
 def _current_user() -> str:
-    """The user name recorded in sidecars (same source as ``_write_provenance``)."""
-    return os.environ.get("USERNAME") or getpass.getuser()
+    """The user name recorded in sidecars and compared by the guards.
+
+    ``USERNAME`` (Windows), then :func:`getpass.getuser` (``LOGNAME``,
+    ``USER``, ``LNAME``, then the operating system's user): the same order as
+    R's ``.dw_current_user()`` (#178). ``""`` only when nothing is set.
+    """
+    user = os.environ.get("USERNAME")
+    if user:
+        return user
+    try:
+        return getpass.getuser() or ""
+    except (OSError, KeyError, ImportError):  # no env var and no pwd entry
+        return ""
 
 
 def _str1(value: Any) -> Optional[str]:
@@ -256,6 +267,67 @@ def _git_info(path: Union[str, Path]) -> Dict[str, Optional[str]]:
             "commit": run("rev-parse", "HEAD")}
 
 
+def _git_settled(path: Union[str, Path], sidecar: Union[str, Path]) -> bool:
+    """Is an output settled in git (#178)?
+
+    True when ``path`` and its sidecar are both tracked and identical to
+    ``HEAD`` (no staged or unstaged change). The previous write then reached
+    this session through git (a pull, a merge, a checkout), so it is the
+    state this session builds on, not a concurrent write. False outside a
+    repository, when git is missing, or when either file is untracked or
+    modified.
+    """
+    folder = str(Path(path).resolve(strict=False).parent)
+    files = [Path(path).name, Path(sidecar).name]
+
+    def ok(*args: str) -> bool:
+        try:
+            proc = subprocess.run(["git", "-C", folder, *args],
+                                  capture_output=True, timeout=10)
+        except (OSError, subprocess.SubprocessError):
+            return False
+        return proc.returncode == 0
+
+    return (ok("ls-files", "--error-unmatch", "--", *files)
+            and ok("diff", "--quiet", "HEAD", "--", *files))
+
+
+_EOL_TEXT_EXTS = {"csv", "tsv", "txt", "json", "md", "tex", "yml", "yaml",
+                  "xml", "html"}
+
+
+def _sha256_eol_variants(path: Union[str, Path]) -> List[str]:
+    """SHA-256 of a text file with its line endings converted (#178).
+
+    A Windows clone with ``core.autocrlf=true`` checks a tracked output out
+    with CRLF line endings, so its bytes no longer match the sidecar written
+    with LF (and the other way round). Returns the hashes of the file with
+    every CRLF turned into LF and with every lone LF turned into CRLF; an
+    empty list for formats that are not line-based text.
+    """
+    if Path(path).suffix.lower().lstrip(".") not in _EOL_TEXT_EXTS:
+        return []
+    try:
+        data = Path(path).read_bytes()
+    except OSError:
+        return []
+    lf = data.replace(b"\r\n", b"\n")
+    crlf = lf.replace(b"\n", b"\r\n") if b"\r" not in data else _lone_lf_to_crlf(data)
+    return [hashlib.sha256(lf).hexdigest(), hashlib.sha256(crlf).hexdigest()]
+
+
+def _lone_lf_to_crlf(data: bytes) -> bytes:
+    """Turn every LF not preceded by CR into CRLF, leaving CRLF as is."""
+    out = bytearray()
+    prev = None
+    for byte in data:
+        if byte == 0x0A and prev != 0x0D:
+            out.append(0x0D)
+        out.append(byte)
+        prev = byte
+    return bytes(out)
+
+
 def _collab_preflight(path: str, takeover: bool = False,
                       is_reviewer: bool = False) -> Optional[Dict[str, Any]]:
     """Multi-producer guards + lineage for :func:`cso_toolkit.dw_save`.
@@ -289,17 +361,33 @@ def _collab_preflight(path: str, takeover: bool = False,
     if not is_reviewer and prev is not None:
         why: List[str] = []
         if prev_sha and file_sha and prev_sha != file_sha:
-            fired.append("out_of_band")
-            why.append(
-                f"  Why (out-of-band change): the file's SHA-256 "
-                f"({file_sha[:12]}) no longer matches its provenance sidecar "
-                f"({prev_sha[:12]}): someone changed it without dw_save(), so "
-                "replacing it now would discard a change nobody recorded."
-            )
+            if prev_sha in _sha256_eol_variants(path):
+                # Same content, other line endings: a CRLF checkout (#178).
+                _log.info("[dw_save] note: %s differs from its sidecar only in "
+                          "line endings (a CRLF checkout of an LF file, or the "
+                          "reverse); not an out-of-band change. Keep tracked "
+                          "outputs byte-exact with `output/** -text` in "
+                          ".gitattributes.", Path(path).name)
+            else:
+                fired.append("out_of_band")
+                why.append(
+                    f"  Why (out-of-band change): the file's SHA-256 "
+                    f"({file_sha[:12]}) no longer matches its provenance sidecar "
+                    f"({prev_sha[:12]}): someone changed it without dw_save(), so "
+                    "replacing it now would discard a change nobody recorded."
+                )
         start = _session_start()
         prev_dt, start_dt = _parse_iso(prev_at), _parse_iso(start)
-        if (prev_user and prev_user != me and prev_dt is not None
-                and start_dt is not None and prev_dt > start_dt):
+        later = (prev_user and prev_user != me and prev_dt is not None
+                 and start_dt is not None and prev_dt > start_dt)
+        if later and _git_settled(path, sidecar):
+            # Written after this session started, but committed and
+            # unmodified: it arrived through git (a pull), so this write
+            # builds on it (#178).
+            _log.debug("[dw_save] %s: %s's write at %s is committed and "
+                       "unmodified (arrived through git); not concurrent",
+                       Path(path).name, prev_user, prev_at)
+        elif later:
             fired.append("concurrent")
             why.append(
                 f"  Why (concurrent write): {prev_user} wrote it at {prev_at}, "

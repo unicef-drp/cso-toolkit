@@ -57,7 +57,7 @@ from typing import Any, Iterable, Mapping, Optional, Sequence, Union
 import pandas as pd
 
 from . import _state
-from .dw_project import _collab_preflight
+from .dw_project import _collab_preflight, _current_user
 
 _log = logging.getLogger(__name__)
 
@@ -691,7 +691,7 @@ def _write_provenance(
         "path": path,
         "format": fmt,
         "written_at": _utc_now_iso(),
-        "user": os.environ.get("USERNAME") or getpass.getuser(),
+        "user": _current_user(),
         "dw_mode": _state._get("dw_mode"),
         "vintage": vintage,
         "sha256": _sha256_file(path),
