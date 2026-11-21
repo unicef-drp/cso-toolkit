@@ -63,7 +63,10 @@ def test_missing_mode_shows_the_yaml(tmp_path):
     assert "No valid dw_mode" in out
     assert 'tester:\n        dw_mode: "reviewer"' in out
     assert 'dw_mode_by_project:\n          proj-x: "producer"' in out
-    assert "MODE=" not in out
+    # The profile stopped before the print ran. Look for a printed line, not
+    # the text anywhere: since Python 3.13 the traceback quotes the -c source,
+    # which contains "MODE=".
+    assert not any(line.startswith("MODE=") for line in out.splitlines())
 
 
 def test_review_profile_user_block(tmp_path):
