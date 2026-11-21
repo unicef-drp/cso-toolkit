@@ -279,6 +279,20 @@ report <- dw_compare(
 report$summary   # row counts and diff classification
 ```
 
+`diagnose = TRUE` adds `report$profile` (also `dw_diff_profile(report, by,
+numeric_value_cols)`): `columns` (which value columns differ), `magnitude`
+(absolute and relative q50 / q90 / q99 / max of each numeric column's drift,
+over the rows where it changed), `keys` (the top values of each key among the
+changed rows, with their share), `added` / `removed` (the same for those
+rows) and `text` (the printed lines; `<label>_profile.txt` with
+`write_report_to`). Python: the same, as a dict of DataFrames.
+
+When `current` and `reference` are both paths that resolve to the same file
+(in reviewer mode a sandbox path is read network-first from the canonical
+deposit), `dw_compare` stops with a `[cso_toolkit.dw_compare]` envelope
+instead of reporting a false "0 changed" (#111). Pass the new data as a data
+frame.
+
 ## `dw_merge(x, using, by, how)`
 
 Stata-style merge with cardinality assertion. `how ∈ {"m:1","1:1","1:m","m:m"}`.

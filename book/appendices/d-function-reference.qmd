@@ -41,7 +41,8 @@ Uniform read / write / compare / merge helpers with mode-aware path routing (pat
 |---|---|---|---|---|
 | `dw_save` | ✅ | ✅ | ✅ | Write + uniqueness check (isid) + sidecar + Z: mirror; prompts before overwriting a producer deposit (v0.5.0), `force = TRUE` to override |
 | `dw_use` | ✅ | ✅ | ✅ | Read with mode-branched resolver; accepts HTTPS URLs since v0.4.0; in R, `sheet = NULL` reads all sheets of an `.xlsx` (v0.5.0) |
-| `dw_compare` | ✅ | ✅ | ✅ | Diff two artefacts on id + value vars; tolerates degenerate sides with a warning (v0.5.0) |
+| `dw_compare` | ✅ | ✅ | ✅ | Diff two artefacts on id + value vars; tolerates degenerate sides with a warning (v0.5.0); `diagnose = TRUE` (R, Python) adds a profile; stops when both sides are the same file (#111) |
+| `dw_diff_profile` | ✅ | ✅ | — | Unreleased (#111): profile a `dw_compare` result (differing columns, numeric drift quantiles, top key values of the changed / added / removed rows) |
 | `dw_merge` | ✅ | ✅ | — | R + Python only |
 | `dw_isid` | ✅ | ✅ | embedded | In Stata the uniqueness check lives inside `dw_save` |
 | `dw_verify_z` | ✅ | ✅ | — | R + Python only |
