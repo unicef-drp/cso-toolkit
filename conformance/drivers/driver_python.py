@@ -175,6 +175,55 @@ def config_user_block(cid: str) -> None:
     out_json({"modes": modes}, cid)
 
 
+def deposit_fetch_inputs(cid: str) -> None:
+    plain()
+    local = work / cid / "local"
+    shutil.rmtree(local, ignore_errors=True)
+    mf = m.dw_fetch_inputs(local, "inputs", pattern=r"_20(23|24|25)\.csv$",
+                           teams_root=str(fix_dir / "deposit" / "teams"), z_root=None,
+                           verbose=False)
+    out_csv(mf[["file", "sha256", "origin", "teams", "z"]], cid)
+
+
+def provenance_diff_status(cid: str) -> None:
+    plain()
+    d = work / cid
+    d.mkdir(parents=True, exist_ok=True)
+    p = d / "out.csv"
+    for f in (p, Path(str(p) + ".provenance.json")):
+        f.unlink(missing_ok=True)
+
+    def inp(files, shas):
+        return pd.DataFrame({"file": files, "sha256": shas})
+
+    def run(df, inputs):
+        meta = {"title": "parity"}
+        if inputs is not None:
+            meta["inputs"] = inputs
+        m.dw_save(df, path=str(p), metadata=meta, overwrite=True)
+
+    df1 = pd.DataFrame({"k": ["x", "y"], "v": [1.0, 2.0]})
+    in1 = inp(["a.csv", "b.csv"], ["aaa", "bbb"])
+    st = []
+    run(df1, in1)
+    st.append(m.dw_provenance_diff(None, p, verbose=False)["status"])
+    prev = m.dw_read_provenance(p, verbose=False)
+    run(df1, in1)
+    st.append(m.dw_provenance_diff(prev, p, verbose=False)["status"])
+    prev = m.dw_read_provenance(p, verbose=False)
+    run(df1.assign(v=df1["v"] * 10), in1)
+    st.append(m.dw_provenance_diff(prev, p, warn=False, verbose=False)["status"])
+    prev = m.dw_read_provenance(p, verbose=False)
+    run(df1, inp(["a.csv", "c.csv"], ["aaa2", "ccc"]))
+    r4 = m.dw_provenance_diff(prev, p, verbose=False)
+    st.append(r4["status"])
+    prev = m.dw_read_provenance(p, verbose=False)
+    run(df1, None)
+    st.append(m.dw_provenance_diff(prev, p, verbose=False)["status"])
+    out_json({"statuses": st, "inputs_added": r4["inputs_added"],
+              "inputs_removed": r4["inputs_removed"], "inputs_changed": r4["inputs_changed"]}, cid)
+
+
 def collab_out_of_band(cid: str) -> None:
     plain()
     state.configure(dw_collaboration_model="multi-producer",
@@ -216,6 +265,8 @@ CASES = {
     "aggregate_weighted_mean": aggregate_weighted_mean,
     "version_compare": version_compare,
     "config_user_block": config_user_block,
+    "deposit_fetch_inputs": deposit_fetch_inputs,
+    "provenance_diff_status": provenance_diff_status,
     "collab_out_of_band": collab_out_of_band,
 }
 

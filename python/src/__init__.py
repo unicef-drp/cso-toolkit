@@ -32,6 +32,11 @@ from .dw_io import (
     dw_verify_z,
 )
 
+# Inputs from the canonical deposit (dw_deposit.py) and run provenance
+# (dw_provenance.py); ports of the R helpers (#152)
+from .dw_deposit import dw_check_deposit, dw_fetch_inputs
+from .dw_provenance import dw_provenance_diff, dw_read_provenance
+
 # Collaboration model (dw_project.py)
 from .dw_project import (
     dw_collaboration,
@@ -114,6 +119,8 @@ __all__ = [
     "dw_verify_z", "dw_resolve_path", "dw_is_canonical",
     "dw_root", "dw_default_unicef_allowlist",
     "dw_toolkit_version",
+    # Deposit inputs and run provenance
+    "dw_fetch_inputs", "dw_check_deposit", "dw_read_provenance", "dw_provenance_diff",
     # Collaboration model
     "dw_collaboration", "dw_set_collaboration",
     # API

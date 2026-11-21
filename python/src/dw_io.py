@@ -671,6 +671,29 @@ def _write_pickle(x: Any, path: str, **kwargs: Any) -> None:
         pickle.dump(x, f, **kwargs)
 
 
+def _json_ready(x: Any) -> Any:
+    """Metadata as JSON: a DataFrame becomes an array of records (as R's
+    jsonlite writes a data frame), so an input manifest from
+    ``dw_fetch_inputs()`` lands in the sidecar as rows, not as its printed
+    form (#152); numpy scalars become Python numbers."""
+    if isinstance(x, pd.DataFrame):
+        return [{k: _json_ready(v) for k, v in r.items()} for r in x.to_dict("records")]
+    if isinstance(x, pd.Series):
+        return [_json_ready(v) for v in x.tolist()]
+    if isinstance(x, Mapping):
+        return {k: _json_ready(v) for k, v in x.items()}
+    if isinstance(x, (list, tuple)):
+        return [_json_ready(v) for v in x]
+    if hasattr(x, "item") and callable(getattr(x, "item")) and type(x).__module__ == "numpy":
+        return x.item()
+    try:
+        if pd.isna(x):
+            return None
+    except (TypeError, ValueError):
+        pass
+    return x
+
+
 def _write_provenance(
     path: str, x: Any, fmt: str,
     vintage: Optional[str], metadata: Optional[Mapping[str, Any]],
@@ -701,7 +724,7 @@ def _write_provenance(
     if lineage:
         prov.update(lineage)
     if metadata is not None:
-        prov["metadata"] = dict(metadata)
+        prov["metadata"] = _json_ready(dict(metadata))
     # Wrap the sidecar write so a non-JSON-serialisable metadata value
     # (rare but possible — e.g. a numpy scalar or custom class) emits a
     # warning rather than rolling back the primary file write.  Sidecar

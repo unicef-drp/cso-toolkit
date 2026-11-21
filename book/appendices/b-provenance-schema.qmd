@@ -78,7 +78,7 @@ The following fields appear in every sidecar. The table gives the JSON key, its 
 | `sources` | array\<string\> (R/Py) / string (Stata) | Upstream data sources (e.g. `"UIS bulk SDG_092025"`, `"WPP 2024"`). |
 | `contact` | string | Owner handle (e.g. `@karavan88`). |
 | `vintage` | string | Data vintage; in Stata this lives inside `metadata`, in R/Python it is a top-level field as well. |
-| `inputs` | array\<object\> (R) | The exact input files the output was built from, one record per input: `file` (path relative to the inputs folder), `sha256`, and optionally `origin`. Pass the manifest returned by `dw_fetch_inputs()` (`manifest[, c("file", "sha256", "origin")]`). `dw_provenance_diff()` reads this record to tell whether two runs used the same inputs. R only for now (#152). |
+| `inputs` | array\<object\> (R, Python) | The exact input files the output was built from, one record per input: `file` (path relative to the inputs folder), `sha256`, and optionally `origin`. Pass the manifest returned by `dw_fetch_inputs()` (`manifest[, c("file", "sha256", "origin")]`). In Python pass `manifest[["file", "sha256", "origin"]]`; `dw_save` writes a DataFrame in `metadata` as an array of records, as R does. `dw_provenance_diff()` reads this record to tell whether two runs used the same inputs. |
 
 The `inputs` record serialises as an array of objects:
 
@@ -253,7 +253,7 @@ A `FALSE` / `False` result here means the file changed since it was written — 
 
 ### Comparing the sidecars of two runs
 
-Two sidecars of the same output answer a fourth question: did the new run reproduce the previous one? In R, `dw_provenance_diff(previous, current)` compares the `metadata.inputs` records (inputs) and the `sha256` fields (outputs) and returns `reproduced`, `inputs_changed` (with the input files added, removed, and changed), `output_changed` (same inputs, different output; warns), `first_run`, or `no_input_record`. Read the previous sidecar with `dw_read_provenance()` before the new run overwrites the output. Python and Stata siblings are planned (#152).
+Two sidecars of the same output answer a fourth question: did the new run reproduce the previous one? In R and Python, `dw_provenance_diff(previous, current)` compares the `metadata.inputs` records (inputs) and the `sha256` fields (outputs) and returns `reproduced`, `inputs_changed` (with the input files added, removed, and changed), `output_changed` (same inputs, different output; warns), `first_run`, or `no_input_record`. Read the previous sidecar with `dw_read_provenance()` before the new run overwrites the output. Stata routes via R or Python (#152).
 
 ## Summary
 
