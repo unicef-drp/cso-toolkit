@@ -199,8 +199,10 @@ refuses to replace an output changed outside `dw_save()` or written by
 another user during your session (unless `takeover = TRUE`) and records
 the lineage of every write in its sidecar. Switch with
 `dw_set_collaboration()` in one reviewed pull request; it baselines the
-existing sidecars so the switch is a non-event. R and Python; Stata is
-tracked in [#168](https://github.com/unicef-drp/cso-toolkit/issues/168).
+existing sidecars so the switch is a non-event. Stata applies the same
+guards through its Python integration (Stata 16+;
+[#168](https://github.com/unicef-drp/cso-toolkit/issues/168)); the switch
+itself is made from R or Python.
 See the handbook chapter
 [Roles and the mode contract](https://unicef-drp.github.io/cso-toolkit/handbook/chapters/21-roles-and-modes.html#collaboration-model-single--and-multi-producer-projects).
 

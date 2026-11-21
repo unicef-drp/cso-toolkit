@@ -25,7 +25,7 @@ local_edits: []
 The `source` field names the upstream repository; `pulled_version` is the tag that was in effect at the most recent copy; `vendored` lists the files that were copied; and `local_edits` lists any vendored files the consumer has since modified, so the refresh workflow knows to leave them alone. The manifest is committed alongside the helpers and updated every time the toolkit is re-pulled. (See the provenance sidecars chapter for the related sidecar manifests that travel with data deposits, and the appendix on the sidecar schema for field-level detail.)
 
 ::: {.callout-note}
-The same manifest schema applies to every language. R and Python consumers vendor into `00_functions/`; Stata consumers copy `.ado` and `.sthlp` files into the project's `ado/` directory (or `PERSONAL` adopath) and pin the same `pulled_version`. The contract is identical; only the destination directory differs by language idiom.
+The same manifest schema applies to every language. R and Python consumers vendor into `00_functions/`; Stata consumers copy the `.ado` and `.sthlp` files, and `dw_stata_helpers.py` (the Python side of `dw_save`'s sidecar and guards), into the project's `ado/` directory (or `PERSONAL` adopath) and pin the same `pulled_version`. The contract is identical; only the destination directory differs by language idiom.
 :::
 
 ## Why vendor instead of install

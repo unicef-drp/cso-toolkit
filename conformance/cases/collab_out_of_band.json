@@ -13,13 +13,10 @@
   },
   "languages": [
     "r",
-    "python"
+    "python",
+    "stata"
   ],
-  "gaps": {
-    "stata": {
-      "issue": "#168",
-      "reason": "Stata dw_save ignores cso_project.yml."
-    }
-  },
+  "notes": "Stata's guards run through its Python integration (Stata 16+).",
+  "gaps": {},
   "divergences": {}
 }

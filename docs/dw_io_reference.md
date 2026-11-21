@@ -96,7 +96,9 @@ happened; the override is recorded in the new sidecar as `takeover`
 prints a note and proceeds. Multi-producer sidecars also carry
 `collaboration`, `previous_sha256`, `previous_user`, `previous_written_at`,
 `git_branch` and `git_commit`. Reviewer sandbox writes skip the guards.
-Single-producer projects are unaffected. Stata: issue #168.
+Single-producer projects are unaffected. Stata: `dw_collaboration` and
+`dw_save, ... takeover`, through Stata's Python integration (Stata 16+;
+#168); without it a multi-producer Stata write stops unless `takeover`.
 
 ```r
 dw_save(df, path = out_csv, overwrite = TRUE, force = TRUE, takeover = TRUE)

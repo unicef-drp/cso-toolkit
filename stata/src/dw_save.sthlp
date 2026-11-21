@@ -21,7 +21,7 @@
 {cmd:dw_save} {cmd:,} {cmdab:file:name(}{it:string}{cmd:)} {cmdab:p:ath(}{it:string}{cmd:)} {cmdab:id:vars(}{it:string}{cmd:)}
 {break}    [ {cmdab:meta:data(}{it:string asis}{cmd:)} {cmdab:ti:tle(}{it:string asis}{cmd:)} {cmdab:pro:ducer(}{it:string asis}{cmd:)}
 {break}      {cmdab:so:urces(}{it:string asis}{cmd:)} {cmdab:con:tact(}{it:string}{cmd:)} {cmdab:vi:ntage(}{it:string}{cmd:)}
-{break}      {cmd:allow_canonical_write} {cmd:nocompress} {cmd:nosidecar} ]
+{break}      {cmd:allow_canonical_write} {cmd:nocompress} {cmd:nosidecar} {cmdab:take:over} ]
 
 {marker description}{...}
 {title:Description}
@@ -95,6 +95,23 @@ review work).{p_end}
 {phang}
 {cmd:nosidecar} — skip writing the {bf:.provenance.json} sidecar (not
 recommended; use only for one-off scratch saves).{p_end}
+
+{phang}
+{cmdab:take:over} — in a multi-producer project ({bf:cso_project.yml},
+see {help dw_collaboration}), replace the output even though its sidecar
+shows an out-of-band change (the file's SHA-256 no longer matches) or a
+concurrent write (another user wrote it after this session started, and
+it did not arrive through git). Without it, {cmd:dw_save} stops with error
+459. The takeover is recorded in the new sidecar. Reviewer sessions skip
+the guards.{p_end}
+
+{pstd}
+{bf:Python.} The multi-producer guards, the sidecar's {bf:sha256} and its
+ISO-8601 UTC {bf:written_at} use Stata's Python integration (Stata 16+;
+{help python}) through {bf:dw_stata_helpers.py}, shipped next to the
+{bf:.ado} files. Without Python a single-producer save still works (no
+{bf:sha256}; {bf:written_at} in local time), and a multi-producer save
+stops unless {cmd:takeover} is passed.{p_end}
 
 {marker examples}{...}
 {title:Examples}

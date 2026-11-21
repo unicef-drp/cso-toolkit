@@ -15,9 +15,19 @@ sector that runs partly in Stata and partly in R uses the same producer
   sidecar with the same shape the R `dw_save()` helper emits. Honours
   the producer / reviewer mode contract via `$dw_mode`; canonical writes
   in reviewer mode are BLOCKED unless `allow_canonical_write` is passed.
-  Content integrity uses Stata-native `datasignature` rather than a
-  file-level SHA-256 (so no shell-out, no AppLocker issues).
-  Companion help: [`dw_save.sthlp`](dw_save.sthlp).
+  The sidecar records Stata's `datasignature` and, through Stata's
+  Python integration (Stata 16+), the file's `sha256` and an ISO-8601 UTC
+  `written_at`, the keys R and Python compare. In a multi-producer project
+  it applies the out-of-band and concurrent-write guards (`takeover`
+  option). Companion help: [`dw_save.sthlp`](dw_save.sthlp).
+- [`dw_collaboration.ado`](dw_collaboration.ado) — the project's
+  collaboration model from `cso_project.yml` (`single-producer` |
+  `multi-producer`), resolved once per session. Companion help:
+  [`dw_collaboration.sthlp`](dw_collaboration.sthlp).
+- [`dw_stata_helpers.py`](dw_stata_helpers.py) and
+  [`_dw_py.ado`](_dw_py.ado) — the Python side of `dw_save` and
+  `dw_collaboration` (SHA-256, UTC time, sidecar JSON, git). **Vendor them
+  with the `.ado` files**: `_dw_py` finds the `.py` on the adopath.
 - [`dw_compare.ado`](dw_compare.ado) — `dw_compare(current, reference,
   idvars, valuevars, tol, report, label)`. Merges two `.dta` files on
   the declared id key and classifies each value column as identical,

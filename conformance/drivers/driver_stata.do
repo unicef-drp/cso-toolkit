@@ -204,6 +204,47 @@ program define case_config_user_block
     _cert_json, id(`id') body(`"{"modes": [`body']}"')
 end
 
+program define case_collab_out_of_band
+    local id collab_out_of_band
+    local d "$CERT_WORK/`id'"
+    capture mkdir "`d'"
+    capture mkdir "`d'/.git"
+    tempname fh
+    file open `fh' using "`d'/cso_project.yml", write text replace
+    file write `fh' "schema: cso_project/1" _n "collaboration: multi-producer" _n
+    file close `fh'
+    dw_collaboration, root("`d'") refresh
+    global dw_session_start "2999-01-01T00:00:00+0000"
+    capture erase "`d'/x.dta"
+    capture erase "`d'/x.dta.provenance.json"
+    clear
+    set obs 2
+    gen a = _n
+    dw_save, filename(x) path("`d'") idvars(a)
+    gen b = 9
+    quietly save "`d'/x.dta", replace                  // changed without dw_save
+    clear
+    set obs 1
+    gen a = 5
+    _cert_try, id(`id') cmd(dw_save, filename(x) path("`d'") idvars(a))
+    local blocked = r(rc) != 0
+    local env = r(envelope)
+    dw_save, filename(x) path("`d'") idvars(a) takeover
+    use "`d'/x.dta", clear
+    local ok = (_N == 1 & a[1] == 5)
+    * Back to the plain session the other cases expect.
+    global dw_collaboration_model "single-producer"
+    global dw_project_file ""
+    global dw_session_start ""
+    _cert_bool `blocked'
+    local s_b `r(s)'
+    _cert_bool `env'
+    local s_e `r(s)'
+    _cert_bool `ok'
+    local s_ok `r(s)'
+    _cert_json, id(`id') body(`"{"blocked": `s_b', "envelope": `s_e', "takeover_written": `s_ok'}"')
+end
+
 * ---- run -----------------------------------------------------------
 
 foreach id of global CERT_CASES {

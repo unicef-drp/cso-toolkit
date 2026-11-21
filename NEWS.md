@@ -46,6 +46,26 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
   configurations, the same mode in R, Python and Stata. New local test
   `stata/tests/test_config_user_block.do`.
 
+- **Stata: the collaboration model and the multi-producer guards (#168).**
+  New `dw_collaboration.ado` finds and validates `cso_project.yml` (walking
+  up to the repository root) and caches `$dw_collaboration_model`,
+  `$dw_project_file` and `$dw_session_start`. In a multi-producer project,
+  outside reviewer mode, `dw_save` stops on an out-of-band change or a
+  concurrent write unless the new `takeover` option, does not count a
+  committed, unmodified write as concurrent (#178), prints a note on a
+  follow-on write, and records the lineage fields (`collaboration`,
+  `previous_*`, `git_branch`, `git_commit`, `takeover`), as R and Python
+  do. The hashing, timestamps, sidecar reading and git checks run through
+  Stata's Python integration (Stata 16+), in `dw_stata_helpers.py` shipped
+  next to the `.ado` files (vendor it with them). Without Python a
+  multi-producer write stops unless `takeover`. With Python every Stata
+  sidecar now records `sha256` and an ISO-8601 UTC `written_at` (#191),
+  and `user` follows R's order (`USERNAME`, `LOGNAME`, `USER`, `LNAME`).
+  `dw_set_collaboration` stays R and Python. Tests:
+  `stata/tests/test_collab_guards.do`, `stata/tests/test_dw_stata_helpers.py`;
+  the parity cases `collab_out_of_band` and `provenance_sidecar` now pass
+  in Stata.
+
 ### Fixed
 
 - **Stata `dw_compare` stopped on every call** with "code follows on the

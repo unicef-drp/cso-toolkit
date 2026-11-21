@@ -40,11 +40,11 @@ The following fields appear in every sidecar. The table gives the JSON key, its 
 |---|---|---|---|
 | `path` | string | Absolute path of the primary file the sidecar describes. | R / Py / Stata |
 | `format` | string | In R/Python, the dispatch format of the primary file (`"csv"`, `"parquet"`, `"dta"`, …). In Stata, a literal schema-version tag `"dw_save.provenance/1"`. | R / Py / Stata (different meaning — see below) |
-| `written_at` | string | Write timestamp. R/Python: ISO-8601 UTC, `YYYY-MM-DDTHH:MM:SS+0000`. Stata: its local `c(current_date) c(current_time)`, e.g. `28 Jun 2026 14:03:51`. | R / Py / Stata (different format) |
-| `user` | string | The writing user. R/Python read `USERNAME` (Python falls back to `getpass.getuser()`); Stata reads `c(username)`. | R / Py / Stata |
+| `written_at` | string | Write timestamp: ISO-8601 UTC, `YYYY-MM-DDTHH:MM:SS+0000`. Stata writes it through Stata's Python integration (Stata 16+); without it, its local `c(current_date) c(current_time)`, e.g. `28 Jun 2026 14:03:51`, which the concurrent-write guard cannot compare. | R / Py / Stata |
+| `user` | string | The writing user: `USERNAME`, then `LOGNAME`, `USER`, `LNAME`, then the operating system's user, in all three languages (Python: `USERNAME`, then `getpass.getuser()`, the same order). | R / Py / Stata |
 | `dw_mode` | string | The session mode at write time (`"producer"`, `"reviewer"`, or unset). A session property, never a per-call argument — see the roles and mode-contract chapter. | R / Py / Stata |
-| `sha256` | string \| null | Hex SHA-256 of the primary file's bytes, computed after the file is written. **R/Python only.** In R it is `null` when the optional `digest` package is not installed. | R / Py |
-| `datasignature` | string | Stata's native `datasignature` content hash (a checksum of variable names and values), used in place of `sha256`. **Stata only.** | Stata |
+| `sha256` | string \| null | Hex SHA-256 of the primary file's bytes, computed after the file is written. In R it is `null` when the optional `digest` package is not installed; Stata writes it through Stata's Python integration (Stata 16+) and omits the key without it (#191). | R / Py / Stata |
+| `datasignature` | string | Stata's native `datasignature` content hash (a checksum of variable names and values), written alongside `sha256`. **Stata only.** | Stata |
 | `vintage` | string \| null | Optional vintage tag (e.g. `"2026-05"`), echoed from the `vintage` argument; `null` when not supplied. **R/Python only** (Stata records vintage inside `metadata`, see below). | R / Py |
 | `isid` | array\<string\> \| null | The key columns asserted unique before the write (the `isid` quality contract). `null` when no uniqueness check was requested. **R/Python key is `isid`.** | R / Py |
 | `idvars` | string | Stata's equivalent of `isid` — the space-separated `idvars()` columns passed to the uniqueness check. **Stata key is `idvars`.** | Stata |
