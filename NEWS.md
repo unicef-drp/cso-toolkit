@@ -6,8 +6,58 @@ _Entries land here as PRs merge into `develop`. When the next release
 is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
+### Added
+
+- **Parity certificate: one local command that checks R, Python and Stata
+  agree (#190).**
+  - `sh tools/certify` runs the cases in `conformance/cases/` through a
+    driver per language and compares the outputs:
+    - values within a tolerance, against the fixture for round trips and
+      against R otherwise;
+    - for the other cases, a small record of what happened, against the
+      answer the case expects.
+  - The register in each case lists the languages that do not implement
+    it (`gaps`) or are known to disagree (`divergences`), with the issue.
+    A gap that closes or a divergence that resolves fails the run until
+    the register is updated.
+  - `--record` writes and commits `.parity/<content-hash>.json` when all
+    three languages pass; the hash covers the implementations and the
+    harness, not the docs. `--verify` checks for one without running any
+    language. A new `Parity certificate` workflow runs it on pull
+    requests into `main` and on demand.
+  - Ten cases to start:
+    - round trips through CSV and `.dta`, and edge values;
+    - the `isid` refusal and the reviewer-mode API refusal;
+    - the provenance sidecar and `dw_compare` counts;
+    - `aggregate_data_v2`, version comparison and the multi-producer
+      guard (R and Python).
+  - Stata runs locally in batch, so #133's CI licence is not needed.
+  - New handbook appendix *Cross-language parity*; chapter 44 adds the
+    certificate to the release checklist.
+
 ### Fixed
 
+- **Stata `dw_compare` stopped on every call** with "code follows on the
+  same line as close brace": a `} else {` on one line, there since the
+  command was added in May 2026. Found by the parity certificate.
+- **Stata `dw_save` stopped on every call that wrote a sidecar (the
+  default), after writing the `.dta`.**
+  - The JSON escaping expanded to `subinstr(..., """, ...)`, which is
+    invalid syntax.
+  - The sidecar's `file write` lines used a `_q` directive that does not
+    exist, so `"path"` held other text.
+  - Quoted `title()`, `producer()`, `sources()` and `metadata()` values
+    were written with their quotes or lost.
+
+  Sidecars are now valid JSON. The `isid` and missing-folder errors carry
+  the `[cso_toolkit.dw_save]` envelope. Found by the parity certificate.
+- **R `dw_api_fetch()` in reviewer mode, on a cache miss, stopped without
+  the envelope.** It called `dw_require_no_api(api_name =, reason =)`,
+  which only a generated profile defines, as `function(context = NULL)`:
+  "could not find function" without a profile, "unused arguments" with
+  one. It refused the network call either way. An internal
+  `.dw_require_no_api()` now raises the `[cso_toolkit.dw_api]` envelope,
+  as Python does.
 - **`cso_toolkit_diff()`, `cso_toolkit_pull()` and `cso_toolkit_sync()`
   can update a vendored `README.md` (R + Python).** Listed under
   `vendored:`, it follows the other files: `r/R/README.md` when they are

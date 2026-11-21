@@ -1,0 +1,23 @@
+{
+  "id": "save_isid_duplicate",
+  "title": "dw_save refuses data whose isid keys are not unique, writes nothing, and says so in the envelope",
+  "surface": [
+    "dw_save"
+  ],
+  "kind": "json",
+  "fixtures": [
+    "duplicate_keys.csv"
+  ],
+  "expect": {
+    "error": true,
+    "envelope": true,
+    "file_written": false
+  },
+  "languages": [
+    "r",
+    "python",
+    "stata"
+  ],
+  "gaps": {},
+  "divergences": {}
+}

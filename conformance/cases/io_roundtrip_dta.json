@@ -1,0 +1,37 @@
+{
+  "id": "io_roundtrip_dta",
+  "title": "Read a CSV, save it as .dta, read the .dta back: the values survive",
+  "surface": [
+    "dw_use",
+    "dw_save"
+  ],
+  "kind": "values",
+  "fixtures": [
+    "indicators.csv"
+  ],
+  "keys": [
+    "REF_AREA",
+    "INDICATOR",
+    "SEX",
+    "AGE",
+    "TIME_PERIOD"
+  ],
+  "columns": [
+    "REF_AREA",
+    "INDICATOR",
+    "SEX",
+    "AGE",
+    "TIME_PERIOD",
+    "OBS_VALUE"
+  ],
+  "tolerance": 1e-09,
+  "rows": 6,
+  "reference": "fixture",
+  "languages": [
+    "r",
+    "python",
+    "stata"
+  ],
+  "gaps": {},
+  "divergences": {}
+}

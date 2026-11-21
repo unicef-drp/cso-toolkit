@@ -1,0 +1,38 @@
+{
+  "id": "io_edge_values",
+  "title": "Edge values survive a round trip: commas, quotes, accents, empty, tiny, large and negative numbers",
+  "surface": [
+    "dw_use",
+    "dw_save"
+  ],
+  "kind": "values",
+  "fixtures": [
+    "edge_values.csv"
+  ],
+  "keys": [
+    "REF_AREA",
+    "TIME_PERIOD"
+  ],
+  "columns": [
+    "REF_AREA",
+    "LABEL",
+    "TIME_PERIOD",
+    "OBS_VALUE"
+  ],
+  "tolerance": 1e-09,
+  "rows": 5,
+  "reference": "fixture",
+  "languages": [
+    "r",
+    "python",
+    "stata"
+  ],
+  "divergences": {
+    "r": {
+      "issue": "#192",
+      "reason": "dw_use() reads a doubled quote (\"\") as two quotes: data.table::fread 1.18.6.1 keeps them, though it reports quote rule 0."
+    }
+  },
+  "notes": "An empty string and a missing value both read as empty: CSV cannot tell them apart.",
+  "gaps": {}
+}

@@ -1,0 +1,38 @@
+{
+  "id": "io_roundtrip_csv",
+  "title": "Read a CSV, save it with dw_save, read it back: the values survive",
+  "surface": [
+    "dw_use",
+    "dw_save"
+  ],
+  "kind": "values",
+  "fixtures": [
+    "indicators.csv"
+  ],
+  "keys": [
+    "REF_AREA",
+    "INDICATOR",
+    "SEX",
+    "AGE",
+    "TIME_PERIOD"
+  ],
+  "columns": [
+    "REF_AREA",
+    "INDICATOR",
+    "SEX",
+    "AGE",
+    "TIME_PERIOD",
+    "OBS_VALUE"
+  ],
+  "tolerance": 1e-09,
+  "rows": 6,
+  "reference": "fixture",
+  "languages": [
+    "r",
+    "python",
+    "stata"
+  ],
+  "notes": "R and Python save CSV; Stata's dw_save writes .dta only, so Stata round-trips through .dta.",
+  "gaps": {},
+  "divergences": {}
+}

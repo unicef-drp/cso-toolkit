@@ -27,8 +27,17 @@ test_that("dw_api_fetch lockout in reviewer mode raises the envelope", {
     error = identity
   )
   expect_s3_class(err, "error")
-  # `dw_require_no_api()` may be provided by the consumer's profile;
-  # we only assert the call fails clearly.
+  # The toolkit's own lockout envelope, with or without a profile (#190):
+  # it used to call a profile-only dw_require_no_api() with arguments the
+  # profile's version does not take.
+  expect_envelope(err, function_name = "dw_api")
+  expect_match(conditionMessage(err), "Reviewer mode forbids live API calls")
+  # A profile's dw_require_no_api(context = NULL) is not called any more.
+  assign("dw_require_no_api", function(context = NULL) stop("profile version"),
+         envir = .GlobalEnv)
+  withr::defer(rm("dw_require_no_api", envir = .GlobalEnv))
+  err <- tryCatch(dw_api_fetch(api = "uis", cache_key = "never_cached"), error = identity)
+  expect_match(conditionMessage(err), "Reviewer mode forbids live API calls")
 })
 
 test_that("dw_api_cached errors with the envelope on missing cache", {

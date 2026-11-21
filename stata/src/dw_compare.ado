@@ -1,4 +1,6 @@
-*! version 1.0 24MAY2026 cso-toolkit cso-toolkit@unicef.org
+*! version 1.1 21NOV2026 cso-toolkit cso-toolkit@unicef.org
+*! v1.1: `} else {` on one line stopped every call ("code follows on the
+*!       same line as close brace"); found by the parity certificate (#190).
 *! Author: João Pedro Azevedo (port); original by Kristoffer Bjärkefur
 
 * dw_compare — Stata sibling of the R dw_compare() helper.
@@ -62,7 +64,8 @@ program define   dw_compare, rclass
     if "`valuevars'" == "" {
         unab _all_ : _all
         local valuevars : list _all_ - idvars
-    } else {
+    }
+    else {
         unab valuevars : `valuevars'
     }
     if "`valuevars'" == "" {

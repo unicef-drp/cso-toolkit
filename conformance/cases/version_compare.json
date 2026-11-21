@@ -1,0 +1,52 @@
+{
+  "id": "version_compare",
+  "title": "Toolkit versions compare numerically (0.10.0 is newer than 0.9.1)",
+  "surface": [
+    "cso_toolkit_check (version comparison)"
+  ],
+  "kind": "json",
+  "fixtures": [],
+  "expect": {
+    "behind": [
+      true,
+      false,
+      false,
+      false,
+      null
+    ]
+  },
+  "pairs": [
+    [
+      "v0.9.1",
+      "v0.10.0"
+    ],
+    [
+      "0.10.0",
+      "v0.9.1"
+    ],
+    [
+      "v0.9.1",
+      "0.9.1"
+    ],
+    [
+      "v0.2.0-rc1",
+      "v0.2.0"
+    ],
+    [
+      "inrepo",
+      "v0.9.1"
+    ]
+  ],
+  "languages": [
+    "r",
+    "python"
+  ],
+  "gaps": {
+    "stata": {
+      "issue": "coverage matrix",
+      "reason": "Stata has no vendoring helpers."
+    }
+  },
+  "notes": "behind(pinned, target): true when pinned is older; null when either is not a version.",
+  "divergences": {}
+}

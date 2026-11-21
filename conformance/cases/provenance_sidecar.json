@@ -1,0 +1,38 @@
+{
+  "id": "provenance_sidecar",
+  "title": "dw_save writes a sidecar with the shared keys, and its sha256 is the file's",
+  "surface": [
+    "dw_save"
+  ],
+  "kind": "json",
+  "fixtures": [
+    "indicators.csv"
+  ],
+  "expect": {
+    "sidecar": true,
+    "missing_keys": [],
+    "sha256_matches": true,
+    "rows": 6,
+    "cols": 6
+  },
+  "required_keys": [
+    "path",
+    "written_at",
+    "user",
+    "dw_mode",
+    "sha256",
+    "schema"
+  ],
+  "languages": [
+    "r",
+    "python",
+    "stata"
+  ],
+  "divergences": {
+    "stata": {
+      "issue": "#191",
+      "reason": "Stata's sidecar records datasignature, not the file's sha256."
+    }
+  },
+  "gaps": {}
+}
