@@ -58,6 +58,14 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
   one. It refused the network call either way. An internal
   `.dw_require_no_api()` now raises the `[cso_toolkit.dw_api]` envelope,
   as Python does.
+- **`cso_toolkit_diff()`, `cso_toolkit_pull()` and `cso_toolkit_sync()`
+  can update a vendored `README.md` (R + Python).** Listed under
+  `vendored:`, it follows the other files: `r/R/README.md` when they are
+  all `*.R`, `python/src/README.md` when they are all `*.py`; a list with
+  both stops with an envelope. It used to stop the call ("Cannot tell
+  where the vendored file README.md lives"), so the first sync of
+  DW-Production left its README at v0.9.1. A README the manifest does not
+  list is left alone, as before: scaffolded repositories keep their own.
 
 ## v0.10.0 (2026-11-21)
 
