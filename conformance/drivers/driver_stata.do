@@ -245,6 +245,20 @@ program define case_collab_out_of_band
     _cert_json, id(`id') body(`"{"blocked": `s_b', "envelope": `s_e', "takeover_written": `s_ok'}"')
 end
 
+program define case_compare_same_file
+    local id compare_same_file
+    import delimited using "$CERT_FIX/compare_reference.csv", clear varnames(1) case(preserve) asdouble
+    quietly save "$CERT_WORK/same.dta", replace
+    _cert_try, id(`id') cmd(dw_compare, current("$CERT_WORK/same.dta") reference("$CERT_WORK/same.dta") idvars(REF_AREA TIME_PERIOD))
+    local refused = r(rc) != 0
+    local env = r(envelope)
+    _cert_bool `refused'
+    local s_r `r(s)'
+    _cert_bool `env'
+    local s_e `r(s)'
+    _cert_json, id(`id') body(`"{"refused": `s_r', "envelope": `s_e'}"')
+end
+
 * ---- run -----------------------------------------------------------
 
 foreach id of global CERT_CASES {

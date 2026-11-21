@@ -48,6 +48,7 @@ The table below is grouped by the five capability families. Each row is one publ
 | `dw_save` | Yes | Yes | Yes |
 | `dw_use` | Yes | Yes | Yes |
 | `dw_compare` | Yes | Yes | Yes |
+| `dw_diff_profile` / `dw_compare(diagnose = TRUE)` | Yes | Yes | No: `r(col_changed)` gives the per-column counts (#111) |
 | `dw_merge` | Yes | Yes | n/a |
 | `dw_isid` | Yes | Yes | Embedded in `dw_save` (no standalone command) |
 | `dw_verify_z` | Yes | Yes | n/a (integrity via `datasignature` inside `dw_use`) |

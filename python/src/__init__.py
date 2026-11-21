@@ -20,6 +20,7 @@ from . import _state  # re-export the configuration module
 # IO helpers (dw_io.py)
 from .dw_io import (
     dw_compare,
+    dw_diff_profile,
     dw_default_unicef_allowlist,
     dw_is_canonical,
     dw_isid,
@@ -115,7 +116,7 @@ dw_test_scripts = test_scripts
 __all__ = [
     "_state",
     # IO
-    "dw_save", "dw_use", "dw_compare", "dw_merge", "dw_isid",
+    "dw_save", "dw_use", "dw_compare", "dw_diff_profile", "dw_merge", "dw_isid",
     "dw_verify_z", "dw_resolve_path", "dw_is_canonical",
     "dw_root", "dw_default_unicef_allowlist",
     "dw_toolkit_version",

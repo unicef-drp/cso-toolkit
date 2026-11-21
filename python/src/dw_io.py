@@ -1543,6 +1543,7 @@ def dw_compare(
     tol: float = 1e-5,
     label: str = "compare",
     write_report_to: Optional[Union[str, Path]] = None,
+    diagnose: bool = False,
 ) -> dict:
     """Compare a current dataset against a reference.
 
@@ -1573,19 +1574,52 @@ def dw_compare(
     write_report_to
         Directory to write ``<label>_summary.csv``,
         ``<label>_added_rows.csv``, ``<label>_removed_rows.csv``,
-        ``<label>_changed_rows.csv``.
+        ``<label>_changed_rows.csv`` (and, with ``diagnose=True``,
+        ``<label>_profile.txt``).
+    diagnose
+        ``True`` adds ``"profile"``, from :func:`dw_diff_profile`: which
+        columns differ, how far the numeric values moved, and which key
+        values the changed, added and removed rows concentrate on; and
+        prints it. Default ``False``.
 
     Returns
     -------
     dict
-        Keys ``"summary"``, ``"added"``, ``"removed"``, ``"changed"``.
+        Keys ``"summary"``, ``"added"``, ``"removed"``, ``"changed"``; with
+        ``diagnose=True`` also ``"profile"``.
 
     Raises
     ------
     ValueError
         When none of the supplied ``by`` columns are present in both
-        ``current`` and ``reference``.
+        ``current`` and ``reference``; or when both are paths that resolve
+        to the same file (#111): in reviewer mode a sandbox path is read
+        network-first from the canonical deposit, so
+        ``dw_compare(sandbox_path, canonical_path)`` would compare the
+        deposit with itself and report a false "0 changed". Pass
+        ``current`` as a DataFrame.
     """
+    if isinstance(current, (str, Path)) and isinstance(reference, (str, Path)):
+        def _res(p):
+            try:
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    return _resolve_for_read(str(p), True)
+            except Exception:  # noqa: BLE001 -- unreadable: the normal path reports it
+                return None
+        rc, rr = _res(current), _res(reference)
+        if _same_file(rc, rr):
+            why = ("in reviewer mode dw_use() reads a sandbox path network-first from the "
+                   "canonical deposit, so the new output was replaced by the deposited one."
+                   if _state._get("dw_mode") == "reviewer" else "both arguments point at one file.")
+            raise ValueError(
+                "[cso_toolkit.dw_compare] `current` and `reference` resolve to the same file, so "
+                "the comparison would report no change whatever the data:\n"
+                f"  current:   {current}\n  reference: {reference}\n  resolved:  {rc}\n"
+                f"  Why: {why}\n"
+                "  Fix: read the new data yourself and pass it as a DataFrame, e.g. "
+                f"dw_compare(current=pd.read_csv({str(current)!r}), reference={str(reference)!r}, ...)."
+            )
     if not isinstance(current, pd.DataFrame):
         current = dw_use(current)
     if not isinstance(reference, pd.DataFrame):
@@ -1671,8 +1705,122 @@ def dw_compare(
         added.to_csv(out / f"{label}_added_rows.csv", index=False)
         removed.to_csv(out / f"{label}_removed_rows.csv", index=False)
         changed.to_csv(out / f"{label}_changed_rows.csv", index=False)
+    result = {"summary": summary, "added": added, "removed": removed, "changed": changed}
+    if diagnose:
+        result["profile"] = dw_diff_profile(result, by=by, numeric_value_cols=numeric_value_cols)
+        if result["profile"]["text"]:
+            print(f"[cso_toolkit.dw_compare] {label} profile:\n" + "\n".join(result["profile"]["text"]))
+        if write_report_to is not None:
+            (Path(write_report_to) / f"{label}_profile.txt").write_text(
+                "\n".join(result["profile"]["text"]) + "\n", encoding="utf-8")
+    return result
 
-    return {"summary": summary, "added": added, "removed": removed, "changed": changed}
+
+def _same_file(a: Optional[str], b: Optional[str]) -> bool:
+    """Are two resolved paths the same file? (``None`` never is.)"""
+    if not a or not b:
+        return False
+    na, nb = _normalize(a), _normalize(b)
+    if os.name == "nt":
+        return na.lower() == nb.lower()
+    return na == nb
+
+
+def dw_diff_profile(cmp: Mapping[str, Any], by: Sequence[str],
+                    numeric_value_cols: Optional[Sequence[str]] = None,
+                    top_n: int = 5) -> dict:
+    """Profile where a :func:`dw_compare` mismatch comes from (#111).
+
+    Mirror of R ``dw_diff_profile()``, lifted from DW-Production's
+    ``.dw_diff_profile()``: turns "36,334 changed" into which columns
+    differ, how far the numeric values moved and which key values the
+    changes concentrate on.
+
+    Returns
+    -------
+    dict
+        ``columns`` (``column``, ``n_changed``), ``magnitude`` (``column``,
+        ``abs_q50`` ... ``abs_max``, ``rel_q50`` ... ``rel_max``, over the
+        rows where that column changed), ``keys`` (``key``, ``value``,
+        ``n``, ``pct`` among the changed rows), ``added`` and ``removed``
+        (``key``, ``value``, ``n``), and ``text`` (the printable lines).
+    """
+    import numpy as np
+
+    def q(x):
+        x = x[np.isfinite(x)]
+        if not len(x):
+            return [float("nan")] * 4
+        return [float(v) for v in np.quantile(x, [0.5, 0.9, 0.99, 1.0])]
+
+    def fmt(vals):
+        return " / ".join("n/a" if v != v else f"{v:.3g}" for v in vals)
+
+    def top(df, k, n):
+        vc = df[k].astype(str).value_counts()
+        vc = vc.sort_values(ascending=False, kind="stable").head(n)
+        return pd.DataFrame({"key": k, "value": vc.index.tolist(), "n": vc.astype(int).tolist()})
+
+    ch = cmp.get("changed")
+    columns = pd.DataFrame({"column": pd.Series(dtype=str), "n_changed": pd.Series(dtype=int)})
+    magnitude = pd.DataFrame({"column": pd.Series(dtype=str)})
+    keys = pd.DataFrame({"key": pd.Series(dtype=str), "value": pd.Series(dtype=str),
+                         "n": pd.Series(dtype=int), "pct": pd.Series(dtype=float)})
+    text = []
+    if isinstance(ch, pd.DataFrame) and len(ch):
+        flags = [c for c in ch.columns if c.startswith("changed_")]
+        tally = [(f[len("changed_"):], int(ch[f].fillna(False).astype(bool).sum())) for f in flags]
+        tally = sorted([t for t in tally if t[1] > 0], key=lambda t: -t[1])
+        columns = pd.DataFrame(tally, columns=["column", "n_changed"])
+        if tally:
+            text.append("  diff columns: " + " ".join(f"{c}({n})" for c, n in tally))
+        mrows = []
+        for vc in [c for c in (numeric_value_cols or []) if c in set(columns["column"])]:
+            rc, cc = f"{vc}_reference", f"{vc}_current"
+            if rc not in ch.columns or cc not in ch.columns:
+                continue
+            sel = ch[f"changed_{vc}"].fillna(False).astype(bool)
+            rv = pd.to_numeric(ch.loc[sel, rc], errors="coerce").to_numpy(dtype=float)
+            cv = pd.to_numeric(ch.loc[sel, cc], errors="coerce").to_numpy(dtype=float)
+            ad = np.abs(cv - rv)
+            with np.errstate(divide="ignore", invalid="ignore"):
+                rel = np.where(np.abs(rv) > 1e-9, ad / np.abs(rv), np.nan)
+            qa, qr = q(ad), q(rel)
+            mrows.append({"column": vc, "abs_q50": qa[0], "abs_q90": qa[1], "abs_q99": qa[2],
+                          "abs_max": qa[3], "rel_q50": qr[0], "rel_q90": qr[1], "rel_q99": qr[2],
+                          "rel_max": qr[3]})
+            text.append(f"  {vc} |abs| q50/q90/q99/max: {fmt(qa)} | rel: {fmt(qr)}")
+        if mrows:
+            magnitude = pd.DataFrame(mrows)
+        krows = []
+        for k in [k for k in by if k in ch.columns]:
+            t = top(ch, k, top_n)
+            t["pct"] = (100 * t["n"] / len(ch)).round(1)
+            krows.append(t)
+            n_distinct = ch[k].astype(str).nunique()
+            text.append(f"  changed by {k} ({n_distinct} distinct): "
+                        + " ".join(f"{v}({p:g}%)" for v, p in zip(t["value"], t["pct"])))
+        if krows:
+            keys = pd.concat(krows, ignore_index=True)
+
+    def side(nm):
+        df = cmp.get(nm)
+        empty = pd.DataFrame({"key": pd.Series(dtype=str), "value": pd.Series(dtype=str),
+                              "n": pd.Series(dtype=int)})
+        if not isinstance(df, pd.DataFrame) or not len(df):
+            return empty
+        parts = [top(df, k, top_n) for k in by if k in df.columns]
+        if not parts:
+            return empty
+        out = pd.concat(parts, ignore_index=True)
+        text.append(f"  {nm} rows by key -- " + " | ".join(
+            f"{g['key'].iloc[0]}: " + ",".join(f"{v}({n})" for v, n in zip(g["value"], g["n"]))
+            for _, g in out.groupby("key", sort=False)))
+        return out
+
+    added, removed = side("added"), side("removed")
+    return {"columns": columns, "magnitude": magnitude, "keys": keys,
+            "added": added, "removed": removed, "text": text}
 
 
 # ---------------------------------------------------------------------------

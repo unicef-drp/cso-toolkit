@@ -13,6 +13,7 @@ dw_compare(
   tol = 1e-05,
   label = "compare",
   write_report_to = NULL,
+  diagnose = FALSE,
   verbose = NULL,
   debug = NULL
 )
@@ -44,8 +45,13 @@ filenames. Default `"compare"`.}
 
 \item{write_report_to}{Character. Directory to write
 `<label>_summary.csv`, `<label>_added_rows.csv`,
-`<label>_removed_rows.csv`, `<label>_changed_rows.csv`. Default
-`NULL` (don't write).}
+`<label>_removed_rows.csv`, `<label>_changed_rows.csv` (and, with
+`diagnose = TRUE`, `<label>_profile.txt`). Default `NULL` (don't write).}
+
+\item{diagnose}{Logical. `TRUE` adds `profile`, from [dw_diff_profile()]:
+which columns differ, how far the numeric values moved, and which key
+values the changed, added and removed rows concentrate on; and prints
+it. Default `FALSE`.}
 
 \item{verbose}{Logical or `NULL`. Show high-level progress and result
 messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
@@ -57,7 +63,7 @@ set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].}
 }
 \value{
 A list with `summary` (one-row tibble) and `added`, `removed`,
-`changed` data frames.
+`changed` data frames; with `diagnose = TRUE` also `profile`.
 }
 \description{
 Three-way comparison of two data frames keyed on `by`, returning the
@@ -66,6 +72,16 @@ value-changed rows on the intersection. Numeric value columns can use a
 tolerance-based equality; string columns normalise to trimmed lowercase
 empty-equivalents (`""`, `"NA"`, `"N/A"`, `"NULL"`, `"."`).
 }
+\section{Errors}{
+
+When `current` and `reference` are both paths that resolve to the same
+file (in reviewer mode a sandbox path is read network-first from the
+canonical deposit, so `dw_compare(sandbox_path, canonical_path)` would
+read the deposit twice and report a false `0 changed`), stops with a
+`[cso_toolkit.dw_compare]` envelope (#111). Pass `current` as an
+in-memory data frame.
+}
+
 \seealso{
 [dw_use()] (used to materialise the inputs when paths are
 supplied); [dw_merge()] for a Stata-style join with cardinality
@@ -74,6 +90,7 @@ assertion.
 Other io: 
 \code{\link{dw_check_deposit}()},
 \code{\link{dw_default_unicef_allowlist}()},
+\code{\link{dw_diff_profile}()},
 \code{\link{dw_fetch_inputs}()},
 \code{\link{dw_is_canonical}()},
 \code{\link{dw_isid}()},

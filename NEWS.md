@@ -77,8 +77,27 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
   coverage matrix. New parity cases `deposit_fetch_inputs` and
   `provenance_diff_status` (R and Python agree; Stata a listed gap).
 
+- **`dw_compare(diagnose = TRUE)` and `dw_diff_profile()` (R + Python;
+  #111).** A profile of where a mismatch comes from:
+  - which value columns differ;
+  - the absolute and relative quantiles of each numeric column's drift;
+  - the top key values of the changed, added and removed rows.
+
+  It is printed, attached as `$profile`, and written as
+  `<label>_profile.txt` with `write_report_to`. Lifted from DW-Production's
+  `.dw_diff_profile()`, which can now be dropped. Parity case
+  `compare_diagnose`; Stata keeps `r(col_changed)`.
+
 ### Fixed
 
+- **`dw_compare()` no longer compares a file with itself (R, Python,
+  Stata; #111).** In reviewer mode `dw_use()` reads a sandbox path
+  network-first from the canonical deposit, so
+  `dw_compare(sandbox_path, canonical_path)` read the deposit twice and
+  reported a false "0 changed". When both arguments resolve to the same
+  file it now stops with a `[cso_toolkit.dw_compare]` envelope that says to
+  pass the new data in memory; Stata checks the literal paths. Parity case
+  `compare_same_file`.
 - **R `dw_use()` read a doubled quote in a quoted CSV field as two quotes
   (#192).** `data.table::fread()` keeps `""` as two characters (data.table
   #1109, #4779, open upstream since 2015), so `"say ""hi"""` read as
