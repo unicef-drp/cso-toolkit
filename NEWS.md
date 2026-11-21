@@ -6,6 +6,38 @@ _Entries land here as PRs merge into `develop`. When the next release
 is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
+## v0.10.0 (2026-11-21)
+
+The first release a consumer repository can update *to* in one call,
+and the first that can start one. `cso_toolkit_sync()`, with working
+`cso_toolkit_diff()` and `cso_toolkit_pull()`, updates a vendored copy
+from a release tag; `create_research_project()` and
+`create_official_stats_project()` write a new repository's floor; a
+project can declare itself multi-producer in `cso_project.yml`, and
+`dw_save()` then guards against out-of-band and concurrent writes;
+templates and guidance cover repository hygiene and local-first CI; and
+`cso_toolkit_check()` warns when the vendored copy is behind a target
+version. MINOR: new functions, arguments and optional files. The
+behaviour a consumer may notice is listed under Changed. The v0.10.0
+section prepared on 2026-11-19 was never tagged; it is folded in here.
+PRs #163, #165, #167, #169, #172, #181 and #182.
+
+### Changed
+
+- **Python: `cso_toolkit.cso_toolkit_sync` is now the function**, not the
+  module (see Fixed, `cso_toolkit_diff()` and `cso_toolkit_pull()`).
+  Import the module with
+  `importlib.import_module("cso_toolkit.cso_toolkit_sync")`.
+- **Generated profiles read the user's block of `user_config.yml`, and
+  the R profile no longer calls `install.packages()`**: a missing package
+  stops the session with the list to install (see Fixed,
+  `create_profile()`). Profiles generated earlier keep the old behaviour
+  until regenerated.
+- **`official-stats.gitignore` ignores `**/013_wrkdata/**` outright and
+  keeps only the provenance of `**/011_rawdata/**`** (see Added, the
+  repository scaffolders). Files a repository already tracks there stay
+  tracked; new ones are ignored.
+
 ### Added
 
 - **Repository hygiene and CI guidance for consumer repos (docs and
@@ -157,6 +189,20 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
   pre-releases; compared numerically, so `v0.10.0` > `v0.9.1`). Git over
   HTTPS works where UNICEF proxies block `api.github.com`.
 
+- **`cso_toolkit_check()` warns loudly when the vendored copy is behind a
+  target version (R + Python)** — new `target_version` argument and optional
+  manifest key `target_version:`. The comparison is offline, so it runs in
+  producer **and** reviewer mode. When the pinned `pulled_version` is behind
+  the target, it raises a `[cso_toolkit.cso_toolkit_check]` warning carrying
+  the exact `cso_toolkit_pull(target_version = "...")` command (even with
+  `quiet = TRUE`) and, with `quiet = FALSE`, prints a boxed alert. Reviewer
+  mode only warns: no network call, no file change. A newer upstream tag
+  (producer mode) now also shows a boxed notice with the commands, but does
+  not warn. The result gains `target_version`, `target_source` and
+  `behind_target`. Documented in the manifest template, the vintage-sync
+  chapter and the error taxonomy.
+  ([#106](https://github.com/unicef-drp/cso-toolkit/issues/106), item 4)
+
 ### Fixed
 
 - **`cso_toolkit_diff()` and `cso_toolkit_pull()` are implemented (R +
@@ -231,30 +277,6 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 - **`tools/check.R` template: header in a repository without commits** —
   the header line printed git's "fatal: Needed a single revision" in place
   of the commit; it now says `(none yet)`.
-
-## v0.10.0 (2026-11-19)
-
-`cso_toolkit_check()` warns loudly when the vendored copy is behind a
-target version, offline and in both modes; versions now compare
-numerically. MINOR: a new optional argument and manifest key, no breaks.
-
-### Added
-
-- **`cso_toolkit_check()` warns loudly when the vendored copy is behind a
-  target version (R + Python)** — new `target_version` argument and optional
-  manifest key `target_version:`. The comparison is offline, so it runs in
-  producer **and** reviewer mode. When the pinned `pulled_version` is behind
-  the target, it raises a `[cso_toolkit.cso_toolkit_check]` warning carrying
-  the exact `cso_toolkit_pull(target_version = "...")` command (even with
-  `quiet = TRUE`) and, with `quiet = FALSE`, prints a boxed alert. Reviewer
-  mode only warns: no network call, no file change. A newer upstream tag
-  (producer mode) now also shows a boxed notice with the commands, but does
-  not warn. The result gains `target_version`, `target_source` and
-  `behind_target`. Documented in the manifest template, the vintage-sync
-  chapter and the error taxonomy.
-  ([#106](https://github.com/unicef-drp/cso-toolkit/issues/106), item 4)
-
-### Fixed
 
 - **`cso_toolkit_check()` compares versions numerically (R + Python)** — tags
   were compared as strings for inequality, so `0.10.0` vs `0.9.1` and a
