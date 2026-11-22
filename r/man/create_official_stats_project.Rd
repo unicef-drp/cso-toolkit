@@ -61,16 +61,18 @@ takes the clone's latest release tag (`v` and numbers only, so
 pre-release tags such as `v1.0.0-rc1` are passed over). Only used when
 vendoring.}
 
-\item{workflows}{Logical. Also write the GitHub Actions workflows to
-`.github/workflows/`. Default `FALSE`: checks run locally. The
+\item{workflows}{Logical. Also write the opt-in GitHub Actions workflows
+to `.github/workflows/`. Default `FALSE`: checks run locally. The
+`check-record.yml` workflow is always written: it verifies the local
+check record on pull requests, without running R. The opt-in
 workflows run only when started by hand and on pull requests into
 `main` (handbook chapter "Continuous integration and repository
 hygiene").}
 
 \item{git}{Logical. Default `FALSE`. `TRUE` runs `git init` (when `path`
 is not a repository yet) with `develop` as the first branch, sets
-`core.hooksPath` to `.githooks`, and stages `.githooks/pre-push` with
-its executable bit. It never commits, creates a remote or pushes.}
+`core.hooksPath` to `.githooks`, and stages `.githooks/pre-push` and
+`tools/check` with their executable bit. It never commits, creates a remote or pushes.}
 
 \item{overwrite}{Logical. Replace existing files whose content differs.
 Default `FALSE`.}
@@ -110,7 +112,7 @@ The layout (handbook chapter "Starting a new repository"):
 .gitattributes            LF for the hook, vendored helpers and sidecars
 profile_<project>.R       sourced first: user, dw_mode, deposit paths,
                           Z: mirror, vendored helpers
-.githooks/pre-push        runs tools/check.R before every push
+.githooks/pre-push        requires a check record before every push
 cso_project.yml           collaboration model (committed)
 README.md, CONTRIBUTING.md
 _config_template/user_config.yml   placeholder per-person configuration
@@ -125,7 +127,13 @@ inputs/README.md, inputs/input_manifest.csv
 releases/README.md        release records, committed after publication
 tests/testthat.R, tests/testthat/helper-project.R, test-project.R
 tools/check.R             OUTPUT_DIRS, DATA_DIRS and AUDIT_PATHS set
-.github/workflows/*.yml   only with workflows = TRUE (no manuscript job)
+tools/check               the wrapper; sh tools/check --record
+.checks/README.md         check records (.checks/<content-hash>.json)
+.github/workflows/check-record.yml   verifies the record on PRs (always)
+.github/workflows/*.yml   the others only with workflows = TRUE (no manuscript job)
+AGENTS.md, CLAUDE.md      instructions for AI coding agents, with the embargo section
+decisions.md              decisions and the record of AI use
+.claude/settings.json     Claude Code: the cso-toolkit plugin; no edits to 00_functions/
 }
 
 The arguments, the refusal to replace existing files and the returned
@@ -153,7 +161,7 @@ create_official_stats_project("C:/GitHub/DW-Nutrition",
 [create_research_project()]; [create_profile()];
   [create_dw_sector_script()]; [dw_fetch_inputs()].
 
-Other scaffolding: 
+Other scaffolding:
 \code{\link{create_dw_sector_script}()},
 \code{\link{create_profile}()},
 \code{\link{create_research_project}()},

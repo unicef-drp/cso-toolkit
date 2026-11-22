@@ -41,7 +41,8 @@ Uniform read / write / compare / merge helpers with mode-aware path routing (pat
 |---|---|---|---|---|
 | `dw_save` | ✅ | ✅ | ✅ | Write + uniqueness check (isid) + sidecar + Z: mirror; prompts before overwriting a producer deposit (v0.5.0), `force = TRUE` to override |
 | `dw_use` | ✅ | ✅ | ✅ | Read with mode-branched resolver; accepts HTTPS URLs since v0.4.0; in R, `sheet = NULL` reads all sheets of an `.xlsx` (v0.5.0) |
-| `dw_compare` | ✅ | ✅ | ✅ | Diff two artefacts on id + value vars; tolerates degenerate sides with a warning (v0.5.0) |
+| `dw_compare` | ✅ | ✅ | ✅ | Diff two artefacts on id + value vars; tolerates degenerate sides with a warning (v0.5.0); `diagnose = TRUE` (R, Python) adds a profile; stops when both sides are the same file (#111) |
+| `dw_diff_profile` | ✅ | ✅ | — | Unreleased (#111): profile a `dw_compare` result (differing columns, numeric drift quantiles, top key values of the changed / added / removed rows) |
 | `dw_merge` | ✅ | ✅ | — | R + Python only |
 | `dw_isid` | ✅ | ✅ | embedded | In Stata the uniqueness check lives inside `dw_save` |
 | `dw_verify_z` | ✅ | ✅ | — | R + Python only |
@@ -49,12 +50,12 @@ Uniform read / write / compare / merge helpers with mode-aware path routing (pat
 | `dw_is_canonical` | ✅ | ✅ | — | Detects a canonical deposit; recognises the Z: (`dwZDrive`) root in R as of v0.5.0 |
 | `dw_root` | ✅ | — | — | Public wrapper around the root resolver (re-exported v0.4.6) |
 | `dw_stage` | ✅ | — | — | R export |
-| `dw_fetch_inputs` | ✅ | — | — | R export (Unreleased): fill a gitignored local inputs folder from the Teams / Z: deposit, `.gitkeep` per folder, input manifest |
-| `dw_check_deposit` | ✅ | — | — | R export (Unreleased): every local input has an identical SHA-256 copy on Teams or Z: |
-| `dw_read_provenance` | ✅ | — | — | R export (Unreleased): read the `.provenance.json` sidecar of an output |
-| `dw_provenance_diff` | ✅ | — | — | R export (Unreleased): compare two runs from their sidecars (reproduced / output changed / inputs changed) |
-| `dw_collaboration` | ✅ | ✅ | — | Unreleased: the project's collaboration model (`single-producer` / `multi-producer`) from `cso_project.yml`, resolved once per session; Stata planned (#168) |
-| `dw_set_collaboration` | ✅ | ✅ | — | Unreleased: write `cso_project.yml` and baseline the existing sidecars (one reviewed PR); refused in reviewer mode; Stata planned (#168) |
+| `dw_fetch_inputs` | ✅ | ✅ | — | R and Python (#152; Stata via R or Python): fill a gitignored local inputs folder from the Teams / Z: deposit, `.gitkeep` per folder, input manifest |
+| `dw_check_deposit` | ✅ | ✅ | — | R and Python (#152; Stata via R or Python): every local input has an identical SHA-256 copy on Teams or Z: |
+| `dw_read_provenance` | ✅ | ✅ | — | R and Python (#152; Stata via R or Python): read the `.provenance.json` sidecar of an output |
+| `dw_provenance_diff` | ✅ | ✅ | — | R and Python (#152; Stata via R or Python): compare two runs from their sidecars (reproduced / output changed / inputs changed) |
+| `dw_collaboration` | ✅ | ✅ | ✅ | Unreleased: the project's collaboration model (`single-producer` / `multi-producer`) from `cso_project.yml`, resolved once per session; Stata `dw_collaboration.ado` (#168) |
+| `dw_set_collaboration` | ✅ | ✅ | — | Unreleased: write `cso_project.yml` and baseline the existing sidecars (one reviewed PR); refused in reviewer mode; not in Stata (switch from R or Python) |
 | `dw_publish` | ✅ (stub) | — | — | STUB / dry-run only — see callout below |
 | `dw_toolkit_version` | ✅ | ✅ | — | Reports the installed toolkit version |
 | `dw_verbosity` | ✅ | — | — | Sets session verbosity / debug options (v0.4.10) |

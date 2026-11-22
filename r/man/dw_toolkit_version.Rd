@@ -12,7 +12,7 @@ troubleshooting. `NULL` (default) inherits `getOption("dw.debug", FALSE)`.
 See [dw_verbosity()].}
 }
 \value{
-Character. Currently `"0.10.0"`.
+Character. Currently `"0.11.0"`.
 }
 \description{
 Returns the upstream `cso-toolkit` tag the current `dw_io.R` /
@@ -35,6 +35,7 @@ Other io:
 \code{\link{dw_check_deposit}()},
 \code{\link{dw_compare}()},
 \code{\link{dw_default_unicef_allowlist}()},
+\code{\link{dw_diff_profile}()},
 \code{\link{dw_fetch_inputs}()},
 \code{\link{dw_is_canonical}()},
 \code{\link{dw_isid}()},

@@ -38,6 +38,8 @@ cso_state.configure(
 | ------------------------------- | ------------------- |
 | `dw_io.py`                      | `dw_save`, `dw_use`, `dw_compare`, `dw_merge`, `dw_isid`, `dw_verify_z`, `dw_resolve_path`, `dw_is_canonical` |
 | `dw_api.py`                     | `dw_api_fetch`, `dw_api_cached`, `dw_api_inventory` |
+| `dw_deposit.py`                 | `dw_fetch_inputs`, `dw_check_deposit` (inputs kept out of Git, from the Teams / Z: deposit) |
+| `dw_provenance.py`              | `dw_read_provenance`, `dw_provenance_diff` (did this run reproduce the last one?) |
 | `cso_toolkit_sync.py`           | `cso_toolkit_check`, `cso_toolkit_diff`, `cso_toolkit_pull`, `cso_toolkit_sync` |
 | `aggregate_data.py`             | `aggregate_data`, `aggregate_data_v2`, `generate_agg_footnote`, `apply_time_window` |
 | `dw_nestweight.py`              | `dw_nestweight` |

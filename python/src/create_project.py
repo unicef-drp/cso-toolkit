@@ -161,6 +161,21 @@ def _project_files(kind: str, project_name: str, title: str, collaboration: str,
     files[".gitignore"] = (tpl / "gitignore" / k["gitignore"]).read_bytes()
     files[".gitattributes"] = (tpl / "gitattributes" / "project.gitattributes").read_bytes()
     files[".githooks/pre-push"] = (tpl / "hooks" / "pre-push").read_bytes()
+    # Check records (#174): the wrapper that also records, and the one
+    # workflow on by default (pull requests into develop and main; no R).
+    files["tools/check"] = (tpl / "tools" / "check").read_bytes()
+    files[".checks/README.md"] = (tpl / "checks" / "README.md").read_bytes()
+    files[".github/workflows/check-record.yml"] = (tpl / "workflows" / "check-record.yml").read_bytes()
+    # AI coding agents (#173; handbook chapter 46): one instructions file for
+    # every agent (CLAUDE.md imports it), the decision log, and the shared
+    # Claude Code settings (the plugin; no edits to the vendored copy).
+    agents = (tpl / "agents" / "AGENTS.md").read_bytes()
+    if kind == "official-stats":
+        agents += (tpl / "agents" / "AGENTS-official-stats.md").read_bytes()
+    files["AGENTS.md"] = _fill(agents, variables)
+    files["CLAUDE.md"] = (tpl / "agents" / "CLAUDE.md").read_bytes()
+    files["decisions.md"] = (tpl / "agents" / "decisions.md").read_bytes()
+    files[".claude/settings.json"] = (tpl / "agents" / "settings.json").read_bytes()
 
     chk = (tpl / "tools" / "check.R").read_bytes()
     if kind == "official-stats":
@@ -242,9 +257,9 @@ def _git_setup(path: Path, fn: str) -> None:
     run("config", "core.hooksPath", ".githooks")
     # Stage the hook with its executable bit, so it runs on macOS and Linux
     # clones too (Windows does not record the bit otherwise).
-    run("add", "--chmod=+x", "--", ".githooks/pre-push")
-    _log.info("[%s] git: core.hooksPath = .githooks; .githooks/pre-push staged as "
-              "executable", fn)
+    run("add", "--chmod=+x", "--", ".githooks/pre-push", "tools/check")
+    _log.info("[%s] git: core.hooksPath = .githooks; .githooks/pre-push and tools/check "
+              "staged as executable", fn)
 
 
 def _create_project(kind: str, path: Union[str, Path], collaboration: Optional[str],
@@ -368,8 +383,9 @@ def _create_project(kind: str, path: Union[str, Path], collaboration: Optional[s
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(data)
     if os.name != "nt":
-        hook = root / ".githooks" / "pre-push"
-        hook.chmod(hook.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+        for rel in (".githooks/pre-push", "tools/check"):
+            exe = root / rel
+            exe.chmod(exe.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
     if git:
         _git_setup(root, fn)
@@ -381,6 +397,9 @@ def _create_project(kind: str, path: Union[str, Path], collaboration: Optional[s
     if vendored["tag"]:
         _log.info("[%s] vendored %d helper(s) from cso-toolkit %s (commit %s)", fn,
                   len(vendored["files"]), vendored["tag"], vendored["sha"][:7])
+    _log.info("[%s] check records: run `sh tools/check --record` before each push; on "
+              "GitHub require the status `check-record` and up-to-date branches for develop "
+              "and main (handbook chapter 45)", fn)
     _log.info("[%s] next: README.md > Quick start%s", fn,
               "" if vendor_files else
               "; vendor the toolkit into 00_functions/ (00_functions/README.md)")
@@ -415,7 +434,7 @@ def create_research_project(
         .gitignore               templates/gitignore/research-project.gitignore
         .gitattributes           LF for the hook, vendored helpers and sidecars
         profile_<project>.R      sourced first: user, dw_mode, vendored helpers
-        .githooks/pre-push       runs tools/check.R before every push
+        .githooks/pre-push       requires a check record before every push
         cso_project.yml          collaboration model (committed)
         README.md, CONTRIBUTING.md
         00_functions/README.md   (+ helpers and .toolkit_manifest.yml if vendored)
@@ -424,8 +443,13 @@ def create_research_project(
         output/README.md         tables and figures, with sidecars
         paper/README.md, references/README.md, docs/README.md
         tests/testthat.R, tests/testthat/helper-project.R, test-project.R
-        tools/check.R
-        .github/workflows/*.yml  only with workflows=True
+        tools/check.R, tools/check   the checks; sh tools/check --record
+        .checks/README.md        check records (.checks/<content-hash>.json)
+        .github/workflows/check-record.yml   verifies the record on PRs (always)
+        .github/workflows/*.yml  the others only with workflows=True
+        AGENTS.md, CLAUDE.md     instructions for AI coding agents (CLAUDE.md: @AGENTS.md)
+        decisions.md             decisions and the record of AI use
+        .claude/settings.json    Claude Code: the cso-toolkit plugin; no edits to 00_functions/
 
     Nothing is written if any target file already exists with different
     content, unless ``overwrite=True``; a file that already holds exactly the
@@ -465,11 +489,14 @@ def create_research_project(
         tag (pre-release tags such as ``v1.0.0-rc1`` are passed over).
     workflows
         Also write the opt-in GitHub Actions workflows to
-        ``.github/workflows/``. Default ``False``.
+        ``.github/workflows/``. Default ``False``. ``check-record.yml`` is
+        always written: it verifies the local check record on pull
+        requests, without running R.
     git
         ``True`` runs ``git init`` (when ``path`` is not a repository) with
         ``develop`` as the first branch, sets ``core.hooksPath`` to
-        ``.githooks`` and stages the hook with its executable bit. Never
+        ``.githooks`` and stages the hook and ``tools/check`` with their
+        executable bit. Never
         commits, creates a remote or pushes.
     overwrite
         Replace existing files whose content differs. Default ``False``.
@@ -527,7 +554,7 @@ def create_official_stats_project(
         .gitattributes            LF for the hook, vendored helpers and sidecars
         profile_<project>.R       sourced first: user, dw_mode, deposit paths,
                                   Z: mirror, vendored helpers
-        .githooks/pre-push        runs tools/check.R before every push
+        .githooks/pre-push        requires a check record before every push
         cso_project.yml           collaboration model (committed)
         README.md, CONTRIBUTING.md
         _config_template/user_config.yml   placeholder per-person configuration
@@ -542,7 +569,13 @@ def create_official_stats_project(
         releases/README.md        release records, committed after publication
         tests/testthat.R, tests/testthat/helper-project.R, test-project.R
         tools/check.R             OUTPUT_DIRS, DATA_DIRS and AUDIT_PATHS set
-        .github/workflows/*.yml   only with workflows=True (no manuscript job)
+        tools/check               the wrapper; sh tools/check --record
+        .checks/README.md         check records (.checks/<content-hash>.json)
+        .github/workflows/check-record.yml   verifies the record on PRs (always)
+        .github/workflows/*.yml   the others only with workflows=True (no manuscript job)
+        AGENTS.md, CLAUDE.md      instructions for AI coding agents, with the embargo section
+        decisions.md              decisions and the record of AI use
+        .claude/settings.json     Claude Code: the cso-toolkit plugin; no edits to 00_functions/
 
     Parameters, return value and errors are those of
     :func:`create_research_project`. With ``vendor=True`` the default helper

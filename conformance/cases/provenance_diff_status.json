@@ -1,0 +1,40 @@
+{
+  "id": "provenance_diff_status",
+  "title": "dw_provenance_diff tells first run, reproduced, output changed, inputs changed and no input record apart",
+  "surface": [
+    "dw_read_provenance",
+    "dw_provenance_diff"
+  ],
+  "kind": "json",
+  "fixtures": [],
+  "expect": {
+    "statuses": [
+      "first_run",
+      "reproduced",
+      "output_changed",
+      "inputs_changed",
+      "no_input_record"
+    ],
+    "inputs_added": [
+      "c.csv"
+    ],
+    "inputs_removed": [
+      "b.csv"
+    ],
+    "inputs_changed": [
+      "a.csv"
+    ]
+  },
+  "languages": [
+    "r",
+    "python"
+  ],
+  "gaps": {
+    "stata": {
+      "issue": "#152",
+      "reason": "Route via R or Python: run-level comparison of sidecars."
+    }
+  },
+  "notes": "Five runs of one output saved with dw_save; inputs a.csv/b.csv, then a.csv changed, b.csv removed, c.csv added; the last run has no input record.",
+  "divergences": {}
+}

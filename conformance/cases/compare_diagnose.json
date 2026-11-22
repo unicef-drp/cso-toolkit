@@ -1,0 +1,43 @@
+{
+  "id": "compare_diagnose",
+  "title": "dw_compare(diagnose = TRUE) profiles the mismatch the same way",
+  "surface": [
+    "dw_compare",
+    "dw_diff_profile"
+  ],
+  "kind": "json",
+  "fixtures": [
+    "compare_reference.csv",
+    "compare_current.csv"
+  ],
+  "expect": {
+    "columns": [
+      "OBS_VALUE"
+    ],
+    "n_changed": [
+      1
+    ],
+    "rel_q50": 0.25,
+    "keys": [
+      "BBB"
+    ],
+    "added": [
+      "EEE"
+    ],
+    "removed": [
+      "DDD"
+    ]
+  },
+  "languages": [
+    "r",
+    "python"
+  ],
+  "gaps": {
+    "stata": {
+      "issue": "#111",
+      "reason": "Stata's dw_compare reports per-column counts (r(col_changed)), not the profile."
+    }
+  },
+  "notes": "Keys REF_AREA, TIME_PERIOD; tolerance 1e-6; BBB moves 2 -> 2.5 (relative 0.25), CCC by 1e-10 (within tolerance).",
+  "divergences": {}
+}

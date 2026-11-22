@@ -21,8 +21,8 @@
 # Mode contract: read-only; behaves identically in producer and reviewer
 # sessions.
 #
-# R only. TODO: Python and Stata siblings; cross-language parity tracked at
-# GitHub issue #152.
+# R and Python (python/src/dw_provenance.py); Stata routes via R or Python
+# (#152). Parity case: conformance/cases/provenance_diff_status.json.
 
 #' Read the provenance sidecar of an output
 #'

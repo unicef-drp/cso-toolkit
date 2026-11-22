@@ -4,19 +4,33 @@
 # Template from unicef-drp/cso-toolkit: templates/tools/check.R
 # Guidance: docs/ci_cd_guidelines.md ("checks run locally first").
 #
-# From the repo root:
-#   Rscript --no-init-file tools/check.R                  # the default checks
-#   Rscript --no-init-file tools/check.R --only sidecars,tests
-#   Rscript --no-init-file tools/check.R --skip tests
-#   Rscript --no-init-file tools/check.R --list           # names, then exit
+# From the repo root (tools/check is a wrapper that also sets up R on
+# Windows; Rscript --no-init-file tools/check.R takes the same arguments):
+#   sh tools/check                                 # the default checks
+#   sh tools/check --record                        # ... and, if all pass,
+#                                                  # commit a check record
+#   sh tools/check --only sidecars,tests
+#   sh tools/check --skip tests
+#   sh tools/check --list                          # names, then exit
 # (Use --no-init-file, not --vanilla: --vanilla also drops .Renviron and the
 # library path it sets.)
 #
 # Prints one [PASS] / [FAIL] / [SKIP] / [WARN] line per check, each failure
 # with a Why and a Fix line, and exits non-zero when any check fails. The
 # GitHub Actions templates in templates/workflows/ call this same script, so
-# the local run and CI cannot drift apart. Paste the output into the pull
-# request: that is the check record when Actions are not run on every push.
+# the local run and CI cannot drift apart.
+#
+# Check records (.checks/<content-hash>.json). With --record, on a clean
+# working tree, a run in which nothing fails writes a record for the
+# committed content and commits it: each check's result, the commit, branch,
+# R and toolkit versions, user, UTC time and the hash of this script. The
+# content hash is git's tree ID of the repository with .checks/ left out
+# (git ls-tree HEAD | grep -v .checks | git mktree), so a record certifies
+# content, not a commit ID: the commit that adds it keeps the same hash. The
+# pre-push hook refuses a tip without a passing record, and the workflow
+# check-record.yml verifies it on pull requests without running R. --record
+# refuses --only and --skip: a record never certifies a partial run. A
+# record can be written by hand; it prevents forgotten checks, not forgery.
 #
 # Needs: R, git on the PATH, and the packages testthat (tests), jsonlite
 # (sidecars; testthat installs it), yaml (vintage). gitleaks is used when
@@ -84,6 +98,13 @@ if ("--list" %in% args) {
   cat("Default:", cfg("CHECKS"), "\nAvailable:", paste(ALL_CHECKS, collapse = " "), "\n")
   quit(status = 0)
 }
+RECORD <- "--record" %in% args
+if (RECORD && any(c("--only", "--skip") %in% args)) {
+  cat("[check] --record cannot be combined with --only or --skip.\n",
+      " Why: a check record certifies the repository's full set of checks (CHECKS).\n",
+      " Fix: run sh tools/check --record on its own.\n")
+  quit(status = 2)
+}
 checks <- if ("--only" %in% args) arg_value("--only") else words(cfg("CHECKS"))
 checks <- setdiff(checks, arg_value("--skip"))
 unknown <- setdiff(checks, ALL_CHECKS)
@@ -94,9 +115,35 @@ if (length(unknown)) {
 }
 
 # ---- Repo root and git -------------------------------------------------------
+# On Windows tools/check starts R without Git Bash's HOME (so R finds its own
+# .Renviron) and passes that HOME as CHECK_GIT_HOME; git gets it back here so
+# it finds the user's global configuration (user.name for the record).
+git_run <- function(args, ...) {
+  gh <- Sys.getenv("CHECK_GIT_HOME")
+  if (nzchar(gh)) {
+    old <- Sys.getenv("HOME", unset = NA)
+    Sys.setenv(HOME = gh)
+    on.exit(if (is.na(old)) Sys.unsetenv("HOME") else Sys.setenv(HOME = old))
+  }
+  suppressWarnings(system2("git", args, ...))
+}
 git <- function(...) {
-  out <- suppressWarnings(system2("git", c(...), stdout = TRUE, stderr = TRUE))
+  out <- git_run(c(...), stdout = TRUE, stderr = TRUE)
   structure(out, status = attr(out, "status") %||% 0L)
+}
+# Content hash: git's tree ID of `rev` with the top-level .checks/ entry left
+# out, computed from git objects (identical on Windows and Linux).
+content_hash <- function(rev = "HEAD") {
+  lt <- git("ls-tree", rev)
+  if (attr(lt, "status") != 0L) return(NA_character_)
+  lt <- lt[!grepl("\t\\.checks$", lt)]
+  tf <- tempfile()
+  on.exit(unlink(tf))
+  con <- file(tf, "wb")                     # binary: LF line endings on Windows too
+  writeLines(lt, con, sep = "\n")
+  close(con)
+  h <- git_run("mktree", stdin = tf, stdout = TRUE)
+  if (length(h) == 1 && grepl("^[0-9a-f]{40,64}$", h)) h else NA_character_
 }
 `%||%` <- function(a, b) if (is.null(a)) b else a
 root <- git("rev-parse", "--show-toplevel")
@@ -132,6 +179,11 @@ tracked <- local({
 head_sha <- git("rev-parse", "--short", "HEAD")
 if (attr(head_sha, "status") != 0L) head_sha <- "(none yet)"   # a new repository
 dirty <- length(git("status", "--porcelain", "--untracked-files=no")) > 0
+if (RECORD && (dirty || identical(head_sha, "(none yet)"))) {
+  cat("[check] --record needs a clean working tree on a commit: a record certifies committed content.\n",
+      " Fix: commit your changes first (not stash: worktrees share one stash list), then rerun.\n")
+  quit(status = 2)
+}
 cat(sprintf("== tools/check.R  %s  commit %s%s  R %s  %s ==\n",
             basename(getwd()), head_sha[1], if (dirty) " (+ uncommitted changes)" else "",
             getRversion(), format(Sys.time(), "%Y-%m-%d %H:%M %Z")))
@@ -437,4 +489,52 @@ n_fail <- sum(results == "FAIL")
 cat(sprintf("== %d check(s): %d passed, %d failed, %d skipped, %d warned ==\n",
             length(results), sum(results == "PASS"), n_fail,
             sum(results == "SKIP"), sum(results == "WARN")))
+
+# ---- Check record (--record) -------------------------------------------------------
+if (RECORD && n_fail > 0) cat("[check] no record written: a check failed.\n")
+if (RECORD && n_fail == 0) {
+  h <- content_hash("HEAD")
+  if (is.na(h)) {
+    cat("[check] could not compute the content hash (git ls-tree / mktree failed).\n")
+    quit(status = 1L)
+  }
+  f <- file.path(".checks", paste0(h, ".json"))
+  prior <- if (file.exists(f)) tryCatch(jsonlite::read_json(f)$result, error = function(e) NULL)
+  if (identical(prior, "pass")) {
+    cat("[check] check record already present:", f, "\n")
+  } else {
+    manifest <- file.path(cfg("TOOLKIT_DIR"), ".toolkit_manifest.yml")
+    toolkit <- if (file.exists(manifest) && requireNamespace("yaml", quietly = TRUE))
+      tryCatch(yaml::read_yaml(manifest)$pulled_version %||% NA, error = function(e) NA) else NA
+    status_of <- c(PASS = "pass", WARN = "advisory", SKIP = "skipped", FAIL = "fail")
+    user <- git("config", "user.name")
+    rec <- list(
+      schema = "check_record/1",
+      content_hash = h,
+      commit = git("rev-parse", "HEAD")[1],
+      branch = git("rev-parse", "--abbrev-ref", "HEAD")[1],
+      result = "pass",
+      checks = as.list(stats::setNames(unname(status_of[results]), names(results))),
+      toolkit = toolkit,
+      r_version = paste(R.version$major, R.version$minor, sep = "."),
+      platform = R.version$platform,
+      user = if (attr(user, "status") == 0L && length(user)) user[1] else
+        Sys.getenv("USERNAME", Sys.getenv("USER")),
+      checked_at = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"),
+      check_script_sha = git("hash-object", "tools/check.R")[1])
+    dir.create(".checks", showWarnings = FALSE)
+    jsonlite::write_json(rec, f, auto_unbox = TRUE, pretty = TRUE)
+    git("add", "--", f)
+    mf <- tempfile()                        # message via a file: system2 does not quote arguments
+    writeLines(c(paste("Check record", substr(h, 1, 12)), "",
+                 sprintf("tools/check.R passed on content %s (commit %s).", h, substr(rec$commit, 1, 12))), mf)
+    st <- git("commit", "-q", "-F", shQuote(mf), "--", f)
+    unlink(mf)
+    if (attr(st, "status") != 0L) {
+      cat("[check] could not commit", f, ":\n ", paste(st, collapse = "\n  "), "\n")
+      quit(status = 1L)
+    }
+    cat("[check] committed check record", f, "\n")
+  }
+}
 quit(status = if (n_fail > 0) 1L else 0L)

@@ -325,6 +325,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Continuous integration and repository hygiene</span></span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/46-ai-agents.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Working with AI coding agents</span></span></a>
+  </div>
+</li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
@@ -336,19 +342,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/51-microdata-archive.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">The microdata archive: archive, catalogue, tool</span></span></a>
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">The microdata archive: archive, catalogue, tool</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/52-ihsn-grammar.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">The IHSN convention and the folder grammar</span></span></a>
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">The IHSN convention and the folder grammar</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/53-datalib-api-conformance.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">The <code>datalib_*</code> API and its conformance suite</span></span></a>
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">The <code>datalib_*</code> API and its conformance suite</span></span></a>
   </div>
 </li>
       </ul>
@@ -362,13 +368,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/61-ecosystem.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">The UNICEF analytics ecosystem: three tiers</span></span></a>
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">The UNICEF analytics ecosystem: three tiers</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/62-unicefdata.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">unicefData: public child statistics in three languages</span></span></a>
+ <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">unicefData: public child statistics in three languages</span></span></a>
   </div>
 </li>
       </ul>
@@ -413,6 +419,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <div class="sidebar-item-container"> 
   <a href="../appendices/f-third-party-functions.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">F</span>&nbsp; <span class="chapter-title">Curated third-party functions</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/g-parity-certificate.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">G</span>&nbsp; <span class="chapter-title">Cross-language parity</span></span></a>
   </div>
 </li>
       </ul>
@@ -569,7 +581,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 ├── .gitignore                 research-project.gitignore, unchanged
 ├── .gitattributes             LF for the hook, vendored helpers and sidecars
 ├── profile_learning-mobility.R  sourced first by every script and session
-├── .githooks/pre-push         runs tools/check.R before every push
+├── .checks/README.md          check records: .checks/&lt;content-hash&gt;.json
+├── .githooks/pre-push         requires a check record before every push
 ├── cso_project.yml            collaboration: multi-producer (committed)
 ├── README.md                  quick start for a new co-author, layout
 ├── CONTRIBUTING.md            ground rules, first clone, workflow, checks
@@ -590,13 +603,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 │       ├── helper-project.R   fixtures, local state, expect_envelope()
 │       └── test-project.R     cso_project.yml, manifest vs sidecars, mode
 ├── tools/check.R              every local check
-└── .github/workflows/         only with workflows = TRUE (four, opt-in)</code></pre>
+├── tools/check                sh tools/check --record: run, then record
+├── .github/workflows/         check-record.yml (always); four more with
+│                              workflows = TRUE (opt-in)
+├── AGENTS.md, CLAUDE.md       rules for AI coding agents (CLAUDE.md: @AGENTS.md)
+├── decisions.md               decisions, who made them and why; AI use
+└── .claude/settings.json      Claude Code: the cso-toolkit plugin; no edits
+                               to 00_functions/</code></pre>
 <p>An official-statistics repository follows DW-Production and the deposit’s stage numbering:</p>
 <pre><code>DW-Nutrition/
 ├── .gitignore                       official-stats.gitignore, unchanged
 ├── .gitattributes                   LF for the hook, vendored helpers and sidecars
 ├── profile_DW-Nutrition.R           sourced first: mode, deposit paths, Z:, helpers
-├── .githooks/pre-push
+├── .checks/README.md                check records
+├── .githooks/pre-push               requires a check record
 ├── cso_project.yml                  collaboration: single-producer
 ├── README.md, CONTRIBUTING.md       embargo, release record, first clone
 ├── _config_template/user_config.yml placeholder per-person configuration
@@ -614,7 +634,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 ├── releases/README.md               releases/&lt;vintage&gt;/, after publication
 ├── tests/testthat.R, tests/testthat/helper-project.R, test-project.R
 ├── tools/check.R                    OUTPUT_DIRS, DATA_DIRS, AUDIT_PATHS set
-└── .github/workflows/               only with workflows = TRUE (three)</code></pre>
+├── tools/check                      sh tools/check --record
+├── .github/workflows/               check-record.yml (always); three more
+│                                    with workflows = TRUE
+├── AGENTS.md, CLAUDE.md             agent rules, the embargo section included
+├── decisions.md                     decisions and the record of AI use
+└── .claude/settings.json            the plugin; no edits to 00_functions/</code></pre>
 <p>The canonical raw data, API caches and promoted work data live in the deposit (Teams <code>060.DW-MASTER/01_dw_prep/011_rawdata</code> and <code>013_wrkdata</code>), which the profile’s <code>teamsRawData</code> and <code>teamsWrkData</code> point to in producer mode and redirect to the sandbox in reviewer mode (<a href="../chapters/22-wiring-the-contract.html">Wiring the contract</a>). The repository keeps folders of the same names for local work, as DW-Production does, because a sector script made by <code>create_sector_script()</code> reads <code>01_dw_prep/011_rawdata/&lt;sector&gt;/</code> and writes <code>01_dw_prep/013_wrkdata/&lt;sector&gt;/</code> relative to the repository (<a href="../chapters/35-scaffolding-audit.html">Scaffolding and the contract auditor</a>). Their contents never reach git: <code>.gitignore</code> ignores <code>013_wrkdata/</code> outright, like every output folder, and keeps only the READMEs, sidecars and manifests of <code>011_rawdata/</code>; <code>tools/check.R</code> fails on anything tracked in <code>013_wrkdata/</code> (<code>OUTPUT_DIRS</code>) and on data tracked in <code>011_rawdata/</code> (<code>DATA_DIRS</code>). <code>013_wrkdata/</code> has no tracked file at all, so it appears with the first run. <code>01_dw_prep/012_codes/README.md</code> shows how to scaffold a sector’s driver against the project’s own profile.</p>
 <p>The <code>.gitignore</code>, the hook, the test helper and the workflows are the toolkit’s templates byte for byte, so the rules a repository starts with are the ones the toolkit tests. Three files are set for the kind of project: <code>tools/check.R</code> (an official-statistics repository gets <code>OUTPUT_DIRS = "output outputs results wrk 013_wrkdata"</code>, the embargo check, <code>011_rawdata</code> added to <code>DATA_DIRS</code>, and <code>AUDIT_PATHS = "01_dw_prep/012_codes"</code>; the contract audit is <code>AUDIT_MODE = "advisory"</code> in a research project, where it reports raw reads such as <code>haven::read_dta()</code> without failing the checks, and <code>"blocking"</code> in official statistics, where any of them fails; see <a href="../chapters/45-ci-cd.html">Continuous integration and repository hygiene</a>), <code>tests/testthat.R</code> (which folder of function files the tests source) and <code>cso_project.yml</code> (the model, today’s date and the members).</p>
 <p>The functions never replace a file silently. Before writing anything they compare every target with what they would write: a file with the same bytes is left alone and reported as <code>unchanged</code>, and a file with different content stops the whole call, with nothing written, unless <code>overwrite = TRUE</code>. Both return the list of files with their status (<code>written</code>, <code>overwritten</code>, <code>unchanged</code>), so a second identical call changes nothing and says so. To adopt the conventions in an existing repository, follow <a href="../chapters/42-onboarding-example.html">Onboarding a repo</a>, or create a scaffold in an empty folder and copy what you need.</p>
@@ -622,7 +647,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 data-number="12.2.1" class="anchored" data-anchor-id="the-options"><span class="header-section-number">12.2.1</span> The options</h3>
 <ul>
 <li><strong><code>vendor</code>, <code>toolkit_source</code>, <code>toolkit_version</code>.</strong> <code>vendor</code> is <code>FALSE</code> by default. <code>TRUE</code> copies the helpers into <code>00_functions/</code> from a release tag of a git clone of cso-toolkit (<code>toolkit_source</code>, or <code>CSO_TOOLKIT_ROOT</code>), and writes <code>.toolkit_manifest.yml</code> with that tag as <code>pulled_version</code> and the commit it points to as <code>pulled_commit</code> (<a href="../chapters/41-vendoring.html">The vendoring model</a>). The tag is <code>toolkit_version</code>, by default the clone’s latest release tag (<code>v0.9.1</code>, never a pre-release such as <code>v1.0.0-rc1</code>). The files are read from the tag’s commit in the clone’s history, never from its working tree, so a clone on another branch or with local edits still vendors exactly the released bytes; a tag the clone does not have stops the call before anything is written (<code>git fetch --tags</code> first). The default set is <code>dw_io.R</code>, <code>dw_api.R</code>, <code>cso_toolkit_sync.R</code>, <code>dw_provenance.R</code>, <code>dw_deposit.R</code>, <code>dw_project.R</code>, <code>test_scripts.R</code> and <code>zzz.R</code>, plus <code>profile_helpers.R</code> and <code>create_sector_script.R</code> for official statistics; a helper of that set which the tag does not have yet (<code>dw_project.R</code> before the release that adds it) is skipped and named in a message. A character vector picks the files, all of which must exist at the tag, and the three that <code>tools/check.R</code> needs are always added. Without vendoring, <code>tools/check.R</code> leaves out the <code>contract-audit</code> and <code>vintage</code> checks, with a comment saying to add them back once <code>00_functions/</code> is filled.</li>
-<li><strong><code>workflows</code>.</strong> <code>FALSE</code> by default: checks run locally. <code>TRUE</code> adds the GitHub Actions workflows, which call the same <code>tools/check.R</code> and by default run only when started by hand and on pull requests into <code>main</code>.</li>
+<li><strong><code>workflows</code>.</strong> <code>FALSE</code> by default: checks run locally. <code>check-record.yml</code>, which only verifies the local check record on pull requests (no R, about 10 seconds), is always written (<a href="../chapters/45-ci-cd.html#check-records">Check records</a>). <code>TRUE</code> adds the other GitHub Actions workflows, which call the same <code>tools/check.R</code> and by default run only when started by hand and on pull requests into <code>main</code>.</li>
 <li><strong><code>git</code>.</strong> <code>FALSE</code> by default. <code>TRUE</code> runs <code>git init</code> with <code>develop</code> as the first branch (<code>main</code> is created at the first release), sets <code>core.hooksPath</code> to <code>.githooks</code>, and stages the hook with its executable bit so it also runs on macOS and Linux clones. It never commits, creates a remote or pushes.</li>
 </ul>
 </section>

@@ -5,7 +5,7 @@ Every consuming repository carries its own frozen copy of the cso-toolkit's help
 Vintage sync is the machinery that makes that drift visible and controllable. It answers three questions, in order: **Am I behind?** (`cso_toolkit_check`), **What changed?** (`cso_toolkit_diff`), and **Refresh me to a known tag** (`cso_toolkit_pull`); `cso_toolkit_sync` runs the last two in one call, after showing the release notes. The pin that anchors them all is `.toolkit_manifest.yml`, a small YAML file vendored alongside the helpers it tracks.
 
 ::: {.callout-note}
-In short: run `cso_toolkit_sync()` in producer mode. It reads the latest release from GitHub (or from a local clone), prints its release notes since your `pulled_version`, compares every vendored file, writes the changed ones (asking per file) and re-pins the manifest. Then run `tools/check.R` and the tests and commit `00_functions/` in one commit. `cso_toolkit_diff` and `cso_toolkit_pull` were stubs until the release after v0.10.0.
+In short: run `cso_toolkit_sync()` in producer mode. It reads the latest release from GitHub (or from a local clone), prints its release notes since your `pulled_version`, compares every vendored file, writes the changed ones (asking per file) and re-pins the manifest. Then run `tools/check.R` and the tests and commit `00_functions/` in one commit. `cso_toolkit_diff` and `cso_toolkit_pull` were stubs before v0.10.0.
 :::
 
 ## The pin: `.toolkit_manifest.yml`
@@ -188,7 +188,7 @@ If no path yields a tag (no `gh`, no HTTP client, no git, blocked network, or a 
 
 When no tag is given, the latest release is used: the clone's highest `vX.Y.Z` tag, or GitHub's latest release (the `gh` CLI, then the API, then `git ls-remote --tags` over HTTPS). Pre-release tags such as `v1.0.0-rc1` are passed over, and tags compare numerically, so `v0.10.0` is newer than `v0.9.1`.
 
-A vendored file's place in the toolkit follows from its extension: `*.R` comes from `r/R/`, `*.py` from `python/src/`. Any other file under `vendored:` stops the call with an error naming it; vendor such files by hand.
+A vendored file's place in the toolkit follows from its extension: `*.R` comes from `r/R/`, `*.py` from `python/src/`. `README.md` follows the other vendored files: `r/R/README.md` when they are all R, `python/src/README.md` when they are all Python; a list with both stops the call. A README is updated only when `vendored:` lists it, because a scaffolded repository's `00_functions/README.md` comes from the project template, not from the toolkit's package folders. Any other file under `vendored:` stops the call with an error naming it; vendor such files by hand.
 
 ## `cso_toolkit_diff` — what changed?
 

@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------
 # 00_functions/dw_io.R
-# Toolkit version: 0.10.0
+# Toolkit version: 0.11.0
 # Purpose: Uniform read/write helpers for DW-Production R scripts.
 # Auto-dispatch by file extension; supports every IO form the
 # sector scripts currently use; enforces the reviewer/producer
@@ -377,7 +377,7 @@ dw_is_canonical <- function(path, debug = NULL) {
 #' rely on a v0.4.0+ contract (e.g. network-first reviewer reads,
 #' mirror-to-both producer writes).
 #'
-#' @return Character. Currently `"0.10.0"`.
+#' @return Character. Currently `"0.11.0"`.
 #'
 #' @examples
 #' if (utils::compareVersion(dw_toolkit_version(), "0.4.0") < 0) {
@@ -392,8 +392,8 @@ dw_is_canonical <- function(path, debug = NULL) {
 #'   See [dw_verbosity()].
 #' @export
 dw_toolkit_version <- function(debug = NULL) {
-	.dw_dbg("dw_toolkit_version", "vendored tag = 0.10.0", d = .dw_d(debug))
-	"0.10.0"
+	.dw_dbg("dw_toolkit_version", "vendored tag = 0.11.0", d = .dw_d(debug))
+	"0.11.0"
 }
 
 # ============================================================================
@@ -1906,14 +1906,33 @@ dw_stage <- function(path, overwrite = FALSE, verbose = NULL, debug = NULL) {
 #' @param cols Character vector. Optional column subset.
 #' @param ... Passed to `data.table::fread`.
 #'
+#' `fread()` keeps a doubled quote inside a quoted field as two characters:
+#' the field `"say ""hi"""` reads as `say ""hi""`, not `say "hi"`
+#' (data.table #1109, #4779, open upstream). Every `""` in a character column
+#' is therefore turned back into `"`, the RFC 4180 value that Python and
+#' Stata read, so a dw_save() / dw_use() round trip no longer doubles the
+#' quotes each time (#192). Skipped when the caller turns quoting off
+#' (`quote = ""`). A non-standard file with `""` in an unquoted field is
+#' collapsed too.
+#'
 #' @return A `data.table`.
 #'
 #' @keywords internal
 #' @noRd
 .read_csv <- function(path, sep, cols = NULL, ...) {
 	.require("data.table")
-	data.table::fread(input = path, sep = sep,
+	dt <- data.table::fread(input = path, sep = sep,
 	 select = cols, showProgress = FALSE, ...)
+	if (identical(list(...)$quote, "")) return(dt)
+	for (j in which(vapply(dt, is.character, logical(1)))) {
+		x <- dt[[j]]
+		hit <- !is.na(x) & grepl('""', x, fixed = TRUE)
+		if (any(hit)) {
+			x[hit] <- gsub('""', '"', x[hit], fixed = TRUE)
+			data.table::set(dt, j = j, value = x)
+		}
+	}
+	dt
 }
 
 #' Cheap schema-only introspection for the `cols_lenient` path in dw_use
@@ -2421,11 +2440,23 @@ dw_default_unicef_allowlist <- function(debug = NULL) {
 #' filenames. Default `"compare"`.
 #' @param write_report_to Character. Directory to write
 #' `<label>_summary.csv`, `<label>_added_rows.csv`,
-#' `<label>_removed_rows.csv`, `<label>_changed_rows.csv`. Default
-#' `NULL` (don't write).
+#' `<label>_removed_rows.csv`, `<label>_changed_rows.csv` (and, with
+#' `diagnose = TRUE`, `<label>_profile.txt`). Default `NULL` (don't write).
+#' @param diagnose Logical. `TRUE` adds `profile`, from [dw_diff_profile()]:
+#'   which columns differ, how far the numeric values moved, and which key
+#'   values the changed, added and removed rows concentrate on; and prints
+#'   it. Default `FALSE`.
 #'
 #' @return A list with `summary` (one-row tibble) and `added`, `removed`,
-#' `changed` data frames.
+#' `changed` data frames; with `diagnose = TRUE` also `profile`.
+#'
+#' @section Errors:
+#' When `current` and `reference` are both paths that resolve to the same
+#' file (in reviewer mode a sandbox path is read network-first from the
+#' canonical deposit, so `dw_compare(sandbox_path, canonical_path)` would
+#' read the deposit twice and report a false `0 changed`), stops with a
+#' `[cso_toolkit.dw_compare]` envelope (#111). Pass `current` as an
+#' in-memory data frame.
 #'
 #' @seealso [dw_use()] (used to materialise the inputs when paths are
 #' supplied); [dw_merge()] for a Stata-style join with cardinality
@@ -2445,11 +2476,32 @@ dw_compare <- function(current, reference,
  tol = 1e-5,
  label = "compare",
  write_report_to = NULL,
+ diagnose = FALSE,
  verbose = NULL,
  debug = NULL) {
 
 	.require("dplyr")
 	vd <- .dw_vd(verbose, debug); v <- vd$v; d <- vd$d
+	# Two paths that dw_use() would read from the same file: in reviewer mode
+	# a sandbox path is resolved network-first to the canonical deposit, so
+	# both sides would be the deposit and the result a false "0 changed" (#111).
+	if (is.character(current) && length(current) == 1 &&
+	    is.character(reference) && length(reference) == 1) {
+		res_of <- function(p) tryCatch(suppressWarnings(suppressMessages(
+			.resolve_for_read(p, fallback_canonical = TRUE))), error = function(e) NA_character_)
+		rc <- res_of(current)
+		rr <- res_of(reference)
+		.dw_dbg("dw_compare", "current resolves to ", rc, " | reference to ", rr, d = d)
+		if (.dw_same_file(rc, rr)) {
+			stop(sprintf(
+				"[cso_toolkit.dw_compare] `current` and `reference` resolve to the same file, so the comparison would report no change whatever the data:\n current:   %s\n reference: %s\n resolved:  %s\n Why: %s\n Fix: read the new data yourself and pass it as a data frame, e.g. dw_compare(current = data.table::fread(\"%s\"), reference = \"%s\", ...).",
+				current, reference, rc,
+				if (identical(.try_get("dw_mode"), "reviewer"))
+					"in reviewer mode dw_use() reads a sandbox path network-first from the canonical deposit, so the new output was replaced by the deposited one."
+				else "both arguments point at one file.",
+				current, reference), call. = FALSE)
+		}
+	}
 	if (is.character(current) && length(current) == 1) {
 		current <- dw_use(current, verbose = v, debug = d)
 	}
@@ -2572,10 +2624,151 @@ dw_compare <- function(current, reference,
 		data.table::fwrite(added, paste0(prefix, "_added_rows.csv"))
 		data.table::fwrite(removed, paste0(prefix, "_removed_rows.csv"))
 		data.table::fwrite(changed, paste0(prefix, "_changed_rows.csv"))
-		.dw_msg("dw_compare", "report written to: ", write_report_to, v = v)
 	}
 
-	list(summary = summary_tbl, added = added, removed = removed, changed = changed)
+	out <- list(summary = summary_tbl, added = added, removed = removed, changed = changed)
+	if (isTRUE(diagnose)) {
+		out$profile <- dw_diff_profile(out, by = by, numeric_value_cols = numeric_value_cols)
+		if (length(out$profile$text)) {
+			.dw_msg("dw_compare", label, " profile:\n", paste(out$profile$text, collapse = "\n"), v = v)
+		}
+		if (!is.null(write_report_to)) {
+			writeLines(out$profile$text, file.path(write_report_to, paste0(label, "_profile.txt")))
+		}
+	}
+	if (!is.null(write_report_to)) {
+		.dw_msg("dw_compare", "report written to: ", write_report_to, v = v)
+	}
+	out
+}
+
+#' Are two resolved paths the same file? (`NA` never is)
+#' @keywords internal
+#' @noRd
+.dw_same_file <- function(a, b) {
+	if (length(a) != 1 || length(b) != 1 || is.na(a) || is.na(b)) return(FALSE)
+	na <- normalizePath(a, winslash = "/", mustWork = FALSE)
+	nb <- normalizePath(b, winslash = "/", mustWork = FALSE)
+	if (.Platform$OS.type == "windows") identical(tolower(na), tolower(nb)) else identical(na, nb)
+}
+
+#' Profile where a dw_compare() mismatch comes from
+#'
+#' Turns the frames [dw_compare()] returns into a short diagnosis, so
+#' "36,334 changed" becomes "the column `POP_COVERAGE`, all regional
+#' aggregates, a median relative drift of 0.01%". Lifted from
+#' DW-Production's `.dw_diff_profile()` (#111). `dw_compare(diagnose = TRUE)`
+#' calls it.
+#'
+#' @param cmp The list [dw_compare()] returns (`changed`, `added`,
+#'   `removed`).
+#' @param by Character. The key columns of the comparison.
+#' @param numeric_value_cols Character or `NULL`. Value columns whose drift
+#'   is measured (absolute and relative quantiles).
+#' @param top_n Integer. How many key values to list per key. Default 5.
+#'
+#' @return A list of data frames and the printable lines:
+#'   \describe{
+#'     \item{`columns`}{`column`, `n_changed`: which value columns differ,
+#'       most first.}
+#'     \item{`magnitude`}{`column`, then `abs_q50`, `abs_q90`, `abs_q99`,
+#'       `abs_max` and `rel_q50` ... `rel_max`, over the rows where that
+#'       column changed (relative to the reference value; `NA` where it is
+#'       0).}
+#'     \item{`keys`}{`key`, `value`, `n`, `pct`: the `top_n` values of each
+#'       key among the changed rows.}
+#'     \item{`added`, `removed`}{`key`, `value`, `n`: the same for added and
+#'       removed rows.}
+#'     \item{`text`}{Character: the profile as lines, empty when there is
+#'       no difference.}
+#'   }
+#'
+#' @seealso [dw_compare()]
+#' @family io
+#' @export
+#' @examples
+#' \dontrun{
+#' cmp <- dw_compare(result, canonical_path, by = c("REF_AREA", "TIME_PERIOD"),
+#'                   numeric_value_cols = "OBS_VALUE")
+#' dw_diff_profile(cmp, by = c("REF_AREA", "TIME_PERIOD"),
+#'                 numeric_value_cols = "OBS_VALUE")$text
+#' }
+dw_diff_profile <- function(cmp, by, numeric_value_cols = NULL, top_n = 5L) {
+	q <- function(x) {
+		x <- x[is.finite(x)]
+		if (!length(x)) return(rep(NA_real_, 4))
+		unname(stats::quantile(x, c(0.5, 0.9, 0.99, 1), names = FALSE))
+	}
+	top <- function(df, k, n) {
+		tt <- sort(table(as.character(df[[k]])), decreasing = TRUE)
+		tt <- tt[seq_len(min(n, length(tt)))]
+		data.frame(key = rep(k, length(tt)), value = names(tt), n = as.integer(tt),
+		           stringsAsFactors = FALSE)
+	}
+	fmt <- function(x) paste(vapply(x, function(z) if (is.na(z)) "n/a" else format(signif(z, 3)),
+	                                character(1)), collapse = " / ")
+	ch <- cmp$changed
+	columns <- data.frame(column = character(0), n_changed = integer(0), stringsAsFactors = FALSE)
+	magnitude <- data.frame(column = character(0), stringsAsFactors = FALSE)
+	keys <- data.frame(key = character(0), value = character(0), n = integer(0), pct = numeric(0),
+	                   stringsAsFactors = FALSE)
+	text <- character(0)
+	if (is.data.frame(ch) && nrow(ch) > 0) {
+		flags <- grep("^changed_", names(ch), value = TRUE)
+		tally <- vapply(flags, function(f) sum(ch[[f]], na.rm = TRUE), numeric(1))
+		columns <- data.frame(column = sub("^changed_", "", flags), n_changed = as.integer(tally),
+		                      stringsAsFactors = FALSE)
+		columns <- columns[columns$n_changed > 0, , drop = FALSE]
+		columns <- columns[order(-columns$n_changed), , drop = FALSE]
+		rownames(columns) <- NULL
+		if (nrow(columns)) {
+			text <- c(text, sprintf("  diff columns: %s",
+			                        paste(sprintf("%s(%d)", columns$column, columns$n_changed), collapse = " ")))
+		}
+		mrows <- list()
+		for (vc in intersect(numeric_value_cols, columns$column)) {
+			rc <- paste0(vc, "_reference"); cc <- paste0(vc, "_current")
+			if (!all(c(rc, cc) %in% names(ch))) next
+			sel <- ch[[paste0("changed_", vc)]] %in% TRUE
+			rv <- suppressWarnings(as.numeric(ch[[rc]][sel]))
+			cv <- suppressWarnings(as.numeric(ch[[cc]][sel]))
+			ad <- abs(cv - rv)
+			rel <- ifelse(abs(rv) > 1e-9, ad / abs(rv), NA_real_)
+			qa <- q(ad); qr <- q(rel)
+			mrows[[vc]] <- data.frame(column = vc,
+				abs_q50 = qa[1], abs_q90 = qa[2], abs_q99 = qa[3], abs_max = qa[4],
+				rel_q50 = qr[1], rel_q90 = qr[2], rel_q99 = qr[3], rel_max = qr[4],
+				stringsAsFactors = FALSE)
+			text <- c(text, sprintf("  %s |abs| q50/q90/q99/max: %s | rel: %s", vc, fmt(qa), fmt(qr)))
+		}
+		if (length(mrows)) magnitude <- do.call(rbind, unname(mrows))
+		krows <- list()
+		for (k in intersect(by, names(ch))) {
+			t <- top(ch, k, top_n)
+			t$pct <- round(100 * t$n / nrow(ch), 1)
+			krows[[k]] <- t
+			text <- c(text, sprintf("  changed by %s (%d distinct): %s", k,
+			                        length(unique(as.character(ch[[k]]))),
+			                        paste(sprintf("%s(%s%%)", t$value, format(t$pct, trim = TRUE)), collapse = " ")))
+		}
+		if (length(krows)) { keys <- do.call(rbind, unname(krows)); rownames(keys) <- NULL }
+	}
+	side <- function(nm) {
+		df <- cmp[[nm]]
+		empty <- data.frame(key = character(0), value = character(0), n = integer(0), stringsAsFactors = FALSE)
+		if (!is.data.frame(df) || nrow(df) == 0) return(empty)
+		rows <- lapply(intersect(by, names(df)), function(k) top(df, k, top_n))
+		if (!length(rows)) return(empty)
+		out <- do.call(rbind, rows); rownames(out) <- NULL
+		text <<- c(text, sprintf("  %s rows by key -- %s", nm, paste(vapply(split(out, factor(out$key, levels = unique(out$key))),
+			function(g) sprintf("%s: %s", g$key[1], paste(sprintf("%s(%d)", g$value, g$n), collapse = ",")),
+			character(1)), collapse = " | ")))
+		out
+	}
+	added <- side("added")
+	removed <- side("removed")
+	list(columns = columns, magnitude = magnitude, keys = keys,
+	     added = added, removed = removed, text = text)
 }
 
 # ============================================================================
@@ -2703,7 +2896,7 @@ dw_merge <- function(x, using, by, how = c("m:1", "1:1", "1:m", "m:m"), verbose 
 # a global named `dw_collaboration` would overwrite the getter function.
 #
 # The setter, dw_set_collaboration(), lives in dw_project.R. Python sibling:
-# python/src/dw_project.py. Stata: not yet (issue #168).
+# python/src/dw_project.py. Stata: dw_collaboration.ado, dw_save.ado (#168).
 
 .DW_COLLAB_MODELS <- c("single-producer", "multi-producer")
 .DW_PROJECT_FILE <- "cso_project.yml"

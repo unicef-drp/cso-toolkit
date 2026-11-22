@@ -314,10 +314,13 @@ dw_save(df, path="outputs/table2.csv", overwrite=True, takeover=True)
 
 #### Stata {.unnumbered .unlisted}
 ```stata
-* Not yet implemented in Stata (issue #168): dw_save.ado neither applies
-* the multi-producer guards nor records the lineage fields. In a
-* multi-producer project, run the legs that write shared outputs from R
-* or Python, or coordinate Stata writes by hand.
+* The same guards, through Stata's Python integration (Stata 16+):
+dw_collaboration                       // $dw_collaboration_model, once per session
+dw_save, filename(table2) path("outputs") idvars(iso3 year)
+* [cso_toolkit.dw_save] Multi-producer project: refusing to replace ...
+*   Fix: ... pass -takeover-; the takeover is recorded in the new sidecar.
+dw_save, filename(table2) path("outputs") idvars(iso3 year) takeover
+* Without Python a multi-producer write stops unless -takeover- is passed.
 ```
 :::
 

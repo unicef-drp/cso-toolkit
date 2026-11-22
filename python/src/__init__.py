@@ -20,6 +20,7 @@ from . import _state  # re-export the configuration module
 # IO helpers (dw_io.py)
 from .dw_io import (
     dw_compare,
+    dw_diff_profile,
     dw_default_unicef_allowlist,
     dw_is_canonical,
     dw_isid,
@@ -31,6 +32,11 @@ from .dw_io import (
     dw_use,
     dw_verify_z,
 )
+
+# Inputs from the canonical deposit (dw_deposit.py) and run provenance
+# (dw_provenance.py); ports of the R helpers (#152)
+from .dw_deposit import dw_check_deposit, dw_fetch_inputs
+from .dw_provenance import dw_provenance_diff, dw_read_provenance
 
 # Collaboration model (dw_project.py)
 from .dw_project import (
@@ -110,10 +116,12 @@ dw_test_scripts = test_scripts
 __all__ = [
     "_state",
     # IO
-    "dw_save", "dw_use", "dw_compare", "dw_merge", "dw_isid",
+    "dw_save", "dw_use", "dw_compare", "dw_diff_profile", "dw_merge", "dw_isid",
     "dw_verify_z", "dw_resolve_path", "dw_is_canonical",
     "dw_root", "dw_default_unicef_allowlist",
     "dw_toolkit_version",
+    # Deposit inputs and run provenance
+    "dw_fetch_inputs", "dw_check_deposit", "dw_read_provenance", "dw_provenance_diff",
     # Collaboration model
     "dw_collaboration", "dw_set_collaboration",
     # API
@@ -138,4 +146,4 @@ __all__ = [
     "dw_create_profile", "dw_review_profile", "dw_test_scripts",
 ]
 
-__version__ = "0.10.0"
+__version__ = "0.11.0"

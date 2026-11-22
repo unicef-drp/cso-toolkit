@@ -1,0 +1,23 @@
+{
+  "id": "compare_same_file",
+  "title": "dw_compare refuses to compare a file with itself",
+  "surface": [
+    "dw_compare"
+  ],
+  "kind": "json",
+  "fixtures": [
+    "compare_reference.csv"
+  ],
+  "expect": {
+    "refused": true,
+    "envelope": true
+  },
+  "languages": [
+    "r",
+    "python",
+    "stata"
+  ],
+  "notes": "R and Python also catch two paths that the reviewer remap resolves to one file (unit tests); Stata reads paths as given.",
+  "gaps": {},
+  "divergences": {}
+}

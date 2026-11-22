@@ -325,6 +325,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Continuous integration and repository hygiene</span></span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/46-ai-agents.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Working with AI coding agents</span></span></a>
+  </div>
+</li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
@@ -336,19 +342,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/51-microdata-archive.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">The microdata archive: archive, catalogue, tool</span></span></a>
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">The microdata archive: archive, catalogue, tool</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/52-ihsn-grammar.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">The IHSN convention and the folder grammar</span></span></a>
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">The IHSN convention and the folder grammar</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/53-datalib-api-conformance.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">The <code>datalib_*</code> API and its conformance suite</span></span></a>
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">The <code>datalib_*</code> API and its conformance suite</span></span></a>
   </div>
 </li>
       </ul>
@@ -362,13 +368,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/61-ecosystem.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">The UNICEF analytics ecosystem: three tiers</span></span></a>
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">The UNICEF analytics ecosystem: three tiers</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/62-unicefdata.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">unicefData: public child statistics in three languages</span></span></a>
+ <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">unicefData: public child statistics in three languages</span></span></a>
   </div>
 </li>
       </ul>
@@ -413,6 +419,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <div class="sidebar-item-container"> 
   <a href="../appendices/f-third-party-functions.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">F</span>&nbsp; <span class="chapter-title">Curated third-party functions</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/g-parity-certificate.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">G</span>&nbsp; <span class="chapter-title">Cross-language parity</span></span></a>
   </div>
 </li>
       </ul>
@@ -476,7 +488,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <i class="callout-icon"></i>
 </div>
 <div class="callout-body-container">
-<p>In short: run <code>cso_toolkit_sync()</code> in producer mode. It reads the latest release from GitHub (or from a local clone), prints its release notes since your <code>pulled_version</code>, compares every vendored file, writes the changed ones (asking per file) and re-pins the manifest. Then run <code>tools/check.R</code> and the tests and commit <code>00_functions/</code> in one commit. <code>cso_toolkit_diff</code> and <code>cso_toolkit_pull</code> were stubs until the release after v0.10.0.</p>
+<p>In short: run <code>cso_toolkit_sync()</code> in producer mode. It reads the latest release from GitHub (or from a local clone), prints its release notes since your <code>pulled_version</code>, compares every vendored file, writes the changed ones (asking per file) and re-pins the manifest. Then run <code>tools/check.R</code> and the tests and commit <code>00_functions/</code> in one commit. <code>cso_toolkit_diff</code> and <code>cso_toolkit_pull</code> were stubs before v0.10.0.</p>
 </div>
 </div>
 </div>
@@ -716,7 +728,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>GitHub.</strong> Otherwise the tag is cloned shallowly, without a checkout, into a temporary folder that is deleted afterwards: <code>git clone --depth 1 --branch &lt;tag&gt; --no-checkout https://github.com/&lt;source&gt;.git</code>. Git over HTTPS works on networks where UNICEF proxies block <code>api.github.com</code>.</li>
 </ul>
 <p>When no tag is given, the latest release is used: the clone’s highest <code>vX.Y.Z</code> tag, or GitHub’s latest release (the <code>gh</code> CLI, then the API, then <code>git ls-remote --tags</code> over HTTPS). Pre-release tags such as <code>v1.0.0-rc1</code> are passed over, and tags compare numerically, so <code>v0.10.0</code> is newer than <code>v0.9.1</code>.</p>
-<p>A vendored file’s place in the toolkit follows from its extension: <code>*.R</code> comes from <code>r/R/</code>, <code>*.py</code> from <code>python/src/</code>. Any other file under <code>vendored:</code> stops the call with an error naming it; vendor such files by hand.</p>
+<p>A vendored file’s place in the toolkit follows from its extension: <code>*.R</code> comes from <code>r/R/</code>, <code>*.py</code> from <code>python/src/</code>. <code>README.md</code> follows the other vendored files: <code>r/R/README.md</code> when they are all R, <code>python/src/README.md</code> when they are all Python; a list with both stops the call. A README is updated only when <code>vendored:</code> lists it, because a scaffolded repository’s <code>00_functions/README.md</code> comes from the project template, not from the toolkit’s package folders. Any other file under <code>vendored:</code> stops the call with an error naming it; vendor such files by hand.</p>
 </section>
 <section id="cso_toolkit_diff-what-changed" class="level2" data-number="10.4">
 <h2 data-number="10.4" class="anchored" data-anchor-id="cso_toolkit_diff-what-changed"><span class="header-section-number">10.4</span> <code>cso_toolkit_diff</code> — what changed?</h2>

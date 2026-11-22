@@ -6,8 +6,8 @@
 # A Windows clone with core.autocrlf=true (the Git for Windows default)
 # checks text files out with CRLF. For most files that is harmless; for
 # these it is not, so they stay LF on every platform:
-#   - the pre-push hook: sh on macOS and Linux cannot run a script whose
-#     lines end in \r;
+#   - the pre-push hook and tools/check: sh on macOS and Linux cannot run
+#     a script whose lines end in \r;
 #   - the vendored cso-toolkit helpers: their bytes must stay those of the
 #     release named in 00_functions/.toolkit_manifest.yml;
 #   - provenance sidecars: they are read and compared as committed;
@@ -17,6 +17,7 @@
 # ---------------------------------------------------------------------------
 
 .githooks/**        text eol=lf
+tools/check         text eol=lf
 *.sh                text eol=lf
 00_functions/**     text eol=lf
 *.provenance.json   text eol=lf

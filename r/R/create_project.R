@@ -148,6 +148,22 @@
 	files[[".gitignore"]] <- .cso_bytes(file.path(tpl, "gitignore", k$gitignore))
 	files[[".gitattributes"]] <- .cso_bytes(file.path(tpl, "gitattributes", "project.gitattributes"))
 	files[[".githooks/pre-push"]] <- .cso_bytes(file.path(tpl, "hooks", "pre-push"))
+	# Check records (#174): the wrapper that also records, and the one
+	# workflow on by default (pull requests into develop and main; no R).
+	files[["tools/check"]] <- .cso_bytes(file.path(tpl, "tools", "check"))
+	files[[".checks/README.md"]] <- .cso_bytes(file.path(tpl, "checks", "README.md"))
+	files[[".github/workflows/check-record.yml"]] <- .cso_bytes(file.path(tpl, "workflows", "check-record.yml"))
+	# AI coding agents (#173; handbook chapter 46): one instructions file for
+	# every agent (CLAUDE.md imports it), the decision log, and the shared
+	# Claude Code settings (the plugin; no edits to the vendored copy).
+	agents <- .cso_bytes(file.path(tpl, "agents", "AGENTS.md"))
+	if (kind == "official-stats") {
+		agents <- c(agents, .cso_bytes(file.path(tpl, "agents", "AGENTS-official-stats.md")))
+	}
+	files[["AGENTS.md"]] <- .cso_fill(agents, vars)
+	files[["CLAUDE.md"]] <- .cso_bytes(file.path(tpl, "agents", "CLAUDE.md"))
+	files[["decisions.md"]] <- .cso_bytes(file.path(tpl, "agents", "decisions.md"))
+	files[[".claude/settings.json"]] <- .cso_bytes(file.path(tpl, "agents", "settings.json"))
 
 	chk <- .cso_bytes(file.path(tpl, "tools", "check.R"))
 	if (kind == "official-stats") {
@@ -323,7 +339,9 @@
 		dir.create(dirname(targets[i]), recursive = TRUE, showWarnings = FALSE)
 		writeBin(files[[i]], targets[i])
 	}
-	if (.Platform$OS.type != "windows") Sys.chmod(file.path(path, ".githooks", "pre-push"), mode = "0755")
+	if (.Platform$OS.type != "windows") {
+		Sys.chmod(file.path(path, c(".githooks/pre-push", "tools/check")), mode = "0755")
+	}
 
 	if (isTRUE(git)) .cso_git_setup(path, fn, v)
 
@@ -335,6 +353,8 @@
 		.dw_msg(fn, sprintf("vendored %d helper(s) from cso-toolkit %s (commit %s)",
 		                    length(vendored$files), vendored$tag, substr(vendored$sha, 1, 7)), v = v)
 	}
+	.dw_msg(fn, "check records: run `sh tools/check --record` before each push; on GitHub require the ",
+	        "status `check-record` and up-to-date branches for develop and main (handbook chapter 45)", v = v)
 	.dw_msg(fn, "next: README.md > Quick start", if (!length(vendor_files))
 		"; vendor the toolkit into 00_functions/ (00_functions/README.md)", v = v)
 	invisible(out)
@@ -362,8 +382,8 @@
 	run("config", "core.hooksPath", ".githooks")
 	# Stage the hook with its executable bit, so it runs on macOS and Linux
 	# clones too (Windows does not record the bit otherwise).
-	run("add", "--chmod=+x", "--", ".githooks/pre-push")
-	.dw_msg(fn, "git: core.hooksPath = .githooks; .githooks/pre-push staged as executable", v = v)
+	run("add", "--chmod=+x", "--", ".githooks/pre-push", "tools/check")
+	.dw_msg(fn, "git: core.hooksPath = .githooks; .githooks/pre-push and tools/check staged as executable", v = v)
 	invisible(TRUE)
 }
 
@@ -384,7 +404,7 @@
 #' .gitignore               templates/gitignore/research-project.gitignore
 #' .gitattributes           LF for the hook, vendored helpers and sidecars
 #' profile_<project>.R      sourced first: user, dw_mode, vendored helpers
-#' .githooks/pre-push       runs tools/check.R before every push
+#' .githooks/pre-push       requires a check record before every push
 #' cso_project.yml          collaboration model (committed)
 #' README.md, CONTRIBUTING.md
 #' 00_functions/README.md   (+ helpers and .toolkit_manifest.yml if vendored)
@@ -393,8 +413,13 @@
 #' output/README.md         tables and figures, with sidecars
 #' paper/README.md, references/README.md, docs/README.md
 #' tests/testthat.R, tests/testthat/helper-project.R, test-project.R
-#' tools/check.R
-#' .github/workflows/*.yml  only with workflows = TRUE
+#' tools/check.R, tools/check   the checks; sh tools/check --record
+#' .checks/README.md        check records (.checks/<content-hash>.json)
+#' .github/workflows/check-record.yml   verifies the record on PRs (always)
+#' .github/workflows/*.yml  the others only with workflows = TRUE
+#' AGENTS.md, CLAUDE.md     instructions for AI coding agents (CLAUDE.md: @AGENTS.md)
+#' decisions.md             decisions and the record of AI use
+#' .claude/settings.json    Claude Code: the cso-toolkit plugin; no edits to 00_functions/
 #' }
 #'
 #' Nothing is written if any target file already exists with different
@@ -446,15 +471,17 @@
 #'   takes the clone's latest release tag (`v` and numbers only, so
 #'   pre-release tags such as `v1.0.0-rc1` are passed over). Only used when
 #'   vendoring.
-#' @param workflows Logical. Also write the GitHub Actions workflows to
-#'   `.github/workflows/`. Default `FALSE`: checks run locally. The
+#' @param workflows Logical. Also write the opt-in GitHub Actions workflows
+#'   to `.github/workflows/`. Default `FALSE`: checks run locally. The
+#'   `check-record.yml` workflow is always written: it verifies the local
+#'   check record on pull requests, without running R. The opt-in
 #'   workflows run only when started by hand and on pull requests into
 #'   `main` (handbook chapter "Continuous integration and repository
 #'   hygiene").
 #' @param git Logical. Default `FALSE`. `TRUE` runs `git init` (when `path`
 #'   is not a repository yet) with `develop` as the first branch, sets
-#'   `core.hooksPath` to `.githooks`, and stages `.githooks/pre-push` with
-#'   its executable bit. It never commits, creates a remote or pushes.
+#'   `core.hooksPath` to `.githooks`, and stages `.githooks/pre-push` and
+#'   `tools/check` with their executable bit. It never commits, creates a remote or pushes.
 #' @param overwrite Logical. Replace existing files whose content differs.
 #'   Default `FALSE`.
 #' @param verbose Logical or `NULL`. Show high-level progress and result
@@ -524,7 +551,7 @@ create_research_project <- function(path, collaboration, members = NULL,
 #' .gitattributes            LF for the hook, vendored helpers and sidecars
 #' profile_<project>.R       sourced first: user, dw_mode, deposit paths,
 #'                           Z: mirror, vendored helpers
-#' .githooks/pre-push        runs tools/check.R before every push
+#' .githooks/pre-push        requires a check record before every push
 #' cso_project.yml           collaboration model (committed)
 #' README.md, CONTRIBUTING.md
 #' _config_template/user_config.yml   placeholder per-person configuration
@@ -539,7 +566,13 @@ create_research_project <- function(path, collaboration, members = NULL,
 #' releases/README.md        release records, committed after publication
 #' tests/testthat.R, tests/testthat/helper-project.R, test-project.R
 #' tools/check.R             OUTPUT_DIRS, DATA_DIRS and AUDIT_PATHS set
-#' .github/workflows/*.yml   only with workflows = TRUE (no manuscript job)
+#' tools/check               the wrapper; sh tools/check --record
+#' .checks/README.md         check records (.checks/<content-hash>.json)
+#' .github/workflows/check-record.yml   verifies the record on PRs (always)
+#' .github/workflows/*.yml   the others only with workflows = TRUE (no manuscript job)
+#' AGENTS.md, CLAUDE.md      instructions for AI coding agents, with the embargo section
+#' decisions.md              decisions and the record of AI use
+#' .claude/settings.json     Claude Code: the cso-toolkit plugin; no edits to 00_functions/
 #' }
 #'
 #' The arguments, the refusal to replace existing files and the returned

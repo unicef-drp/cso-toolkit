@@ -199,8 +199,10 @@ refuses to replace an output changed outside `dw_save()` or written by
 another user during your session (unless `takeover = TRUE`) and records
 the lineage of every write in its sidecar. Switch with
 `dw_set_collaboration()` in one reviewed pull request; it baselines the
-existing sidecars so the switch is a non-event. R and Python; Stata is
-tracked in [#168](https://github.com/unicef-drp/cso-toolkit/issues/168).
+existing sidecars so the switch is a non-event. Stata applies the same
+guards through its Python integration (Stata 16+;
+[#168](https://github.com/unicef-drp/cso-toolkit/issues/168)); the switch
+itself is made from R or Python.
 See the handbook chapter
 [Roles and the mode contract](https://unicef-drp.github.io/cso-toolkit/handbook/chapters/21-roles-and-modes.html#collaboration-model-single--and-multi-producer-projects).
 
@@ -229,10 +231,10 @@ run-level comparison of two outputs from their sidecars.
 | `dw_merge` | ✅ | ✅ | — | R + Python only |
 | `dw_isid` | ✅ | ✅ | (embedded in `dw_save`) | same |
 | `dw_verify_z` | ✅ | ✅ | — | R + Python only |
-| `dw_fetch_inputs` | ✅ | ⏳ (#152) | ⏳ (#152) | R only — fill a gitignored inputs folder from the Teams / Z: deposit ([R](docs/dw_io_reference.md)) |
-| `dw_check_deposit` | ✅ | ⏳ (#152) | ⏳ (#152) | R only — every local input has an identical copy on Teams or Z: |
-| `dw_read_provenance` | ✅ | ⏳ (#152) | ⏳ (#152) | R only — read an output's `.provenance.json` sidecar |
-| `dw_provenance_diff` | ✅ | ⏳ (#152) | ⏳ (#152) | R only — did this run reproduce the last one? |
+| `dw_fetch_inputs` | ✅ | ✅ | ➖ via R/Python (#152) | Fill a gitignored inputs folder from the Teams / Z: deposit ([reference](docs/dw_io_reference.md)) |
+| `dw_check_deposit` | ✅ | ✅ | ➖ via R/Python (#152) | Every local input has an identical copy on Teams or Z: |
+| `dw_read_provenance` | ✅ | ✅ | ➖ via R/Python (#152) | Read an output's `.provenance.json` sidecar |
+| `dw_provenance_diff` | ✅ | ✅ | ➖ via R/Python (#152) | Did this run reproduce the last one? |
 
 `dw_use` accepts **HTTPS URLs** since v0.4.0 — producer downloads
 once and freezes the response under `_frozen/<host>/<path>` with a
@@ -445,6 +447,7 @@ Semantic versioning (MAJOR.MINOR.PATCH).
 | `v0.9.0` | 2026-11-19 | Inputs kept out of Git and run comparison (R only; Python / Stata siblings in [#152](https://github.com/unicef-drp/cso-toolkit/issues/152)): `dw_fetch_inputs()` fills a gitignored inputs folder from the Teams / Z: deposit (SHA-256-verified copies, `.gitkeep` per folder, input manifest) and `dw_check_deposit()` proves every input matches it; `dw_read_provenance()` and `dw_provenance_diff()` tell from two sidecars whether a run reproduced the last one ([#153](https://github.com/unicef-drp/cso-toolkit/pull/153), docs [#155](https://github.com/unicef-drp/cso-toolkit/pull/155)). Fixes `dw_toolkit_version()` still reporting `0.6.0`. No public API breaks. |
 | `v0.9.1` | 2026-11-19 | Patch ([#159](https://github.com/unicef-drp/cso-toolkit/pull/159), #106 items 2–3): `create_profile(include_z_drive_check = TRUE)` now emits a timeout-bounded Z: probe (`vol`, 3 s) instead of `dir.exists("Z:/")` / `Path.is_dir()`, which could hang on a dead-mapped drive (R + Python); the R, Python and Stata package READMEs use absolute GitHub links so they still resolve when vendored. No public API changes. |
 | `v0.10.0` | 2026-11-21 | Update and start repositories (R + Python): `cso_toolkit_sync()` prints the release notes since the pinned tag and updates the vendored copy, with `cso_toolkit_diff()` and `cso_toolkit_pull()` now implemented and reading a release tag ([#181](https://github.com/unicef-drp/cso-toolkit/pull/181)); `create_research_project()` and `create_official_stats_project()` write a new repository's floor ([#172](https://github.com/unicef-drp/cso-toolkit/pull/172)); a single- or multi-producer setting in `cso_project.yml`, with `dw_save()` guards ([#169](https://github.com/unicef-drp/cso-toolkit/pull/169), fixes [#182](https://github.com/unicef-drp/cso-toolkit/pull/182)); repository-hygiene and local-first CI templates ([#167](https://github.com/unicef-drp/cso-toolkit/pull/167)); `cso_toolkit_check()` target-version alert and numeric version comparison ([#163](https://github.com/unicef-drp/cso-toolkit/pull/163), closes #106). Stata: not yet ([#168](https://github.com/unicef-drp/cso-toolkit/issues/168), [#180](https://github.com/unicef-drp/cso-toolkit/issues/180)). MINOR; NEWS lists the changes a consumer may notice. |
+| `v0.11.0` | 2026-11-22 | Three languages certified to agree and Stata caught up: `sh tools/certify` records a parity certificate when R, Python and Stata give the same results ([#193](https://github.com/unicef-drp/cso-toolkit/pull/193)); Stata `dw_load_config` reads the user block ([#196](https://github.com/unicef-drp/cso-toolkit/pull/196)) and Stata gains the collaboration model and multi-producer guards ([#198](https://github.com/unicef-drp/cso-toolkit/pull/198)); Python `dw_fetch_inputs()`, `dw_check_deposit()`, `dw_read_provenance()`, `dw_provenance_diff()` ([#201](https://github.com/unicef-drp/cso-toolkit/pull/201)); `dw_compare(diagnose = TRUE)` and `dw_diff_profile()` ([#203](https://github.com/unicef-drp/cso-toolkit/pull/203)); check records for consumer repositories ([#205](https://github.com/unicef-drp/cso-toolkit/pull/205)); AI coding agents: handbook chapter 46, a Claude Code plugin, and the agent files in new repositories ([#175](https://github.com/unicef-drp/cso-toolkit/pull/175), [#176](https://github.com/unicef-drp/cso-toolkit/pull/176), [#208](https://github.com/unicef-drp/cso-toolkit/pull/208)); fixes: R doubled CSV quotes ([#199](https://github.com/unicef-drp/cso-toolkit/pull/199)), four Stata bugs, vendored README sync ([#189](https://github.com/unicef-drp/cso-toolkit/pull/189)). MINOR; NEWS lists the changes a consumer may notice. |
 | `v1.0.0` | _committed API_ | After the `ed` sector pilot lands and a second sector vendors the helpers without modification. |
 
 **Changelog.** Per-release notes — including breaking-change migration

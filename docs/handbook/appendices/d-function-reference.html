@@ -325,6 +325,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Continuous integration and repository hygiene</span></span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/46-ai-agents.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Working with AI coding agents</span></span></a>
+  </div>
+</li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
@@ -336,19 +342,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/51-microdata-archive.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">The microdata archive: archive, catalogue, tool</span></span></a>
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">The microdata archive: archive, catalogue, tool</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/52-ihsn-grammar.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">The IHSN convention and the folder grammar</span></span></a>
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">The IHSN convention and the folder grammar</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/53-datalib-api-conformance.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">The <code>datalib_*</code> API and its conformance suite</span></span></a>
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">The <code>datalib_*</code> API and its conformance suite</span></span></a>
   </div>
 </li>
       </ul>
@@ -362,13 +368,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/61-ecosystem.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">The UNICEF analytics ecosystem: three tiers</span></span></a>
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">The UNICEF analytics ecosystem: three tiers</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/62-unicefdata.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">unicefData: public child statistics in three languages</span></span></a>
+ <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">unicefData: public child statistics in three languages</span></span></a>
   </div>
 </li>
       </ul>
@@ -413,6 +419,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <div class="sidebar-item-container"> 
   <a href="../appendices/f-third-party-functions.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">F</span>&nbsp; <span class="chapter-title">Curated third-party functions</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/g-parity-certificate.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">G</span>&nbsp; <span class="chapter-title">Cross-language parity</span></span></a>
   </div>
 </li>
       </ul>
@@ -547,128 +559,135 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>✅</td>
 <td>✅</td>
 <td>✅</td>
-<td>Diff two artefacts on id + value vars; tolerates degenerate sides with a warning (v0.5.0)</td>
+<td>Diff two artefacts on id + value vars; tolerates degenerate sides with a warning (v0.5.0); <code>diagnose = TRUE</code> (R, Python) adds a profile; stops when both sides are the same file (#111)</td>
 </tr>
 <tr class="even">
+<td><code>dw_diff_profile</code></td>
+<td>✅</td>
+<td>✅</td>
+<td>—</td>
+<td>Unreleased (#111): profile a <code>dw_compare</code> result (differing columns, numeric drift quantiles, top key values of the changed / added / removed rows)</td>
+</tr>
+<tr class="odd">
 <td><code>dw_merge</code></td>
 <td>✅</td>
 <td>✅</td>
 <td>—</td>
 <td>R + Python only</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>dw_isid</code></td>
 <td>✅</td>
 <td>✅</td>
 <td>embedded</td>
 <td>In Stata the uniqueness check lives inside <code>dw_save</code></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>dw_verify_z</code></td>
 <td>✅</td>
 <td>✅</td>
 <td>—</td>
 <td>R + Python only</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>dw_resolve_path</code></td>
 <td>✅</td>
 <td>✅</td>
 <td>—</td>
 <td>Mode-aware path resolver</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>dw_is_canonical</code></td>
 <td>✅</td>
 <td>✅</td>
 <td>—</td>
 <td>Detects a canonical deposit; recognises the Z: (<code>dwZDrive</code>) root in R as of v0.5.0</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>dw_root</code></td>
 <td>✅</td>
 <td>—</td>
 <td>—</td>
 <td>Public wrapper around the root resolver (re-exported v0.4.6)</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>dw_stage</code></td>
 <td>✅</td>
 <td>—</td>
 <td>—</td>
 <td>R export</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>dw_fetch_inputs</code></td>
 <td>✅</td>
+<td>✅</td>
 <td>—</td>
-<td>—</td>
-<td>R export (Unreleased): fill a gitignored local inputs folder from the Teams / Z: deposit, <code>.gitkeep</code> per folder, input manifest</td>
+<td>R and Python (#152; Stata via R or Python): fill a gitignored local inputs folder from the Teams / Z: deposit, <code>.gitkeep</code> per folder, input manifest</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>dw_check_deposit</code></td>
 <td>✅</td>
-<td>—</td>
-<td>—</td>
-<td>R export (Unreleased): every local input has an identical SHA-256 copy on Teams or Z:</td>
-</tr>
-<tr class="odd">
-<td><code>dw_read_provenance</code></td>
 <td>✅</td>
 <td>—</td>
-<td>—</td>
-<td>R export (Unreleased): read the <code>.provenance.json</code> sidecar of an output</td>
+<td>R and Python (#152; Stata via R or Python): every local input has an identical SHA-256 copy on Teams or Z:</td>
 </tr>
 <tr class="even">
-<td><code>dw_provenance_diff</code></td>
+<td><code>dw_read_provenance</code></td>
+<td>✅</td>
 <td>✅</td>
 <td>—</td>
-<td>—</td>
-<td>R export (Unreleased): compare two runs from their sidecars (reproduced / output changed / inputs changed)</td>
+<td>R and Python (#152; Stata via R or Python): read the <code>.provenance.json</code> sidecar of an output</td>
 </tr>
 <tr class="odd">
+<td><code>dw_provenance_diff</code></td>
+<td>✅</td>
+<td>✅</td>
+<td>—</td>
+<td>R and Python (#152; Stata via R or Python): compare two runs from their sidecars (reproduced / output changed / inputs changed)</td>
+</tr>
+<tr class="even">
 <td><code>dw_collaboration</code></td>
 <td>✅</td>
 <td>✅</td>
-<td>—</td>
-<td>Unreleased: the project’s collaboration model (<code>single-producer</code> / <code>multi-producer</code>) from <code>cso_project.yml</code>, resolved once per session; Stata planned (#168)</td>
+<td>✅</td>
+<td>Unreleased: the project’s collaboration model (<code>single-producer</code> / <code>multi-producer</code>) from <code>cso_project.yml</code>, resolved once per session; Stata <code>dw_collaboration.ado</code> (#168)</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>dw_set_collaboration</code></td>
 <td>✅</td>
 <td>✅</td>
 <td>—</td>
-<td>Unreleased: write <code>cso_project.yml</code> and baseline the existing sidecars (one reviewed PR); refused in reviewer mode; Stata planned (#168)</td>
+<td>Unreleased: write <code>cso_project.yml</code> and baseline the existing sidecars (one reviewed PR); refused in reviewer mode; not in Stata (switch from R or Python)</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>dw_publish</code></td>
 <td>✅ (stub)</td>
 <td>—</td>
 <td>—</td>
 <td>STUB / dry-run only — see callout below</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>dw_toolkit_version</code></td>
 <td>✅</td>
 <td>✅</td>
 <td>—</td>
 <td>Reports the installed toolkit version</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>dw_verbosity</code></td>
 <td>✅</td>
 <td>—</td>
 <td>—</td>
 <td>Sets session verbosity / debug options (v0.4.10)</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>dw_mkdir</code></td>
 <td>—</td>
 <td>—</td>
 <td>✅</td>
 <td>Stata-only: recursive mkdir (Stata’s built-in is not recursive)</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>dw_map_drive</code></td>
 <td>—</td>
 <td>—</td>

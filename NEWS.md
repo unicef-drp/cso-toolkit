@@ -6,6 +6,228 @@ _Entries land here as PRs merge into `develop`. When the next release
 is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
+## v0.11.0 (2026-11-22)
+
+R, Python and Stata are now checked against each other. `sh tools/certify`
+runs shared cases in all three languages and commits a parity certificate
+when they agree; its first runs found four Stata bugs and an R CSV bug,
+all fixed here. Stata reads the user's block of `user_config.yml` and
+gains the multi-producer guards; Python gains the deposit and provenance
+helpers; `dw_compare(diagnose = TRUE)` profiles where a mismatch comes
+from. New repositories get check records (local checks that a pull request
+verifies in seconds) and the AI-agent files, and the repository is a
+Claude Code plugin marketplace. MINOR: new functions, arguments and
+options. The behaviour a consumer may notice is listed under Changed. PRs
+#175, #176, #188, #189, #193, #196, #198, #199, #201, #203, #205 and #208.
+
+### Changed
+
+- **R `dw_use()` reads a doubled quote in a quoted CSV field as one
+  quote** (see Fixed, #192). A file written by `dw_save()` that holds `"`
+  in a character column now reads back as written; values read earlier
+  had `""`.
+- **`dw_compare()` stops when both arguments resolve to the same file**
+  (see Fixed, #111). It used to report a false "0 changed" for
+  `dw_compare(sandbox_path, canonical_path)` in reviewer mode; pass the
+  new data in memory.
+- **Stata `dw_save` in a multi-producer project stops on an out-of-band
+  change or a concurrent write unless `takeover`, and stops every such
+  write without Stata's Python integration** (see Added, #168). Stata
+  sidecars now record `sha256` and an ISO-8601 UTC `written_at`, and
+  `user` follows R's order.
+- **Python `dw_save()` writes a DataFrame in `metadata` as an array of
+  records**, as R does (see Added, #152); it used to write its `str()`.
+
+### Added
+
+- **New repositories get the AI-agent files (#173, part C).**
+  `create_research_project()` and `create_official_stats_project()` (R and
+  Python, same bytes) now also write `AGENTS.md` (from
+  `templates/agents/`, the project name filled in; official statistics add
+  the embargo section), `CLAUDE.md` (`@AGENTS.md`), `decisions.md`, and
+  `.claude/settings.json`: the cso-toolkit plugin, and a deny rule,
+  `Edit(**/00_functions/**)`, so Claude Code cannot edit the vendored
+  copy. Generated profiles (the scaffolders' and `create_profile()`'s, R
+  and Python) print a notice when a Claude Code session
+  (`CLAUDE_CODE_CHILD_SESSION=1`) runs as producer; nothing is blocked.
+  Handbook chapters 46 (shared settings, the notice) and 40 (layout)
+  updated.
+
+- **Claude Code plugin with five skills (#173).** The repository is now a
+  Claude Code marketplace (`.claude-plugin/marketplace.json`, name
+  `unicef-cso`) with one plugin, `plugins/cso-toolkit/`: `new-project`,
+  `provenance`, `check`, `review` and `update-toolkit`. Each skill is a short
+  procedure that links to the handbook chapter holding the rules. Install
+  with `claude plugin marketplace add unicef-drp/cso-toolkit` and
+  `claude plugin install cso-toolkit@unicef-cso`; the plugin README has a
+  test prompt per skill. `update-toolkit` runs `cso_toolkit_sync()` (a dry
+  run first); `check` ends with `sh tools/check --record` (#174). The plugin
+  is MIT-licensed: `LICENSE` now names `plugins/`, `.claude-plugin/`,
+  `conformance/` and `tools/` in its code section.
+
+- **Working with AI coding agents (handbook chapter 46 and templates; no
+  helper code changes; #173).** The chapter sets out the instructions file
+  every toolkit repository carries, what an agent may do (reviewer by
+  default; no `takeover = TRUE`, deposits or releases without a person), what
+  it may see (no microdata rows; no pre-release official figures), where
+  project knowledge lives (`decisions.md`, not personal agent memory), how
+  agent output is checked, parallel sessions in worktrees, and recording and
+  disclosing AI use. Templates in `templates/agents/`: `AGENTS.md`
+  (tool-neutral; the chapter includes it verbatim, so the two cannot drift),
+  `AGENTS-official-stats.md` (the embargo section), `CLAUDE.md`
+  (`@AGENTS.md`) and `decisions.md` (decisions and an AI-use table). Both
+  `.gitignore` templates now ignore personal agent settings
+  (`.claude/settings.local.json`, `CLAUDE.local.md`) in their shared secrets
+  block.
+
+- **Parity certificate: one local command that checks R, Python and Stata
+  agree (#190).**
+  - `sh tools/certify` runs the cases in `conformance/cases/` through a
+    driver per language and compares the outputs:
+    - values within a tolerance, against the fixture for round trips and
+      against R otherwise;
+    - for the other cases, a small record of what happened, against the
+      answer the case expects.
+  - The register in each case lists the languages that do not implement
+    it (`gaps`) or are known to disagree (`divergences`), with the issue.
+    A gap that closes or a divergence that resolves fails the run until
+    the register is updated.
+  - `--record` writes and commits `.parity/<content-hash>.json` when all
+    three languages pass; the hash covers the implementations and the
+    harness, not the docs. `--verify` checks for one without running any
+    language. A new `Parity certificate` workflow runs it on pull
+    requests into `main` and on demand.
+  - Ten cases to start:
+    - round trips through CSV and `.dta`, and edge values;
+    - the `isid` refusal and the reviewer-mode API refusal;
+    - the provenance sidecar and `dw_compare` counts;
+    - `aggregate_data_v2`, version comparison and the multi-producer
+      guard (R and Python).
+  - Stata runs locally in batch, so #133's CI licence is not needed.
+  - New handbook appendix *Cross-language parity*; chapter 44 adds the
+    certificate to the release checklist.
+
+- **Stata `dw_load_config` reads the user's block of `user_config.yml`
+  (#180).** It reads the block named after the user first (`user()`, else
+  `USERNAME`, `USER`, `c(username)`) and top-level keys as the fallback,
+  as the R and Python profiles do. `dw_mode` resolves as
+  `dw_mode_by_project` for the project (`project()`, else the repository
+  folder's name), then `dw_mode`, with no default. A missing or invalid
+  mode stops with error 459 and the YAML to add. Other blocks, such as
+  `datalib:`, are still skipped. New parity case `config_user_block`: six
+  configurations, the same mode in R, Python and Stata. New local test
+  `stata/tests/test_config_user_block.do`.
+
+- **Stata: the collaboration model and the multi-producer guards (#168).**
+  New `dw_collaboration.ado` finds and validates `cso_project.yml` (walking
+  up to the repository root) and caches `$dw_collaboration_model`,
+  `$dw_project_file` and `$dw_session_start`. In a multi-producer project,
+  outside reviewer mode, `dw_save` stops on an out-of-band change or a
+  concurrent write unless the new `takeover` option, does not count a
+  committed, unmodified write as concurrent (#178), prints a note on a
+  follow-on write, and records the lineage fields (`collaboration`,
+  `previous_*`, `git_branch`, `git_commit`, `takeover`), as R and Python
+  do. The hashing, timestamps, sidecar reading and git checks run through
+  Stata's Python integration (Stata 16+), in `dw_stata_helpers.py` shipped
+  next to the `.ado` files (vendor it with them). Without Python a
+  multi-producer write stops unless `takeover`. With Python every Stata
+  sidecar now records `sha256` and an ISO-8601 UTC `written_at` (#191),
+  and `user` follows R's order (`USERNAME`, `LOGNAME`, `USER`, `LNAME`).
+  `dw_set_collaboration` stays R and Python. Tests:
+  `stata/tests/test_collab_guards.do`, `stata/tests/test_dw_stata_helpers.py`;
+  the parity cases `collab_out_of_band` and `provenance_sidecar` now pass
+  in Stata.
+
+- **Python: `dw_fetch_inputs()`, `dw_check_deposit()`,
+  `dw_read_provenance()` and `dw_provenance_diff()` (#152).** Ports of the R
+  helpers, with the same arguments, statuses and envelopes; they return
+  DataFrames (the manifest, the report) and dicts (the sidecar, the diff).
+  `dw_save()` now writes a DataFrame in `metadata` as an array of records,
+  as R does, so the manifest can be recorded as `metadata={"inputs": ...}`;
+  `dw_read_provenance()` reads arrays of records back as DataFrames. Tests
+  mirror R's D1-D14 and P1-P9. Stata routes via R or Python, recorded in the
+  coverage matrix. New parity cases `deposit_fetch_inputs` and
+  `provenance_diff_status` (R and Python agree; Stata a listed gap).
+
+- **`dw_compare(diagnose = TRUE)` and `dw_diff_profile()` (R + Python;
+  #111).** A profile of where a mismatch comes from:
+  - which value columns differ;
+  - the absolute and relative quantiles of each numeric column's drift;
+  - the top key values of the changed, added and removed rows.
+
+  It is printed, attached as `$profile`, and written as
+  `<label>_profile.txt` with `write_report_to`. Lifted from DW-Production's
+  `.dw_diff_profile()`, which can now be dropped. Parity case
+  `compare_diagnose`; Stata keeps `r(col_changed)`.
+
+- **Check records: local checks verified on GitHub at almost no Actions
+  cost (#174).** The templates gain:
+  - `sh tools/check --record` (new wrapper `templates/tools/check`, which
+    also starts R without Git Bash's `HOME` on Windows): on a clean tree, a
+    run in which nothing fails commits `.checks/<content-hash>.json`, the
+    hash being git's tree ID without `.checks/`;
+  - a pre-push hook that verifies the record by default (`MODE=verify`, no
+    R) or runs the checks (`MODE=run`);
+  - `check-record.yml`, the one workflow on by default: pull requests into
+    `develop` and `main`, about 10 seconds, no R, with `EXEMPT_PATHS` for
+    bot pull requests that only touch generated files;
+  - `.checks/README.md`, a `.gitignore` re-include for `.checks/*.json`
+    and `tools/check` pinned to LF in `.gitattributes`.
+
+  `create_research_project()` and `create_official_stats_project()` write
+  them all and print the branch-protection steps. The project READMEs and
+  CONTRIBUTING files now say `sh tools/check --record`. Handbook chapter 45
+  gains a "Check records" section with the branch-protection settings and
+  the Windows note. cso-toolkit itself keeps its parity certificate.
+
+### Fixed
+
+- **`dw_compare()` no longer compares a file with itself (R, Python,
+  Stata; #111).** In reviewer mode `dw_use()` reads a sandbox path
+  network-first from the canonical deposit, so
+  `dw_compare(sandbox_path, canonical_path)` read the deposit twice and
+  reported a false "0 changed". When both arguments resolve to the same
+  file it now stops with a `[cso_toolkit.dw_compare]` envelope that says to
+  pass the new data in memory; Stata checks the literal paths. Parity case
+  `compare_same_file`.
+- **R `dw_use()` read a doubled quote in a quoted CSV field as two quotes
+  (#192).** `data.table::fread()` keeps `""` as two characters (data.table
+  #1109, #4779, open upstream since 2015), so `"say ""hi"""` read as
+  `say ""hi""`, and every `dw_save()` / `dw_use()` round trip doubled the
+  quotes again. Python and Stata read `say "hi"`. `dw_use()` now turns each
+  `""` in a character column back into `"` (CSV, TSV, TXT; skipped with
+  `quote = ""`). Found by the parity certificate; its R divergence on
+  `io_edge_values` is gone.
+- **Stata `dw_compare` stopped on every call** with "code follows on the
+  same line as close brace": a `} else {` on one line, there since the
+  command was added in May 2026. Found by the parity certificate.
+- **Stata `dw_save` stopped on every call that wrote a sidecar (the
+  default), after writing the `.dta`.**
+  - The JSON escaping expanded to `subinstr(..., """, ...)`, which is
+    invalid syntax.
+  - The sidecar's `file write` lines used a `_q` directive that does not
+    exist, so `"path"` held other text.
+  - Quoted `title()`, `producer()`, `sources()` and `metadata()` values
+    were written with their quotes or lost.
+
+  Sidecars are now valid JSON. The `isid` and missing-folder errors carry
+  the `[cso_toolkit.dw_save]` envelope. Found by the parity certificate.
+- **R `dw_api_fetch()` in reviewer mode, on a cache miss, stopped without
+  the envelope.** It called `dw_require_no_api(api_name =, reason =)`,
+  which only a generated profile defines, as `function(context = NULL)`:
+  "could not find function" without a profile, "unused arguments" with
+  one. It refused the network call either way. An internal
+  `.dw_require_no_api()` now raises the `[cso_toolkit.dw_api]` envelope,
+  as Python does.
+- **`cso_toolkit_diff()`, `cso_toolkit_pull()` and `cso_toolkit_sync()`
+  can update a vendored `README.md` (R + Python).** Listed under
+  `vendored:`, it follows the other files: `r/R/README.md` when they are
+  all `*.R`, `python/src/README.md` when they are all `*.py`; a list with
+  both stops with an envelope. It used to stop the call ("Cannot tell
+  where the vendored file README.md lives"), so the first sync of
+  DW-Production left its README at v0.9.1. A README the manifest does not
+  list is left alone, as before: scaffolded repositories keep their own.
+
 ## v0.10.0 (2026-11-21)
 
 The first release a consumer repository can update *to* in one call,

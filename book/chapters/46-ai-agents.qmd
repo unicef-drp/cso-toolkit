@@ -1,0 +1,121 @@
+# Working with AI coding agents
+
+Toolkit repositories are increasingly worked on with AI coding agents: Claude Code, GitHub Copilot, OpenAI Codex and their peers read the repository, run its scripts and propose commits. An agent follows the instructions it is given and fills every gap with a plausible guess. The contract of this handbook is full of rules that a plausible guess breaks. Left to itself, an agent edits the vendored helpers in `00_functions/` to make a call work. It reads a file with `read.csv()` instead of `dw_use()`, and the output loses its provenance. It runs as a producer because that is what the person's `user_config.yml` says. It passes `takeover = TRUE` to get past a collaboration guard. And the reasons behind the project's choices end up in one person's private agent memory, where co-authors cannot see them.
+
+None of this needs new machinery. It needs the repository to say, in a file every agent reads, which rules apply, and the people working with agents to keep a few habits. This chapter sets out both: the instructions file every toolkit repository carries, what an agent may and may not do, what it may see, where project knowledge lives, how agent output is checked, and how its use is disclosed.
+
+## The instructions file
+
+Every toolkit repository has an `AGENTS.md` at its root. `AGENTS.md` is the tool-neutral convention: Codex, Copilot's coding agent and most other agents read it on their own. Claude Code reads `CLAUDE.md` instead, so the repository also carries a one-line `CLAUDE.md` that imports the first:
+
+```markdown
+@AGENTS.md
+```
+
+One file, read by every agent, means one set of rules, edited in one place and reviewed like code. Tool-specific files beyond that import (`.github/copilot-instructions.md`, `.cursor/rules/`) are better avoided: two copies of the rules drift apart.
+
+The toolkit ships the file as a template, `templates/agents/AGENTS.md`, and `create_research_project()` and `create_official_stats_project()` write it into every new repository with `{{project_name}}` replaced by the repository's name, together with `CLAUDE.md`, `decisions.md` and the shared `.claude/settings.json` described below ([Starting a new repository](40-new-repository.qmd)). An existing repository copies the files by hand. The template, as it stands:
+
+````markdown
+{{< include ../../templates/agents/AGENTS.md >}}
+````
+
+An official-statistics repository appends one more section, `templates/agents/AGENTS-official-stats.md`, for the embargo:
+
+````markdown
+{{< include ../../templates/agents/AGENTS-official-stats.md >}}
+````
+
+The file is a starting point, not a ceiling. A repository adds what is specific to it: its layout, the scripts to run from which folder, the tests that pin published numbers. It keeps the rules short and imperative, because an agent weighs every line it reads and a long file dilutes the rules that matter. Five rules carry most of the weight:
+
+| Rule | What it prevents |
+|---|---|
+| `Rscript --no-init-file`, never `--vanilla` | A run that misses the user library and fails, or silently uses another package version |
+| Never edit `00_functions/` | A vendored copy that no longer matches its manifest, so results no longer trace to a toolkit release ([the vendoring chapter](41-vendoring.qmd)) |
+| Read and write through `dw_use()` / `dw_save()` | Outputs without provenance sidecars ([Appendix B](../appendices/b-provenance-schema.qmd)) |
+| Run `sh tools/check --record` before every push | Data, secrets or contract violations reaching the remote; the pre-push hook and the pull request's `check-record` status refuse a push without a passing record ([the CI chapter](45-ci-cd.qmd#check-records)) |
+| Atomic commits, pull requests into `develop` | Changes no reviewer can follow, and unreviewed changes on `main` |
+
+### Shared Claude Code settings
+
+The scaffolders also write `.claude/settings.json`, the settings every member's Claude Code reads in that repository:
+
+```json
+{{< include ../../templates/agents/settings.json >}}
+```
+
+- **The deny rule** makes "never edit `00_functions/`" a rule Claude Code enforces, not only one it is told. `Edit` rules cover every file-editing tool, and `**/` matches wherever the session was started. The vendored copy still changes through `cso_toolkit_sync()`, which runs in R. A person who must edit it locally overrides the rule in their own `.claude/settings.local.json`.
+- **The plugin.** The cso-toolkit marketplace and plugin (the skills `/cso-toolkit:check`, `/cso-toolkit:update-toolkit` and three more) are offered to everyone who trusts the folder. Enabling a plugin in a committed file does not install it: each member runs `claude plugin install cso-toolkit@unicef-cso --scope project` once in their clone.
+
+## What an agent may do
+
+The toolkit's two modes ([roles and modes](21-roles-and-modes.qmd)) apply to agents with one change of default.
+
+- **An agent session runs as `reviewer`** unless a person deliberately sets `producer` for it. A reviewer re-runs, compares and writes to its sandbox. It cannot write canonical outputs or call live APIs: the reviewer-mode guard refuses both. Most agent work is of that kind: reproducing an output, finding why a number moved, writing tests, refactoring code whose outputs must not change.
+- **Producer work is a person's decision, made per session.** When an agent is to write outputs, the person running the session sets `producer` and stays responsible for what is written.
+- **An agent never writes to the canonical deposit** (Teams, Z:, SDMX, data.unicef.org) and never prepares a release on its own.
+- **An agent never passes `takeover = TRUE`** to `dw_save()` without a person's explicit approval. The collaboration guards of a multi-producer project ([the collaboration model](21-roles-and-modes.qmd#collaboration-model-single--and-multi-producer-projects)) exist to stop one writer from overwriting another's output. An agent that overrides them to finish its task defeats them.
+- **An agent never edits a person's `user_config.yml`, and never installs packages without asking.** When the profile stops, the agent reports the exact message and the person fixes their own configuration.
+
+`dw_mode` is read from the person's `user_config.yml`, which cannot tell whether a person or an agent is running the session. The reviewer default is therefore a rule in `AGENTS.md`, not something the toolkit enforces. It does make the case visible. Claude Code sets `CLAUDE_CODE_CHILD_SESSION=1` in the commands it runs, and a profile generated by the toolkit (the scaffolders' and `create_profile()`'s, in R and Python) prints a notice when that variable is set and `dw_mode` is `producer`: "a Claude Code session is running as producer". Nothing is blocked; the notice puts the choice on the record of the session. (`CLAUDECODE=1` is not used for this: IDE extensions also set it in their integrated terminals, where a person works.) Other agents set no such variable.
+
+## What an agent may see
+
+Whatever an agent reads is sent to the AI service that runs it. A file the agent opens, a table it prints, the output of a command it runs: all of it leaves the machine. The rules on what may leave follow from that.
+
+- **No microdata and no personal records.** An agent never prints rows of a microdata file or of any file with records on individuals: no `head()`, no `View()`, no `cat` of a data file. Variable names and labels, counts, summary statistics that could be published, and code are fine.
+- **Code and provenance sidecars are fine to share.** They hold paths, hashes, schemas and settings, not data.
+- **Pre-release figures stay unseen in official statistics.** Official figures are embargoed until their publication date ([the CI chapter](45-ci-cd.qmd) sets out the release record). Before that date no external AI service sees them, unless the organization's AI-use policy allows that service to. In practice the agent does not open the output folders of an official-statistics repository before publication.
+- **Use the services your organization has approved,** under its terms for confidential material. A personal account on a public service is not the same contract.
+
+## Where project knowledge lives
+
+An agent working for weeks on a project accumulates context: why a variable is recoded, which countries are dropped and on whose say-so, which robustness check was tried and abandoned. If that context lives in one person's agent memory or in session transcripts, co-authors cannot see it and the next agent starts from nothing. The rule is that project knowledge goes in the repository, and personal working state does not.
+
+| What | Where | In git? |
+|---|---|---|
+| Decisions: what, when, who decided, why | `decisions.md`, at the root or per product (a paper, a sector) | Yes |
+| Working notes, analysis plans, open questions | the documentation folder (`docs/` or `00_documentation/`) | Yes |
+| Instructions for agents | `AGENTS.md`, `CLAUDE.md` | Yes |
+| Shared agent settings (permissions every member uses) | `.claude/settings.json` | Yes |
+| Personal agent settings | `.claude/settings.local.json`, `CLAUDE.local.md` | No (the gitignore templates ignore them) |
+| Personal agent memory, session transcripts | the agent's own folders, outside the repository | No |
+
+The toolkit's `decisions.md` template (`templates/agents/decisions.md`) has one dated entry per decision, with who decided, why and what was set aside. An agent may draft an entry when asked, but the person who made the decision confirms its wording. A decision recorded in the wrong words is worse than none.
+
+## Checking what an agent produces
+
+An agent's output is checked like a junior colleague's, with one difference: it is fluent and confident whether or not it is right. Four checks catch most of what goes wrong.
+
+1. **Every number traces to a file.** A number in a paper, a brief or a release note traces to a file in `output/` (or, for official statistics, to the release record). A number that traces to nothing is removed or recomputed.
+2. **Tests are not re-pinned to make them pass.** When a test that pins published numbers fails, numbers moved. The agent finds out why. A pinned value changes only when a person agrees the change is intended, and the pull request lists what moved.
+3. **Comparative claims are checked after every rerun.** Levels can barely move while a comparison flips: "flat", "the same", "robust", "larger than". After a rerun, each comparative claim in the text is checked against the new tables, not only the numbers it quotes.
+4. **An independent claim check before submission or release.** Someone who did not write the text recomputes every number in it from `output/`: a co-author, or a fresh agent session given only the text and the repository. The agent that wrote the text is the wrong one to check it: it tends to confirm what it wrote.
+
+The local checks and the check record ([the CI chapter](45-ci-cd.qmd#check-records)) apply to agents as they do to people. An agent that cannot make the checks pass reports the failure. It does not push with `--no-verify`, and it never writes a check record by hand: a record says the checks passed on that exact content.
+
+## Parallel sessions
+
+When two sessions work on one repository at the same time, people or agents, each gets its own **git worktree** of the one local clone. Two sessions in one folder switch branches under each other. A second clone drifts from the first and gets edited by mistake.
+
+```sh
+MAIN="$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")"
+git -C "$MAIN" fetch origin
+git -C "$MAIN" worktree add --no-track "$MAIN/../<repo>-wt-<topic>" -b feature/<topic> origin/develop
+```
+
+Branches, stashes and configuration are shared between worktrees, so each session works only on its own branch. It never switches, resets or deletes another session's branch, and it commits instead of stashing, because all worktrees share one stash list. Git-ignored files, inputs among them, are not shared. A new worktree fills its inputs folder with `dw_fetch_inputs()`, which copies each input from the deposit and checks its SHA-256 against the deposited copy. When the pull request has merged, `git worktree remove` deletes the worktree. Deleting the folder by hand leaves a stale entry, which `git worktree prune` clears.
+
+## Recording and disclosing AI use
+
+Journals and statistical offices increasingly ask how AI was used in producing a paper or a release. The answer is easy to give at the end only if it was recorded along the way. The `decisions.md` template ends with an *AI use* table: from when, to when, which tool and version, used for what, and who checked the result. Add a row when a tool starts being used for a new purpose, not at submission time.
+
+The declaration then follows from the table. A template line, to adapt to the venue's own wording:
+
+> During the preparation of this work the authors used *tool and version* to *purpose, for example: write and test analysis code; edit the text for clarity*. The authors reviewed, tested and verified all code, numbers and text, and take full responsibility for the content of the publication.
+
+Where a venue asks for more (which sections, which prompts), the AI-use table and the pull requests it points to hold the evidence.
+
+---
+
+Agents do not change the contract; they make it more important that the contract is written down. A repository whose rules live in `AGENTS.md`, whose decisions live in `decisions.md` and whose checks run on every push can take an agent's help without losing track of where its numbers came from.

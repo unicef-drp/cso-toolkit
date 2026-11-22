@@ -79,7 +79,8 @@ learning-mobility/
 ├── .gitignore                 research-project.gitignore, unchanged
 ├── .gitattributes             LF for the hook, vendored helpers and sidecars
 ├── profile_learning-mobility.R  sourced first by every script and session
-├── .githooks/pre-push         runs tools/check.R before every push
+├── .checks/README.md          check records: .checks/<content-hash>.json
+├── .githooks/pre-push         requires a check record before every push
 ├── cso_project.yml            collaboration: multi-producer (committed)
 ├── README.md                  quick start for a new co-author, layout
 ├── CONTRIBUTING.md            ground rules, first clone, workflow, checks
@@ -100,7 +101,13 @@ learning-mobility/
 │       ├── helper-project.R   fixtures, local state, expect_envelope()
 │       └── test-project.R     cso_project.yml, manifest vs sidecars, mode
 ├── tools/check.R              every local check
-└── .github/workflows/         only with workflows = TRUE (four, opt-in)
+├── tools/check                sh tools/check --record: run, then record
+├── .github/workflows/         check-record.yml (always); four more with
+│                              workflows = TRUE (opt-in)
+├── AGENTS.md, CLAUDE.md       rules for AI coding agents (CLAUDE.md: @AGENTS.md)
+├── decisions.md               decisions, who made them and why; AI use
+└── .claude/settings.json      Claude Code: the cso-toolkit plugin; no edits
+                               to 00_functions/
 ```
 
 An official-statistics repository follows DW-Production and the deposit's stage numbering:
@@ -110,7 +117,8 @@ DW-Nutrition/
 ├── .gitignore                       official-stats.gitignore, unchanged
 ├── .gitattributes                   LF for the hook, vendored helpers and sidecars
 ├── profile_DW-Nutrition.R           sourced first: mode, deposit paths, Z:, helpers
-├── .githooks/pre-push
+├── .checks/README.md                check records
+├── .githooks/pre-push               requires a check record
 ├── cso_project.yml                  collaboration: single-producer
 ├── README.md, CONTRIBUTING.md       embargo, release record, first clone
 ├── _config_template/user_config.yml placeholder per-person configuration
@@ -128,7 +136,12 @@ DW-Nutrition/
 ├── releases/README.md               releases/<vintage>/, after publication
 ├── tests/testthat.R, tests/testthat/helper-project.R, test-project.R
 ├── tools/check.R                    OUTPUT_DIRS, DATA_DIRS, AUDIT_PATHS set
-└── .github/workflows/               only with workflows = TRUE (three)
+├── tools/check                      sh tools/check --record
+├── .github/workflows/               check-record.yml (always); three more
+│                                    with workflows = TRUE
+├── AGENTS.md, CLAUDE.md             agent rules, the embargo section included
+├── decisions.md                     decisions and the record of AI use
+└── .claude/settings.json            the plugin; no edits to 00_functions/
 ```
 
 The canonical raw data, API caches and promoted work data live in the deposit (Teams `060.DW-MASTER/01_dw_prep/011_rawdata` and `013_wrkdata`), which the profile's `teamsRawData` and `teamsWrkData` point to in producer mode and redirect to the sandbox in reviewer mode ([Wiring the contract](22-wiring-the-contract.qmd)). The repository keeps folders of the same names for local work, as DW-Production does, because a sector script made by `create_sector_script()` reads `01_dw_prep/011_rawdata/<sector>/` and writes `01_dw_prep/013_wrkdata/<sector>/` relative to the repository ([Scaffolding and the contract auditor](35-scaffolding-audit.qmd)). Their contents never reach git: `.gitignore` ignores `013_wrkdata/` outright, like every output folder, and keeps only the READMEs, sidecars and manifests of `011_rawdata/`; `tools/check.R` fails on anything tracked in `013_wrkdata/` (`OUTPUT_DIRS`) and on data tracked in `011_rawdata/` (`DATA_DIRS`). `013_wrkdata/` has no tracked file at all, so it appears with the first run. `01_dw_prep/012_codes/README.md` shows how to scaffold a sector's driver against the project's own profile.
@@ -140,7 +153,7 @@ The functions never replace a file silently. Before writing anything they compar
 ### The options
 
 - **`vendor`, `toolkit_source`, `toolkit_version`.** `vendor` is `FALSE` by default. `TRUE` copies the helpers into `00_functions/` from a release tag of a git clone of cso-toolkit (`toolkit_source`, or `CSO_TOOLKIT_ROOT`), and writes `.toolkit_manifest.yml` with that tag as `pulled_version` and the commit it points to as `pulled_commit` ([The vendoring model](41-vendoring.qmd)). The tag is `toolkit_version`, by default the clone's latest release tag (`v0.9.1`, never a pre-release such as `v1.0.0-rc1`). The files are read from the tag's commit in the clone's history, never from its working tree, so a clone on another branch or with local edits still vendors exactly the released bytes; a tag the clone does not have stops the call before anything is written (`git fetch --tags` first). The default set is `dw_io.R`, `dw_api.R`, `cso_toolkit_sync.R`, `dw_provenance.R`, `dw_deposit.R`, `dw_project.R`, `test_scripts.R` and `zzz.R`, plus `profile_helpers.R` and `create_sector_script.R` for official statistics; a helper of that set which the tag does not have yet (`dw_project.R` before the release that adds it) is skipped and named in a message. A character vector picks the files, all of which must exist at the tag, and the three that `tools/check.R` needs are always added. Without vendoring, `tools/check.R` leaves out the `contract-audit` and `vintage` checks, with a comment saying to add them back once `00_functions/` is filled.
-- **`workflows`.** `FALSE` by default: checks run locally. `TRUE` adds the GitHub Actions workflows, which call the same `tools/check.R` and by default run only when started by hand and on pull requests into `main`.
+- **`workflows`.** `FALSE` by default: checks run locally. `check-record.yml`, which only verifies the local check record on pull requests (no R, about 10 seconds), is always written ([Check records](45-ci-cd.qmd#check-records)). `TRUE` adds the other GitHub Actions workflows, which call the same `tools/check.R` and by default run only when started by hand and on pull requests into `main`.
 - **`git`.** `FALSE` by default. `TRUE` runs `git init` with `develop` as the first branch (`main` is created at the first release), sets `core.hooksPath` to `.githooks`, and stages the hook with its executable bit so it also runs on macOS and Linux clones. It never commits, creates a remote or pushes.
 
 ### The profile

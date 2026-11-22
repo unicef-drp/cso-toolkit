@@ -1,0 +1,10 @@
+{
+  "name": "cso-toolkit",
+  "description": "Skills that walk an agent through the cso-toolkit procedures. Each skill is a short procedure; the handbook (https://unicef-drp.github.io/cso-toolkit/handbook/) holds the rules.",
+  "author": {
+    "name": "UNICEF Chief Statistician Office"
+  },
+  "homepage": "https://unicef-drp.github.io/cso-toolkit/handbook/",
+  "repository": "https://github.com/unicef-drp/cso-toolkit",
+  "license": "MIT"
+}

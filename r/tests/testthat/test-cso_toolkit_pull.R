@@ -167,6 +167,66 @@ test_that("a vendored file that is neither .R nor .py stops with an envelope", {
 	expect_match(conditionMessage(err), "notes.txt")
 })
 
+test_that("a listed README.md follows the folder of the other vendored files", {
+	skip_if(!nzchar(Sys.which("git")), "git not installed")
+	up <- tempfile("upstream_readme_")
+	withr::defer(unlink(up, recursive = TRUE, force = TRUE))
+	dir.create(up)
+	put(up, "r/DESCRIPTION", "Package: csotoolkit\nVersion: 0.0.1\n")
+	put(up, "r/R/a.R", "# a\n")
+	put(up, "python/src/p.py", "# p\n")
+	put(up, "r/R/README.md", "# R helpers v1\n")
+	put(up, "python/src/README.md", "# Python helpers v1\n")
+	put(up, "NEWS.md", NEWS_010)
+	up_git(up, "init", "--quiet"); up_git(up, "add", "-A")
+	up_git(up, "commit", "--quiet", "-m", "v0.1.0"); up_git(up, "tag", "v0.1.0")
+	put(up, "r/R/README.md", "# R helpers v2\n")
+	put(up, "python/src/README.md", "# Python helpers v2\n")
+	up_git(up, "commit", "--quiet", "-a", "-m", "v0.2.0"); up_git(up, "tag", "v0.2.0")
+
+	te <- environment()
+	consumer <- function(files) {
+		d <- tempfile("consumer_readme_")
+		withr::defer(unlink(d, recursive = TRUE, force = TRUE), envir = te)
+		fd <- file.path(d, "00_functions")
+		dir.create(fd, recursive = TRUE)
+		sha <- up_git(up, "rev-list", "-n", "1", "v0.1.0")
+		for (f in files) {
+			src <- if (f == "README.md") "r/R/README.md" else .cso_upstream_path(f, "test")
+			writeBin(.cso_git_blob(up, sha, src), file.path(fd, f))
+		}
+		put(fd, ".toolkit_manifest.yml", paste0(
+			"source: \"unicef-drp/cso-toolkit\"\npulled_version: \"v0.1.0\"\n",
+			"pulled_date: \"2026-01-02\"\npulled_by: \"someone\"\nvendored:\n",
+			paste0("  - ", files, "\n", collapse = ""), "local_edits: []\n"))
+		up_git(d, "init", "--quiet"); up_git(d, "add", "-A")
+		up_git(d, "commit", "--quiet", "-m", "vendor")
+		fd
+	}
+
+	# All R: README.md is r/R/README.md, compared and pulled like the rest.
+	fd <- consumer(c("a.R", "README.md"))
+	local_state(dw_apis_allowed = TRUE, dwFunct = fd)
+	d <- cso_toolkit_diff("v0.2.0", toolkit_source = up, verbose = FALSE)
+	expect_identical(stats::setNames(d$status, d$file)[["README.md"]], "changed")
+	cso_toolkit_pull("v0.2.0", confirm = FALSE, toolkit_source = up, verbose = FALSE)
+	expect_identical(rbytes(file.path(fd, "README.md")), tag_blob(up, "v0.2.0", "r/R/README.md"))
+
+	# All Python: python/src/README.md.
+	fd <- consumer(c("p.py", "README.md"))
+	local_state(dw_apis_allowed = TRUE, dwFunct = fd)
+	d <- cso_toolkit_diff("v0.2.0", toolkit_source = up, verbose = FALSE)
+	expect_identical(d$sha256_target[d$file == "README.md"],
+	                 .cso_sha256(tag_blob(up, "v0.2.0", "python/src/README.md")))
+
+	# Both languages: no way to tell; stops before anything is read.
+	fd <- consumer(c("a.R", "p.py", "README.md"))
+	local_state(dw_apis_allowed = TRUE, dwFunct = fd)
+	err <- tryCatch(cso_toolkit_diff("v0.2.0", toolkit_source = up, verbose = FALSE), error = identity)
+	expect_envelope(err, "cso_toolkit_diff")
+	expect_match(conditionMessage(err), "README.md")
+})
+
 test_that("dry_run writes nothing and says what it would do", {
 	up <- fake_upstream()
 	fd <- fake_consumer(up)

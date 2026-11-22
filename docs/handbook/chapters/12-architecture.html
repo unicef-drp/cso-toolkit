@@ -325,6 +325,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Continuous integration and repository hygiene</span></span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/46-ai-agents.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Working with AI coding agents</span></span></a>
+  </div>
+</li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
@@ -336,19 +342,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/51-microdata-archive.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">The microdata archive: archive, catalogue, tool</span></span></a>
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">The microdata archive: archive, catalogue, tool</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/52-ihsn-grammar.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">The IHSN convention and the folder grammar</span></span></a>
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">The IHSN convention and the folder grammar</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/53-datalib-api-conformance.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">The <code>datalib_*</code> API and its conformance suite</span></span></a>
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">The <code>datalib_*</code> API and its conformance suite</span></span></a>
   </div>
 </li>
       </ul>
@@ -362,13 +368,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/61-ecosystem.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">The UNICEF analytics ecosystem: three tiers</span></span></a>
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">The UNICEF analytics ecosystem: three tiers</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/62-unicefdata.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">unicefData: public child statistics in three languages</span></span></a>
+ <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">unicefData: public child statistics in three languages</span></span></a>
   </div>
 </li>
       </ul>
@@ -413,6 +419,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <div class="sidebar-item-container"> 
   <a href="../appendices/f-third-party-functions.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">F</span>&nbsp; <span class="chapter-title">Curated third-party functions</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/g-parity-certificate.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">G</span>&nbsp; <span class="chapter-title">Cross-language parity</span></span></a>
   </div>
 </li>
       </ul>
@@ -617,7 +629,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Cross-language parity is the design goal, not a finished fact. The gaps worth naming up front, all recorded in the coverage matrix appendix, are:</p>
 <ul>
 <li><strong>No Stata API <em>fetch</em> wrapper.</strong> <code>dw_api_fetch</code> / <code>dw_api_cached</code> / <code>dw_api_inventory</code> are R and Python only. Stata ships the enforcement half (<code>dw_require_no_api</code>) but not the fetch half.</li>
-<li><strong><code>dw_fetch_inputs</code>, <code>dw_check_deposit</code>, <code>dw_read_provenance</code> and <code>dw_provenance_diff</code> are R-only so far</strong> (Python and Stata siblings: #152).</li>
+<li><strong><code>dw_fetch_inputs</code>, <code>dw_check_deposit</code>, <code>dw_read_provenance</code> and <code>dw_provenance_diff</code> are R and Python</strong> (#152); Stata routes via R or Python.</li>
 <li><strong>No Stata parquet or RDS, and <code>dw_merge</code> / <code>dw_verify_z</code> are not in the Stata sibling.</strong> <code>dw_isid</code> in Stata is embedded inside <code>dw_save</code> (the <code>idvars()</code> option) rather than exposed as its own command. (The read contract, <code>dw_use</code>, <em>is</em> now in Stata as of v0.4.0; issue #5 is closed.)</li>
 <li><strong>The demographics helpers are partially ported.</strong> <code>dw_pop</code> ships in R and Python; <code>dw_regions</code> is still R-only. Neither has a Stata sibling yet, so a Stata consumer that needs population denominators or regional groupings routes through a sibling or a pre-computed artefact.</li>
 <li><strong>No Python autodoc.</strong> R has Roxygen-complete reference documentation (34 <code>.Rd</code> files plus a pkgdown site configured in <code>r/_pkgdown.yml</code>); Python has no equivalent pkgdown-style generated reference, only hand-written references and module READMEs.</li>

@@ -104,6 +104,10 @@ The `v0.4.3.1` incident — three `dw_io.R` stamps left at `"0.4.2"` while `DESC
 
 > The release-cut checklist for the next minor (v0.5.0) should include a `grep -rn '0\.[0-9]\.[0-9]' r/R/` step to catch any future stamp drift before tagging.
 
+### The three languages must agree before the tag
+
+From v0.11.0 on, the commit being tagged also needs a **parity certificate**. Run `sh tools/certify --record` on a machine with R, Python and Stata. It runs the shared cases in all three languages and commits `.parity/<content-hash>.json` when they agree, known gaps and divergences aside. `sh tools/certify --verify`, which the `Parity certificate` workflow runs on pull requests into `main`, must pass on the release commit. The GitHub release notes link the certificate. The cases, the register of gaps and divergences, and the content hash are described in the appendix *Cross-language parity*.
+
 ### The tag is immutable; consumers pin to it
 
 A published tag is never moved. Consumers vendor the helper *files* into their own `00_functions/` and record the tag in `00_functions/.toolkit_manifest.yml` (see the vendoring model chapter). The manifest's `pulled_version` field is the consumer's pin:

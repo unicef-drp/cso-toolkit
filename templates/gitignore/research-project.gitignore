@@ -77,6 +77,9 @@ _frozen/**
 *.duckdb
 *.sqlite
 *.db
+# Check records are always tracked (sh tools/check --record). A ! line
+# only overrides the rules above it: keep it after any rule ignoring *.json.
+!.checks/*.json
 
 
 # ---- 3. Secrets and personal configuration [shared] -----------------------
@@ -90,6 +93,10 @@ _frozen/**
 .netrc
 user_config.yml
 .Renviron
+# Personal AI-agent settings and notes. The shared ones stay tracked:
+# AGENTS.md, CLAUDE.md and .claude/settings.json.
+.claude/settings.local.json
+CLAUDE.local.md
 # A placeholder template may be re-included after this block with an
 # explicit `!` line (the official-stats template keeps
 # _config_template/user_config.yml that way).

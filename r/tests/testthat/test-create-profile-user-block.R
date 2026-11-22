@@ -110,3 +110,17 @@ test_that("review_profile passes the user-block read and warns on top-level only
   expect_identical(row$status, "warn")
   expect_match(row$detail, "top-level keys only", fixed = TRUE)
 })
+
+test_that("a Claude Code session running as producer gets a notice; a person does not (#173)", {
+  skip_if_not_installed("yaml")
+  p <- make_profile()
+  cfg <- c("tester:", '  dw_mode: "producer"')
+  agent <- withr::with_envvar(c(CLAUDE_CODE_CHILD_SESSION = "1"), run_profile(p, cfg))
+  expect_identical(agent$status, 0L, info = agent$out)
+  expect_match(agent$out, "a Claude Code session is running as producer", fixed = TRUE)
+  person <- withr::with_envvar(c(CLAUDE_CODE_CHILD_SESSION = NA), run_profile(p, cfg))
+  expect_false(grepl("Claude Code session", person$out, fixed = TRUE))
+  reviewer <- withr::with_envvar(c(CLAUDE_CODE_CHILD_SESSION = "1"),
+                                 run_profile(p, c("tester:", '  dw_mode: "reviewer"')))
+  expect_false(grepl("Claude Code session", reviewer$out, fixed = TRUE))
+})

@@ -96,7 +96,9 @@ happened; the override is recorded in the new sidecar as `takeover`
 prints a note and proceeds. Multi-producer sidecars also carry
 `collaboration`, `previous_sha256`, `previous_user`, `previous_written_at`,
 `git_branch` and `git_commit`. Reviewer sandbox writes skip the guards.
-Single-producer projects are unaffected. Stata: issue #168.
+Single-producer projects are unaffected. Stata: `dw_collaboration` and
+`dw_save, ... takeover`, through Stata's Python integration (Stata 16+;
+#168); without it a multi-producer Stata write stops unless `takeover`.
 
 ```r
 dw_save(df, path = out_csv, overwrite = TRUE, force = TRUE, takeover = TRUE)
@@ -277,6 +279,20 @@ report <- dw_compare(
 report$summary   # row counts and diff classification
 ```
 
+`diagnose = TRUE` adds `report$profile` (also `dw_diff_profile(report, by,
+numeric_value_cols)`): `columns` (which value columns differ), `magnitude`
+(absolute and relative q50 / q90 / q99 / max of each numeric column's drift,
+over the rows where it changed), `keys` (the top values of each key among the
+changed rows, with their share), `added` / `removed` (the same for those
+rows) and `text` (the printed lines; `<label>_profile.txt` with
+`write_report_to`). Python: the same, as a dict of DataFrames.
+
+When `current` and `reference` are both paths that resolve to the same file
+(in reviewer mode a sandbox path is read network-first from the canonical
+deposit), `dw_compare` stops with a `[cso_toolkit.dw_compare]` envelope
+instead of reporting a false "0 changed" (#111). Pass the new data as a data
+frame.
+
 ## `dw_merge(x, using, by, how)`
 
 Stata-style merge with cardinality assertion. `how ∈ {"m:1","1:1","1:m","m:m"}`.
@@ -333,7 +349,9 @@ file's Teams / Z: status (`match`, `differs`, `missing`, `no access`);
 Both functions only read the deposit and write only under `local_root`, so
 they behave identically in producer and reviewer sessions. For a gitignored
 inputs folder, add `!<rel_dir>/**/` and `!<rel_dir>/**/.gitkeep` exceptions so
-Git tracks the placeholders. Python and Stata siblings: #152.
+Git tracks the placeholders. Python: the same functions and arguments
+(`cso_toolkit.dw_fetch_inputs`, `dw_check_deposit`), returning DataFrames.
+Stata: route via R or Python (#152).
 
 ## `dw_read_provenance(path)` and `dw_provenance_diff(previous, current)` (Unreleased, R only)
 
@@ -356,4 +374,5 @@ through the sidecars' `sha256`. `output_changed` (same inputs, different
 output) warns with a `[cso_toolkit.dw_provenance_diff]` envelope;
 `inputs_changed` returns `inputs_added`, `inputs_removed` and
 `inputs_changed`. Follow with `dw_compare()` for the records that moved.
-Python and Stata siblings: #152.
+Python: the same functions (`dw_read_provenance` returns a dict, with
+`metadata["inputs"]` as a DataFrame). Stata: route via R or Python (#152).

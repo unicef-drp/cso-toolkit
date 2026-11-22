@@ -61,16 +61,18 @@ takes the clone's latest release tag (`v` and numbers only, so
 pre-release tags such as `v1.0.0-rc1` are passed over). Only used when
 vendoring.}
 
-\item{workflows}{Logical. Also write the GitHub Actions workflows to
-`.github/workflows/`. Default `FALSE`: checks run locally. The
+\item{workflows}{Logical. Also write the opt-in GitHub Actions workflows
+to `.github/workflows/`. Default `FALSE`: checks run locally. The
+`check-record.yml` workflow is always written: it verifies the local
+check record on pull requests, without running R. The opt-in
 workflows run only when started by hand and on pull requests into
 `main` (handbook chapter "Continuous integration and repository
 hygiene").}
 
 \item{git}{Logical. Default `FALSE`. `TRUE` runs `git init` (when `path`
 is not a repository yet) with `develop` as the first branch, sets
-`core.hooksPath` to `.githooks`, and stages `.githooks/pre-push` with
-its executable bit. It never commits, creates a remote or pushes.}
+`core.hooksPath` to `.githooks`, and stages `.githooks/pre-push` and
+`tools/check` with their executable bit. It never commits, creates a remote or pushes.}
 
 \item{overwrite}{Logical. Replace existing files whose content differs.
 Default `FALSE`.}
@@ -105,7 +107,7 @@ The layout (handbook chapter "Starting a new repository"):
 .gitignore               templates/gitignore/research-project.gitignore
 .gitattributes           LF for the hook, vendored helpers and sidecars
 profile_<project>.R      sourced first: user, dw_mode, vendored helpers
-.githooks/pre-push       runs tools/check.R before every push
+.githooks/pre-push       requires a check record before every push
 cso_project.yml          collaboration model (committed)
 README.md, CONTRIBUTING.md
 00_functions/README.md   (+ helpers and .toolkit_manifest.yml if vendored)
@@ -114,8 +116,13 @@ data/README.md, data/input_manifest.csv, data/provenance/README.md
 output/README.md         tables and figures, with sidecars
 paper/README.md, references/README.md, docs/README.md
 tests/testthat.R, tests/testthat/helper-project.R, test-project.R
-tools/check.R
-.github/workflows/*.yml  only with workflows = TRUE
+tools/check.R, tools/check   the checks; sh tools/check --record
+.checks/README.md        check records (.checks/<content-hash>.json)
+.github/workflows/check-record.yml   verifies the record on PRs (always)
+.github/workflows/*.yml  the others only with workflows = TRUE
+AGENTS.md, CLAUDE.md     instructions for AI coding agents (CLAUDE.md: @AGENTS.md)
+decisions.md             decisions and the record of AI use
+.claude/settings.json    Claude Code: the cso-toolkit plugin; no edits to 00_functions/
 }
 
 Nothing is written if any target file already exists with different
@@ -158,7 +165,7 @@ create_research_project("C:/GitHub/learning-mobility",
 [create_official_stats_project()]; [dw_set_collaboration()];
   [cso_toolkit_check()]; [test_scripts()].
 
-Other scaffolding: 
+Other scaffolding:
 \code{\link{create_dw_sector_script}()},
 \code{\link{create_official_stats_project}()},
 \code{\link{create_profile}()},
