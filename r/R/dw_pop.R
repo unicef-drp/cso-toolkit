@@ -16,7 +16,8 @@
 #
 # Python sibling ships at `python/src/dw_pop.py`.
 # TODO: Stata sibling at `stata/src/dw_pop.ado` still pending;
-# cross-language parity tracked at GitHub issue #17.
+# issue #17 (closed) shipped the R version, and no open issue
+# tracks the sibling.
 
 #' Latest country-level population numbers
 #'
