@@ -5,7 +5,7 @@ Every consuming repository carries its own frozen copy of the cso-toolkit's help
 Vintage sync is the machinery that makes that drift visible and controllable. It answers three questions, in order: **Am I behind?** (`cso_toolkit_check`), **What changed?** (`cso_toolkit_diff`), and **Refresh me to a known tag** (`cso_toolkit_pull`); `cso_toolkit_sync` runs the last two in one call, after showing the release notes. The pin that anchors them all is `.toolkit_manifest.yml`, a small YAML file vendored alongside the helpers it tracks.
 
 ::: {.callout-note}
-In short: run `cso_toolkit_sync()` in producer mode. It reads the latest release from GitHub (or from a local clone), prints its release notes since your `pulled_version`, compares every vendored file, writes the changed ones (asking per file) and re-pins the manifest. Then run `tools/check.R` and the tests and commit `00_functions/` in one commit. `cso_toolkit_diff` and `cso_toolkit_pull` were stubs until the release after v0.10.0.
+In short: run `cso_toolkit_sync()` in producer mode. It reads the latest release from GitHub (or from a local clone), prints its release notes since your `pulled_version`, compares every vendored file, writes the changed ones (asking per file) and re-pins the manifest. Then run `tools/check.R` and the tests and commit `00_functions/` in one commit. `cso_toolkit_diff` and `cso_toolkit_pull` were stubs before v0.10.0.
 :::
 
 ## The pin: `.toolkit_manifest.yml`
