@@ -83,7 +83,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-554944da459c622dc457c1ed647c448c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-7f6c64e0d652c61cb9aac081886fc576.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -616,9 +616,9 @@ python/pyproject.toml    Python package version</code></pre>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">pulled_version</span><span class="kw">:</span><span class="at"> </span><span class="st">"v0.4.0"</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">pulled_date</span><span class="kw">:</span><span class="at"> </span><span class="st">"2026-05-26"</span></span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="fu">pulled_by</span><span class="kw">:</span><span class="at"> </span><span class="st">"&lt;your-name&gt;"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><code>cso_toolkit_check()</code> reads this file, queries the GitHub API for the latest tag on <code>source:</code>, and warns when the consumer is behind. Refreshing to a newer tag is a <strong>producer-controlled, explicit</strong> act: the producer reads the release notes, decides the new vintage is appropriate, and runs <code>cso_toolkit_pull(target_version = "vX.Y.Z")</code>. Nothing is pulled automatically.</p>
-<p>This is what makes a tag’s immutability load-bearing. Reviewer mode forbids the network lookup entirely (<code>cso_toolkit_check()</code> and <code>cso_toolkit_pull()</code> both refuse in reviewer mode), so a reviewer always runs against whatever vintage the producer has pinned, never a silently newer one. The whole reproducibility argument rests on a pinned tag meaning the same bytes forever.</p>
-<p>The check / pull surface is itself part of the contract, but it is <strong>R-first</strong>: the vintage-sync helpers (<code>cso_toolkit_check</code> / <code>cso_toolkit_diff</code> / <code>cso_toolkit_pull</code>) are exercised through the R sibling, and <code>cso_toolkit_pull()</code>’s file-refresh body is still being finished. A Stata consumer has no automated check or pull at all and edits <code>.toolkit_manifest.yml</code> by hand.</p>
+<p><code>cso_toolkit_check()</code> reads this file, queries the GitHub API for the latest tag on <code>source:</code>, and warns when the consumer is behind. Refreshing to a newer tag is a <strong>producer-controlled, explicit</strong> act: the producer runs <code>cso_toolkit_sync(target_version = "vX.Y.Z")</code>, which prints the release notes since the pinned tag (Breaking and Changed entries marked), then asks before it writes any file and re-pins the manifest. Nothing is pulled automatically.</p>
+<p>This is what makes a tag’s immutability load-bearing. Reviewer mode forbids the network lookup entirely (<code>cso_toolkit_check()</code> skips its upstream poll, and <code>cso_toolkit_sync()</code> and <code>cso_toolkit_pull()</code> refuse), so a reviewer always runs against whatever vintage the producer has pinned, never a silently newer one. The whole reproducibility argument rests on a pinned tag meaning the same bytes forever.</p>
+<p>The check / sync surface is itself part of the contract. <code>cso_toolkit_check()</code>, <code>cso_toolkit_diff()</code>, <code>cso_toolkit_pull()</code> and <code>cso_toolkit_sync()</code> ship in R and Python with the same arguments and envelopes (v0.10.0). A Stata consumer has no automated check or sync and edits <code>.toolkit_manifest.yml</code> by hand.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="" aria-current="page">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-3" role="tab" aria-controls="tabset-1-3" aria-selected="false" href="">Stata</a></li></ul>
 <div class="tab-content">
@@ -626,15 +626,18 @@ python/pyproject.toml    Python package version</code></pre>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Producer-mode: is the pinned vintage behind upstream?</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cso_toolkit_check</span>()</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Refresh the vendored files to a chosen tag (explicit, producer-only)</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cso_toolkit_pull</span>(<span class="at">target_version =</span> <span class="st">"v0.5.0"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Release notes since the pinned tag, then refresh the vendored files to a</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co"># chosen tag (explicit, producer-only)</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cso_toolkit_sync</span>(<span class="at">target_version =</span> <span class="st">"v0.5.0"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Coverage gap: the cso_toolkit_* vintage-sync helpers are R-first.</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co"># A Python consumer pins .toolkit_manifest.yml and refreshes the</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># vendored python/src/ files by hand, then records the new tag in</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># pulled_version. See the vintage sync chapter and the coverage</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co"># matrix appendix.</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> cso_toolkit <span class="im">import</span> cso_toolkit_check, cso_toolkit_sync</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Producer-mode: is the pinned vintage behind upstream?</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>cso_toolkit_check()</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Release notes since the pinned tag, then refresh the vendored files</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>cso_toolkit_sync(target_version<span class="op">=</span><span class="st">"v0.5.0"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div id="tabset-1-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-3-tab">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>* Coverage gap: no Stata sibling <span class="kw">of</span> the vintage-sync helpers ships.</span>
