@@ -94,6 +94,9 @@
 *.duckdb
 *.sqlite
 *.db
+# Check records are always tracked (sh tools/check --record). A ! line
+# only overrides the rules above it: keep it after any rule ignoring *.json.
+!.checks/*.json
 
 
 # ---- 5. Secrets and personal configuration [shared] -----------------------

@@ -1,0 +1,39 @@
+#!/bin/sh
+# ---------------------------------------------------------------------------
+# tools/check -- run tools/check.R with the right R environment
+# ---------------------------------------------------------------------------
+# Template from unicef-drp/cso-toolkit: templates/tools/check
+# Guidance: docs/ci_cd_guidelines.md; handbook chapter 45 ("Check records").
+#
+# From anywhere in the repository:
+#   sh tools/check               # run the checks
+#   sh tools/check --record      # run them and, if all pass, commit a check
+#                                # record (.checks/<content-hash>.json)
+#   sh tools/check --only tests  # any tools/check.R argument passes through
+#
+# Rscript not on the PATH (common on Windows)? Set RSCRIPT, or it is looked
+# for in the default Windows install folder.
+#
+# On Windows (Git Bash), Git Bash's HOME hides R's own home folder
+# (Documents, often redirected to OneDrive), where the user's .Renviron and
+# its library settings live, so R would not find testthat. R is therefore
+# started without HOME, and CHECK_GIT_HOME hands Git Bash's HOME back to the
+# git calls inside check.R, so git still finds user.name and user.email.
+# ---------------------------------------------------------------------------
+cd "$(git rev-parse --show-toplevel)" || exit 1
+rs="${RSCRIPT:-}"
+if [ -z "$rs" ]; then
+  if command -v Rscript >/dev/null 2>&1; then
+    rs=Rscript
+  else
+    for p in "/c/Program Files/R"/R-*/bin/Rscript.exe; do [ -x "$p" ] && rs="$p"; done
+  fi
+fi
+if [ -z "$rs" ]; then
+  echo "tools/check: Rscript not found. Set RSCRIPT to its path, or put R on the PATH." >&2
+  exit 1
+fi
+case "$(uname -s)" in
+  MINGW*|MSYS*|CYGWIN*) exec env -u HOME CHECK_GIT_HOME="$HOME" "$rs" --no-init-file tools/check.R "$@" ;;
+  *)                    exec "$rs" --no-init-file tools/check.R "$@" ;;
+esac
