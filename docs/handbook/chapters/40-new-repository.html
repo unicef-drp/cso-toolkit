@@ -604,8 +604,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 │       └── test-project.R     cso_project.yml, manifest vs sidecars, mode
 ├── tools/check.R              every local check
 ├── tools/check                sh tools/check --record: run, then record
-└── .github/workflows/         check-record.yml (always); four more with
-                               workflows = TRUE (opt-in)</code></pre>
+├── .github/workflows/         check-record.yml (always); four more with
+│                              workflows = TRUE (opt-in)
+├── AGENTS.md, CLAUDE.md       rules for AI coding agents (CLAUDE.md: @AGENTS.md)
+├── decisions.md               decisions, who made them and why; AI use
+└── .claude/settings.json      Claude Code: the cso-toolkit plugin; no edits
+                               to 00_functions/</code></pre>
 <p>An official-statistics repository follows DW-Production and the deposit’s stage numbering:</p>
 <pre><code>DW-Nutrition/
 ├── .gitignore                       official-stats.gitignore, unchanged
@@ -631,8 +635,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 ├── tests/testthat.R, tests/testthat/helper-project.R, test-project.R
 ├── tools/check.R                    OUTPUT_DIRS, DATA_DIRS, AUDIT_PATHS set
 ├── tools/check                      sh tools/check --record
-└── .github/workflows/               check-record.yml (always); three more
-                                     with workflows = TRUE</code></pre>
+├── .github/workflows/               check-record.yml (always); three more
+│                                    with workflows = TRUE
+├── AGENTS.md, CLAUDE.md             agent rules, the embargo section included
+├── decisions.md                     decisions and the record of AI use
+└── .claude/settings.json            the plugin; no edits to 00_functions/</code></pre>
 <p>The canonical raw data, API caches and promoted work data live in the deposit (Teams <code>060.DW-MASTER/01_dw_prep/011_rawdata</code> and <code>013_wrkdata</code>), which the profile’s <code>teamsRawData</code> and <code>teamsWrkData</code> point to in producer mode and redirect to the sandbox in reviewer mode (<a href="../chapters/22-wiring-the-contract.html">Wiring the contract</a>). The repository keeps folders of the same names for local work, as DW-Production does, because a sector script made by <code>create_sector_script()</code> reads <code>01_dw_prep/011_rawdata/&lt;sector&gt;/</code> and writes <code>01_dw_prep/013_wrkdata/&lt;sector&gt;/</code> relative to the repository (<a href="../chapters/35-scaffolding-audit.html">Scaffolding and the contract auditor</a>). Their contents never reach git: <code>.gitignore</code> ignores <code>013_wrkdata/</code> outright, like every output folder, and keeps only the READMEs, sidecars and manifests of <code>011_rawdata/</code>; <code>tools/check.R</code> fails on anything tracked in <code>013_wrkdata/</code> (<code>OUTPUT_DIRS</code>) and on data tracked in <code>011_rawdata/</code> (<code>DATA_DIRS</code>). <code>013_wrkdata/</code> has no tracked file at all, so it appears with the first run. <code>01_dw_prep/012_codes/README.md</code> shows how to scaffold a sector’s driver against the project’s own profile.</p>
 <p>The <code>.gitignore</code>, the hook, the test helper and the workflows are the toolkit’s templates byte for byte, so the rules a repository starts with are the ones the toolkit tests. Three files are set for the kind of project: <code>tools/check.R</code> (an official-statistics repository gets <code>OUTPUT_DIRS = "output outputs results wrk 013_wrkdata"</code>, the embargo check, <code>011_rawdata</code> added to <code>DATA_DIRS</code>, and <code>AUDIT_PATHS = "01_dw_prep/012_codes"</code>; the contract audit is <code>AUDIT_MODE = "advisory"</code> in a research project, where it reports raw reads such as <code>haven::read_dta()</code> without failing the checks, and <code>"blocking"</code> in official statistics, where any of them fails; see <a href="../chapters/45-ci-cd.html">Continuous integration and repository hygiene</a>), <code>tests/testthat.R</code> (which folder of function files the tests source) and <code>cso_project.yml</code> (the model, today’s date and the members).</p>
 <p>The functions never replace a file silently. Before writing anything they compare every target with what they would write: a file with the same bytes is left alone and reported as <code>unchanged</code>, and a file with different content stops the whole call, with nothing written, unless <code>overwrite = TRUE</code>. Both return the list of files with their status (<code>written</code>, <code>overwritten</code>, <code>unchanged</code>), so a second identical call changes nothing and says so. To adopt the conventions in an existing repository, follow <a href="../chapters/42-onboarding-example.html">Onboarding a repo</a>, or create a scaffold in an empty folder and copy what you need.</p>
