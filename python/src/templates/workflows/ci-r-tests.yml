@@ -1,0 +1,141 @@
+# ---------------------------------------------------------------------------
+# ci-r-tests.yml -- Tier 1 R tests (testthat) + advisory lintr
+# ---------------------------------------------------------------------------
+# Template from unicef-drp/cso-toolkit: templates/workflows/ci-r-tests.yml
+# Guidance: docs/ci_cd_guidelines.md. Test skeleton: templates/testthat/.
+# Copy to .github/workflows/.
+#
+# LOCAL FIRST. Non-package project (papers, pipelines): the tests run through
+# tools/check.R (templates/tools/check.R), which calls tests/testthat.R, the
+# runner from templates/testthat/. The same command locally, from the root:
+#   Rscript --no-init-file tools/check.R --only tests
+# (or `Rscript --no-init-file tools/check.R` for every check).
+#
+# R package (a DESCRIPTION file at the root or in a subfolder): use the
+# commented `r-package` job at the end instead; it mirrors cso-toolkit's own
+# .github/workflows/r-check.yml (R CMD check runs tests/testthat.R).
+#
+# Tests use tiny synthetic fixtures only and run in reviewer mode: no data,
+# no network, no secrets.
+#
+# OPT-IN BY DEFAULT: manual runs and pull requests into main only. To run on
+# every push and pull request, use the commented `on:` block below; only
+# then make the job a required status check.
+# ---------------------------------------------------------------------------
+name: r-tests
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+# Opt in to every push and pull request (costs Actions minutes):
+# on:
+#   workflow_dispatch:
+#   push:
+#     branches: [main, develop]
+#   pull_request:
+#     branches: [main, develop]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: r-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  testthat:
+    name: R tests (testthat)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+
+      # With an renv.lock, restore exactly the locked library (cached).
+      - uses: r-lib/actions/setup-renv@v2
+        if: hashFiles('renv.lock') != ''
+
+      # Without one, install what the tests and the code under test need.
+      # Add your project's packages to the list.
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        if: hashFiles('renv.lock') == ''
+        with:
+          packages: |
+            any::testthat
+            any::withr
+            any::yaml
+            any::jsonlite
+
+      - name: tools/check.R (tests)
+        run: Rscript --no-init-file tools/check.R --only tests
+
+  # Advisory, and on manual runs only: lintr costs an install per run.
+  # Locally: Rscript --no-init-file tools/check.R --only lint (WARN, never FAIL)
+  lintr:
+    name: R lint (advisory)
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true   # advisory: reported, never blocks a merge
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: any::lintr
+
+      # Vendored helpers are linted upstream, not here.
+      - name: lintr
+        shell: Rscript {0}
+        run: |
+          lints <- lintr::lint_dir(".", exclusions = list("00_functions", "renv", "tests/testthat/fixtures"))
+          print(lints)
+          if (length(lints)) quit(status = 1)
+
+  # --- R package variant ----------------------------------------------------
+  # Replace the `testthat` job above with this one when the repo is an R
+  # package (DESCRIPTION + tests/testthat/). Set working-directory to the
+  # package folder ("." or e.g. "./r").
+  #
+  # r-package:
+  #   name: R CMD check
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 20
+  #   env:
+  #     GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: r-lib/actions/setup-pandoc@v2
+  #     - uses: r-lib/actions/setup-r@v2
+  #       with:
+  #         r-version: 'release'
+  #         use-public-rspm: true
+  #     - uses: r-lib/actions/setup-r-dependencies@v2
+  #       with:
+  #         working-directory: .
+  #         extra-packages: any::rcmdcheck
+  #         needs: check
+  #     - uses: r-lib/actions/check-r-package@v2
+  #       with:
+  #         working-directory: .
+  #         args: 'c("--no-manual", "--no-build-vignettes")'
+  #         build_args: 'c("--no-manual", "--no-build-vignettes")'
+  #
+  # Windows / macOS: add them to a matrix on a schedule or on release, not on
+  # every push (private repos bill Windows minutes at 2x, macOS at 10x):
+  #
+  # on:
+  #   schedule:
+  #     - cron: '0 3 * * 1'   # Mondays 03:00 UTC
+  #   release:
+  #     types: [published]

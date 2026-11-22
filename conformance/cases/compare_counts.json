@@ -1,0 +1,25 @@
+{
+  "id": "compare_counts",
+  "title": "dw_compare counts added, removed and changed rows the same way (tolerance 1e-6)",
+  "surface": [
+    "dw_compare"
+  ],
+  "kind": "json",
+  "fixtures": [
+    "compare_reference.csv",
+    "compare_current.csv"
+  ],
+  "expect": {
+    "added": 1,
+    "removed": 1,
+    "changed": 1
+  },
+  "languages": [
+    "r",
+    "python",
+    "stata"
+  ],
+  "notes": "BBB changes by 0.5 (changed); CCC by 1e-10 (within tolerance); DDD removed; EEE added.",
+  "gaps": {},
+  "divergences": {}
+}

@@ -11,9 +11,11 @@ sector pipeline you are vendoring into.
   Auto-dispatch by extension. Writes `.provenance.json` sidecars.
 - [`dw_api.R`](dw_api.R) — cached API fetcher with reviewer-mode no-API
   enforcement.
-- [`cso_toolkit_sync.R`](cso_toolkit_sync.R) — version-drift detection +
-  pull / diff against the upstream tag pinned in your consumer's
-  `.toolkit_manifest.yml`.
+- [`cso_toolkit_sync.R`](cso_toolkit_sync.R) — the vintage helpers:
+  `cso_toolkit_check()` (am I behind?), `cso_toolkit_diff()`,
+  `cso_toolkit_pull()` and the one-call `cso_toolkit_sync()` (latest tag,
+  its NEWS, diff, pull) against the release tag pinned in your consumer's
+  `.toolkit_manifest.yml`. Self-contained apart from `dw_io.R`.
 
 **Aggregation + scaffolding helpers (added post-v0.1.0-rc1):**
 
@@ -65,8 +67,11 @@ pulled_version: "v0.2.0"
 pulled_date: "2026-05-25"
 ```
 
-`cso_toolkit_check()` reads the manifest, asks the GitHub API for the latest
-tag, and warns if the consumer is behind. See
+`cso_toolkit_check()` reads the manifest, asks GitHub for the latest
+tag, and warns if the consumer is behind. `cso_toolkit_sync()` then
+updates: it prints the release notes since `pulled_version`, compares
+every vendored file with the new tag, writes the changed ones (asking per
+file) and re-pins the manifest. See
 [`templates/.toolkit_manifest.yml`](https://github.com/unicef-drp/cso-toolkit/blob/main/templates/.toolkit_manifest.yml)
 for the full schema (fields, optional helpers, `local_edits` opt-out).
 

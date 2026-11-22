@@ -19,7 +19,7 @@
 # Vendor this file too to switch a project with dw_set_collaboration().
 #
 # Python sibling: python/src/dw_project.py (same file, keys, envelopes and
-# sidecar fields). Stata: not yet (issue #168).
+# sidecar fields). Stata: guards in dw_save.ado (#168); no dw_set_collaboration.
 
 #' Insert a `baseline` object into a sidecar's JSON text, byte-preserving
 #'

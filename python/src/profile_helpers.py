@@ -39,8 +39,11 @@ def create_profile(
     Writes a ``profile_<repo_name>.py`` template to disk.  The template
     wires up the standard CSO building blocks: cross-platform user
     identification, reproducibility seed, optional Z: drive integrity
-    check, YAML user config load, optional producer / reviewer
-    ``dw_mode`` resolution, a block that resolves and prints the
+    check, YAML user config load (the user's block first, then top-level
+    keys, as in DW-Production's ``user_config.yml`` template), optional
+    producer / reviewer ``dw_mode`` resolution (``dw_mode_by_project``
+    for this repository, then ``dw_mode``; no default, and the error
+    shows the YAML to add), a block that resolves and prints the
     project's collaboration model (:func:`cso_toolkit.dw_collaboration`,
     read from ``cso_project.yml``; single-producer when the file is
     absent), a placeholder imports block, and a profile sentinel boolean.
@@ -181,14 +184,25 @@ if not dw_z_available:
     config_block = '''# ----------------------------------------
 # 5. Load user config (YAML required)
 # ----------------------------------------
+# ~/.config/user_config.yml serves every cso-toolkit project (template:
+# DW-Production's _config_template/user_config.yml). Settings sit in a
+# block named after the user (USERNAME on Windows, USER elsewhere);
+# top-level keys are read as a fallback.
 config_path = Path(USERPROFILE) / ".config" / "user_config.yml"
 if not config_path.exists():
     raise FileNotFoundError(
         f"[X] Configuration file not found at: {config_path}\\n"
-        "[>] Create or move your 'user_config.yml' to this location."
+        f"[>] Create it, with your settings in a block named {USERNAME}:"
     )
 with open(config_path, encoding="utf-8") as _f:
-    user_config = yaml.safe_load(_f)  # cso-allow: io-yaml
+    user_config = yaml.safe_load(_f) or {}  # cso-allow: io-yaml
+user_block = user_config.get(USERNAME) if isinstance(user_config.get(USERNAME), dict) else {}
+
+
+def user_setting(key):
+    """A setting from the user's block, else from the top level."""
+    value = user_block.get(key)
+    return value if value is not None else user_config.get(key)
 
 '''
 
@@ -197,10 +211,25 @@ with open(config_path, encoding="utf-8") as _f:
         mode_block = '''# ----------------------------------------
 # 6. Producer / reviewer mode (cso-toolkit contract)
 # ----------------------------------------
-dw_mode = user_config.get("dw_mode")
+# No default. Precedence (as DW-Production's dw_mode_by_sector):
+# dw_mode_by_project for this repository, then dw_mode; each from the
+# user block first.
+dw_mode_by_project = user_setting("dw_mode_by_project")
+if dw_mode_by_project is not None and not isinstance(dw_mode_by_project, dict):
+    raise ValueError(
+        f"[X] dw_mode_by_project in {config_path} must map project names to "
+        '"producer" or "reviewer", not a single value.'
+    )
+dw_mode = (dw_mode_by_project or {}).get(repo_name)
+if dw_mode is None:
+    dw_mode = user_setting("dw_mode")
 if dw_mode not in ("producer", "reviewer"):
     raise ValueError(
-        "[X] user_config.yml must set dw_mode to 'producer' or 'reviewer'."
+        f'[X] No valid dw_mode ("producer" or "reviewer") for {repo_name}.\\n'
+        f"    Add it to {config_path}, in your user block:\\n"
+        f'      {USERNAME}:\\n        dw_mode: "reviewer"\\n'
+        "    or, for this project only:\\n"
+        f'      {USERNAME}:\\n        dw_mode_by_project:\\n          {repo_name}: "producer"'
     )
 
 # Wire state into the toolkit so dw_save / dw_use / dw_api_fetch route by mode.
@@ -296,9 +325,11 @@ def review_profile(
     depends on (profile sentinel, cross-platform user identification,
     YAML config load, producer / reviewer ``dw_mode`` resolution, the
     ``dw_require_no_api`` guard, a reproducibility seed, and a packages
-    block).  It also warns when the repository's ``cso_project.yml`` sets
-    ``collaboration: multi-producer`` but the profile never calls
-    ``dw_collaboration()``.
+    block).  It warns when the profile reads only top-level keys of
+    ``user_config.yml``, which nests each person's settings under their
+    user name (DW-Production's template), and when the repository's
+    ``cso_project.yml`` sets ``collaboration: multi-producer`` but the
+    profile never calls ``dw_collaboration()``.
 
     Pattern-based (not parse-based), so it tolerates stylistic variation
     across profiles written before this helper existed.
@@ -381,6 +412,20 @@ def review_profile(
         "Loads user_config.yml via yaml.safe_load().",
         "Profile never reads user_config.yml — per-user paths and dw_mode "
         "cannot resolve.",
+    ))
+
+    # 4b. The user's block.  DW-Production's user_config.yml template nests
+    #     each person's settings under their user name; a profile that reads
+    #     only top-level keys finds no dw_mode in such a file.
+    checks.append(_check(
+        "User block in user_config.yml",
+        has(r"user_config(\.get\(|\[)\s*USERNAME\b") or has(r"\buser_block\b"),
+        "Reads the settings under the user's name (user_config[USERNAME]).",
+        "Reads top-level keys only — with the user_config.yml template (settings "
+        "nested under the user name, as in DW-Production) dw_mode and the paths "
+        "resolve to None. Read user_config[USERNAME] first, then top-level keys "
+        "(create_profile() emits this).",
+        level="warn",
     ))
 
     # 5. dw_mode resolution

@@ -20,6 +20,7 @@ from . import _state  # re-export the configuration module
 # IO helpers (dw_io.py)
 from .dw_io import (
     dw_compare,
+    dw_diff_profile,
     dw_default_unicef_allowlist,
     dw_is_canonical,
     dw_isid,
@@ -31,6 +32,11 @@ from .dw_io import (
     dw_use,
     dw_verify_z,
 )
+
+# Inputs from the canonical deposit (dw_deposit.py) and run provenance
+# (dw_provenance.py); ports of the R helpers (#152)
+from .dw_deposit import dw_check_deposit, dw_fetch_inputs
+from .dw_provenance import dw_provenance_diff, dw_read_provenance
 
 # Collaboration model (dw_project.py)
 from .dw_project import (
@@ -50,6 +56,7 @@ from .cso_toolkit_sync import (
     cso_toolkit_check,
     cso_toolkit_diff,
     cso_toolkit_pull,
+    cso_toolkit_sync,
 )
 
 # Aggregation helpers (aggregate_data.py)
@@ -82,6 +89,12 @@ from .profile_helpers import (
     review_profile,
 )
 
+# Repository scaffolding (create_project.py)
+from .create_project import (
+    create_official_stats_project,
+    create_research_project,
+)
+
 # Contract auditor
 from .test_scripts import test_scripts
 
@@ -103,16 +116,18 @@ dw_test_scripts = test_scripts
 __all__ = [
     "_state",
     # IO
-    "dw_save", "dw_use", "dw_compare", "dw_merge", "dw_isid",
+    "dw_save", "dw_use", "dw_compare", "dw_diff_profile", "dw_merge", "dw_isid",
     "dw_verify_z", "dw_resolve_path", "dw_is_canonical",
     "dw_root", "dw_default_unicef_allowlist",
     "dw_toolkit_version",
+    # Deposit inputs and run provenance
+    "dw_fetch_inputs", "dw_check_deposit", "dw_read_provenance", "dw_provenance_diff",
     # Collaboration model
     "dw_collaboration", "dw_set_collaboration",
     # API
     "dw_api_fetch", "dw_api_cached", "dw_api_inventory",
     # Sync
-    "cso_toolkit_check", "cso_toolkit_diff", "cso_toolkit_pull",
+    "cso_toolkit_check", "cso_toolkit_diff", "cso_toolkit_pull", "cso_toolkit_sync",
     # Aggregation
     "aggregate_data", "aggregate_data_v2",
     "apply_time_window", "generate_agg_footnote",
@@ -122,6 +137,7 @@ __all__ = [
     "generate_markdown_report", "process_all_csv_files",
     "create_sector_script", "create_dw_sector_script",
     "create_profile", "review_profile",
+    "create_research_project", "create_official_stats_project",
     "test_scripts",
     # dw_-prefixed aliases (mirror the R dual names)
     "dw_aggregate_data", "dw_aggregate_data_v2", "dw_apply_time_window",

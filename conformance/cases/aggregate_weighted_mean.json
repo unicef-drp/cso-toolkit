@@ -1,0 +1,31 @@
+{
+  "id": "aggregate_weighted_mean",
+  "title": "aggregate_data_v2 weighted means by region and for the world",
+  "surface": [
+    "aggregate_data_v2"
+  ],
+  "kind": "values",
+  "fixtures": [
+    "aggregate_input.csv"
+  ],
+  "keys": [
+    "Region_Code"
+  ],
+  "columns": [
+    "Region_Code",
+    "Aggregate"
+  ],
+  "tolerance": 1e-09,
+  "rows": 3,
+  "languages": [
+    "r",
+    "python"
+  ],
+  "gaps": {
+    "stata": {
+      "issue": "coverage matrix",
+      "reason": "Stata has no aggregate_data_v2."
+    }
+  },
+  "divergences": {}
+}

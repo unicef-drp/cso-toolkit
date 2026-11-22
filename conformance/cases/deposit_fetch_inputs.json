@@ -1,0 +1,37 @@
+{
+  "id": "deposit_fetch_inputs",
+  "title": "dw_fetch_inputs fills an empty local folder from the deposit: the same manifest",
+  "surface": [
+    "dw_fetch_inputs",
+    "dw_check_deposit"
+  ],
+  "kind": "values",
+  "fixtures": [
+    "deposit/teams/inputs/2024/NUTRITION_2024.csv",
+    "deposit/teams/inputs/2025/WASH_2025.csv"
+  ],
+  "keys": [
+    "file"
+  ],
+  "columns": [
+    "file",
+    "sha256",
+    "origin",
+    "teams",
+    "z"
+  ],
+  "tolerance": 0,
+  "rows": 2,
+  "languages": [
+    "r",
+    "python"
+  ],
+  "gaps": {
+    "stata": {
+      "issue": "#152",
+      "reason": "Route via R or Python: Stata reads the fetched inputs with dw_use."
+    }
+  },
+  "notes": "The deposit is fixtures/deposit/teams (rel_dir 'inputs', pattern _20(23|24|25)\\.csv$, so its README.md is not an input); Z: unavailable.",
+  "divergences": {}
+}

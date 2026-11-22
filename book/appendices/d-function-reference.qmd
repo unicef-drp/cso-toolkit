@@ -41,7 +41,8 @@ Uniform read / write / compare / merge helpers with mode-aware path routing (pat
 |---|---|---|---|---|
 | `dw_save` | ✅ | ✅ | ✅ | Write + uniqueness check (isid) + sidecar + Z: mirror; prompts before overwriting a producer deposit (v0.5.0), `force = TRUE` to override |
 | `dw_use` | ✅ | ✅ | ✅ | Read with mode-branched resolver; accepts HTTPS URLs since v0.4.0; in R, `sheet = NULL` reads all sheets of an `.xlsx` (v0.5.0) |
-| `dw_compare` | ✅ | ✅ | ✅ | Diff two artefacts on id + value vars; tolerates degenerate sides with a warning (v0.5.0) |
+| `dw_compare` | ✅ | ✅ | ✅ | Diff two artefacts on id + value vars; tolerates degenerate sides with a warning (v0.5.0); `diagnose = TRUE` (R, Python) adds a profile; stops when both sides are the same file (#111) |
+| `dw_diff_profile` | ✅ | ✅ | — | Unreleased (#111): profile a `dw_compare` result (differing columns, numeric drift quantiles, top key values of the changed / added / removed rows) |
 | `dw_merge` | ✅ | ✅ | — | R + Python only |
 | `dw_isid` | ✅ | ✅ | embedded | In Stata the uniqueness check lives inside `dw_save` |
 | `dw_verify_z` | ✅ | ✅ | — | R + Python only |
@@ -49,12 +50,12 @@ Uniform read / write / compare / merge helpers with mode-aware path routing (pat
 | `dw_is_canonical` | ✅ | ✅ | — | Detects a canonical deposit; recognises the Z: (`dwZDrive`) root in R as of v0.5.0 |
 | `dw_root` | ✅ | — | — | Public wrapper around the root resolver (re-exported v0.4.6) |
 | `dw_stage` | ✅ | — | — | R export |
-| `dw_fetch_inputs` | ✅ | — | — | R export (Unreleased): fill a gitignored local inputs folder from the Teams / Z: deposit, `.gitkeep` per folder, input manifest |
-| `dw_check_deposit` | ✅ | — | — | R export (Unreleased): every local input has an identical SHA-256 copy on Teams or Z: |
-| `dw_read_provenance` | ✅ | — | — | R export (Unreleased): read the `.provenance.json` sidecar of an output |
-| `dw_provenance_diff` | ✅ | — | — | R export (Unreleased): compare two runs from their sidecars (reproduced / output changed / inputs changed) |
-| `dw_collaboration` | ✅ | ✅ | — | Unreleased: the project's collaboration model (`single-producer` / `multi-producer`) from `cso_project.yml`, resolved once per session; Stata planned (#168) |
-| `dw_set_collaboration` | ✅ | ✅ | — | Unreleased: write `cso_project.yml` and baseline the existing sidecars (one reviewed PR); refused in reviewer mode; Stata planned (#168) |
+| `dw_fetch_inputs` | ✅ | ✅ | — | R and Python (#152; Stata via R or Python): fill a gitignored local inputs folder from the Teams / Z: deposit, `.gitkeep` per folder, input manifest |
+| `dw_check_deposit` | ✅ | ✅ | — | R and Python (#152; Stata via R or Python): every local input has an identical SHA-256 copy on Teams or Z: |
+| `dw_read_provenance` | ✅ | ✅ | — | R and Python (#152; Stata via R or Python): read the `.provenance.json` sidecar of an output |
+| `dw_provenance_diff` | ✅ | ✅ | — | R and Python (#152; Stata via R or Python): compare two runs from their sidecars (reproduced / output changed / inputs changed) |
+| `dw_collaboration` | ✅ | ✅ | ✅ | Unreleased: the project's collaboration model (`single-producer` / `multi-producer`) from `cso_project.yml`, resolved once per session; Stata `dw_collaboration.ado` (#168) |
+| `dw_set_collaboration` | ✅ | ✅ | — | Unreleased: write `cso_project.yml` and baseline the existing sidecars (one reviewed PR); refused in reviewer mode; not in Stata (switch from R or Python) |
 | `dw_publish` | ✅ (stub) | — | — | STUB / dry-run only — see callout below |
 | `dw_toolkit_version` | ✅ | ✅ | — | Reports the installed toolkit version |
 | `dw_verbosity` | ✅ | — | — | Sets session verbosity / debug options (v0.4.10) |
@@ -152,20 +153,23 @@ Consumer-side helpers that read the local `.toolkit_manifest.yml`, query upstrea
 | Function | R | Python | Stata | Notes |
 |---|---|---|---|---|
 | `cso_toolkit_check` | ✅ | ✅ | — | Compare the pinned vintage against a target version (offline; warns when behind, v0.10.0) and, in producer mode, the latest upstream tag |
-| `cso_toolkit_diff` | ✅ | ✅ | — | Show what changed between vintages |
-| `cso_toolkit_pull` | ✅ | ✅ | — | Refresh the vendored copy |
+| `cso_toolkit_diff` | ✅ | ✅ | — | Compare each vendored file with a release tag (unchanged / changed / local_edit / missing_upstream / missing_local) |
+| `cso_toolkit_pull` | ✅ | ✅ | — | Refresh the vendored copy to a release tag and re-pin the manifest |
+| `cso_toolkit_sync` | ✅ | ✅ | — | The one call: latest release, its NEWS since the pin, diff, then pull |
 
-These three keep the `cso_toolkit_` prefix in both R and Python (no `dw_` alias).
+These four keep the `cso_toolkit_` prefix in both R and Python (no `dw_` alias).
 
 ## Scaffolding and the contract auditor
 
-Generators for the standard CSO building blocks (profile scripts, sector run-scripts), an auditor for existing profiles, and the raw-call contract auditor. See the scaffolding and contract auditor chapter.
+Generators for the standard CSO building blocks (new repositories, profile scripts, sector run-scripts), an auditor for existing profiles, and the raw-call contract auditor. See the scaffolding and contract auditor chapter.
 
 | Function (R canonical) | R | Python | Stata | Notes |
 |---|---|---|---|---|
 | `dw_create_profile` | ✅ | ✅ | — | Scaffold `profile_<repo>.R` / `.py`; bare name `create_profile` |
 | `dw_create_sector_script` | ✅ | ✅ | — | Scaffold a sector run-script template; bare name `create_sector_script` |
 | `create_dw_sector_script` | ✅ | ✅ | — | DW-Production convenience wrapper (no `dw_`-prefixed alias by design — it already carries a `dw` infix) |
+| `create_research_project` | ✅ | ✅ | — | Unreleased: scaffold a research repository (layout, `.gitignore`, `tools/check.R`, hook, tests, `cso_project.yml`); no `dw_` alias. See "Starting a new repository" |
+| `create_official_stats_project` | ✅ | ✅ | — | Unreleased: scaffold an official-statistics repository (embargo settings, `releases/`, `01_dw_prep/012_codes/`); no `dw_` alias |
 | `dw_review_profile` | ✅ | ✅ | — | Audit a profile for required blocks (pass/warn/fail); bare name `review_profile` |
 | `dw_test_scripts` | ✅ | ✅ | — | Contract auditor: flag raw IO / API calls; bare name `test_scripts` |
 

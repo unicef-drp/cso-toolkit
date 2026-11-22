@@ -41,6 +41,7 @@ book:
         - chapters/35-scaffolding-audit.qmd
     - part: "Part IV — Adoption & Operations"
       chapters:
+        - chapters/40-new-repository.qmd
         - chapters/41-vendoring.qmd
         - chapters/42-onboarding-example.qmd
         - chapters/43-contract-auditor-ci.qmd
@@ -62,6 +63,7 @@ book:
     - appendices/d-function-reference.qmd
     - appendices/e-glossary.qmd
     - appendices/f-third-party-functions.qmd
+    - appendices/g-parity-certificate.qmd
 
 format:
   html:

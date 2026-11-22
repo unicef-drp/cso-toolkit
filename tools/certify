@@ -1,0 +1,15 @@
+#!/bin/sh
+# Parity certificate: run the cross-language cases in R, Python and Stata.
+#   sh tools/certify             run them; PASS / FAIL per case and language
+#   sh tools/certify --record    if all pass, write and commit .parity/<hash>.json
+#   sh tools/certify --verify    check a passing certificate exists (runs nothing)
+# CSO_PYTHON: a Python with the toolkit's dependencies for the Python driver.
+# CSO_RSCRIPT / STATA_EXE: override where R and Stata are found.
+# See conformance/README.md (#190).
+cd "$(git rev-parse --show-toplevel)" || exit 1
+for p in "$CSO_PYTHON" python3 python; do
+  [ -n "$p" ] && command -v "$p" >/dev/null 2>&1 && exec "$p" conformance/certify.py "$@"
+done
+if command -v py >/dev/null 2>&1; then exec py -3 conformance/certify.py "$@"; fi
+echo "tools/certify: no Python found; set CSO_PYTHON." >&2
+exit 1

@@ -40,11 +40,11 @@ The following fields appear in every sidecar. The table gives the JSON key, its 
 |---|---|---|---|
 | `path` | string | Absolute path of the primary file the sidecar describes. | R / Py / Stata |
 | `format` | string | In R/Python, the dispatch format of the primary file (`"csv"`, `"parquet"`, `"dta"`, …). In Stata, a literal schema-version tag `"dw_save.provenance/1"`. | R / Py / Stata (different meaning — see below) |
-| `written_at` | string | Write timestamp. R/Python: ISO-8601 UTC, `YYYY-MM-DDTHH:MM:SS+0000`. Stata: its local `c(current_date) c(current_time)`, e.g. `28 Jun 2026 14:03:51`. | R / Py / Stata (different format) |
-| `user` | string | The writing user. R/Python read `USERNAME` (Python falls back to `getpass.getuser()`); Stata reads `c(username)`. | R / Py / Stata |
+| `written_at` | string | Write timestamp: ISO-8601 UTC, `YYYY-MM-DDTHH:MM:SS+0000`. Stata writes it through Stata's Python integration (Stata 16+); without it, its local `c(current_date) c(current_time)`, e.g. `28 Jun 2026 14:03:51`, which the concurrent-write guard cannot compare. | R / Py / Stata |
+| `user` | string | The writing user: `USERNAME`, then `LOGNAME`, `USER`, `LNAME`, then the operating system's user, in all three languages (Python: `USERNAME`, then `getpass.getuser()`, the same order). | R / Py / Stata |
 | `dw_mode` | string | The session mode at write time (`"producer"`, `"reviewer"`, or unset). A session property, never a per-call argument — see the roles and mode-contract chapter. | R / Py / Stata |
-| `sha256` | string \| null | Hex SHA-256 of the primary file's bytes, computed after the file is written. **R/Python only.** In R it is `null` when the optional `digest` package is not installed. | R / Py |
-| `datasignature` | string | Stata's native `datasignature` content hash (a checksum of variable names and values), used in place of `sha256`. **Stata only.** | Stata |
+| `sha256` | string \| null | Hex SHA-256 of the primary file's bytes, computed after the file is written. In R it is `null` when the optional `digest` package is not installed; Stata writes it through Stata's Python integration (Stata 16+) and omits the key without it (#191). | R / Py / Stata |
+| `datasignature` | string | Stata's native `datasignature` content hash (a checksum of variable names and values), written alongside `sha256`. **Stata only.** | Stata |
 | `vintage` | string \| null | Optional vintage tag (e.g. `"2026-05"`), echoed from the `vintage` argument; `null` when not supplied. **R/Python only** (Stata records vintage inside `metadata`, see below). | R / Py |
 | `isid` | array\<string\> \| null | The key columns asserted unique before the write (the `isid` quality contract). `null` when no uniqueness check was requested. **R/Python key is `isid`.** | R / Py |
 | `idvars` | string | Stata's equivalent of `isid` — the space-separated `idvars()` columns passed to the uniqueness check. **Stata key is `idvars`.** | Stata |
@@ -78,7 +78,7 @@ The following fields appear in every sidecar. The table gives the JSON key, its 
 | `sources` | array\<string\> (R/Py) / string (Stata) | Upstream data sources (e.g. `"UIS bulk SDG_092025"`, `"WPP 2024"`). |
 | `contact` | string | Owner handle (e.g. `@karavan88`). |
 | `vintage` | string | Data vintage; in Stata this lives inside `metadata`, in R/Python it is a top-level field as well. |
-| `inputs` | array\<object\> (R) | The exact input files the output was built from, one record per input: `file` (path relative to the inputs folder), `sha256`, and optionally `origin`. Pass the manifest returned by `dw_fetch_inputs()` (`manifest[, c("file", "sha256", "origin")]`). `dw_provenance_diff()` reads this record to tell whether two runs used the same inputs. R only for now (#152). |
+| `inputs` | array\<object\> (R, Python) | The exact input files the output was built from, one record per input: `file` (path relative to the inputs folder), `sha256`, and optionally `origin`. Pass the manifest returned by `dw_fetch_inputs()` (`manifest[, c("file", "sha256", "origin")]`). In Python pass `manifest[["file", "sha256", "origin"]]`; `dw_save` writes a DataFrame in `metadata` as an array of records, as R does. `dw_provenance_diff()` reads this record to tell whether two runs used the same inputs. |
 
 The `inputs` record serialises as an array of objects:
 
@@ -253,7 +253,7 @@ A `FALSE` / `False` result here means the file changed since it was written — 
 
 ### Comparing the sidecars of two runs
 
-Two sidecars of the same output answer a fourth question: did the new run reproduce the previous one? In R, `dw_provenance_diff(previous, current)` compares the `metadata.inputs` records (inputs) and the `sha256` fields (outputs) and returns `reproduced`, `inputs_changed` (with the input files added, removed, and changed), `output_changed` (same inputs, different output; warns), `first_run`, or `no_input_record`. Read the previous sidecar with `dw_read_provenance()` before the new run overwrites the output. Python and Stata siblings are planned (#152).
+Two sidecars of the same output answer a fourth question: did the new run reproduce the previous one? In R and Python, `dw_provenance_diff(previous, current)` compares the `metadata.inputs` records (inputs) and the `sha256` fields (outputs) and returns `reproduced`, `inputs_changed` (with the input files added, removed, and changed), `output_changed` (same inputs, different output; warns), `first_run`, or `no_input_record`. Read the previous sidecar with `dw_read_provenance()` before the new run overwrites the output. Stata routes via R or Python (#152).
 
 ## Summary
 

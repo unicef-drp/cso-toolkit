@@ -58,10 +58,10 @@ most for results:
 | | `research-project.gitignore` | `official-stats.gitignore` |
 |---|---|---|
 | Canonical store for results | Git: the committed tables and figures, each with its sidecar | The deposit: Teams `060.DW-MASTER` / Z:, then SDMX and data.unicef.org |
-| Results in the repo? | Small text results (under about 1 MB) and the manuscript's figures, tracked; large binaries and scratch output not | Never. Output folders (`output/`, `outputs/`, `results/`, `wrk/`, at any depth) are ignored outright, sidecars included |
+| Results in the repo? | Small text results (under about 1 MB) and the manuscript's figures, tracked; large binaries and scratch output not | Never. Output folders (`013_wrkdata/`, `output/`, `outputs/`, `results/`, `wrk/`, at any depth) are ignored outright, sidecars included |
 | Confidentiality | Results go public with the paper; the confidential part is the microdata, which never enter git anyway | Pre-release figures are embargoed until the publication date. Repository access is not release authorization |
 | Release record | The tracked results themselves; tag the submitted version | `releases/<vintage>/output_manifest.csv` plus the deposited files' sidecars, committed in the release PR after publication |
-| Folder layout | `data/`, `inputs/`, `_apis/`, `_frozen/` at the root | `inputs/`, `_apis/`, `_frozen/` at any depth (e.g. `01_dw_prep/011_rawdata/_frozen/`); `releases/` at the root |
+| Folder layout | `data/`, `inputs/`, `_apis/`, `_frozen/` at the root | The deposit's stages (`01_dw_prep/010_metadata`, `011_rawdata`, `012_codes`, `013_wrkdata`); `inputs/`, `011_rawdata/`, `_apis/`, `_frozen/` at any depth keep only READMEs, sidecars and manifests; `releases/` at the root |
 | Extra noise | Quarto and LaTeX build files; reviewer sandbox (`sandbox/`) and `*.staged.json` | Reviewer sandbox (`sandbox/`, `dw-repro/`), `*.staged.json`, local copies of the deposit (`060.DW-MASTER/`, `_deposit/`) |
 | Tracked config | None by default; a placeholder template only through an explicit `!` line | `_config_template/user_config.yml` (placeholder values only) |
 
@@ -76,7 +76,9 @@ and access to a repository is not authorization to release the figures in
 it. Git history also keeps it after the file is deleted.
 
 So `official-stats.gitignore` ignores the output folders wholesale, with
-`**/output/**`, `**/outputs/**`, `**/results/**` and `**/wrk/**`, and does
+`**/output/**`, `**/outputs/**`, `**/results/**`, `**/wrk/**` and
+`**/013_wrkdata/**` (the work-data stage of the deposit layout, where sector
+scripts write `01_dw_prep/013_wrkdata/<sector>/`), and does
 not re-include anything in them: not a small CSV, and not the
 `.provenance.json` sidecars either, whose `sha256` and `schema` (row and
 column counts) of a small table are enough to confirm a guessed figure.

@@ -64,4 +64,5 @@ Source = "https://github.com/unicef-drp/cso-toolkit"
 package-dir = {"cso_toolkit" = "src"}
 
 [tool.setuptools.package-data]
-cso_toolkit = ["py.typed"]
+# templates/: copies of the repository's templates/ (tools/sync_templates.py)
+cso_toolkit = ["py.typed", "templates/**/*"]

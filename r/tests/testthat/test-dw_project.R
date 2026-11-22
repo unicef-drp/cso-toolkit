@@ -176,6 +176,131 @@ test_that("multi-producer: the same user re-writing in the session is not concur
   expect_no_error(save_as("jp", data.frame(a = 3:4), out))
 })
 
+# --- #178: false alarms and the empty user ------------------------------------
+
+# A git repository in a temp folder, with a committer identity of its own.
+local_git_repo <- function(.frame = parent.frame()) {
+  skip_if(!nzchar(Sys.which("git")), "git not available")
+  d <- withr::local_tempdir(.local_envir = .frame)
+  git <- function(...) {
+    st <- suppressWarnings(system2("git", c("-C", shQuote(d), ...), stdout = TRUE, stderr = TRUE))
+    if (!is.null(attr(st, "status")) && attr(st, "status") != 0) stop(paste(st, collapse = "\n"))
+    invisible(st)
+  }
+  git("init", "-q")
+  git("config", "user.name", "test")
+  git("config", "user.email", "test@example.org")
+  git("config", "core.autocrlf", "false")
+  list(dir = d, git = git)
+}
+
+test_that("#178: a write that arrived through git (committed, unmodified) is not concurrent", {
+  r <- local_git_repo()
+  local_multi(start = "2000-01-01T00:00:00+0000")   # karen writes after this start
+  out <- file.path(r$dir, "x.csv")
+  save_as("karen", data.frame(a = 1:2), out)
+  r$git("add", "--", "x.csv", "x.csv.provenance.json")
+  r$git("commit", "-q", "-m", "karen-output")     # what a pull would bring in
+  expect_no_error(save_as("jp", data.frame(a = 5), out))
+  expect_identical(jsonlite::read_json(paste0(out, ".provenance.json"))$previous_user, "karen")
+})
+
+test_that("#178: the same write, uncommitted or modified, is still concurrent", {
+  r <- local_git_repo()
+  local_multi(start = "2000-01-01T00:00:00+0000")
+  out <- file.path(r$dir, "x.csv")
+  save_as("karen", data.frame(a = 1:2), out)
+  # Untracked: karen wrote it in this working tree (or a shared folder).
+  err <- withr::with_envvar(c(USERNAME = "jp"), tryCatch(
+    suppressMessages(dw_save(data.frame(a = 5), path = out, overwrite = TRUE)),
+    error = identity))
+  expect_match(conditionMessage(err), "concurrent write")
+  # Committed, then rewritten by karen again: the working copy differs from HEAD.
+  r$git("add", "--", "x.csv", "x.csv.provenance.json")
+  r$git("commit", "-q", "-m", "karen-output")
+  save_as("karen", data.frame(a = 3:4), out)
+  err <- withr::with_envvar(c(USERNAME = "jp"), tryCatch(
+    suppressMessages(dw_save(data.frame(a = 5), path = out, overwrite = TRUE)),
+    error = identity))
+  expect_match(conditionMessage(err), "concurrent write")
+})
+
+test_that("#178: an output checked out with the other line endings is not an out-of-band change", {
+  d <- local_tempdir()
+  local_multi(start = "2999-01-01T00:00:00+0000")
+  out <- file.path(d, "x.csv")
+  save_as("jp", data.frame(a = 1:3, b = c("x", "y", "z")), out)
+  b <- readBin(out, "raw", n = file.info(out)$size)
+  # Flip the line endings dw_save() wrote (CRLF on Windows, LF elsewhere):
+  # what a checkout on the other platform, or with core.autocrlf=true, gives.
+  flipped <- if (as.raw(13) %in% b) b[b != as.raw(13)] else
+    unlist(lapply(b, function(x) if (x == as.raw(10)) as.raw(c(13, 10)) else x))
+  writeBin(flipped, out)
+  msgs <- testthat::capture_messages(withr::with_envvar(c(USERNAME = "jp"),
+    dw_save(data.frame(a = 5), path = out, overwrite = TRUE)))
+  expect_true(any(grepl("only in line endings", msgs)))
+  expect_identical(read.csv(out)$a, 5L)
+})
+
+test_that("#178: an LF checkout of a CRLF output is not an out-of-band change either", {
+  d <- local_tempdir()
+  local_multi(start = "2999-01-01T00:00:00+0000")
+  out <- file.path(d, "x.txt")
+  writeBin(charToRaw("a\r\nb\r\n"), out)
+  sha_crlf <- digest::digest(file = out, algo = "sha256")
+  jsonlite::write_json(list(path = out, sha256 = sha_crlf, user = "karen",
+                            written_at = "2001-01-01T00:00:00+0000"),
+                       paste0(out, ".provenance.json"), auto_unbox = TRUE)
+  writeBin(charToRaw("a\nb\n"), out)                  # same text, LF
+  expect_no_error(suppressMessages(withr::with_envvar(c(USERNAME = "jp"),
+    .dw_collab_preflight(out))))
+})
+
+test_that("#178: a real change in a CRLF checkout is still out-of-band", {
+  d <- local_tempdir()
+  local_multi(start = "2999-01-01T00:00:00+0000")
+  out <- file.path(d, "x.csv")
+  save_as("jp", data.frame(a = 1:2), out)
+  txt <- readLines(out)
+  writeBin(charToRaw(paste0(paste(c(txt, "9"), collapse = "\r\n"), "\r\n")), out)
+  err <- withr::with_envvar(c(USERNAME = "jp"), tryCatch(
+    suppressMessages(dw_save(data.frame(a = 5), path = out, overwrite = TRUE)),
+    error = identity))
+  expect_match(conditionMessage(err), "out-of-band change")
+})
+
+test_that("#178: binary formats get no line-ending leniency", {
+  d <- local_tempdir()
+  f <- file.path(d, "x.parquet")
+  writeBin(as.raw(c(1, 13, 10, 2)), f)
+  expect_identical(.dw_sha256_eol_variants(f), character(0))
+})
+
+test_that("#178: the user falls back to LOGNAME / USER / the system user when USERNAME is unset", {
+  withr::with_envvar(c(USERNAME = NA, LOGNAME = NA, USER = "macuser", LNAME = NA),
+    expect_identical(.dw_current_user(), "macuser"))
+  withr::with_envvar(c(USERNAME = NA, LOGNAME = "loguser", USER = "macuser"),
+    expect_identical(.dw_current_user(), "loguser"))
+  withr::with_envvar(c(USERNAME = "winuser", USER = "macuser"),
+    expect_identical(.dw_current_user(), "winuser"))
+  sys_user <- Sys.info()[["user"]]
+  withr::with_envvar(c(USERNAME = NA, LOGNAME = NA, USER = NA, LNAME = NA),
+    expect_identical(.dw_current_user(), if (nzchar(sys_user) && sys_user != "unknown") sys_user else ""))
+})
+
+test_that("#178: on mac/Linux (no USERNAME) sidecars record the user and the concurrent guard fires", {
+  d <- local_tempdir()
+  local_multi(start = "2000-01-01T00:00:00+0000")
+  out <- file.path(d, "x.csv")
+  withr::with_envvar(c(USERNAME = NA, LOGNAME = NA, LNAME = NA, USER = "karen"),
+    suppressMessages(dw_save(data.frame(a = 1:2), path = out, overwrite = TRUE)))
+  expect_identical(jsonlite::read_json(paste0(out, ".provenance.json"))$user, "karen")
+  err <- withr::with_envvar(c(USERNAME = NA, LOGNAME = NA, LNAME = NA, USER = "jp"), tryCatch(
+    suppressMessages(dw_save(data.frame(a = 5), path = out, overwrite = TRUE)),
+    error = identity))
+  expect_match(conditionMessage(err), "concurrent write")
+})
+
 test_that("multi-producer: takeover = TRUE overrides the guards and is recorded", {
   d <- local_tempdir()
   local_multi(start = "2000-01-01T00:00:00+0000")

@@ -173,8 +173,10 @@ Wiring:
 4. **New co-authors** set `dw_mode: reviewer` in their own
    `user_config.yml` until they start producing; the project file decides
    the rest.
-5. **Stata.** `dw_save.ado` does not read `cso_project.yml` yet (#168):
-   Stata writes in a multi-producer project are unguarded.
+5. **Stata.** `dw_save.ado` applies the same guards (`takeover` option)
+   through Stata's Python integration (Stata 16+; #168). Without Python a
+   multi-producer Stata write stops unless `takeover` is passed. Switch
+   the project from R or Python (`dw_set_collaboration()`).
 
 See the handbook chapter "Roles and the mode contract", section
 "Collaboration model", for the rationale and a worked example.
