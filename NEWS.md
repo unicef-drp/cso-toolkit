@@ -8,6 +8,19 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 
 ### Added
 
+- **New repositories get the AI-agent files (#173, part C).**
+  `create_research_project()` and `create_official_stats_project()` (R and
+  Python, same bytes) now also write `AGENTS.md` (from
+  `templates/agents/`, the project name filled in; official statistics add
+  the embargo section), `CLAUDE.md` (`@AGENTS.md`), `decisions.md`, and
+  `.claude/settings.json`: the cso-toolkit plugin, and a deny rule,
+  `Edit(**/00_functions/**)`, so Claude Code cannot edit the vendored
+  copy. Generated profiles (the scaffolders' and `create_profile()`'s, R
+  and Python) print a notice when a Claude Code session
+  (`CLAUDE_CODE_CHILD_SESSION=1`) runs as producer; nothing is blocked.
+  Handbook chapters 46 (shared settings, the notice) and 40 (layout)
+  updated.
+
 - **Claude Code plugin with five skills (#173).** The repository is now a
   Claude Code marketplace (`.claude-plugin/marketplace.json`, name
   `unicef-cso`) with one plugin, `plugins/cso-toolkit/`: `new-project`,
