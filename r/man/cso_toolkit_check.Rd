@@ -46,7 +46,7 @@ Compares the version recorded in the consumer's
     has decided it must run on. The comparison is offline, so it runs in
     **both** producer and reviewer mode. When the vendored copy is
     behind the target, the check is loud: it raises a warning (error
-    envelope) carrying the exact `cso_toolkit_pull(target_version = ...)`
+    envelope) carrying the exact `cso_toolkit_sync(target_version = ...)`
     command and, with `quiet = FALSE`, prints a boxed alert. Reviewer
     mode only warns: it never polls GitHub or changes any file.}
   \item{The latest upstream tag}{Producer mode only (the mode contract
@@ -66,7 +66,7 @@ mode when no target version is set (nothing can be checked offline).
 \section{Warnings}{
 
 `[cso_toolkit.cso_toolkit_check]` when the vendored copy is behind the
-target version, with the `cso_toolkit_pull()` command in its `Fix:`.
+target version, with the `cso_toolkit_sync()` command in its `Fix:`.
 }
 
 \examples{

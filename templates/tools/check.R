@@ -407,7 +407,7 @@ check[["vintage"]] <- function(name) {
       }
     })
   if (length(behind)) return(fail(c("the vendored toolkit is behind target_version:", strsplit(behind, "\n")[[1]]),
-                                  "a producer re-vendors with cso_toolkit_pull(target_version = ...)."))
+                                  "a producer updates with cso_toolkit_sync(target_version = ...)."))
   report("PASS", name, sprintf("manifest well-formed; pinned %s%s", m$pulled_version,
                                if (!is.null(m$target_version)) paste0(", target ", m$target_version) else ""))
 }

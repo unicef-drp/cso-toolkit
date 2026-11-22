@@ -27,7 +27,9 @@ test_that("T2: reviewer mode, manifest target ahead -> warning envelope, no box 
   local_state(dw_apis_allowed = FALSE, dwFunct = local_manifest("v0.9.0", "v0.9.1"))
   w <- expect_warning(res <- cso_toolkit_check(quiet = TRUE))
   expect_envelope(w, "cso_toolkit_check")
-  expect_match(conditionMessage(w), 'cso_toolkit_pull(target_version = "v0.9.1")', fixed = TRUE)
+  expect_match(conditionMessage(w), 'cso_toolkit_sync(target_version = "v0.9.1")', fixed = TRUE)
+  expect_no_match(conditionMessage(w), "cso_toolkit_pull(", fixed = TRUE)   # #213
+  expect_match(conditionMessage(w), "re-pins the manifest", fixed = TRUE)
   expect_match(conditionMessage(w), "Reviewer mode: no network call")
   expect_true(res$behind_target)
   expect_identical(res$target_source, "manifest")
@@ -43,7 +45,8 @@ test_that("T3: quiet = FALSE prints the boxed alert with the exact commands", {
   )
   box <- paste(msgs, collapse = "\n")
   expect_match(box, "BEHIND its target version", fixed = TRUE)
-  expect_match(box, 'cso_toolkit_pull(target_version = "v0.9.1")', fixed = TRUE)
+  expect_match(box, 'cso_toolkit_sync(target_version = "v0.9.1")', fixed = TRUE)
+  expect_no_match(box, "cso_toolkit_pull(", fixed = TRUE)   # #213
   expect_match(box, "(?m)^\\+-+\\+$", perl = TRUE)   # ASCII box border line
 })
 

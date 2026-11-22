@@ -294,13 +294,13 @@ The toolkit is **vendored**, not installed over the network: consumers copy the 
 
 `cso_toolkit_check()` reads the local manifest and compares the pinned version with two references (v0.10.0):
 
-- **The latest upstream tag** (producer mode only; it calls the GitHub API). A newer tag is informational: with `quiet = FALSE` a boxed notice names the versions and the exact `cso_toolkit_diff()` / `cso_toolkit_pull()` commands, but nothing is raised.
+- **The latest upstream tag** (producer mode only; it calls the GitHub API). A newer tag is informational: with `quiet = FALSE` a boxed notice names the versions and the exact `cso_toolkit_diff()` / `cso_toolkit_sync()` commands, but nothing is raised.
 - **A target version** (the `target_version` argument, or the manifest's `target_version:` key). The comparison is offline and runs in both modes. Being behind the target raises a **warning** in envelope shape, even with `quiet` on:
 
 ```text
 [cso_toolkit.cso_toolkit_check] The vendored cso-toolkit (v0.9.0) is behind its target version v0.9.1 (from the manifest's target_version key).
  Reviewer mode: no network call was made and nothing was changed; ask the producer to re-vendor.
- Fix: in producer mode, run cso_toolkit_pull(target_version = "v0.9.1") (or re-vendor v0.9.1 by hand) and update pulled_version in .toolkit_manifest.yml.
+ Fix: in producer mode, run cso_toolkit_sync(target_version = "v0.9.1"): it prints the release notes, then updates the vendored copy and re-pins the manifest. (Re-vendoring v0.9.1 by hand also means updating pulled_version in .toolkit_manifest.yml.)
 ```
 
 In producer mode the second line reads `Pipelines run on the older helpers until the re-vendor.` instead. When the pin is at or above both references, the log reads `(up to date)`.

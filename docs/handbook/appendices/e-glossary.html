@@ -506,7 +506,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>This glossary documents <code>cso-toolkit</code> as of <strong>v0.11.0</strong> (2026-11-22); version notes mark when a behaviour was added. It defines the load-bearing terms used throughout the handbook. The toolkit’s vocabulary is deliberately small, but several of the terms carry precise, contractual meaning — <em>canonical deposit</em>, <em>reviewer mode</em>, <em>provenance sidecar</em> — and the most common misreading is to take one of these in its everyday sense: to treat a <em>canonical deposit</em> as merely a file location, say, rather than as a status that depends on which role is acting. Definitions are listed alphabetically. Where a term names a function and the cross-language story is non-trivial, a tabset shows how it appears in R, Python, and Stata; where a sibling does not yet implement a term, the gap is stated explicitly.</p>
+<p>This glossary documents <code>cso-toolkit</code> as of <strong>v0.11.1</strong> (2026-11-22); version notes mark when a behaviour was added. It defines the load-bearing terms used throughout the handbook. The toolkit’s vocabulary is deliberately small, but several of the terms carry precise, contractual meaning — <em>canonical deposit</em>, <em>reviewer mode</em>, <em>provenance sidecar</em> — and the most common misreading is to take one of these in its everyday sense: to treat a <em>canonical deposit</em> as merely a file location, say, rather than as a status that depends on which role is acting. Definitions are listed alphabetically. Where a term names a function and the cross-language story is non-trivial, a tabset shows how it appears in R, Python, and Stata; where a sibling does not yet implement a term, the gap is stated explicitly.</p>
 <p>For the function-by-function reference, see the function reference appendix; for the on-disk shape of the provenance sidecar, see the provenance sidecar schema appendix; for the full vocabulary of failures, see the error taxonomy appendix.</p>
 <hr>
 <section id="adaptation-vintage" class="level2" data-number="E.1">
@@ -704,7 +704,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <i class="callout-icon"></i>
 </div>
 <div class="callout-body-container">
-<p>The publisher role is documented, and <code>dw_publish()</code> ships as a deliberate dry-run-only stub: <code>dry_run = TRUE</code> validates inputs and assembles a payload (<code>sha256</code>, <code>bytes</code>, <code>built_at</code>, <code>built_by</code>, version stamp), while <code>dry_run = FALSE</code> raises an envelope-shaped <em>“Live submission not yet implemented”</em> error pointing at issue #15. Despite the version number reaching v0.11.0, the live Helix submission branch has not yet landed — it remains gated on the sector leads finalising the submission contract. (Formerly INGESTOR.)</p>
+<p>The publisher role is documented, and <code>dw_publish()</code> ships as a deliberate dry-run-only stub: <code>dry_run = TRUE</code> validates inputs and assembles a payload (<code>sha256</code>, <code>bytes</code>, <code>built_at</code>, <code>built_by</code>, version stamp), while <code>dry_run = FALSE</code> raises an envelope-shaped <em>“Live submission not yet implemented”</em> error pointing at issue #15. Despite the version number reaching v0.11.1, the live Helix submission branch has not yet landed — it remains gated on the sector leads finalising the submission contract. (Formerly INGESTOR.)</p>
 </div>
 </div>
 </div>

@@ -1175,7 +1175,7 @@ cso_toolkit_sync <- function(target_version = NULL,
 #'     has decided it must run on. The comparison is offline, so it runs in
 #'     **both** producer and reviewer mode. When the vendored copy is
 #'     behind the target, the check is loud: it raises a warning (error
-#'     envelope) carrying the exact `cso_toolkit_pull(target_version = ...)`
+#'     envelope) carrying the exact `cso_toolkit_sync(target_version = ...)`
 #'     command and, with `quiet = FALSE`, prints a boxed alert. Reviewer
 #'     mode only warns: it never polls GitHub or changes any file.}
 #'   \item{The latest upstream tag}{Producer mode only (the mode contract
@@ -1213,7 +1213,7 @@ cso_toolkit_sync <- function(target_version = NULL,
 #'
 #' @section Warnings:
 #' `[cso_toolkit.cso_toolkit_check]` when the vendored copy is behind the
-#' target version, with the `cso_toolkit_pull()` command in its `Fix:`.
+#' target version, with the `cso_toolkit_sync()` command in its `Fix:`.
 #'
 #' @examples
 #' \dontrun{
@@ -1288,11 +1288,11 @@ cso_toolkit_check <- function(quiet = TRUE, target_version = NULL,
 				"",
 				if (reviewer) "Producer mode is needed to update (reviewer mode only warns):" else "To update:",
 				sprintf("  cso_toolkit_diff(target_version = \"%s\")", tag),
-				sprintf("  cso_toolkit_pull(target_version = \"%s\")", tag)
+				sprintf("  cso_toolkit_sync(target_version = \"%s\")", tag)
 			)))
 		}
 		warning(sprintf(
-			"[cso_toolkit.cso_toolkit_check] The vendored cso-toolkit (%s) is behind its target version %s (from the %s).\n %s\n Fix: in producer mode, run cso_toolkit_pull(target_version = \"%s\") (or re-vendor %s by hand) and update pulled_version in .toolkit_manifest.yml.",
+			"[cso_toolkit.cso_toolkit_check] The vendored cso-toolkit (%s) is behind its target version %s (from the %s).\n %s\n Fix: in producer mode, run cso_toolkit_sync(target_version = \"%s\"): it prints the release notes, then updates the vendored copy and re-pins the manifest. (Re-vendoring %s by hand also means updating pulled_version in .toolkit_manifest.yml.)",
 			.cso_tag(pinned), tag,
 			if (identical(target_source, "argument")) "target_version argument" else "manifest's target_version key",
 			if (reviewer) "Reviewer mode: no network call was made and nothing was changed; ask the producer to re-vendor." else "Pipelines run on the older helpers until the re-vendor.",
@@ -1306,7 +1306,7 @@ cso_toolkit_check <- function(quiet = TRUE, target_version = NULL,
 			"",
 			"To see the changes and update:",
 			sprintf("  cso_toolkit_diff(target_version = \"%s\")", tag),
-			sprintf("  cso_toolkit_pull(target_version = \"%s\")", tag)
+			sprintf("  cso_toolkit_sync(target_version = \"%s\")", tag)
 		)))
 	} else if (!quiet && !is.na(res$upstream_version)) {
 		message(sprintf("[cso-toolkit] %s: vendored %s, latest upstream %s (up to date)",
