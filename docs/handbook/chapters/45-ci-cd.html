@@ -71,7 +71,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
-<link href="../chapters/51-microdata-archive.html" rel="next">
+<link href="../chapters/46-ai-agents.html" rel="next">
 <link href="../chapters/44-versioning-release.html" rel="prev">
 <script src="../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
@@ -325,6 +325,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Continuous integration and repository hygiene</span></span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/46-ai-agents.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Working with AI coding agents</span></span></a>
+  </div>
+</li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
@@ -336,19 +342,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/51-microdata-archive.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">The microdata archive: archive, catalogue, tool</span></span></a>
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">The microdata archive: archive, catalogue, tool</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/52-ihsn-grammar.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">The IHSN convention and the folder grammar</span></span></a>
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">The IHSN convention and the folder grammar</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/53-datalib-api-conformance.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">The <code>datalib_*</code> API and its conformance suite</span></span></a>
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">The <code>datalib_*</code> API and its conformance suite</span></span></a>
   </div>
 </li>
       </ul>
@@ -362,13 +368,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/61-ecosystem.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">The UNICEF analytics ecosystem: three tiers</span></span></a>
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">The UNICEF analytics ecosystem: three tiers</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/62-unicefdata.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">unicefData: public child statistics in three languages</span></span></a>
+ <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">unicefData: public child statistics in three languages</span></span></a>
   </div>
 </li>
       </ul>
@@ -792,7 +798,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>The check record above is the gate (see <code>docs/git_workflow.md</code> for the gitflow itself). The release pull request into <code>main</code> also triggers the opt-in workflows, which gives every release an independent run on a clean runner for a few minutes of Actions time.</p>
 <p>The opt-in workflows are not required by default: with the default triggers they do not run on pull requests into <code>develop</code>, and a required check that never runs blocks the merge forever. A repository that has the minutes switches each workflow’s <code>on:</code> block to every push and pull request, lets the workflows run green once, and then marks the Tier 0 and Tier 1 jobs as required on <code>develop</code> and <code>main</code>. Two operational details matter then. GitHub matches a required check by its job name, so the templates give each job a stable <code>name:</code>. And a required workflow must not carry a <code>paths:</code> filter: when a pull request touches no matching path the workflow never runs, and its required check waits forever. Path filters belong on advisory workflows only, which is why the manuscript template is advisory.</p>
 <hr>
-<p>The contract auditor made one rule enforceable; this chapter makes the rest of the repository’s floor enforceable in the same way. The <code>.gitignore</code> keeps data out, the committed sidecars keep their provenance in, and a handful of fast checks — none of which needs data, credentials or network, and all of which run on the author’s own machine — turn both, and the contract, into gates a pull request has to pass.</p>
+<p>The contract auditor made one rule enforceable; this chapter makes the rest of the repository’s floor enforceable in the same way. The <code>.gitignore</code> keeps data out, the committed sidecars keep their provenance in, and a handful of fast checks — none of which needs data, credentials or network, and all of which run on the author’s own machine — turn both, and the contract, into gates a pull request has to pass. A repository worked on with AI coding agents adds one more file, <code>AGENTS.md</code>, which tells every agent to run these checks before it pushes; <a href="../chapters/46-ai-agents.html">the next chapter</a> sets out that file and the rest of working with agents.</p>
 
 
 </section>
@@ -1281,8 +1287,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../chapters/51-microdata-archive.html" class="pagination-link" aria-label="The microdata archive: archive, catalogue, tool">
-        <span class="nav-page-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">The microdata archive: archive, catalogue, tool</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="../chapters/46-ai-agents.html" class="pagination-link" aria-label="Working with AI coding agents">
+        <span class="nav-page-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Working with AI coding agents</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
