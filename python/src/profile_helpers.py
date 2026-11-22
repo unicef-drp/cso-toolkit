@@ -232,6 +232,14 @@ if dw_mode not in ("producer", "reviewer"):
         f'      {USERNAME}:\\n        dw_mode_by_project:\\n          {repo_name}: "producer"'
     )
 
+# Agent sessions (handbook chapter 46): Claude Code sets CLAUDE_CODE_CHILD_SESSION=1
+# in the commands it runs. An agent works as reviewer unless the person running the
+# session chose producer (AGENTS.md); say so when it is a producer. Nothing is blocked.
+if dw_mode == "producer" and os.environ.get("CLAUDE_CODE_CHILD_SESSION") == "1":
+    print(f"[!] profile: a Claude Code session is running as producer for {repo_name}: "
+          "it writes outputs and may call live APIs. Agents work as reviewer unless "
+          "the person running the session chose producer (AGENTS.md).", file=sys.stderr)
+
 # Wire state into the toolkit so dw_save / dw_use / dw_api_fetch route by mode.
 from cso_toolkit import _state as _cso_state  # noqa: E402
 

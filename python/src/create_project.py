@@ -166,6 +166,16 @@ def _project_files(kind: str, project_name: str, title: str, collaboration: str,
     files["tools/check"] = (tpl / "tools" / "check").read_bytes()
     files[".checks/README.md"] = (tpl / "checks" / "README.md").read_bytes()
     files[".github/workflows/check-record.yml"] = (tpl / "workflows" / "check-record.yml").read_bytes()
+    # AI coding agents (#173; handbook chapter 46): one instructions file for
+    # every agent (CLAUDE.md imports it), the decision log, and the shared
+    # Claude Code settings (the plugin; no edits to the vendored copy).
+    agents = (tpl / "agents" / "AGENTS.md").read_bytes()
+    if kind == "official-stats":
+        agents += (tpl / "agents" / "AGENTS-official-stats.md").read_bytes()
+    files["AGENTS.md"] = _fill(agents, variables)
+    files["CLAUDE.md"] = (tpl / "agents" / "CLAUDE.md").read_bytes()
+    files["decisions.md"] = (tpl / "agents" / "decisions.md").read_bytes()
+    files[".claude/settings.json"] = (tpl / "agents" / "settings.json").read_bytes()
 
     chk = (tpl / "tools" / "check.R").read_bytes()
     if kind == "official-stats":
@@ -437,6 +447,9 @@ def create_research_project(
         .checks/README.md        check records (.checks/<content-hash>.json)
         .github/workflows/check-record.yml   verifies the record on PRs (always)
         .github/workflows/*.yml  the others only with workflows=True
+        AGENTS.md, CLAUDE.md     instructions for AI coding agents (CLAUDE.md: @AGENTS.md)
+        decisions.md             decisions and the record of AI use
+        .claude/settings.json    Claude Code: the cso-toolkit plugin; no edits to 00_functions/
 
     Nothing is written if any target file already exists with different
     content, unless ``overwrite=True``; a file that already holds exactly the
@@ -560,6 +573,9 @@ def create_official_stats_project(
         .checks/README.md         check records (.checks/<content-hash>.json)
         .github/workflows/check-record.yml   verifies the record on PRs (always)
         .github/workflows/*.yml   the others only with workflows=True (no manuscript job)
+        AGENTS.md, CLAUDE.md      instructions for AI coding agents, with the embargo section
+        decisions.md              decisions and the record of AI use
+        .claude/settings.json     Claude Code: the cso-toolkit plugin; no edits to 00_functions/
 
     Parameters, return value and errors are those of
     :func:`create_research_project`. With ``vendor=True`` the default helper

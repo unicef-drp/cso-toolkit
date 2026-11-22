@@ -54,6 +54,8 @@ releases/<vintage>/      release record: output_manifest.csv and sidecars, commi
 tests/                   testthat suite; tests/testthat.R runs it
 tools/check.R            every local check, embargo included; sh tools/check --record runs it
 .checks/                 check records; .githooks/pre-push requires one before a push
+AGENTS.md                rules for AI coding agents, the embargo included (CLAUDE.md imports it)
+decisions.md             decisions, who made them and why; the record of AI use
 ```
 
 The canonical raw data, API caches and promoted work data live in the

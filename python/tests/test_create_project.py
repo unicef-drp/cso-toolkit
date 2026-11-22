@@ -25,23 +25,23 @@ REPO = Path(__file__).resolve().parents[2]
 PKG_TEMPLATES = Path(cp.__file__).resolve().parent / "templates"
 
 RESEARCH_FILES = sorted([
-    ".checks/README.md", ".gitattributes", ".githooks/pre-push",
+    ".checks/README.md", ".claude/settings.json", ".gitattributes", ".githooks/pre-push",
     ".github/workflows/check-record.yml", ".gitignore", "00_functions/README.md", "CONTRIBUTING.md",
     "R/README.md", "README.md", "cso_project.yml", "data/README.md",
     "data/input_manifest.csv", "data/provenance/README.md", "docs/README.md",
     "output/README.md", "paper/README.md", "profile_proj.R", "references/README.md",
     "tests/testthat.R", "tests/testthat/helper-project.R",
-    "tests/testthat/test-project.R", "tools/check", "tools/check.R",
+    "tests/testthat/test-project.R", "tools/check", "tools/check.R", "AGENTS.md", "CLAUDE.md", "decisions.md",
 ])
 OFFICIAL_FILES = sorted([
-    ".checks/README.md", ".gitattributes", ".githooks/pre-push",
+    ".checks/README.md", ".claude/settings.json", ".gitattributes", ".githooks/pre-push",
     ".github/workflows/check-record.yml", ".gitignore", "00_documentation/README.md",
     "00_functions/README.md", "01_dw_prep/README.md", "01_dw_prep/010_metadata/README.md",
     "01_dw_prep/011_rawdata/README.md", "01_dw_prep/012_codes/README.md", "CONTRIBUTING.md",
     "README.md", "_config_template/user_config.yml", "cso_project.yml",
     "inputs/README.md", "inputs/input_manifest.csv", "profile_proj.R", "releases/README.md",
     "tests/testthat.R", "tests/testthat/helper-project.R",
-    "tests/testthat/test-project.R", "tools/check", "tools/check.R",
+    "tests/testthat/test-project.R", "tools/check", "tools/check.R", "AGENTS.md", "CLAUDE.md", "decisions.md",
 ])
 
 
@@ -398,3 +398,21 @@ def test_r_python_parity(tmp_path):
         assert on_disk(py_root) == on_disk(r_root)
         for rel in on_disk(py_root):
             assert (py_root / rel).read_bytes() == (r_root / rel).read_bytes(), rel
+
+
+def test_agent_files(tmp_path):
+    """#173: AGENTS.md (embargo in official statistics), CLAUDE.md, decisions.md, settings."""
+    import json
+    r, o = tmp_path / "r", tmp_path / "o"
+    m.create_research_project(r, "single-producer")
+    m.create_official_stats_project(o, "single-producer")
+    ra = (r / "AGENTS.md").read_text(encoding="utf-8")
+    oa = (o / "AGENTS.md").read_text(encoding="utf-8")
+    assert "profile_r.R" in ra and "{{" not in ra
+    assert "Official statistics: the embargo" not in ra
+    assert "Official statistics: the embargo" in oa
+    assert (r / "CLAUDE.md").read_text(encoding="utf-8").strip() == "@AGENTS.md"
+    s = json.loads((r / ".claude" / "settings.json").read_text(encoding="utf-8"))
+    assert "Edit(**/00_functions/**)" in s["permissions"]["deny"]
+    assert s["enabledPlugins"]["cso-toolkit@unicef-cso"] is True
+    assert s["extraKnownMarketplaces"]["unicef-cso"]["source"]["repo"] == "unicef-drp/cso-toolkit"
