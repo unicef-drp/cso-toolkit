@@ -692,7 +692,7 @@ def cso_toolkit_check(quiet: bool = True,
       offline, so it runs in **both** producer and reviewer mode.  When the
       vendored copy is behind the target the check is loud: it emits a
       ``[cso_toolkit.cso_toolkit_check]`` warning carrying the exact
-      ``cso_toolkit_pull(target_version=...)`` command and, with
+      ``cso_toolkit_sync(target_version=...)`` command and, with
       ``quiet=False``, logs a boxed alert at WARNING level.  Reviewer mode
       only warns: it never polls GitHub or changes any file.
     * **The latest upstream tag** — producer mode only (gh CLI, the GitHub
@@ -777,7 +777,7 @@ def cso_toolkit_check(quiet: bool = True,
                 ("Producer mode is needed to update (reviewer mode only warns):"
                  if reviewer else "To update:"),
                 f'  cso_toolkit_diff(target_version="{tag}")',
-                f'  cso_toolkit_pull(target_version="{tag}")',
+                f'  cso_toolkit_sync(target_version="{tag}")',
             ]))
         warnings.warn(
             f"[cso_toolkit.cso_toolkit_check] The vendored cso-toolkit "
@@ -786,9 +786,10 @@ def cso_toolkit_check(quiet: bool = True,
             + ("Reviewer mode: no network call was made and nothing was changed; "
                "ask the producer to re-vendor." if reviewer else
                "Pipelines run on the older helpers until the re-vendor.")
-            + f'\n Fix: in producer mode, run cso_toolkit_pull(target_version="{tag}") '
-            f"(or re-vendor {tag} by hand) and update pulled_version in "
-            ".toolkit_manifest.yml.",
+            + f'\n Fix: in producer mode, run cso_toolkit_sync(target_version="{tag}"): '
+            "it prints the release notes, then updates the vendored copy and "
+            f"re-pins the manifest. (Re-vendoring {tag} by hand also means "
+            "updating pulled_version in .toolkit_manifest.yml.)",
             stacklevel=2,
         )
     elif res["updates_available"] and not quiet:
@@ -800,7 +801,7 @@ def cso_toolkit_check(quiet: bool = True,
             "",
             "To see the changes and update:",
             f'  cso_toolkit_diff(target_version="{tag}")',
-            f'  cso_toolkit_pull(target_version="{tag}")',
+            f'  cso_toolkit_sync(target_version="{tag}")',
         ]))
     elif not quiet and res["upstream_version"]:
         _log.info("[cso-toolkit] %s: vendored %s, latest upstream %s (up to date)",
