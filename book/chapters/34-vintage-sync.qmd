@@ -133,7 +133,7 @@ When a newer upstream release exists and `quiet` is off, the producer sees a box
 |                                               |
 | To see the changes and update:                |
 |   cso_toolkit_diff(target_version = "v0.9.1") |
-|   cso_toolkit_pull(target_version = "v0.9.1") |
+|   cso_toolkit_sync(target_version = "v0.9.1") |
 +-----------------------------------------------+
 ```
 
@@ -141,8 +141,8 @@ When a newer upstream release exists and `quiet` is off, the producer sees a box
 
 A project that has decided to run on a given version — say, after a release that fixes a bug it depends on — records that version as `target_version:` in its manifest (or passes `target_version =` from the profile). The comparison is offline, so it runs in **both** modes. When the vendored copy is behind the target, the check is deliberately loud:
 
-- it raises a **warning** in the error-envelope shape, `[cso_toolkit.cso_toolkit_check] … Fix: … cso_toolkit_pull(target_version = "v0.9.1") …`, even with `quiet` on, so a required re-vendor is never silent;
-- with `quiet` off it also prints a boxed alert, titled `cso-toolkit is BEHIND its target version`, with the vendored, target and (in producer mode) latest versions and the exact `cso_toolkit_diff()` / `cso_toolkit_pull()` commands;
+- it raises a **warning** in the error-envelope shape, `[cso_toolkit.cso_toolkit_check] … Fix: … cso_toolkit_sync(target_version = "v0.9.1") …`, even with `quiet` on, so a required re-vendor is never silent;
+- with `quiet` off it also prints a boxed alert, titled `cso-toolkit is BEHIND its target version`, with the vendored, target and (in producer mode) latest versions and the exact `cso_toolkit_diff()` / `cso_toolkit_sync()` commands;
 - in **reviewer mode** it only warns: no network call is made and no file changes; the warning tells the reviewer to ask the producer to re-vendor.
 
 In a reviewer session with `target_version: "v0.9.1"` in the manifest and `v0.9.0` vendored, `cso_toolkit_check(quiet = FALSE)` prints:
@@ -155,7 +155,7 @@ In a reviewer session with `target_version: "v0.9.1"` in the manifest and `v0.9.
 |                                                               |
 | Producer mode is needed to update (reviewer mode only warns): |
 |   cso_toolkit_diff(target_version = "v0.9.1")                 |
-|   cso_toolkit_pull(target_version = "v0.9.1")                 |
+|   cso_toolkit_sync(target_version = "v0.9.1")                 |
 +---------------------------------------------------------------+
 ```
 
@@ -164,7 +164,7 @@ and raises:
 ```text
 [cso_toolkit.cso_toolkit_check] The vendored cso-toolkit (v0.9.0) is behind its target version v0.9.1 (from the manifest's target_version key).
  Reviewer mode: no network call was made and nothing was changed; ask the producer to re-vendor.
- Fix: in producer mode, run cso_toolkit_pull(target_version = "v0.9.1") (or re-vendor v0.9.1 by hand) and update pulled_version in .toolkit_manifest.yml.
+ Fix: in producer mode, run cso_toolkit_sync(target_version = "v0.9.1"): it prints the release notes, then updates the vendored copy and re-pins the manifest. (Re-vendoring v0.9.1 by hand also means updating pulled_version in .toolkit_manifest.yml.)
 ```
 
 An `inrepo` pin is never behind a target, and a pin at or above the target passes silently. The target alert was added in v0.10.0 (#106, item 4); the R and Python ports behave the same.
