@@ -553,128 +553,135 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>✅</td>
 <td>✅</td>
 <td>✅</td>
-<td>Diff two artefacts on id + value vars; tolerates degenerate sides with a warning (v0.5.0)</td>
+<td>Diff two artefacts on id + value vars; tolerates degenerate sides with a warning (v0.5.0); <code>diagnose = TRUE</code> (R, Python) adds a profile; stops when both sides are the same file (#111)</td>
 </tr>
 <tr class="even">
+<td><code>dw_diff_profile</code></td>
+<td>✅</td>
+<td>✅</td>
+<td>—</td>
+<td>Unreleased (#111): profile a <code>dw_compare</code> result (differing columns, numeric drift quantiles, top key values of the changed / added / removed rows)</td>
+</tr>
+<tr class="odd">
 <td><code>dw_merge</code></td>
 <td>✅</td>
 <td>✅</td>
 <td>—</td>
 <td>R + Python only</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>dw_isid</code></td>
 <td>✅</td>
 <td>✅</td>
 <td>embedded</td>
 <td>In Stata the uniqueness check lives inside <code>dw_save</code></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>dw_verify_z</code></td>
 <td>✅</td>
 <td>✅</td>
 <td>—</td>
 <td>R + Python only</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>dw_resolve_path</code></td>
 <td>✅</td>
 <td>✅</td>
 <td>—</td>
 <td>Mode-aware path resolver</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>dw_is_canonical</code></td>
 <td>✅</td>
 <td>✅</td>
 <td>—</td>
 <td>Detects a canonical deposit; recognises the Z: (<code>dwZDrive</code>) root in R as of v0.5.0</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>dw_root</code></td>
 <td>✅</td>
 <td>—</td>
 <td>—</td>
 <td>Public wrapper around the root resolver (re-exported v0.4.6)</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>dw_stage</code></td>
 <td>✅</td>
 <td>—</td>
 <td>—</td>
 <td>R export</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>dw_fetch_inputs</code></td>
 <td>✅</td>
 <td>✅</td>
 <td>—</td>
 <td>R and Python (#152; Stata via R or Python): fill a gitignored local inputs folder from the Teams / Z: deposit, <code>.gitkeep</code> per folder, input manifest</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>dw_check_deposit</code></td>
 <td>✅</td>
 <td>✅</td>
 <td>—</td>
 <td>R and Python (#152; Stata via R or Python): every local input has an identical SHA-256 copy on Teams or Z:</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>dw_read_provenance</code></td>
 <td>✅</td>
 <td>✅</td>
 <td>—</td>
 <td>R and Python (#152; Stata via R or Python): read the <code>.provenance.json</code> sidecar of an output</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>dw_provenance_diff</code></td>
 <td>✅</td>
 <td>✅</td>
 <td>—</td>
 <td>R and Python (#152; Stata via R or Python): compare two runs from their sidecars (reproduced / output changed / inputs changed)</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>dw_collaboration</code></td>
 <td>✅</td>
 <td>✅</td>
 <td>✅</td>
 <td>Unreleased: the project’s collaboration model (<code>single-producer</code> / <code>multi-producer</code>) from <code>cso_project.yml</code>, resolved once per session; Stata <code>dw_collaboration.ado</code> (#168)</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>dw_set_collaboration</code></td>
 <td>✅</td>
 <td>✅</td>
 <td>—</td>
 <td>Unreleased: write <code>cso_project.yml</code> and baseline the existing sidecars (one reviewed PR); refused in reviewer mode; not in Stata (switch from R or Python)</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>dw_publish</code></td>
 <td>✅ (stub)</td>
 <td>—</td>
 <td>—</td>
 <td>STUB / dry-run only — see callout below</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>dw_toolkit_version</code></td>
 <td>✅</td>
 <td>✅</td>
 <td>—</td>
 <td>Reports the installed toolkit version</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>dw_verbosity</code></td>
 <td>✅</td>
 <td>—</td>
 <td>—</td>
 <td>Sets session verbosity / debug options (v0.4.10)</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>dw_mkdir</code></td>
 <td>—</td>
 <td>—</td>
 <td>✅</td>
 <td>Stata-only: recursive mkdir (Stata’s built-in is not recursive)</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>dw_map_drive</code></td>
 <td>—</td>
 <td>—</td>

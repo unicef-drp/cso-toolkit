@@ -576,108 +576,114 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Yes</td>
 </tr>
 <tr class="even">
+<td><code>dw_diff_profile</code> / <code>dw_compare(diagnose = TRUE)</code></td>
+<td>Yes</td>
+<td>Yes</td>
+<td>No: <code>r(col_changed)</code> gives the per-column counts (#111)</td>
+</tr>
+<tr class="odd">
 <td><code>dw_merge</code></td>
 <td>Yes</td>
 <td>Yes</td>
 <td>n/a</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>dw_isid</code></td>
 <td>Yes</td>
 <td>Yes</td>
 <td>Embedded in <code>dw_save</code> (no standalone command)</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>dw_verify_z</code></td>
 <td>Yes</td>
 <td>Yes</td>
 <td>n/a (integrity via <code>datasignature</code> inside <code>dw_use</code>)</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>dw_stage</code></td>
 <td>Yes</td>
 <td>n/a</td>
 <td>n/a</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>dw_fetch_inputs</code></td>
 <td>Yes</td>
 <td>Yes</td>
 <td>Route via R or Python (#152)</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>dw_check_deposit</code></td>
 <td>Yes</td>
 <td>Yes</td>
 <td>Route via R or Python (#152)</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>dw_read_provenance</code></td>
 <td>Yes</td>
 <td>Yes</td>
 <td>Route via R or Python (#152)</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>dw_provenance_diff</code></td>
 <td>Yes</td>
 <td>Yes</td>
 <td>Route via R or Python (#152)</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>dw_collaboration</code></td>
 <td>Yes</td>
 <td>Yes</td>
 <td>Yes (<code>dw_collaboration.ado</code>, #168)</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>dw_set_collaboration</code></td>
 <td>Yes</td>
 <td>Yes</td>
 <td>No: switch from R or Python (one reviewed PR)</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>dw_save</code> multi-producer guards + lineage fields (<code>takeover</code>)</td>
 <td>Yes</td>
 <td>Yes</td>
 <td>Yes, through Stata’s Python integration (Stata 16+) (#168); without it a multi-producer write stops unless <code>takeover</code></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>dw_root</code></td>
 <td>Yes</td>
 <td>Yes</td>
 <td>n/a</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>dw_resolve_path</code></td>
 <td>Yes</td>
 <td>Yes</td>
 <td>Internal to <code>dw_use</code> / <code>dw_save</code></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>dw_is_canonical</code></td>
 <td>Yes</td>
 <td>Yes</td>
 <td>Internal to the mode guard</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>dw_mkdir</code></td>
 <td>via base R <code>dir.create</code></td>
 <td>via <code>os.makedirs</code></td>
 <td>Yes (<code>dw_mkdir.ado</code> — Stata’s built-in cannot nest)</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>dw_verbosity</code></td>
 <td>Yes (session verbose/debug switch)</td>
 <td>Planned</td>
 <td>n/a</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>dw_default_unicef_allowlist</code></td>
 <td>Yes (remote-URL freeze allowlist)</td>
 <td>Yes</td>
 <td>n/a (no remote-URL reads in Stata)</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>dw_map_drive</code></td>
 <td>n/a</td>
 <td>n/a</td>
