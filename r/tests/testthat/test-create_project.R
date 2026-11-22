@@ -49,21 +49,23 @@ fake_clone <- function(files, tag = "v9.8.7", .frame = parent.frame()) {
 }
 
 RESEARCH_FILES <- c(
-	".gitattributes", ".githooks/pre-push", ".gitignore", "00_functions/README.md", "CONTRIBUTING.md",
+	".checks/README.md", ".gitattributes", ".githooks/pre-push", ".github/workflows/check-record.yml",
+	".gitignore", "00_functions/README.md", "CONTRIBUTING.md",
 	"R/README.md", "README.md", "cso_project.yml", "data/README.md",
 	"data/input_manifest.csv", "data/provenance/README.md", "docs/README.md",
 	"output/README.md", "paper/README.md", "profile_proj.R", "references/README.md",
 	"tests/testthat.R", "tests/testthat/helper-project.R",
-	"tests/testthat/test-project.R", "tools/check.R")
+	"tests/testthat/test-project.R", "tools/check", "tools/check.R")
 
 OFFICIAL_FILES <- c(
-	".gitattributes", ".githooks/pre-push", ".gitignore", "00_documentation/README.md",
+	".checks/README.md", ".gitattributes", ".githooks/pre-push", ".github/workflows/check-record.yml",
+	".gitignore", "00_documentation/README.md",
 	"00_functions/README.md", "01_dw_prep/README.md", "01_dw_prep/010_metadata/README.md",
 	"01_dw_prep/011_rawdata/README.md", "01_dw_prep/012_codes/README.md", "CONTRIBUTING.md",
 	"README.md", "_config_template/user_config.yml", "cso_project.yml",
 	"inputs/README.md", "inputs/input_manifest.csv", "profile_proj.R", "releases/README.md",
 	"tests/testthat.R", "tests/testthat/helper-project.R",
-	"tests/testthat/test-project.R", "tools/check.R")
+	"tests/testthat/test-project.R", "tools/check", "tools/check.R")
 
 test_that("a research project gets exactly the documented files", {
 	root <- new_root()
@@ -129,7 +131,8 @@ test_that("tools/check.R and tests/testthat.R carry the per-kind settings", {
 	expect_true(any(grepl("^SOURCE_DIRS <- character\\(0\\)", readLines(file.path(o, "tests", "testthat.R")))))
 	# Placeholders are all filled.
 	for (f in list.files(c(r, o), recursive = TRUE, full.names = TRUE)) {
-		expect_false(any(grepl("{{", readLines(f, warn = FALSE), fixed = TRUE)), info = f)
+		# an unfilled {{name}} placeholder (a workflow's ${{ expr }} is GitHub's)
+		expect_false(any(grepl("(^|[^$])\\{\\{[a-z_]+\\}\\}", readLines(f, warn = FALSE))), info = f)
 	}
 	expect_true(any(grepl("data/input_manifest.csv", readLines(file.path(r, "tests", "testthat", "test-project.R")), fixed = TRUE)))
 	expect_true(any(grepl("inputs/input_manifest.csv", readLines(file.path(o, "tests", "testthat", "test-project.R")), fixed = TRUE)))
@@ -362,7 +365,7 @@ test_that("workflows = TRUE adds the opt-in workflows, byte for byte", {
 	res2 <- create_official_stats_project(root2, collaboration = "single-producer",
 	                                      workflows = TRUE, verbose = FALSE)
 	expect_false(".github/workflows/ci-manuscript.yml" %in% res2$path)
-	expect_length(grep("^\\.github/workflows/", res2$path), 3)
+	expect_length(grep("^\\.github/workflows/", res2$path), 4)          # 3 opt-in + check-record
 })
 
 test_that("vendor = TRUE copies the helpers of the latest tag and records it", {
@@ -500,6 +503,7 @@ test_that("git = TRUE initialises develop, sets the hook path and the hook's mod
 	expect_identical(g("symbolic-ref", "HEAD"), "refs/heads/develop")
 	expect_identical(g("config", "core.hooksPath"), ".githooks")
 	expect_match(g("ls-files", "-s", "--", ".githooks/pre-push"), "^100755 ")
+	expect_match(g("ls-files", "-s", "--", "tools/check"), "^100755 ")
 	# No commit is made.
 	st <- attr(suppressWarnings(g("rev-parse", "--verify", "--quiet", "HEAD")), "status")
 	expect_true(!is.null(st) && st != 0L)

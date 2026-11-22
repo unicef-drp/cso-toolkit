@@ -25,8 +25,8 @@ conventions are in The CSO Handbook (unicef-drp/cso-toolkit).
 
 ## Joining the team (first clone)
 
-1. Clone, then `git config core.hooksPath .githooks` so the local checks run
-   on every push.
+1. Clone, then `git config core.hooksPath .githooks` so every push needs a
+   passing check record.
 2. Copy `_config_template/user_config.yml` to `~/.config/user_config.yml`
    and fill in your block with `dw_mode: reviewer` and a `sandboxRoot`
    outside the repository. Reviewer mode reads the deposit and writes only to
@@ -36,7 +36,7 @@ conventions are in The CSO Handbook (unicef-drp/cso-toolkit).
 4. Reproduce the latest vintage in reviewer mode and compare it with the
    deposit (`dw_compare()`, `dw_provenance_diff()`). A clean comparison means
    your setup reproduces the published figures.
-5. Run `Rscript --no-init-file tools/check.R`. Every line must pass.
+5. Run `sh tools/check`. Every line must pass.
 
 ## Collaboration model
 
@@ -63,8 +63,8 @@ vintages. Protect both, so changes reach them only through pull requests.
    Types: `feature/`, `fix/`, `docs/`, `data-prep/`, `release/`.
 2. Commit atomically: one logical change per commit, with a short imperative
    subject and a body that says what changed and why.
-3. Run the local checks, push the branch and open a pull request into
-   `develop`. Paste the output of `tools/check.R` into the description, with
+3. Run `sh tools/check --record`, push the branch and open a pull request
+   into `develop`. The `check-record` status confirms the checks passed; add
    the reviewer-mode reproduction evidence when the change touches figures
    (the `dw_compare()` summary, the `dw_provenance_diff()` status).
 4. Merge after review and delete the branch. A release to `main` is a pull
@@ -75,18 +75,29 @@ vintages. Protect both, so changes reach them only through pull requests.
 Checks run on your machine, not on GitHub Actions:
 
 ```
-Rscript --no-init-file tools/check.R            # every default check
-Rscript --no-init-file tools/check.R --list     # their names
-Rscript --no-init-file tools/check.R --only tracked-data
+sh tools/check                 # every default check
+sh tools/check --record        # ... and commit a check record
+sh tools/check --list          # their names
+sh tools/check --only tracked-data
 ```
 
 It checks that no data, secret, oversized file or embargoed output is
 tracked, that every provenance sidecar is well-formed, runs the toolkit's
 contract audit on `01_dw_prep/012_codes/` and its vintage check on the
 vendored helpers, and runs the testthat suite. It exits non-zero on any
-failure, and the pre-push hook in `.githooks/` runs it before every push.
-Use `Rscript --no-init-file`, not `--vanilla`.
+failure. `sh tools/check` runs it with the right R setup (`Rscript
+--no-init-file tools/check.R` takes the same arguments;
+use `--no-init-file`, not `--vanilla`).
 
-GitHub Actions workflows are opt-in. If the repository has them
+**Check records.** `sh tools/check --record` runs the checks on a clean
+working tree and, if none fails, commits `.checks/<content-hash>.json`: a
+record that this exact content passed (`.checks/README.md`). The pre-push
+hook refuses a push without one, and the `check-record` workflow verifies it
+on pull requests into `develop` and `main` without running R. After merging
+`develop` into your branch, record again: the content changed. On Windows,
+`tools/check` starts R so it finds your `.Renviron` (Git Bash's `HOME` would
+hide it).
+
+The other GitHub Actions workflows are opt-in. If the repository has them
 (`.github/workflows/`), they run the same script, by default only when
 started by hand and on pull requests into `main`.

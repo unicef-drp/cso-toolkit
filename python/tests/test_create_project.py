@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import datetime as dt
 import os
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -24,21 +25,23 @@ REPO = Path(__file__).resolve().parents[2]
 PKG_TEMPLATES = Path(cp.__file__).resolve().parent / "templates"
 
 RESEARCH_FILES = sorted([
-    ".gitattributes", ".githooks/pre-push", ".gitignore", "00_functions/README.md", "CONTRIBUTING.md",
+    ".checks/README.md", ".gitattributes", ".githooks/pre-push",
+    ".github/workflows/check-record.yml", ".gitignore", "00_functions/README.md", "CONTRIBUTING.md",
     "R/README.md", "README.md", "cso_project.yml", "data/README.md",
     "data/input_manifest.csv", "data/provenance/README.md", "docs/README.md",
     "output/README.md", "paper/README.md", "profile_proj.R", "references/README.md",
     "tests/testthat.R", "tests/testthat/helper-project.R",
-    "tests/testthat/test-project.R", "tools/check.R",
+    "tests/testthat/test-project.R", "tools/check", "tools/check.R",
 ])
 OFFICIAL_FILES = sorted([
-    ".gitattributes", ".githooks/pre-push", ".gitignore", "00_documentation/README.md",
+    ".checks/README.md", ".gitattributes", ".githooks/pre-push",
+    ".github/workflows/check-record.yml", ".gitignore", "00_documentation/README.md",
     "00_functions/README.md", "01_dw_prep/README.md", "01_dw_prep/010_metadata/README.md",
     "01_dw_prep/011_rawdata/README.md", "01_dw_prep/012_codes/README.md", "CONTRIBUTING.md",
     "README.md", "_config_template/user_config.yml", "cso_project.yml",
     "inputs/README.md", "inputs/input_manifest.csv", "profile_proj.R", "releases/README.md",
     "tests/testthat.R", "tests/testthat/helper-project.R",
-    "tests/testthat/test-project.R", "tools/check.R",
+    "tests/testthat/test-project.R", "tools/check", "tools/check.R",
 ])
 
 
@@ -137,7 +140,8 @@ def test_per_kind_settings(tmp_path):
     for root in (r, o):
         for p in root.rglob("*"):
             if p.is_file():
-                assert "{{" not in p.read_text(encoding="utf-8"), p
+                # an unfilled {{name}} placeholder (a workflow's ${{ expr }} is GitHub's)
+                assert not re.search(r"(?<!\$)\{\{[a-z_]+\}\}", p.read_text(encoding="utf-8")), p
 
 
 def test_profile(tmp_path):
@@ -220,7 +224,7 @@ def test_workflows(tmp_path):
         assert on["pull_request"]["branches"] == ["main"]
     res2 = m.create_official_stats_project(tmp_path / "o", "single-producer", workflows=True)
     assert ".github/workflows/ci-manuscript.yml" not in list(res2["path"])
-    assert sum(p.startswith(".github/workflows/") for p in res2["path"]) == 3
+    assert sum(p.startswith(".github/workflows/") for p in res2["path"]) == 4  # 3 opt-in + check-record
 
 
 def _manifest(root: Path) -> dict:
@@ -344,6 +348,7 @@ def test_git(tmp_path):
     assert g("symbolic-ref", "HEAD").stdout.strip() == "refs/heads/develop"
     assert g("config", "core.hooksPath").stdout.strip() == ".githooks"
     assert g("ls-files", "-s", "--", ".githooks/pre-push").stdout.startswith("100755 ")
+    assert g("ls-files", "-s", "--", "tools/check").stdout.startswith("100755 ")
     assert g("rev-parse", "--verify", "--quiet", "HEAD").returncode != 0
 
 
