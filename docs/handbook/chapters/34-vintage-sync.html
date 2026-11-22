@@ -83,7 +83,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-554944da459c622dc457c1ed647c448c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-7f6c64e0d652c61cb9aac081886fc576.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -682,15 +682,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 |                                               |
 | To see the changes and update:                |
 |   cso_toolkit_diff(target_version = "v0.9.1") |
-|   cso_toolkit_pull(target_version = "v0.9.1") |
+|   cso_toolkit_sync(target_version = "v0.9.1") |
 +-----------------------------------------------+</code></pre>
 </section>
 <section id="a-target-version-loud-when-behind" class="level3" data-number="10.2.2">
 <h3 data-number="10.2.2" class="anchored" data-anchor-id="a-target-version-loud-when-behind"><span class="header-section-number">10.2.2</span> A target version: loud when behind</h3>
 <p>A project that has decided to run on a given version — say, after a release that fixes a bug it depends on — records that version as <code>target_version:</code> in its manifest (or passes <code>target_version =</code> from the profile). The comparison is offline, so it runs in <strong>both</strong> modes. When the vendored copy is behind the target, the check is deliberately loud:</p>
 <ul>
-<li>it raises a <strong>warning</strong> in the error-envelope shape, <code>[cso_toolkit.cso_toolkit_check] … Fix: … cso_toolkit_pull(target_version = "v0.9.1") …</code>, even with <code>quiet</code> on, so a required re-vendor is never silent;</li>
-<li>with <code>quiet</code> off it also prints a boxed alert, titled <code>cso-toolkit is BEHIND its target version</code>, with the vendored, target and (in producer mode) latest versions and the exact <code>cso_toolkit_diff()</code> / <code>cso_toolkit_pull()</code> commands;</li>
+<li>it raises a <strong>warning</strong> in the error-envelope shape, <code>[cso_toolkit.cso_toolkit_check] … Fix: … cso_toolkit_sync(target_version = "v0.9.1") …</code>, even with <code>quiet</code> on, so a required re-vendor is never silent;</li>
+<li>with <code>quiet</code> off it also prints a boxed alert, titled <code>cso-toolkit is BEHIND its target version</code>, with the vendored, target and (in producer mode) latest versions and the exact <code>cso_toolkit_diff()</code> / <code>cso_toolkit_sync()</code> commands;</li>
 <li>in <strong>reviewer mode</strong> it only warns: no network call is made and no file changes; the warning tells the reviewer to ask the producer to re-vendor.</li>
 </ul>
 <p>In a reviewer session with <code>target_version: "v0.9.1"</code> in the manifest and <code>v0.9.0</code> vendored, <code>cso_toolkit_check(quiet = FALSE)</code> prints:</p>
@@ -701,12 +701,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 |                                                               |
 | Producer mode is needed to update (reviewer mode only warns): |
 |   cso_toolkit_diff(target_version = "v0.9.1")                 |
-|   cso_toolkit_pull(target_version = "v0.9.1")                 |
+|   cso_toolkit_sync(target_version = "v0.9.1")                 |
 +---------------------------------------------------------------+</code></pre>
 <p>and raises:</p>
 <pre class="text"><code>[cso_toolkit.cso_toolkit_check] The vendored cso-toolkit (v0.9.0) is behind its target version v0.9.1 (from the manifest's target_version key).
  Reviewer mode: no network call was made and nothing was changed; ask the producer to re-vendor.
- Fix: in producer mode, run cso_toolkit_pull(target_version = "v0.9.1") (or re-vendor v0.9.1 by hand) and update pulled_version in .toolkit_manifest.yml.</code></pre>
+ Fix: in producer mode, run cso_toolkit_sync(target_version = "v0.9.1"): it prints the release notes, then updates the vendored copy and re-pins the manifest. (Re-vendoring v0.9.1 by hand also means updating pulled_version in .toolkit_manifest.yml.)</code></pre>
 <p>An <code>inrepo</code> pin is never behind a target, and a pin at or above the target passes silently. The target alert was added in v0.10.0 (#106, item 4); the R and Python ports behave the same.</p>
 </section>
 <section id="how-the-upstream-tag-is-resolved" class="level3" data-number="10.2.3">
