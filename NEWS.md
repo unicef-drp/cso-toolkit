@@ -6,6 +6,13 @@ _Entries land here as PRs merge into `develop`. When the next release
 is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
+## v0.11.1 (2026-11-22)
+
+A patch: `cso_toolkit_check()` now tells a producer to update with
+`cso_toolkit_sync()`, which prints the release notes first, and no
+longer asks for a manual re-pin after a pull. No API change; only
+messages and docs differ. PR #214.
+
 ### Fixed
 
 - **`cso_toolkit_check()` suggests `cso_toolkit_sync()` (R + Python;
