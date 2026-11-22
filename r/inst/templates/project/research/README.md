@@ -47,6 +47,8 @@ docs/             analysis plan, notes, decisions
 tests/            testthat suite; tests/testthat.R runs it
 tools/check.R     every local check; sh tools/check --record runs it and records
 .checks/          check records; .githooks/pre-push requires one before a push
+AGENTS.md         rules for AI coding agents (CLAUDE.md imports it; .claude/ holds shared settings)
+decisions.md      decisions, who made them and why; the record of AI use
 ```
 
 ## Results

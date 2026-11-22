@@ -49,23 +49,23 @@ fake_clone <- function(files, tag = "v9.8.7", .frame = parent.frame()) {
 }
 
 RESEARCH_FILES <- c(
-	".checks/README.md", ".gitattributes", ".githooks/pre-push", ".github/workflows/check-record.yml",
+	".checks/README.md", ".claude/settings.json", ".gitattributes", ".githooks/pre-push", ".github/workflows/check-record.yml",
 	".gitignore", "00_functions/README.md", "CONTRIBUTING.md",
 	"R/README.md", "README.md", "cso_project.yml", "data/README.md",
 	"data/input_manifest.csv", "data/provenance/README.md", "docs/README.md",
 	"output/README.md", "paper/README.md", "profile_proj.R", "references/README.md",
 	"tests/testthat.R", "tests/testthat/helper-project.R",
-	"tests/testthat/test-project.R", "tools/check", "tools/check.R")
+	"tests/testthat/test-project.R", "tools/check", "tools/check.R", "AGENTS.md", "CLAUDE.md", "decisions.md")
 
 OFFICIAL_FILES <- c(
-	".checks/README.md", ".gitattributes", ".githooks/pre-push", ".github/workflows/check-record.yml",
+	".checks/README.md", ".claude/settings.json", ".gitattributes", ".githooks/pre-push", ".github/workflows/check-record.yml",
 	".gitignore", "00_documentation/README.md",
 	"00_functions/README.md", "01_dw_prep/README.md", "01_dw_prep/010_metadata/README.md",
 	"01_dw_prep/011_rawdata/README.md", "01_dw_prep/012_codes/README.md", "CONTRIBUTING.md",
 	"README.md", "_config_template/user_config.yml", "cso_project.yml",
 	"inputs/README.md", "inputs/input_manifest.csv", "profile_proj.R", "releases/README.md",
 	"tests/testthat.R", "tests/testthat/helper-project.R",
-	"tests/testthat/test-project.R", "tools/check", "tools/check.R")
+	"tests/testthat/test-project.R", "tools/check", "tools/check.R", "AGENTS.md", "CLAUDE.md", "decisions.md")
 
 test_that("a research project gets exactly the documented files", {
 	root <- new_root()
@@ -535,4 +535,25 @@ test_that("the package's template copies match the repository's templates/", {
 	}
 	expect_setequal(list.files(file.path(src, "project"), recursive = TRUE, all.files = TRUE),
 	                list.files(file.path(pkg, "project"), recursive = TRUE, all.files = TRUE))
+})
+
+test_that("agent files: AGENTS.md (embargo in official statistics), CLAUDE.md, decisions.md, settings", {
+	r <- new_root(); o <- new_root()
+	create_research_project(r, collaboration = "single-producer", verbose = FALSE)
+	create_official_stats_project(o, collaboration = "single-producer", verbose = FALSE)
+	ra <- readLines(file.path(r, "AGENTS.md"), warn = FALSE)
+	oa <- readLines(file.path(o, "AGENTS.md"), warn = FALSE)
+	expect_true(any(grepl(sprintf("profile_%s.R", basename(r)), ra, fixed = TRUE)))
+	expect_false(any(grepl("{{", ra, fixed = TRUE)))
+	expect_false(any(grepl("Official statistics: the embargo", ra, fixed = TRUE)))
+	expect_true(any(grepl("Official statistics: the embargo", oa, fixed = TRUE)))
+	expect_identical(readLines(file.path(r, "CLAUDE.md"), warn = FALSE), "@AGENTS.md")
+	expect_identical(bytes(file.path(r, "decisions.md")), bytes(scaffold_tpl("agents", "decisions.md")))
+	s <- jsonlite::read_json(file.path(r, ".claude", "settings.json"))
+	expect_true("Edit(**/00_functions/**)" %in% unlist(s$permissions$deny))
+	expect_true(isTRUE(s$enabledPlugins[["cso-toolkit@unicef-cso"]]))
+	expect_identical(s$extraKnownMarketplaces[["unicef-cso"]]$source$repo, "unicef-drp/cso-toolkit")
+	# The generated profile warns when a Claude Code session is a producer.
+	p <- readLines(file.path(r, paste0("profile_", basename(r), ".R")), warn = FALSE)
+	expect_true(any(grepl('Sys.getenv("CLAUDE_CODE_CHILD_SESSION")', p, fixed = TRUE)))
 })

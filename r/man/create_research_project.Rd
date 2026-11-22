@@ -120,6 +120,9 @@ tools/check.R, tools/check   the checks; sh tools/check --record
 .checks/README.md        check records (.checks/<content-hash>.json)
 .github/workflows/check-record.yml   verifies the record on PRs (always)
 .github/workflows/*.yml  the others only with workflows = TRUE
+AGENTS.md, CLAUDE.md     instructions for AI coding agents (CLAUDE.md: @AGENTS.md)
+decisions.md             decisions and the record of AI use
+.claude/settings.json    Claude Code: the cso-toolkit plugin; no edits to 00_functions/
 }
 
 Nothing is written if any target file already exists with different

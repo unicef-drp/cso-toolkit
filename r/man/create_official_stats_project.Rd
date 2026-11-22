@@ -131,6 +131,9 @@ tools/check               the wrapper; sh tools/check --record
 .checks/README.md         check records (.checks/<content-hash>.json)
 .github/workflows/check-record.yml   verifies the record on PRs (always)
 .github/workflows/*.yml   the others only with workflows = TRUE (no manuscript job)
+AGENTS.md, CLAUDE.md      instructions for AI coding agents, with the embargo section
+decisions.md              decisions and the record of AI use
+.claude/settings.json     Claude Code: the cso-toolkit plugin; no edits to 00_functions/
 }
 
 The arguments, the refusal to replace existing files and the returned

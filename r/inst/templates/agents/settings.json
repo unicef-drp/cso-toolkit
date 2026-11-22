@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "deny": [
+      "Edit(**/00_functions/**)"
+    ]
+  },
+  "extraKnownMarketplaces": {
+    "unicef-cso": {
+      "source": {
+        "source": "github",
+        "repo": "unicef-drp/cso-toolkit"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "cso-toolkit@unicef-cso": true
+  }
+}

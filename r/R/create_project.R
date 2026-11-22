@@ -153,6 +153,17 @@
 	files[["tools/check"]] <- .cso_bytes(file.path(tpl, "tools", "check"))
 	files[[".checks/README.md"]] <- .cso_bytes(file.path(tpl, "checks", "README.md"))
 	files[[".github/workflows/check-record.yml"]] <- .cso_bytes(file.path(tpl, "workflows", "check-record.yml"))
+	# AI coding agents (#173; handbook chapter 46): one instructions file for
+	# every agent (CLAUDE.md imports it), the decision log, and the shared
+	# Claude Code settings (the plugin; no edits to the vendored copy).
+	agents <- .cso_bytes(file.path(tpl, "agents", "AGENTS.md"))
+	if (kind == "official-stats") {
+		agents <- c(agents, .cso_bytes(file.path(tpl, "agents", "AGENTS-official-stats.md")))
+	}
+	files[["AGENTS.md"]] <- .cso_fill(agents, vars)
+	files[["CLAUDE.md"]] <- .cso_bytes(file.path(tpl, "agents", "CLAUDE.md"))
+	files[["decisions.md"]] <- .cso_bytes(file.path(tpl, "agents", "decisions.md"))
+	files[[".claude/settings.json"]] <- .cso_bytes(file.path(tpl, "agents", "settings.json"))
 
 	chk <- .cso_bytes(file.path(tpl, "tools", "check.R"))
 	if (kind == "official-stats") {
@@ -406,6 +417,9 @@
 #' .checks/README.md        check records (.checks/<content-hash>.json)
 #' .github/workflows/check-record.yml   verifies the record on PRs (always)
 #' .github/workflows/*.yml  the others only with workflows = TRUE
+#' AGENTS.md, CLAUDE.md     instructions for AI coding agents (CLAUDE.md: @AGENTS.md)
+#' decisions.md             decisions and the record of AI use
+#' .claude/settings.json    Claude Code: the cso-toolkit plugin; no edits to 00_functions/
 #' }
 #'
 #' Nothing is written if any target file already exists with different
@@ -556,6 +570,9 @@ create_research_project <- function(path, collaboration, members = NULL,
 #' .checks/README.md         check records (.checks/<content-hash>.json)
 #' .github/workflows/check-record.yml   verifies the record on PRs (always)
 #' .github/workflows/*.yml   the others only with workflows = TRUE (no manuscript job)
+#' AGENTS.md, CLAUDE.md      instructions for AI coding agents, with the embargo section
+#' decisions.md              decisions and the record of AI use
+#' .claude/settings.json     Claude Code: the cso-toolkit plugin; no edits to 00_functions/
 #' }
 #'
 #' The arguments, the refusal to replace existing files and the returned

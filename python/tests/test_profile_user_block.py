@@ -82,3 +82,17 @@ def test_review_profile_user_block(tmp_path):
     rev = m.review_profile(old, verbose=False)
     row = rev[rev["check"] == "User block in user_config.yml"].iloc[0]
     assert row["status"] == "warn" and "top-level keys only" in row["detail"]
+
+
+def test_agent_session_as_producer_gets_a_notice(tmp_path, monkeypatch):
+    """#173: the profile prints a notice in a Claude Code producer session only."""
+    monkeypatch.setenv("CLAUDE_CODE_CHILD_SESSION", "1")
+    rc, out = _run(tmp_path / "a", 'tester:\n  dw_mode: "producer"\n')
+    assert rc == 0, out
+    assert "a Claude Code session is running as producer" in out
+    monkeypatch.delenv("CLAUDE_CODE_CHILD_SESSION")
+    rc, out = _run(tmp_path / "b", 'tester:\n  dw_mode: "producer"\n')
+    assert rc == 0 and "Claude Code session" not in out
+    monkeypatch.setenv("CLAUDE_CODE_CHILD_SESSION", "1")
+    rc, out = _run(tmp_path / "c", 'tester:\n  dw_mode: "reviewer"\n')
+    assert rc == 0 and "Claude Code session" not in out
