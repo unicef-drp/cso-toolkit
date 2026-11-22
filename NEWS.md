@@ -6,6 +6,38 @@ _Entries land here as PRs merge into `develop`. When the next release
 is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
+## v0.11.0 (2026-11-22)
+
+R, Python and Stata are now checked against each other. `sh tools/certify`
+runs shared cases in all three languages and commits a parity certificate
+when they agree; its first runs found four Stata bugs and an R CSV bug,
+all fixed here. Stata reads the user's block of `user_config.yml` and
+gains the multi-producer guards; Python gains the deposit and provenance
+helpers; `dw_compare(diagnose = TRUE)` profiles where a mismatch comes
+from. New repositories get check records (local checks that a pull request
+verifies in seconds) and the AI-agent files, and the repository is a
+Claude Code plugin marketplace. MINOR: new functions, arguments and
+options. The behaviour a consumer may notice is listed under Changed. PRs
+#175, #176, #188, #189, #193, #196, #198, #199, #201, #203, #205 and #208.
+
+### Changed
+
+- **R `dw_use()` reads a doubled quote in a quoted CSV field as one
+  quote** (see Fixed, #192). A file written by `dw_save()` that holds `"`
+  in a character column now reads back as written; values read earlier
+  had `""`.
+- **`dw_compare()` stops when both arguments resolve to the same file**
+  (see Fixed, #111). It used to report a false "0 changed" for
+  `dw_compare(sandbox_path, canonical_path)` in reviewer mode; pass the
+  new data in memory.
+- **Stata `dw_save` in a multi-producer project stops on an out-of-band
+  change or a concurrent write unless `takeover`, and stops every such
+  write without Stata's Python integration** (see Added, #168). Stata
+  sidecars now record `sha256` and an ISO-8601 UTC `written_at`, and
+  `user` follows R's order.
+- **Python `dw_save()` writes a DataFrame in `metadata` as an array of
+  records**, as R does (see Added, #152); it used to write its `str()`.
+
 ### Added
 
 - **New repositories get the AI-agent files (#173, part C).**
