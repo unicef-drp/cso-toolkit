@@ -440,7 +440,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#design-principles" id="toc-design-principles" class="nav-link" data-scroll-target="#design-principles"><span class="header-section-number">17.2</span> Design principles</a></li>
   <li><a href="#the-default-menu" id="toc-the-default-menu" class="nav-link" data-scroll-target="#the-default-menu"><span class="header-section-number">17.3</span> The default menu</a></li>
   <li><a href="#testthat-in-every-r-repository" id="toc-testthat-in-every-r-repository" class="nav-link" data-scroll-target="#testthat-in-every-r-repository"><span class="header-section-number">17.4</span> testthat in every R repository</a></li>
-  <li><a href="#gating-merges-and-the-gitflow" id="toc-gating-merges-and-the-gitflow" class="nav-link" data-scroll-target="#gating-merges-and-the-gitflow"><span class="header-section-number">17.5</span> Gating merges and the gitflow</a></li>
+  <li><a href="#check-records" id="toc-check-records" class="nav-link" data-scroll-target="#check-records"><span class="header-section-number">17.5</span> Check records</a></li>
+  <li><a href="#gating-merges-and-the-gitflow" id="toc-gating-merges-and-the-gitflow" class="nav-link" data-scroll-target="#gating-merges-and-the-gitflow"><span class="header-section-number">17.6</span> Gating merges and the gitflow</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/unicef-drp/cso-toolkit/edit/main/book/chapters/45-ci-cd.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/unicef-drp/cso-toolkit/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
@@ -493,14 +494,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><code>templates/tools/check.R</code></td>
 </tr>
 <tr class="odd">
-<td>Pre-push hook that runs it</td>
-<td><code>templates/hooks/pre-push</code></td>
+<td>The wrapper that starts R right (and records)</td>
+<td><code>templates/tools/check</code></td>
 </tr>
 <tr class="even">
+<td>Pre-push hook that requires a check record (or runs the checks)</td>
+<td><code>templates/hooks/pre-push</code></td>
+</tr>
+<tr class="odd">
+<td>The workflow that verifies the record on pull requests (on by default; no R)</td>
+<td><code>templates/workflows/check-record.yml</code></td>
+</tr>
+<tr class="even">
+<td>The check-record folder’s README</td>
+<td><code>templates/checks/README.md</code></td>
+</tr>
+<tr class="odd">
 <td>GitHub Actions workflows (opt-in; they call <code>check.R</code>)</td>
 <td><code>templates/workflows/ci-hygiene.yml</code>, <code>ci-contract-audit.yml</code>, <code>ci-r-tests.yml</code>, <code>ci-manuscript.yml</code></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>testthat skeleton for a non-package project</td>
 <td><code>templates/testthat/</code></td>
 </tr>
@@ -595,10 +608,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 data-number="17.2" class="anchored" data-anchor-id="design-principles"><span class="header-section-number">17.2</span> Design principles</h2>
 <p>Ten principles shape the menu. Each earns its place by a failure it prevents.</p>
 <ol type="1">
-<li><strong>Checks run locally first.</strong> Every check in the menu runs on your machine with one command from the repository root, <code>Rscript --no-init-file tools/check.R</code>, which prints a <code>PASS</code> / <code>FAIL</code> / <code>SKIP</code> line per check and exits non-zero on any failure; a pre-push hook can run it before every push. The pull request carries its output. GitHub Actions are opt-in and call the same script, so they add an independent run, never a different check. Actions minutes run out, and a failure reproduced on your machine gets fixed before the push.</li>
+<li><strong>Checks run locally first.</strong> Every check in the menu runs on your machine with one command from the repository root, <code>Rscript --no-init-file tools/check.R</code>, which prints a <code>PASS</code> / <code>FAIL</code> / <code>SKIP</code> line per check and exits non-zero on any failure. <code>sh tools/check --record</code> also commits a check record of the result, and the pre-push hook refuses a push without one. GitHub Actions are opt-in and call the same script, so they add an independent run, never a different check. Actions minutes run out, and a failure reproduced on your machine gets fixed before the push.</li>
 <li><strong>CI never needs real data.</strong> Tests use tiny synthetic fixtures. Reproduction against real data runs locally in reviewer mode, and its evidence — the <code>dw_provenance_diff()</code> status, <code>dw_check_deposit()</code> output, a <code>dw_compare()</code> summary — goes in the pull request. Data must not be on a hosted runner, and a check that needs data cannot run on every push.</li>
 <li><strong>Default checks are fast, under ten minutes.</strong> A check people wait for gets skipped, and a pre-push hook that takes too long gets bypassed.</li>
-<li><strong>Merges are gated by the check record.</strong> By default the gate is the <code>check.R</code> output for the pull request’s head commit and a reviewer who does not merge without it. Required status checks become available when a repository switches its workflows on for every pull request. A check that can be merged around is advice, not a gate.</li>
+<li><strong>Merges are gated by the check record.</strong> The gate is a committed record that <code>check.R</code> passed on the pull request’s exact content, verified on GitHub in seconds without running R (see <a href="#check-records">Check records</a>), and required by branch protection. A check that can be merged around is advice, not a gate.</li>
 <li><strong>Every bug fix ships a regression test</strong> that fails on the old code and names the issue. The bug cannot return silently, and the test records what went wrong.</li>
 <li><strong>Least privilege, pinned actions.</strong> Workflows start from <code>permissions: contents: read</code>; actions are pinned to a version. A compromised dependency should not be able to write to the repository or alter results unnoticed.</li>
 <li><strong>No secrets in logs.</strong> Prefer checks that need no secret; scanners redact. Logs, and check output pasted into a pull request, are readable by everyone with access to the repository.</li>
@@ -694,13 +707,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="tab-content">
 <div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># From the repository root:</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">#   Rscript --no-init-file tools/check.R                 # every default check</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">#   Rscript --no-init-file tools/check.R --only tests    # one check</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">#   Rscript --no-init-file tools/check.R --list          # the names</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Before every push (once per clone):</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co">#   mkdir -p .githooks &amp;&amp; cp pre-push .githooks/ &amp;&amp; chmod +x .githooks/pre-push</span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co">#   git config core.hooksPath .githooks</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">#   sh tools/check                   # every default check</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">#   sh tools/check --record          # ... and, if none fails, commit a check record</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">#   sh tools/check --only tests      # one check</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co">#   sh tools/check --list            # the names</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co"># (sh tools/check runs Rscript --no-init-file tools/check.R, which takes the</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co"># same arguments, with R set up right on Windows.)</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Once per clone, so every push needs a passing record:</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co">#   git config core.hooksPath .githooks</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># tools/check.R is R. A Python-only repository runs the same hygiene and</span></span>
@@ -755,10 +770,27 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <p>The example in the skeleton is the pattern to copy rather than the function to keep: a small project function, a fixture that carries the very codes that once broke it, and a test whose title names the issue. Run against the old implementation — an inner join on raw codes — that test fails; against the fix it passes. The skeleton follows the toolkit’s own suite: helpers in <code>helper-*.R</code>, session state set through a local setter that restores on exit, errors asserted with <code>expect_envelope()</code>.</p>
 </section>
-<section id="gating-merges-and-the-gitflow" class="level2" data-number="17.5">
-<h2 data-number="17.5" class="anchored" data-anchor-id="gating-merges-and-the-gitflow"><span class="header-section-number">17.5</span> Gating merges and the gitflow</h2>
-<p>By default nothing on GitHub enforces the checks; the record does (see <code>docs/git_workflow.md</code> for the gitflow itself). The pull request author runs <code>tools/check.R</code> on the branch’s head commit and pastes its output into the pull request; the header line names the commit and flags uncommitted changes, so the reviewer can confirm it matches the head and that every line passed. A new push needs a new run. The release pull request into <code>main</code> also triggers the workflows, which gives every release an independent run on a clean runner for a few minutes of Actions time.</p>
-<p>Required status checks are therefore not the default: with the default triggers the workflows do not run on pull requests into <code>develop</code>, and a required check that never runs blocks the merge forever. A repository that has the minutes switches each workflow’s <code>on:</code> block to every push and pull request, lets the workflows run green once, and then marks the Tier 0 and Tier 1 jobs as required on <code>develop</code> and <code>main</code>. Two operational details matter then. GitHub matches a required check by its job name, so the templates give each job a stable <code>name:</code>. And a required workflow must not carry a <code>paths:</code> filter: when a pull request touches no matching path the workflow never runs, and its required check waits forever. Path filters belong on advisory workflows only, which is why the manuscript template is advisory.</p>
+<section id="check-records" class="level2" data-number="17.5">
+<h2 data-number="17.5" class="anchored" data-anchor-id="check-records"><span class="header-section-number">17.5</span> Check records</h2>
+<p>Local-first checks leave one gap: nothing proves they were run on what gets merged. A forgotten hook, <code>git push --no-verify</code>, or a co-author who never enabled the hook all go unnoticed. Required status checks close that gap only by running the full checks on GitHub, which is what local-first avoids. A <strong>check record</strong> closes it at almost no Actions cost (#174).</p>
+<ul>
+<li><strong>The record.</strong> <code>sh tools/check --record</code> runs the checks on a clean working tree and, when none fails, writes <code>.checks/&lt;content-hash&gt;.json</code> and commits it, alone. It holds each check’s result (<code>pass</code>, <code>advisory</code> for an advisory contract audit, <code>skipped</code>), the commit and branch, the R and toolkit versions, the platform, the user, the UTC time, and the hash of <code>check.R</code> itself. <code>--record</code> refuses <code>--only</code> and <code>--skip</code>: a record never certifies a partial run.</li>
+<li><strong>The content hash</strong> is git’s tree ID of the repository with <code>.checks/</code> left out: <code>git ls-tree HEAD | grep -v '\t.checks$' | git mktree</code>. A record certifies content, not a commit ID. The commit that adds the record keeps the same content hash, which avoids the chicken-and-egg problem. Computed from git objects, the hash is the same on Windows and Linux.</li>
+<li><strong>One file per checked state,</strong> about 1 KB each: records never conflict between branches, and history keeps every checked state.</li>
+<li><strong>The pre-push hook</strong> (<code>MODE=verify</code>, the default) requires, for each pushed branch, a passing record committed in that commit. It runs no R, so pushes stay fast. <code>MODE=run</code> at the top of <code>.githooks/pre-push</code> restores the older behaviour, running the checks, for repositories that do not use records.</li>
+<li><strong>The workflow</strong> <code>check-record.yml</code> is the one workflow on by default: on pull requests into <code>develop</code> and <code>main</code>, never on push. It checks out the pull request’s head commit (not GitHub’s merge commit), recomputes the hash and requires the record to say <code>pass</code>. No R, no data, about 10 seconds, <code>contents: read</code>; GitHub bills it as one minute on a private repository.</li>
+<li><strong>Branch protection</strong> (Settings &gt; Branches, for <code>develop</code> and <code>main</code>): require the status check <code>check-record</code>, and <em>Require branches to be up to date before merging</em>. Then what merges is exactly the checked content.</li>
+<li><strong>Merging <code>develop</code> into a branch</strong> changes its content, so record again before pushing. The release pull request <code>develop</code> → <code>main</code> reuses the record of the last feature branch whenever the trees are identical.</li>
+<li><strong>Automated pull requests</strong> (a bot rebuilding the handbook, a sync job) carry no record. List the generated paths they touch in the workflow’s <code>EXEMPT_PATHS</code> (shell patterns, for example <code>docs/handbook/*</code>): a pull request whose every changed file matches passes without a record. Anything that changes other files still needs one, whoever opened it.</li>
+<li><strong>Limits.</strong> A record can be written by hand. It prevents forgotten checks, not forgery, like any honour-based gate. Shared or mirrored repositories with different content need their own records.</li>
+</ul>
+<p><strong>Windows.</strong> Started from Git Bash, R takes Git Bash’s <code>HOME</code> (<code>C:\Users\&lt;user&gt;</code>) as its home folder. So it misses a <code>.Renviron</code> that lives in Documents (often redirected to OneDrive), and with it the user library: the checks fail with “there is no package called testthat”. <code>tools/check</code> starts R with <code>env -u HOME</code>, so R falls back to Documents, and passes the original <code>HOME</code> as <code>CHECK_GIT_HOME</code>, which the git calls inside <code>check.R</code> get back, so git still finds <code>user.name</code> and <code>user.email</code>.</p>
+<p><code>create_research_project()</code> and <code>create_official_stats_project()</code> write the wrapper, the hook, the workflow and <code>.checks/README.md</code>, and print the branch-protection steps; they do not change repository settings. cso-toolkit itself uses its parity certificate (<a href="../appendices/g-parity-certificate.html">Appendix G</a>) and its package CI instead.</p>
+</section>
+<section id="gating-merges-and-the-gitflow" class="level2" data-number="17.6">
+<h2 data-number="17.6" class="anchored" data-anchor-id="gating-merges-and-the-gitflow"><span class="header-section-number">17.6</span> Gating merges and the gitflow</h2>
+<p>The check record above is the gate (see <code>docs/git_workflow.md</code> for the gitflow itself). The release pull request into <code>main</code> also triggers the opt-in workflows, which gives every release an independent run on a clean runner for a few minutes of Actions time.</p>
+<p>The opt-in workflows are not required by default: with the default triggers they do not run on pull requests into <code>develop</code>, and a required check that never runs blocks the merge forever. A repository that has the minutes switches each workflow’s <code>on:</code> block to every push and pull request, lets the workflows run green once, and then marks the Tier 0 and Tier 1 jobs as required on <code>develop</code> and <code>main</code>. Two operational details matter then. GitHub matches a required check by its job name, so the templates give each job a stable <code>name:</code>. And a required workflow must not carry a <code>paths:</code> filter: when a pull request touches no matching path the workflow never runs, and its required check waits forever. Path filters belong on advisory workflows only, which is why the manuscript template is advisory.</p>
 <hr>
 <p>The contract auditor made one rule enforceable; this chapter makes the rest of the repository’s floor enforceable in the same way. The <code>.gitignore</code> keeps data out, the committed sidecars keep their provenance in, and a handful of fast checks — none of which needs data, credentials or network, and all of which run on the author’s own machine — turn both, and the contract, into gates a pull request has to pass.</p>
 
