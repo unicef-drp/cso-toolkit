@@ -143,7 +143,7 @@ The real gap, though, is **coverage asymmetry across siblings** (see the coverag
 - **Stata `dw_save` writes `.dta` only.** It does not dispatch on extension — it always saves a Stata dataset, so there is no Parquet, RDS, or CSV write path on the Stata side. Pipelines that need those formats produce them in R or Python and let Stata consume the `.dta`.
 - **Stata `dw_use` reads `.dta`, `.csv`, and `.xlsx` only.** Parquet, RDS, and RData reads are out of scope on the Stata side; route them through R or Python.
 - **`dw_merge`, `dw_verify_z`, `dw_stage`, and the standalone `dw_isid` are R + Python only.** Calling a name that exists in R but not in Stata fails as an *unknown command*, not as a toolkit envelope — so a "command not found" from Stata is itself a coverage signal, not a bug.
-- **`dw_fetch_inputs`, `dw_check_deposit`, `dw_read_provenance`, and `dw_provenance_diff` are R only** (Python and Stata siblings: #152). Their envelopes are raised by R alone; from Python or Stata the names are simply undefined.
+- **`dw_fetch_inputs`, `dw_check_deposit`, `dw_read_provenance`, and `dw_provenance_diff` are R and Python** (#152). Python raises the same envelopes: `FileNotFoundError` (no deposit reachable, no input anywhere, no current sidecar), `ValueError` (a path outside `local_root`, a failed check, Teams and Z: disagreeing, an invalid sidecar), `OSError` (a copy that cannot be verified), and a `UserWarning` for `output_changed`. Stata routes via R or Python, so the names are undefined there.
 - **`.RData` / `.rda` writes skip the provenance sidecar** — not an error, but expect it: the write succeeds silently, with no `.provenance.json` companion.
 
 The fix is to choose an extension the target sibling supports, or move the step to the language whose sibling implements the format. The contract is identical *where the format is implemented*; the gaps are in coverage, not in semantics. When in doubt, the coverage matrix appendix is the authoritative source for what each sibling can read and write.
@@ -310,22 +310,24 @@ In producer mode the second line reads `Pipelines run on the older helpers until
 
 ```r
 cso_toolkit_check()       # warns if behind the target; logs if behind upstream
-cso_toolkit_diff()        # what changed between pinned and latest
-cso_toolkit_pull()        # refresh the vendored copy (producer / online only)
+cso_toolkit_sync()        # release notes, per-file diff, then pull (producer only)
+cso_toolkit_diff()        # or step by step: what changed between pinned and latest
+cso_toolkit_pull("v0.10.0") # refresh the vendored copy to a tag
 ```
 
 #### Python {.unnumbered .unlisted}
 
 ```python
 cso_toolkit_check()
+cso_toolkit_sync()
 cso_toolkit_diff()
-cso_toolkit_pull()
+cso_toolkit_pull("v0.10.0")
 ```
 
 #### Stata {.unnumbered .unlisted}
 
 ```stata
-* The vintage-sync family (cso_toolkit_check / _diff / _pull) is R + Python
+* The vintage-sync family (cso_toolkit_check / _diff / _pull / _sync) is R + Python
 * only; the Stata sibling has no manifest-sync helper (coverage matrix appendix).
 ```
 :::
@@ -333,23 +335,27 @@ cso_toolkit_pull()
 Two limits to note:
 
 - **Drift detection is tag-level, not file-level.** `cso_toolkit_check()` compares the pinned manifest version against the upstream latest tag; per-file hash drift (catching a hand-edited vendored copy that *claims* a clean version) is planned, not shipped. A consumer that locally edited `dw_io.R` but kept the manifest pin is **not** flagged.
-- **The upstream poll needs the network.** `cso_toolkit_check()` calls the GitHub API only in producer mode; in reviewer mode it skips the poll with a notice. The target-version comparison needs no network, so set `target_version:` in the manifest to have reviewer sessions warn when they run below it. `cso_toolkit_pull()` goes further and *stops* in reviewer mode:
+- **The upstream poll needs the network.** `cso_toolkit_check()` calls the GitHub API only in producer mode; in reviewer mode it skips the poll with a notice. The target-version comparison needs no network, so set `target_version:` in the manifest to have reviewer sessions warn when they run below it. `cso_toolkit_pull()` and `cso_toolkit_sync()` go further and *stop* in reviewer mode (a diff against a local clone, `cso_toolkit_diff(toolkit_source = ...)`, still works offline):
 
 ```text
 [cso_toolkit.cso_toolkit_pull] Forbidden in reviewer mode.
-  Reason: pulling a new toolkit version requires hitting GitHub, which the
-  reviewer-mode contract forbids.
-  Fix: switch the profile to producer mode (set dw_mode: producer in
-  user_config.yml) before re-running.
+ Why: an update changes the vendored helpers and re-pins the manifest, a
+ producer's decision (and reading a release from GitHub is a network call,
+ which reviewer mode forbids).
+ Fix: switch the profile to producer mode (set dw_mode: producer in
+ user_config.yml) before re-running; to inspect only, use
+ cso_toolkit_diff(toolkit_source = "<a local clone>").
 ```
 
-When behind, run `cso_toolkit_diff()` to read the changes, then `cso_toolkit_pull()` to refresh the vendored copy and re-pin the manifest. Because vendoring exists precisely to guarantee vintage permanence, treat a pull as a deliberate version bump in the consumer repo — review the diff, do not auto-pull on every session.
+The pull also stops, with the same envelope, when the vendored folder has uncommitted changes (commit or stash first), for a downgrade without `allow_downgrade = TRUE`, for a tag that does not exist (for a local clone the fix is `git -C <clone> fetch --tags`), and with `confirm = TRUE` in a non-interactive session (the fix is `confirm = FALSE`).
+
+When behind, run `cso_toolkit_sync()`: it prints the release notes since the pin, the per-file diff, and then refreshes the vendored copy and re-pins the manifest (or run `cso_toolkit_diff()` and `cso_toolkit_pull()` yourself). Because vendoring exists precisely to guarantee vintage permanence, treat a pull as a deliberate version bump in the consumer repo — review the diff, do not auto-pull on every session.
 
 ## Reading any envelope: a debugging recipe
 
 When you hit a `[cso_toolkit.*]` stop and are not sure which category it is:
 
-1. **Read the `<func>` token** — it tells you the contract layer: `dw_save` / `dw_use` (IO), `dw_api` / `dw_require_no_api` (external API), `dw_isid` / `dw_stage` / `dw_verify_z` (integrity), `cso_toolkit_pull` (drift).
+1. **Read the `<func>` token** — it tells you the contract layer: `dw_save` / `dw_use` (IO), `dw_api` / `dw_require_no_api` (external API), `dw_isid` / `dw_stage` / `dw_verify_z` (integrity), `cso_toolkit_pull` / `cso_toolkit_sync` (drift).
 2. **Read the second word of the `WHAT` line.** `Reviewer mode forbids` → category 1. `COPY INTEGRITY` / `SANDBOX DRIFT` / `CANONICAL INTEGRITY` → category 4. `duplicate row(s)` → category 4 (`isid`). `HTTP ... returned status` → category 3. `newer tag available` → category 5.
 3. **Check your `dw_mode` first.** A large share of these stops dissolve once you confirm whether the session is a producer or a reviewer and whether that role is *correct* for the step you are running.
 4. **Grep the consumer project for the prefix** (for example `[cso_toolkit.dw_save]`) to find every other site that can hit the same class — useful when one fix should be applied repo-wide. Remember the R transport errors (category 3) and the Stata `isid` message are the two cases that do *not* carry the prefix.

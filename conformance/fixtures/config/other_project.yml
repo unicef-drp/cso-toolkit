@@ -1,0 +1,4 @@
+tester:
+  dw_mode: "reviewer"
+  dw_mode_by_project:
+    other-repo: "producer"

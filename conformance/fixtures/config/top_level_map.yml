@@ -1,0 +1,4 @@
+dw_mode_by_project:
+  proj-x: "producer"
+tester:
+  dw_mode: "reviewer"

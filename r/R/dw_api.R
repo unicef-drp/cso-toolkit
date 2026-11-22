@@ -8,7 +8,7 @@
 #              (via dw_save -> Z: mirror + provenance sidecar), return
 #            - Reviewer session: read from deposit cache; if missing, stop
 #              with the standard provenance-contract message
-#              (via dw_require_no_api())
+#              (via .dw_require_no_api())
 #            - Records every fetch in the cache's .provenance.json sidecar
 #              (endpoint, params, fetched_at, user, mode, sha256)
 #
@@ -114,6 +114,26 @@
 	file.path(root, "_apis", api, paste0(cache_key, ".", ext))
 }
 
+#' Stop with the reviewer-mode lockout envelope
+#'
+#' Internal. R analogue of Python's `_dw_require_no_api()`. It used to call
+#' `dw_require_no_api(api_name =, reason =)`, which only a profile defines,
+#' and as `function(context = NULL)`: without a profile the stop said
+#' "could not find function", with one "unused arguments" (#190).
+#'
+#' @keywords internal
+#' @noRd
+.dw_require_no_api <- function(api_name, reason) {
+	stop(paste0(
+		"[cso_toolkit.dw_api] Reviewer mode forbids live API calls.\n",
+		"  Call:   ", api_name, "\n",
+		"  Reason: ", reason, "\n",
+		"  Fix:\n",
+		"    1. The expected workflow is that a Database Manager has already populated the cache under teamsRawDataCanonical/_apis/. Verify the cache file exists at the path above.\n",
+		"    2. If you ARE the producer, switch modes: set dw_mode: producer in user_config.yml and re-source the profile."),
+		call. = FALSE)
+}
+
 # ============================================================================
 # dw_api_fetch — main entry point
 # ============================================================================
@@ -128,7 +148,7 @@
 #'         mapped and emits a `.provenance.json` sidecar), and returns the
 #'         result.
 #'   \item **Reviewer** — reads the cache from the canonical deposit; if
-#'         missing, stops via `dw_require_no_api()`.
+#'         missing, stops via `.dw_require_no_api()` (the reviewer-mode envelope).
 #' }
 #'
 #' Cache layout: `teamsRawData/_apis/<api>/<cache_key>.<ext>` with a
@@ -211,11 +231,11 @@ dw_api_fetch <- function(api,
 
 	# No cache hit (or refresh). Producer mode required to fetch.
 	if (!isTRUE(.try_get("dw_apis_allowed"))) {
-		dw_require_no_api(
+		.dw_require_no_api(
 			api_name = sprintf("dw_api_fetch('%s', cache_key='%s')", api, cache_key),
 			reason = sprintf("cache missing at %s", canonical_cache_path)
 		)
-		return(invisible(NULL))  # defensive; dw_require_no_api already stop()'d
+		return(invisible(NULL))  # defensive; .dw_require_no_api already stop()'d
 	}
 
 	# Producer mode: dispatch on api

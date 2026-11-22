@@ -1,4 +1,7 @@
-*! version 1.0 24MAY2026 cso-toolkit cso-toolkit@unicef.org
+*! version 1.2 22NOV2026 cso-toolkit cso-toolkit@unicef.org
+*! v1.2: stops when current() and reference() are the same file (#111).
+*! v1.1: `} else {` on one line stopped every call ("code follows on the
+*!       same line as close brace"); found by the parity certificate (#190).
 *! Author: João Pedro Azevedo (port); original by Kristoffer Bjärkefur
 
 * dw_compare — Stata sibling of the R dw_compare() helper.
@@ -40,6 +43,15 @@ program define   dw_compare, rclass
         }
         local `side'_path "`f'"
     }
+    * One file on both sides can only report "no change" (#111). Stata reads
+    * the paths as given (no reviewer remap), so a literal match is the case.
+    local nc = lower(subinstr("`current_path'", "\", "/", .))
+    local nr = lower(subinstr("`reference_path'", "\", "/", .))
+    if "`nc'" == "`nr'" {
+        noi di as error "{phang}[cso_toolkit.dw_compare] current() and reference() are the same file, so the comparison would report no change whatever the data: `current_path'.{p_end}"
+        noi di as error "{phang}  Fix: point current() at the new output and reference() at the deposited one.{p_end}"
+        error 198
+    }
     if "`label'" == "" local label "dw_compare"
 
     *----------------------------------------------------------
@@ -62,7 +74,8 @@ program define   dw_compare, rclass
     if "`valuevars'" == "" {
         unab _all_ : _all
         local valuevars : list _all_ - idvars
-    } else {
+    }
+    else {
         unab valuevars : `valuevars'
     }
     if "`valuevars'" == "" {

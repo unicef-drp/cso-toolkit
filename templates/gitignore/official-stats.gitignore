@@ -31,24 +31,35 @@
 # Pre-release figures must not reach git, not even as a small CSV, and not
 # their .provenance.json sidecars either (hashes and row counts of a small
 # table can confirm a guessed figure). Outputs go to the deposit through
-# dw_save(). `x/**` rather than `x/` so that blocks 2, 3 and 10 can still
-# re-include input sidecars, frozen-download sidecars and release records
-# that sit under a folder with one of these names.
+# dw_save(). 013_wrkdata is the work-data stage of the deposit layout
+# (01_dw_prep/013_wrkdata/<sector>/), where sector scripts write locally.
+# `x/**` rather than `x/` so that blocks 2, 3 and 10 can still re-include
+# input sidecars, frozen-download sidecars and release records that sit
+# under a folder with one of these names.
 **/output/**
 **/outputs/**
 **/results/**
 **/wrk/**
+**/013_wrkdata/**
 
 
 # ---- 2. Input folders anywhere (e.g. 02_consultations/023_targets/inputs) --
 # Folders are re-included (`!**/inputs/**/`) because git cannot re-include a
 # file whose parent directory is excluded; then only these files come back.
+# 011_rawdata is the raw-data stage of the deposit layout
+# (01_dw_prep/011_rawdata/<sector>/): local copies of raw inputs, same rule.
 **/inputs/**
 !**/inputs/**/
 !**/inputs/**/README.md
 !**/inputs/**/.gitkeep
 !**/inputs/**/*.provenance.json
 !**/inputs/**/input_manifest.*
+**/011_rawdata/**
+!**/011_rawdata/**/
+!**/011_rawdata/**/README.md
+!**/011_rawdata/**/.gitkeep
+!**/011_rawdata/**/*.provenance.json
+!**/011_rawdata/**/input_manifest.*
 
 
 # ---- 3. API cache and frozen downloads, at any depth -----------------------
@@ -83,6 +94,9 @@
 *.duckdb
 *.sqlite
 *.db
+# Check records are always tracked (sh tools/check --record). A ! line
+# only overrides the rules above it: keep it after any rule ignoring *.json.
+!.checks/*.json
 
 
 # ---- 5. Secrets and personal configuration [shared] -----------------------

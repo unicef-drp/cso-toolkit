@@ -4,13 +4,16 @@ r/tests/testthat/test-cso-toolkit-check-target.R.
 
 from __future__ import annotations
 
+import importlib
 import logging
 
 import pytest
 
 import cso_toolkit as m
 from cso_toolkit import _state
-from cso_toolkit import cso_toolkit_sync as sync
+# The package exports the function cso_toolkit_sync(), which shadows the
+# submodule of the same name as an attribute: take the module itself.
+sync = importlib.import_module("cso_toolkit.cso_toolkit_sync")
 
 
 @pytest.fixture

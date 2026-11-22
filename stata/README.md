@@ -15,7 +15,9 @@ siblings, scoped to the subset of helpers that fit Stata's idioms.
 ## Installation
 
 Vendoring is the **production model** (drop the `.ado` and `.sthlp`
-files into the consumer's `ado/` or extend the `adopath`). Stata has
+files, and `dw_stata_helpers.py`, into the consumer's `ado/` or extend
+the `adopath`). `dw_save`'s `sha256`, UTC `written_at` and multi-producer
+guards use Stata's Python integration (Stata 16+). Stata has
 no native package install path that matters here.
 
 ### Option A — extend the adopath (development)

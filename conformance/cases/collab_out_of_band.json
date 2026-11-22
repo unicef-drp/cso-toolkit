@@ -1,0 +1,22 @@
+{
+  "id": "collab_out_of_band",
+  "title": "Multi-producer: dw_save stops on an out-of-band change; takeover overrides",
+  "surface": [
+    "dw_save (multi-producer guards)"
+  ],
+  "kind": "json",
+  "fixtures": [],
+  "expect": {
+    "blocked": true,
+    "envelope": true,
+    "takeover_written": true
+  },
+  "languages": [
+    "r",
+    "python",
+    "stata"
+  ],
+  "notes": "Stata's guards run through its Python integration (Stata 16+).",
+  "gaps": {},
+  "divergences": {}
+}

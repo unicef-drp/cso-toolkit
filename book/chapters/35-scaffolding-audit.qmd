@@ -69,15 +69,15 @@ The generated profile opens with a **header** — title, filename, author, times
 2. **Flags and controls** — e.g. `create_missing_folders <- FALSE`.
 3. **Repository name** — records the repo as a literal, e.g. `repo_name <- "DW-Production"`.
 4. **Z: drive advisory** (only when `include_z_drive_check = TRUE`) — a *non-blocking* check; the absence of the legacy mirror prints a warning rather than stopping execution.
-5. **Config load** — reads `~/.config/user_config.yml` via `yaml::read_yaml()` / `yaml.safe_load()`, hard-failing if the file is missing.
-6. **Producer/reviewer mode** (only when `include_dw_mode = TRUE`) — reads `dw_mode` from the config, refuses any value other than `"producer"` or `"reviewer"`, and defines the `dw_require_no_api()` guard that reviewer-mode analysis code calls to forbid network access.
-7. **Packages / imports** — a placeholder block listing the pipeline's dependencies.
+5. **Config load** — reads `~/.config/user_config.yml` via `yaml::read_yaml()` / `yaml.safe_load()`, hard-failing if the file is missing. Settings are read from the block named after the user (DW-Production's template), then from top-level keys.
+6. **Producer/reviewer mode** (only when `include_dw_mode = TRUE`) — resolves `dw_mode` as `dw_mode_by_project[[repo_name]]`, then `dw_mode`, refuses any value other than `"producer"` or `"reviewer"` with an error that shows the YAML to add (the user name filled in), sets `dw_apis_allowed`, and defines the `dw_require_no_api()` guard that reviewer-mode analysis code calls to forbid network access.
+7. **Packages / imports** — a placeholder block listing the pipeline's dependencies. The R profile never installs a package: a missing one stops the session with the list and the `install.packages()` call to run once.
 8. **Profile sentinel** — sets `profile_<repo> <- TRUE` (R) or `profile_<repo> = True` (Python) and prints a confirmation.
 
-Block 6 hides a meaningful cross-language difference. The Python profile wires the resolved mode into the toolkit's shared state, so `dw_save` / `dw_use` / `dw_api_fetch` route by mode automatically — it imports `cso_toolkit._state` and calls `_cso_state.configure(dw_mode=..., dw_apis_allowed=(dw_mode == "producer"))`. The R profile does no such wiring; its generated `dw_require_no_api()` simply inspects `dw_mode` and `stop()`s in reviewer mode. There is a second asymmetry in block 8: the Python profile also defines a `log_message()` helper there, so that sector scripts have a logger to import. These differences reflect each language's idioms; the contract they implement is identical.
+Block 6 hides a meaningful cross-language difference. The Python profile wires the resolved mode into the toolkit's shared state, so `dw_save` / `dw_use` / `dw_api_fetch` route by mode automatically — it imports `cso_toolkit._state` and calls `_cso_state.configure(dw_mode=..., dw_apis_allowed=(dw_mode == "producer"))`. The R profile needs no such call: sourced into the global environment, its `dw_mode` and `dw_apis_allowed` are the globals the R helpers read, and its generated `dw_require_no_api()` simply inspects `dw_mode` and `stop()`s in reviewer mode. There is a second asymmetry in block 8: the Python profile also defines a `log_message()` helper there, so that sector scripts have a logger to import. These differences reflect each language's idioms; the contract they implement is identical.
 
 ::: {.callout-note}
-The YAML config load in block 5 is the one place a profile *must* read a file directly — it bootstraps the very configuration the toolkit needs before any toolkit helper is available. The auditor knows this: the generated Python profile annotates the line `yaml.safe_load(_f)  # cso-allow: io-yaml`, exempting it from the auditor's IO rule. See "The escape hatch" below.
+The YAML config load in block 5 is the one place a profile *must* read a file directly — it bootstraps the very configuration the toolkit needs before any toolkit helper is available. The auditor knows this: the generated profiles annotate the line (`yaml::read_yaml(config_path)  # cso-allow: io-yaml`, `yaml.safe_load(_f)  # cso-allow: io-yaml`), exempting it from the auditor's IO rule. See "The escape hatch" below.
 :::
 
 ## Generating a sector driver: `create_sector_script`
@@ -170,7 +170,7 @@ review_profile("profile_my-project.py", require_dw_mode=False)
 ```
 :::
 
-The eight checks, and the level each fails at:
+The ten checks, and the level each fails at:
 
 | # | Check | Fails at | What it looks for |
 |---|---|---|---|
@@ -178,12 +178,14 @@ The eight checks, and the level each fails at:
 | 2 | Cross-platform user identification | `fail` | `Sys.getenv("USERNAME"/"USER")` / `os.environ.get(...)`. |
 | 3 | Reproducibility seed | `warn` | `set.seed(` (R); `random.seed(` / `np.random.seed(` (Python). |
 | 4 | `user_config.yml` load | `fail` | A reference to `user_config.yml` *and* a `yaml::read_yaml` / `yaml.safe_load` call. |
-| 5 | `dw_mode` resolution | `fail`* | The strings `dw_mode`, `producer`, and `reviewer` all present. |
-| 6 | `dw_require_no_api` guard | `fail`* | `dw_require_no_api` defined or invoked. |
-| 7 | Z: drive advisory | `warn`† | `dw_z_available` or `network_root <- "Z:` / `network_root = "Z:`. |
-| 8 | Packages / imports block | `warn` | `requireNamespace` / `install.packages` / `library(` (R); an `import` / `from` statement (Python). |
+| 5 | User block in `user_config.yml` | `warn` | `user_config[[USERNAME]]` / `user_config$USERNAME` / `user_block` (R); `user_config[USERNAME]` / `user_config.get(USERNAME` / `user_block` (Python). A profile that reads only top-level keys finds no `dw_mode` in a file that nests settings under the user name. |
+| 6 | `dw_mode` resolution | `fail`* | The strings `dw_mode`, `producer`, and `reviewer` all present. |
+| 7 | `dw_require_no_api` guard | `fail`* | `dw_require_no_api` defined or invoked. |
+| 8 | Z: drive advisory | `warn`† | `dw_z_available` or `network_root <- "Z:` / `network_root = "Z:`. |
+| 9 | Collaboration model block | `warn` | `dw_collaboration(` — a warning only when `cso_project.yml` declares `multi-producer`. |
+| 10 | Packages / imports block | `warn` | `requireNamespace` / `install.packages` / `library(` (R); an `import` / `from` statement (Python). |
 
-\* Checks 5 and 6 drop from `fail` to `warn` when `require_dw_mode = FALSE` — appropriate for a profile that never touches the IO or API wrappers. † Check 7 is a `warn` by default and rises to `fail` only when `require_z_drive_check = TRUE`.
+\* Checks 6 and 7 drop from `fail` to `warn` when `require_dw_mode = FALSE` — appropriate for a profile that never touches the IO or API wrappers. † Check 8 is a `warn` by default and rises to `fail` only when `require_z_drive_check = TRUE`.
 
 Both functions return a data frame (`check`, `status`, `detail`) — invisibly in R, directly in Python — and print a formatted summary with `[OK]` / `[!]` / `[X]` markers and a tally. Use the returned frame in CI to gate on `status == "fail"`.
 

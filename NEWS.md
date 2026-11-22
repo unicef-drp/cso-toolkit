@@ -23,6 +23,188 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
   (`.claude/settings.local.json`, `CLAUDE.local.md`) in their shared secrets
   block.
 
+- **Parity certificate: one local command that checks R, Python and Stata
+  agree (#190).**
+  - `sh tools/certify` runs the cases in `conformance/cases/` through a
+    driver per language and compares the outputs:
+    - values within a tolerance, against the fixture for round trips and
+      against R otherwise;
+    - for the other cases, a small record of what happened, against the
+      answer the case expects.
+  - The register in each case lists the languages that do not implement
+    it (`gaps`) or are known to disagree (`divergences`), with the issue.
+    A gap that closes or a divergence that resolves fails the run until
+    the register is updated.
+  - `--record` writes and commits `.parity/<content-hash>.json` when all
+    three languages pass; the hash covers the implementations and the
+    harness, not the docs. `--verify` checks for one without running any
+    language. A new `Parity certificate` workflow runs it on pull
+    requests into `main` and on demand.
+  - Ten cases to start:
+    - round trips through CSV and `.dta`, and edge values;
+    - the `isid` refusal and the reviewer-mode API refusal;
+    - the provenance sidecar and `dw_compare` counts;
+    - `aggregate_data_v2`, version comparison and the multi-producer
+      guard (R and Python).
+  - Stata runs locally in batch, so #133's CI licence is not needed.
+  - New handbook appendix *Cross-language parity*; chapter 44 adds the
+    certificate to the release checklist.
+
+- **Stata `dw_load_config` reads the user's block of `user_config.yml`
+  (#180).** It reads the block named after the user first (`user()`, else
+  `USERNAME`, `USER`, `c(username)`) and top-level keys as the fallback,
+  as the R and Python profiles do. `dw_mode` resolves as
+  `dw_mode_by_project` for the project (`project()`, else the repository
+  folder's name), then `dw_mode`, with no default. A missing or invalid
+  mode stops with error 459 and the YAML to add. Other blocks, such as
+  `datalib:`, are still skipped. New parity case `config_user_block`: six
+  configurations, the same mode in R, Python and Stata. New local test
+  `stata/tests/test_config_user_block.do`.
+
+- **Stata: the collaboration model and the multi-producer guards (#168).**
+  New `dw_collaboration.ado` finds and validates `cso_project.yml` (walking
+  up to the repository root) and caches `$dw_collaboration_model`,
+  `$dw_project_file` and `$dw_session_start`. In a multi-producer project,
+  outside reviewer mode, `dw_save` stops on an out-of-band change or a
+  concurrent write unless the new `takeover` option, does not count a
+  committed, unmodified write as concurrent (#178), prints a note on a
+  follow-on write, and records the lineage fields (`collaboration`,
+  `previous_*`, `git_branch`, `git_commit`, `takeover`), as R and Python
+  do. The hashing, timestamps, sidecar reading and git checks run through
+  Stata's Python integration (Stata 16+), in `dw_stata_helpers.py` shipped
+  next to the `.ado` files (vendor it with them). Without Python a
+  multi-producer write stops unless `takeover`. With Python every Stata
+  sidecar now records `sha256` and an ISO-8601 UTC `written_at` (#191),
+  and `user` follows R's order (`USERNAME`, `LOGNAME`, `USER`, `LNAME`).
+  `dw_set_collaboration` stays R and Python. Tests:
+  `stata/tests/test_collab_guards.do`, `stata/tests/test_dw_stata_helpers.py`;
+  the parity cases `collab_out_of_band` and `provenance_sidecar` now pass
+  in Stata.
+
+- **Python: `dw_fetch_inputs()`, `dw_check_deposit()`,
+  `dw_read_provenance()` and `dw_provenance_diff()` (#152).** Ports of the R
+  helpers, with the same arguments, statuses and envelopes; they return
+  DataFrames (the manifest, the report) and dicts (the sidecar, the diff).
+  `dw_save()` now writes a DataFrame in `metadata` as an array of records,
+  as R does, so the manifest can be recorded as `metadata={"inputs": ...}`;
+  `dw_read_provenance()` reads arrays of records back as DataFrames. Tests
+  mirror R's D1-D14 and P1-P9. Stata routes via R or Python, recorded in the
+  coverage matrix. New parity cases `deposit_fetch_inputs` and
+  `provenance_diff_status` (R and Python agree; Stata a listed gap).
+
+- **`dw_compare(diagnose = TRUE)` and `dw_diff_profile()` (R + Python;
+  #111).** A profile of where a mismatch comes from:
+  - which value columns differ;
+  - the absolute and relative quantiles of each numeric column's drift;
+  - the top key values of the changed, added and removed rows.
+
+  It is printed, attached as `$profile`, and written as
+  `<label>_profile.txt` with `write_report_to`. Lifted from DW-Production's
+  `.dw_diff_profile()`, which can now be dropped. Parity case
+  `compare_diagnose`; Stata keeps `r(col_changed)`.
+
+- **Check records: local checks verified on GitHub at almost no Actions
+  cost (#174).** The templates gain:
+  - `sh tools/check --record` (new wrapper `templates/tools/check`, which
+    also starts R without Git Bash's `HOME` on Windows): on a clean tree, a
+    run in which nothing fails commits `.checks/<content-hash>.json`, the
+    hash being git's tree ID without `.checks/`;
+  - a pre-push hook that verifies the record by default (`MODE=verify`, no
+    R) or runs the checks (`MODE=run`);
+  - `check-record.yml`, the one workflow on by default: pull requests into
+    `develop` and `main`, about 10 seconds, no R, with `EXEMPT_PATHS` for
+    bot pull requests that only touch generated files;
+  - `.checks/README.md`, a `.gitignore` re-include for `.checks/*.json`
+    and `tools/check` pinned to LF in `.gitattributes`.
+
+  `create_research_project()` and `create_official_stats_project()` write
+  them all and print the branch-protection steps. The project READMEs and
+  CONTRIBUTING files now say `sh tools/check --record`. Handbook chapter 45
+  gains a "Check records" section with the branch-protection settings and
+  the Windows note. cso-toolkit itself keeps its parity certificate.
+
+### Fixed
+
+- **`dw_compare()` no longer compares a file with itself (R, Python,
+  Stata; #111).** In reviewer mode `dw_use()` reads a sandbox path
+  network-first from the canonical deposit, so
+  `dw_compare(sandbox_path, canonical_path)` read the deposit twice and
+  reported a false "0 changed". When both arguments resolve to the same
+  file it now stops with a `[cso_toolkit.dw_compare]` envelope that says to
+  pass the new data in memory; Stata checks the literal paths. Parity case
+  `compare_same_file`.
+- **R `dw_use()` read a doubled quote in a quoted CSV field as two quotes
+  (#192).** `data.table::fread()` keeps `""` as two characters (data.table
+  #1109, #4779, open upstream since 2015), so `"say ""hi"""` read as
+  `say ""hi""`, and every `dw_save()` / `dw_use()` round trip doubled the
+  quotes again. Python and Stata read `say "hi"`. `dw_use()` now turns each
+  `""` in a character column back into `"` (CSV, TSV, TXT; skipped with
+  `quote = ""`). Found by the parity certificate; its R divergence on
+  `io_edge_values` is gone.
+- **Stata `dw_compare` stopped on every call** with "code follows on the
+  same line as close brace": a `} else {` on one line, there since the
+  command was added in May 2026. Found by the parity certificate.
+- **Stata `dw_save` stopped on every call that wrote a sidecar (the
+  default), after writing the `.dta`.**
+  - The JSON escaping expanded to `subinstr(..., """, ...)`, which is
+    invalid syntax.
+  - The sidecar's `file write` lines used a `_q` directive that does not
+    exist, so `"path"` held other text.
+  - Quoted `title()`, `producer()`, `sources()` and `metadata()` values
+    were written with their quotes or lost.
+
+  Sidecars are now valid JSON. The `isid` and missing-folder errors carry
+  the `[cso_toolkit.dw_save]` envelope. Found by the parity certificate.
+- **R `dw_api_fetch()` in reviewer mode, on a cache miss, stopped without
+  the envelope.** It called `dw_require_no_api(api_name =, reason =)`,
+  which only a generated profile defines, as `function(context = NULL)`:
+  "could not find function" without a profile, "unused arguments" with
+  one. It refused the network call either way. An internal
+  `.dw_require_no_api()` now raises the `[cso_toolkit.dw_api]` envelope,
+  as Python does.
+- **`cso_toolkit_diff()`, `cso_toolkit_pull()` and `cso_toolkit_sync()`
+  can update a vendored `README.md` (R + Python).** Listed under
+  `vendored:`, it follows the other files: `r/R/README.md` when they are
+  all `*.R`, `python/src/README.md` when they are all `*.py`; a list with
+  both stops with an envelope. It used to stop the call ("Cannot tell
+  where the vendored file README.md lives"), so the first sync of
+  DW-Production left its README at v0.9.1. A README the manifest does not
+  list is left alone, as before: scaffolded repositories keep their own.
+
+## v0.10.0 (2026-11-21)
+
+The first release a consumer repository can update *to* in one call,
+and the first that can start one. `cso_toolkit_sync()`, with working
+`cso_toolkit_diff()` and `cso_toolkit_pull()`, updates a vendored copy
+from a release tag; `create_research_project()` and
+`create_official_stats_project()` write a new repository's floor; a
+project can declare itself multi-producer in `cso_project.yml`, and
+`dw_save()` then guards against out-of-band and concurrent writes;
+templates and guidance cover repository hygiene and local-first CI; and
+`cso_toolkit_check()` warns when the vendored copy is behind a target
+version. MINOR: new functions, arguments and optional files. The
+behaviour a consumer may notice is listed under Changed. The v0.10.0
+section prepared on 2026-11-19 was never tagged; it is folded in here.
+PRs #163, #165, #167, #169, #172, #181 and #182.
+
+### Changed
+
+- **Python: `cso_toolkit.cso_toolkit_sync` is now the function**, not the
+  module (see Fixed, `cso_toolkit_diff()` and `cso_toolkit_pull()`).
+  Import the module with
+  `importlib.import_module("cso_toolkit.cso_toolkit_sync")`.
+- **Generated profiles read the user's block of `user_config.yml`, and
+  the R profile no longer calls `install.packages()`**: a missing package
+  stops the session with the list to install (see Fixed,
+  `create_profile()`). Profiles generated earlier keep the old behaviour
+  until regenerated.
+- **`official-stats.gitignore` ignores `**/013_wrkdata/**` outright and
+  keeps only the provenance of `**/011_rawdata/**`** (see Added, the
+  repository scaffolders). Files a repository already tracks there stay
+  tracked; new ones are ignored.
+
+### Added
+
 - **Repository hygiene and CI guidance for consumer repos (docs and
   templates only; no helper code changes).**
   `docs/gitignore_guidelines.md` sets the rule (data never enter git; their
@@ -99,22 +281,78 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
     "Collaboration model"), Appendices A–D, `docs/mode_contract_integration.md`,
     `docs/dw_io_reference.md`, README.
 
-### Fixed
+- **Start a new repository: `create_research_project()` and
+  `create_official_stats_project()` (R + Python, same files byte for
+  byte).** One call writes the toolkit's floor for a new repository from
+  the shipped templates: the matching `.gitignore` (template bytes), a
+  `.gitattributes` that keeps the hook, the vendored helpers and the
+  provenance sidecars LF in every clone,
+  `tools/check.R` and `.githooks/pre-push`, `tests/testthat.R` with the
+  helper and a starter `test-project.R` (cso_project.yml parses; every
+  input manifest row has a sidecar with the same sha256; reviewer mode),
+  `cso_project.yml` (`collaboration` is required, with no default, as
+  `dw_mode` has none; optional `members`), `profile_<project>.R` (from
+  `templates/profile/`: reads the user's block of `user_config.yml`,
+  resolves `dw_mode` as `dw_mode_by_project[[<project>]]` then `dw_mode`
+  with no default, sources the vendored helpers with `zzz.R` first, never
+  installs packages, sets the sentinel; the official-statistics profile
+  also derives the deposit paths from `dw_mode` and checks the Z: mirror;
+  `review_profile()` passes both), README and CONTRIBUTING
+  skeletons with the first-clone steps, and the provenance policy
+  (`data/README.md` + `data/input_manifest.csv` for research,
+  `inputs/README.md` + `inputs/input_manifest.csv` for official
+  statistics). Research layout: `R/`, `data/provenance/`, `output/`,
+  `paper/`, `references/`, `docs/`. Official-statistics layout, aligned
+  with DW-Production and the deposit's stage numbering:
+  `00_documentation/`, `00_functions/`, `01_dw_prep/` (`010_metadata/`
+  committed, `011_rawdata/` ignored but for READMEs, sidecars and
+  manifests, `012_codes/`, `013_wrkdata/` ignored outright), `inputs/`,
+  `releases/`, `_config_template/user_config.yml`, with `OUTPUT_DIRS`
+  (embargo, `013_wrkdata` included), `DATA_DIRS` (`011_rawdata` added)
+  and `AUDIT_PATHS` set in `tools/check.R`. `official-stats.gitignore`
+  now ignores `**/013_wrkdata/**` with the other output folders and keeps
+  only the provenance of `**/011_rawdata/**`, the folders where
+  `create_sector_script()` drivers read and write. `tools/check.R` gains
+  `AUDIT_MODE`: `"blocking"` (the template default, kept for official
+  statistics) fails the run on a contract-audit violation, `"advisory"`
+  (set for research projects, whose first scripts read data directly)
+  reports the violations as `[WARN]` without failing. Options: `vendor = TRUE` copies
+  the helpers into `00_functions/` from a release tag of a git clone of
+  cso-toolkit (`toolkit_source`, or `CSO_TOOLKIT_ROOT`; the tag is
+  `toolkit_version`, by default the clone's latest `vX.Y.Z` tag), reading
+  them from the tag's commit with `git cat-file`, never from the working
+  tree, and writes `.toolkit_manifest.yml` with the tag as
+  `pulled_version` and its commit as `pulled_commit`; a missing tag stops
+  the call before anything is written (without vendoring, `tools/check.R`
+  leaves out `contract-audit` and `vintage` until the helpers are
+  vendored);
+  `workflows = TRUE` adds the opt-in GitHub Actions workflows (default
+  off); `git = TRUE` runs `git init` with `develop` as the first branch,
+  sets `core.hooksPath` and stages the hook as executable (no commit,
+  remote or push). Nothing is written if a target file exists with
+  different content unless `overwrite = TRUE`; identical files are left
+  alone. Returns the files with their status. The skeleton files live in
+  `templates/project/`; the R and Python packages ship copies
+  (`r/inst/templates/`, `python/src/templates/`), refreshed by
+  `python tools/sync_templates.py`, and both test suites fail while a
+  copy differs. Stata: none (run R or Python once). New handbook chapter
+  *Starting a new repository*.
 
-- **`dw_api_fetch(refresh = TRUE)` replaces an existing cache (R + Python)** —
-  the refresh reached `dw_save()` with the default overwrite setting and
-  stopped at the overwrite gate in producer mode, so the documented refresh
-  never replaced an existing cache. A refresh now passes `overwrite = TRUE`
-  (and `force = TRUE` in R) when the cache exists. Without `refresh` an
-  existing cache is still read and never replaced.
+- **`cso_toolkit_sync()`: update the vendored toolkit in one call (R +
+  Python).** Resolves the target (the latest release, or `target_version`);
+  says "up to date" and stops when `pulled_version` is already there;
+  otherwise prints the upstream `NEWS.md` sections, read from the target
+  tag, for every version after `pulled_version` up to the target, marking
+  with `!!` the entries under Breaking or Changed headings; then compares
+  and pulls as `cso_toolkit_pull()` does. It is the call the docs point
+  to. Stata: none.
 
-## v0.10.0 (2026-11-19)
-
-`cso_toolkit_check()` warns loudly when the vendored copy is behind a
-target version, offline and in both modes; versions now compare
-numerically. MINOR: a new optional argument and manifest key, no breaks.
-
-### Added
+- **Latest-tag lookup falls back to `git ls-remote` (R + Python).** After
+  the gh CLI and the GitHub API, the lookup used by `cso_toolkit_check()`
+  and the sync helpers runs `git ls-remote --tags --refs
+  https://github.com/<source>.git` and takes the highest `vX.Y.Z` (no
+  pre-releases; compared numerically, so `v0.10.0` > `v0.9.1`). Git over
+  HTTPS works where UNICEF proxies block `api.github.com`.
 
 - **`cso_toolkit_check()` warns loudly when the vendored copy is behind a
   target version (R + Python)** — new `target_version` argument and optional
@@ -131,6 +369,79 @@ numerically. MINOR: a new optional argument and manifest key, no breaks.
   ([#106](https://github.com/unicef-drp/cso-toolkit/issues/106), item 4)
 
 ### Fixed
+
+- **`cso_toolkit_diff()` and `cso_toolkit_pull()` are implemented (R +
+  Python)** — both were stubs that printed "not yet implemented" /
+  "implementation TBD". They read a release tag, never a working tree:
+  from a local clone given as `toolkit_source` (or `CSO_TOOLKIT_ROOT`)
+  with `git cat-file`, without fetching or changing it, or else from a
+  shallow `--no-checkout` clone of the tag from GitHub into a temporary
+  folder. `*.R` files map to `r/R/`, `*.py` to `python/src/`.
+  `cso_toolkit_diff()` returns one row per vendored file with status
+  `unchanged` / `changed` / `local_edit` / `missing_upstream` /
+  `missing_local` and both sha256s (CRLF-only differences are not
+  changes; a file that differs from what `pulled_version` shipped is a
+  local edit); with a local clone it also runs in reviewer mode.
+  `cso_toolkit_pull()` gains `toolkit_source` and `allow_downgrade`;
+  refuses uncommitted changes in the vendored folder, a downgrade, and
+  `confirm = TRUE` in a non-interactive session; reports "already at" for
+  the same tag (warning when the tag moved from `pulled_commit`); skips
+  local edits, keeps files gone upstream (warning), writes the rest
+  atomically, asking per file; and re-pins the manifest by editing lines
+  in place (`pulled_version`, `pulled_commit`, the existing `pulled_date`
+  or `pulled_at`, `pulled_by`, hashes of an existing `files:` block), so
+  comments and other keys survive. The git and release-tag helpers moved
+  from `create_project.R` / `.py` into `cso_toolkit_sync.R` / `.py`, which
+  consumers vendor on their own. In Python, `cso_toolkit.cso_toolkit_sync`
+  is now the exported function; import the module with
+  `importlib.import_module("cso_toolkit.cso_toolkit_sync")`.
+
+- **Multi-producer guards: two false alarms and an empty user (R + Python;
+  #178).** `dw_save()` in a multi-producer project no longer stops on:
+  - a text output that differs from its sidecar only in line endings (a
+    CRLF checkout of an LF file, or the reverse, from `core.autocrlf` or
+    from R writing CRLF on Windows). It prints a note instead. A real
+    change is still an out-of-band change;
+  - a newer write by a co-author whose output and sidecar are committed
+    and unmodified in git. That write reached the session through a pull,
+    so the session builds on it. Untracked or modified outputs, such as
+    deposits and shared folders, keep the concurrent-write check.
+
+  R now records the user from `USERNAME`, then `LOGNAME`, `USER`, `LNAME`
+  and the system user, the same order as Python. On macOS and Linux, R
+  sidecars used to record `"user": ""`, so the concurrent-write check
+  never fired there. Scaffolded repositories' `.gitattributes` adds
+  `output/** -text`, so tracked outputs keep the bytes their sidecars
+  hash.
+
+- **`create_profile()` reads the user block of `user_config.yml` (R +
+  Python)** — the generated profile read `user_config$dw_mode` at the top
+  level, while DW-Production's `_config_template/user_config.yml` (the
+  file every CSO project shares) nests each person's settings under their
+  user name, so a profile generated for a new project stopped with "must
+  set dw_mode" for a correctly configured user. The profile now reads
+  `user_config[[USERNAME]]` first and top-level keys as a fallback,
+  resolves `dw_mode` as `dw_mode_by_project[[<repo>]]`, then `dw_mode`
+  (mirroring DW-Production's `dw_mode_by_sector` precedence; still no
+  default), sets `dw_apis_allowed`, and stops with an error that shows the
+  exact YAML to add, user name filled in. The R profile no longer calls
+  `install.packages()`: a missing package (yaml included) stops the session
+  with the list to install. `review_profile()` gains a check, "User block
+  in user_config.yml", that warns on a profile reading top-level keys only.
+  Tests run generated profiles in a child process against user-block,
+  per-project, flat and missing configurations. Handbook chapters 22 and
+  35 updated (chapter 22 had documented the flat layout).
+
+- **`dw_api_fetch(refresh = TRUE)` replaces an existing cache (R + Python)** —
+  the refresh reached `dw_save()` with the default overwrite setting and
+  stopped at the overwrite gate in producer mode, so the documented refresh
+  never replaced an existing cache. A refresh now passes `overwrite = TRUE`
+  (and `force = TRUE` in R) when the cache exists. Without `refresh` an
+  existing cache is still read and never replaced.
+
+- **`tools/check.R` template: header in a repository without commits** —
+  the header line printed git's "fatal: Needed a single revision" in place
+  of the commit; it now says `(none yet)`.
 
 - **`cso_toolkit_check()` compares versions numerically (R + Python)** — tags
   were compared as strings for inequality, so `0.10.0` vs `0.9.1` and a

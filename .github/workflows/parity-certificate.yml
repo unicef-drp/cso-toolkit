@@ -1,0 +1,25 @@
+name: Parity certificate
+
+# Verifies that the commit has a passing parity certificate
+# (.parity/<content-hash>.json, written by `sh tools/certify --record` on a
+# machine with R, Python and Stata). Runs nothing but Python's standard
+# library and git: a few seconds. Release PRs into main only, and on demand
+# (#190; local checks first, so no run on every push).
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Verify the parity certificate
+        run: python3 conformance/certify.py --verify

@@ -369,7 +369,7 @@ dw_use , filename("dw_nut.dta") path("$teamsWrkData/nt")
 
 Some pipelines keep their raw inputs out of Git — Consult-tool exports, licensed microdata, large deliveries — in a gitignored folder of the consumer repository. The copy that makes such a run reproducible is the one deposited in the canonical store, so the toolkit treats the deposit as the source of truth. The local folder mirrors a deposit folder: `<repo>/<rel_dir>` corresponds to `<teamsFolderCanonical>/<rel_dir>` on Teams and `<dwZDrive>/<rel_dir>` on Z:.
 
-`dw_fetch_inputs` (R only) runs at the top of such a pipeline:
+`dw_fetch_inputs` (R and Python) runs at the top of such a pipeline:
 
 - it lists the input files (matching `pattern`) locally and in the deposit folder on Teams and on Z:;
 - it stops when Teams and Z: hold different versions of the same file (the same canonical-integrity rule as `dw_stage`);
@@ -392,11 +392,22 @@ inputs <- lapply(manifest$path, readr::read_csv)
 ```
 #### Python {.unnumbered .unlisted}
 ```python
-# Not available — dw_fetch_inputs and dw_check_deposit are R-only (#152).
+import pandas as pd
+from cso_toolkit import dw_fetch_inputs
+
+rel = "02_consultations/023_targets/inputs"
+manifest = dw_fetch_inputs(
+    local_root=f"{project_folder}/{rel}",
+    rel_dir=rel,
+    pattern=r"_20(23|24|25)\.(csv|txt)$",
+)
+inputs = [pd.read_csv(p) for p in manifest["path"]]
 ```
 #### Stata {.unnumbered .unlisted}
 ```stata
-* Not available — dw_fetch_inputs and dw_check_deposit are R-only (#152).
+* Route via R or Python (#152): run dw_fetch_inputs there once, then read
+* the fetched inputs from the local folder.
+dw_use, filename(NUTRITION_2024.csv) path("$projectFolder/02_consultations/023_targets/inputs/2024")
 ```
 :::
 
@@ -449,9 +460,28 @@ dw_compare , current("dw_ed_edu.dta") reference("ref_dw_ed_edu.dta") ///
 
 `dw_compare` tolerates a degenerate first deposit gracefully: in R and Python a missing or unreadable reference is treated as empty (with a warning), so every current row reports as added rather than crashing the run. Note the divergences. R and Python name the arguments `value_cols` / `numeric_value_cols`; Stata uses `valuevars` and infers numeric-versus-string comparison from each variable's storage type. The numeric tolerance defaults differ too — `1e-5` in R and Python, `1e-8` in Stata — so set `tol` explicitly when it matters. The Stata `dw_compare` prints a console summary and, via `report()`, an optional Markdown file of row counts and per-column change counts; it is sized for a publication-gate diff, not the rich row-level Markdown of its upstream `comparefiles` ancestor.
 
+**When the counts are not enough** (R and Python, #111). `diagnose = TRUE` adds a `profile`, also available on its own as `dw_diff_profile(cmp, by, numeric_value_cols)`. It turns "36,334 changed" into a diagnosis:
+
+- which value columns differ, most first;
+- how far each numeric column moved over the rows where it changed: absolute and relative quantiles (q50, q90, q99, max);
+- which values of each key the changed rows concentrate on, with their share;
+- the same for the added and removed rows.
+
+It prints these as lines and, with `write_report_to`, also writes `<label>_profile.txt`. In DW-Production's `ed` sector this showed that a scary mismatch was a population-weight difference, not an aggregation regression: the top column was `POP_COVERAGE`, every changed row was a regional aggregate, and the median relative drift was 0.01%. Stata reports the per-column counts in `r(col_changed)`.
+
+```r
+report <- dw_compare(result, canonical_path, by = key,
+                     numeric_value_cols = "OBS_VALUE", diagnose = TRUE)
+report$profile$columns     # column, n_changed
+report$profile$magnitude   # abs_/rel_ q50, q90, q99, max per numeric column
+report$profile$keys        # key, value, n, pct among the changed rows
+```
+
+**Never compare a file with itself.** In reviewer mode `dw_use()` reads a sandbox path network-first from the canonical deposit. So `dw_compare(sandbox_path, canonical_path)` would read the deposit on both sides and report a false `0 changed`. When the two paths resolve to the same file, `dw_compare` now stops with an envelope (#111) in all three languages; Stata checks the literal paths. Pass the new output as an in-memory data frame instead.
+
 ### `dw_read_provenance` and `dw_provenance_diff` — did this run reproduce the last one?
 
-`dw_compare` says which records moved; `dw_provenance_diff` (R only) answers the question before it, from the `dw_save` sidecars alone and without reading any data: did the new run reproduce the previous one? `dw_read_provenance` reads the `<path>.provenance.json` sidecar of an output (or returns `NULL` when there is none); read the previous one **before** the new run overwrites the output. `dw_provenance_diff` then compares the two sidecars — inputs through the `metadata$inputs` record (`file` + `sha256` per input, the shape of the `dw_fetch_inputs` manifest), outputs through `sha256` — and returns a status:
+`dw_compare` says which records moved; `dw_provenance_diff` (R and Python) answers the question before it, from the `dw_save` sidecars alone and without reading any data: did the new run reproduce the previous one? `dw_read_provenance` reads the `<path>.provenance.json` sidecar of an output (or returns `NULL` when there is none); read the previous one **before** the new run overwrites the output. `dw_provenance_diff` then compares the two sidecars — inputs through the `metadata$inputs` record (`file` + `sha256` per input, the shape of the `dw_fetch_inputs` manifest), outputs through `sha256` — and returns a status:
 
 - **`reproduced`** — same inputs and a byte-identical output;
 - **`inputs_changed`** — input files were added, removed, or changed; the three lists are returned;
@@ -473,11 +503,21 @@ dw_compare(current = result, reference = previous_df, by = key)
 ```
 #### Python {.unnumbered .unlisted}
 ```python
-# Not available — dw_read_provenance and dw_provenance_diff are R-only (#152).
+from cso_toolkit import dw_compare, dw_provenance_diff, dw_read_provenance, dw_save
+
+previous = dw_read_provenance(out_csv)       # None on the first run
+dw_save(result, path=out_csv, isid=key,
+        metadata={"inputs": manifest[["file", "sha256", "origin"]]})
+run = dw_provenance_diff(previous, out_csv)
+run["status"]                                # e.g. "reproduced"
+
+# then, record by record
+dw_compare(current=result, reference=previous_df, by=key)
 ```
 #### Stata {.unnumbered .unlisted}
 ```stata
-* Not available — dw_read_provenance and dw_provenance_diff are R-only (#152).
+* Route via R or Python (#152). Stata sidecars record sha256 (through
+* Stata's Python integration), so dw_provenance_diff can compare them.
 ```
 :::
 

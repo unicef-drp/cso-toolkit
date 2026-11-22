@@ -2,13 +2,24 @@
 % Please edit documentation in R/cso_toolkit_sync.R
 \name{cso_toolkit_diff}
 \alias{cso_toolkit_diff}
-\title{Show per-file diff between vendored copy and upstream version}
+\title{Show per-file differences between the vendored copy and a release}
 \usage{
-cso_toolkit_diff(target_version = NULL, verbose = NULL, debug = NULL)
+cso_toolkit_diff(
+  target_version = NULL,
+  toolkit_source = NULL,
+  verbose = NULL,
+  debug = NULL
+)
 }
 \arguments{
-\item{target_version}{Character. Optional explicit tag to diff against.
-Defaults to the latest upstream tag.}
+\item{target_version}{Character or `NULL`. Release tag to compare with
+(e.g. `"v0.10.0"`; `"0.10.0"` gets a `v`). `NULL` (default) takes the
+latest release: of the local clone, or of GitHub (gh CLI, the API,
+then `git ls-remote`).}
+
+\item{toolkit_source}{Character or `NULL`. A local git clone of
+cso-toolkit to read the tag from; `NULL` uses `CSO_TOOLKIT_ROOT`, and
+GitHub when that is unset too.}
 
 \item{verbose}{Logical or `NULL`. Show high-level progress and result
 messages. `NULL` (default) inherits `getOption("dw.verbose", TRUE)`;
@@ -19,19 +30,70 @@ set `TRUE`/`FALSE` to override for this call. See [dw_verbosity()].}
 `getOption("dw.debug", FALSE)`; implies `verbose`. See [dw_verbosity()].}
 }
 \value{
-Invisibly, `NULL` for the stub.
+Invisibly, a data frame with one row per vendored file: `file`,
+  `status`, `sha256_local`, `sha256_target` (`NA` where the file is
+  absent). Attributes `source`, `pulled_version`, `target_version` (the
+  tag) and `target_commit` (its 40-hex commit). `NULL` when there is no
+  manifest.
 }
 \description{
-Stub for v0.0.0. The implementation will fetch upstream files at the
-target tag and compare via `digest::digest` + a textual diff if
-requested.
+Compares every file listed under `vendored:` in `.toolkit_manifest.yml`
+with the same file at a cso-toolkit release tag (`*.R` from `r/R/`,
+`*.py` from `python/src/`) and prints a short summary. Nothing is
+written.
+}
+\details{
+The tag is read from git history, never from a working tree: from the
+local clone named by `toolkit_source` (or the `CSO_TOOLKIT_ROOT`
+environment variable) with `git cat-file`, without fetching or changing
+that clone; otherwise from a shallow clone of the tag from
+`https://github.com/<source>.git` into a temporary folder, deleted on
+exit (git over HTTPS works where proxies block api.github.com).
+
+Each file gets a status:
+\describe{
+  \item{`unchanged`}{The vendored bytes are the tag's (line endings
+    aside).}
+  \item{`changed`}{The tag has a different version and the vendored copy
+    is what `pulled_version` shipped: [cso_toolkit_pull()] updates it.}
+  \item{`local_edit`}{The file is listed under `local_edits:`, or it
+    differs from what `pulled_version` shipped (edited here): the pull
+    skips it.}
+  \item{`missing_upstream`}{The tag has no such file: the pull keeps the
+    vendored copy and warns.}
+  \item{`missing_local`}{Listed under `vendored:` but not in the folder:
+    the pull adds it.}
+}
+When the `pulled_version` tag cannot be read, a file that differs from
+the target is reported as `changed` (a local edit cannot be detected).
+
+Reading from GitHub needs producer mode (`dw_apis_allowed`); with a
+local `toolkit_source` the diff runs in reviewer mode too (no network).
+}
+\section{Errors}{
+
+`[cso_toolkit.cso_toolkit_diff]` in reviewer mode without a local
+`toolkit_source`; when the manifest has no `source:`; when the tag does
+not exist or GitHub cannot be reached; for a vendored file that is
+neither `.R` nor `.py`.
+}
+
+\examples{
+\dontrun{
+d <- cso_toolkit_diff()                          # latest release
+d <- cso_toolkit_diff(target_version = "v0.10.0")
+d[d$status != "unchanged", ]
+cso_toolkit_diff(toolkit_source = "C:/GitHub/cso-toolkit")  # offline
+}
 }
 \seealso{
-[cso_toolkit_check()] (which surfaces when a diff is worth
-  inspecting); [cso_toolkit_pull()] (executes the upgrade).
+[cso_toolkit_sync()], the one call that shows the release
+  notes, this diff and then pulls; [cso_toolkit_pull()];
+  [cso_toolkit_check()].
 
 Other sync: 
 \code{\link{cso_toolkit_check}()},
-\code{\link{cso_toolkit_pull}()}
+\code{\link{cso_toolkit_pull}()},
+\code{\link{cso_toolkit_sync}()}
 }
 \concept{sync}

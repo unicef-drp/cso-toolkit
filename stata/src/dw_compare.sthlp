@@ -92,6 +92,11 @@ Compare a fresh production run against the canonical deposit:{p_end}
 {break}{cmd:    report("$tempdir/ws_compare.md")}
 {p_end}
 
+{pstd}
+{cmd:dw_compare} stops (error 198) when {cmd:current()} and
+{cmd:reference()} name the same file: the comparison could only report no
+change (#111).{p_end}
+
 {marker returns}{...}
 {title:Returns}
 

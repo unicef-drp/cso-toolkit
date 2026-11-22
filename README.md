@@ -199,8 +199,10 @@ refuses to replace an output changed outside `dw_save()` or written by
 another user during your session (unless `takeover = TRUE`) and records
 the lineage of every write in its sidecar. Switch with
 `dw_set_collaboration()` in one reviewed pull request; it baselines the
-existing sidecars so the switch is a non-event. R and Python; Stata is
-tracked in [#168](https://github.com/unicef-drp/cso-toolkit/issues/168).
+existing sidecars so the switch is a non-event. Stata applies the same
+guards through its Python integration (Stata 16+;
+[#168](https://github.com/unicef-drp/cso-toolkit/issues/168)); the switch
+itself is made from R or Python.
 See the handbook chapter
 [Roles and the mode contract](https://unicef-drp.github.io/cso-toolkit/handbook/chapters/21-roles-and-modes.html#collaboration-model-single--and-multi-producer-projects).
 
@@ -229,10 +231,10 @@ run-level comparison of two outputs from their sidecars.
 | `dw_merge` | ✅ | ✅ | — | R + Python only |
 | `dw_isid` | ✅ | ✅ | (embedded in `dw_save`) | same |
 | `dw_verify_z` | ✅ | ✅ | — | R + Python only |
-| `dw_fetch_inputs` | ✅ | ⏳ (#152) | ⏳ (#152) | R only — fill a gitignored inputs folder from the Teams / Z: deposit ([R](docs/dw_io_reference.md)) |
-| `dw_check_deposit` | ✅ | ⏳ (#152) | ⏳ (#152) | R only — every local input has an identical copy on Teams or Z: |
-| `dw_read_provenance` | ✅ | ⏳ (#152) | ⏳ (#152) | R only — read an output's `.provenance.json` sidecar |
-| `dw_provenance_diff` | ✅ | ⏳ (#152) | ⏳ (#152) | R only — did this run reproduce the last one? |
+| `dw_fetch_inputs` | ✅ | ✅ | ➖ via R/Python (#152) | Fill a gitignored inputs folder from the Teams / Z: deposit ([reference](docs/dw_io_reference.md)) |
+| `dw_check_deposit` | ✅ | ✅ | ➖ via R/Python (#152) | Every local input has an identical copy on Teams or Z: |
+| `dw_read_provenance` | ✅ | ✅ | ➖ via R/Python (#152) | Read an output's `.provenance.json` sidecar |
+| `dw_provenance_diff` | ✅ | ✅ | ➖ via R/Python (#152) | Did this run reproduce the last one? |
 
 `dw_use` accepts **HTTPS URLs** since v0.4.0 — producer downloads
 once and freezes the response under `_frozen/<host>/<path>` with a
@@ -272,7 +274,18 @@ R port of World Bank EduAnalyticsToolkit's
 (Diana Goldemberg) — redistributes survey weights from missing nested
 observations so per-stratum totals are preserved (R + Python).
 
-### Project scaffolding — `create_profile`, `create_sector_script`, `review_profile`
+### Project scaffolding — `create_research_project`, `create_official_stats_project`, `create_profile`, `create_sector_script`, `review_profile`
+
+`create_research_project()` and `create_official_stats_project()` (R and
+Python, same files) start a new repository with the toolkit's floor in
+place: the matching `.gitignore`, `tools/check.R` and the pre-push hook, a
+testthat suite, `cso_project.yml` (the collaboration model, required),
+README and CONTRIBUTING skeletons with first-clone steps, the data or
+inputs README and manifest, and optionally the vendored helpers
+(`vendor = TRUE`), the opt-in workflows (`workflows = TRUE`) and
+`git init` with `develop` and the hook path (`git = TRUE`). They never
+replace an existing file unless `overwrite = TRUE`. See the handbook
+chapter *Starting a new repository*.
 
 `create_profile()` scaffolds a `profile_<repo>.R` (or `.py`) with the
 standard CSO building blocks: cross-platform user identification, YAML
@@ -293,11 +306,14 @@ wraps (e.g. `read_csv`, `pd.read_csv`, `httr::GET`, `requests.get`,
 `# cso-allow: <rule-id>`; CI-mode via `error_on_violation = TRUE`
 fails the build on any violation.
 
-### Vintage sync — `cso_toolkit_check`, `cso_toolkit_diff`, `cso_toolkit_pull`
+### Vintage sync — `cso_toolkit_check`, `cso_toolkit_diff`, `cso_toolkit_pull`, `cso_toolkit_sync`
 
 Consumer-side helpers that read the local `.toolkit_manifest.yml`,
-query upstream for the latest tag, and warn / refresh when the
-consumer is behind. Reviewer mode forbids the network call.
+query upstream for the latest tag, and warn when the consumer is
+behind. `cso_toolkit_sync()` updates in one call: the release notes
+since the pin, a per-file diff against the release tag, then the pull
+(asking per file) and a re-pinned manifest. Reviewer mode forbids the
+network call and the update.
 
 ### Graceful error envelopes — across every helper
 
@@ -430,7 +446,7 @@ Semantic versioning (MAJOR.MINOR.PATCH).
 | `v0.8.0` | 2026-07-13 | Python parity release: Python exports the canonical `dw_*` aliases (previously they raised `ImportError`; PR [#143](https://github.com/unicef-drp/cso-toolkit/pull/143)), plus `dw_root()` and `dw_default_unicef_allowlist()`; the dashboard workflow deploys from `develop` only (stops the post-release failure on `main`, PR [#142](https://github.com/unicef-drp/cso-toolkit/pull/142)). No public API breaks. |
 | `v0.9.0` | 2026-11-19 | Inputs kept out of Git and run comparison (R only; Python / Stata siblings in [#152](https://github.com/unicef-drp/cso-toolkit/issues/152)): `dw_fetch_inputs()` fills a gitignored inputs folder from the Teams / Z: deposit (SHA-256-verified copies, `.gitkeep` per folder, input manifest) and `dw_check_deposit()` proves every input matches it; `dw_read_provenance()` and `dw_provenance_diff()` tell from two sidecars whether a run reproduced the last one ([#153](https://github.com/unicef-drp/cso-toolkit/pull/153), docs [#155](https://github.com/unicef-drp/cso-toolkit/pull/155)). Fixes `dw_toolkit_version()` still reporting `0.6.0`. No public API breaks. |
 | `v0.9.1` | 2026-11-19 | Patch ([#159](https://github.com/unicef-drp/cso-toolkit/pull/159), #106 items 2–3): `create_profile(include_z_drive_check = TRUE)` now emits a timeout-bounded Z: probe (`vol`, 3 s) instead of `dir.exists("Z:/")` / `Path.is_dir()`, which could hang on a dead-mapped drive (R + Python); the R, Python and Stata package READMEs use absolute GitHub links so they still resolve when vendored. No public API changes. |
-| `v0.10.0` | 2026-11-19 | `cso_toolkit_check()` target-version alert (R + Python; [#163](https://github.com/unicef-drp/cso-toolkit/pull/163), closes #106): new `target_version` argument and optional manifest key `target_version:`; the offline comparison runs in producer and reviewer mode and, when the vendored copy is behind, raises an envelope warning with the exact `cso_toolkit_pull(target_version = ...)` command plus a boxed alert (`quiet = FALSE`); a newer upstream tag shows a boxed notice. Versions now compare numerically (`0.10.0` > `0.9.1`; a copy ahead of upstream is not flagged). MINOR: new optional argument, no breaks. |
+| `v0.10.0` | 2026-11-21 | Update and start repositories (R + Python): `cso_toolkit_sync()` prints the release notes since the pinned tag and updates the vendored copy, with `cso_toolkit_diff()` and `cso_toolkit_pull()` now implemented and reading a release tag ([#181](https://github.com/unicef-drp/cso-toolkit/pull/181)); `create_research_project()` and `create_official_stats_project()` write a new repository's floor ([#172](https://github.com/unicef-drp/cso-toolkit/pull/172)); a single- or multi-producer setting in `cso_project.yml`, with `dw_save()` guards ([#169](https://github.com/unicef-drp/cso-toolkit/pull/169), fixes [#182](https://github.com/unicef-drp/cso-toolkit/pull/182)); repository-hygiene and local-first CI templates ([#167](https://github.com/unicef-drp/cso-toolkit/pull/167)); `cso_toolkit_check()` target-version alert and numeric version comparison ([#163](https://github.com/unicef-drp/cso-toolkit/pull/163), closes #106). Stata: not yet ([#168](https://github.com/unicef-drp/cso-toolkit/issues/168), [#180](https://github.com/unicef-drp/cso-toolkit/issues/180)). MINOR; NEWS lists the changes a consumer may notice. |
 | `v1.0.0` | _committed API_ | After the `ed` sector pilot lands and a second sector vendors the helpers without modification. |
 
 **Changelog.** Per-release notes — including breaking-change migration
@@ -459,7 +475,8 @@ locally and on CI (`.github/workflows/r-check.yml`).
 ## Repository hygiene and CI for consumer repos
 
 How a repo that vendors the toolkit keeps data out of git and gates its
-pull requests:
+pull requests (a new repo gets all of it from `create_research_project()`
+or `create_official_stats_project()`):
 
 - [`docs/gitignore_guidelines.md`](docs/gitignore_guidelines.md) — data
   never enter git, their `.provenance.json` sidecars always do; templates

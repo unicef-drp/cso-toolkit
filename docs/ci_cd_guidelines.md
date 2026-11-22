@@ -97,7 +97,7 @@ GitHub Actions template that runs the same check.
 | Repository hygiene: large files | `large-files` | `ci-hygiene.yml` | Fails on any tracked file over 50 MB (`MAX_FILE_MB`). GitHub warns at 50 MB and rejects at 100 MB. |
 | Secret scan | `secret-scan` | `ci-hygiene.yml` | Runs [gitleaks](https://github.com/gitleaks/gitleaks) over the full history with findings redacted. Locally it runs when `gitleaks` is on the PATH and is skipped (`[SKIP]`) otherwise; in CI the workflow installs the pinned binary and a missing one fails. (The gitleaks GitHub Action needs a licence key on organisation repos; the binary does not.) GitHub's own secret scanning and push protection are worth turning on too where available: free on public repos, part of GitHub Secret Protection on private ones. |
 | Provenance sidecar validation | `sidecars` | `ci-hygiene.yml` | Every tracked `*.provenance.json` parses, and has the core keys `path`, `format`, `written_at`, `dw_mode` and a 64-hex `sha256`. Stata sidecars (`format: dw_save.provenance/1`) need `datasignature` instead of `sha256`; API-fetch sidecars need `url`, `fetched_at`, `dw_mode`, `sha256` ([Appendix B](https://unicef-drp.github.io/cso-toolkit/handbook/appendices/b-provenance-schema.html)). **Hashes are not re-computed here**, because the data are not in the repo; they are verified in reviewer mode (`dw_read_provenance()`, `dw_check_deposit()`, `dw_provenance_diff()`). |
-| Contract audit | `contract-audit` | [`ci-contract-audit.yml`](../templates/workflows/ci-contract-audit.yml) | Sources the vendored `00_functions/dw_io.R` and `test_scripts.R` and runs `test_scripts()` over `AUDIT_PATHS`: any raw IO or HTTP call that should go through a `dw_*` wrapper fails ([handbook chapter 43](https://unicef-drp.github.io/cso-toolkit/handbook/chapters/43-contract-auditor-ci.html)). Uses the vendored copy, so it audits with the pinned vintage. R only; the Python variant is in chapter 43; Stata has no auditor. |
+| Contract audit | `contract-audit` | [`ci-contract-audit.yml`](../templates/workflows/ci-contract-audit.yml) | Sources the vendored `00_functions/dw_io.R` and `test_scripts.R` and runs `test_scripts()` over `AUDIT_PATHS`: any raw IO or HTTP call that should go through a `dw_*` wrapper fails, or, with `AUDIT_MODE = "advisory"` (the setting for a new research project), is listed as a warning without failing the run ([handbook chapter 43](https://unicef-drp.github.io/cso-toolkit/handbook/chapters/43-contract-auditor-ci.html)). Uses the vendored copy, so it audits with the pinned vintage. R only; the Python variant is in chapter 43; Stata has no auditor. |
 | Toolkit vintage | `vintage` | `ci-contract-audit.yml` | `00_functions/.toolkit_manifest.yml` exists, parses, has `source`, `pulled_version`, `vendored`, and every `vendored:` file is present; then `cso_toolkit_check()` runs offline in reviewer mode and the check fails if `pulled_version` is behind `target_version` (needs the v0.10.0+ `cso_toolkit_sync.R`). A newer upstream tag is not a failure: refreshing is the producer's decision ([chapter 44](https://unicef-drp.github.io/cso-toolkit/handbook/chapters/44-versioning-release.html)). |
 
 ### Tier 1: repos with code
@@ -155,14 +155,26 @@ Rscript --no-init-file tools/check.R --only lint     # an opt-in check
   `DATA_DIRS`, `OUTPUT_DIRS`, `ALLOW_PATHS`, `MAX_FILE_MB`, `TOOLKIT_DIR`,
   `AUDIT_PATHS`, …); an environment variable of the same name overrides a
   value for one run. An official-statistics repo sets
-  `OUTPUT_DIRS = "output outputs results wrk"`, so a tracked pre-release
-  output fails the check ([the embargo rule](gitignore_guidelines.md#the-embargo-rule)).
+  `OUTPUT_DIRS = "output outputs results wrk 013_wrkdata"`, so a tracked
+  pre-release output fails the check, and adds `011_rawdata` to `DATA_DIRS` ([the embargo rule](gitignore_guidelines.md#the-embargo-rule)).
 - Needs R, git, and the packages testthat, jsonlite (installed with
   testthat) and yaml; gitleaks for the secret scan (skipped without it).
 
+**Check records.** `sh tools/check --record` ([`templates/tools/check`](../templates/tools/check),
+a wrapper that starts R right on Windows) runs the checks on a clean working
+tree and, if none fails, commits `.checks/<content-hash>.json`, where the hash
+is git's tree ID with `.checks/` left out. The pre-push hook (verify mode)
+refuses a push without a passing record; the workflow
+[`templates/workflows/check-record.yml`](../templates/workflows/check-record.yml),
+on by default for pull requests into `develop` and `main`, verifies it in
+about 10 seconds without R. Handbook chapter 45, "Check records", has the
+details, the branch-protection settings and the Windows note.
+
 **Pre-push hook.** [`templates/hooks/pre-push`](../templates/hooks/pre-push)
-runs `tools/check.R` before every push and stops the push when a check
-fails. Install it either as a tracked hook for everyone who opts in:
+requires a passing check record for each pushed branch (`MODE=verify`, the
+default; no R) or, with `MODE=run` at its top, runs `tools/check.R` and stops
+the push when a check fails. Install it either as a tracked hook for everyone
+who opts in:
 
 ```bash
 mkdir -p .githooks
@@ -184,14 +196,16 @@ branch → pull request into `develop` → release pull request `develop` →
 
 **By default (Actions off for routine work):**
 
-- The pull request author runs `tools/check.R` on the branch's head commit
-  and pastes the output into the pull request description (or a comment).
-  The header line names the commit and flags uncommitted changes; the
-  reviewer checks that it matches the pull request's head and that every
-  line is `PASS` (a `SKIP` says why). A new push needs a new run.
-- Required status checks are **not** set: with the default triggers the
-  workflows do not run on pull requests into `develop`, and a required
-  check that never runs blocks the merge forever.
+- The pull request author runs `sh tools/check --record`; the
+  `check-record` workflow verifies the record of the pull request's head.
+  Require the status `check-record` on `develop` and `main`, with
+  "Require branches to be up to date before merging", so what merges is the
+  checked content. After merging `develop` into a branch, record again.
+- Pull requests that only touch generated files (bot rebuilds) pass without
+  a record when their paths are listed in the workflow's `EXEMPT_PATHS`.
+- The opt-in workflows are **not** required: with the default triggers
+  they do not run on pull requests into `develop`, and a required check
+  that never runs blocks the merge forever.
 - The release pull request into `main` triggers the workflows (their
   default trigger), which gives each release an independent run on a clean
   runner at a cost of a few minutes per release. Any workflow can also be

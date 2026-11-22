@@ -20,8 +20,8 @@
 # `<repo>/<rel_dir>` corresponds to `<teamsFolderCanonical>/<rel_dir>` on
 # Teams and `<dwZDrive>/<rel_dir>` on Z:.
 #
-# R only. TODO: Python and Stata siblings; cross-language parity tracked at
-# GitHub issue #152.
+# R and Python (python/src/dw_deposit.py); Stata routes via R or Python
+# (#152). Parity case: conformance/cases/deposit_fetch_inputs.json.
 
 # -----------------------------------------------------------------------------
 # Internal helpers

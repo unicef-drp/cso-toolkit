@@ -1,5 +1,34 @@
 # Cross-language conformance harness
 
+## Parity certificate (#190)
+
+The main tool here is the **parity certificate**: the cases in `cases/`, run by
+one driver per language in `drivers/`, compared by `certify.py`.
+
+```sh
+sh tools/certify             # every case in R, Python and Stata
+sh tools/certify --record    # all pass -> commit .parity/<content-hash>.json
+sh tools/certify --verify    # is there a passing certificate for this tree?
+sh tools/certify --languages r,python --cases io_roundtrip_csv   # while developing
+python -m pytest conformance/tests                               # certify.py's own tests
+```
+
+- `CSO_PYTHON`: a Python with the toolkit's dependencies, for the Python driver.
+- `CSO_RSCRIPT`, `STATA_EXE`: override where R and Stata are found.
+
+**Adding a case**
+1. Write `cases/<id>.json`: `kind` `values` or `json`, `fixtures`, `languages`, and `gaps` or `divergences` with the issue.
+2. Add `<id>` to each driver that implements it.
+3. Run `sh tools/certify --cases <id>`.
+
+`tests/test_certify.py` checks that every case is well formed. The handbook appendix *Cross-language parity* has the full protocol.
+
+The round-trip harness described below (`run_r.R`, `run_python.py`,
+`compare.py`, the `Conformance` workflow) predates the certificate and still
+runs in CI for R and Python.
+
+## The original round-trip harness
+
 Proves the toolkit's core claim — **R, Python, and Stata yield the same
 results** — with an executed test, not just the coverage-matrix prose. This
 closes the regression gap flagged for version upgrades: today R is CI-gated,

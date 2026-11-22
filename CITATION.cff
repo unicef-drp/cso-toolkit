@@ -39,7 +39,7 @@ authors:
     given-names: Sahar
     affiliation: "UNICEF Data & Analytics"
 version: "0.10.0"
-date-released: "2026-11-19"
+date-released: "2026-11-21"
 license: CC-BY-4.0
 repository-code: "https://github.com/unicef-drp/cso-toolkit"
 url: "https://unicef-drp.github.io/cso-toolkit/handbook/"
@@ -63,7 +63,7 @@ preferred-citation:
   publisher:
     name: "UNICEF Chief Statistician Office"
   version: "0.10.0"
-  date-released: "2026-11-19"
+  date-released: "2026-11-21"
   license: CC-BY-4.0
   url: "https://unicef-drp.github.io/cso-toolkit/handbook/"
   repository-code: "https://github.com/unicef-drp/cso-toolkit"
