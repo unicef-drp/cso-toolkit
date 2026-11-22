@@ -14,9 +14,9 @@ The rules: data never enter git; the provenance sidecars that say exactly which 
 1. **Where the file lives.** The canonical copy is in the deposit (Teams and its Z: mirror, the microdata archive, Gitea LFS), not in git. The local copy goes in the repository's gitignored inputs folder (`data/` or `inputs/`), or stays outside the repository.
 2. **Check it stays out of git:** `git check-ignore -v <file>` must name a rule. If it prints nothing, stop and fix the `.gitignore` first.
 3. **Record it.**
-   - Inputs that mirror a deposit folder: read them through `dw_fetch_inputs(local_root, rel_dir, pattern)` (R). It copies and SHA-256-verifies deposit files and returns the input manifest.
+   - Inputs that mirror a deposit folder: read them through `dw_fetch_inputs(local_root, rel_dir, pattern)` (R or Python). It copies and SHA-256-verifies deposit files and returns the input manifest.
    - Otherwise: add a row to the folder's `input_manifest.csv` (file, sha256, bytes, source, retrieved date), using the repository's own convention if its README describes one.
-4. **Carry it into the outputs.** Pass the manifest to every `dw_save()` that uses the input: `metadata = list(inputs = manifest[, c("file", "sha256", "origin")])`.
+4. **Carry it into the outputs.** Pass the manifest to every `dw_save()` that uses the input: `metadata = list(inputs = manifest[, c("file", "sha256", "origin")])` in R, `metadata={"inputs": manifest[["file", "sha256", "origin"]]}` in Python.
 5. **Commit** the manifest row and the code that reads the input together, staged by path. Never the data file.
 
 ## Explaining a problem
@@ -28,4 +28,4 @@ The rules: data never enter git; the provenance sidecars that say exactly which 
   - `inputs_changed`: report the added, removed and changed inputs;
   - `output_changed`: same inputs, different output; only code or environment can explain it, so find which;
   - `first_run`, `no_input_record`: say so.
-  Then `dw_compare()` record by record if the person wants detail.
+  Then `dw_compare(..., diagnose = TRUE)` record by record if the person wants detail.

@@ -18,9 +18,9 @@ The rules are in the handbook chapter "Starting a new repository": <https://unic
    create_official_stats_project("<path>/<name>", collaboration = "multi-producer",
                                  members = c("<user>", "<user>"), git = TRUE)
    ```
-   Show the person the arguments the function takes (`?create_research_project`) before choosing any that are not defaults. Do not vendor the toolkit (`vendor = TRUE`) or add GitHub workflows (`workflows = TRUE`) unless they ask. With `git = TRUE` the function also sets `core.hooksPath` to `.githooks`, so the pre-push hook runs the checks.
+   Show the person the arguments the function takes (`?create_research_project`) before choosing any that are not defaults. Do not vendor the toolkit (`vendor = TRUE`) or add GitHub workflows (`workflows = TRUE`) unless they ask. With `git = TRUE` the function also sets `core.hooksPath` to `.githooks`, so the pre-push hook requires a passing check record before every push. The scaffold always includes `.github/workflows/check-record.yml`, which checks that record on pull requests without running R.
 3. **The person's own configuration:** the profile reads `user_config.yml` from their configuration folder. Never create or edit it for them. If the first `source("profile_<name>.R")` stops, show them its exact message: it names the YAML to add.
-4. **Checks:** run `Rscript --no-init-file tools/check.R` from the new repository's root. A co-author's fresh clone runs `git config core.hooksPath .githooks` once.
-5. **First commit:** stage by path (never `git add -A`), read `git diff --cached --stat`, and commit. Do not create the GitHub repository or push unless the person asks; ask whether it should be private (official statistics: always private).
+4. **Checks:** run `sh tools/check` from the new repository's root. A co-author's fresh clone runs `git config core.hooksPath .githooks` once.
+5. **First commit, then the record:** stage by path (never `git add -A`), read `git diff --cached --stat`, and commit. Then `sh tools/check --record`: it needs a clean tree on a commit, and commits `.checks/<content-hash>.json`. Do not create the GitHub repository or push unless the person asks; ask whether it should be private (official statistics: always private).
 
-Report what was created, the check result, and the steps left to the person (their `user_config.yml`, the GitHub repository, branch protection).
+Report what was created, the check result, and the steps left to the person: their `user_config.yml`, the GitHub repository, and branch protection on `develop` and `main` (require the status `check-record` and up-to-date branches; the function prints these steps).

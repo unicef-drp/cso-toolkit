@@ -15,8 +15,10 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
   procedure that links to the handbook chapter holding the rules. Install
   with `claude plugin marketplace add unicef-drp/cso-toolkit` and
   `claude plugin install cso-toolkit@unicef-cso`; the plugin README has a
-  test prompt per skill. `update-toolkit` copies files from the release tag
-  by hand while `cso_toolkit_pull()` remains a stub.
+  test prompt per skill. `update-toolkit` runs `cso_toolkit_sync()` (a dry
+  run first); `check` ends with `sh tools/check --record` (#174). The plugin
+  is MIT-licensed: `LICENSE` now names `plugins/`, `.claude-plugin/`,
+  `conformance/` and `tools/` in its code section.
 
 - **Parity certificate: one local command that checks R, Python and Stata
   agree (#190).**

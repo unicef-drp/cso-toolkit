@@ -14,9 +14,10 @@ A reviewer reads the canonical deposit, writes only to its own sandbox and calls
 3. **Reproduce.** Run the pipeline or the scripts under review as the README says. Outputs go to the sandbox.
 4. **Compare, for each output:**
    - `dw_provenance_diff(previous, current)` where sidecars exist: `reproduced`, `inputs_changed` or `output_changed`;
-   - `dw_compare(current, reference, by = <key>, value_cols = ..., tol = ...)` against the canonical file: the rows added, removed and changed.
+   - `dw_compare(current, reference, by = <key>, value_cols = ..., tol = ...)` against the canonical file: the rows added, removed and changed. Pass the reproduced output **as a data frame** (read it yourself), not as a sandbox path: in reviewer mode a sandbox path is read from the canonical deposit, and `dw_compare` stops when both sides are the same file.
+   - when something differs, `diagnose = TRUE` says where: which columns, how far the values moved (relative quantiles), and which key values the changes concentrate on. Quote it in the note.
    Use the key the producer's script declares (`isid`). Do not loosen `tol` to make a difference disappear.
-5. **Run the local checks** (`Rscript --no-init-file tools/check.R`).
+5. **Run the local checks** (`sh tools/check`).
 6. **Write the review note** where the repository keeps them (the pull request, or the folder its README names):
    - what was reviewed (commit, toolkit version, date, reviewer);
    - one line per output with its status;

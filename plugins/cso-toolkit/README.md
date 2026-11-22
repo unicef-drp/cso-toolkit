@@ -6,9 +6,9 @@ Five skills that walk an agent, and the person working with it, through the main
 |---|---|
 | `/cso-toolkit:new-project` | Choose research project or official statistics, run `create_research_project()` / `create_official_stats_project()`, set the collaboration model, make the first commit |
 | `/cso-toolkit:provenance` | Add an input with its provenance; explain a hash mismatch, a sidecar failure or an output that did not reproduce |
-| `/cso-toolkit:check` | Run `tools/check.R`, explain each failure, fix the routine ones |
+| `/cso-toolkit:check` | Run `sh tools/check`, explain each failure, fix the routine ones, record a passing run (`--record`) before a push |
 | `/cso-toolkit:review` | Reviewer workflow: reproduce in the sandbox, compare with `dw_provenance_diff()` and `dw_compare()`, write the review note |
-| `/cso-toolkit:update-toolkit` | Update the vendored copy to a newer release: read NEWS, copy from the tag, update the manifest, re-run the checks |
+| `/cso-toolkit:update-toolkit` | Update the vendored copy with `cso_toolkit_sync()`: read the release notes (a dry run first), update from the tag, re-run the checks |
 
 Claude also uses a skill on its own when a request matches its description; the slash command is for calling one by name.
 
@@ -48,9 +48,9 @@ Run each in a session started in a toolkit repository (for `new-project`, in an 
 |---|---|---|
 | `new-project` | "Set up a new research repository for a paper on school closures." | Asks which kind, the name, and single- or multi-producer before creating anything; does not vendor; does not touch `user_config.yml` |
 | `provenance` | "I put a new survey file in data/external. Add it properly." | Checks the file is ignored, records a manifest row, commits no data, prints no rows |
-| `check` | "Run the checks before I push." | Runs `tools/check.R` with `--no-init-file`, explains each FAIL, never suggests `--no-verify` on its own |
+| `check` | "Run the checks before I push." | Runs `sh tools/check`, explains each FAIL, ends with `sh tools/check --record`, never suggests `--no-verify` or a hand-written record |
 | `review` | "Review the outputs on this branch." | Confirms `dw_mode` is reviewer, compares with `dw_provenance_diff()` / `dw_compare()`, writes a note with a verdict |
-| `update-toolkit` | "Is our toolkit copy out of date? Update it." | Runs `cso_toolkit_check()`, reads NEWS, asks which tag, copies from the tag on a branch, re-runs the checks |
+| `update-toolkit` | "Is our toolkit copy out of date? Update it." | Runs `cso_toolkit_check()`, then `cso_toolkit_sync(dry_run = TRUE)` on a branch, reports the `!!` entries and asks which tag before updating, re-runs the checks |
 
 ## Validate
 
