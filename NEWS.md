@@ -6,6 +6,18 @@ _Entries land here as PRs merge into `develop`. When the next release
 is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
+### Fixed
+
+- **`cso_toolkit_check()` suggests `cso_toolkit_sync()` (R + Python;
+  #213).** Its behind-target warning and both boxed notices named
+  `cso_toolkit_pull()`, which skips the release notes, and the warning
+  said to update `pulled_version` by hand, which `cso_toolkit_pull()` and
+  `cso_toolkit_sync()` already do. They now give
+  `cso_toolkit_sync(target_version = ...)`; the manual step is kept only
+  for a re-vendor by hand. The vintage check in `templates/tools/check.R`
+  says the same. Handbook chapters 34 and 44 and appendix C updated;
+  chapter 44 no longer calls the sync helpers R-first.
+
 ## v0.11.0 (2026-11-22)
 
 R, Python and Stata are now checked against each other. `sh tools/certify`
