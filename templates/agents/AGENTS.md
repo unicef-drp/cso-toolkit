@@ -6,7 +6,8 @@ This repository follows the cso-toolkit conventions: <https://unicef-drp.github.
 
 - `profile_{{project_name}}.R`: the session profile. Every script sources it first. It reads the person's `user_config.yml`, sets `dw_mode`, and loads the toolkit copy in `00_functions/`.
 - `00_functions/`: a copy of a cso-toolkit release, pinned in `.toolkit_manifest.yml`. **Never edit it.** Changes go to `unicef-drp/cso-toolkit`, and the copy is replaced by a newer release.
-- `tools/check.R`: the local checks.
+- `tools/check.R`: the local checks; `sh tools/check` runs them, and
+  `sh tools/check --record` also commits a check record (`.checks/`).
 - `decisions.md`: the project's decisions and its record of AI use.
 
 ## Rules
@@ -18,7 +19,7 @@ This repository follows the cso-toolkit conventions: <https://unicef-drp.github.
 - **Session mode:** work as `dw_mode: reviewer` unless the person running the session sets `producer`. Never pass `takeover = TRUE` to `dw_save()` without their explicit approval, and never write to the canonical deposit (Teams, Z:) yourself.
 - **No data in git.** Never commit microdata, extracts or caches. A new input gets a provenance sidecar and an `input_manifest.csv` row, committed with the code that uses it.
 - **What you read leaves the machine.** Whatever you open is sent to the AI service. Never print rows of microdata or personal records (`head()`, `View()`, `cat` of a data file). Variable names, labels, counts and code are fine.
-- **Before every push:** run `Rscript --no-init-file tools/check.R` from the repository root and fix what fails. Never skip it with `--no-verify`.
+- **Before every push:** run `sh tools/check --record` from the repository root (after committing) and fix what fails. The pre-push hook refuses a push without a passing record, and the pull request's `check-record` status checks it again. Never skip it with `--no-verify`, and never write a record by hand.
 - **Git:** branch off `develop`; one logical change per commit, staged by path (never `git add -A`); pull requests into `develop`. Never force-push, and never push to `main`.
 - **Tests:** a failing test means something changed. Find out why. Never change an expected value to make a test pass unless the person running the session agrees the change is intended, and list what moved in the pull request.
 - **Numbers:** every number in a text traces to a file in `output/`. After a rerun, check comparative claims ("flat", "the same", "robust") against the new tables, not only the levels.

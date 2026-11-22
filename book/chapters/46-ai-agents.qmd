@@ -33,7 +33,7 @@ The file is a starting point, not a ceiling. A repository adds what is specific 
 | `Rscript --no-init-file`, never `--vanilla` | A run that misses the user library and fails, or silently uses another package version |
 | Never edit `00_functions/` | A vendored copy that no longer matches its manifest, so results no longer trace to a toolkit release ([the vendoring chapter](41-vendoring.qmd)) |
 | Read and write through `dw_use()` / `dw_save()` | Outputs without provenance sidecars ([Appendix B](../appendices/b-provenance-schema.qmd)) |
-| Run `tools/check.R` before every push | Data, secrets or contract violations reaching the remote ([the CI chapter](45-ci-cd.qmd)) |
+| Run `sh tools/check --record` before every push | Data, secrets or contract violations reaching the remote; the pre-push hook and the pull request's `check-record` status refuse a push without a passing record ([the CI chapter](45-ci-cd.qmd#check-records)) |
 | Atomic commits, pull requests into `develop` | Changes no reviewer can follow, and unreviewed changes on `main` |
 
 ## What an agent may do
@@ -81,7 +81,7 @@ An agent's output is checked like a junior colleague's, with one difference: it 
 3. **Comparative claims are checked after every rerun.** Levels can barely move while a comparison flips: "flat", "the same", "robust", "larger than". After a rerun, each comparative claim in the text is checked against the new tables, not only the numbers it quotes.
 4. **An independent claim check before submission or release.** Someone who did not write the text recomputes every number in it from `output/`: a co-author, or a fresh agent session given only the text and the repository. The agent that wrote the text is the wrong one to check it: it tends to confirm what it wrote.
 
-`tools/check.R` and the pre-push hook ([the CI chapter](45-ci-cd.qmd)) apply to agents as they do to people. An agent that cannot make the checks pass reports the failure; it does not push with `--no-verify`.
+The local checks and the check record ([the CI chapter](45-ci-cd.qmd#check-records)) apply to agents as they do to people. An agent that cannot make the checks pass reports the failure. It does not push with `--no-verify`, and it never writes a check record by hand: a record says the checks passed on that exact content.
 
 ## Parallel sessions
 
@@ -93,7 +93,7 @@ git -C "$MAIN" fetch origin
 git -C "$MAIN" worktree add --no-track "$MAIN/../<repo>-wt-<topic>" -b feature/<topic> origin/develop
 ```
 
-Branches, stashes and configuration are shared between worktrees, so each session works only on its own branch. It never switches, resets or deletes another session's branch, and it commits instead of stashing, because all worktrees share one stash list. Git-ignored files, inputs among them, are not shared. A new worktree fills its inputs folder with `dw_fetch_inputs()`, which checks each file's hash against `input_manifest.csv`. When the pull request has merged, `git worktree remove` deletes the worktree. Deleting the folder by hand leaves a stale entry, which `git worktree prune` clears.
+Branches, stashes and configuration are shared between worktrees, so each session works only on its own branch. It never switches, resets or deletes another session's branch, and it commits instead of stashing, because all worktrees share one stash list. Git-ignored files, inputs among them, are not shared. A new worktree fills its inputs folder with `dw_fetch_inputs()`, which copies each input from the deposit and checks its SHA-256 against the deposited copy. When the pull request has merged, `git worktree remove` deletes the worktree. Deleting the folder by hand leaves a stale entry, which `git worktree prune` clears.
 
 ## Recording and disclosing AI use
 
