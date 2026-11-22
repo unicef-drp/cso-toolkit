@@ -32,6 +32,7 @@ SHIPPED = [
     "tools/check.R",
     "tools/check",
     "checks/README.md",
+    "agents/",
     "testthat/tests/testthat.R",
     "testthat/tests/testthat/helper-project.R",
     "workflows/",

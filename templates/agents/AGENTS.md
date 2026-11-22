@@ -9,6 +9,7 @@ This repository follows the cso-toolkit conventions: <https://unicef-drp.github.
 - `tools/check.R`: the local checks; `sh tools/check` runs them, and
   `sh tools/check --record` also commits a check record (`.checks/`).
 - `decisions.md`: the project's decisions and its record of AI use.
+- `.claude/settings.json`: shared Claude Code settings: the cso-toolkit plugin (skills such as `/cso-toolkit:check`), and edits to `00_functions/` denied. Personal settings go in `.claude/settings.local.json`, which git ignores.
 
 ## Rules
 

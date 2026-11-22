@@ -121,6 +121,16 @@ if (!(is.character(dw_mode) && length(dw_mode) == 1 &&
        config_hint, call. = FALSE)
 }
 dw_apis_allowed <- identical(dw_mode, "producer")
+# Agent sessions (handbook chapter 46): Claude Code sets
+# CLAUDE_CODE_CHILD_SESSION=1 in the commands it runs (CLAUDECODE is also
+# set in IDE terminals, so it would also flag a person's own terminal). An
+# agent works as reviewer unless the person running the session chose
+# producer (AGENTS.md); say so when it is a producer. Nothing is blocked.
+if (identical(dw_mode, "producer") && identical(Sys.getenv("CLAUDE_CODE_CHILD_SESSION"), "1")) {
+  message("[!] profile: a Claude Code session is running as producer for ", repo_name,
+          ": it writes outputs and may call live APIs. Agents work as reviewer unless ",
+          "the person running the session chose producer (AGENTS.md).")
+}
 # Guard for code about to call an external API: a no-op for a producer.
 dw_require_no_api <- function(context = NULL) {
   if (identical(dw_mode, "reviewer")) {
