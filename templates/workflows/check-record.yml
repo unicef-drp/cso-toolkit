@@ -1,0 +1,90 @@
+# ---------------------------------------------------------------------------
+# check-record -- verify the local check record of a pull request
+# ---------------------------------------------------------------------------
+# Template from unicef-drp/cso-toolkit: templates/workflows/check-record.yml
+# Guidance: docs/ci_cd_guidelines.md; handbook chapter 45 ("Check records").
+#
+# The checks run locally (sh tools/check --record), which commits
+# .checks/<content-hash>.json. This job only confirms that a passing record
+# for the pull request's exact content is committed: no R, no data, about
+# 10 seconds on Ubuntu (GitHub bills it as one minute on a private
+# repository). The one workflow on by default: pull requests into develop
+# and main only, never on push.
+#
+# Branch protection (Settings > Branches, for develop and main): require
+# the status check "check-record" and "Require branches to be up to date
+# before merging", so what merges is exactly the checked content.
+#
+# Pull requests that only touch generated files (a bot's rebuild, say)
+# carry no record. List those paths in EXEMPT_PATHS below (shell patterns,
+# space separated; * also matches /, e.g. "docs/handbook/*"): a pull
+# request whose every changed file matches one passes without a record.
+# Anything that changes other files still needs one, whoever opened it.
+# ---------------------------------------------------------------------------
+name: check-record
+
+on:
+  pull_request:
+    branches: [develop, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+env:
+  EXEMPT_PATHS: ""
+
+jobs:
+  check-record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # the pull request's own latest commit, not GitHub's merge commit
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 1
+
+      - name: Exempt a pull request that only touches EXEMPT_PATHS
+        id: exempt
+        if: github.event_name == 'pull_request' && env.EXEMPT_PATHS != ''
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          files=$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR}/files" --paginate --jq '.[].filename')
+          all=true
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            hit=false
+            for pat in $EXEMPT_PATHS; do
+              # shellcheck disable=SC2053  # pattern match on purpose
+              if [[ "$f" == $pat ]]; then hit=true; break; fi
+            done
+            if [ "$hit" = false ]; then all=false; echo "needs a record: $f"; break; fi
+          done <<< "$files"
+          echo "exempt=$all" >> "$GITHUB_OUTPUT"
+          if [ "$all" = true ]; then echo "Every changed file matches EXEMPT_PATHS ($EXEMPT_PATHS): no record needed."; fi
+
+      - name: Verify the check record for this content
+        if: steps.exempt.outputs.exempt != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          hash=$(git ls-tree HEAD | grep -v -P '\t\.checks$' | git mktree)
+          rec=".checks/${hash}.json"
+          echo "content hash: ${hash}"
+          if [ ! -f "$rec" ]; then
+            echo "::error::No check record for this content (${rec}). Run 'sh tools/check --record' locally, then push."
+            exit 1
+          fi
+          result=$(jq -r '.result' "$rec")
+          if [ "$result" != "pass" ]; then
+            echo "::error::Check record ${rec} says '${result}', not 'pass'."
+            exit 1
+          fi
+          echo "Check record OK:"
+          jq '{content_hash, result, user, checked_at, r_version, toolkit, checks}' "$rec"

@@ -30,7 +30,7 @@ each result came from always do.**
 5. **Verify** that your copies are byte-identical to the inputs the results
    were built from (`data/README.md`, "Verify") before running anything.
 6. **Checks**, before every push, on your machine:
-   `Rscript --no-init-file tools/check.R`.
+   `sh tools/check --record` (commits a check record when all pass).
 
 ## Layout
 
@@ -45,7 +45,8 @@ paper/            the manuscript (paper/main.tex)
 references/       bibliography and notes on sources
 docs/             analysis plan, notes, decisions
 tests/            testthat suite; tests/testthat.R runs it
-tools/check.R     every local check; .githooks/pre-push runs it before a push
+tools/check.R     every local check; sh tools/check --record runs it and records
+.checks/          check records; .githooks/pre-push requires one before a push
 ```
 
 ## Results

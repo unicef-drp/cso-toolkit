@@ -32,7 +32,7 @@ not even a small table or its sidecar, is ever committed.
 4. **Inputs.** Fill `inputs/` from the deposit with `dw_fetch_inputs()`; it
    checks every copy's sha256 against the deposit (`inputs/README.md`).
 5. **Checks**, before every push, on your machine:
-   `Rscript --no-init-file tools/check.R`.
+   `sh tools/check --record` (commits a check record when all pass).
 
 `cso_project.yml` declares the project **{{collaboration}}**.
 
@@ -52,7 +52,8 @@ _config_template/        user_config.yml template (placeholders only; your copy 
 inputs/                  README.md, input_manifest.csv and sidecars (committed); the inputs are git-ignored
 releases/<vintage>/      release record: output_manifest.csv and sidecars, committed AFTER publication
 tests/                   testthat suite; tests/testthat.R runs it
-tools/check.R            every local check, embargo included; .githooks/pre-push runs it
+tools/check.R            every local check, embargo included; sh tools/check --record runs it
+.checks/                 check records; .githooks/pre-push requires one before a push
 ```
 
 The canonical raw data, API caches and promoted work data live in the

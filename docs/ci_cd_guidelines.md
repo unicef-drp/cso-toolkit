@@ -160,9 +160,21 @@ Rscript --no-init-file tools/check.R --only lint     # an opt-in check
 - Needs R, git, and the packages testthat, jsonlite (installed with
   testthat) and yaml; gitleaks for the secret scan (skipped without it).
 
+**Check records.** `sh tools/check --record` ([`templates/tools/check`](../templates/tools/check),
+a wrapper that starts R right on Windows) runs the checks on a clean working
+tree and, if none fails, commits `.checks/<content-hash>.json`, where the hash
+is git's tree ID with `.checks/` left out. The pre-push hook (verify mode)
+refuses a push without a passing record; the workflow
+[`templates/workflows/check-record.yml`](../templates/workflows/check-record.yml),
+on by default for pull requests into `develop` and `main`, verifies it in
+about 10 seconds without R. Handbook chapter 45, "Check records", has the
+details, the branch-protection settings and the Windows note.
+
 **Pre-push hook.** [`templates/hooks/pre-push`](../templates/hooks/pre-push)
-runs `tools/check.R` before every push and stops the push when a check
-fails. Install it either as a tracked hook for everyone who opts in:
+requires a passing check record for each pushed branch (`MODE=verify`, the
+default; no R) or, with `MODE=run` at its top, runs `tools/check.R` and stops
+the push when a check fails. Install it either as a tracked hook for everyone
+who opts in:
 
 ```bash
 mkdir -p .githooks
@@ -184,14 +196,16 @@ branch → pull request into `develop` → release pull request `develop` →
 
 **By default (Actions off for routine work):**
 
-- The pull request author runs `tools/check.R` on the branch's head commit
-  and pastes the output into the pull request description (or a comment).
-  The header line names the commit and flags uncommitted changes; the
-  reviewer checks that it matches the pull request's head and that every
-  line is `PASS` (a `SKIP` says why). A new push needs a new run.
-- Required status checks are **not** set: with the default triggers the
-  workflows do not run on pull requests into `develop`, and a required
-  check that never runs blocks the merge forever.
+- The pull request author runs `sh tools/check --record`; the
+  `check-record` workflow verifies the record of the pull request's head.
+  Require the status `check-record` on `develop` and `main`, with
+  "Require branches to be up to date before merging", so what merges is the
+  checked content. After merging `develop` into a branch, record again.
+- Pull requests that only touch generated files (bot rebuilds) pass without
+  a record when their paths are listed in the workflow's `EXEMPT_PATHS`.
+- The opt-in workflows are **not** required: with the default triggers
+  they do not run on pull requests into `develop`, and a required check
+  that never runs blocks the merge forever.
 - The release pull request into `main` triggers the workflows (their
   default trigger), which gives each release an independent run on a clean
   runner at a cost of a few minutes per release. Any workflow can also be

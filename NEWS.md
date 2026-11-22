@@ -88,6 +88,26 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
   `.dw_diff_profile()`, which can now be dropped. Parity case
   `compare_diagnose`; Stata keeps `r(col_changed)`.
 
+- **Check records: local checks verified on GitHub at almost no Actions
+  cost (#174).** The templates gain:
+  - `sh tools/check --record` (new wrapper `templates/tools/check`, which
+    also starts R without Git Bash's `HOME` on Windows): on a clean tree, a
+    run in which nothing fails commits `.checks/<content-hash>.json`, the
+    hash being git's tree ID without `.checks/`;
+  - a pre-push hook that verifies the record by default (`MODE=verify`, no
+    R) or runs the checks (`MODE=run`);
+  - `check-record.yml`, the one workflow on by default: pull requests into
+    `develop` and `main`, about 10 seconds, no R, with `EXEMPT_PATHS` for
+    bot pull requests that only touch generated files;
+  - `.checks/README.md`, a `.gitignore` re-include for `.checks/*.json`
+    and `tools/check` pinned to LF in `.gitattributes`.
+
+  `create_research_project()` and `create_official_stats_project()` write
+  them all and print the branch-protection steps. The project READMEs and
+  CONTRIBUTING files now say `sh tools/check --record`. Handbook chapter 45
+  gains a "Check records" section with the branch-protection settings and
+  the Windows note. cso-toolkit itself keeps its parity certificate.
+
 ### Fixed
 
 - **`dw_compare()` no longer compares a file with itself (R, Python,
