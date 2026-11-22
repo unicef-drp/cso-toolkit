@@ -45,7 +45,8 @@ def test_t2_reviewer_target_ahead_warns(manifest):
     with pytest.warns(UserWarning, match=r"\[cso_toolkit\.cso_toolkit_check\]") as rec:
         res = m.cso_toolkit_check(quiet=True)
     msg = str(rec[0].message)
-    assert 'cso_toolkit_pull(target_version="v0.9.1")' in msg
+    assert 'cso_toolkit_sync(target_version="v0.9.1")' in msg
+    assert "cso_toolkit_pull(" not in msg and "re-pins the manifest" in msg   # #213
     assert "Fix:" in msg and "Reviewer mode: no network call" in msg
     assert res["behind_target"] is True and res["target_source"] == "manifest"
     assert res["upstream_version"] is None
@@ -58,7 +59,8 @@ def test_t3_quiet_false_logs_box(manifest, caplog):
             m.cso_toolkit_check(quiet=False)
     text = caplog.text
     assert "BEHIND its target version" in text
-    assert 'cso_toolkit_pull(target_version="v0.9.1")' in text
+    assert 'cso_toolkit_sync(target_version="v0.9.1")' in text
+    assert "cso_toolkit_pull(" not in text   # #213
 
 
 def test_t4_argument_overrides_manifest(manifest, recwarn):
