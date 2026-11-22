@@ -20,6 +20,21 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
   is MIT-licensed: `LICENSE` now names `plugins/`, `.claude-plugin/`,
   `conformance/` and `tools/` in its code section.
 
+- **Working with AI coding agents (handbook chapter 46 and templates; no
+  helper code changes; #173).** The chapter sets out the instructions file
+  every toolkit repository carries, what an agent may do (reviewer by
+  default; no `takeover = TRUE`, deposits or releases without a person), what
+  it may see (no microdata rows; no pre-release official figures), where
+  project knowledge lives (`decisions.md`, not personal agent memory), how
+  agent output is checked, parallel sessions in worktrees, and recording and
+  disclosing AI use. Templates in `templates/agents/`: `AGENTS.md`
+  (tool-neutral; the chapter includes it verbatim, so the two cannot drift),
+  `AGENTS-official-stats.md` (the embargo section), `CLAUDE.md`
+  (`@AGENTS.md`) and `decisions.md` (decisions and an AI-use table). Both
+  `.gitignore` templates now ignore personal agent settings
+  (`.claude/settings.local.json`, `CLAUDE.local.md`) in their shared secrets
+  block.
+
 - **Parity certificate: one local command that checks R, Python and Stata
   agree (#190).**
   - `sh tools/certify` runs the cases in `conformance/cases/` through a

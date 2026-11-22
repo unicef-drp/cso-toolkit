@@ -110,6 +110,10 @@
 .netrc
 user_config.yml
 .Renviron
+# Personal AI-agent settings and notes. The shared ones stay tracked:
+# AGENTS.md, CLAUDE.md and .claude/settings.json.
+.claude/settings.local.json
+CLAUDE.local.md
 # A placeholder template may be re-included after this block with an
 # explicit `!` line (the official-stats template keeps
 # _config_template/user_config.yml that way).
