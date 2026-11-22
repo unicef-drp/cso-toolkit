@@ -16,7 +16,8 @@ Under the following terms:
   license, and indicate if changes were made.
 
 ================================================================================
-CODE (everything under r/, stata/, python/):
+CODE (everything under r/, stata/, python/, conformance/, tools/, plugins/
+and .claude-plugin/):
 MIT License
 ================================================================================
 

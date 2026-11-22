@@ -8,6 +8,18 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 
 ### Added
 
+- **Claude Code plugin with five skills (#173).** The repository is now a
+  Claude Code marketplace (`.claude-plugin/marketplace.json`, name
+  `unicef-cso`) with one plugin, `plugins/cso-toolkit/`: `new-project`,
+  `provenance`, `check`, `review` and `update-toolkit`. Each skill is a short
+  procedure that links to the handbook chapter holding the rules. Install
+  with `claude plugin marketplace add unicef-drp/cso-toolkit` and
+  `claude plugin install cso-toolkit@unicef-cso`; the plugin README has a
+  test prompt per skill. `update-toolkit` runs `cso_toolkit_sync()` (a dry
+  run first); `check` ends with `sh tools/check --record` (#174). The plugin
+  is MIT-licensed: `LICENSE` now names `plugins/`, `.claude-plugin/`,
+  `conformance/` and `tools/` in its code section.
+
 - **Working with AI coding agents (handbook chapter 46 and templates; no
   helper code changes; #173).** The chapter sets out the instructions file
   every toolkit repository carries, what an agent may do (reviewer by
