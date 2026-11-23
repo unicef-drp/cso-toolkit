@@ -262,6 +262,7 @@ cases <- list(
 		sbp <- file.path(sb, rel); scp <- paste0(sbp, ".staged.json")
 		out <- dw_stage(file.path(teams, rel))           # canonical input -> sandbox
 		sc <- jsonlite::fromJSON(scp)
+		sc_sha_ok <- identical(sc$sha256, sha(file.path(z, rel)))
 		mt <- file.mtime(sbp)
 		Sys.sleep(1.1)
 		dw_stage(sbp)
@@ -282,7 +283,7 @@ cases <- list(
 		out_json(list(
 			returns_sandbox = .normalize_for_comparison(out) == .normalize_for_comparison(sbp),
 			sidecar_keys = sort(names(sc)), sidecar_type = sc$type, source_root = sc$source_root,
-			sidecar_sha_matches = identical(sc$sha256, sha(file.path(z, rel))),
+			sidecar_sha_matches = sc_sha_ok,
 			mtime_format_ok = grepl("^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d[+-]\\d{4}$", sc$mtime),
 			second_call_copied = second_copied,
 			drift_stops = !is.null(e_drift) && grepl("SANDBOX DRIFT", conditionMessage(e_drift)),

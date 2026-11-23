@@ -315,6 +315,7 @@ def stage_lifecycle(cid: str) -> None:
         scp = Path(str(sbp) + ".staged.json")
         out = m.dw_stage(str(teams / rel))                 # canonical input -> sandbox
         sc = json.loads(scp.read_text(encoding="utf-8"))
+        sc_sha_ok = sc.get("sha256") == sha(z / rel)
         mt = sbp.stat().st_mtime
         time.sleep(1.1)
         m.dw_stage(str(sbp))
@@ -347,7 +348,7 @@ def stage_lifecycle(cid: str) -> None:
             "returns_sandbox": norm(out) == norm(sbp),
             "sidecar_keys": sorted(sc), "sidecar_type": sc.get("type"),
             "source_root": sc.get("source_root"),
-            "sidecar_sha_matches": sc.get("sha256") == sha(z / rel),
+            "sidecar_sha_matches": sc_sha_ok,
             "mtime_format_ok": bool(re.match(r"^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d[+-]\d{4}$",
                                              sc.get("mtime") or "")),
             "second_call_copied": second_copied,
