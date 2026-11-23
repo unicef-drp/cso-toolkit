@@ -48,8 +48,8 @@ Uniform read / write / compare / merge helpers with mode-aware path routing (pat
 | `dw_verify_z` | ✅ | ✅ | — | R + Python only |
 | `dw_resolve_path` | ✅ | ✅ | — | Mode-aware path resolver |
 | `dw_is_canonical` | ✅ | ✅ | — | Detects a canonical deposit; recognises the Z: (`dwZDrive`) root in R as of v0.5.0 |
-| `dw_root` | ✅ | — | — | Public wrapper around the root resolver (re-exported v0.4.6) |
-| `dw_stage` | ✅ | — | — | R export |
+| `dw_root` | ✅ | ✅ | — | Public wrapper around the root resolver (re-exported v0.4.6) |
+| `dw_stage` | ✅ | ✅ | — | Reviewer copy of a canonical input with a `.staged.json` hash sidecar; `dw_use(stage = TRUE)` calls it (Python since v0.12.0) |
 | `dw_fetch_inputs` | ✅ | ✅ | — | R and Python (#152; Stata via R or Python): fill a gitignored local inputs folder from the Teams / Z: deposit, `.gitkeep` per folder, input manifest |
 | `dw_check_deposit` | ✅ | ✅ | — | R and Python (#152; Stata via R or Python): every local input has an identical SHA-256 copy on Teams or Z: |
 | `dw_read_provenance` | ✅ | ✅ | — | R and Python (#152; Stata via R or Python): read the `.provenance.json` sidecar of an output |
