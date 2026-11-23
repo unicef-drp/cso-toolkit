@@ -6,7 +6,7 @@ Python port of ``r/R/aggregate_data.R`` and ``r/R/aggregate_data_v2.R``.
   optional global aggregate, population + country coverage).  Kept for
   back-compat.
 * :func:`aggregate_data_v2` — enhanced cross-sector signature with
-  ``weighted_mean`` / ``mean`` / ``sum`` / ``proportion`` methods,
+  ``weighted_mean`` / ``mean`` / ``sum`` / ``proportion`` / ``total`` methods,
   coverage threshold, metadata columns.
 * :func:`generate_agg_footnote` — standardised footnote string for
   aggregated estimates.
@@ -208,7 +208,13 @@ def aggregate_data_v2(
         Include a global aggregation row.
     method
         One of ``"weighted_mean"`` (default), ``"mean"``, ``"sum"``,
-        ``"proportion"``.
+        ``"proportion"``, ``"total"``.  ``"sum"`` returns a
+        population-weighted rate (``sum(value) / sum(weight) * 100``);
+        ``"total"`` returns an additive count or stock total
+        (``sum(value)``) for person-count indicators (e.g. refugees,
+        displaced persons, births), where the regional value is the sum
+        of the country values.  Missing values are dropped, so a group
+        with no values totals 0, as in R.
     coverage_threshold
         Minimum population coverage (0–1) to report aggregate.  ``None``
         means no threshold.
@@ -225,14 +231,15 @@ def aggregate_data_v2(
     -------
     pd.DataFrame
     """
-    valid_methods = ("weighted_mean", "mean", "sum", "proportion")
+    valid_methods = ("weighted_mean", "mean", "sum", "proportion", "total")
     if method not in valid_methods:
         raise ValueError(
             "[cso_toolkit.aggregate_data_v2] `method` must be one of "
             f"{valid_methods}; got {method!r}.\n"
             "  Fix: pick the aggregation method that matches the "
-            "indicator semantics — weighted_mean for rates, sum for "
-            "totals, proportion for indicators expressed as percentages."
+            "indicator semantics — weighted_mean for rates, total for "
+            "additive counts (sum returns a population-weighted rate), "
+            "proportion for indicators expressed as percentages."
         )
 
     if validate:
@@ -284,6 +291,8 @@ def aggregate_data_v2(
         elif method == "sum":
             denom = w.sum()
             agg = (v.sum() / denom * 100.0) if denom else float("nan")
+        elif method == "total":
+            agg = v.sum()
         else:  # proportion
             datapop = g["_weight_non_na"].sum()
             popaffected = g["_num_affected"].sum(skipna=True)
@@ -332,7 +341,9 @@ def aggregate_data_v2(
         elif method == "sum":
             denom_all = w_all.sum()
             agg_all = (v_all.sum() / denom_all * 100.0) if denom_all else float("nan")
-        else:
+        elif method == "total":
+            agg_all = v_all.sum()
+        else:  # proportion
             datapop = df["_weight_non_na"].sum()
             popaffected = df["_num_affected"].sum(skipna=True)
             agg_all = (popaffected / datapop * 100.0) if datapop else float("nan")
