@@ -6,6 +6,16 @@ _Entries land here as PRs merge into `develop`. When the next release
 is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
+### Added
+
+- **`aggregate_data_v2(method = "total")` in Python.** The additive
+  total (the sum of the country values, for person counts such as
+  refugees or births) was R-only; Python now matches it, per group and
+  for the global row. Missing values are dropped, so a group with no
+  values totals 0, as in R; `coverage_threshold` still blanks groups
+  below it. New parity case `aggregate_total` (Stata: gap, no
+  `aggregate_data_v2`). Handbook chapters 12 and 33 updated.
+
 ## v0.11.1 (2026-11-22)
 
 A patch: `cso_toolkit_check()` now tells a producer to update with
