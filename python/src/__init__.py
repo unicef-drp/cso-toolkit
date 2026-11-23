@@ -28,6 +28,7 @@ from .dw_io import (
     dw_resolve_path,
     dw_root,
     dw_save,
+    dw_stage,
     dw_toolkit_version,
     dw_use,
     dw_verify_z,
@@ -117,7 +118,7 @@ __all__ = [
     "_state",
     # IO
     "dw_save", "dw_use", "dw_compare", "dw_diff_profile", "dw_merge", "dw_isid",
-    "dw_verify_z", "dw_resolve_path", "dw_is_canonical",
+    "dw_verify_z", "dw_resolve_path", "dw_is_canonical", "dw_stage",
     "dw_root", "dw_default_unicef_allowlist",
     "dw_toolkit_version",
     # Deposit inputs and run provenance

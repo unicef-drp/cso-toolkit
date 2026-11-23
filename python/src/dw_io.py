@@ -37,6 +37,7 @@ Public entry points:
 * :func:`dw_resolve_path` — logical → filesystem path resolution
 * :func:`dw_is_canonical` — canonical-root test
 * :func:`dw_verify_z` — Teams vs Z: integrity check
+* :func:`dw_stage` — reviewer copy of a canonical input, hash-guarded
 * :func:`dw_isid` — Stata-style uniqueness check
 * :func:`dw_toolkit_version` — return the version stamp ("0.11.1")
 """
@@ -399,6 +400,39 @@ def _dw_teams_mirror_path(primary_path: Union[str, Path]) -> Optional[str]:
             rel = pn[len(src_n):].lstrip("/")
             return f"{dst_n}/{rel}".replace("//", "/")
     return None
+
+
+def _dw_canonical_to_sandbox(path: Union[str, Path]) -> str:
+    """Map a canonical-rooted path back to its sandbox equivalent.
+
+    The inverse of :func:`_dw_remote_mirrors`.  If ``path`` lies under a
+    ``*Canonical`` root (``teamsRawDataCanonical`` /
+    ``teamsWrkDataCanonical`` / ``teamsFolderCanonical``), returns the
+    same relative path under the matching local root (``teamsRawData`` /
+    ``teamsWrkData`` / ``teamsFolder``), which in reviewer mode is the
+    sandbox.  Otherwise returns the normalised input unchanged.
+
+    Needed by :func:`dw_stage`: a sector conductor may legitimately pass
+    a canonical-rooted input; without this mapping the sidecar would land
+    next to the Teams source.  Mirrors R's ``.dw_canonical_to_sandbox``.
+    """
+    pn = _normalize(path)
+    pairs = [
+        (_state._get("teamsRawDataCanonical"), _state._get("teamsRawData")),
+        (_state._get("teamsWrkDataCanonical"), _state._get("teamsWrkData")),
+        (_state._get("teamsFolderCanonical"), _state._get("teamsFolder")),
+    ]
+    for canon, local in pairs:
+        if not (canon and local):
+            continue
+        cn = _normalize(canon).rstrip("/")
+        ln = _normalize(local).rstrip("/")
+        if cn == ln:
+            continue  # not redirected (e.g. producer mode); nothing to map
+        if pn == cn or pn.startswith(cn + "/"):
+            rel = pn[len(cn):].lstrip("/")
+            return f"{ln}/{rel}" if rel else ln
+    return pn
 
 
 def _dw_remote_mirrors(primary_path: Union[str, Path]) -> dict:
@@ -1421,6 +1455,8 @@ def dw_use(
     as_: str = "dataframe",
     fallback_canonical: bool = True,
     verify_z: Union[bool, str] = True,
+    stage: Optional[bool] = None,
+    overwrite: bool = False,
     **kwargs: Any,
 ) -> Any:
     """Read a file from disk, dispatching on the file extension.
@@ -1448,6 +1484,15 @@ def dw_use(
     verify_z
         ``True``, ``False``, or ``"sha256"``.  Controls the Z: integrity
         check for canonical reads.
+    stage
+        Reviewer mode only.  ``True`` copies the canonical input into the
+        sandbox with :func:`dw_stage` (hash-checked) and reads the
+        verified copy; ``False`` reads in place.  ``None`` (default)
+        follows the session's ``dw_autostage`` setting, which is off
+        unless the profile turns it on.
+    overwrite
+        Forwarded to :func:`dw_stage` when staging: re-copy from the
+        canonical source even when a staged copy exists.
     **kwargs
         Format-specific arguments passed through to the underlying reader.
 
@@ -1478,7 +1523,14 @@ def dw_use(
         path = dw_resolve_path(name=name, sector=sector, kind=kind)
     path = str(path)
 
-    resolved = _resolve_for_read(path, fallback_canonical=fallback_canonical)
+    # Reviewer auto-stage (R v0.4.9).  Opt-in per call (stage=True) or for
+    # the session (dw_autostage).  Off by default: read in place as before.
+    stage_on = bool(stage) if stage is not None else bool(_state._get("dw_autostage"))
+    if (stage_on and _state._get("dw_mode") == "reviewer"
+            and not path.lower().startswith(("http://", "https://"))):
+        resolved = dw_stage(path, overwrite=overwrite)
+    else:
+        resolved = _resolve_for_read(path, fallback_canonical=fallback_canonical)
 
     # Z: integrity check (non-blocking)
     if verify_z and dw_is_canonical(resolved) and _state._get("dw_z_available"):
@@ -1520,6 +1572,213 @@ def dw_use(
         )
 
     return x
+
+
+# ---------------------------------------------------------------------------
+# dw_stage — reviewer auto-stage with hash guard
+# ---------------------------------------------------------------------------
+
+def _stage_mtime_iso(path: Union[str, Path]) -> str:
+    """File mtime as R's ``format(file.mtime(p), "%Y-%m-%dT%H:%M:%S%z")``.
+
+    Local time with a ``+HHMM`` offset, whole seconds.  Must match R byte
+    for byte: the upstream-changed check compares this string with the
+    sidecar's, and a mismatch would make every read hash the source.
+    """
+    ts = Path(path).stat().st_mtime
+    return _dt.datetime.fromtimestamp(ts).astimezone().strftime("%Y-%m-%dT%H:%M:%S%z")
+
+
+def dw_stage(path: Union[str, Path], overwrite: bool = False) -> str:
+    """Stage a canonical input into the reviewer's sandbox, hash-verified.
+
+    Python port of R's ``dw_stage()``.  Reviewer mode only; in any other
+    mode it returns ``path`` unchanged with no I/O.
+
+    ``path`` may be the sandbox path or the canonical path a sector
+    conductor builds; either way the sandbox target is derived from it.
+    The source is Z: when it holds the file, else Teams.
+
+    * **First stage** (no sandbox copy): when Z: and Teams both hold the
+      file their sha256 must agree, else ``RuntimeError`` (CANONICAL
+      INTEGRITY).  The file is copied to ``<path>.dw_stage.tmp``,
+      hash-checked, and renamed into place (one retry, then
+      ``RuntimeError``, COPY INTEGRITY), and the sidecar
+      ``<path>.staged.json`` is written.
+    * **Later runs**: the copy is not repeated.  A missing sidecar, a
+      sidecar of another ``type``, or a sandbox file whose sha256 no
+      longer matches the sidecar raises ``RuntimeError`` (SANDBOX DRIFT).
+      When the source's size or mtime changed and its sha256 differs,
+      a ``UserWarning`` (UPSTREAM CHANGED) is issued and the sandbox is
+      NOT refreshed: rolling inputs forward is the reviewer's decision.
+    * ``overwrite=True`` re-copies from the source unconditionally.
+
+    The sidecar schema is the R one, so a file staged in R verifies in
+    Python and vice versa.
+
+    Parameters
+    ----------
+    path
+        Sandbox or canonical path of the input.
+    overwrite
+        Re-copy from the canonical source even if a staged copy exists.
+
+    Returns
+    -------
+    str
+        The normalised sandbox path (``path`` unchanged outside reviewer
+        mode).
+    """
+    if _state._get("dw_mode") != "reviewer":
+        return str(path)
+
+    sandbox_path = _dw_canonical_to_sandbox(path)
+    mirrors = _dw_remote_mirrors(sandbox_path)
+    src_candidates = {k: mirrors.get(k) for k in ("z", "teams")}
+    src_candidates = {k: v for k, v in src_candidates.items() if v}
+    sidecar = sandbox_path + ".staged.json"
+    name = Path(sandbox_path).name
+
+    def short(h: Optional[str]) -> str:
+        return h[:12] if h else "<na>"
+
+    def sha(f: str) -> Optional[str]:
+        try:
+            return _sha256_file(f)
+        except OSError:
+            return None
+
+    def first_src() -> Optional[tuple]:
+        for k in ("z", "teams"):
+            p = src_candidates.get(k)
+            if p and Path(p).is_file():
+                return p, k
+        return None
+
+    Path(sandbox_path).parent.mkdir(parents=True, exist_ok=True)
+    needs_copy = not Path(sandbox_path).exists() or bool(overwrite)
+
+    if needs_copy:
+        src = first_src()
+        if src is None:
+            looked = "\n        ".join(dict.fromkeys([sandbox_path, *src_candidates.values()]))
+            raise FileNotFoundError(
+                f"[cso_toolkit.dw_stage] '{name}' not found in sandbox, Z:, or Teams.\n"
+                f" Looked: {looked}\n"
+                " Fix: ask the producer to deposit this input, or remount "
+                "the missing canonical drive."
+            )
+        src_path, src_root = src
+        z_p, t_p = src_candidates.get("z"), src_candidates.get("teams")
+        if z_p and t_p and Path(z_p).is_file() and Path(t_p).is_file():
+            zsha, tsha = sha(z_p), sha(t_p)
+            if zsha and tsha and zsha != tsha:
+                raise RuntimeError(
+                    f"[cso_toolkit.dw_stage] CANONICAL INTEGRITY: Z: and Teams "
+                    f"disagree for '{name}'.\n"
+                    f" Z={short(zsha)} Teams={short(tsha)}\n"
+                    " Fix: re-deposit the canonical artifact on whichever "
+                    "mirror is stale and re-stage; the producer's deposit "
+                    "pipeline must converge Z: and Teams before any reviewer reads."
+                )
+        src_sha = sha(src_path)
+        # Atomic copy: stage to a temp file, check its hash, then replace.
+        # os.replace overwrites an existing target on Windows too, so the
+        # forced re-stage needs no separate remove (R needs one).
+        tmp_path = sandbox_path + ".dw_stage.tmp"
+        ok_copy = False
+        for attempt in (1, 2):
+            Path(tmp_path).unlink(missing_ok=True)
+            shutil.copy2(src_path, tmp_path)
+            if sha(tmp_path) == src_sha:
+                try:
+                    os.replace(tmp_path, sandbox_path)
+                    ok_copy = True
+                    break
+                except OSError:
+                    pass
+            Path(tmp_path).unlink(missing_ok=True)
+            if attempt == 1:
+                _log.info("[dw_stage] copy mismatch for %s -- retrying once ...", name)
+        if not ok_copy:
+            raise RuntimeError(
+                f"[cso_toolkit.dw_stage] COPY INTEGRITY: sandbox copy of '{name}' "
+                f"does not match source after re-copy (src {short(src_sha)} != "
+                f"sandbox {short(sha(sandbox_path))}).\n"
+                f" Fix: investigate the filesystem between {src_root.upper()} "
+                "and the sandbox (disk full / antivirus / permission); re-stage "
+                "with overwrite=True once the filesystem is healthy."
+            )
+        try:
+            version: Optional[str] = dw_toolkit_version()
+        except Exception:  # noqa: BLE001
+            version = None
+        record = {
+            "type": "dw_stage",
+            "source": src_path,
+            "source_root": src_root,
+            "sha256": src_sha,
+            "size": Path(src_path).stat().st_size,
+            "mtime": _stage_mtime_iso(src_path),
+            "staged_at": _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "dw_toolkit_version": version,
+        }
+        Path(sidecar).write_text(json.dumps(record, indent=2), encoding="utf-8")
+        _log.info("[dw_stage] %s staged from %s + copy verified (sha256 %s)",
+                  name, src_root.upper(), short(src_sha))
+        return sandbox_path
+
+    # ---- later run, overwrite=False: verify, do NOT re-copy ----
+    if not Path(sidecar).exists():
+        raise RuntimeError(
+            f"[cso_toolkit.dw_stage] '{name}' present in sandbox but has no "
+            f"archived hash sidecar at {sidecar}.\n"
+            " Fix: re-stage with overwrite=True to establish the baseline."
+        )
+    try:
+        sc: Optional[dict] = json.loads(Path(sidecar).read_text(encoding="utf-8"))
+        if not isinstance(sc, dict):
+            sc = None
+    except (OSError, ValueError):
+        sc = None
+    # A missing `type` is tolerated (sidecars from the v0.4.5-dev era).
+    if sc is not None and sc.get("type") and sc.get("type") != "dw_stage":
+        raise RuntimeError(
+            f"[cso_toolkit.dw_stage] sidecar at {sidecar} has type='{sc['type']}' "
+            "(expected 'dw_stage').\n"
+            " Fix: re-stage with overwrite=True to refresh -- the sidecar was "
+            "likely written by another tool (e.g. dw_save) and shouldn't be "
+            "interpreted as a dw_stage archive."
+        )
+    live = sha(sandbox_path)
+    if sc is None or live is None or live != sc.get("sha256"):
+        archived = sc.get("sha256") if sc else None
+        raise RuntimeError(
+            f"[cso_toolkit.dw_stage] SANDBOX DRIFT: '{name}' no longer matches "
+            f"its archived hash (archived {short(archived)} != live {short(live)}).\n"
+            " The staged copy was modified out of band.\n"
+            " Fix: re-stage with overwrite=True to restore the canonical "
+            "version, or investigate which tool wrote to the sandbox before "
+            "re-running the review."
+        )
+    # Upstream drift: size + mtime fast path, sha256 only on change.
+    src = first_src()
+    if src is not None:
+        src_path, src_root = src
+        st_size = Path(src_path).stat().st_size
+        if st_size != sc.get("size", -1) or _stage_mtime_iso(src_path) != (sc.get("mtime") or ""):
+            if sha(src_path) != sc.get("sha256"):
+                warnings.warn(
+                    f"[cso_toolkit.dw_stage] UPSTREAM CHANGED: '{name}' on "
+                    f"{src_root.upper()} differs from the staged copy.\n"
+                    " Fix: re-stage with overwrite=True to refresh the sandbox "
+                    "to the new canonical bytes -- auto-refresh is intentionally "
+                    "not performed so the reviewer keeps explicit control of "
+                    "when canonical inputs roll forward.",
+                    stacklevel=2,
+                )
+    _log.info("[dw_stage] verified staged copy of %s", name)
+    return sandbox_path
 
 
 # ---------------------------------------------------------------------------
