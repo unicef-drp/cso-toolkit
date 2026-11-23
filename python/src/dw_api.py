@@ -27,11 +27,14 @@ Supported ``api`` values:
 * ``"sdmx"`` — SDMX data fetch (any provider + flowRef)
 * ``"sdmx_codelist"`` — SDMX codelist GET + JSON parse
 * ``"wb"`` — World Bank ``wbgapi.data.fetch``
+* ``"wb_indicators"`` — World Bank indicator catalogue
 * ``"ilo"`` — ILO SDMX
 * ``"unsd_sdg"`` — UNSD SDG API: POST with form-encoded seriesCodes
 * ``"github_raw"`` — pinned-commit raw.githubusercontent.com fetch
 * ``"http"`` — generic HTTP GET returning text
 * ``"json_get"`` — generic JSON GET → parsed object
+* ``"csv"`` — flat CSV at a URL (SDMX REST-CSV, Data360, ILOSTAT) →
+  data frame
 """
 
 from __future__ import annotations
@@ -727,6 +730,36 @@ def _fetch_http(url: str, headers: Optional[Mapping[str, str]] = None,
     return resp.text
 
 
+def _fetch_csv(url: str, **kwargs: Any) -> pd.DataFrame:
+    """Generic CSV-at-a-URL GET → parsed data frame.
+
+    For flat CSV endpoints that ``github_raw`` (GitHub-only) and ``http``
+    (raw text, no round-trip) do not cover: SDMX REST-CSV, World Bank
+    Data360 file URLs, ILOSTAT rplumber ``format=.csv``.  An ``http(s)``
+    URL goes through the toolkit's HTTP wrapper, so network failures get
+    the usual error envelope; anything else (a local path) is read
+    directly.  Extra keyword arguments are passed to ``pandas.read_csv``,
+    as R passes ``...`` to ``readr::read_csv``.
+    """
+    import io
+
+    if str(url).lower().startswith(("http://", "https://")):
+        resp = _http_call("get", url, timeout=120)
+        source: Any = io.StringIO(resp.text)
+    else:
+        source = url
+    try:
+        return pd.read_csv(source, **kwargs)
+    except (ValueError, pd.errors.ParserError) as exc:
+        raise RuntimeError(
+            f"[cso_toolkit.dw_api/_fetch_csv] Could not parse {url} as CSV.\n"
+            f"  Underlying error: {type(exc).__name__}: {exc}\n"
+            "  Fix: check that the URL returns CSV (some endpoints return "
+            "an HTML error page or JSON on bad parameters), and pass "
+            "read_csv options such as sep= for non-comma files."
+        ) from exc
+
+
 def _fetch_json_get(url: str, **_: Any) -> Any:
     """Generic JSON GET → parsed object."""
     resp = _http_call("get", url, timeout=120)
@@ -755,4 +788,5 @@ _DISPATCH = {
     "github_raw": _fetch_github_raw,
     "http": _fetch_http,
     "json_get": _fetch_json_get,
+    "csv": _fetch_csv,
 }
