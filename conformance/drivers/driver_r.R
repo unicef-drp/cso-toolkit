@@ -115,6 +115,14 @@ cases <- list(
 		out_csv(a, id)
 	},
 
+	aggregate_total = function(id) {
+		plain()
+		x <- as.data.frame(dw_use(fx("aggregate_total_input.csv")))
+		a <- aggregate_data_v2(x, value = "value", weight = "weight", by = "Region_Code",
+		                       method = "total", global = TRUE, global_label = "WORLD")
+		out_csv(a, id)
+	},
+
 	version_compare = function(id) {
 		case <- jsonlite::fromJSON(file.path(repo, "conformance", "cases", paste0(id, ".json")),
 		                           simplifyVector = FALSE)

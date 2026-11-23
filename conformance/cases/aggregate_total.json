@@ -1,0 +1,32 @@
+{
+  "id": "aggregate_total",
+  "title": "aggregate_data_v2 method = \"total\": additive counts by region and for the world, missing values dropped",
+  "surface": [
+    "aggregate_data_v2"
+  ],
+  "kind": "values",
+  "fixtures": [
+    "aggregate_total_input.csv"
+  ],
+  "keys": [
+    "Region_Code"
+  ],
+  "columns": [
+    "Region_Code",
+    "Aggregate",
+    "Pop_Covered"
+  ],
+  "tolerance": 1e-09,
+  "rows": 4,
+  "languages": [
+    "r",
+    "python"
+  ],
+  "gaps": {
+    "stata": {
+      "issue": "coverage matrix",
+      "reason": "Stata has no aggregate_data_v2."
+    }
+  },
+  "divergences": {}
+}
