@@ -15,6 +15,13 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
   values totals 0, as in R; `coverage_threshold` still blanks groups
   below it. New parity case `aggregate_total` (Stata: gap, no
   `aggregate_data_v2`). Handbook chapters 12 and 33 updated.
+- **`dw_api_fetch(api = "csv")` in Python.** The flat CSV-at-a-URL
+  source (SDMX REST-CSV, Data360 file URLs, ILOSTAT `format=.csv`) was
+  R-only; R and Python now share all eleven `api =` keys. An `http(s)`
+  URL goes through the toolkit's HTTP wrapper, so network errors get
+  the usual envelope; extra arguments reach `pandas.read_csv`, as R's
+  reach `readr::read_csv`. Handbook chapters 12 and 32 and appendices A,
+  D and E updated.
 
 ## v0.11.1 (2026-11-22)
 
