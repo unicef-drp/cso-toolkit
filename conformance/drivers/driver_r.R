@@ -239,6 +239,60 @@ cases <- list(
 		back <- as.data.frame(dw_use(p))
 		out_json(list(blocked = !is.null(e), envelope = !is.null(e) && is_envelope(e),
 		              takeover_written = nrow(back) == 1 && back$a[[1]] == 5), id)
+	},
+
+	stage_lifecycle = function(id) {
+		d <- file.path(work, id)
+		unlink(d, recursive = TRUE)
+		teams <- file.path(d, "teams"); z <- file.path(d, "z"); sb <- file.path(d, "sandbox")
+		rel <- file.path("nt", "regions.csv")
+		for (r in c(teams, z, sb)) dir.create(file.path(r, "nt"), recursive = TRUE, showWarnings = FALSE)
+		put <- function(root, text, f = rel) writeLines(text, file.path(root, f))
+		put(teams, c("id,value", "AFG,1")); put(z, c("id,value", "AFG,1"))
+		roots <- c("teamsRawData", "teamsWrkData", "teamsFolder")
+		set_state(dw_mode = "reviewer", teamsRawData = sb, teamsWrkData = sb, teamsFolder = sb,
+		          teamsRawDataCanonical = teams, teamsWrkDataCanonical = teams,
+		          teamsFolderCanonical = teams, dwZDrive = z, dw_z_available = TRUE)
+		on.exit({
+			do.call(set_state, stats::setNames(rep(list(NULL), 8),
+			        c(roots, paste0(roots, "Canonical"), "dwZDrive", "dw_z_available")))
+			plain()
+		})
+		sha <- function(f) digest::digest(file = f, algo = "sha256")
+		sbp <- file.path(sb, rel); scp <- paste0(sbp, ".staged.json")
+		out <- dw_stage(file.path(teams, rel))           # canonical input -> sandbox
+		sc <- jsonlite::fromJSON(scp)
+		mt <- file.mtime(sbp)
+		Sys.sleep(1.1)
+		dw_stage(sbp)
+		second_copied <- !identical(file.mtime(sbp), mt)
+		writeLines(c("id,value", "XXX,9"), sbp)          # tampered sandbox
+		e_drift <- tryCatch({dw_stage(sbp); NULL}, error = identity)
+		dw_stage(sbp, overwrite = TRUE)
+		restored <- sha(sbp) == sha(file.path(teams, rel))
+		Sys.sleep(1.1)
+		put(teams, c("id,value", "AFG,9")); put(z, c("id,value", "AFG,9"))
+		w <- NULL
+		withCallingHandlers(dw_stage(sbp), warning = function(x) {
+			w <<- conditionMessage(x); invokeRestart("muffleWarning")
+		})
+		rel2 <- file.path("nt", "other.csv")
+		put(teams, c("id", "A"), rel2); put(z, c("id", "B"), rel2)
+		e_mirror <- tryCatch({dw_stage(file.path(sb, rel2)); NULL}, error = identity)
+		out_json(list(
+			returns_sandbox = .normalize_for_comparison(out) == .normalize_for_comparison(sbp),
+			sidecar_keys = sort(names(sc)), sidecar_type = sc$type, source_root = sc$source_root,
+			sidecar_sha_matches = identical(sc$sha256, sha(file.path(z, rel))),
+			mtime_format_ok = grepl("^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d[+-]\\d{4}$", sc$mtime),
+			second_call_copied = second_copied,
+			drift_stops = !is.null(e_drift) && grepl("SANDBOX DRIFT", conditionMessage(e_drift)),
+			overwrite_restores = restored,
+			upstream_warns = !is.null(w) && grepl("UPSTREAM CHANGED", w),
+			upstream_recopied = sha(sbp) == sha(file.path(teams, rel)),
+			mirrors_disagree_stops = !is.null(e_mirror) &&
+				grepl("CANONICAL INTEGRITY", conditionMessage(e_mirror)),
+			envelope = !is.null(e_drift) && is_envelope(e_drift)
+		), id)
 	}
 )
 
