@@ -301,6 +301,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Versioning and releases</span></span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/parity.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">How the three languages stay in step</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/contributing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Contributing</span></span></a>
+  </div>
+</li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
@@ -312,19 +324,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/51-microdata-archive.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">The microdata archive: archive, catalogue, tool</span></span></a>
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">The microdata archive: archive, catalogue, tool</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/52-ihsn-grammar.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">The IHSN convention and the folder grammar</span></span></a>
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">The IHSN convention and the folder grammar</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/53-datalib-api-conformance.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">The <code>datalib_*</code> API and its conformance suite</span></span></a>
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">The <code>datalib_*</code> API and its conformance suite</span></span></a>
   </div>
 </li>
       </ul>
@@ -338,13 +350,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/61-ecosystem.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">The UNICEF analytics ecosystem: three tiers</span></span></a>
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">The UNICEF analytics ecosystem: three tiers</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/62-unicefdata.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">unicefData: public child statistics in three languages</span></span></a>
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">unicefData: public child statistics in three languages</span></span></a>
   </div>
 </li>
       </ul>
@@ -389,12 +401,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <div class="sidebar-item-container"> 
   <a href="../appendices/f-third-party-functions.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">F</span>&nbsp; <span class="chapter-title">Curated third-party functions</span></span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../appendices/g-parity-certificate.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">G</span>&nbsp; <span class="chapter-title">Cross-language parity</span></span></a>
   </div>
 </li>
       </ul>
@@ -867,7 +873,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 data-number="11.5.2" class="anchored" data-anchor-id="the-check-record-workflow"><span class="header-section-number">11.5.2</span> The check-record workflow</h3>
 <p><code>check-record.yml</code> is the one workflow on by default. It runs on pull requests into <code>develop</code> and <code>main</code> (and by hand), never on push. It checks out the pull request’s head commit, not GitHub’s merge commit, recomputes the content hash, and requires <code>.checks/&lt;hash&gt;.json</code> to exist and say <code>pass</code>; it then prints the record’s summary. It needs no R and no data, takes about 10 seconds, and has <code>contents: read</code> and <code>pull-requests: read</code> permissions. GitHub bills it as one minute on a private repository.</p>
 <p><strong>Automated pull requests</strong> (a bot rebuilding the handbook, a sync job) carry no record. List the generated paths they touch in the workflow’s <code>EXEMPT_PATHS</code> (space-separated shell patterns, where <code>*</code> also matches <code>/</code>, for example <code>docs/handbook/*</code>). A pull request whose every changed file matches one passes without a record. Anything that changes other files still needs one, whoever opened it.</p>
-<p><strong>Branch protection</strong> (Settings &gt; Branches, for <code>develop</code> and <code>main</code>): require the status check <code>check-record</code>, and tick <em>Require branches to be up to date before merging</em>. Then what merges is exactly the checked content. The toolkit repository itself uses its parity certificate (<a href="../appendices/g-parity-certificate.html">Appendix G</a>) and its package CI instead.</p>
+<p><strong>Branch protection</strong> (Settings &gt; Branches, for <code>develop</code> and <code>main</code>): require the status check <code>check-record</code>, and tick <em>Require branches to be up to date before merging</em>. Then what merges is exactly the checked content. The toolkit repository itself uses its parity certificate (<a href="../chapters/parity.html">How the three languages stay in step</a>) and its package CI instead.</p>
 </section>
 </section>
 <section id="the-opt-in-workflows" class="level2" data-number="11.6">

@@ -301,6 +301,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Versioning and releases</span></span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/parity.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">How the three languages stay in step</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/contributing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Contributing</span></span></a>
+  </div>
+</li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
@@ -312,19 +324,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/51-microdata-archive.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">The microdata archive: archive, catalogue, tool</span></span></a>
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">The microdata archive: archive, catalogue, tool</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/52-ihsn-grammar.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">The IHSN convention and the folder grammar</span></span></a>
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">The IHSN convention and the folder grammar</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/53-datalib-api-conformance.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">The <code>datalib_*</code> API and its conformance suite</span></span></a>
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">The <code>datalib_*</code> API and its conformance suite</span></span></a>
   </div>
 </li>
       </ul>
@@ -338,13 +350,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/61-ecosystem.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">The UNICEF analytics ecosystem: three tiers</span></span></a>
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">The UNICEF analytics ecosystem: three tiers</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/62-unicefdata.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">unicefData: public child statistics in three languages</span></span></a>
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">unicefData: public child statistics in three languages</span></span></a>
   </div>
 </li>
       </ul>
@@ -389,12 +401,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <div class="sidebar-item-container"> 
   <a href="../appendices/f-third-party-functions.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">F</span>&nbsp; <span class="chapter-title">Curated third-party functions</span></span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../appendices/g-parity-certificate.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">G</span>&nbsp; <span class="chapter-title">Cross-language parity</span></span></a>
   </div>
 </li>
       </ul>
@@ -606,7 +612,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>Each sibling stays idiomatic. R and Python take a logical store (<code>name</code>, <code>sector</code>, <code>kind</code>) and resolve the path from the mode; Stata takes comma options in the usual Stata way (<code>dw_save, filename(...) path(...)</code>, not a <code>using</code> form) and an explicit path built from the profile’s globals. The contract is in what the calls do, not in how they are spelled.</p>
-<p>Equal support in all three languages is the pledge, and two devices keep the pledge honest. <a href="../appendices/a-coverage-matrix.html">Appendix A</a>, generated from the code, records for every function whether each language has it, has it in a documented narrower scope, or does not need it, and each function’s chapter carries the same information as a one-line badge. The conformance harness under <code>conformance/</code> runs the same cases in R, Python and Stata and compares the results; <code>sh tools/certify</code> records a parity certificate (<a href="../appendices/g-parity-certificate.html">Cross-language parity</a>). A repository vendors <em>one</em> sibling and gets whatever that sibling implements, so before choosing a language for a new pipeline, check the matrix rather than assuming every name works everywhere.</p>
+<p>Equal support in all three languages is the pledge, and two devices keep the pledge honest. <a href="../appendices/a-coverage-matrix.html">Appendix A</a>, generated from the code, records for every function whether each language has it, has it in a documented narrower scope, or does not need it, and each function’s chapter carries the same information as a one-line badge. The conformance harness under <code>conformance/</code> runs the same cases in R, Python and Stata and compares the results; <code>sh tools/certify</code> records a parity certificate (<a href="../chapters/parity.html">How the three languages stay in step</a>). A repository vendors <em>one</em> sibling and gets whatever that sibling implements, so before choosing a language for a new pipeline, check the matrix rather than assuming every name works everywhere.</p>
 </section>
 <section id="consumer-repositories" class="level2" data-number="2.8">
 <h2 data-number="2.8" class="anchored" data-anchor-id="consumer-repositories"><span class="header-section-number">2.8</span> Consumer repositories</h2>
