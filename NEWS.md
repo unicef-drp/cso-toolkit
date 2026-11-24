@@ -15,6 +15,13 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
   (Python). The profile now sets `rootFolder` (the working directory,
   unless set before the profile is sourced) and `projectFolder`, in R
   and Python.
+- **Contract auditor patterns (#237).** R's `api-fromjson-url` rule
+  could never fire, because the URL it looks for is a string literal and
+  lines are matched with strings blanked; it is now matched against the
+  raw line (a custom rule can do the same with `raw = TRUE`). Python's
+  call patterns now start at a name boundary, as R's do, so
+  `my_read_csv(` and `pl.read_csv(` (polars) are no longer flagged as
+  pandas calls.
 
 ### Documentation
 
