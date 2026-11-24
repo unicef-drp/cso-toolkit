@@ -40,35 +40,11 @@ The repository version is carried by the R package (`csotoolkit`, `r/DESCRIPTION
 
 ## Function coverage matrix
 
-The table below is grouped by the five capability families. Each row is one public function; each cell is the state of that function in that language. (R and Python both export `dw_`-prefixed aliases of the bare-named helpers — `dw_save`/`dw_use` already carry the prefix, while `aggregate_data` is also reachable as `dw_aggregate_data` in both. The aliases are the same objects, not separate functions, and are omitted from the rows below.)
+The tables below are grouped by the five capability families. Each row is one public function; each cell is the state of that function in that language. They are generated from the code (`r/NAMESPACE`, Python's `__all__`, `stata/src/*.ado`) by `sh tools/docs-tables`, with the notes kept in `book/_data/coverage.json`; the check fails when a function has no row or a note contradicts the code. (R and Python both export `dw_`-prefixed aliases of the bare-named helpers — `dw_save`/`dw_use` already carry the prefix, while `aggregate_data` is also reachable as `dw_aggregate_data` in both. The aliases are the same objects, not separate functions, and are omitted from the rows below.)
 
 ### IO contract
 
-| Function | R | Python | Stata |
-|---|---|---|---|
-| `dw_save` | Yes | Yes | Yes |
-| `dw_use` | Yes | Yes | Yes |
-| `dw_compare` | Yes | Yes | Yes |
-| `dw_diff_profile` / `dw_compare(diagnose = TRUE)` | Yes | Yes | No: `r(col_changed)` gives the per-column counts (#111) |
-| `dw_merge` | Yes | Yes | n/a |
-| `dw_isid` | Yes | Yes | Embedded in `dw_save` (no standalone command) |
-| `dw_verify_z` | Yes | Yes | n/a (integrity via `datasignature` inside `dw_use`) |
-| `dw_stage` | Yes | Yes | n/a |
-| `dw_fetch_inputs` | Yes | Yes | Route via R or Python (#152) |
-| `dw_check_deposit` | Yes | Yes | Route via R or Python (#152) |
-| `dw_read_provenance` | Yes | Yes | Route via R or Python (#152) |
-| `dw_provenance_diff` | Yes | Yes | Route via R or Python (#152) |
-| `dw_collaboration` | Yes | Yes | Yes (`dw_collaboration.ado`, #168) |
-| `dw_set_collaboration` | Yes | Yes | No: switch from R or Python (one reviewed PR) |
-| `dw_save` multi-producer guards + lineage fields (`takeover`) | Yes | Yes | Yes, through Stata's Python integration (Stata 16+) (#168); without it a multi-producer write stops unless `takeover` |
-| `dw_root` | Yes | Yes | n/a |
-| `dw_resolve_path` | Yes | Yes | Internal to `dw_use` / `dw_save` |
-| `dw_is_canonical` | Yes | Yes | Internal to the mode guard |
-| `dw_mkdir` | via base R `dir.create` | via `os.makedirs` | Yes (`dw_mkdir.ado` — Stata's built-in cannot nest) |
-| `dw_verbosity` | Yes (session verbose/debug switch) | No (Python logs through the standard `logging` module, `cso_toolkit.*` loggers) | n/a |
-| `dw_toolkit_version` | Yes | Yes | n/a |
-| `dw_default_unicef_allowlist` | Yes (remote-URL freeze allowlist) | Yes | n/a (no remote-URL reads in Stata) |
-| `dw_map_drive` | n/a | n/a | Yes (`dw_map_drive.ado` — Stata-only onboarding: maps the team network drive from `dwZDrive`/`dwZDriveUNC`; the toolkit port of datalib's `mapzdrive`) |
+{{< include ../_generated/functions-io.md >}}
 
 A few caveats sit behind the "Yes" cells:
 
@@ -113,13 +89,7 @@ Note the surface difference in how metadata is passed: R and Python accept a sin
 
 ### External-API contract
 
-| Function | R | Python | Stata |
-|---|---|---|---|
-| `dw_api_fetch` | Yes | Yes | Route via R/Python |
-| `dw_api_cached` | Yes | Yes | Route via R/Python |
-| `dw_api_inventory` | Yes | Yes | Route via R/Python |
-| `dw_require_no_api` (reviewer gate) | via profile helpers | via profile helpers | Yes (`dw_require_no_api.ado`) |
-| `dw_publish` (Helix submission) | Stub: dry run only (`dry_run = TRUE`, the default, returns a validated payload); `dry_run = FALSE` stops, live Helix submission tracked in #15 (open) | Planned (#15) | n/a (API-side capability) |
+{{< include ../_generated/functions-api.md >}}
 
 The largest gap in the toolkit: **Stata has no external-API wrapper.** There is no `dw_api_fetch` in Stata and none is planned. External data must be pulled in R or Python, which writes the result into the deposit cache (`teamsRawData/_apis/<api>/<cache_key>.<ext>`, the canonical landing place for fetched upstream data, mirrored to the Z: drive); the Stata pipeline then reads that cache with `dw_use`.
 
@@ -151,15 +121,7 @@ dw_use , filename("wb_SI.POV.DDAY.csv") path("$teamsRawData/_apis/wb")
 
 ### Aggregation and survey weights
 
-| Function | R | Python | Stata |
-|---|---|---|---|
-| `aggregate_data` (v1, back-compat) | Yes | Yes | n/a |
-| `aggregate_data_v2` | Yes | Yes | n/a |
-| `apply_time_window` | Yes | Yes | n/a |
-| `generate_agg_footnote` | Yes | Yes | n/a |
-| `dw_nestweight` | Yes | Yes | n/a |
-| `dw_pop` | Yes | Yes | n/a |
-| `dw_regions` | Yes | No (R-only; redesign tracked in #40) | n/a |
+{{< include ../_generated/functions-aggregation.md >}}
 
 Most of the aggregation family is R-and-Python; of the two demographics convenience wrappers added at v0.4.0, `dw_pop` now ships in R and Python while `dw_regions` remains R-only. None of these functions has a Stata sibling, and none is on the roadmap. This is a scope decision: Stata sector pipelines aggregate with native commands (`collapse`, `egen`). `dw_nestweight` ports the World Bank EduAnalyticsToolkit's Stata command `edukit_nestweight` to R and Python; it was deliberately not ported back to Stata, since a Stata pipeline can call the upstream `edukit` command directly. `dw_pop` wraps `dw_api_fetch()` for the World Bank total-population indicator (`SP.POP.TOTL`); `dw_regions` fetches the UNICEF region taxonomy and appends regional aggregates computed via `aggregate_data_v2()`. `dw_regions` ships in the R package only; both still lack a Stata sibling.
 
@@ -185,29 +147,13 @@ out = aggregate_data_v2(df, value="OBS_VALUE", by=["REGION"],
 
 ### Vintage sync
 
-| Function | R | Python | Stata |
-|---|---|---|---|
-| `cso_toolkit_check` | Yes | Yes | n/a |
-| `cso_toolkit_diff` | Yes | Yes | n/a |
-| `cso_toolkit_pull` | Yes | Yes | n/a |
-| `cso_toolkit_sync` | Yes | Yes | n/a |
+{{< include ../_generated/functions-sync.md >}}
 
 The version-drift helpers are R-and-Python only. They read the consumer's `.toolkit_manifest.yml`, ask GitHub for the latest tag, and warn when the pin is behind; `cso_toolkit_sync` (or `_diff` + `_pull`) refreshes the vendored files from a release tag and re-pins the manifest. Stata vendoring pins the same manifest, but the drift check has no Stata sibling — a Stata-only consumer either runs the check from R/Python or compares its `pulled_version` against the upstream tag list by hand. See the vintage-sync chapter for the manifest schema and upgrade flow.
 
 ### Scaffolding and contract auditor
 
-| Function | R | Python | Stata |
-|---|---|---|---|
-| `create_profile` | Yes | Yes | n/a |
-| `review_profile` | Yes | Yes | n/a |
-| `create_sector_script` | Yes | Yes | n/a |
-| `create_dw_sector_script` | Yes | Yes | n/a |
-| `create_research_project` | Yes | Yes (same files) | n/a (run once from R or Python) |
-| `create_official_stats_project` | Yes | Yes (same files) | n/a (run once from R or Python) |
-| `generate_markdown_report` | Yes | Yes | n/a |
-| `process_all_csv_files` | Yes (folder mode of the report) | Yes | n/a |
-| `test_scripts` (contract auditor) | Yes (`.R` scripts) | Yes (`.py` scripts) | n/a (no Stata auditor) |
-| `dw_load_config` (profile config loader) | inside `create_profile` output | inside `create_profile` output | Yes (`dw_load_config.ado`) |
+{{< include ../_generated/functions-scaffolding.md >}}
 
 Two points here:
 
