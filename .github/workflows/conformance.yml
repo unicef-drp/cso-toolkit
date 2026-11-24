@@ -9,11 +9,18 @@ name: Conformance
 # self-hosted Stata runner (issue #133). compare.py tolerates the missing
 # output, so the job slots in without touching the compare step.
 
+# Not run for the rendered handbook (docs/, which is all the handbook bot's
+# pull requests touch) or for certificates alone. Source handbook changes
+# (book/) still run it: the compare job checks the generated tables and the
+# version stamps, which live there. No check is required by branch
+# protection, so a skipped run blocks nothing.
 on:
   push:
     branches: [main, develop]
+    paths-ignore: ['docs/**', '.parity/**']
   pull_request:
     branches: [main, develop]
+    paths-ignore: ['docs/**', '.parity/**']
 
 concurrency:
   group: conformance-${{ github.ref }}
