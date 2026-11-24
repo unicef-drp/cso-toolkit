@@ -16,7 +16,7 @@ The reference material records one migration in which fourteen hand-coded SDMX c
 
 The contract exposes exactly three public functions. They share names across R and Python. Stata, as noted below, ships only the enforcement half of the contract and has no fetch functions of its own.
 
-`dw_api_fetch(api, cache_key, ...)` is the workhorse. It checks the cache first; on a miss it either fetches live (producer) or stops (reviewer). Its signature also accepts `refresh`, `ext`, and `metadata` keywords, described in the sections that follow, plus per-source arguments that flow through `...` to the internal fetcher. `dw_api_cached(api, cache_key)` is the explicit cache-only reader — it never touches the network under any mode, and raises if the cache is absent. `dw_api_inventory(api = NULL)` lists what has already been cached, reading the provenance sidecars so the Database Manager can audit freshness.
+`dw_api_fetch(api, cache_key, ...)` is the workhorse. It checks the cache first; on a miss it either fetches live (producer) or stops (reviewer). Its signature also accepts `refresh`, `ext`, `metadata`, and `takeover` keywords (the first three described in the sections that follow; `takeover` applies only to multi-producer projects), plus per-source arguments that flow through `...` to the internal fetcher. `dw_api_cached(api, cache_key, ext = "csv")` is the explicit cache-only reader — it never touches the network under any mode, and raises if the cache is absent. Its `ext` defaults to `"csv"`, not to the per-API default, so a `wb_indicators`, `json_get`, `http`, or `github_raw` cache needs `ext = "rds"` (R) / `ext="pkl"` (Python). `dw_api_inventory(api = NULL)` lists what has already been cached, reading the provenance sidecars so the Database Manager can audit freshness.
 
 ::: {.panel-tabset}
 #### R {.unnumbered .unlisted}
@@ -80,11 +80,11 @@ The full matrix:
 | Producer | cache present, `refresh = FALSE`          | reads the cache |
 | Producer | cache missing **or** `refresh = TRUE`     | hits the live API, writes the cache (via `dw_save`), returns the result |
 | Reviewer | cache present (canonical)                  | reads the cache |
-| Reviewer | cache missing                              | **STOPS** — `dw_require_no_api()` in R, `PermissionError` in Python |
+| Reviewer | cache missing                              | **STOPS** — `[cso_toolkit.dw_api]` envelope (`stop()` in R, `PermissionError` in Python) |
 
 Two refinements matter. First, the cache lookup is two-tiered: on a non-refresh call the wrapper looks in the producer sandbox path (`teamsRawData`) first and then falls back to the canonical read-only path (`teamsRawDataCanonical`). A reviewer therefore reads from the frozen canonical deposit even when no sandbox copy exists. (Both roots are introduced in the IO contract chapter; here they serve only as the two tiers of the cache lookup.) Second, `refresh = TRUE` is a producer-only escape hatch: it forces a live fetch even when a cache is present, and is how the Database Manager deliberately re-pulls a source on a schedule the team owns.
 
-The reviewer lockout is loud and instructive rather than a bare error. In Python, a missing cache under reviewer mode raises `PermissionError` naming the offending call, the path it expected, and a two-step fix (verify the Database Manager populated the canonical cache, or switch to producer mode via `_state.configure(...)`). In R the equivalent stop comes from `dw_require_no_api()`, the profile-defined guard that aborts with `[X] External API access is forbidden in reviewer mode.` The Stata sibling, for any live call a Stata script makes directly, aborts with the same envelope shape and Stata error 459.
+The reviewer lockout is loud and instructive rather than a bare error. In Python, a missing cache under reviewer mode raises `PermissionError` naming the offending call, the path it expected, and a two-step fix (verify the Database Manager populated the canonical cache, or switch to producer mode via `_state.configure(...)`). R raises the same `[cso_toolkit.dw_api] Reviewer mode forbids live API calls.` envelope from an internal guard (its second fix step says to set `dw_mode: producer` in `user_config.yml` and re-source the profile). The Stata sibling, for any live call a Stata script makes directly, aborts with the same envelope shape and Stata error 459.
 
 ## The supported sources
 
@@ -104,7 +104,7 @@ The wrapper dispatches on the `api =` string. R and Python support the same elev
 | `"json_get"`      | Generic JSON GET → parsed object (`jsonlite::fromJSON`)               | `jsonlite`       | `requests`     | `url` |
 | `"csv"` | Flat CSV-at-a-URL: SDMX REST-CSV, WB Data360 files, ILOSTAT rplumber `format=.csv` (`readr::read_csv` / `pandas.read_csv`) | `readr` | `requests`, `pandas` | `url` |
 
-One serialisation default is worth calling out. Several sources return shapes that do not flatten cleanly into CSV — a nested JSON tree, plain text, the World Bank catalogue's list-columns, or arbitrary content fetched by `github_raw`. Both languages therefore default those four sources — `wb_indicators`, `json_get`, `http`, and `github_raw` — to a non-tabular serialisation: RDS in R, pickle (`pkl`) in Python. The remaining flat-tabular sources default to CSV — the six shared ones plus R's `csv` fetcher. The `ext =` argument lets a caller override the per-API default when needed, for example to force a UIS response into a non-tabular cache:
+One serialisation default is worth calling out. Several sources return shapes that do not flatten cleanly into CSV — a nested JSON tree, plain text, the World Bank catalogue's list-columns, or arbitrary content fetched by `github_raw`. Both languages therefore default those four sources — `wb_indicators`, `json_get`, `http`, and `github_raw` — to a non-tabular serialisation: RDS in R, pickle (`pkl`) in Python. The other seven, flat-tabular sources (`uis`, `sdmx`, `sdmx_codelist`, `wb`, `ilo`, `unsd_sdg`, `csv`) default to CSV, in both languages. The `ext =` argument lets a caller override the per-API default when needed, for example to force a UIS response into a non-tabular cache:
 
 ::: {.panel-tabset}
 #### R {.unnumbered .unlisted}
@@ -217,7 +217,7 @@ Every fetch writes two files into the deposit, under a fixed layout keyed by `ap
 
 The `cache_key` *is* the filename basename, so it should be human-readable snake_case carrying the distinguishing parameters — prefer `wb_learning_poverty_primary` or `sdmx_codelist_UNICEF_CL_RESIDENCE_1_0` over a hash. The wrapper does not invent the cache write: it delegates to `dw_save`. Three things follow from that delegation. The cache inherits the mode-aware write path; it inherits the Z: mirror when the drive is mapped; and it inherits the standard `.provenance.json` sidecar described in the provenance-sidecars chapter. Reads go back through `dw_use`.
 
-The sidecar records both *what* the cache contains and *how* the wrapper obtained it. Beyond the IO contract's base fields (`path`, `format`, `written_at`, `user`, `dw_mode`, `sha256`, `schema`), `dw_api_fetch` merges an API-specific `metadata` block:
+The sidecar records both *what* the cache contains and *how* the wrapper obtained it. Beyond the IO contract's base fields (`path`, `format`, `written_at`, `user`, `dw_mode`, `vintage`, `sha256`, `isid`, `schema`), `dw_api_fetch` merges an API-specific `metadata` block:
 
 ```json
 {
@@ -226,7 +226,9 @@ The sidecar records both *what* the cache contains and *how* the wrapper obtaine
   "written_at": "2026-05-25T14:23:11+0000",
   "user": "jpazvd",
   "dw_mode": "producer",
+  "vintage": null,
   "sha256": "...",
+  "isid": null,
   "schema": {"rows": 4, "cols": 3, "columns": ["code", "name", "description"]},
   "metadata": {
     "api": "sdmx_codelist",
