@@ -1,6 +1,7 @@
 name: Conformance
 
-# Cross-language parity gate: each language driver round-trips the shared
+# Cross-language parity gate (and, in the compare job, the check that the
+# handbook tables generated from the code are current): each language driver round-trips the shared
 # fixture through the IO contract and emits a normalised CSV; compare.py
 # asserts the outputs are value-equal within 1e-9 (see conformance/README.md).
 #
@@ -78,3 +79,10 @@ jobs:
         run: >
           python conformance/compare.py
           r=out_r.csv python=out_python.csv stata=out_stata.csv
+
+      # The handbook's coverage, API-key, auditor-rule and parity-case tables
+      # are generated from the code (book/_scripts/gen_tables.py). Fails when
+      # an export has no row, a note contradicts the code, or the committed
+      # tables in book/_generated/ are stale. Standard library only: seconds.
+      - name: Handbook tables match the code
+        run: python3 book/_scripts/gen_tables.py --check
