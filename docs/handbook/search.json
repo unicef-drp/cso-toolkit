@@ -2385,117 +2385,29 @@
     "href": "appendices/d-function-reference.html",
     "title": "Appendix D — Function reference",
     "section": "",
-    "text": "D.1 Where the per-function reference lives\nThis appendix is a directory, not a manual. It lists every public function the toolkit exports, groups them into their capability families, and points you to the authoritative per-function documentation for each language. Use it to find a function by name and see which family it belongs to, which languages implement it, and where to read the argument-by-argument details. The full prose reference — argument descriptions, return values, and runnable examples — lives in each language’s own documentation, described below.\nThe families here mirror the chapters of Part II, plus the Part III chapters on profiles, vendoring and checks. For the behaviour of a family — what it does and why — read the matching chapter (the IO contract, the external-API contract, aggregation, vintage sync, scaffolding and the contract auditor). For the signatures, read each language’s reference, described in the next section. The coverage-matrix appendix is the canonical source for the cross-language gaps summarised below.\nA note on terms used throughout the tables. The toolkit routes paths and gates the network by mode: a script runs as the data producer (writes the canonical deposit, may hit the live network) or as the reviewer (reads frozen artefacts only, with the network barred). A canonical write is a final published deposit, as opposed to a working artefact. These distinctions are load-bearing for the IO and external-API tables; the external-API contract chapter explains them in full.\nThe three language siblings document themselves in three different idioms, and coverage is uneven — complete in R, site-less in Python, partial in Stata.\nR — roxygen2 help pages (complete). The R package is fully documented with roxygen2: every exported function has a generated .Rd help page; open it with ?dw_save after installing the package (or devtools::load_all(\"r\")). r/_pkgdown.yml groups the pages into the same capability families used below, for a pkgdown site, but no workflow builds or publishes one yet: https://unicef-drp.github.io/cso-toolkit serves the DW Operations dashboard and the handbook. The grouping assigns each function to a family through roxygen @family tags (io, collaboration, api, sync, aggregate, demographics, survey-weights, reporting, scaffolding, audit). roxygen2 renders each @family tag as a \\concept{} entry in the .Rd, which is what the has_concept() selectors in _pkgdown.yml match. The R help pages are the most complete reference of the three and the recommended starting point even for Python and Stata users, because the behaviour contract is shared.\nPython — module docstrings only (no autodoc site). The Python package carries full type hints (it ships src/py.typed per PEP 561) and per-function docstrings, but there is no generated documentation site — no Sphinx, no pkgdown equivalent. To read the Python reference, either introspect in a session (help(dw_save) after from cso_toolkit import dw_save) or read the hand-written Markdown references in the repo: docs/dw_io_python_reference.md and docs/dw_api_python_reference.md. These two files cover the IO and external-API families; the remaining Python families are documented only by their docstrings.\nStata — native .sthlp help files (partial coverage). Each shipped Stata command has a companion .sthlp help file next to its .ado in stata/src/, viewable with the usual help dw_save. Stata implements only the subset of the contract that fits its idioms, so its reference covers far fewer functions than R or Python (see the per-family coverage notes and the coverage-matrix appendix).",
+    "text": "D.1 Where the per-function reference lives\nThis appendix is a directory, not a manual. It lists every public function of the toolkit with a one-line description, the languages that have it, and the chapter that explains it. The table is generated from the code by sh tools/docs-tables: the description is the function’s R help title (or, for a Stata-only command, its Stata help title), and a new function without one fails the check. For the argument-by-argument reference, use each language’s own help, described next. For what a function’s note in another language says (a route, a reason), see the coverage matrix.\nR — help pages. Every exported R function has a roxygen2-generated help page: ?dw_save after installing the package or devtools::load_all(\"r\"). They are the most complete reference of the three, and worth reading even if you work in Python or Stata, because the behaviour is shared. r/_pkgdown.yml groups the pages into families through each function’s roxygen @family tag, ready for a pkgdown site; none is published yet.\nPython — docstrings. Every public function has a docstring and type hints (the package ships py.typed): help(dw_save) after from cso_toolkit import dw_save. There is no generated site. docs/dw_io_python_reference.md and docs/dw_api_python_reference.md are hand-written references for the IO and external-API functions.\nStata — help files. Each command has a .sthlp file next to its .ado in stata/src/: help dw_save. Two internal files sit beside them: _dw_py.ado and dw_stata_helpers.py, the Python helpers that dw_save and dw_collaboration call through Stata’s Python integration.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>D</span>  <span class='chapter-title'>Function reference</span>"
     ]
   },
   {
-    "objectID": "appendices/d-function-reference.html#where-the-per-function-reference-lives",
-    "href": "appendices/d-function-reference.html#where-the-per-function-reference-lives",
+    "objectID": "appendices/d-function-reference.html#names",
+    "href": "appendices/d-function-reference.html#names",
     "title": "Appendix D — Function reference",
-    "section": "",
-    "text": "The family grouping in r/_pkgdown.yml is driven by the roxygen @family tags (which roxygen2 emits as \\concept{} entries the has_concept() selectors match), not hand-maintained. If you add an exported R function, tag it with the right @family so it lands in the correct family; an untagged export is still exported but is orphaned from the reference index.",
+    "section": "D.2 Names",
+    "text": "D.2 Names\nSeveral helpers have two names in both R and Python: a short historical name and a dw_-prefixed alias of the same function (aggregate_data_v2 and dw_aggregate_data_v2, create_profile and dw_create_profile, test_scripts and dw_test_scripts, and so on). The aliases are the same objects, so either spelling works; the table lists each function once, under its short name.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>D</span>  <span class='chapter-title'>Function reference</span>"
     ]
   },
   {
-    "objectID": "appendices/d-function-reference.html#reading-the-family-tables",
-    "href": "appendices/d-function-reference.html#reading-the-family-tables",
+    "objectID": "appendices/d-function-reference.html#the-functions",
+    "href": "appendices/d-function-reference.html#the-functions",
     "title": "Appendix D — Function reference",
-    "section": "D.2 Reading the family tables",
-    "text": "D.2 Reading the family tables\nEach family below lists its members and shows which languages export the function today. A check means the function is exported and documented in that language; an em dash means it is not implemented there; a parenthetical note records a partial or deferred state. These columns are a quick orientation only — the coverage-matrix appendix is authoritative and tracks the issues behind each gap.\nTwo naming conventions matter when you read across the columns:\n\nR dual names. Several R functions are exported under two names — a short historical name and a dw_-prefixed alias. The dw_ aliases were introduced incrementally across v0.4.4 and v0.4.5 (issue #42 / PR #48) and remain exported alongside the bare names. The tables list the canonical dw_-prefixed name first and note the bare alias.\nPython exports both names too. The Python package (python/src/__init__.py) exports the bare name and a dw_-prefixed alias for every dual-named function — aggregate_data_v2 / dw_aggregate_data_v2, create_profile / dw_create_profile, test_scripts / dw_test_scripts, and so on — so the canonical dw_-prefixed spelling resolves identically in R and Python. (Earlier these aliases were R-only, and the dw_ spelling raised ImportError in Python.)\n\n\n\n\n\n\n\nVersion stamps, not feature parity. The R and Python packages report the same version. A matching stamp is a floor, not a guarantee that every behaviour is present in both: some noted below (for example the Z:-root recognition in dw_is_canonical, or the read-all-sheets dw_use(sheet = NULL)) landed in R and may not yet be present, or may behave differently, in the Python sibling. When a feature’s vintage matters, confirm it against the language you are actually running.",
-    "crumbs": [
-      "Appendices",
-      "<span class='chapter-number'>D</span>  <span class='chapter-title'>Function reference</span>"
-    ]
-  },
-  {
-    "objectID": "appendices/d-function-reference.html#io-contract",
-    "href": "appendices/d-function-reference.html#io-contract",
-    "title": "Appendix D — Function reference",
-    "section": "D.3 IO contract",
-    "text": "D.3 IO contract\nUniform read / write / compare / merge helpers with mode-aware path routing (paths resolve differently for the producer and the reviewer), the Z: drive mirror on canonical writes, and emission of a .provenance.json sidecar. See the IO contract chapter for behaviour.\n\n\n\n\n\n\n\n\n\n\nFunction\nR\nPython\nStata\nNotes\n\n\n\n\ndw_save\n✅\n✅\n✅\nWrite + uniqueness check (isid) + sidecar + Z: mirror; in R, prompts before overwriting a producer deposit (v0.5.0), force = TRUE to override\n\n\ndw_use\n✅\n✅\n✅\nRead with mode-branched resolver; accepts HTTPS URLs since v0.4.0; in R, sheet = NULL reads all sheets of an .xlsx (v0.5.0)\n\n\ndw_compare\n✅\n✅\n✅\nDiff two artefacts on id + value vars; tolerates degenerate sides with a warning (v0.5.0); diagnose = TRUE (R, Python) adds a profile; stops when both sides are the same file (#111)\n\n\ndw_diff_profile\n✅\n✅\n—\nSince v0.11.0 (#111): profile a dw_compare result (differing columns, numeric drift quantiles, top key values of the changed / added / removed rows); Stata’s dw_compare returns per-column counts in r(col_changed)\n\n\ndw_merge\n✅\n✅\n—\nR + Python only\n\n\ndw_isid\n✅\n✅\nembedded\nIn Stata the uniqueness check lives inside dw_save\n\n\ndw_verify_z\n✅\n✅\n—\nR + Python only\n\n\ndw_resolve_path\n✅\n✅\n—\nMode-aware path resolver\n\n\ndw_is_canonical\n✅\n✅\n—\nDetects a canonical deposit; recognises the Z: (dwZDrive) root in R as of v0.5.0\n\n\ndw_root\n✅\n✅\n—\nPublic wrapper around the root resolver (re-exported v0.4.6)\n\n\ndw_stage\n✅\n✅\n—\nReviewer copy of a canonical input with a .staged.json hash sidecar; dw_use(stage = TRUE) calls it (Python since v0.12.0)\n\n\ndw_fetch_inputs\n✅\n✅\n—\nR and Python (#152; Stata via R or Python): fill a gitignored local inputs folder from the Teams / Z: deposit, .gitkeep per folder, input manifest\n\n\ndw_check_deposit\n✅\n✅\n—\nR and Python (#152; Stata via R or Python): every local input has an identical SHA-256 copy on Teams or Z:\n\n\ndw_read_provenance\n✅\n✅\n—\nR and Python (#152; Stata via R or Python): read the .provenance.json sidecar of an output\n\n\ndw_provenance_diff\n✅\n✅\n—\nR and Python (#152; Stata via R or Python): compare two runs from their sidecars (reproduced / output changed / inputs changed)\n\n\ndw_collaboration\n✅\n✅\n✅\nThe project’s collaboration model (single-producer / multi-producer) from cso_project.yml, resolved once per session (R and Python since v0.10.0); Stata dw_collaboration.ado since v0.11.0 (#168)\n\n\ndw_set_collaboration\n✅\n✅\n—\nSince v0.10.0: write cso_project.yml and baseline the existing sidecars (one reviewed PR); refused in reviewer mode; not in Stata (switch from R or Python)\n\n\ndw_publish\n✅ (stub)\n—\n—\nSTUB / dry-run only — see callout below\n\n\ndw_toolkit_version\n✅\n✅\n—\nReports the installed toolkit version\n\n\ndw_verbosity\n✅\n—\n—\nSets session verbosity / debug options (v0.4.10)\n\n\ndw_mkdir\n—\n—\n✅\nStata-only: recursive mkdir (Stata’s built-in is not recursive)\n\n\ndw_map_drive\n—\n—\n✅\nStata-only onboarding: maps the team network drive from config (port of datalib’s mapzdrive)\n\n\n\n\n\n\n\n\n\ndw_publish is exported but remains a stub: only the dry-run path (dry_run = TRUE, the default) is supported, returning a validated payload with a sha256. A live submission (dry_run = FALSE) deliberately raises an error pointing at issue #15. Do not treat it as a working submission path; the live Helix branch is still pending. See the versioning and releases chapter.\n\n\n\n\nRPythonStata\n\n\ndw_save(df, name = \"dw_ed_edu.csv\", sector = \"ed\", kind = \"wrk\", isid = \"REF_AREA\")\ndf &lt;- dw_use(name = \"dw_ed_edu.csv\", sector = \"ed\", kind = \"wrk\")\n\n\ndw_save(df, name=\"dw_ed_edu.csv\", sector=\"ed\", kind=\"wrk\", isid=[\"REF_AREA\"])\ndf = dw_use(name=\"dw_ed_edu.csv\", sector=\"ed\", kind=\"wrk\")\n\n\ndw_save, filename(\"dw_ed_edu.dta\") path(\"$teamsWrkData/ed\") idvars(REF_AREA)\ndw_use, filename(\"dw_ed_edu.dta\") path(\"$teamsWrkData/ed\")",
-    "crumbs": [
-      "Appendices",
-      "<span class='chapter-number'>D</span>  <span class='chapter-title'>Function reference</span>"
-    ]
-  },
-  {
-    "objectID": "appendices/d-function-reference.html#external-api-contract",
-    "href": "appendices/d-function-reference.html#external-api-contract",
-    "title": "Appendix D — Function reference",
-    "section": "D.4 External-API contract",
-    "text": "D.4 External-API contract\nMode-aware wrappers around the supported external data sources (eleven in all, among them UIS, the World Bank, ILO, the UNSD-SDG database, SDMX endpoints, and GitHub-raw). The producer hits the live API and caches the result; the reviewer reads from the canonical cache only and is barred from the network. See the external-API contract chapter.\n\n\n\n\n\n\n\n\n\n\nFunction\nR\nPython\nStata\nNotes\n\n\n\n\ndw_api_fetch\n✅\n✅\n—\nThe main dispatcher (api = selects the source)\n\n\ndw_api_cached\n✅\n✅\n—\nCache-only read\n\n\ndw_api_inventory\n✅\n✅\n—\nList what is cached\n\n\ndw_default_unicef_allowlist\n✅\n✅\n—\nDefault URL allowlist for dw_use HTTPS freezing (Python since v0.8.0)\n\n\n\n\n\n\n\n\n\nStata has no external-API wrapper. The entire API family is R + Python only. A Stata reviewer can still re-run from frozen artefacts, but Stata cannot fetch from UIS, SDMX, the World Bank, ILO, UNSD-SDG, or GitHub-raw through the toolkit. Stata enforces its reviewer-mode network lockout separately, through dw_require_no_api (listed under Stata-only helpers below).\n\n\n\n# Python — api= selects the source\ndf = dw_api_fetch(api=\"wb\", cache_key=\"wb_SP.POP.TOTL\", indicator=\"SP.POP.TOTL\")",
-    "crumbs": [
-      "Appendices",
-      "<span class='chapter-number'>D</span>  <span class='chapter-title'>Function reference</span>"
-    ]
-  },
-  {
-    "objectID": "appendices/d-function-reference.html#aggregation-and-survey-weights",
-    "href": "appendices/d-function-reference.html#aggregation-and-survey-weights",
-    "title": "Appendix D — Function reference",
-    "section": "D.5 Aggregation and survey weights",
-    "text": "D.5 Aggregation and survey weights\nStratified aggregation, time-window filtering, footnote formatting, and survey-weight redistribution. See the aggregation chapter.\n\n\n\n\n\n\n\n\n\n\nFunction (R canonical)\nR\nPython\nStata\nNotes\n\n\n\n\ndw_aggregate_data_v2\n✅\n✅\n—\nCurrent aggregator; bare name aggregate_data_v2 (the Python export)\n\n\ndw_aggregate_data\n✅\n✅\n—\nEarlier aggregator; bare name aggregate_data\n\n\ndw_apply_time_window\n✅\n✅\n—\nLatest obs per country in a year window; bare name apply_time_window\n\n\ndw_generate_agg_footnote\n✅\n✅\n—\nStandardised coverage footnote; bare name generate_agg_footnote\n\n\ndw_nestweight\n✅\n✅\n—\nSurvey-weight redistribution; R port of EduAnalyticsToolkit’s edukit_nestweight (no bare alias — dw_nestweight is the only name in both R and Python)\n\n\n\nPer the naming conventions above, R and Python both export the dw_-prefixed and the bare name for the first four functions.\n\nRPythonStata\n\n\nout &lt;- dw_aggregate_data_v2(df, value = \"OBS_VALUE\", weight = \"POP\", by = \"REGION\", method = \"weighted_mean\")\n\n\nout = aggregate_data_v2(df, value=\"OBS_VALUE\", weight=\"POP\", by=[\"REGION\"], method=\"weighted_mean\")\n\n\n* not implemented in Stata",
-    "crumbs": [
-      "Appendices",
-      "<span class='chapter-number'>D</span>  <span class='chapter-title'>Function reference</span>"
-    ]
-  },
-  {
-    "objectID": "appendices/d-function-reference.html#demographics",
-    "href": "appendices/d-function-reference.html#demographics",
-    "title": "Appendix D — Function reference",
-    "section": "D.6 Demographics",
-    "text": "D.6 Demographics\nConvenience wrappers for the population denominators and the UNICEF region taxonomy that most sector pipelines need. See the aggregation chapter for how they feed coverage.\n\n\n\n\n\n\n\n\n\n\nFunction\nR\nPython\nStata\nNotes\n\n\n\n\ndw_pop\n✅\n✅\n—\nWorld Bank SP.POP.TOTL denominators; added v0.4.0, Python sibling added for issue #17\n\n\ndw_regions\n✅\n—\n—\nAppend UNICEF regional aggregate rows; added v0.4.0 (issue #18)\n\n\n\n\n\n\n\n\n\ndw_pop ships in R and Python; dw_regions is R-only today. Neither has a Stata sibling, by design (see the coverage matrix). dw_regions has no Python sibling yet; a redesign against the Country-and-Region-Metadata-API (issue #40, open) is on the roadmap.",
-    "crumbs": [
-      "Appendices",
-      "<span class='chapter-number'>D</span>  <span class='chapter-title'>Function reference</span>"
-    ]
-  },
-  {
-    "objectID": "appendices/d-function-reference.html#vintage-sync",
-    "href": "appendices/d-function-reference.html#vintage-sync",
-    "title": "Appendix D — Function reference",
-    "section": "D.7 Vintage sync",
-    "text": "D.7 Vintage sync\nConsumer-side helpers that read the local .toolkit_manifest.yml, query upstream for the latest tag, and warn or refresh when the vendored copy is behind. Reviewer mode forbids the network query. See Vendoring and updates.\n\n\n\n\n\n\n\n\n\n\nFunction\nR\nPython\nStata\nNotes\n\n\n\n\ncso_toolkit_check\n✅\n✅\n—\nCompare the pinned vintage against a target version (offline; warns when behind, v0.10.0) and, in producer mode, the latest upstream tag\n\n\ncso_toolkit_diff\n✅\n✅\n—\nCompare each vendored file with a release tag (unchanged / changed / local_edit / missing_upstream / missing_local)\n\n\ncso_toolkit_pull\n✅\n✅\n—\nRefresh the vendored copy to a release tag and re-pin the manifest\n\n\ncso_toolkit_sync\n✅\n✅\n—\nThe one call: latest release, its NEWS since the pin, diff, then pull\n\n\n\nThese four keep the cso_toolkit_ prefix in both R and Python (no dw_ alias).",
-    "crumbs": [
-      "Appendices",
-      "<span class='chapter-number'>D</span>  <span class='chapter-title'>Function reference</span>"
-    ]
-  },
-  {
-    "objectID": "appendices/d-function-reference.html#scaffolding-and-the-contract-auditor",
-    "href": "appendices/d-function-reference.html#scaffolding-and-the-contract-auditor",
-    "title": "Appendix D — Function reference",
-    "section": "D.8 Scaffolding and the contract auditor",
-    "text": "D.8 Scaffolding and the contract auditor\nGenerators for the standard CSO building blocks (new repositories, profile scripts, sector run-scripts), an auditor for existing profiles, and the raw-call contract auditor. See Starting a repository, Profiles and the mode switch and Checks and CI.\n\n\n\n\n\n\n\n\n\n\nFunction (R canonical)\nR\nPython\nStata\nNotes\n\n\n\n\ndw_create_profile\n✅\n✅\n—\nScaffold profile_&lt;repo&gt;.R / .py; bare name create_profile\n\n\ndw_create_sector_script\n✅\n✅\n—\nScaffold a sector run-script template; bare name create_sector_script\n\n\ncreate_dw_sector_script\n✅\n✅\n—\nDW-Production convenience wrapper (no dw_-prefixed alias by design — it already carries a dw infix)\n\n\ncreate_research_project\n✅\n✅\n—\nSince v0.10.0: scaffold a research repository (layout, .gitignore, tools/check.R, hook, tests, cso_project.yml, agent files); no dw_ alias. See “Starting a new repository”\n\n\ncreate_official_stats_project\n✅\n✅\n—\nSince v0.10.0: scaffold an official-statistics repository (embargo settings, releases/, 01_dw_prep/012_codes/); no dw_ alias\n\n\ndw_review_profile\n✅\n✅\n—\nAudit a profile for required blocks (pass/warn/fail); bare name review_profile\n\n\ndw_test_scripts\n✅\n✅\n—\nContract auditor: flag raw IO / API calls; bare name test_scripts\n\n\n\nAs above, R and Python both export the dw_-prefixed and the bare name for the dual-named helpers.\n\n\n\n\n\n\nA future rename of test_scripts / dw_test_scripts to dw_audit_scripts (to surface the audit intent and avoid the testthat name collision) is on the design horizon (not yet tracked by an issue); the current prefix-only alias keeps that cleanup additive.\n\n\n\n# R — audit a directory of scripts for raw IO / API calls\ndw_test_scripts(\"R/\", error_on_violation = TRUE)",
-    "crumbs": [
-      "Appendices",
-      "<span class='chapter-number'>D</span>  <span class='chapter-title'>Function reference</span>"
-    ]
-  },
-  {
-    "objectID": "appendices/d-function-reference.html#reporting-and-uniqueness-utilities",
-    "href": "appendices/d-function-reference.html#reporting-and-uniqueness-utilities",
-    "title": "Appendix D — Function reference",
-    "section": "D.9 Reporting and uniqueness utilities",
-    "text": "D.9 Reporting and uniqueness utilities\nSmaller exported utilities that do not anchor a chapter of their own.\n\n\n\n\n\n\n\n\n\n\nFunction (R canonical)\nR\nPython\nStata\nNotes\n\n\n\n\ndw_generate_markdown_report\n✅\n✅\n—\nMarkdown report from a CSV; bare name generate_markdown_report\n\n\ndw_process_all_csv_files\n✅\n✅\n—\nBatch the report over a directory; bare name process_all_csv_files\n\n\ndw_isid\n✅\n✅\nembedded\nUniqueness assertion (also invoked inside dw_save); see the IO contract table — listed here only for cross-reference",
-    "crumbs": [
-      "Appendices",
-      "<span class='chapter-number'>D</span>  <span class='chapter-title'>Function reference</span>"
-    ]
-  },
-  {
-    "objectID": "appendices/d-function-reference.html#stata-only-helpers",
-    "href": "appendices/d-function-reference.html#stata-only-helpers",
-    "title": "Appendix D — Function reference",
-    "section": "D.10 Stata-only helpers",
-    "text": "D.10 Stata-only helpers\nFour Stata commands have no toolkit-exported R or Python sibling because they fill gaps specific to Stata’s runtime (R and Python get a dw_require_no_api() function from the generated profile instead). Each is documented in its .sthlp file in stata/src/.\n\n\n\n\n\n\n\nCommand\nPurpose\n\n\n\n\ndw_mkdir\nRecursive directory creation (Stata’s built-in mkdir is not recursive)\n\n\ndw_map_drive\nMaps the team network drive from dwZDrive / dwZDriveUNC (port of datalib’s mapzdrive)\n\n\ndw_require_no_api\nReviewer-mode no-API gate — Stata’s equivalent of the network lockout\n\n\ndw_load_config\nAppLocker-safe YAML config loader for the profile (loads config without an external binary the corporate AppLocker policy would block)\n\n\n\nThe full set of commands under stata/src/ is: dw_save, dw_use, dw_compare, dw_collaboration, dw_mkdir, dw_map_drive, dw_require_no_api and dw_load_config, each shipped as an .ado plus a matching .sthlp; alongside them sit the internal _dw_py.ado and dw_stata_helpers.py, which the Python-backed parts of dw_save and dw_collaboration use.",
+    "section": "D.3 The functions",
+    "text": "D.3 The functions\n\n\nD.3.1 IO contract\n\n\n\nFunction\nWhat it does\nR\nPython\nStata\nDocumented in\n\n\n\n\ndw_save\nSave an object to disk, dispatching on the file extension\n✓\n✓\n✓\nThe IO contract\n\n\ndw_use\nRead a file from disk, dispatching on the file extension\n✓\n✓\n✓\nThe IO contract\n\n\ndw_compare\nCompare a current dataset against a reference (added / removed / changed)\n✓\n✓\n✓\nThe IO contract\n\n\ndw_diff_profile\nProfile where a dw_compare() mismatch comes from\n✓\n✓\n—\nThe IO contract\n\n\ndw_merge\nStata-style merge with cardinality assertion\n✓\n✓\n—\nThe IO contract\n\n\ndw_isid\nStata-style uniqueness check on a key tuple\n✓\n✓\n—\nThe IO contract\n\n\ndw_verify_z\nVerify a canonical Teams file matches its Z: drive mirror\n✓\n✓\n—\nThe IO contract\n\n\ndw_stage\nStage a canonical input into the reviewer sandbox with hash-guard\n✓\n✓\n—\nThe IO contract\n\n\ndw_fetch_inputs\nFetch pipeline inputs from the canonical deposit, then verify them\n✓\n✓\n—\nThe IO contract\n\n\ndw_check_deposit\nCheck that local input files are deposited on Teams or Z:\n✓\n✓\n—\nThe IO contract\n\n\ndw_read_provenance\nRead the provenance sidecar of an output\n✓\n✓\n—\nThe IO contract\n\n\ndw_provenance_diff\nCompare the provenance of two runs of the same output\n✓\n✓\n—\nThe IO contract\n\n\ndw_collaboration\nResolve the collaboration model of the current project\n✓\n✓\n✓\nRoles and the mode contract\n\n\ndw_set_collaboration\nSet the project’s collaboration model (cso_project.yml)\n✓\n✓\n—\nRoles and the mode contract\n\n\ndw_root\nResolve the mode-aware repo / canonical root for a vendored kind\n✓\n✓\n—\nThe IO contract\n\n\ndw_resolve_path\nResolve a logical DW path to a filesystem path\n✓\n✓\n—\nThe IO contract\n\n\ndw_is_canonical\nTest whether a path lives under a canonical deposit root\n✓\n✓\n—\nThe IO contract\n\n\ndw_mkdir\nRecursive mkdir for the cso-toolkit Stata side\n—\n—\n✓\nThe IO contract\n\n\ndw_verbosity\nSet toolkit verbosity for the session\n✓\n—\n—\nhelp page only\n\n\ndw_toolkit_version\nToolkit version that this dw_io.R was vendored from\n✓\n✓\n—\nVendoring and updates\n\n\ndw_default_unicef_allowlist\nStandard URL-allowlist patterns for UNICEF-owned reference data\n✓\n✓\n—\nThe IO contract\n\n\ndw_map_drive\nMap the configured network drive (default Z:)\n—\n—\n✓\nProfiles and the mode switch\n\n\n\n\n\nD.3.2 External-API contract\n\n\n\nFunction\nWhat it does\nR\nPython\nStata\nDocumented in\n\n\n\n\ndw_api_fetch\nFetch from an external API, mode-aware, with deposit cache\n✓\n✓\n—\nThe external-API contract\n\n\ndw_api_cached\nRead an API cache without fetching\n✓\n✓\n—\nThe external-API contract\n\n\ndw_api_inventory\nList all cached API fetches under the canonical root\n✓\n✓\n—\nThe external-API contract\n\n\ndw_require_no_api\nBlock live API calls in reviewer mode\n—\n—\n✓\nProfiles and the mode switch\n\n\ndw_publish\nSubmit a warehouse artifact to the UNICEF Helix data platform (STUB)\n✓\n—\n—\nRoles and the mode contract\n\n\n\n\n\nD.3.3 Aggregation and survey weights\n\n\n\nFunction\nWhat it does\nR\nPython\nStata\nDocumented in\n\n\n\n\naggregate_data\nAggregate Data with Optional Weighting and Global Aggregation\n✓\n✓\n—\nAggregation\n\n\naggregate_data_v2\nAggregate Data v2.0 - Enhanced for Cross-Sector Use\n✓\n✓\n—\nAggregation\n\n\napply_time_window\nFilter data to latest observation within a time window, with exemptions\n✓\n✓\n—\nAggregation\n\n\ngenerate_agg_footnote\nGenerate standardized footnotes for aggregated estimates\n✓\n✓\n—\nAggregation\n\n\ndw_nestweight\nRedistribute survey weights from missing nested observations\n✓\n✓\n—\nAggregation\n\n\ndw_pop\nLatest country-level population numbers\n✓\n✓\n—\nAggregation\n\n\ndw_regions\nUNICEF regional aggregates appended to a country-level tibble\n✓\n—\n—\nAggregation\n\n\n\n\n\nD.3.4 Vintage sync\n\n\n\nFunction\nWhat it does\nR\nPython\nStata\nDocumented in\n\n\n\n\ncso_toolkit_check\nCheck whether the vendored toolkit is behind a target or upstream\n✓\n✓\n—\nVendoring and updates\n\n\ncso_toolkit_diff\nShow per-file differences between the vendored copy and a release\n✓\n✓\n—\nVendoring and updates\n\n\ncso_toolkit_pull\nRefresh the vendored copies to a cso-toolkit release\n✓\n✓\n—\nVendoring and updates\n\n\ncso_toolkit_sync\nUpdate the vendored cso-toolkit in one call\n✓\n✓\n—\nVendoring and updates\n\n\n\n\n\nD.3.5 Scaffolding and contract auditor\n\n\n\nFunction\nWhat it does\nR\nPython\nStata\nDocumented in\n\n\n\n\ncreate_profile\nGenerate a project profile script for a CSO data-warehouse pipeline\n✓\n✓\n—\nProfiles and the mode switch\n\n\nreview_profile\nAudit a profile script for the blocks the cso-toolkit contract expects\n✓\n✓\n—\nProfiles and the mode switch\n\n\ncreate_sector_script\nGenerate a prefilled sector-run script for a data-warehouse pipeline\n✓\n✓\n—\nProfiles and the mode switch\n\n\ncreate_dw_sector_script\nGenerate a prefilled sector-run script using DW-Production conventions\n✓\n✓\n—\nProfiles and the mode switch\n\n\ncreate_research_project\nCreate a new research repository (paper, analysis, replication package)\n✓\n✓\n—\nStarting a repository\n\n\ncreate_official_stats_project\nCreate a new official-statistics repository (production pipeline)\n✓\n✓\n—\nStarting a repository\n\n\ngenerate_markdown_report\nGenerate a descriptive-statistics Markdown report from a single CSV file\n✓\n✓\n—\nhelp page only\n\n\nprocess_all_csv_files\nGenerate descriptive-statistics Markdown reports for every CSV in a folder\n✓\n✓\n—\nhelp page only\n\n\ntest_scripts\nAudit R scripts for direct calls to commands wrapped by cso-toolkit\n✓\n✓\n—\nChecks and CI\n\n\ndw_load_config\nLoad cso-toolkit session globals from a\n—\n—\n✓\nProfiles and the mode switch\n\n\n\n“Help page only” marks a function no chapter explains; its help page is the reference.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>D</span>  <span class='chapter-title'>Function reference</span>"
@@ -2505,19 +2417,19 @@
     "objectID": "appendices/d-function-reference.html#how-to-find-a-function-fast",
     "href": "appendices/d-function-reference.html#how-to-find-a-function-fast",
     "title": "Appendix D — Function reference",
-    "section": "D.11 How to find a function fast",
-    "text": "D.11 How to find a function fast\n\nYou know the name. In R, ?&lt;name&gt;; in Python, help(&lt;name&gt;) after importing it from cso_toolkit (either the bare name or the dw_ prefix works for the dual-named functions); in Stata, help &lt;command&gt;.\nYou know the task but not the name. Find the matching chapter in Part II or III, then return here for the family table.\nYou want the full R reference. Install the package (or devtools::load_all(\"r\")) and use ?&lt;name&gt;; the help pages are the most complete reference of the three languages, even when you work in Python or Stata.\nYou want to know whether a language has a function. Use the tables above for a quick read and the cross-language coverage matrix appendix for the authoritative, issue-tracked answer.",
+    "section": "D.4 How to find a function fast",
+    "text": "D.4 How to find a function fast\n\nYou know the name. In R, ?&lt;name&gt;; in Python, help(&lt;name&gt;) after importing it from cso_toolkit; in Stata, help &lt;command&gt;.\nYou know the task but not the name. Scan the “What it does” column above, or read the chapter for the task in Part II or III.\nYou want to know whether a language has a function, and what to do if not. The coverage matrix has the notes behind every dash above.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>D</span>  <span class='chapter-title'>Function reference</span>"
     ]
   },
   {
-    "objectID": "appendices/d-function-reference.html#authoritative-source-files",
-    "href": "appendices/d-function-reference.html#authoritative-source-files",
+    "objectID": "appendices/d-function-reference.html#where-this-appendix-comes-from",
+    "href": "appendices/d-function-reference.html#where-this-appendix-comes-from",
     "title": "Appendix D — Function reference",
-    "section": "D.12 Authoritative source files",
-    "text": "D.12 Authoritative source files\nThe lists on this page are generated from, and should be reconciled against, these files in the repository. When the exports drift from this page, the files below win — this appendix is a finding aid, not the contract.\n\nr/NAMESPACE — the complete list of R exports (the source of truth for the R column).\nr/_pkgdown.yml — the family grouping for a pkgdown site (none is published yet), driven by roxygen @family tags (which roxygen2 emits as \\concept{} entries the has_concept() selectors match).\npython/src/__init__.py — the Python __all__ export list and the per-module import map.\nstata/src/ — one .ado plus one .sthlp per Stata command.\ndocs/dw_io_python_reference.md, docs/dw_api_python_reference.md — the hand-written Python IO and API references.\ndocs/dw_io_reference.md, docs/dw_api_reference.md — the R-side narrative references for the IO and API families.",
+    "section": "D.5 Where this appendix comes from",
+    "text": "D.5 Where this appendix comes from\nThe table is generated, so it cannot drift from the code without the Conformance check failing. Its inputs:\n\nr/NAMESPACE, Python’s __all__ in python/src/__init__.py, and stata/src/*.ado: which functions exist where;\nthe roxygen titles in r/R/*.R and the titles in stata/src/*.sthlp: the descriptions;\nbook/_data/coverage.json: the order of rows, the notes, and which chapter documents each function;\nbook/_scripts/gen_tables.py: the generator, run by sh tools/docs-tables.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>D</span>  <span class='chapter-title'>Function reference</span>"
@@ -2527,8 +2439,8 @@
     "objectID": "appendices/d-function-reference.html#microdata-archive-datalib_",
     "href": "appendices/d-function-reference.html#microdata-archive-datalib_",
     "title": "Appendix D — Function reference",
-    "section": "D.13 Microdata archive (datalib_*)",
-    "text": "D.13 Microdata archive (datalib_*)\nAccess: internal — request via the CSO team (repository visibility is tracked in datalib issue #20).\nThis family belongs to datalib, the survey-microdata archive tool — a different data layer from the toolkit’s dw_* surface. It shelves and loads survey microdata under the Z:/datalib* IHSN trees; those deposits never enter the aggregate warehouse 060.DW-MASTER. It is documented in full in Part V, and appears here only as a directory entry so the two contracts can be found in one place. As of datalib v0.7.0 / contract v1 the surface is thirteen datalib_* functions: Stata and Python export all thirteen; R exports the thirteen canonical names.\n\n\n\n\n\n\n\n\n\n\nFunction\nR\nPython\nStata\nNotes\n\n\n\n\ndatalib_config\n✅\n✅\n✅\nLoad the per-operator config block (the datalib: root key in ~/.config/user_config.yml). Python also exports the verbatim alias getuserconfig; Stata keeps getuserconfig as the original command\n\n\ndatalib_root\n✅\n✅\n✅\nResolve the library root (explicit arg → DATALIB_ROOT → language option → config key → error)\n\n\ndatalib_countries\n✅\n✅\n✅\nEnumerate country folders under a root\n\n\ndatalib_surveys\n✅\n✅\n✅\nEnumerate survey folders for a country (exact *_&lt;SURVEY&gt; suffix match, never substring)\n\n\ndatalib_vintages\n✅\n✅\n✅\nList master vintages; “latest” is the numeric maximum (v10 &gt; v09)\n\n\ndatalib_adaptations\n✅\n✅\n✅\nList adaptation vintages of a collection\n\n\ndatalib_resolve\n✅\n✅\n✅\nResolve country / year / survey / collection to a verified vintage folder\n\n\ndatalib_files\n✅\n✅\n✅\nList files by section: data · data-original · data-r · data-other · doc · programs (identical sections in all three languages)\n\n\ndatalib_catalog\n✅\n✅\n✅\nInventory one root per call (multi-root estates call it per root)\n\n\ndatalib_load\n✅\n✅\n✅\nLoad, normalise, and merge without mutating data; returns a data frame, or a named list when merge is off\n\n\ndatalib_browse\n✅\n✅\n✅\nInteractive folder navigation (in Stata, bare datalib with no arguments)\n\n\ndatalib_create\n✅\n✅\n✅\nScaffold a grammar-conforming vintage folder (flow deposits)\n\n\ndatalib_map_drive\n✅\n✅\n✅\nMap the Z: share. Python also exports the verbatim alias mapzdrive; Stata keeps mapzdrive as the original command\n\n\n\n\nD.13.1 Where the per-function reference lives\ndatalib documents itself in the same three idioms as the toolkit. R — roxygen2 man pages for the thirteen canonical names; open one with ?datalib_resolve. Python — per-function docstrings (help(datalib_resolve) after from datalib import datalib_resolve) plus the CLI entry point python -m datalib. Stata — help datalib, and a companion .sthlp file next to each command’s .ado.\nThis family is tracked in its own repository, unicef-drp/datalib-unicef, not in this book’s source tree; the coverage-matrix appendix’s datalib note is the authoritative pointer to it. Because datalib is a tier-(ii) ecosystem package (see the architecture chapter), its cross-language coverage is asserted and tested in that repository, not in this appendix.",
+    "section": "D.6 Microdata archive (datalib_*)",
+    "text": "D.6 Microdata archive (datalib_*)\nAccess: public — unicef-drp/datalib-unicef (public since 2026-07-27).\nThis family belongs to datalib, the survey-microdata archive tool — a different data layer from the toolkit’s dw_* surface. It shelves and loads survey microdata under the Z:/datalib* IHSN trees; those deposits never enter the aggregate warehouse 060.DW-MASTER. It is documented in full in Part V, and appears here only as a directory entry so the two contracts can be found in one place. As of datalib v0.7.0 / contract v1 the surface is thirteen datalib_* functions: Stata and Python export all thirteen; R exports the thirteen canonical names.\n\n\n\n\n\n\n\n\n\n\nFunction\nR\nPython\nStata\nNotes\n\n\n\n\ndatalib_config\n✅\n✅\n✅\nLoad the per-operator config block (the datalib: root key in ~/.config/user_config.yml). Python also exports the verbatim alias getuserconfig; Stata keeps getuserconfig as the original command\n\n\ndatalib_root\n✅\n✅\n✅\nResolve the library root (explicit arg → DATALIB_ROOT → language option → config key → error)\n\n\ndatalib_countries\n✅\n✅\n✅\nEnumerate country folders under a root\n\n\ndatalib_surveys\n✅\n✅\n✅\nEnumerate survey folders for a country (exact *_&lt;SURVEY&gt; suffix match, never substring)\n\n\ndatalib_vintages\n✅\n✅\n✅\nList master vintages; “latest” is the numeric maximum (v10 &gt; v09)\n\n\ndatalib_adaptations\n✅\n✅\n✅\nList adaptation vintages of a collection\n\n\ndatalib_resolve\n✅\n✅\n✅\nResolve country / year / survey / collection to a verified vintage folder\n\n\ndatalib_files\n✅\n✅\n✅\nList files by section: data · data-original · data-r · data-other · doc · programs (identical sections in all three languages)\n\n\ndatalib_catalog\n✅\n✅\n✅\nInventory one root per call (multi-root estates call it per root)\n\n\ndatalib_load\n✅\n✅\n✅\nLoad, normalise, and merge without mutating data; returns a data frame, or a named list when merge is off\n\n\ndatalib_browse\n✅\n✅\n✅\nInteractive folder navigation (in Stata, bare datalib with no arguments)\n\n\ndatalib_create\n✅\n✅\n✅\nScaffold a grammar-conforming vintage folder (flow deposits)\n\n\ndatalib_map_drive\n✅\n✅\n✅\nMap the Z: share. Python also exports the verbatim alias mapzdrive; Stata keeps mapzdrive as the original command\n\n\n\n\nD.6.1 Where the per-function reference lives\ndatalib documents itself in the same three idioms as the toolkit. R — roxygen2 man pages for the thirteen canonical names; open one with ?datalib_resolve. Python — per-function docstrings (help(datalib_resolve) after from datalib import datalib_resolve) plus the CLI entry point python -m datalib. Stata — help datalib, and a companion .sthlp file next to each command’s .ado.\nThis family is tracked in its own repository, unicef-drp/datalib-unicef, not in this book’s source tree; the coverage-matrix appendix’s datalib note is the authoritative pointer to it. Because datalib is a tier-(ii) ecosystem package (see The UNICEF analytics ecosystem), its cross-language coverage is asserted and tested in that repository, not in this appendix.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>D</span>  <span class='chapter-title'>Function reference</span>"
@@ -2539,7 +2451,7 @@
     "href": "appendices/e-glossary.html",
     "title": "Appendix E — Glossary",
     "section": "",
-    "text": "E.1 Adaptation (vintage)\nThis glossary documents cso-toolkit as of v0.12.0 (2026-11-24); version notes mark when a behaviour was added. It defines the load-bearing terms used throughout the handbook. The toolkit’s vocabulary is deliberately small, but several of the terms carry precise, contractual meaning — canonical deposit, reviewer mode, provenance sidecar — and the most common misreading is to take one of these in its everyday sense: to treat a canonical deposit as merely a file location, say, rather than as a status that depends on which role is acting. Definitions are listed alphabetically. Where a term names a function and the cross-language story is non-trivial, a tabset shows how it appears in R, Python, and Stata; where a sibling does not yet implement a term, the gap is stated explicitly.\nFor the function-by-function reference, see the function reference appendix; for the on-disk shape of the provenance sidecar, see the provenance sidecar schema appendix; for the full vocabulary of failures, see the error taxonomy appendix.\nA harmonized derivative of a master survey vintage, recorded as a further token block in the IHSN folder name — …_v&lt;MM&gt;_M_v&lt;AA&gt;_A_&lt;HHHH&gt;, where v&lt;AA&gt;_A is the adaptation number and &lt;HHHH&gt; the collection. Like master vintages, adaptations are integers, and “latest adaptation” resolves to the numeric maximum for the requested collection. Contrast Master vintage.",
+    "text": "E.1 Adaptation (vintage)\nThis glossary defines the terms the handbook uses with a precise meaning, as of cso-toolkit v0.12.0 (2026-11-24). Some carry contractual weight: a canonical deposit, for instance, is a status that depends on which role is acting, not just a place on disk. Entries are alphabetical; each links to the chapter or appendix that owns the detail. Which languages implement what is in the coverage matrix.\nA harmonised derivative of a master vintage, built for one collection and named by a further token block, …_v&lt;MM&gt;_M_v&lt;AA&gt;_A_&lt;HHHH&gt;, where v&lt;AA&gt;_A numbers the adaptation and &lt;HHHH&gt; names the collection. “Latest adaptation” is the numeric maximum for the requested collection. See The IHSN convention and the folder grammar.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2550,7 +2462,7 @@
     "href": "appendices/e-glossary.html#aggregation-contract",
     "title": "Appendix E — Glossary",
     "section": "E.2 Aggregation contract",
-    "text": "E.2 Aggregation contract\nThe capability family that turns country-level (or finer) observations into regional and global figures with explicit coverage accounting. Its centerpiece is aggregate_data_v2(), which computes weighted_mean / mean / sum / proportion / total while tracking population and country coverage against a coverage threshold (see coverage threshold: below it the aggregate is blanked to NA rather than published silently). Supporting members are apply_time_window() (keep the latest observation per country within an inclusive year window), generate_agg_footnote() (assemble the human-readable coverage footnote), dw_nestweight() (redistribute survey weights from missing nested observations so a stratified aggregate stays consistent when missingness is not completely at random within the stratum), and two demographic convenience wrappers — dw_pop() (fetch World Bank population) and dw_regions() (enrich a national table with the standard UNICEF regional aggregates). Stata has no aggregation sibling; aggregate_data_v2 and the three aggregation helpers are R + Python, as is dw_pop, while dw_regions is R-only. See the aggregation chapter.",
+    "text": "E.2 Aggregation contract\nThe capability family that turns country-level observations into regional and global figures while accounting for the share of population the data cover. Its core is aggregate_data_v2(), with helpers for time windows, coverage footnotes and survey weights. See Aggregation.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2561,7 +2473,7 @@
     "href": "appendices/e-glossary.html#cache-key",
     "title": "Appendix E — Glossary",
     "section": "E.3 Cache key",
-    "text": "E.3 Cache key\nThe stable, descriptive identifier — snake_case, encoding the parameters that make a response distinct — under which dw_api_fetch() stores a cached response. It becomes the filename &lt;cache_key&gt;.&lt;ext&gt; in the frozen cache. A well-chosen cache key is what lets a reviewer find the exact frozen response a producer fetched. See frozen cache.",
+    "text": "E.3 Cache key\nThe short snake_case name under which dw_api_fetch() stores a response, chosen to encode what makes it distinct; it becomes the file name &lt;cache_key&gt;.&lt;ext&gt; in the frozen cache, so a reviewer can find the exact response a producer fetched. See The external-API contract.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2572,7 +2484,29 @@
     "href": "appendices/e-glossary.html#canonical-deposit",
     "title": "Appendix E — Glossary",
     "section": "E.4 Canonical deposit",
-    "text": "E.4 Canonical deposit\nCanonical (aggregates). The single authoritative copy of a sector’s deposited artefacts — the dw_&lt;sector&gt;.&lt;ext&gt; files and their provenance sidecars — living under the Teams folder at 060.DW-MASTER/01_dw_prep/, with 013_wrkdata/ holding the promoted, publication-ready outputs and 011_rawdata/ holding inputs and API caches — is the aggregate / indicator warehouse sense of canonical, and the one the dw_* contract means by default. A second, distinct sense — Canonical (microdata) — belongs to the survey-microdata archive: the IHSN trees Z:/datalib and Z:/datalib-&lt;domain&gt; into which the Data Steward promotes conformed survey vintages. The two senses share an office and a single ~/.config/user_config.yml file but name different data layers — a microdata deposit is never promoted into 060.DW-MASTER. See Microdata archive and the IHSN convention chapter. Whether a path counts as canonical depends on the role acting on it, not just on where it sits: the producer writes it (with automatic mirroring to the Z: drive — see Z: mirror), the reviewer may only read it, and the publisher publishes from it. A reviewer-mode write that targets a canonical path is a hard error. The toolkit recognises a path as canonical via dw_is_canonical(), which (since v0.4.6) also understands OneDrive-mounted Teams Documents paths on UNICEF laptops, and (since v0.5.0) the dwZDrive (Z:) root.",
+    "text": "E.4 Canonical deposit\nThe single authoritative copy of a project’s deposited outputs and their sidecars: for the indicator warehouse, the Teams folder 060.DW-MASTER/ and its Z: mirror. The producer writes it, the reviewer only reads it, the publisher publishes from it. The microdata archive’s Z:/datalib* trees are canonical in a separate sense, and nothing passes between the two stores. See Why a toolkit, and how it fits together.",
+    "crumbs": [
+      "Appendices",
+      "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
+    ]
+  },
+  {
+    "objectID": "appendices/e-glossary.html#check-record",
+    "href": "appendices/e-glossary.html#check-record",
+    "title": "Appendix E — Glossary",
+    "section": "E.5 Check record",
+    "text": "E.5 Check record\nA small file, .checks/&lt;content-hash&gt;.json, that sh tools/check --record commits when every local check passes on committed content, so a pull request can show its checks were run without re-running them on GitHub. See Checks and CI.",
+    "crumbs": [
+      "Appendices",
+      "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
+    ]
+  },
+  {
+    "objectID": "appendices/e-glossary.html#collaboration-model",
+    "href": "appendices/e-glossary.html#collaboration-model",
+    "title": "Appendix E — Glossary",
+    "section": "E.6 Collaboration model",
+    "text": "E.6 Collaboration model\nThe project setting, single-producer or multi-producer, that says how many people may produce results. It lives in the committed cso_project.yml (no file means single-producer) and is separate from each person’s dw_mode; in a multi-producer project dw_save() guards outputs against concurrent or unrecorded replacement. See Roles and the mode contract.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2582,8 +2516,8 @@
     "objectID": "appendices/e-glossary.html#collection",
     "href": "appendices/e-glossary.html#collection",
     "title": "Appendix E — Glossary",
-    "section": "E.5 Collection",
-    "text": "E.5 Collection\nThe harmonization code carried in the folder grammar’s final token (for example HLT, IPUMS), naming the module-and-key schema a vintage conforms to in datalib’s merge registry. A collection is aligned with, but narrower than, a domain: the domain groups an office’s holdings thematically, while the collection is the specific harmonization contract the loader merges against. As of datalib contract v1 only HLT and IPUMS are registered — the IPUMS keys still unverified against a real deposit, so per-module key validation guards each merge. See Domain and Module.",
+    "section": "E.7 Collection",
+    "text": "E.7 Collection\nThe harmonisation code in the last token of an adaptation folder name (for example HLT), naming the modules and merge keys a vintage conforms to in datalib’s registry. A domain says where a survey is shelved; a collection says how a vintage is harmonised and merged. See The IHSN convention and the folder grammar.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2593,8 +2527,8 @@
     "objectID": "appendices/e-glossary.html#contract-auditor",
     "href": "appendices/e-glossary.html#contract-auditor",
     "title": "Appendix E — Glossary",
-    "section": "E.6 Contract auditor",
-    "text": "E.6 Contract auditor\nThe static-analysis helper, test_scripts(), that recursively scans a directory of R or Python scripts and flags any direct call to a raw file-IO or external-API command the toolkit is meant to wrap — for example read_csv, pd.read_csv, httr::GET, requests.get, rsdmx::readSDMX, or sdmx.Client. It exists to keep a vendoring repo from quietly drifting back to un-wrapped IO. A per-line escape hatch, # cso-allow: &lt;rule-id&gt;, suppresses an intentional exception; error_on_violation = TRUE turns it into a build gate. The auditor is R + Python only; there is no Stata sibling. See Checks and CI.\n\nRPythonStata\n\n\ntest_scripts(\"01_dw_prep/\", error_on_violation = TRUE)\n\n\ntest_scripts(\"01_dw_prep/\", error_on_violation=True)\n\n\n* Not implemented — the contract auditor has no Stata sibling.",
+    "section": "E.8 Contract auditor",
+    "text": "E.8 Contract auditor\nThe static check, test_scripts(), that flags direct calls to the raw file-IO and API functions the toolkit wraps, so a repository does not drift back to unwrapped IO. A trailing # cso-allow: &lt;rule-id&gt; comment exempts a deliberate exception. See Checks and CI.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2604,8 +2538,8 @@
     "objectID": "appendices/e-glossary.html#coverage-threshold",
     "href": "appendices/e-glossary.html#coverage-threshold",
     "title": "Appendix E — Glossary",
-    "section": "E.7 Coverage threshold",
-    "text": "E.7 Coverage threshold\nThe minimum population coverage, expressed as a fraction in [0, 1], that an aggregate must meet to be reported. Passed to aggregate_data_v2() as coverage_threshold (default NULL, meaning no threshold; the common UNICEF default is 0.5, i.e. 50% of population covered). When the covered population share falls below it, the helper blanks the aggregate to NA rather than reporting a figure built on too few countries — under-coverage is suppressed, not published silently.",
+    "section": "E.9 Coverage threshold",
+    "text": "E.9 Coverage threshold\nThe minimum population share, a fraction in [0, 1], that countries with data must cover for an aggregate to be reported; below it aggregate_data_v2() returns a missing value instead. The default is no threshold; 0.5 is the common UNICEF choice. See Aggregation.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2615,8 +2549,8 @@
     "objectID": "appendices/e-glossary.html#cross-language-parity",
     "href": "appendices/e-glossary.html#cross-language-parity",
     "title": "Appendix E — Glossary",
-    "section": "E.8 Cross-language parity",
-    "text": "E.8 Cross-language parity\nThe toolkit’s design commitment that the same operation carries the same function name and the same behaviour across R, Python, and Stata, sharing a single provenance sidecar schema, mode-aware path routing, and one error-envelope shape. Parity is the goal, not yet a completed state: Stata has no external-API wrapper and no Parquet support; dw_merge, dw_verify_z, dw_root and dw_stage are R + Python only; dw_regions is R-only; the contract auditor and the aggregation family have no Stata siblings; and the Python reference is hand-written (no pkgdown-style autodoc). The coverage matrix appendix records the gaps function by function.",
+    "section": "E.10 Cross-language parity",
+    "text": "E.10 Cross-language parity\nThe commitment that an operation has the same name and behaviour in R, Python and Stata, with one sidecar schema, the same mode-aware routing and one error shape. A parity certificate, written by sh tools/certify --record, records the shared test cases’ results in all three languages for one state of the code. See How the three languages stay in step.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2626,8 +2560,8 @@
     "objectID": "appendices/e-glossary.html#data-steward",
     "href": "appendices/e-glossary.html#data-steward",
     "title": "Appendix E — Glossary",
-    "section": "E.9 Data Steward",
-    "text": "E.9 Data Steward\nIn the microdata-deposit governance model (draft v0.3), the role — with a deputy — that operates the archive: it maintains datalib, runs the review-gate checks and the assisted move, executes promotion of conformed vintages into the canonical IHSN trees, and keeps the logs. The Data Steward operates the gate; the Microdata Core Group decides its outcomes. The appointment is still to be named (the governance model is pre-ratification). See the microdata-deposit governance chapter.",
+    "section": "E.11 Data Steward",
+    "text": "E.11 Data Steward\nIn the draft microdata governance model, the role that operates the archive: it runs the review-gate checks, promotes conformed vintages into the canonical trees and keeps the logs, while the Microdata Core Group decides gate outcomes. The post is not yet filled. See The microdata archive.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2637,8 +2571,8 @@
     "objectID": "appendices/e-glossary.html#dbm-dbr-dbp",
     "href": "appendices/e-glossary.html#dbm-dbr-dbp",
     "title": "Appendix E — Glossary",
-    "section": "E.10 DBM / DBR / DBP",
-    "text": "E.10 DBM / DBR / DBP\nThe three role acronyms: DBM = Database Manager = producer; DBR = Database Reviewer = reviewer; DBP = Database Publisher = publisher. The third role was renamed INGESTOR → PUBLISHER in v0.4.6, aligning the label with the verb the code already uses (dw_publish(); there is no dw_ingest()). For each role’s responsibilities, see producer, reviewer, and publisher.",
+    "section": "E.12 DBM / DBR / DBP",
+    "text": "E.12 DBM / DBR / DBP\nThe role acronyms: Database Manager (producer), Database Reviewer (reviewer) and Database Publisher (publisher, formerly INGESTOR). See Roles and the mode contract.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2648,8 +2582,8 @@
     "objectID": "appendices/e-glossary.html#deposit-check",
     "href": "appendices/e-glossary.html#deposit-check",
     "title": "Appendix E — Glossary",
-    "section": "E.11 Deposit check",
-    "text": "E.11 Deposit check\nThe rule, enforced by dw_check_deposit() (and by dw_fetch_inputs(), which calls it), that every input a pipeline keeps out of Git must have an identical copy — same SHA-256 — in the canonical deposit on Teams or Z:, at the same relative path as in the consumer repository’s inputs folder. A file passes when an identical copy exists on either mirror and no existing copy differs; an unmounted Z: is fine when Teams matches. A missing or differing file stops the run with a [cso_toolkit.dw_check_deposit] envelope listing each file’s status (match, differs, missing, no access). R and Python (Python since v0.11.0); Stata routes through R or Python (#152). See the IO contract chapter.",
+    "section": "E.13 Deposit check",
+    "text": "E.13 Deposit check\nThe rule, enforced by dw_check_deposit(), that every input a pipeline keeps out of Git has an identical copy (same SHA-256) at the same relative path in the deposit on Teams or Z:; a missing or differing file stops the run. See The IO contract.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2659,8 +2593,8 @@
     "objectID": "appendices/e-glossary.html#domain",
     "href": "appendices/e-glossary.html#domain",
     "title": "Appendix E — Glossary",
-    "section": "E.12 Domain",
-    "text": "E.12 Domain\nA thematic grouping of an office’s microdata holdings, each mapped to a library root: health → Z:/datalib-hlt, education → Z:/datalib-edu, nutrition → Z:/datalib-nut, child-protection → Z:/datalib-chp, and cross-cutting → Z:/datalib. A domain (an organisational grouping of holdings) and a collection (a harmonization code in the folder grammar) are aligned but not identical. Only the health domain — via the HLT collection — and IPUMS are in the merge registry today; the rest of the domain registry is a draft-v0.3 item still to be confirmed by the Standards Board. See Collection.",
+    "section": "E.14 Domain",
+    "text": "E.14 Domain\nA thematic grouping of microdata holdings, each shelved under its own library root (health under Z:/datalib-hlt, for example). The domain list is still a draft. Contrast Collection. See The microdata archive.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2670,8 +2604,8 @@
     "objectID": "appendices/e-glossary.html#dw_apis_allowed",
     "href": "appendices/e-glossary.html#dw_apis_allowed",
     "title": "Appendix E — Glossary",
-    "section": "E.13 dw_apis_allowed",
-    "text": "E.13 dw_apis_allowed\nThe session-level boolean that gates every external network call. It is TRUE in producer mode and FALSE in reviewer mode, derived once from dw_mode at profile-load time rather than set per call. dw_api_fetch() reads it from the session and, when it is not TRUE, stops with the reviewer-mode envelope before any HTTP request; the profile’s dw_require_no_api() guard, for a sector’s own network calls, checks dw_mode == \"reviewer\" directly — so the reviewer lockout holds even inside a sector’s own scripts, not only at the top-level entry points.",
+    "section": "E.15 dw_apis_allowed",
+    "text": "E.15 dw_apis_allowed\nThe session flag that gates external network calls: TRUE in producer mode, FALSE in reviewer mode, derived from dw_mode when the profile loads. When dw_api_fetch() finds no cached response and the flag is not TRUE, it stops before any request. See Profiles and the mode switch.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2681,8 +2615,8 @@
     "objectID": "appendices/e-glossary.html#dw_mode",
     "href": "appendices/e-glossary.html#dw_mode",
     "title": "Appendix E — Glossary",
-    "section": "E.14 dw_mode",
-    "text": "E.14 dw_mode\nThe session property — \"producer\" or \"reviewer\" — that selects which side of the mode contract a session operates under. It is read once at profile-load time from the user’s block in ~/.config/user_config.yml; it is required, and profile loading hard-fails if it is absent (defaulting either way is unsafe). From it the profile derives the path globals (teamsWrkData and its *Canonical aliases) and dw_apis_allowed. It is a session property, never a per-call argument. See the roles and mode contract chapter.\n\nRPythonStata\n\n\ndw_mode &lt;- \"producer\"          # normally set by profile_&lt;repo&gt;.R from YAML\ndw_apis_allowed &lt;- TRUE\n\n\n_state.configure(dw_mode=\"producer\", dw_apis_allowed=True)\n\n\nglobal dw_mode \"producer\"",
+    "section": "E.16 dw_mode",
+    "text": "E.16 dw_mode\nThe session property, \"producer\" or \"reviewer\", that decides which side of the mode contract a session is on. The profile reads it once from the user’s block in ~/.config/user_config.yml, where a dw_mode_by_project entry takes precedence; there is no default, and it is never a per-call argument. See Profiles and the mode switch.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2692,8 +2626,8 @@
     "objectID": "appendices/e-glossary.html#error-envelope",
     "href": "appendices/e-glossary.html#error-envelope",
     "title": "Appendix E — Glossary",
-    "section": "E.15 Error envelope",
-    "text": "E.15 Error envelope\nThe three-part shape every stop() / raise in the toolkit follows, so a reader can both grep for the failing function and act on it:\n[cso_toolkit.dw_save] Reviewer mode forbids writes under canonical: /path\n  Reviewer sessions must keep canonical deposits read-only to preserve\n  vintage permanence; writes go to the sandbox.\n  Fix:\n    1. Resolve a sandbox path instead, OR\n    2. If this is a deliberate DBM bootstrap, pass `allow_canonical_write = TRUE`.\nThe leading [cso_toolkit.&lt;func&gt;] prefix names the raising function, so a consumer project can be grepped for every site that hits a given error class; the second line says why; the Fix: block says what to do. The R testthat suite asserts the shape with expect_envelope(). See the error taxonomy appendix.",
+    "section": "E.17 Error envelope",
+    "text": "E.17 Error envelope\nThe shape of every deliberate error and warning in the toolkit: a [cso_toolkit.&lt;function&gt;] prefix naming the function that raised it, a line saying why the rule exists, and a Fix: block of numbered remedies. See Provenance sidecars and the error envelope and Appendix C.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2703,8 +2637,8 @@
     "objectID": "appendices/e-glossary.html#external-api-contract",
     "href": "appendices/e-glossary.html#external-api-contract",
     "title": "Appendix E — Glossary",
-    "section": "E.16 External-API contract",
-    "text": "E.16 External-API contract\nThe capability family that wraps external data sources behind a single mode-aware interface: dw_api_fetch() (producer hits the live API and caches; reviewer reads only the cache), dw_api_cached(), and dw_api_inventory(). Sources are selected by the api = argument, one of eleven identifiers — \"uis\", \"sdmx\", \"sdmx_codelist\", \"wb\", \"wb_indicators\", \"ilo\", \"unsd_sdg\", \"github_raw\", \"http\", \"json_get\", and \"csv\". The family is R + Python only; Stata has no API wrapper. See the external-API contract chapter.",
+    "section": "E.18 External-API contract",
+    "text": "E.18 External-API contract\nThe capability family that puts external data sources behind one mode-aware function, dw_api_fetch(), with the source chosen by api =. A producer fetches live and caches the response; a reviewer reads only the cache. See The external-API contract.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2714,8 +2648,8 @@
     "objectID": "appendices/e-glossary.html#frozen-cache",
     "href": "appendices/e-glossary.html#frozen-cache",
     "title": "Appendix E — Glossary",
-    "section": "E.17 Frozen cache",
-    "text": "E.17 Frozen cache\nThe on-disk store of upstream API responses that a reviewer re-runs against without ever touching the network. A producer call to dw_api_fetch() hits the live source and persists the response under &lt;rawdata&gt;/_apis/&lt;api&gt;/&lt;cache_key&gt;.&lt;ext&gt; alongside a .provenance.json sidecar; a reviewer call reads that file, or stops via dw_require_no_api() if it is absent. “Frozen” captures the contract guarantee: the cached vintage does not change under a reviewer’s feet, so a 2026 publication reproduces identically two years later. This is the canonical sense of reproduces identically used elsewhere in this glossary (under vintage and vendoring). A related _frozen/&lt;host&gt;/&lt;path&gt; store holds HTTPS responses that dw_use() froze from a URL (see HTTPS-URL freeze). See also cache key.",
+    "section": "E.19 Frozen cache",
+    "text": "E.19 Frozen cache\nThe store of upstream API responses, &lt;rawdata&gt;/_apis/&lt;api&gt;/&lt;cache_key&gt;.&lt;ext&gt; with a sidecar each, that a reviewer re-runs against without the network; a missing response stops a reviewer’s call. “Frozen” means the response does not change under the reviewer, so a published figure can be reproduced later. See The external-API contract.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2725,8 +2659,8 @@
     "objectID": "appendices/e-glossary.html#https-url-freeze",
     "href": "appendices/e-glossary.html#https-url-freeze",
     "title": "Appendix E — Glossary",
-    "section": "E.18 HTTPS-URL freeze",
-    "text": "E.18 HTTPS-URL freeze\nThe behaviour, added to dw_use() in v0.4.0, by which a producer may pass an HTTPS URL instead of a path: the producer downloads it once and freezes the response under _frozen/&lt;host&gt;/&lt;path&gt; with a provenance sidecar, and the reviewer reads only from that frozen copy. The host allowlist is configured per-consumer and is empty by default, so the capability is opt-in.",
+    "section": "E.20 HTTPS-URL freeze",
+    "text": "E.20 HTTPS-URL freeze\ndw_use() accepting an HTTPS URL in place of a path: a producer’s first read saves the file as &lt;host&gt;/&lt;path&gt; under the frozen-cache root, with a sidecar, and later reads use that copy. Only URLs matching the profile’s dw_url_allowlist (empty by default) are accepted; a reviewer never downloads. See The IO contract.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2736,8 +2670,8 @@
     "objectID": "appendices/e-glossary.html#ihsn-convention",
     "href": "appendices/e-glossary.html#ihsn-convention",
     "title": "Appendix E — Glossary",
-    "section": "E.19 IHSN convention",
-    "text": "E.19 IHSN convention\nThe folder-naming grammar datalib encodes, following the International Household Survey Network shelving pattern: &lt;CCC&gt;/&lt;CCC&gt;_&lt;YYYY&gt;_&lt;SSSS&gt;/ down to master (…_v&lt;MM&gt;_M) and adaptation (…_v&lt;MM&gt;_M_v&lt;AA&gt;_A_&lt;HHHH&gt;) vintages, with Data/{Original,Stata,R,Other}, Doc/, and Programs/ inside each vintage. Because the vintage is legible from the path itself, the microdata archive records provenance structurally — the folder name plus an untouched Data/Original/ — rather than in a .provenance.json sidecar. See the IHSN convention chapter and Microdata archive.",
+    "section": "E.21 IHSN convention",
+    "text": "E.21 IHSN convention\nThe folder-naming grammar datalib encodes, after the International Household Survey Network’s shelving pattern: country, survey, master and adaptation vintages, each vintage holding Data/, Doc/ and Programs/. Because the path names the vintage, the microdata archive records provenance in folder names rather than sidecars. See The IHSN convention and the folder grammar.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2747,8 +2681,8 @@
     "objectID": "appendices/e-glossary.html#input-manifest",
     "href": "appendices/e-glossary.html#input-manifest",
     "title": "Appendix E — Glossary",
-    "section": "E.20 Input manifest",
-    "text": "E.20 Input manifest\nThe data frame dw_fetch_inputs() returns: one row per input file with file (path relative to the inputs folder), path (what to read), sha256, origin (local, copied from Z:, copied from Teams, or read from …), and the Teams / Z: deposit status. Recorded in an output’s provenance sidecar as metadata.inputs (file, sha256, origin), it names the exact inputs the output was built from, which is what lets dw_provenance_diff() tell whether two runs used the same inputs. See the provenance sidecar schema appendix.",
+    "section": "E.22 Input manifest",
+    "text": "E.22 Input manifest\nThe table dw_fetch_inputs() returns, one row per input with its path, SHA-256 and origin. Stored in an output’s sidecar as metadata.inputs, it lets two runs be compared. See The IO contract and Appendix B.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2758,8 +2692,8 @@
     "objectID": "appendices/e-glossary.html#io-contract",
     "href": "appendices/e-glossary.html#io-contract",
     "title": "Appendix E — Glossary",
-    "section": "E.21 IO contract",
-    "text": "E.21 IO contract\nThe capability family that gives every read, write, compare, and merge a single shape: dw_save, dw_use, dw_compare, dw_merge, dw_isid, and dw_verify_z, alongside two path-and-staging helpers — dw_root() (resolves the mode-aware wrk / raw / meta root so sector scripts build paths without knowing producer-vs-reviewer mode) and dw_stage() (a reviewer-mode helper that copies a canonical input into the sandbox once, then hash-guards the staged copy on every later run; in producer mode it is a no-op), plus four helpers for pipelines whose inputs are kept out of Git — dw_fetch_inputs() and dw_check_deposit() (fill a gitignored local inputs folder from the Teams / Z: deposit and prove every input matches it, keeping each folder visible with a .gitkeep) and dw_read_provenance() and dw_provenance_diff() (read an output’s sidecar and tell whether a new run reproduced the previous one). Dispatch is automatic by file extension (CSV / TSV / XLSX / RDS-or-PKL / DTA / Parquet / JSON / YAML); every write given isid = runs the uniqueness check, emits a provenance sidecar, mirrors to Teams and Z: on canonical writes, and verifies integrity on canonical reads. Coverage is not uniform: dw_merge, dw_verify_z, dw_root, dw_stage, dw_fetch_inputs, dw_check_deposit, dw_read_provenance and dw_provenance_diff are R + Python only (Stata routes through R or Python, #152), and Stata has no Parquet or RDS support (dw_use.ado reads .dta / .csv / .xlsx only — pipelines needing other formats route through R or Python and dw_save() to .dta for Stata consumption). See the IO contract chapter.\n\nRPythonStata\n\n\ndw_save(df, name = \"dw_ed_edu.csv\", sector = \"ed\", kind = \"wrk\",\n        isid = \"REF_AREA\")\n\n\ndw_save(df, name=\"dw_ed_edu.csv\", sector=\"ed\", kind=\"wrk\",\n        isid=[\"REF_AREA\"])\n\n\ndw_save, filename(\"dw_ed_edu.dta\") path(\"$teamsWrkData/ed\") idvars(REF_AREA INDICATOR)",
+    "section": "E.23 IO contract",
+    "text": "E.23 IO contract\nThe capability family that gives every read and write one shape: dw_save() and dw_use() choose the format from the extension, route paths by mode, check uniqueness, write sidecars, mirror canonical writes and check canonical reads. See The IO contract and Appendix D.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2769,8 +2703,8 @@
     "objectID": "appendices/e-glossary.html#isid",
     "href": "appendices/e-glossary.html#isid",
     "title": "Appendix E — Glossary",
-    "section": "E.22 isid",
-    "text": "E.22 isid\nA uniqueness check named after the Stata command of the same idea: assert that a given set of columns identifies rows uniquely (no duplicate key tuples). The toolkit exposes it both as a standalone helper, dw_isid(df, keys), and as the isid = argument to dw_save(), which runs the check automatically before writing. A failed isid check is a write-blocking error: a non-unique key means the deposit cannot be trusted as a keyed table. In Stata the check is embedded in dw_save via idvars(...) rather than exposed as a separate command.\n\nRPythonStata\n\n\ndw_isid(df, keys = c(\"REF_AREA\", \"INDICATOR\", \"SEX\"))\n\n\ndw_isid(df, keys=[\"REF_AREA\", \"INDICATOR\", \"SEX\"])\n\n\ndw_save, filename(\"out.dta\") path(\"$teamsWrkData/ed\") idvars(REF_AREA INDICATOR SEX)",
+    "section": "E.24 isid",
+    "text": "E.24 isid\nA uniqueness check named after the Stata command: it asserts that a set of columns identifies rows uniquely. The toolkit offers it as dw_isid() and as the isid = argument of dw_save(), where a failure blocks the write. See The IO contract.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2780,8 +2714,8 @@
     "objectID": "appendices/e-glossary.html#manifest-.toolkit_manifest.yml",
     "href": "appendices/e-glossary.html#manifest-.toolkit_manifest.yml",
     "title": "Appendix E — Glossary",
-    "section": "E.23 Manifest (.toolkit_manifest.yml)",
-    "text": "E.23 Manifest (.toolkit_manifest.yml)\nThe small YAML file that records which toolkit vintage a consumer repo has vendored; it lives at 00_functions/.toolkit_manifest.yml. Its fields are source (the upstream owner/repo), pulled_version (the pinned tag — or the literal inrepo, which marks a helper this repo maintains itself and so silences sync warnings on it), pulled_commit (the commit that tag points to), pulled_date, pulled_by, vendored (the list of copied files), and local_edits (vendored files with local divergence, which cso_toolkit_pull() skips on update). It is version-controlled alongside the helpers and updated on every re-pull. The vintage-sync helpers read it. See the vendoring model chapter.",
+    "section": "E.25 Manifest (.toolkit_manifest.yml)",
+    "text": "E.25 Manifest (.toolkit_manifest.yml)\nThe committed YAML file in 00_functions/ that records which toolkit release a repository has vendored: the upstream repository, the pinned tag and the copied files, among other fields. See Vendoring and updates.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2791,8 +2725,8 @@
     "objectID": "appendices/e-glossary.html#master-vintage",
     "href": "appendices/e-glossary.html#master-vintage",
     "title": "Appendix E — Glossary",
-    "section": "E.24 Master vintage",
-    "text": "E.24 Master vintage\nA numbered master release of a survey’s harmonized data — the fourth token block of the folder name, &lt;CCC&gt;_&lt;YYYY&gt;_&lt;SSSS&gt;_v&lt;MM&gt;_M. Vintages are integers (inputs accept 1 / 01 / v01 / V01; the internal form is v%02d), and “latest master” is the numeric maximum, never the directory-listing or alphabetical order (v10 &gt; v09). An adaptation layers a harmonization on top of a master. Contrast Adaptation (vintage).",
+    "section": "E.26 Master vintage",
+    "text": "E.26 Master vintage\nA numbered release of a survey’s cleaned data, the block _v&lt;MM&gt;_M after the survey stem. Vintages are integers, and “latest” is the numeric maximum, never the alphabetical one (v10 is later than v09). See The IHSN convention and the folder grammar.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2802,8 +2736,8 @@
     "objectID": "appendices/e-glossary.html#microdata-archive",
     "href": "appendices/e-glossary.html#microdata-archive",
     "title": "Appendix E — Glossary",
-    "section": "E.25 Microdata archive",
-    "text": "E.25 Microdata archive\nThe governed store of the survey data files themselves — datalib’s Z:/datalib* IHSN trees, plus a staging area and a deposit process. It is one of three governance layers, distinct from the microdata catalogue (the metadata/discovery layer) and from datalib (the software tool). Crucially it is a different data layer from the aggregate / indicator warehouse 060.DW-MASTER that the dw_* contract serves: microdata deposits are never promoted into 060.DW-MASTER. See the microdata-deposit governance chapter and Canonical deposit.",
+    "section": "E.27 Microdata archive",
+    "text": "E.27 Microdata archive\nThe governed store of survey data files: datalib’s Z:/datalib* trees, a staging area and the deposit process. It is a different data layer from the indicator warehouse in 060.DW-MASTER, and distinct from the catalogue and from datalib, the software. See The microdata archive.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2813,8 +2747,8 @@
     "objectID": "appendices/e-glossary.html#microdata-catalogue",
     "href": "appendices/e-glossary.html#microdata-catalogue",
     "title": "Appendix E — Glossary",
-    "section": "E.26 Microdata catalogue",
-    "text": "E.26 Microdata catalogue\nThe metadata and discovery layer over the microdata archive — an IHSN/NADA-style index built on the DDI model — as opposed to the archive (the files) or the tool (datalib). It is a Phase-2-plus product, seeded by the tool’s auto-generated inventories, and is not yet built. The distinction the three layers turn on: an archive without a catalogue is unfindable, a catalogue without an archive points at silos, and both without a tool are manual drudgery.",
+    "section": "E.28 Microdata catalogue",
+    "text": "E.28 Microdata catalogue\nThe planned metadata and discovery layer over the microdata archive, an IHSN/NADA-style index on the DDI model, to be seeded by datalib’s inventories. It is not yet built. See The microdata archive.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2824,8 +2758,8 @@
     "objectID": "appendices/e-glossary.html#mode-contract",
     "href": "appendices/e-glossary.html#mode-contract",
     "title": "Appendix E — Glossary",
-    "section": "E.27 Mode contract",
-    "text": "E.27 Mode contract\nWhat each role may and may not do at every wrapped call site, decided by dw_mode: producers may call APIs and write canonical; reviewers may do neither — their writes route to the sandbox, and their API calls raise. The contract is enforced by the code, not by convention: every dw_save, dw_use, and dw_api_fetch re-checks. One operational test of whether a sector has adopted the contract is that the canonical deposit’s modification time is unchanged before and after a reviewer-mode run. See the roles and mode contract chapter and Profiles and the mode switch.",
+    "section": "E.29 Mode contract",
+    "text": "E.29 Mode contract\nThe rules for what each mode may do at every wrapped call: a producer may call APIs and write canonical paths; a reviewer may do neither, so its writes go to the sandbox and its API calls stop. The code enforces it, at each dw_save(), dw_use() and dw_api_fetch(). See Roles and the mode contract.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2835,8 +2769,8 @@
     "objectID": "appendices/e-glossary.html#module",
     "href": "appendices/e-glossary.html#module",
     "title": "Appendix E — Glossary",
-    "section": "E.28 Module",
-    "text": "E.28 Module\nA single survey data file within a vintage — for the HLT collection, household, hhmembers, adult, and children — stored as &lt;vintage-folder-name&gt;_&lt;module&gt;.dta under Data/Stata/. Each collection’s merge registry declares which modules are person-level and which are household-level, and the keys that validate and join them: datalib chains person modules 1:1 on the person keys and attaches household modules m:1 on the household keys, keeping unmatched rows. See Collection.",
+    "section": "E.30 Module",
+    "text": "E.30 Module\nA single survey data file within a vintage (household, for example), stored under Data/Stata/ as &lt;vintage-folder&gt;_&lt;module&gt;.dta. The collection’s registry gives each module’s level and merge keys. See The IHSN convention and the folder grammar.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2846,8 +2780,8 @@
     "objectID": "appendices/e-glossary.html#producer",
     "href": "appendices/e-glossary.html#producer",
     "title": "Appendix E — Glossary",
-    "section": "E.29 Producer",
-    "text": "E.29 Producer\nThe role (Database Manager, DBM) that owns the deposit: it refreshes upstream API caches, runs the sector pipeline, writes the canonical dw_&lt;sector&gt;.&lt;ext&gt; artefacts (with automatic Teams + Z: mirroring — see Z: mirror), and completes the pre-deposit checklist. It is the only role permitted live network access (dw_apis_allowed = TRUE). Set with dw_mode: \"producer\".",
+    "section": "E.31 Producer",
+    "text": "E.31 Producer\nThe role (DBM) that owns the deposit: it refreshes API caches, runs the pipeline and writes the canonical outputs, and is the only role allowed live network access. Set with dw_mode: producer. See Roles and the mode contract.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2857,8 +2791,8 @@
     "objectID": "appendices/e-glossary.html#provenance-sidecar",
     "href": "appendices/e-glossary.html#provenance-sidecar",
     "title": "Appendix E — Glossary",
-    "section": "E.30 Provenance sidecar",
-    "text": "E.30 Provenance sidecar\nThe &lt;path&gt;.provenance.json file the toolkit writes next to every primary output, recording how that output came to be: written_at, user, dw_mode, the sha256 of the primary file, a schema block (rows / cols / column names), and any caller-supplied metadata (title, sources, vintage, contact, among other caller-chosen fields). Sidecars are on by default (opt out with provenance = FALSE); .RData / .rda writes skip them. Secrets passed as API call arguments are redacted before they reach the sidecar. The sidecar is what makes a deposit auditable and what a publisher’s provenance chain links back through to the original API fetches. When the caller records the input manifest as metadata.inputs, two sidecars of the same output also show whether a new run reproduced the previous one: dw_read_provenance() reads a sidecar and dw_provenance_diff() compares two (reproduced, output_changed, inputs_changed, first_run, no_input_record; R and Python, #152). See the provenance sidecar schema appendix.",
+    "section": "E.32 Provenance sidecar",
+    "text": "E.32 Provenance sidecar\nThe &lt;file&gt;.provenance.json written next to each output, recording when, by whom and in which mode it was written, its SHA-256 and shape, and any caller-supplied metadata. It is what makes a deposit auditable. See Provenance sidecars and the error envelope and Appendix B.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2868,8 +2802,8 @@
     "objectID": "appendices/e-glossary.html#publisher",
     "href": "appendices/e-glossary.html#publisher",
     "title": "Appendix E — Glossary",
-    "section": "E.31 Publisher",
-    "text": "E.31 Publisher\nThe role (Database Publisher, DBP) that takes producer-blessed deposits from 013_wrkdata/ and pushes them into downstream infrastructure — Helix, SDMX endpoints, data.unicef.org, and the State of the World’s Children tables. It reads canonical, writes only to infrastructure outside the deposit repo, and is gated on the producer’s checklist plus the reviewer’s compare report.\n\n\n\n\n\n\nThe publisher role is documented, and dw_publish() ships as a deliberate dry-run-only stub: dry_run = TRUE validates inputs and assembles a payload (sha256, bytes, built_at, built_by, version stamp), while dry_run = FALSE raises an envelope-shaped “Live submission not yet implemented” error pointing at issue #15. Despite the version number reaching v0.12.0, the live Helix submission branch has not yet landed — it remains gated on the sector leads finalising the submission contract. (Formerly INGESTOR.)",
+    "section": "E.33 Publisher",
+    "text": "E.33 Publisher\nThe role (DBP) that pushes deposits the producer has signed off and the reviewer has checked to downstream platforms such as Helix. It reads canonical and writes only outside the deposit; dw_publish() so far supports only a dry run. See Roles and the mode contract.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2879,8 +2813,8 @@
     "objectID": "appendices/e-glossary.html#review-gate",
     "href": "appendices/e-glossary.html#review-gate",
     "title": "Appendix E — Glossary",
-    "section": "E.32 Review gate",
-    "text": "E.32 Review gate\nThe seven-item checklist a microdata deposit must pass before promotion (governance draft v0.3): (1) inventory logged; (2) naming conforms to the grammar (flow deposits only); (3) reproducibility — a non-author can re-run the script from staging; (4) no breakage outside the deposit’s staging folder; (5) licence recorded; (6) access tier assigned; (7) de-identification confirmed. The Microdata Core Group decides the outcome; the Data Steward operates the checks and, on a pass, promotes conformed vintages into the domain’s canonical IHSN tree — never into 060.DW-MASTER. See Staging area and Data Steward.",
+    "section": "E.34 Review gate",
+    "text": "E.34 Review gate\nThe seven-item checklist a microdata deposit must pass before promotion from staging into a canonical tree, covering naming, reproducibility, licence, access and de-identification among others. The Core Group decides; the Data Steward runs the checks. See The microdata archive.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2890,8 +2824,8 @@
     "objectID": "appendices/e-glossary.html#reviewer",
     "href": "appendices/e-glossary.html#reviewer",
     "title": "Appendix E — Glossary",
-    "section": "E.33 Reviewer",
-    "text": "E.33 Reviewer\nThe role (Database Reviewer, DBR) that reproduces and validates: it re-runs the same sector pipeline from the canonical deposit, writing only into its own sandbox; compares its output against canonical; and files issues. It is physically prevented from writing canonical and from calling external APIs (dw_apis_allowed = FALSE). A reviewer can re-run a full pipeline offline, because the vendored helpers and the frozen cache are local. Set with dw_mode: \"reviewer\" plus a sandboxRoot.",
+    "section": "E.35 Reviewer",
+    "text": "E.35 Reviewer\nThe role (DBR) that re-runs the pipeline from the canonical deposit, writing only to its sandbox, and compares its outputs with the deposit. It cannot write canonical paths or call external APIs; the vendored helpers and the frozen cache let it work offline. Set with dw_mode: reviewer and a sandboxRoot. See Roles and the mode contract.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2901,8 +2835,8 @@
     "objectID": "appendices/e-glossary.html#sandbox-sandboxroot",
     "href": "appendices/e-glossary.html#sandbox-sandboxroot",
     "title": "Appendix E — Glossary",
-    "section": "E.34 Sandbox / sandboxRoot",
-    "text": "E.34 Sandbox / sandboxRoot\nThe per-user, writable directory tree a reviewer session writes into instead of the canonical deposit. sandboxRoot is set in the user’s ~/.config/user_config.yml block and is used only in reviewer mode; the profile redirects teamsFolder, teamsRawData, and teamsWrkData under it so that existing pipeline code lands in the sandbox without per-script edits. (That the canonical deposit’s modification time is unchanged across a reviewer run is part of the operational definition of adopting the contract — see mode contract.)",
+    "section": "E.36 Sandbox / sandboxRoot",
+    "text": "E.36 Sandbox / sandboxRoot\nThe per-user folder a reviewer session writes into instead of the canonical deposit, set as sandboxRoot in ~/.config/user_config.yml. A profile that derives the write paths points them there in reviewer mode, so pipeline code needs no edits. See Profiles and the mode switch.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2912,8 +2846,8 @@
     "objectID": "appendices/e-glossary.html#scaffolding",
     "href": "appendices/e-glossary.html#scaffolding",
     "title": "Appendix E — Glossary",
-    "section": "E.35 Scaffolding",
-    "text": "E.35 Scaffolding\nThe capability family that generates the standard CSO project building blocks: create_profile() writes a profile_&lt;repo&gt;.R (or .py) with cross-platform user identification, YAML config load, producer / reviewer dw_mode resolution, an optional Z: drive advisory (a non-blocking block that warns when the legacy Azure mirror is unavailable but does not stop execution), a packages block, and a sentinel object; review_profile() audits an existing profile against the same checklist, reporting pass / warn / fail; create_sector_script() scaffolds a sector run-script template with profile verification, logging, runtime tracking, and try/catch; create_dw_sector_script() is the DW-Production wrapper; and create_research_project() and create_official_stats_project() (v0.10.0) scaffold a whole new repository: layout, .gitignore, tools/check.R and its wrapper, pre-push hook, testthat skeleton, cso_project.yml and the agent files. See Starting a repository and Profiles and the mode switch.",
+    "section": "E.37 Scaffolding",
+    "text": "E.37 Scaffolding\nThe capability family that writes a project’s standard parts: a profile (create_profile()), a sector script, or a whole repository with its checks, hooks and agent files (create_official_stats_project(), create_research_project()). See Starting a repository.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2923,8 +2857,8 @@
     "objectID": "appendices/e-glossary.html#sentinel-object",
     "href": "appendices/e-glossary.html#sentinel-object",
     "title": "Appendix E — Glossary",
-    "section": "E.36 Sentinel object",
-    "text": "E.36 Sentinel object\nThe marker a generated profile leaves in the session to signal that the profile loaded successfully and the mode contract is wired. Downstream sector scripts check for it before running, so a script never executes against an un-initialised, mode-ambiguous session.",
+    "section": "E.38 Sentinel object",
+    "text": "E.38 Sentinel object\nThe variable a generated profile sets last, profile_&lt;repo&gt; &lt;- TRUE, to show it loaded completely; a sector script can test it and refuse to run without it. See Profiles and the mode switch.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2934,8 +2868,8 @@
     "objectID": "appendices/e-glossary.html#staging-area",
     "href": "appendices/e-glossary.html#staging-area",
     "title": "Appendix E — Glossary",
-    "section": "E.37 Staging area",
-    "text": "E.37 Staging area\nThe waypoint tree — Z:/staging-area/&lt;domain&gt;/&lt;team-folder-as-is&gt;/ — where a deposit lands before review, readable by least privilege (the depositing unit, the Data Steward, and the Core Group). Stock deposits arrive here exactly as-is; the area is reviewed within a quarter and retired after promotion or a no-go decision. It is a waypoint, not an archive. See Stock and flow and Review gate.",
+    "section": "E.39 Staging area",
+    "text": "E.39 Staging area\nThe waypoint tree Z:/staging-area/&lt;domain&gt;/&lt;team-folder-as-is&gt;/ where a microdata deposit waits for review, readable by default only by the depositing unit, the Data Steward and the Core Group. It is not an archive: each deposit is promoted or turned down within a quarter. See The microdata archive.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2945,8 +2879,8 @@
     "objectID": "appendices/e-glossary.html#stock-and-flow",
     "href": "appendices/e-glossary.html#stock-and-flow",
     "title": "Appendix E — Glossary",
-    "section": "E.38 Stock and flow",
-    "text": "E.38 Stock and flow\nThe two deposit modes in the microdata governance model. Stock is existing holdings, deposited exactly as-is — folder structure preserved so current scripts keep running — with conformance never a precondition (“copy it as it is, don’t touch it”), promoted survey by survey. Flow is new work, following the datalib convention from day one (“name it right from day one”). The as-is rule buys a four-phase payoff: preserve and make portable, compare inputs across teams for the same survey, reverse-engineer transformations, and eventually consolidate one file per survey.",
+    "section": "E.40 Stock and flow",
+    "text": "E.40 Stock and flow\nThe two microdata deposit modes. Stock is existing holdings, deposited exactly as they are so current scripts keep running; flow is new work, named by the IHSN grammar from the start. See The microdata archive.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2956,8 +2890,8 @@
     "objectID": "appendices/e-glossary.html#vendoring",
     "href": "appendices/e-glossary.html#vendoring",
     "title": "Appendix E — Glossary",
-    "section": "E.39 Vendoring",
-    "text": "E.39 Vendoring\nThe toolkit’s production adoption model: a consumer repo copies the helper files into its own 00_functions/ and pins the version in .toolkit_manifest.yml, rather than installing or source()-ing them over the network. Vendoring is what buys vintage permanence (a release re-run uses the helper code as it stood at release — reproduces identically, in the sense defined under frozen cache), survives UNICEF AppLocker restrictions on script-installable paths, and lets reviewers reproduce offline. Native install paths exist for local development (devtools::install_local, pip install -e, adopath ++), but vendoring stays the production model. See the vendoring model chapter.",
+    "section": "E.41 Vendoring",
+    "text": "E.41 Vendoring\nThe toolkit’s production adoption model: a consumer repository copies the helper files into itself and pins the release in .toolkit_manifest.yml, instead of installing them or sourcing them over the network. A re-run then uses the helpers as they stood at release, offline if need be. See Vendoring and updates.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2967,8 +2901,8 @@
     "objectID": "appendices/e-glossary.html#vintage",
     "href": "appendices/e-glossary.html#vintage",
     "title": "Appendix E — Glossary",
-    "section": "E.40 Vintage",
-    "text": "E.40 Vintage\nA dated snapshot of a data source or of a piece of code. Two senses recur: the data vintage carried in a deposit’s provenance metadata (for example, vintage = \"2026-05\"), and the toolkit vintage pinned in .toolkit_manifest.yml. The whole point of freezing caches and vendoring helpers is that a published vintage reproduces identically later (see frozen cache).",
+    "section": "E.42 Vintage",
+    "text": "E.42 Vintage\nA dated snapshot of data or code: the data vintage in a deposit’s provenance metadata, or the toolkit vintage pinned in the manifest. Vintage permanence is the guarantee that a published vintage never changes, which frozen caches and vendoring exist to keep. See Why a toolkit, and how it fits together.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2978,8 +2912,8 @@
     "objectID": "appendices/e-glossary.html#vintage-sync",
     "href": "appendices/e-glossary.html#vintage-sync",
     "title": "Appendix E — Glossary",
-    "section": "E.41 Vintage sync",
-    "text": "E.41 Vintage sync\nThe capability family of consumer-side helpers that keep a vendored copy from silently falling behind upstream: cso_toolkit_check() reads the local manifest, queries upstream for the latest tag, and warns when the consumer is behind; cso_toolkit_diff() compares each vendored file with a release tag; cso_toolkit_pull() refreshes vendored files to a target tag and updates the manifest; cso_toolkit_sync() does the update in one call, after printing the release notes. In reviewer mode the check runs offline only (pinned version against target_version); the network lockout (dw_apis_allowed = FALSE) skips the upstream lookup, and cso_toolkit_pull() / cso_toolkit_sync() refuse, so reviewers always run against whatever vintage the producer pinned. See Vendoring and updates.",
+    "section": "E.43 Vintage sync",
+    "text": "E.43 Vintage sync\nThe capability family that keeps a vendored copy from falling silently behind: cso_toolkit_check() warns when the pin is behind, and other helpers show the differences and refresh the copies. Updating is a producer’s step; reviewer mode makes no network call and refuses updates. See Vendoring and updates.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
@@ -2989,8 +2923,8 @@
     "objectID": "appendices/e-glossary.html#z-mirror",
     "href": "appendices/e-glossary.html#z-mirror",
     "title": "Appendix E — Glossary",
-    "section": "E.42 Z: mirror",
-    "text": "E.42 Z: mirror\nThe carbon-copy of the canonical deposit kept on the UNICEF Azure file share (the Z: drive). A producer’s canonical write is mirrored to Z: automatically and non-blockingly: a failed mirror emits an envelope-shaped warning rather than rolling back the primary write. On canonical reads, the toolkit can verify that the Teams copy and the Z: copy are byte-equal; dw_verify_z() exposes this check, and dw_use() runs it on canonical reads (verify_z = \"sha256\" for a deep check, verify_z = FALSE to skip). The mirror is a redundancy and integrity guarantee, not a separate deposit. dw_verify_z is R + Python only.\n\nRPythonStata\n\n\ndw_verify_z(\"013_wrkdata/dw_ed_edu.csv\")\n\n\ndw_verify_z(\"013_wrkdata/dw_ed_edu.csv\")\n\n\n* Not implemented — dw_verify_z has no Stata sibling.\n* (dw_use does run a non-blocking Z: integrity check on canonical reads.)",
+    "section": "E.44 Z: mirror",
+    "text": "E.44 Z: mirror\nThe copy of the canonical deposit on the UNICEF Azure file share, the Z: drive. A producer’s canonical write is copied there automatically, and a failed copy warns rather than undoing the write; canonical reads compare the Z: copy with Teams by size, or by SHA-256 on request. See The IO contract.",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Glossary</span>"
