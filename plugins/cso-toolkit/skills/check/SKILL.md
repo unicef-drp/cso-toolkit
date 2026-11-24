@@ -5,7 +5,7 @@ description: Run a cso-toolkit repository's local checks (sh tools/check), expla
 
 # Run the local checks
 
-Handbook: "Continuous integration and repository hygiene", <https://unicef-drp.github.io/cso-toolkit/handbook/chapters/45-ci-cd.html>, section "Check records".
+Handbook: "Checks and CI", <https://unicef-drp.github.io/cso-toolkit/handbook/chapters/checks-and-ci.html>, section "Check records".
 
 1. **Run** from the repository root:
    ```sh
