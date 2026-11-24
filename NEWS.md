@@ -14,10 +14,13 @@ Python too: `aggregate_data_v2(method = "total")`,
 `dw_use(stage =)`. That leaves three R exports without a Python
 sibling: `dw_regions()`, `dw_publish()` (a dry-run placeholder in R)
 and `dw_verbosity()` (R's message switch; Python uses `logging`).
-Python also finds Z: again when it is a mapped network drive. Two new
-parity cases cover the new code; the certificate for this release
-passes 44 checks, with 7 gaps, all in Stata. Handbook appendix G now
-explains in full how the three languages are certified. PRs #221, #222, #223, #227. MINOR: new
+Python also finds Z: again when it is a mapped network drive, and two
+smaller Python faults found while checking the handbook against the
+code are fixed. Two new parity cases cover the new code; the
+certificate for this release passes 44 checks, with 7 gaps, all in
+Stata. The handbook and READMEs were checked line by line against the
+code, and appendix G now explains in full how the three languages are
+certified. PRs #221, #222, #223, #227. MINOR: new
 functions and options in Python; nothing changes for R or Stata users.
 
 ### Added
