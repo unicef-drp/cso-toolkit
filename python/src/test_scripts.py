@@ -42,11 +42,14 @@ class _Rule:
     suggest: str
 
 
+# Every call pattern starts with the left boundary R's patterns use
+# (?<![A-Za-z0-9_.]): `my_read_csv(` and `pl.read_csv(` (polars) are not
+# pandas calls (#237). The .to_*() method patterns need none.
 _BUILTIN_RULES: tuple[_Rule, ...] = (
     # ---- IO commands wrapped by dw_io.py ----
     _Rule(
         id="io-read-csv", family="io",
-        pattern=r"(?:pd\.|pandas\.)?read_csv\s*\(",
+        pattern=r"(?<![A-Za-z0-9_.])(?:pd\.|pandas\.)?read_csv\s*\(",
         message="Direct CSV read via pandas.",
         suggest="dw_use(name=..., sector=..., kind=...)",
     ),
@@ -58,7 +61,7 @@ _BUILTIN_RULES: tuple[_Rule, ...] = (
     ),
     _Rule(
         id="io-read-excel", family="io",
-        pattern=r"(?:pd\.|pandas\.)?read_excel\s*\(",
+        pattern=r"(?<![A-Za-z0-9_.])(?:pd\.|pandas\.)?read_excel\s*\(",
         message="Direct Excel read.",
         suggest="dw_use(...) — auto-dispatches on .xlsx",
     ),
@@ -70,7 +73,7 @@ _BUILTIN_RULES: tuple[_Rule, ...] = (
     ),
     _Rule(
         id="io-read-stata", family="io",
-        pattern=r"(?:pd\.|pandas\.)?read_stata\s*\(",
+        pattern=r"(?<![A-Za-z0-9_.])(?:pd\.|pandas\.)?read_stata\s*\(",
         message="Direct Stata .dta read.",
         suggest="dw_use(...) — auto-dispatches on .dta",
     ),
@@ -82,7 +85,7 @@ _BUILTIN_RULES: tuple[_Rule, ...] = (
     ),
     _Rule(
         id="io-read-parquet", family="io",
-        pattern=r"(?:pd\.|pandas\.)?read_parquet\s*\(",
+        pattern=r"(?<![A-Za-z0-9_.])(?:pd\.|pandas\.)?read_parquet\s*\(",
         message="Direct Parquet read.",
         suggest="dw_use(...) — auto-dispatches on .parquet",
     ),
@@ -94,19 +97,19 @@ _BUILTIN_RULES: tuple[_Rule, ...] = (
     ),
     _Rule(
         id="io-pickle", family="io",
-        pattern=r"pickle\.(?:dump|load)\s*\(",
+        pattern=r"(?<![A-Za-z0-9_.])pickle\.(?:dump|load)\s*\(",
         message="Direct pickle dump / load.",
         suggest="dw_save(obj, name='...pkl') / dw_use(...)",
     ),
     _Rule(
         id="io-json", family="io",
-        pattern=r"json\.(?:dump|load)\s*\(",
+        pattern=r"(?<![A-Za-z0-9_.])json\.(?:dump|load)\s*\(",
         message="Direct JSON dump / load on a file handle.",
         suggest="dw_save(obj, name='...json') / dw_use(...)",
     ),
     _Rule(
         id="io-yaml", family="io",
-        pattern=r"yaml\.(?:safe_dump|dump|safe_load|load)\s*\(",
+        pattern=r"(?<![A-Za-z0-9_.])yaml\.(?:safe_dump|dump|safe_load|load)\s*\(",
         message="Direct YAML read / write.",
         suggest=(
             "dw_save(obj, name='...yaml') / dw_use(...).  "
@@ -131,43 +134,43 @@ _BUILTIN_RULES: tuple[_Rule, ...] = (
     # ---- API commands wrapped by dw_api.py ----
     _Rule(
         id="api-requests", family="api",
-        pattern=r"\brequests\.(?:get|post|put|patch|delete|request)\s*\(",
+        pattern=r"(?<![A-Za-z0-9_.])requests\.(?:get|post|put|patch|delete|request)\s*\(",
         message="Direct HTTP call via requests.",
         suggest="dw_api_fetch(api='http' | 'json_get' | ..., cache_key=...)",
     ),
     _Rule(
         id="api-httpx", family="api",
-        pattern=r"\bhttpx\.(?:get|post|put|patch|delete|Client|AsyncClient)\s*\(",
+        pattern=r"(?<![A-Za-z0-9_.])httpx\.(?:get|post|put|patch|delete|Client|AsyncClient)\s*\(",
         message="Direct HTTP call via httpx.",
         suggest="dw_api_fetch(api='http' | 'json_get' | ..., cache_key=...)",
     ),
     _Rule(
         id="api-urllib", family="api",
-        pattern=r"urllib\.request\.urlopen\s*\(",
+        pattern=r"(?<![A-Za-z0-9_.])urllib\.request\.urlopen\s*\(",
         message="Direct HTTP call via urllib.",
         suggest="dw_api_fetch(api='http', cache_key=...)",
     ),
     _Rule(
         id="api-sdmx", family="api",
-        pattern=r"sdmx\.Client\s*\(",
+        pattern=r"(?<![A-Za-z0-9_.])sdmx\.Client\s*\(",
         message="Direct sdmx.Client call.",
         suggest="dw_api_fetch(api='sdmx', providerId=..., flowRef=..., key=..., cache_key=...)",
     ),
     _Rule(
         id="api-wbgapi", family="api",
-        pattern=r"wbgapi\.(?:data|series|economy)\.",
+        pattern=r"(?<![A-Za-z0-9_.])wbgapi\.(?:data|series|economy)\.",
         message="Direct wbgapi call.",
         suggest="dw_api_fetch(api='wb' | 'wb_indicators', indicator=..., cache_key=...)",
     ),
     _Rule(
         id="api-wbdata", family="api",
-        pattern=r"\bwbdata\.(?:get_data|get_dataframe|get_series)\s*\(",
+        pattern=r"(?<![A-Za-z0-9_.])wbdata\.(?:get_data|get_dataframe|get_series)\s*\(",
         message="Direct wbdata call.",
         suggest="dw_api_fetch(api='wb', indicator=..., cache_key=...)",
     ),
     _Rule(
         id="api-urlretrieve", family="api",
-        pattern=r"urllib\.request\.urlretrieve\s*\(",
+        pattern=r"(?<![A-Za-z0-9_.])urllib\.request\.urlretrieve\s*\(",
         message="Direct file download bypasses the cache.",
         suggest="dw_api_fetch(api='http', cache_key=...) and pass the cached bytes to your reader.",
     ),
