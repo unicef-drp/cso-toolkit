@@ -313,6 +313,20 @@ def dw_is_canonical(path: Union[str, Path]) -> bool:
 # Z: drive mirror
 # ---------------------------------------------------------------------------
 
+def _join_under(root_n: str, rel: str) -> str:
+    """Join a normalised root and a relative path with one ``/``.
+
+    Keeps the root as it is: a UNC root (``//server/share``, which
+    :func:`_normalize` gives for a mapped network drive on Windows) must
+    keep its leading ``//``.  Collapsing every ``//`` turned
+    ``//server/share/x`` into ``/server/share/x``, a folder on the
+    current drive (#225).
+    """
+    root_n = root_n.rstrip("/")
+    rel = rel.lstrip("/")
+    return f"{root_n}/{rel}" if rel else root_n
+
+
 def _dw_z_mirror_path(path: Union[str, Path]) -> Optional[str]:
     """Translate a Teams-canonical path to its Z: drive equivalent.
 
@@ -331,7 +345,7 @@ def _dw_z_mirror_path(path: Union[str, Path]) -> Optional[str]:
     if not pn.startswith(tn):
         return None
     rel = pn[len(tn):].lstrip("/")
-    return f"{zn}/{rel}".replace("//", "/")
+    return _join_under(zn, rel)
 
 
 def _dw_mirror_to_z(primary_path: Union[str, Path], verbose: bool = True) -> Optional[str]:
@@ -398,7 +412,7 @@ def _dw_teams_mirror_path(primary_path: Union[str, Path]) -> Optional[str]:
             continue
         if pn == src_n or pn.startswith(src_n + "/"):
             rel = pn[len(src_n):].lstrip("/")
-            return f"{dst_n}/{rel}".replace("//", "/")
+            return _join_under(dst_n, rel)
     return None
 
 
