@@ -60,6 +60,21 @@ def test_dates_follow_news_and_the_readme_row_must_exist(tmp_path):
     assert any(e.startswith("README.md: no version-table row") for e in errs)
 
 
+def test_the_handbook_stamps_and_every_date_are_checked(tmp_path):
+    root = copy_repo(tmp_path)
+    v, date = cv.release(root)
+    edit(root, "book/appendices/a-coverage-matrix.qmd", f"matches R at {v},", "matches R at 0.0.1,")
+    edit(root, "book/appendices/e-glossary.qmd", f"**v{v}** ({date})", f"**v{v}** (1999-01-01)")
+    edit(root, "README.md", f", v{v} ({date[:4]}),", f", v{v} (1999),")
+    edit(root, "r/DESCRIPTION", f"Date: {date}", "Date: 1999-01-01")
+    errs = cv.check(root)
+    assert any(e.startswith("book/appendices/a-coverage-matrix.qmd:") and "0.0.1" in e for e in errs)
+    assert any(e.startswith("book/appendices/e-glossary.qmd:") and "1999-01-01" in e for e in errs)
+    assert any(e.startswith("README.md:") and "year 1999" in e for e in errs)
+    assert any(e.startswith("r/DESCRIPTION:") and "1999-01-01" in e for e in errs)
+    assert len(errs) == 4
+
+
 def test_a_bumped_description_without_news_fails(tmp_path):
     root = copy_repo(tmp_path)
     v, _ = cv.release(root)

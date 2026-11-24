@@ -3,8 +3,9 @@
 
     python3 tools/check_versions.py      exit 1 if any stamp disagrees
 
-The version is written by hand in ten files (handbook chapter "Versioning and
-releases", "The version is stamped in more than one place"). A stamp left
+The version is written by hand in many places (handbook chapter "Versioning
+and releases", "The version is stamped in more than one place"); STAMPS and
+DATES below are the list, and a new place belongs there. A stamp left
 behind mislabels provenance: dw_toolkit_version() is recorded in dw_stage()
 sidecars and dw_publish() payloads. This check reads the release from
 r/DESCRIPTION and its date from NEWS.md, then requires every other stamp to
@@ -44,13 +45,19 @@ STAMPS = [
     ("README.md", [r", v{V} \(\d{{4}}\),"]),
     ("book/introduction.qmd", [r"currently v{V}\)"]),
     ("book/appendices/e-glossary.qmd", [r"as of `cso-toolkit` \*\*v{V}\*\*"]),
+    ("book/appendices/a-coverage-matrix.qmd", [r"Its version stamp is v{V}, level with Python",
+                                               r"Its version stamp matches R at {V},"]),
 ]
 
 # Dates that must equal the release date: (file, pattern with one group).
 DATES = [
+    ("r/DESCRIPTION", r"^Date: (\d{4}-\d\d-\d\d)\s*$"),
     ("CITATION.cff", r"^\s*date-released: \"(\d{4}-\d\d-\d\d)\""),
     (".zenodo.json", r"^\s*\"publication_date\": \"(\d{4}-\d\d-\d\d)\""),
+    ("book/appendices/e-glossary.qmd", r"as of `cso-toolkit` \*\*v[^*]+\*\* \((\d{4}-\d\d-\d\d)\)"),
 ]
+# The README's suggested citation gives the release's year.
+README_YEAR = r", v\S+ \((\d{4})\),"
 
 
 def read(repo: Path, rel: str) -> str:
@@ -93,6 +100,12 @@ def check(repo: Path) -> list:
                 errs.append(f"{rel}: no release date found")
             errs += [f"{rel}:{ln}: date {got}, expected {date} (NEWS.md)"
                      for ln, got in hits if got != date]
+        years = [(readme.count("\n", 0, m.start()) + 1, m.group(1))
+                 for m in re.finditer(README_YEAR, readme, re.M)]
+        if not years:
+            errs.append("README.md: no citation year found")
+        errs += [f"README.md:{ln}: year {got}, expected {date[:4]} (NEWS.md)"
+                 for ln, got in years if got != date[:4]]
     return errs
 
 
@@ -106,7 +119,7 @@ def main() -> int:
             print(f"  {e}")
         print("  Fix: stamp every place listed in chapter 'Versioning and releases'.")
         return 1
-    n = sum(len(p) for _, p in STAMPS) + len(DATES) + 1
+    n = sum(len(p) for _, p in STAMPS) + len(DATES) + 2
     print(f"[versions] PASS: v{v} ({date}); {n} stamp patterns in "
           f"{len({f for f, _ in STAMPS + DATES})} files agree")
     return 0
