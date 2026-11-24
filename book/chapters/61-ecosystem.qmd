@@ -1,6 +1,6 @@
 # The UNICEF analytics ecosystem: three tiers
 
-The architecture chapter already introduced this ecosystem in miniature. Its "wider ecosystem" section gave the orientation: a compact three-tier table, a one-sentence membership rule, the parity pledge, and a note about why configuration diverges across packages today. That section did its job — it told a reader building a pipeline where the surrounding code comes from — and then it pointed here. This chapter is the full map. It is the authoritative treatment: the same three tiers, but with the columns, the membership gate, and the governance policy set out in full, so that the orientation upstream can stay short.
+[Why a toolkit, and how it fits together](why-and-architecture.qmd) already introduced this ecosystem in miniature. Its "wider ecosystem" section gave the orientation: a three-tier summary, a one-sentence membership rule, the parity pledge, and a note about why configuration diverges across packages today. That section did its job — it told a reader building a pipeline where the surrounding code comes from — and then it pointed here. This chapter is the full map. It is the authoritative treatment: the same three tiers, but with the columns, the membership gate, and the governance policy set out in full, so that the orientation upstream can stay short.
 
 The organizing idea is simple and it governs everything that follows. Shared code around a CSO pipeline is not one undifferentiated pile. It falls into three tiers, and the tier a piece of code belongs to decides two things at once: **who maintains it**, and **what this book is willing to assert about it**. Those two questions travel together. The toolkit's own functions carry the strongest maintenance commitment and the strongest claim — the book *is* their specification. An external package used in one production pipeline carries neither a maintenance promise nor a conformance claim; the book asserts only that a specific version did a specific thing on a specific day. Everything between those poles is the middle tier, and most of the governance in this chapter exists to keep that middle tier honest.
 
@@ -8,7 +8,7 @@ Because the tiers are a reproducibility instrument, not an org chart, this chapt
 
 ## The three tiers
 
-The table below is the authoritative version. It carries more columns than the orientation table in the architecture chapter — in particular a **visibility** column and a **support owner** column — because those two columns are exactly where an over-strong claim would otherwise hide.
+The table below is the authoritative version. It carries more than the orientation in the opening chapter — in particular a **visibility** column and a **support owner** column — because those two columns are exactly where an over-strong claim would otherwise hide.
 
 | Tier | What it is | Members | Canonical home | Visibility | Support owner | What the book asserts |
 |---|---|---|---|---|---|---|
@@ -57,7 +57,7 @@ One consequence is worth stating plainly: **stale rows display stale; they never
 
 ## Configuration across the tiers
 
-Configuration is the clearest place where the three tiers are genuinely, deliberately divergent — and the architecture chapter's config-divergence note pointed here for the reason. Today there are **three separate configuration contracts**, and they should be treated as **three separate namespaces**. They are not yet meant to interoperate.
+Configuration is the clearest place where the three tiers are genuinely, deliberately divergent — and the opening chapter's note on configuration pointed here for the reason. Today there are **three separate configuration contracts**, and they should be treated as **three separate namespaces**. They are not yet meant to interoperate.
 
 | Contract | Config source | Mechanism | Reads the toolkit's `user_config.yml`? |
 |---|---|---|---|

@@ -30,6 +30,13 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
   redirect to the new pages. Bugs found while rewriting: #236
   (`create_profile()` output lacks `projectFolder`), #237 (two auditor
   pattern gaps).
+- **Handbook Parts I and II trimmed to what they own.** Chapters 11 and
+  12 become one opening chapter, "Why a toolkit, and how it fits
+  together"; the roles, provenance, IO, external-API and aggregation
+  chapters drop restated material (now in Part III and the appendices)
+  and show language coverage with the generated line under each
+  function. Parts I and II go from 25,007 to 18,936 words. Faults found
+  in the code are filed in #240.
 
 ## v0.12.0 (2026-11-24)
 

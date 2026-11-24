@@ -1,175 +1,42 @@
 # Provenance sidecars and the error envelope
 
-Two small conventions make `cso-toolkit` outputs trustworthy and its failures readable. The first is the **provenance sidecar**: a tiny JSON file written next to every data artefact, recording who wrote it, when, in what mode, and with what content hash. The second is the **error envelope**: a fixed three-part shape that every deliberate error and warning in the toolkit follows, so that library failures read like instructions rather than stack traces. Both conventions are reproduced across the R, Python, and Stata siblings. This chapter documents what each contains, why it exists, and where the cross-language parity is honest versus aspirational.
+Two small conventions make `cso-toolkit` outputs trustworthy and its failures readable. The **provenance sidecar** is a small JSON file written next to every data artefact, recording who wrote it, when, in what mode and with what content hash. The **error envelope** is a fixed three-part shape that every deliberate error and warning in the toolkit follows, so a failure reads like an instruction rather than a stack trace. Both hold in R, Python and Stata. This chapter explains why each exists and what it guarantees. The fields of the sidecar are listed in [Appendix B](../appendices/b-provenance-schema.qmd), and the messages the toolkit raises are catalogued in [Appendix C](../appendices/c-error-taxonomy.qmd).
 
 ## The provenance sidecar
 
-Whenever you write a data file through the IO contract — the toolkit's single sanctioned read/write path (see the IO contract chapter) — the toolkit emits a companion file named `<path>.provenance.json` in the same directory. If you write `dw_ed_edu.csv`, you also get `dw_ed_edu.csv.provenance.json`. The sidecar is not the data; it is a record *about* the data — a small, human-readable, machine-parseable receipt that travels with the artefact through the canonical Teams folder and the Z: drive mirror.
+Whenever you write a data file through `dw_save` ([The IO contract](31-io.qmd)), the toolkit also writes `<path>.provenance.json` beside it: write `dw_ed_edu.csv` and you also get `dw_ed_edu.csv.provenance.json`. The sidecar is a receipt *about* the data, readable by a person and by a program, that travels with the artefact into the canonical Teams folder and its Z: mirror.
 
 ### Why a sidecar at all
 
-The toolkit exists to make analytics reproducible by someone other than the original author (see the "Why a toolkit" chapter). Reproducibility is not only about being able to *re-run* a pipeline; it is also about being able to *trust* a frozen artefact two years after it was deposited. A reviewer who opens `dw_ed_edu.csv` from the canonical deposit needs to answer questions the file itself cannot: Who produced this? Under which session mode — the toolkit runs as either a *producer*, who writes authoritative data, or a *reviewer*, who works read-only (see the roles and mode-contract chapter), and a deposit means something different in each. Has the file been altered since it was written? What were its dimensions, and what upstream sources fed it? The sidecar answers exactly these questions, and it does so without changing the data file's own schema.
+The toolkit exists so that someone other than the author can reproduce an analysis ([Why a toolkit, and how it fits together](why-and-architecture.qmd)). Reproducibility is not only being able to *re-run* a pipeline; it is also being able to *trust* a frozen artefact two years after it was deposited. A reviewer who opens `dw_ed_edu.csv` from the deposit needs answers the file itself cannot give. Who produced it? In which session mode, producer or reviewer ([Roles and the mode contract](21-roles-and-modes.qmd))? Has it been altered since it was written? What shape was it, and which inputs fed it? The sidecar answers these without touching the data file's own schema.
 
-The toolkit uses a sidecar rather than embedding metadata inside the file (the way Stata's native `char _dta[]` mechanism or a Parquet key-value footer would). A sidecar wins on three counts. It is format-agnostic — the same scheme works for CSV, Parquet, DTA, XLSX, JSON, and YAML; it never changes the bytes of the artefact, so a content hash of the data file stays stable regardless of how rich the metadata grows; and it is easy to diff in review and easy to drop when unwanted.
+The toolkit keeps this record beside the file rather than inside it (as Stata's `char _dta[]` or a Parquet key-value footer would). A sidecar wins on three counts:
 
-### What the sidecar contains
+- **It works for every format.** The same scheme serves CSV, Parquet, DTA, XLSX, JSON and YAML.
+- **It never changes the artefact's bytes.** A content hash of the data file stays stable however rich the metadata grows.
+- **It is easy to review.** A sidecar diffs cleanly in a pull request and can be dropped when unwanted.
 
-The R and Python siblings write an identical schema. For a data frame written through `dw_save`, the sidecar carries:
+### What it guarantees
 
-| Field | Meaning |
-|---|---|
-| `path` | Absolute path of the primary file the sidecar describes. |
-| `format` | The dispatched format (e.g. `csv`, `parquet`, `dta`). |
-| `written_at` | UTC timestamp in ISO-8601 form (`%Y-%m-%dT%H:%M:%S%z`). |
-| `user` | OS username (`USERNAME` env var, with a `getpass` fallback in Python). |
-| `dw_mode` | The session mode at write time — `producer`, `reviewer`, or unset. |
-| `vintage` | Optional release tag passed by the caller (e.g. `2026-05`). |
-| `sha256` | SHA-256 hash of the *written file's* bytes — the integrity anchor. |
-| `isid` | The columns asserted to uniquely identify each row at write time, if any (the "is-ID" check). |
-| `schema` | For data frames: `{ rows, cols, columns }`. |
-| `metadata` | Optional caller-supplied block, present only when supplied. |
+**The hash describes the bytes on disk.** The sidecar is written *after* the primary file lands, and its `sha256` is computed by reading that file back, not from the object in memory. That makes the hash an integrity anchor. Re-hash the file later and compare: a match means the bytes are the ones that were written; a mismatch means someone changed the file outside the toolkit. The toolkit uses this anchor itself. `dw_use` compares the Teams copy of a canonical file with its Z: mirror on every read, and `dw_verify_z` does the same on demand ([The IO contract](31-io.qmd)). In a multi-producer project, `dw_save` refuses to replace a file whose bytes no longer match its sidecar ([Roles and the mode contract](21-roles-and-modes.qmd#collaboration-model-single--and-multi-producer-projects)).
 
-The `metadata` block is free-form and is where domain context lives — title, producer script, upstream sources, a contact handle, the data vintage. The toolkit does not prescribe its keys; it merges whatever the caller passes.
+**Each copy carries its own receipt.** When a producer write fans out to the Teams and Z: mirrors, the sidecar is copied with it, so every copy of the artefact can be checked on its own.
 
-Here is how you populate the sidecar at the call site. You write the `metadata` argument by hand; the toolkit captures every other field automatically.
+**Two runs can be compared without reading the data.** If the caller records the inputs in the sidecar's metadata (one record per input file with its SHA-256, which is what `dw_fetch_inputs` returns), then two sidecars of the same output show whether a new run reproduced the old one: same inputs and the same output hash, or which inputs changed, or (the case that warns) the same inputs but a different output, which only the code or the environment can explain. `dw_read_provenance` and `dw_provenance_diff` do this ([The IO contract](31-io.qmd)).
 
-::: {.panel-tabset}
+**The record lives in git while the data stay out.** Data live in the deposit; the sidecars that say which bytes each result came from are committed. A reviewer can then tell from the repository alone what produced a result ([Checks and CI](checks-and-ci.qmd)).
 
-#### R {.unnumbered .unlisted}
+**A sidecar never costs you the data.** If the metadata hold a value that cannot be written as JSON (an R `Date`, a NumPy scalar), the sidecar write emits a warning and the primary file stays. The sidecar is metadata about the asset; the asset is what matters. You can also turn the sidecar off for one call (`provenance = FALSE`; `nosidecar` in Stata).
 
-```r
-dw_save(df, name = "dw_ed_edu.csv", sector = "ed", kind = "wrk",
-        isid = c("REF_AREA", "INDICATOR", "TIME_PERIOD"),
-        vintage = "2026-05",
-        metadata = list(
-          title    = "Education indicators — UNICEF DW format",
-          producer = "01_dw_prep/012_codes/ed/02_aggregate_uis_sdg.R",
-          sources  = c("UIS bulk SDG_092025", "WPP 2024"),
-          contact  = "@karavan88",
-          vintage  = "2026-05"
-        ))
-```
+### Two shapes, one intent
 
-#### Python {.unnumbered .unlisted}
+The sidecar `dw_save` writes describes a *write event*: the file, its format, its schema, its writer and its hash. When `dw_use` downloads an allowlisted URL and freezes it for reviewers (a producer-only step; see [The external-API contract](32-external-api.qmd)), it writes a sidecar of a different shape that describes a *fetch event*: the URL, the hash, the size, and who fetched it and when. Both use the `.provenance.json` extension and the same hashing, but their keys differ, so do not read one with a parser written for the other.
 
-```python
-dw_save(df, name="dw_ed_edu.csv", sector="ed", kind="wrk",
-        isid=["REF_AREA", "INDICATOR", "TIME_PERIOD"],
-        vintage="2026-05",
-        metadata={
-            "title":    "Education indicators — UNICEF DW format",
-            "producer": "01_dw_prep/012_codes/ed/02_aggregate_uis_sdg.py",
-            "sources":  ["UIS bulk SDG_092025", "WPP 2024"],
-            "contact":  "@karavan88",
-            "vintage":  "2026-05",
-        })
-```
-
-#### Stata {.unnumbered .unlisted}
-
-```stata
-dw_save, filename("dw_ed_edu.dta")                     ///
-    path("$teamsWrkData/ed")                           ///
-    idvars(REF_AREA INDICATOR TIME_PERIOD)             ///
-    title("Education indicators — UNICEF DW format")   ///
-    producer("01_dw_prep/.../02_aggregate_uis_sdg.do") ///
-    sources("UIS bulk SDG_092025; WPP 2024")           ///
-    contact("@karavan88")                              ///
-    vintage("2026-05")
-```
-
-:::
-
-A producer-mode write of a CSV produces a sidecar of roughly this shape:
-
-```json
-{
-  "path": "C:/.../060.DW-MASTER/013_wrkdata/ed/dw_ed_edu.csv",
-  "format": "csv",
-  "written_at": "2026-05-30T14:22:07+0000",
-  "user": "jpazevedo",
-  "dw_mode": "producer",
-  "vintage": "2026-05",
-  "sha256": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
-  "isid": ["REF_AREA", "INDICATOR", "TIME_PERIOD"],
-  "schema": { "rows": 1840, "cols": 7,
-              "columns": ["DATAFLOW", "REF_AREA", "INDICATOR",
-                          "SEX", "WEALTH_QUINTILE", "TIME_PERIOD",
-                          "OBS_VALUE"] },
-  "metadata": {
-    "title": "Education indicators — UNICEF DW format",
-    "producer": "01_dw_prep/012_codes/ed/02_aggregate_uis_sdg.R",
-    "sources": ["UIS bulk SDG_092025", "WPP 2024"],
-    "contact": "@karavan88",
-    "vintage": "2026-05"
-  }
-}
-```
-
-The exhaustive field-by-field schema, including the optional and language-specific keys, is tabulated in the provenance sidecar schema appendix.
-
-### How and when it is written
-
-The sidecar is written *after* the primary file lands, by an internal helper (`.write_provenance` in R, `_write_provenance` in Python) invoked by `dw_save`. The SHA-256 is computed by reading back the file that was just written, so the hash describes the bytes actually on disk, not the in-memory object. Two switches govern whether a sidecar appears at all:
-
-- **`provenance = FALSE`** opts out entirely for a single call.
-- **`.RData` / `.rda` writes skip the sidecar unconditionally**, because those formats can carry arbitrary R objects rather than a single tabular artefact, and a row/column schema would be meaningless.
-
-The redundant-mirror logic in producer mode copies the sidecar alongside the primary file to both the Teams canonical equivalent and the Z: drive equivalent, so each copy of the artefact carries its own receipt (see the IO contract chapter for the mirroring rules).
-
-::: {.callout-note}
-The sidecar write is **non-blocking**. If the metadata contains a value that cannot be serialised to JSON — an R `Date` object, a NumPy scalar, a custom class — the write is wrapped so that it emits an envelope-shaped warning and continues, rather than rolling back the primary file. The reasoning is deliberate: the sidecar is metadata; the asset is what matters. You never lose a successfully written data file because its receipt could not be serialised. This behaviour was backported from a DW-Production hardening (the "B3" alignment item).
-:::
-
-### Verifying the hash
-
-The `sha256` field is not just a label; it is the verb behind the sidecar's central promise. To check whether a canonical artefact has drifted from its mirror, `dw_use` runs a non-blocking Z: integrity check on every canonical read, and the dedicated `dw_verify_z` function performs the same comparison on demand. With `compare = "size"` (the default) it does a cheap size check; with `compare = "sha256"` it re-hashes both the Teams copy and the Z: copy and compares the digests, returning a status such as `"match_sha256"` or `"sha256_mismatch"`. To detect tampering against the recorded provenance, re-hash the file and compare the result with the sidecar's `sha256`; this is exactly what the staging path inside `dw_use` does when it re-reads a frozen artefact (see the IO contract and external-API contract chapters). The sidecar records the anchor; `dw_verify_z` is the tool that checks it.
-
-### Comparing two runs
-
-The same sidecar answers a second question: did a new run of a pipeline reproduce the previous one? If the caller records the inputs in the `metadata` block — one row per input file with its SHA-256, which is exactly the manifest `dw_fetch_inputs` returns — then two sidecars of the same output carry everything needed. `dw_read_provenance` reads a sidecar (read the previous one before the new run overwrites the output) and `dw_provenance_diff` compares two of them: `reproduced` means the same inputs and a byte-identical output; `inputs_changed` lists the input files added, removed, or changed; `output_changed` — the same inputs but a different output — warns, because only the code or the environment can explain it. The comparison is run-level and needs no data read; `dw_compare` then shows which records moved. Both functions are in R and Python; Stata routes through either (#152).
-
-### A second sidecar shape: frozen remote files
-
-When `dw_use` downloads an HTTPS URL and freezes it to the local cache (a producer-only operation; see the external-API contract chapter), it writes a sidecar with a *different* schema, tuned to a downloaded resource rather than a saved data frame:
-
-```json
-{
-  "url": "https://raw.githubusercontent.com/.../regions.csv",
-  "sha256": "…",
-  "bytes": 48213,
-  "fetched_at": "2026-05-30T14:25:11Z",
-  "fetched_by": "jpazevedo",
-  "dw_mode": "producer"
-}
-```
-
-This is intentionally distinct: `url`/`fetched_at`/`fetched_by`/`bytes` describe a fetch event, whereas the `dw_save` sidecar describes a write event with a tabular schema. A reviewer reading a frozen remote file is reading a provenance record of *where the bytes came from*, not of a local computation.
-
-::: {.callout-note}
-The two sidecar shapes spell the UTC timestamp slightly differently, and a careful reader will notice. The `dw_save` sidecar emits the numeric offset (`+0000`) in both R and Python. The freeze path is not fully aligned: R's `.write_remote_provenance` emits the `Z` suffix (`…14:25:11Z`), while Python's reuses the shared `+0000` formatter. Both denote UTC; only the spelling differs. This is a minor parity wrinkle rather than a contract, and is noted here so it is not mistaken for a bug.
-:::
-
-### Cross-language parity — and the honest gaps
-
-R and Python produce equivalent sidecars: same field names, same ISO-8601 UTC timestamp, same SHA-256 file hash, same `{rows, cols, columns}` schema, same optional metadata merge. Stata reaches the same goal but cannot match every detail, and the differences are worth stating plainly:
-
-| Field | R | Python | Stata |
-|---|---|---|---|
-| `format` tag | dispatched format | dispatched format | literal string `"dw_save.provenance/1"` |
-| `written_at` | ISO-8601 UTC (`+0000`) | ISO-8601 UTC (`+0000`) | ISO-8601 UTC (`+0000`) with Stata's Python integration (Stata 16+); otherwise the local `c(current_date) c(current_time)` string |
-| content hash | `sha256` (file bytes) | `sha256` (file bytes) | `sha256` (file bytes) with Stata's Python integration, always plus `datasignature` (SHA-1 of the values); `datasignature` only without Python |
-| `schema.columns` | column names | column names | **absent** — only `{rows, cols}` |
-| `isid` / `idvars` | `isid` array | `isid` array | `idvars` string |
-| metadata | nested list | nested dict | nested block built from named options |
-
-Two gaps matter. First, **without Stata's Python integration a Stata sidecar records only a `datasignature`**, a checksum of the data values (SHA-1) rather than of the file, so it cannot be checked against an R/Python `sha256`; with Python (Stata 16+) it also records the file's `sha256`, and R and Python can verify and compare Stata outputs. The `datasignature`, written either way, has its own use: two artefacts with identical data but different on-disk bytes — say, different compression — still match on it. Second, **Stata omits the `columns` list**, recording only row and column counts.
-
-Stata's sidecar also carries an explicit version tag, `"format": "dw_save.provenance/1"`, and an `_end` sentinel in its metadata block, reflecting that the JSON is hand-assembled by a `.ado` file rather than emitted by a JSON library. The `.ado` escapes every user-supplied value before writing it — backslashes first, then double-quotes, then control characters — so Windows paths and quotes or newlines in metadata do not produce malformed JSON that an R reader would later reject.
+Stata writes the same sidecar with the same intent, but one difference matters. Stata records the file's `sha256` only through its Python integration (Stata 16+). It always records its native `datasignature` as well, and without Python that is the only hash. A `datasignature` is a checksum of the dataset's values, not of the file's bytes, so it can never be compared with an R or Python `sha256`. [Appendix B](../appendices/b-provenance-schema.qmd) sets out this and the smaller Stata differences field by field.
 
 ## The error envelope
 
-The toolkit's second convention governs failure. Every deliberate `stop()` in R, every `raise` in Python, and every error or advisory message in Stata follows the same three-part shape:
+The toolkit's second convention governs failure. Every deliberate `stop()` in R, every `raise` in Python and every error message in Stata follows one shape:
 
 ```text
 [cso_toolkit.<fn>] WHAT happened
@@ -179,66 +46,32 @@ The toolkit's second convention governs failure. Every deliberate `stop()` in R,
     2. An alternative remedy / escape hatch.
 ```
 
-The leading bracketed prefix names the function that raised — `[cso_toolkit.dw_save]`, `[cso_toolkit.dw_use]`, `[cso_toolkit.dw_api_fetch]`. The body explains *why* the rule exists rather than merely restating the symptom. The `Fix:` block lists the actionable next steps, often including the deliberate escape hatch for the case where the user genuinely means to do the forbidden thing.
+The bracketed prefix names the function that raised: `[cso_toolkit.dw_save]`, `[cso_toolkit.dw_use]`, `[cso_toolkit.dw_api]`. The body says *why* the rule exists rather than restating the symptom. The `Fix:` block lists what to do next, often ending with the deliberate escape hatch for when you really do mean to do the forbidden thing.
 
-### Why a fixed shape
+### Why one shape
 
-One shape on every error buys three things:
+One shape on every error buys three things.
 
-1. **Searchability.** The `[cso_toolkit.<fn>]` prefix is a stable, greppable token. To find every site in a consumer project that could trip the reviewer-mode write guard, you grep for `[cso_toolkit.dw_save] Reviewer mode forbids`. Library errors become an index.
-2. **Actionability.** Because the `Fix:` block is mandatory, an error never leaves the user staring at *what* broke without *how to proceed*. The escape hatch — `allow_canonical_write = TRUE`, `overwrite = TRUE`, switching `dw_mode` — is surfaced at the point of failure, not buried in documentation.
-3. **Distinguishing toolkit errors from upstream noise.** A failure prefixed `[cso_toolkit.*]` is a contract decision the toolkit made on purpose; an unprefixed error is something leaking from `arrow`, `haven`, `pandas`, or the OS. The prefix lets a reader triage at a glance.
+1. **Searchability.** The prefix is a stable token you can grep. To find every place in a consumer project that can trip the reviewer-mode write guard, search for `[cso_toolkit.dw_save] Reviewer mode forbids`. The library's errors become an index.
+2. **Actionability.** Because `Fix:` is mandatory, an error never leaves you knowing *what* broke without knowing *how to proceed*. The escape hatch (`allow_canonical_write = TRUE`, `overwrite = TRUE`, `takeover = TRUE`, switching `dw_mode`) appears at the point of failure, not in a manual.
+3. **Triage.** A failure prefixed `[cso_toolkit.*]` is a decision the toolkit made on purpose, usually the contract doing its job rather than a bug. An unprefixed error is something leaking from `arrow`, `haven`, `pandas` or the operating system.
 
-### A worked example
+### Reading one
 
-The canonical example is the reviewer-mode write guard. A reviewer session is physically prevented from writing under the canonical Teams deposit or the Z: drive root, to preserve vintage permanence (see the roles and mode-contract chapter). The error it raises is the envelope in its fullest form:
+The reviewer-mode write refusal, shown in full in [Roles and the mode contract](21-roles-and-modes.qmd), is the envelope at its fullest, and every clause does work. The prefix names `dw_save`. The WHAT line names the rule and the offending path. The Why line gives the reason the rule exists, *vintage permanence*: a deposited vintage must never change under the people who rely on it. The Fix block gives the ordinary remedy first (write to your sandbox) and the deliberate override second (`allow_canonical_write = TRUE`, for a Database Manager's bootstrap). The numbered options are ranked the same way everywhere: option 1 is the expected remedy, and a later option is usually the escape hatch.
 
-```text
-[cso_toolkit.dw_save] Reviewer mode forbids writes to canonical (Teams) deposit: /path/to/file.csv
-  Reviewer sessions must keep canonical / Z: deposits read-only to preserve
-  vintage permanence; writes go to the local repo sandbox.
-  Fix:
-    1. Resolve a sandbox path instead (the profile's `teamsWrkData` should
-       point there in reviewer mode), OR
-    2. If this is a deliberate Database Manager bootstrap, pass
-       `allow_canonical_write = TRUE`.
-```
+### Warnings wear it too
 
-Every clause of the envelope is doing work. The prefix identifies `dw_save`. The WHAT names both the rule and the offending path. The Why explains *vintage permanence* — the reason the rule exists. The Fix gives the ordinary remedy first and the deliberate-override escape hatch second.
+The shape is not kept for fatal errors. Non-fatal warnings use it too, including the ones the sidecar machinery emits. A sidecar that cannot be written warns with `[cso_toolkit.dw_save] Provenance sidecar write failed for <path>`, says the primary file is unaffected, and tells you how to make the metadata serialisable. A reviewer whose canonical and Z: locations are unreachable, and who falls back to a repository-local copy, gets a `[cso_toolkit.dw_use]` warning that the fallback breaks provenance and that Teams or Z: should be re-mounted before the output is relied on. The envelope makes even a soft degradation legible.
 
-The same shape recurs across unrelated failure classes — a missing dependency, an unsupported extension, a refused overwrite, an unknown `kind`:
+### A tested invariant
 
-```text
-[cso_toolkit.dw_save] Producer-mode write requires at least one of Teams
-(preferred) or Z: drive to be mounted and writable; currently neither is
-available on this machine.
-  Primary path: /path/to/file.csv
-  Fix: map at least one -- preferably both. See the profile's path block.
-```
-
-The complete catalogue of error classes, grouped by the rule each enforces, lives in the error taxonomy appendix.
-
-### Asserting the shape in tests
-
-The envelope is not merely a style guideline — it is a tested invariant. The R `testthat` suite ships an `expect_envelope()` helper that asserts the `[cso_toolkit.<fn>]` prefix, a `Fix:` block, and (optionally) the specific raising function on every checked raise, and the Python siblings carry a dedicated error-envelope test covering roughly thirty raise paths. A new `stop()` or `raise` that omits the prefix or the `Fix:` block fails the suite. This is what keeps parity from rotting: the contract is enforced by the build, not by manual code review (see [Checks and CI](checks-and-ci.qmd)).
-
-### Warnings wear the envelope too
-
-The convention is not limited to fatal errors. The same shape decorates *non-fatal* warnings — most importantly the ones the sidecar machinery itself emits. When a sidecar write fails because of non-serialisable metadata, the warning is:
-
-```text
-[cso_toolkit.dw_save] Provenance sidecar write failed for <path>: <reason>
-  Primary file unaffected; metadata may contain non-serialisable objects.
-  Fix: ensure all metadata values are JSON-serialisable (atomic types,
-  lists of atomics, or named lists thereof).
-```
-
-The same shape covers another soft failure: when a reviewer falls back to a repo-local copy because the canonical and Z: locations are unreachable, the provenance-gap warning carries the `[cso_toolkit.dw_use]` prefix and explains that the fallback *breaks provenance* and that Teams/Z: should be re-mounted before the output is relied upon. The envelope makes even a soft degradation legible.
-
-### Cross-language parity for the envelope
-
-The envelope is the most fully realised piece of cross-language parity in the toolkit, but the realisation is uneven and worth stating exactly. R and Python use the identical prefix-and-`Fix` shape, asserted in both test suites. Stata carries the same `[cso_toolkit.<fn>]` prefix throughout, but the *fullness* of the body varies by command: `dw_require_no_api` renders the complete three-part `WHAT / Why / Fix` envelope (across separate `{phang}` lines), whereas the `dw_save` reviewer-mode refusal compresses to a single line that names the rule and the `-allow_canonical_write-` override without a separate Why/Fix block. The shape and the diagnostic intent are the same across all three siblings; the test harness that polices it is not. The automated `expect_envelope`-style assertion exists for R and Python, while Stata's adherence is maintained by convention and review rather than by a packaged matcher.
+The envelope is not only a style guide. The R test suite asserts it with an `expect_envelope()` helper, which checks for the `[cso_toolkit.<fn>]` prefix and a `Fix:` block on each raise the tests trigger; a raise that loses either fails the suite. Python has a script that checks the same on its raise paths, run by hand. Stata keeps the prefix everywhere, but the body is fuller in some commands than others: `dw_require_no_api` prints the full WHAT / Why / Fix, while the `dw_save` reviewer-mode refusal fits on one line that names the rule and the `-allow_canonical_write-` override. Stata's adherence is kept by convention and review. Consumer repositories assert their own errors the same way ([Checks and CI](checks-and-ci.qmd)); the details of each test are in [Appendix C](../appendices/c-error-taxonomy.qmd).
 
 ## How the two conventions reinforce each other
 
-The sidecar and the envelope are two halves of the same reproducibility contract. The sidecar makes a *successful* write self-describing and verifiable after the fact: who, when, what mode, what hash, what schema. The envelope makes an *unsuccessful* operation self-explaining at the moment it happens: which function, which rule, why, and how to proceed. Together they ensure that a `cso-toolkit` artefact is never a bare file of unknown origin, and a `cso-toolkit` failure is never a bare exception of unknown cause. Both travel with the toolkit wherever it is vendored, in whichever of the three languages a consumer repo uses, with the gaps above stated openly.
+The sidecar and the envelope are two halves of one reproducibility contract. The sidecar makes a *successful* write describe itself and be checkable afterwards: who, when, in which mode, with what hash and what shape. The envelope makes an *unsuccessful* operation explain itself at the moment it happens: which function, which rule, why, and how to proceed.
+
+They also lean on each other. Several of the toolkit's stops are decisions taken by reading a sidecar: the multi-producer guards in `dw_save`, which compare a file's bytes with its recorded `sha256` and its writer with the current session; the `dw_stage` stop when a reviewer's staged copy no longer matches the hash archived beside it; and the warning from `dw_provenance_diff` when the same inputs gave a different output. Each of those reaches you as an envelope whose Fix points back at the record (check the sidecar's user and `written_at`, re-run, or override and have the override recorded in the new sidecar). The sidecar supplies the evidence; the envelope turns it into a decision you can act on.
+
+Together they ensure that a `cso-toolkit` artefact is never a bare file of unknown origin and a `cso-toolkit` failure is never a bare exception of unknown cause, in whichever of the three languages a consumer repository uses.

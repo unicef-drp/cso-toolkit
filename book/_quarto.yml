@@ -25,8 +25,7 @@ book:
     - introduction.qmd
     - part: "Part I — The Contract"
       chapters:
-        - chapters/11-why.qmd
-        - chapters/12-architecture.qmd
+        - chapters/why-and-architecture.qmd
         - chapters/21-roles-and-modes.qmd
         - chapters/23-provenance-and-errors.qmd
     - part: "Part II — Using the Helpers"
