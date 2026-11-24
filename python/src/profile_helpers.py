@@ -146,6 +146,12 @@ create_missing_folders = False
 # ----------------------------------------
 repo_name = "{repo_name}"
 
+# Repository root: the folder the profile is loaded from, unless rootFolder
+# is set first. Sector scripts build their input and output paths from
+# projectFolder (create_sector_script()).
+rootFolder = os.path.abspath(globals().get("rootFolder") or os.getcwd())
+projectFolder = rootFolder
+
 '''
 
     z_block = ""
