@@ -1,6 +1,6 @@
 """Uniform read/write helpers for DW-Production Python pipelines.
 
-Toolkit version: 0.11.1
+Toolkit version: 0.12.0
 
 Python port of ``r/R/dw_io.R``.  Auto-dispatch by file extension; same
 mode contract (reviewer sessions cannot write to canonical without an
@@ -39,7 +39,7 @@ Public entry points:
 * :func:`dw_verify_z` — Teams vs Z: integrity check
 * :func:`dw_stage` — reviewer copy of a canonical input, hash-guarded
 * :func:`dw_isid` — Stata-style uniqueness check
-* :func:`dw_toolkit_version` — return the version stamp ("0.11.1")
+* :func:`dw_toolkit_version` — return the version stamp ("0.12.0")
 """
 
 from __future__ import annotations
@@ -119,7 +119,7 @@ def _dw_root_for(kind: str) -> Optional[str]:
 #: both to ``0.4.0``).  Exposed publicly via :func:`dw_toolkit_version`
 #: so callers can stamp logs / provenance and assert minimum-contract
 #: requirements in profile scripts.
-_TOOLKIT_VERSION = "0.11.1"
+_TOOLKIT_VERSION = "0.12.0"
 
 
 def dw_toolkit_version() -> str:
@@ -128,13 +128,13 @@ def dw_toolkit_version() -> str:
     Returns
     -------
     str
-        Semver string (``"0.11.1"``).
+        Semver string (``"0.12.0"``).
 
     Examples
     --------
     >>> from cso_toolkit import dw_toolkit_version
     >>> dw_toolkit_version()
-    '0.11.1'
+    '0.12.0'
     """
     return _TOOLKIT_VERSION
 
