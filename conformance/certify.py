@@ -28,6 +28,7 @@ import json
 import math
 import os
 import platform
+import re
 import shutil
 import subprocess
 import sys
@@ -192,12 +193,33 @@ def suite_wrapper(repo: Path, suite: Path, result: Path) -> str:
         ""])
 
 
+def stata_code_lines(text: str) -> list:
+    """The lines Stata would execute: /* */ blocks, * and // comment lines (with the
+    lines a /// continues them onto) and trailing // comments removed."""
+    text = re.sub(r"/\*.*?\*/", " ", text, flags=re.S)
+    joined, buf = [], ""
+    for ln in text.splitlines():
+        if re.search(r"\s///\s*$", " " + ln):
+            buf += re.sub(r"\s*///\s*$", " ", ln)
+            continue
+        joined.append(buf + ln)
+        buf = ""
+    if buf:
+        joined.append(buf)
+    code = []
+    for ln in joined:
+        s = ln.strip()
+        if not s or s.startswith(("*", "//")):
+            continue
+        code.append(re.sub(r"\s+//.*$", "", s).strip())
+    return code
+
+
 def lint_suites(repo: Path) -> list:
-    """Every suite must end with DONE_LINE, its last non-blank, non-comment line."""
+    """Every suite must end with DONE_LINE, its last line of code."""
     errs = []
     for s in stata_suites(repo):
-        lines = [ln.strip() for ln in s.read_text(encoding="utf-8", errors="replace").splitlines()]
-        code = [ln for ln in lines if ln and not ln.startswith(("*", "//"))]
+        code = stata_code_lines(s.read_text(encoding="utf-8", errors="replace"))
         if not code or code[-1] != DONE_LINE:
             errs.append(f"stata/tests/{s.name}: the last line must be `{DONE_LINE}`, so the "
                         "certificate can tell a suite that ran to the end from one that exited")
@@ -262,15 +284,40 @@ REQUIRED = {"all": ("id", "title", "kind", "fixtures", "languages"),
             "values": ("columns", "keys"), "json": ("expect",)}
 
 
-def certified_ids(repo: Path) -> set:
-    """Every case id a committed certificate records."""
-    ids = set()
-    for p in (repo / CERT_DIR).glob("*.json"):
+def certified_ids(repo: Path) -> tuple:
+    """(ids, errors): every case id the certificates committed at HEAD record, and a
+    message for each committed certificate that cannot be read."""
+    ids, errs = set(), []
+    listed = git(repo, "ls-tree", "--name-only", "HEAD", f"{CERT_DIR}/", check=False)
+    for rel in (ln for ln in listed.splitlines() if ln.endswith(".json")):
+        res = subprocess.run(["git", "-C", str(repo), "show", f"HEAD:{rel}"],
+                             capture_output=True, text=True, encoding="utf-8")
         try:
-            ids |= set(json.loads(p.read_text(encoding="utf-8")).get("cases", {}))
-        except (ValueError, AttributeError):
+            cases = json.loads(res.stdout).get("cases")
+            if not isinstance(cases, dict):
+                raise ValueError("no `cases` object")
+        except (ValueError, AttributeError) as e:
+            errs.append(f"{rel}: a committed certificate that cannot be read ({e})")
             continue
-    return ids
+        ids |= set(cases)
+    return ids, errs
+
+
+def register_errors(name: str, c: dict) -> list:
+    """`gaps` and `divergences` map a language to {issue, reason}, both strings."""
+    errs = []
+    for field in ("gaps", "divergences"):
+        reg = c.get(field, {})
+        if not isinstance(reg, dict):
+            errs.append(f"{name}: `{field}` must be an object keyed by language")
+            continue
+        for lang, entry in reg.items():
+            if lang not in LANGS:
+                errs.append(f"{name}: `{field}` names {lang!r}, not one of {', '.join(LANGS)}")
+            if not (isinstance(entry, dict) and isinstance(entry.get("issue"), str)
+                    and isinstance(entry.get("reason"), str)):
+                errs.append(f"{name}: `{field}.{lang}` needs string `issue` and `reason`")
+    return errs
 
 
 def lint_cases(repo: Path) -> list:
@@ -282,17 +329,31 @@ def lint_cases(repo: Path) -> list:
             c = json.loads(p.read_text(encoding="utf-8"))
         except ValueError as e:
             errs.append(f"{p.name}: not JSON: {e}")
+            present.add(p.stem)          # reported here; not also as a lost id
             continue
         if not isinstance(c, dict):
             errs.append(f"{p.name}: a case is a JSON object, not a {type(c).__name__}")
+            present.add(p.stem)
             continue
+        cid = c.get("id")
+        present |= {p.stem, cid}
         need = REQUIRED["all"] + REQUIRED.get(c.get("kind"), ())
         missing = [k for k in need if k not in c]
         if missing:
             errs.append(f"{p.name}: missing {', '.join(missing)}")
             continue
-        cid = c.get("id")
-        present.add(cid)
+        shapes = [("languages", list), ("fixtures", list)] + (
+            [("columns", list), ("keys", list)] if c["kind"] == "values" else [])
+        bad = [k for k, t in shapes if not isinstance(c[k], t)]
+        if bad:
+            errs.append(f"{p.name}: {', '.join(bad)} must be lists")
+            continue
+        errs += register_errors(p.name, c)
+        tol = c.get("tolerance", 1e-9)
+        if isinstance(tol, bool) or not isinstance(tol, (int, float)) or tol < 0:
+            errs.append(f"{p.name}: `tolerance` must be a non-negative number")
+        if c.get("reference") == "fixture" and not c["fixtures"]:
+            errs.append(f"{p.name}: `reference: fixture` needs a fixture to compare with")
         if cid != p.stem:
             errs.append(f"{p.name}: id {cid!r} is not the file name")
         if cid in retired:
@@ -300,8 +361,9 @@ def lint_cases(repo: Path) -> list:
         kind = c.get("kind")
         if kind not in ("values", "json"):
             errs.append(f"{p.name}: kind {kind!r} is neither 'values' nor 'json'")
+        gaps = c.get("gaps", {}) if isinstance(c.get("gaps", {}), dict) else {}
         for lang in LANGS:
-            if (lang in c.get("languages", [])) == (lang in c.get("gaps", {})):
+            if (lang in c["languages"]) == (lang in gaps):
                 errs.append(f"{p.name}: {lang} must be in `languages` or in `gaps`, not both "
                             "or neither")
         for f in c.get("fixtures", []):
@@ -313,7 +375,9 @@ def lint_cases(repo: Path) -> list:
             errs.append(f"{p.name}: a json case needs a non-empty `expect`")
     # A case a certificate records may not vanish quietly: removing or renaming
     # one means retiring its id, so the id is never given to a different case.
-    gone = sorted(certified_ids(repo) - present - retired)
+    ids, cert_errs = certified_ids(repo)
+    errs += cert_errs
+    gone = sorted(ids - present - retired)
     errs += [f"{cid}.json: id {cid!r} is in a committed certificate but no case file has it; "
              f"restore the case or list the id in {RETIRED}" for cid in gone]
     return errs
@@ -536,7 +600,13 @@ def verify(repo: Path, rev: str = "HEAD") -> int:
               "  Fix: run `sh tools/certify --record` with R, Python and Stata available, "
               "then push the commit it makes.")
         return 1
-    cert = json.loads(res.stdout)
+    try:
+        cert = json.loads(res.stdout)
+    except ValueError as e:
+        cert = e
+    if not isinstance(cert, dict):
+        print(f"[certify] FAIL {rel} is not a valid certificate ({cert}).")
+        return 1
     if cert.get("result") != "pass" or cert.get("content_hash") != h:
         print(f"[certify] FAIL {h}.json does not record a pass for {where}.")
         return 1
@@ -565,7 +635,8 @@ def main() -> int:
     repo = Path(git(Path.cwd(), "rev-parse", "--show-toplevel"))
     if a.verify:
         return verify(repo, a.rev)
-    errs = [f"conformance/cases/{e}" for e in lint_cases(repo)] + lint_suites(repo)
+    errs = [e if e.startswith(f"{CERT_DIR}/") else f"conformance/cases/{e}"
+            for e in lint_cases(repo)] + lint_suites(repo)
     if errs:
         print("[certify] FAIL: the case files or the Stata suites are not well formed")
         for e in errs:

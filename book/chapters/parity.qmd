@@ -155,7 +155,7 @@ sh tools/certify --lint                       # are the case files well formed? 
 ```
 
 Every run first checks what `--lint` checks, and stops if anything is wrong:
-- each case file is a JSON object with the fields its kind needs (`id`, `title`, `kind`, `fixtures` and `languages`; `columns` and `keys` for a values case; a non-empty `expect` for a json case);
+- each case file is a JSON object with the fields its kind needs (`id`, `title`, `kind`, `fixtures` and `languages`; `columns` and `keys` for a values case; a non-empty `expect` for a json case), each `gaps` and `divergences` entry has a string `issue` and `reason`, any `tolerance` is a non-negative number, and `"reference": "fixture"` comes with a fixture;
 - each id matches its file name, and no id is retired;
 - every case a committed certificate records still has a case file, or is retired;
 - each Stata suite ends with `global cert_suite_done 1`.
