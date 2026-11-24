@@ -101,7 +101,7 @@
     "dw_nestweight": {"stata": "n/a"},
     "dw_pop": {"stata": "n/a"},
     "dw_regions": {"python": "No (redesign tracked in #40)", "stata": "n/a"},
-    "cso_toolkit_check": {"stata": "n/a (update by hand; see Vintage sync)"},
+    "cso_toolkit_check": {"stata": "n/a (update by hand; see Vendoring and updates)"},
     "cso_toolkit_diff": {"stata": "n/a"},
     "cso_toolkit_pull": {"stata": "n/a"},
     "cso_toolkit_sync": {"stata": "n/a"},

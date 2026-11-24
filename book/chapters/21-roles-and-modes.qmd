@@ -88,7 +88,7 @@ jpazevedo:
 
 `dw_mode` is **required**. Profile loading hard-fails if it is absent or set to anything other than `producer` or `reviewer`, because defaulting to either side is unsafe: defaulting to producer would let an unconfigured session corrupt the deposit, and defaulting to reviewer would surprise a Database Manager mid-deposit.
 
-From `dw_mode` the profile derives the path globals — `teamsWrkData`, the `*Canonical` read-only aliases, and a `dw_apis_allowed` flag. That derivation lets the same conductor scripts route to the deposit in producer mode and to the sandbox in reviewer mode without per-script edits. The wiring chapter covers the derivation in full; here we focus on the two enforcement points the contract relies on.
+From `dw_mode` the profile derives the path globals — `teamsWrkData`, the `*Canonical` read-only aliases, and a `dw_apis_allowed` flag. That derivation lets the same conductor scripts route to the deposit in producer mode and to the sandbox in reviewer mode without per-script edits. [Profiles and the mode switch](profiles-and-modes.qmd) covers the derivation in full; here we focus on the two enforcement points the contract relies on.
 
 The contract is enforced by **defence in depth**. The mode setting routes paths at the profile, and then the individual write and fetch helpers check *again* at the call site. Two guards do the work.
 

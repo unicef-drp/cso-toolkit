@@ -57,7 +57,7 @@ vendored:
 local_edits: []
 ```
 
-For local development each language still offers a native install path (`devtools::install_local("r/")`, `pip install -e python/`, `adopath ++ "stata/src"`), but vendoring stays the production model. The vendoring-model chapter and the manifest material in Part IV cover the mechanics and the upgrade flow; here the point is only *why* the toolkit is copied rather than installed.
+For local development each language still offers a native install path (`devtools::install_local("r/")`, `pip install -e python/`, `adopath ++ "stata/src"`), but vendoring stays the production model. [Vendoring and updates](vendoring-and-updates.qmd) covers the mechanics and the upgrade flow; here the point is only *why* the toolkit is copied rather than installed.
 
 ::: {.callout-note}
 Vendoring trades a little convenience for a hard guarantee. You take on the small chore of an explicit refresh; in return, the helper code can never drift out from under a published result. For a statistical office, that trade is the whole point.
@@ -116,7 +116,7 @@ The toolkit therefore distinguishes roles by what they are permitted to do, and 
 
 This split is what closes the loop on the reproducibility floor. The producer's run is the run of record; the reviewer's run, executed against frozen inputs with the network sealed off, is the proof that the run of record reproduces. Because the boundary is enforced at every wrapped call site, the guarantee does not depend on anyone behaving well on a busy day.
 
-The roles and the mode contract are the subject of the next part of the book — the roles-and-mode-contract chapter defines each role precisely, and the wiring chapter shows how `dw_mode` is set in a sector profile. Hold the shape in mind: *one contract, two enforced postures toward the network, one direction of trust from producer to reviewer.*
+The roles and the mode contract come next: the roles-and-mode-contract chapter defines each role precisely, and [Profiles and the mode switch](profiles-and-modes.qmd) shows how `dw_mode` is set in a sector profile. Hold the shape in mind: *one contract, two enforced postures toward the network, one direction of trust from producer to reviewer.*
 
 ## What this buys you
 

@@ -220,7 +220,7 @@ The complete catalogue of error classes, grouped by the rule each enforces, live
 
 ### Asserting the shape in tests
 
-The envelope is not merely a style guideline — it is a tested invariant. The R `testthat` suite ships an `expect_envelope()` helper that asserts the `[cso_toolkit.<fn>]` prefix, a `Fix:` block, and (optionally) the specific raising function on every checked raise, and the Python siblings carry a dedicated error-envelope test covering roughly thirty raise paths. A new `stop()` or `raise` that omits the prefix or the `Fix:` block fails the suite. This is what keeps parity from rotting: the contract is enforced by the build, not by manual code review (see the contract-auditor and CI chapters).
+The envelope is not merely a style guideline — it is a tested invariant. The R `testthat` suite ships an `expect_envelope()` helper that asserts the `[cso_toolkit.<fn>]` prefix, a `Fix:` block, and (optionally) the specific raising function on every checked raise, and the Python siblings carry a dedicated error-envelope test covering roughly thirty raise paths. A new `stop()` or `raise` that omits the prefix or the `Fix:` block fails the suite. This is what keeps parity from rotting: the contract is enforced by the build, not by manual code review (see [Checks and CI](checks-and-ci.qmd)).
 
 ### Warnings wear the envelope too
 

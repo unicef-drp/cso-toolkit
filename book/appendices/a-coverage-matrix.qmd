@@ -149,7 +149,7 @@ out = aggregate_data_v2(df, value="OBS_VALUE", by=["REGION"],
 
 {{< include ../_generated/functions-sync.md >}}
 
-The version-drift helpers are R-and-Python only. They read the consumer's `.toolkit_manifest.yml`, ask GitHub for the latest tag, and warn when the pin is behind; `cso_toolkit_sync` (or `_diff` + `_pull`) refreshes the vendored files from a release tag and re-pins the manifest. Stata vendoring pins the same manifest, but the drift check has no Stata sibling — a Stata-only consumer either runs the check from R/Python or compares its `pulled_version` against the upstream tag list by hand. See the vintage-sync chapter for the manifest schema and upgrade flow.
+The version-drift helpers are R-and-Python only. They read the consumer's `.toolkit_manifest.yml`, ask GitHub for the latest tag, and warn when the pin is behind; `cso_toolkit_sync` (or `_diff` + `_pull`) refreshes the vendored files from a release tag and re-pins the manifest. Stata vendoring pins the same manifest, but the drift check has no Stata sibling — a Stata-only consumer either runs the check from R/Python or compares its `pulled_version` against the upstream tag list by hand. See [Vendoring and updates](../chapters/vendoring-and-updates.qmd) for the manifest schema and upgrade flow.
 
 ### Scaffolding and contract auditor
 
@@ -157,7 +157,7 @@ The version-drift helpers are R-and-Python only. They read the consumer's `.tool
 
 Two points here:
 
-- **The contract auditor does not cover Stata.** `test_scripts` scans `.R` scripts in R and `.py` scripts in Python, flagging raw IO/API calls the toolkit is meant to wrap (its `io-xlsx` rule, for instance, catches `getSheetNames`/`excel_sheets`/`loadWorkbook` and points the author at `dw_use(sheet = NULL)`). There is no equivalent scanner for `.do` / `.ado` files. A Stata sector's discipline is enforced at runtime by `dw_require_no_api` and the `dw_save` mode guard, not by a static auditor in CI. See the contract-auditor chapter.
+- **The contract auditor does not cover Stata.** `test_scripts` scans `.R` scripts in R and `.py` scripts in Python, flagging raw IO/API calls the toolkit is meant to wrap (its `io-xlsx` rule, for instance, catches `getSheetNames`/`excel_sheets`/`loadWorkbook` and points the author at `dw_use(sheet = NULL)`). There is no equivalent scanner for `.do` / `.ado` files. A Stata sector's discipline is enforced at runtime by `dw_require_no_api` and the `dw_save` mode guard, not by a static auditor in CI. See [Checks and CI](../chapters/checks-and-ci.qmd).
 - **`dw_load_config` is Stata's standalone analogue of the profile config-load step.** In R and Python, `create_profile` emits the YAML config load and `dw_mode` resolution into the scaffolded profile. Stata exposes a dedicated `dw_load_config.ado` that reads `~/.config/user_config.yml` with a hand-rolled parser (no external dependency, AppLocker-safe) and populates the session globals. Since v0.11.0 it reads the user's block and `dw_mode_by_project` as the R and Python profiles do (#180; parity case `config_user_block`). Same effect, different packaging — note that `dw_load_config` sets exactly the keys the YAML provides; it does not derive mode-aware globals on its own.
 
 ## File-format support matrix
@@ -224,7 +224,7 @@ The headline gaps:
 - **Python** is a near-complete functional port — core IO (including `.pkl`), all eleven external-API dispatch keys, aggregation, vintage sync, and scaffolding — with full type hints, but no generated reference site, a local pytest suite not run in CI, and three R exports it lacks (`dw_regions`, `dw_verbosity` and the `dw_publish` stub; `dw_root` and `dw_stage` now ship in Python too). Its version stamp matches R at 0.12.0, though those gaps remain.
 - **Stata** is a deliberately scoped subset: full IO and mode contract for `.dta` / `.csv` / `.xlsx`, `dw_compare`, the collaboration model and multi-producer guards (`dw_collaboration`, `dw_save … takeover`), `dw_map_drive`, the reviewer no-API gate, recursive `mkdir`, and config loading — but **no external-API wrapper, no aggregation, no vintage-sync helpers, no contract auditor, no Parquet/binary formats, and no automated tests**. It enforces every half of the mode contract it can reach, and routes everything else through R or Python.
 
-When you vendor, choose the language that fits the pipeline — and where a Stata pipeline needs a capability this matrix marks "Route via R/Python," plan that crossing explicitly. The vendoring-model and onboarding chapters walk through how to wire a multi-language sector so the crossings are clean.
+When you vendor, choose the language that fits the pipeline — and where a Stata pipeline needs a capability this matrix marks "Route via R/Python," plan that crossing explicitly. [Vendoring and updates](../chapters/vendoring-and-updates.qmd) and [Starting a repository](../chapters/40-new-repository.qmd) walk through how to wire a multi-language sector so the crossings are clean.
 
 ## Related contracts outside this matrix
 
