@@ -115,6 +115,8 @@ With two-digit minors that pattern misses versions such as `0.10.0`; grep for th
 
 From v0.11.0 on, the commit being tagged also needs a **parity certificate**. Run `sh tools/certify --record` on a machine with R, Python and Stata. It runs the shared cases in all three languages and commits `.parity/<content-hash>.json` when they agree, known gaps and divergences aside. `sh tools/certify --verify`, which the `Parity certificate` workflow runs on pull requests into `main`, must pass on the release commit. Bump the version stamps first: they live in `r/R/` and `python/src/`, which the certificate hashes, so a certificate recorded before the bump does not cover the release commit. The GitHub release notes link the certificate. The cases, the register of gaps and divergences, and the content hash are described in the appendix *Cross-language parity*.
 
+The handbook's reference tables (the coverage matrix, the API keys, the auditor rules and the parity cases) are generated from the code. Run `sh tools/docs-tables` after adding, removing or porting a function, and commit `book/_generated/`; `sh tools/docs-tables --check`, which the `Conformance` workflow also runs, fails when a public function has no row in `book/_data/coverage.json`, when a note there contradicts the code, or when the committed tables are stale.
+
 ### The tag is immutable; consumers pin to it
 
 A published tag is never moved. Consumers vendor the helper *files* into their own `00_functions/` and record the tag in `00_functions/.toolkit_manifest.yml` (see the vendoring model chapter). The manifest's `pulled_version` field is the consumer's pin:

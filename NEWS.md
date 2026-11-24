@@ -6,6 +6,21 @@ _Entries land here as PRs merge into `develop`. When the next release
 is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
+### Documentation
+
+- **The handbook's reference tables are generated from the code.**
+  `sh tools/docs-tables` (`book/_scripts/gen_tables.py`, standard-library
+  Python) reads which functions exist in R, Python and Stata, the
+  `api =` dispatch tables, the auditor rule registries and the parity
+  cases, and writes `book/_generated/`: the coverage matrix, one
+  "which languages" line per function for the chapters, the API keys,
+  the auditor rules and the parity cases. Notes live in
+  `book/_data/coverage.json`. `--check` fails when a public function has
+  no row, a note contradicts the code, or the tables are stale; the
+  `Conformance` workflow runs it on every pull request. Appendices A and
+  G now include the generated tables. First step of the handbook
+  restructure.
+
 ## v0.12.0 (2026-11-24)
 
 Python catches up with R. Three things that were R-only now work in
