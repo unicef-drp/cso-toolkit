@@ -1685,21 +1685,35 @@ def dw_stage(path: Union[str, Path], overwrite: bool = False) -> str:
         # Atomic copy: stage to a temp file, check its hash, then replace.
         # os.replace overwrites an existing target on Windows too, so the
         # forced re-stage needs no separate remove (R needs one).
+        # A failed copy (disk full, antivirus lock, source gone) counts as a
+        # failed attempt, as R's file.copy() returning FALSE does: retry
+        # once, then stop with COPY INTEGRITY, never leaving the temp file.
+        # copyfile (not copy2) gives the sandbox a fresh mtime, as R does.
         tmp_path = sandbox_path + ".dw_stage.tmp"
+
+        def drop_tmp() -> None:
+            try:
+                Path(tmp_path).unlink(missing_ok=True)
+            except OSError:
+                pass
+
         ok_copy = False
-        for attempt in (1, 2):
-            Path(tmp_path).unlink(missing_ok=True)
-            shutil.copy2(src_path, tmp_path)
-            if sha(tmp_path) == src_sha:
+        try:
+            for attempt in (1, 2):
+                drop_tmp()
                 try:
-                    os.replace(tmp_path, sandbox_path)
-                    ok_copy = True
-                    break
+                    shutil.copyfile(src_path, tmp_path)
+                    if sha(tmp_path) == src_sha:
+                        os.replace(tmp_path, sandbox_path)
+                        ok_copy = True
+                        break
                 except OSError:
                     pass
-            Path(tmp_path).unlink(missing_ok=True)
-            if attempt == 1:
-                _log.info("[dw_stage] copy mismatch for %s -- retrying once ...", name)
+                drop_tmp()
+                if attempt == 1:
+                    _log.info("[dw_stage] copy mismatch for %s -- retrying once ...", name)
+        finally:
+            drop_tmp()
         if not ok_copy:
             raise RuntimeError(
                 f"[cso_toolkit.dw_stage] COPY INTEGRITY: sandbox copy of '{name}' "
