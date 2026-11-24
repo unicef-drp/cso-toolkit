@@ -9,8 +9,8 @@ contract. Same behaviour matrix as the [R](../r/) and
 Defined in [`pyproject.toml`](pyproject.toml):
 
 - **Name** — `cso-toolkit`
-- **Version** — `0.2.1.dev0` (development; the next tagged release is
-  `v0.3.0`)
+- **Version** — the repository release it ships with (`version` in
+  `pyproject.toml`; `cso_toolkit.__version__` at run time)
 - **Requires** — Python >= 3.9
 - **License** — MIT
 - **Type-hint coverage** — full; ships [`src/py.typed`](src/py.typed)
@@ -38,8 +38,8 @@ Pin the version in `.toolkit_manifest.yml` alongside the helpers:
 
 ```yaml
 source: "unicef-drp/cso-toolkit"
-pulled_version: "v0.2.0"
-pulled_date: "2026-05-25"
+pulled_version: "vX.Y.Z"
+pulled_date: "YYYY-MM-DD"
 ```
 
 See [`templates/.toolkit_manifest.yml`](../templates/.toolkit_manifest.yml)
@@ -62,26 +62,29 @@ Available extras: `excel` (openpyxl), `parquet` (pyarrow), `yaml`
 
 ```text
 python/
-├── pyproject.toml      # package metadata + optional-dep groups
-├── src/
-│   ├── README.md       # per-module catalogue (vendoring view)
-│   ├── __init__.py     # re-exports 26 public entries; __version__
-│   ├── py.typed        # PEP 561 marker
-│   ├── _state.py       # session globals (configure / _get)
-│   ├── dw_io.py        # IO contract
-│   ├── dw_api.py       # cached external API (10 dispatch keys)
-│   ├── cso_toolkit_sync.py
-│   ├── aggregate_data.py
+├── pyproject.toml          # package metadata + optional-dependency groups
+├── src/                    # vendored as 00_functions/cso_toolkit/
+│   ├── README.md           # per-module catalogue (vendoring view)
+│   ├── __init__.py         # the public functions and their dw_ aliases; __version__
+│   ├── py.typed            # PEP 561 marker
+│   ├── _state.py           # session state (configure / _get)
+│   ├── dw_io.py            # IO contract: dw_save, dw_use, dw_compare, dw_stage, ...
+│   ├── dw_api.py           # cached external APIs (the api= keys)
+│   ├── dw_deposit.py       # dw_fetch_inputs, dw_check_deposit
+│   ├── dw_provenance.py    # dw_read_provenance, dw_provenance_diff
+│   ├── dw_project.py       # collaboration model (cso_project.yml)
+│   ├── cso_toolkit_sync.py # check / diff / pull / sync
+│   ├── aggregate_data.py   # aggregate_data_v2, apply_time_window, footnotes
 │   ├── dw_nestweight.py
 │   ├── dw_pop.py
 │   ├── generate_markdown_report.py
+│   ├── create_project.py   # create_research_project, create_official_stats_project
 │   ├── create_sector_script.py
-│   ├── profile_helpers.py
-│   └── test_scripts.py
-└── tests/
-    └── manual/
-        ├── smoke_test.py             # 15 in-process invariants
-        └── error_envelope_test.py    # 30 raise paths verified
+│   ├── profile_helpers.py  # create_profile, review_profile
+│   ├── test_scripts.py     # the contract auditor
+│   └── templates/          # copied from the repository's templates/ by tools/sync_templates.py
+└── tests/                  # pytest suite: python -m pytest python/tests
+    └── manual/             # smoke and error-envelope scripts, run by hand
 ```
 
 ## Quick start
