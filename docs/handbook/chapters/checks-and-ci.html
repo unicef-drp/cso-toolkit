@@ -1,0 +1,1927 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.11.9">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>11&nbsp; Checks and CI – The CSO Handbook</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../chapters/46-ai-agents.html" rel="next">
+<link href="../chapters/vendoring-and-updates.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/scrollable-regions/scrollable-regions.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-554944da459c622dc457c1ed647c448c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-sidebar floating quarto-light"><a id="quarto-skip-link" class="visually-hidden-focusable" href="#quarto-document-content">Skip to main content</a>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav" aria-label="Toolbar">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="Breadcrumbs"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/40-new-repository.html">Part III — Setting Up and Running a Repository</a></li><li class="breadcrumb-item"><a href="../chapters/checks-and-ci.html"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Checks and CI</span></a></li></ol></nav>
+        <a class="flex-grow-1" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto" aria-label="Site">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">The CSO Handbook</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/unicef-drp/cso-toolkit/tree/main/book/" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">The CSO Handbook</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../front-matter/foreword.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Foreword</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../front-matter/preface.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../front-matter/authors.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">About the authors</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../front-matter/acknowledgements.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Acknowledgements</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../front-matter/how-to-cite.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">How to cite this work</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../introduction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-controls="quarto-sidebar-section-1" aria-expanded="true">
+ <span class="menu-text" id="quarto-sidebar-section-1-label">Part I — The Contract</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+      </div>
+      <ul id="quarto-sidebar-section-1" aria-labelledby="quarto-sidebar-section-1-label" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/why-and-architecture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Why a toolkit, and how it fits together</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/21-roles-and-modes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Roles and the mode contract</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/23-provenance-and-errors.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Provenance sidecars and the error envelope</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-controls="quarto-sidebar-section-2" aria-expanded="true">
+ <span class="menu-text" id="quarto-sidebar-section-2-label">Part II — Using the Helpers</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+      </div>
+      <ul id="quarto-sidebar-section-2" aria-labelledby="quarto-sidebar-section-2-label" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/31-io.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">The IO contract</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/32-external-api.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">The external-API contract</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/33-aggregation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Aggregation</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-controls="quarto-sidebar-section-3" aria-expanded="true">
+ <span class="menu-text" id="quarto-sidebar-section-3-label">Part III — Setting Up and Running a Repository</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+      </div>
+      <ul id="quarto-sidebar-section-3" aria-labelledby="quarto-sidebar-section-3-label" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/40-new-repository.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Starting a repository</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/profiles-and-modes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Profiles and the mode switch</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/vendoring-and-updates.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Vendoring and updates</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/checks-and-ci.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Checks and CI</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/46-ai-agents.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Working with AI coding agents</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-controls="quarto-sidebar-section-4" aria-expanded="true">
+ <span class="menu-text" id="quarto-sidebar-section-4-label">Part IV — Maintaining the Toolkit</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+      </div>
+      <ul id="quarto-sidebar-section-4" aria-labelledby="quarto-sidebar-section-4-label" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/44-versioning-release.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Versioning and releases</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/parity.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">How the three languages stay in step</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/contributing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Contributing</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" aria-controls="quarto-sidebar-section-5" aria-expanded="true">
+ <span class="menu-text" id="quarto-sidebar-section-5-label">Part V — The Microdata Archive (datalib)</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+      </div>
+      <ul id="quarto-sidebar-section-5" aria-labelledby="quarto-sidebar-section-5-label" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/51-microdata-archive.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">The microdata archive: archive, catalogue, tool</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/52-ihsn-grammar.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">The IHSN convention and the folder grammar</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/53-datalib-api-conformance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">The <code>datalib_*</code> API and its conformance suite</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" aria-controls="quarto-sidebar-section-6" aria-expanded="true">
+ <span class="menu-text" id="quarto-sidebar-section-6-label">Part VI — The Ecosystem</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+      </div>
+      <ul id="quarto-sidebar-section-6" aria-labelledby="quarto-sidebar-section-6-label" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/61-ecosystem.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">The UNICEF analytics ecosystem: three tiers</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/62-unicefdata.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">unicefData: public child statistics in three languages</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" aria-controls="quarto-sidebar-section-7" aria-expanded="true">
+ <span class="menu-text" id="quarto-sidebar-section-7-label">Appendices</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+      </div>
+      <ul id="quarto-sidebar-section-7" aria-labelledby="quarto-sidebar-section-7-label" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/a-coverage-matrix.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">A</span>&nbsp; <span class="chapter-title">Cross-language coverage matrix</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/b-provenance-schema.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">B</span>&nbsp; <span class="chapter-title">Provenance sidecar schema</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/c-error-taxonomy.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">C</span>&nbsp; <span class="chapter-title">Error taxonomy</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/d-function-reference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">D</span>&nbsp; <span class="chapter-title">Function reference</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/e-glossary.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">E</span>&nbsp; <span class="chapter-title">Glossary</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendices/f-third-party-functions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">F</span>&nbsp; <span class="chapter-title">Curated third-party functions</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" aria-labelledby="toc-title" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#data-stay-out-their-provenance-goes-in" id="toc-data-stay-out-their-provenance-goes-in" class="nav-link active" data-scroll-target="#data-stay-out-their-provenance-goes-in"><span class="header-section-number">11.1</span> Data stay out; their provenance goes in</a>
+  <ul class="collapse">
+  <li><a href="#research-projects-and-official-statistics" id="toc-research-projects-and-official-statistics" class="nav-link" data-scroll-target="#research-projects-and-official-statistics"><span class="header-section-number">11.1.1</span> Research projects and official statistics</a></li>
+  </ul></li>
+  <li><a href="#design-principles" id="toc-design-principles" class="nav-link" data-scroll-target="#design-principles"><span class="header-section-number">11.2</span> Design principles</a></li>
+  <li><a href="#running-the-checks-toolscheck" id="toc-running-the-checks-toolscheck" class="nav-link" data-scroll-target="#running-the-checks-toolscheck"><span class="header-section-number">11.3</span> Running the checks: <code>tools/check</code></a>
+  <ul class="collapse">
+  <li><a href="#settings" id="toc-settings" class="nav-link" data-scroll-target="#settings"><span class="header-section-number">11.3.1</span> Settings</a></li>
+  <li><a href="#the-checks" id="toc-the-checks" class="nav-link" data-scroll-target="#the-checks"><span class="header-section-number">11.3.2</span> The checks</a></li>
+  <li><a href="#contract-audit-blocking-or-advisory" id="toc-contract-audit-blocking-or-advisory" class="nav-link" data-scroll-target="#contract-audit-blocking-or-advisory"><span class="header-section-number">11.3.3</span> Contract audit: blocking or advisory</a></li>
+  </ul></li>
+  <li><a href="#testthat-in-every-r-repository" id="toc-testthat-in-every-r-repository" class="nav-link" data-scroll-target="#testthat-in-every-r-repository"><span class="header-section-number">11.4</span> testthat in every R repository</a></li>
+  <li><a href="#check-records" id="toc-check-records" class="nav-link" data-scroll-target="#check-records"><span class="header-section-number">11.5</span> Check records</a>
+  <ul class="collapse">
+  <li><a href="#the-pre-push-hook" id="toc-the-pre-push-hook" class="nav-link" data-scroll-target="#the-pre-push-hook"><span class="header-section-number">11.5.1</span> The pre-push hook</a></li>
+  <li><a href="#the-check-record-workflow" id="toc-the-check-record-workflow" class="nav-link" data-scroll-target="#the-check-record-workflow"><span class="header-section-number">11.5.2</span> The check-record workflow</a></li>
+  </ul></li>
+  <li><a href="#the-opt-in-workflows" id="toc-the-opt-in-workflows" class="nav-link" data-scroll-target="#the-opt-in-workflows"><span class="header-section-number">11.6</span> The opt-in workflows</a></li>
+  <li><a href="#contract-auditor" id="toc-contract-auditor" class="nav-link" data-scroll-target="#contract-auditor"><span class="header-section-number">11.7</span> The contract auditor: <code>test_scripts()</code></a>
+  <ul class="collapse">
+  <li><a href="#what-it-does" id="toc-what-it-does" class="nav-link" data-scroll-target="#what-it-does"><span class="header-section-number">11.7.1</span> What it does</a></li>
+  <li><a href="#the-rules" id="toc-the-rules" class="nav-link" data-scroll-target="#the-rules"><span class="header-section-number">11.7.2</span> The rules</a></li>
+  <li><a href="#extending-the-rule-set" id="toc-extending-the-rule-set" class="nav-link" data-scroll-target="#extending-the-rule-set"><span class="header-section-number">11.7.3</span> Extending the rule set</a></li>
+  <li><a href="#reporting-and-the-build-gate" id="toc-reporting-and-the-build-gate" class="nav-link" data-scroll-target="#reporting-and-the-build-gate"><span class="header-section-number">11.7.4</span> Reporting and the build gate</a></li>
+  <li><a href="#exceptions-cso-allow" id="toc-exceptions-cso-allow" class="nav-link" data-scroll-target="#exceptions-cso-allow"><span class="header-section-number">11.7.5</span> Exceptions: <code># cso-allow:</code></a></li>
+  <li><a href="#false-positives-and-limits" id="toc-false-positives-and-limits" class="nav-link" data-scroll-target="#false-positives-and-limits"><span class="header-section-number">11.7.6</span> False positives and limits</a></li>
+  <li><a href="#using-it-in-ci" id="toc-using-it-in-ci" class="nav-link" data-scroll-target="#using-it-in-ci"><span class="header-section-number">11.7.7</span> Using it in CI</a></li>
+  <li><a href="#a-note-on-the-name" id="toc-a-note-on-the-name" class="nav-link" data-scroll-target="#a-note-on-the-name"><span class="header-section-number">11.7.8</span> A note on the name</a></li>
+  </ul></li>
+  <li><a href="#how-the-pieces-fit" id="toc-how-the-pieces-fit" class="nav-link" data-scroll-target="#how-the-pieces-fit"><span class="header-section-number">11.8</span> How the pieces fit</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/unicef-drp/cso-toolkit/edit/main/book/chapters/checks-and-ci.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/unicef-drp/cso-toolkit/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content" tabindex="-1">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="Breadcrumbs"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/40-new-repository.html">Part III — Setting Up and Running a Repository</a></li><li class="breadcrumb-item"><a href="../chapters/checks-and-ci.html"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Checks and CI</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Checks and CI</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>A repository that follows the contract still needs something that tells it when it stops following it. This chapter covers the checks a consumer repository runs before its changes merge: that no data slipped into git, that no secret did either, that the provenance sidecars it commits are well-formed, that the analysis code goes through the <code>dw_*</code> wrappers, that the vendored toolkit is the vintage the repository claims, and that the project’s own functions still do what their tests say.</p>
+<p>Those checks run <strong>locally first</strong>, with one command. A committed check record proves they passed on the exact content being merged, and GitHub verifies that record in seconds without running R. The full checks run on GitHub Actions only when a repository opts in. The chapter ends with the contract auditor, <code>test_scripts()</code>, the check that turns the IO and API contract into a build gate.</p>
+<p>Everything here ships as copyable material in the toolkit repository:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>What</th>
+<th>Where</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>.gitignore</code> rules, with the reasoning</td>
+<td><a href="https://github.com/unicef-drp/cso-toolkit/blob/develop/docs/gitignore_guidelines.md"><code>docs/gitignore_guidelines.md</code></a></td>
+</tr>
+<tr class="even">
+<td><code>.gitignore</code> templates</td>
+<td><code>templates/gitignore/research-project.gitignore</code>, <code>templates/gitignore/official-stats.gitignore</code></td>
+</tr>
+<tr class="odd">
+<td>CI principles and the full menu</td>
+<td><a href="https://github.com/unicef-drp/cso-toolkit/blob/develop/docs/ci_cd_guidelines.md"><code>docs/ci_cd_guidelines.md</code></a></td>
+</tr>
+<tr class="even">
+<td>Every check, run locally with one command</td>
+<td><code>templates/tools/check.R</code></td>
+</tr>
+<tr class="odd">
+<td>The wrapper that starts R right, and records</td>
+<td><code>templates/tools/check</code></td>
+</tr>
+<tr class="even">
+<td>Pre-push hook that requires a check record (or runs the checks)</td>
+<td><code>templates/hooks/pre-push</code></td>
+</tr>
+<tr class="odd">
+<td>The workflow that verifies the record on pull requests (on by default; no R)</td>
+<td><code>templates/workflows/check-record.yml</code></td>
+</tr>
+<tr class="even">
+<td>The check-record folder’s README</td>
+<td><code>templates/checks/README.md</code></td>
+</tr>
+<tr class="odd">
+<td>GitHub Actions workflows (opt-in; they call <code>check.R</code>)</td>
+<td><code>templates/workflows/ci-hygiene.yml</code>, <code>ci-contract-audit.yml</code>, <code>ci-r-tests.yml</code>, <code>ci-manuscript.yml</code></td>
+</tr>
+<tr class="even">
+<td>testthat skeleton for a non-package project</td>
+<td><code>templates/testthat/</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>create_research_project()</code> and <code>create_official_stats_project()</code> write all of this, set for the repository’s kind (<a href="../chapters/40-new-repository.html">Starting a repository</a>). They write the wrapper, the hook, <code>check-record.yml</code> and <code>.checks/README.md</code> every time, and the other workflows only with <code>workflows = TRUE</code>. They print the branch-protection steps but do not change repository settings.</p>
+<section id="data-stay-out-their-provenance-goes-in" class="level2" data-number="11.1">
+<h2 data-number="11.1" class="anchored" data-anchor-id="data-stay-out-their-provenance-goes-in"><span class="header-section-number">11.1</span> Data stay out; their provenance goes in</h2>
+<p>The rule the rest of the chapter enforces fits in one line: <strong>data never enter git, and the provenance sidecars that say exactly which bytes each result came from always do.</strong> Data live in the deposit (the Teams folder and its Z: mirror, the microdata archive, Gitea LFS), and <code>dw_fetch_inputs()</code> fills a local, gitignored inputs folder from it (<a href="../chapters/31-io.html">The IO contract</a>). What git holds is the record: every <code>dw_save()</code> output carries a <code>&lt;file&gt;.provenance.json</code> sidecar with the file’s hash and, through <code>metadata.inputs</code>, the hashes of the inputs it was built from (<a href="../chapters/23-provenance-and-errors.html">Provenance and errors</a>; fields in <a href="../appendices/b-provenance-schema.html">Appendix B</a>). Committing the sidecars puts that record under version control while the data stay out, so a reviewer can tell from git alone which bytes produced a result, and <code>dw_provenance_diff()</code> can tell whether a re-run reproduced it.</p>
+<p>A sidecar sits next to its file when the file is inside the repository but ignored: <code>data/derived/panel.csv.provenance.json</code> is tracked and <code>panel.csv</code> is not. Microdata kept outside the repository get their sidecars under <code>data/provenance/&lt;path&gt;/</code>, mirroring where the file lives, so the sidecar for <code>S:\datalib-edu\KEN\2022\hh.dta</code> is committed as <code>data/provenance/S/datalib-edu/KEN/2022/hh.dta.provenance.json</code>.</p>
+<p>The <code>.gitignore</code> pattern that does this has four kinds of line, and the second is the one people drop:</p>
+<pre class="gitignore"><code>data/**                       # ignore everything below data/
+!data/**/                     # re-include the directories
+!data/**/README.md            # then only these files
+!data/**/.gitkeep
+!data/**/*.provenance.json
+!data/**/input_manifest.*</code></pre>
+<p>Git cannot re-include a file whose parent directory is excluded: it never looks inside an excluded directory, so a <code>!</code> rule for a file in one is never consulted. Because <code>data/**</code> also matches the sub-directories, <code>!data/**/</code> (the trailing slash means “directories only”) lets git look inside them again; the files there stay ignored unless a later <code>!</code> line names them. For the same reason the folder rule is <code>data/**</code>, never <code>data/</code>: the latter excludes the directory itself, and nothing below it can come back.</p>
+<p>The templates repeat the block for <code>inputs/</code>, <code>_apis/</code> (the API cache) and <code>_frozen/</code> (frozen URL downloads). They then ignore data formats wherever they appear (<code>*.dta</code>, <code>*.rds</code>, <code>*.parquet</code>, …), secrets and personal configuration (<code>.env</code>, <code>*.pem</code>, <code>*.key</code>, <code>user_config.yml</code>, <code>.Renviron</code>), and the build noise of R, Python, Stata, Quarto and LaTeX. Both re-include <code>.checks/*.json</code> after every rule that could ignore it, so check records are always tracked.</p>
+<section id="research-projects-and-official-statistics" class="level3" data-number="11.1.1">
+<h3 data-number="11.1.1" class="anchored" data-anchor-id="research-projects-and-official-statistics"><span class="header-section-number">11.1.1</span> Research projects and official statistics</h3>
+<p>The two templates differ in where results live. In a research project git is the canonical store for results: the small tables and figures a reader checks the paper against are tracked, each with its sidecar.</p>
+<p>In an official-statistics repository (a DW sector pipeline, an SDMX or data.unicef.org publication pipeline, a survey-processing repository) the canonical store is the deposit, then SDMX and data.unicef.org, and <strong>pre-release figures are embargoed</strong>. Access to the repository is not authorization to release what is in it, and git history keeps whatever was committed. So <code>official-stats.gitignore</code> ignores output folders outright (<code>**/output/**</code>, <code>**/outputs/**</code>, <code>**/results/**</code>, <code>**/wrk/**</code>, and <code>**/013_wrkdata/**</code>, the work-data stage of the deposit layout), sidecars included, and a small pre-release CSV cannot be committed by accident. The raw-data stage, <code>**/011_rawdata/**</code>, keeps only its READMEs, sidecars and manifests, like <code>inputs/</code>.</p>
+<p>What such a repository commits instead is a release record. After publication, as part of the release pull request, it adds <code>releases/&lt;vintage&gt;/output_manifest.csv</code> (one row per deposited file with <code>file</code>, <code>sha256</code>, <code>bytes</code>, <code>deposited_at</code> and the path relative to the deposit root) and copies of the deposited files’ <code>.provenance.json</code> sidecars. The template re-includes exactly those files under <code>releases/</code>. A release record is never committed before the publication date: its hashes describe embargoed figures.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>Research project</th>
+<th>Official statistics</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Canonical store for results</td>
+<td>git</td>
+<td>the deposit, then SDMX / data.unicef.org</td>
+</tr>
+<tr class="even">
+<td>Results in the repository</td>
+<td>small tables and figures, with sidecars</td>
+<td>none; output folders ignored</td>
+</tr>
+<tr class="odd">
+<td>Confidentiality</td>
+<td>results public with the paper</td>
+<td>embargoed until the publication date</td>
+</tr>
+<tr class="even">
+<td>Release record</td>
+<td>the tracked results</td>
+<td><code>releases/&lt;vintage&gt;/</code> manifest and sidecars, after publication</td>
+</tr>
+<tr class="odd">
+<td>Folder layout</td>
+<td><code>data/</code>, <code>inputs/</code> at the root</td>
+<td><code>01_dw_prep/010_metadata</code>, <code>011_rawdata</code>, <code>012_codes</code>, <code>013_wrkdata</code>; <code>inputs/</code>, <code>_apis/</code>, <code>_frozen/</code> at any depth; <code>releases/</code></td>
+</tr>
+<tr class="even">
+<td>Extra noise</td>
+<td>Quarto and LaTeX builds</td>
+<td>reviewer sandbox, local copies of the deposit</td>
+</tr>
+<tr class="odd">
+<td>Tracked configuration</td>
+<td>none by default</td>
+<td><code>_config_template/user_config.yml</code></td>
+</tr>
+</tbody>
+</table>
+<p>Both templates ignore a reviewer’s local artefacts, <code>sandbox/</code> and the <code>*.staged.json</code> sidecars <code>dw_stage()</code> writes. The blocks they share (data formats, secrets, language noise, OS and editors) are kept identical by a test in the toolkit’s own suite, so edit both copies together.</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Check the rules, not your memory of them
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>git check-ignore -v &lt;path&gt;</code> prints the line that decides a path. <code>git ls-files -i -c --exclude-standard</code> lists tracked files the rules now say should be ignored; after adopting a template it must print nothing. <code>git rm --cached -- &lt;path&gt;</code> untracks a file without deleting it. History still holds anything committed before. Removing it from history is a separate decision, taken with the repository owner (and the data owner, for confidential microdata), and a leaked secret is rotated first, whatever happens to history.</p>
+</div>
+</div>
+<p>The ignore file is the safety net, not the first line of defence. That is the staging habit: never <code>git add -A</code> or <code>git add .</code>; stage by path (<code>git add -- R/clean.R results/t1.csv results/t1.csv.provenance.json</code>) and read <code>git diff --cached --stat</code> before committing. The checks below catch what both miss.</p>
+</section>
+</section>
+<section id="design-principles" class="level2" data-number="11.2">
+<h2 data-number="11.2" class="anchored" data-anchor-id="design-principles"><span class="header-section-number">11.2</span> Design principles</h2>
+<p>Ten principles shape the checks. Each earns its place by a failure it prevents.</p>
+<ol type="1">
+<li><strong>Checks run locally first.</strong> Every check runs on your machine with one command from the repository root and prints a <code>PASS</code> / <code>WARN</code> / <code>FAIL</code> / <code>SKIP</code> line per check, exiting non-zero on any failure. GitHub Actions are opt-in and call the same script, so they add an independent run, never a different check. Actions minutes run out, and a failure reproduced on your machine gets fixed before the push.</li>
+<li><strong>CI never needs real data.</strong> Tests use tiny synthetic fixtures. Reproduction against real data runs locally in reviewer mode, and its evidence (the <code>dw_provenance_diff()</code> status, <code>dw_check_deposit()</code> output, a <code>dw_compare()</code> summary) goes in the pull request. Data must not be on a hosted runner, and a check that needs data cannot run on every push. For the same reason <strong>CI never runs in producer mode</strong>: the checks put their own session in reviewer mode (<code>tools/check.R</code> before it loads the vendored helpers, <code>tests/testthat.R</code> before it sources anything), no workflow template sets <code>dw_mode</code>, and a job must never set <code>dw_mode: producer</code>, which would allow network calls and canonical writes from a runner.</li>
+<li><strong>Default checks are fast, under ten minutes.</strong> A check people wait for gets skipped, and a pre-push hook that takes too long gets bypassed.</li>
+<li><strong>Merges are gated by the check record.</strong> The gate is a committed record that <code>check.R</code> passed on the pull request’s exact content, verified on GitHub without running R (<a href="#check-records">Check records</a>) and required by branch protection. A check that can be merged around is advice, not a gate.</li>
+<li><strong>Every bug fix ships a regression test</strong> that fails on the old code and names the issue. The bug cannot return silently, and the test records what went wrong.</li>
+<li><strong>Least privilege, pinned actions.</strong> Workflows start from <code>permissions: contents: read</code>, and actions are pinned to a version. A compromised dependency should not be able to write to the repository or alter results unnoticed.</li>
+<li><strong>No secrets in logs.</strong> Prefer checks that need no secret; scanners redact. Logs, and check output pasted into a pull request, are readable by everyone with access to the repository.</li>
+<li><strong>Fail with an actionable message</strong>, in the toolkit’s WHAT / Why / Fix envelope (<a href="../chapters/23-provenance-and-errors.html">Provenance and errors</a>). A red check that says how to turn it green costs minutes.</li>
+<li><strong>Spend minutes where they buy something.</strong> When Actions run, default to <code>ubuntu-latest</code> and few jobs, since each is billed by the started minute; run Windows and macOS on a schedule or on release. Private repositories pay for minutes, and Windows minutes count double and macOS minutes ten times.</li>
+<li><strong>CI is documentation.</strong> The README has a short section listing the checks, the local command, and which workflows are switched on.</li>
+</ol>
+</section>
+<section id="running-the-checks-toolscheck" class="level2" data-number="11.3">
+<h2 data-number="11.3" class="anchored" data-anchor-id="running-the-checks-toolscheck"><span class="header-section-number">11.3</span> Running the checks: <code>tools/check</code></h2>
+<p>From the repository root:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sh</span> tools/check                   <span class="co"># every default check</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sh</span> tools/check <span class="at">--record</span>          <span class="co"># ... and, if none fails, commit a check record</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sh</span> tools/check <span class="at">--only</span> tests      <span class="co"># one check (comma-separate several)</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sh</span> tools/check <span class="at">--skip</span> tests      <span class="co"># all but one</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sh</span> tools/check <span class="at">--list</span>            <span class="co"># the default and available names</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>tools/check</code> is a small shell wrapper around <code>Rscript --no-init-file tools/check.R</code>, which takes the same arguments. Use <code>--no-init-file</code>, never <code>--vanilla</code>: <code>--vanilla</code> also drops <code>.Renviron</code> and the library path it sets. If <code>Rscript</code> is not on the PATH, as is common on Windows, set <code>RSCRIPT</code> to its path, or the wrapper looks in the default Windows install folder.</p>
+<p><strong>Windows.</strong> Started from Git Bash, R takes Git Bash’s <code>HOME</code> (<code>C:\Users\&lt;user&gt;</code>) as its home folder. It then misses a <code>.Renviron</code> that lives in Documents (often redirected to OneDrive), and with it the user library, and the checks fail with “there is no package called testthat”. <code>tools/check</code> therefore starts R with <code>env -u HOME</code>, so R falls back to Documents, and passes the original <code>HOME</code> as <code>CHECK_GIT_HOME</code>, which the git calls inside <code>check.R</code> get back, so git still finds <code>user.name</code> and <code>user.email</code>.</p>
+<p><code>check.R</code> needs R, git on the PATH, and the packages testthat (for <code>tests</code>), jsonlite (for <code>sidecars</code>; testthat installs it) and yaml (for <code>vintage</code>). When the repository has <code>renv/activate.R</code>, the script activates renv itself, since <code>--no-init-file</code> skips the project’s <code>.Rprofile</code>; <code>CHECK_NO_RENV=true</code> turns that off, as the workflows do. It prints a header line with the repository, commit (marked when there are uncommitted changes), R version and time, then one line per check, each failure with a <code>Why:</code> and a <code>Fix:</code> line, then a tally.</p>
+<p><code>tools/check.R</code> is an R script. A Python-only or Stata repository can still run the hygiene and sidecar checks with it, because they read files only and need just R and jsonlite: drop <code>contract-audit</code>, <code>vintage</code> and <code>tests</code> from <code>CHECKS</code>, and run pytest alongside.</p>
+<section id="settings" class="level3" data-number="11.3.1">
+<h3 data-number="11.3.1" class="anchored" data-anchor-id="settings"><span class="header-section-number">11.3.1</span> Settings</h3>
+<p>The settings sit in one <code>CONFIG</code> block at the top of <code>tools/check.R</code>. An environment variable of the same name overrides any of them for one run, for example <code>AUDIT_MODE=blocking sh tools/check</code>.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Setting</th>
+<th>Template default</th>
+<th>What it controls</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>CHECKS</code></td>
+<td><code>tracked-data large-files secret-scan sidecars contract-audit vintage tests</code></td>
+<td>Checks run by default, in order. <code>lint</code> and <code>manuscript</code> are optional extras.</td>
+</tr>
+<tr class="even">
+<td><code>DATA_DIRS</code></td>
+<td><code>data inputs _apis _frozen</code></td>
+<td>Folders, at any depth, whose contents stay out of git.</td>
+</tr>
+<tr class="odd">
+<td><code>DATA_ALLOW</code></td>
+<td><code>README.md .gitkeep *.provenance.json input_manifest.*</code></td>
+<td>File-name globs allowed inside <code>DATA_DIRS</code>.</td>
+</tr>
+<tr class="even">
+<td><code>DATA_EXTS</code></td>
+<td><code>sav dta rds RData rda parquet feather sas7bdat zip 7z gz tar h5 duckdb sqlite db</code></td>
+<td>Formats that are data wherever they appear.</td>
+</tr>
+<tr class="odd">
+<td><code>OUTPUT_DIRS</code></td>
+<td>empty</td>
+<td>Embargoed output folders that must hold nothing tracked (<code>releases/</code> is always exempt).</td>
+</tr>
+<tr class="even">
+<td><code>ALLOW_PATHS</code></td>
+<td><code>tests/</code> and <code>_config_template/</code> at the root</td>
+<td>Paths exempt from <code>tracked-data</code> and <code>large-files</code>, as one extended regex.</td>
+</tr>
+<tr class="odd">
+<td><code>MAX_FILE_MB</code></td>
+<td><code>50</code></td>
+<td>Size limit for <code>large-files</code>.</td>
+</tr>
+<tr class="even">
+<td><code>TOOLKIT_DIR</code></td>
+<td><code>00_functions</code></td>
+<td>Where the vendored helpers live.</td>
+</tr>
+<tr class="odd">
+<td><code>AUDIT_PATHS</code></td>
+<td><code>R</code></td>
+<td>Folders the contract audit reads.</td>
+</tr>
+<tr class="even">
+<td><code>AUDIT_MODE</code></td>
+<td><code>blocking</code></td>
+<td><code>blocking</code> fails the run on a violation; <code>advisory</code> reports it as <code>WARN</code>.</td>
+</tr>
+<tr class="odd">
+<td><code>PAPER_DIR</code>, <code>ROOT_FILE</code>, <code>MAX_PAGES</code></td>
+<td><code>paper</code>, <code>main.tex</code>, <code>40</code></td>
+<td>The manuscript check.</td>
+</tr>
+</tbody>
+</table>
+<p>The scaffolders edit some of these for you. <code>create_official_stats_project()</code> sets <code>OUTPUT_DIRS = "output outputs results wrk 013_wrkdata"</code>, adds <code>011_rawdata</code> to <code>DATA_DIRS</code>, and points <code>AUDIT_PATHS</code> at <code>01_dw_prep/012_codes</code>. <code>create_research_project()</code> sets <code>AUDIT_MODE = "advisory"</code> (see the contract audit below). When nothing was vendored yet, both drop <code>contract-audit</code> and <code>vintage</code> from <code>CHECKS</code>, with a comment to add them back once <code>00_functions/</code> is filled.</p>
+</section>
+<section id="the-checks" class="level3" data-number="11.3.2">
+<h3 data-number="11.3.2" class="anchored" data-anchor-id="the-checks"><span class="header-section-number">11.3.2</span> The checks</h3>
+<p>The checks come in three tiers. Tier 0 goes in every repository, Tier 1 in every repository with code, Tier 2 when it earns its keep. The workflow column names the opt-in GitHub Actions template that runs the same check.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Tier</th>
+<th>Check</th>
+<th><code>tools/check.R</code></th>
+<th>Workflow (opt-in)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0</td>
+<td>No data, secrets or embargoed outputs tracked outside the allowlist</td>
+<td><code>tracked-data</code></td>
+<td><code>ci-hygiene.yml</code></td>
+</tr>
+<tr class="even">
+<td>0</td>
+<td>No tracked file over 50 MB</td>
+<td><code>large-files</code></td>
+<td><code>ci-hygiene.yml</code></td>
+</tr>
+<tr class="odd">
+<td>0</td>
+<td>Secret scan of the full history (gitleaks, redacted)</td>
+<td><code>secret-scan</code></td>
+<td><code>ci-hygiene.yml</code></td>
+</tr>
+<tr class="even">
+<td>0</td>
+<td>Provenance sidecars parse and carry the core keys</td>
+<td><code>sidecars</code></td>
+<td><code>ci-hygiene.yml</code></td>
+</tr>
+<tr class="odd">
+<td>0</td>
+<td>Contract audit, <code>test_scripts()</code> on the vendored helpers</td>
+<td><code>contract-audit</code></td>
+<td><code>ci-contract-audit.yml</code></td>
+</tr>
+<tr class="even">
+<td>0</td>
+<td>Toolkit vintage: manifest well-formed, <code>cso_toolkit_check()</code> offline</td>
+<td><code>vintage</code></td>
+<td><code>ci-contract-audit.yml</code></td>
+</tr>
+<tr class="odd">
+<td>1</td>
+<td>R tests (testthat; R CMD check for a package)</td>
+<td><code>tests</code></td>
+<td><code>ci-r-tests.yml</code></td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td>lintr (advisory)</td>
+<td><code>lint</code></td>
+<td><code>ci-r-tests.yml</code>, manual runs</td>
+</tr>
+<tr class="odd">
+<td>2</td>
+<td>Manuscript build and page limit</td>
+<td><code>manuscript</code></td>
+<td><code>ci-manuscript.yml</code></td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>Site deploy, <code>renv</code> status, cross-language conformance, scheduled drift checks</td>
+<td>—</td>
+<td>see <code>docs/ci_cd_guidelines.md</code></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong><code>tracked-data</code></strong> lists every tracked file outside <code>ALLOW_PATHS</code> that sits in a <code>DATA_DIRS</code> folder without matching <code>DATA_ALLOW</code>, has a <code>DATA_EXTS</code> extension, is a secret or personal configuration file (<code>.env</code>, <code>.env.*</code> but not <code>.env.example</code>, <code>*.pem</code>, <code>*.key</code>, <code>*.p12</code>, <code>*.pfx</code>, <code>.netrc</code>, <code>.Renviron</code>, <code>user_config.yml</code>), or sits in an <code>OUTPUT_DIRS</code> folder outside <code>releases/</code>. The fix it prints is <code>git rm --cached -- &lt;path&gt;</code>, which keeps the file on disk, plus the matching <code>.gitignore</code> rule.</li>
+<li><strong><code>large-files</code></strong> fails on any tracked file over <code>MAX_FILE_MB</code>. Git keeps every version forever, and GitHub rejects files over 100 MB. Move the file to the deposit and commit its sidecar instead.</li>
+<li><strong><code>secret-scan</code></strong> runs <code>gitleaks git --redact</code> over the full history. Locally it is skipped when gitleaks is not installed; in CI (<code>CI=true</code>) a missing gitleaks is a failure. A finding means the secret is compromised: rotate it first, then remove it from the code. A known false positive goes in <code>.gitleaksignore</code>, by the fingerprint from the report, with a comment saying why.</li>
+<li><strong><code>sidecars</code></strong> parses every tracked <code>*.provenance.json</code> and checks the shape <a href="../appendices/b-provenance-schema.html">Appendix B</a> documents: <code>path</code>, <code>format</code>, <code>written_at</code>, <code>dw_mode</code> and a 64-character hex <code>sha256</code> for an R or Python sidecar; <code>datasignature</code> in place of the hash for a Stata one (<code>format</code> <code>dw_save.provenance/1</code>); <code>url</code>, <code>fetched_at</code>, <code>dw_mode</code> and <code>sha256</code> for an API-fetch or frozen-URL sidecar. It does not re-compute hashes: the data are not in the repository, so the bytes are checked locally or in reviewer mode, where <code>dw_read_provenance()</code>, <code>dw_check_deposit()</code> and <code>dw_provenance_diff()</code> have the files to hash. An R sidecar with no <code>sha256</code> usually means the digest package was missing when it was written.</li>
+<li><strong><code>contract-audit</code></strong> loads <code>dw_io.R</code> and <code>test_scripts.R</code> from <code>TOOLKIT_DIR</code>, in reviewer mode, and runs <code>test_scripts()</code> over each folder in <code>AUDIT_PATHS</code>, skipping the vendored folder itself. It audits with the exact code and vintage the repository runs, not a fresh install. It fails when the vendored files or every <code>AUDIT_PATHS</code> folder are missing, or when <code>AUDIT_MODE</code> is neither <code>blocking</code> nor <code>advisory</code>. The auditor itself is described <a href="#contract-auditor">below</a>.</li>
+<li><strong><code>vintage</code></strong> reads <code>00_functions/.toolkit_manifest.yml</code>, requires <code>source</code>, <code>pulled_version</code> and <code>vendored</code>, confirms every <code>vendored:</code> file is present, and runs the vendored <code>cso_toolkit_check()</code> in reviewer mode, which compares against <code>target_version</code> offline. It fails when <code>pulled_version</code> is behind <code>target_version</code>. A newer upstream tag is not a failure: refreshing remains the producer’s decision (<a href="../chapters/vendoring-and-updates.html">Vendoring and updates</a>).</li>
+<li><strong><code>tests</code></strong> runs <code>tests/testthat.R</code> in a fresh R process (through renv when the repository has it), so the runner’s reviewer-mode globals do not leak into the check run. In an R package (a <code>DESCRIPTION</code> at the root) it is skipped with a pointer to <code>R CMD check</code>.</li>
+<li><strong><code>lint</code></strong> runs <code>lintr::lint_dir()</code>, excluding the vendored folder, <code>renv</code> and the test fixtures. It only ever warns, and is skipped when lintr is not installed.</li>
+<li><strong><code>manuscript</code></strong> builds <code>PAPER_DIR/ROOT_FILE</code> with <code>latexmk</code> from the committed tables and figures and fails when the PDF is over <code>MAX_PAGES</code> (<code>0</code> turns the limit off). Without latexmk it is skipped locally and fails in CI; without <code>pdfinfo</code> the page count is not checked.</li>
+</ul>
+</section>
+<section id="contract-audit-blocking-or-advisory" class="level3" data-number="11.3.3">
+<h3 data-number="11.3.3" class="anchored" data-anchor-id="contract-audit-blocking-or-advisory"><span class="header-section-number">11.3.3</span> Contract audit: blocking or advisory</h3>
+<p><code>AUDIT_MODE</code> decides what a contract violation does. <code>blocking</code>, the template’s default, fails the run. <code>advisory</code> lists the violations under a <code>[WARN]</code> line and does not fail it. Official statistics keep it blocking, because a raw read there is an input without provenance in a published figure. A research project created by <code>create_research_project()</code> starts advisory, because its first scripts read their data directly (<code>haven::read_dta()</code>, <code>read.csv()</code>) long before they move to <code>dw_use()</code>. The audit reports each such line from the first day, and the project switches to <code>"blocking"</code> once its code reads through the wrappers.</p>
+</section>
+</section>
+<section id="testthat-in-every-r-repository" class="level2" data-number="11.4">
+<h2 data-number="11.4" class="anchored" data-anchor-id="testthat-in-every-r-repository"><span class="header-section-number">11.4</span> testthat in every R repository</h2>
+<p>A sector pipeline or a paper is not an R package, so it has no <code>R CMD check</code> to run its tests. The <code>templates/testthat/</code> skeleton fills that gap with a runner, <code>tests/testthat.R</code>, that works without a <code>DESCRIPTION</code>. It puts the session in reviewer mode, so a test that reaches for the network or a canonical deposit fails instead of fetching; sources the vendored helpers from <code>TOOLKIT_DIR</code> (<code>dw_io.R</code> first); sources the project’s function files from <code>SOURCE_DIRS</code> (files that define functions, never scripts that run an analysis); and calls <code>testthat::test_dir()</code>, exiting non-zero on any failure. The scaffolders set <code>SOURCE_DIRS</code> to <code>R/functions</code> for a research project and leave it empty for official statistics.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="" aria-current="page">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Locally, from the repository root:</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">#   sh tools/check --only tests</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># (or the runner on its own: Rscript --no-init-file tests/testthat.R)</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co"># A regression test names the issue and fails on the pre-fix code.</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="fu">test_that</span>(<span class="st">"regression #12: codes with stray whitespace or lower case are kept"</span>, {</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  ind <span class="ot">&lt;-</span> <span class="fu">read_fixture</span>(<span class="st">"indicators_synthetic.csv"</span>)   <span class="co"># tiny, synthetic</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  out <span class="ot">&lt;-</span> <span class="fu">merge_country_names</span>(ind, countries)</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">expect_setequal</span>(out<span class="sc">$</span>TIME_PERIOD[out<span class="sc">$</span>country <span class="sc">==</span> <span class="st">"Kenya"</span>], <span class="fu">c</span>(<span class="dv">2021</span>, <span class="dv">2022</span>))</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="fu">test_that</span>(<span class="st">"an unknown code fails loudly with a WHAT / Why / Fix error"</span>, {</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  err <span class="ot">&lt;-</span> <span class="fu">expect_error</span>(<span class="fu">merge_country_names</span>(bad, countries))</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">expect_envelope</span>(err, <span class="st">"merge_country_names"</span>)</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># No Python skeleton ships. Use pytest with the same rules: synthetic</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"># fixtures under tests/fixtures/, a regression test per fixed bug named</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># after the issue, errors asserted on the "[&lt;scope&gt;.&lt;function&gt;] ... Fix:"</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># envelope, and the session configured with dw_mode="reviewer",</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co"># dw_apis_allowed=False.</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<p>The example in the skeleton is the pattern to copy rather than the function to keep: a small project function, a fixture that carries the very codes that once broke it, and a test whose title names the issue. Run against the old implementation, an inner join on raw codes, the test fails; against the fix it passes. The skeleton follows the toolkit’s own suite: helpers in <code>helper-*.R</code> (<code>read_fixture()</code>, <code>local_tempdir()</code>, <code>local_dw_state()</code>, <code>expect_envelope()</code>), session state set through a local setter that restores on exit, and errors asserted with <code>expect_envelope()</code>. No Stata test runner ships; the hygiene and sidecar checks still cover a Stata repository, since they read only files.</p>
+</section>
+<section id="check-records" class="level2" data-number="11.5">
+<h2 data-number="11.5" class="anchored" data-anchor-id="check-records"><span class="header-section-number">11.5</span> Check records</h2>
+<p>Local-first checks leave one gap: nothing proves they were run on what gets merged. A forgotten hook, <code>git push --no-verify</code>, or a co-author who never enabled the hook all go unnoticed. Required status checks close that gap only by running the full checks on GitHub, which is what local-first avoids. A <strong>check record</strong> closes it at almost no Actions cost.</p>
+<ul>
+<li><strong>The record.</strong> <code>sh tools/check --record</code> runs the checks and, when none fails, writes <code>.checks/&lt;content-hash&gt;.json</code> and commits it, alone, with the message <code>Check record &lt;hash&gt;</code>. It needs a clean working tree on a commit (untracked files do not count), because a record certifies committed content: commit your changes first, and do not stash them, since worktrees share one stash list. <code>--record</code> refuses <code>--only</code> and <code>--skip</code>: a record never certifies a partial run. If a passing record for the content already exists, it says so and writes nothing.</li>
+<li><strong>What it holds.</strong> <code>schema</code> (<code>check_record/1</code>), <code>content_hash</code>, the <code>commit</code> and <code>branch</code> checked, <code>result</code> (<code>pass</code>), each check’s result in <code>checks</code> (<code>pass</code>; <code>advisory</code> for a <code>WARN</code>, such as an advisory contract audit or lint; <code>skipped</code>), <code>toolkit</code> (the manifest’s <code>pulled_version</code>), <code>r_version</code>, <code>platform</code>, <code>user</code> (git’s <code>user.name</code>), <code>checked_at</code> in UTC, and <code>check_script_sha</code>, the git hash of <code>tools/check.R</code> itself.</li>
+<li><strong>The content hash</strong> is git’s tree ID of the repository with <code>.checks/</code> left out: <code>git ls-tree HEAD | grep -v '\t.checks$' | git mktree</code>. A record certifies content, not a commit ID, so the commit that adds the record keeps the same content hash, which avoids the chicken-and-egg problem. Computed from git objects, the hash is the same on Windows and Linux.</li>
+<li><strong>One file per checked state,</strong> about 1 KB each: records never conflict between branches, and history keeps every checked state.</li>
+<li><strong>Merging <code>develop</code> into a branch</strong> changes its content, so record again before pushing. A pull request whose content is identical to an already recorded state, such as the release pull request <code>develop</code> → <code>main</code> right after a feature merge, reuses that record.</li>
+<li><strong>Limits.</strong> A record can be written by hand. It prevents forgotten checks, not forgery, like any honour-based gate. Shared or mirrored repositories with different content need their own records.</li>
+</ul>
+<section id="the-pre-push-hook" class="level3" data-number="11.5.1">
+<h3 data-number="11.5.1" class="anchored" data-anchor-id="the-pre-push-hook"><span class="header-section-number">11.5.1</span> The pre-push hook</h3>
+<p><code>templates/hooks/pre-push</code> is tracked in the repository as <code>.githooks/pre-push</code>. Enable it once per clone:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> config core.hooksPath .githooks</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The scaffolders do this for you when called with <code>git = TRUE</code>, and stage the hook and <code>tools/check</code> with their executable bit, so they run on macOS and Linux clones too.</p>
+<p>The setting <code>MODE</code> at the top of the hook decides what it does, and <code>CHECK_HOOK_MODE</code> overrides it for one push:</p>
+<ul>
+<li><strong><code>MODE=verify</code></strong> (the default) requires, for each pushed branch, a passing record for the commit’s content, committed in that commit (the record must say <code>"result": "pass"</code>). It runs no R, so pushes stay fast. Branch deletions and tags are not checked. A refused push prints the command to run: <code>sh tools/check --record</code>, then push again.</li>
+<li><strong><code>MODE=run</code></strong> runs the checks instead (<code>sh tools/check</code>, or <code>tools/check.R</code> directly when the wrapper is missing), for repositories that do not use records. <code>CHECK_ARGS="--skip tests" git push</code> runs a subset, and <code>RSCRIPT</code> points at R when it is not on the PATH.</li>
+</ul>
+<p>To skip the hook once, when you must, use <code>git push --no-verify</code> or <code>CHECK_SKIP=1 git push</code>, and say so in the pull request. The pull request’s <code>check-record</code> status still fails without a record.</p>
+</section>
+<section id="the-check-record-workflow" class="level3" data-number="11.5.2">
+<h3 data-number="11.5.2" class="anchored" data-anchor-id="the-check-record-workflow"><span class="header-section-number">11.5.2</span> The check-record workflow</h3>
+<p><code>check-record.yml</code> is the one workflow on by default. It runs on pull requests into <code>develop</code> and <code>main</code> (and by hand), never on push. It checks out the pull request’s head commit, not GitHub’s merge commit, recomputes the content hash, and requires <code>.checks/&lt;hash&gt;.json</code> to exist and say <code>pass</code>; it then prints the record’s summary. It needs no R and no data, takes about 10 seconds, and has <code>contents: read</code> and <code>pull-requests: read</code> permissions. GitHub bills it as one minute on a private repository.</p>
+<p><strong>Automated pull requests</strong> (a bot rebuilding the handbook, a sync job) carry no record. List the generated paths they touch in the workflow’s <code>EXEMPT_PATHS</code> (space-separated shell patterns, where <code>*</code> also matches <code>/</code>, for example <code>docs/handbook/*</code>). A pull request whose every changed file matches one passes without a record. Anything that changes other files still needs one, whoever opened it.</p>
+<p><strong>Branch protection</strong> (Settings &gt; Branches, for <code>develop</code> and <code>main</code>): require the status check <code>check-record</code>, and tick <em>Require branches to be up to date before merging</em>. Then what merges is exactly the checked content. The toolkit repository itself uses its parity certificate (<a href="../chapters/parity.html">How the three languages stay in step</a>) and its package CI instead.</p>
+</section>
+</section>
+<section id="the-opt-in-workflows" class="level2" data-number="11.6">
+<h2 data-number="11.6" class="anchored" data-anchor-id="the-opt-in-workflows"><span class="header-section-number">11.6</span> The opt-in workflows</h2>
+<p>With <code>workflows = TRUE</code>, the scaffolders also write the workflows that run the full checks on GitHub: <code>ci-hygiene.yml</code>, <code>ci-contract-audit.yml</code> and <code>ci-r-tests.yml</code> for both kinds, and <code>ci-manuscript.yml</code> for a research project only. Each calls <code>tools/check.R</code> with <code>--only</code>, so they run exactly the local checks, and each is configured at the top of <code>tools/check.R</code>, not in the YAML.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Workflow</th>
+<th>Runs</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>ci-hygiene.yml</code></td>
+<td><code>tracked-data,large-files,secret-scan,sidecars</code></td>
+<td>One job, not four. Full history (<code>fetch-depth: 0</code>) for the secret scan. Installs a pinned gitleaks binary (8.21.2): the gitleaks GitHub Action needs a licence key for organisation repositories, the binary does not.</td>
+</tr>
+<tr class="even">
+<td><code>ci-contract-audit.yml</code></td>
+<td><code>contract-audit,vintage</code></td>
+<td>Installs only yaml: <code>test_scripts()</code> needs base R.</td>
+</tr>
+<tr class="odd">
+<td><code>ci-r-tests.yml</code></td>
+<td><code>tests</code></td>
+<td>Restores <code>renv.lock</code> when there is one, otherwise installs testthat, withr, yaml and jsonlite (add your project’s packages). An advisory lintr job runs on manual runs only, with <code>continue-on-error</code>. A commented <code>r-package</code> job runs <code>R CMD check</code> instead, for a repository that is an R package.</td>
+</tr>
+<tr class="even">
+<td><code>ci-manuscript.yml</code></td>
+<td>LaTeX build and page count</td>
+<td>Builds with <code>xu-cheng/latex-action</code>, checks pages with <code>pdfinfo</code> against <code>MAX_PAGES</code>, and uploads the PDF as an artifact for 14 days. A commented job does the same for Quarto.</td>
+</tr>
+</tbody>
+</table>
+<p>By default they run only when started by hand and on pull requests into <code>main</code> (the release pull request), so routine pushes cost no Actions minutes, and every release gets an independent run on a clean runner for a few minutes. The manuscript workflow also has a <code>paths:</code> filter on <code>paper/**</code>. Each workflow carries a commented <code>on:</code> block that switches it to every push and pull request.</p>
+<p>They are not required checks by default: with the default triggers they do not run on pull requests into <code>develop</code>, and a required check that never runs blocks the merge forever. A repository that has the minutes switches each workflow’s <code>on:</code> block, lets the workflows run green once, and then marks the Tier 0 and Tier 1 jobs as required on <code>develop</code> and <code>main</code>. Two details matter then. GitHub matches a required check by its job name, so the templates give each job a stable <code>name:</code>. And a required workflow must not carry a <code>paths:</code> filter: when a pull request touches no matching path the workflow never runs, and its required check waits forever. Path filters belong on advisory workflows only, which is why the manuscript workflow is advisory. Windows and macOS runs belong on a schedule or on release (the commented block at the end of <code>ci-r-tests.yml</code>), never on every push. The gitflow itself is in <a href="https://github.com/unicef-drp/cso-toolkit/blob/develop/docs/git_workflow.md"><code>docs/git_workflow.md</code></a>.</p>
+</section>
+<section id="contract-auditor" class="level2" data-number="11.7">
+<h2 data-number="11.7" class="anchored" data-anchor-id="contract-auditor"><span class="header-section-number">11.7</span> The contract auditor: <code>test_scripts()</code></h2>
+<!-- Generated by book/_scripts/gen_tables.py from the code and book/_data/coverage.json. Do not edit: run `sh tools/docs-tables`. -->
+<p><strong>Languages:</strong> R, Python. Stata: n/a (no Stata auditor). See the <a href="../appendices/a-coverage-matrix.html">coverage matrix</a>.</p>
+<p>The contract says that file and network access go through a small set of wrappers: file IO through <code>dw_save()</code> / <code>dw_use()</code> / <code>dw_compare()</code> / <code>dw_merge()</code> (<a href="../chapters/31-io.html">The IO contract</a>), external APIs through <code>dw_api_fetch()</code> / <code>dw_api_cached()</code> (<a href="../chapters/32-external-api.html">External APIs</a>). A contract that is only documented decays. New scripts reach for <code>read_csv()</code> out of habit, a quick <code>httr::GET()</code> slips into a one-off fetch, and a reviewer approves the pull request without noticing either.</p>
+<p><code>test_scripts()</code> closes that gap. It walks a directory of analysis scripts and flags every line that calls a raw IO or HTTP function the toolkit wraps, together with the wrapper to use instead. Run interactively it is a code-review aid; with <code>error_on_violation = TRUE</code> it is a build gate.</p>
+<p>The auditor and the wrappers are two layers of the same defence. The wrappers enforce the contract at the call site: once you call <code>dw_save()</code>, mode routing and provenance happen. The auditor enforces it at review time, catching the calls that never reached a wrapper at all.</p>
+<section id="what-it-does" class="level3" data-number="11.7.1">
+<h3 data-number="11.7.1" class="anchored" data-anchor-id="what-it-does"><span class="header-section-number">11.7.1</span> What it does</h3>
+<p>For each file whose name matches <code>pattern</code>, the auditor reads the file line by line. Before matching, it replaces string literals with empty strings (so a URL or file name inside quotes does not trigger a rule) and strips trailing comments (so commented-out code is not flagged), while keeping any <code># cso-allow:</code> directive, which it reads from the raw line. It then tests the line against every rule. A match is a violation.</p>
+<p>It is a lexical check, not a parser: fast, with no dependencies beyond base R or pandas, but it sees text, not an abstract syntax tree. The <a href="#false-positives-and-limits">false positives</a> section says what that costs.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">test_scripts</span>(</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  path,</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">pattern            =</span> <span class="st">"</span><span class="sc">\\</span><span class="st">.R$"</span>,</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">recursive          =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">ignore_files       =</span> <span class="fu">c</span>(<span class="st">"dw_io.R"</span>, <span class="st">"dw_api.R"</span>, <span class="st">"cso_toolkit_sync.R"</span>,</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>                         <span class="st">"profile_helpers.R"</span>, <span class="st">"test_scripts.R"</span>),</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">ignore_dirs        =</span> <span class="fu">c</span>(<span class="st">".git"</span>, <span class="st">"renv"</span>, <span class="st">"packrat"</span>,</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>                         <span class="st">"node_modules"</span>, <span class="st">".Rproj.user"</span>),</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">custom_rules       =</span> <span class="cn">NULL</span>,</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">error_on_violation =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">verbose            =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">debug              =</span> <span class="cn">NULL</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>test_scripts(</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    path,</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    pattern<span class="op">=</span><span class="vs">r"</span><span class="ch">\.</span><span class="vs">py</span><span class="dv">$</span><span class="vs">"</span>,</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>,</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    recursive<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    ignore_files<span class="op">=</span>(<span class="st">"dw_io.py"</span>, <span class="st">"dw_api.py"</span>, <span class="st">"cso_toolkit_sync.py"</span>,</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>                  <span class="st">"profile_helpers.py"</span>, <span class="st">"test_scripts.py"</span>, <span class="st">"_state.py"</span>,</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>                  <span class="st">"__init__.py"</span>),</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    ignore_dirs<span class="op">=</span>(<span class="st">".git"</span>, <span class="st">".venv"</span>, <span class="st">"venv"</span>, <span class="st">"env"</span>, <span class="st">"__pycache__"</span>,</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>                 <span class="st">".tox"</span>, <span class="st">".pytest_cache"</span>, <span class="st">"node_modules"</span>),</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    custom_rules<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    error_on_violation<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    verbose<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<p><code>path</code> is a directory (searched recursively unless <code>recursive = FALSE</code>) or a single file. The file-name <code>pattern</code> is matched case-insensitively. <code>ignore_files</code> skips the toolkit’s own implementation files, which must call the raw commands; <code>ignore_dirs</code> skips machinery folders (version control, dependency caches, virtual environments). Both are overridable. A path that does not exist is an error with the <code>[cso_toolkit.test_scripts]</code> envelope: a <code>stop()</code> in R, a <code>FileNotFoundError</code> in Python. Python reads files as UTF-8 and silently skips a file it cannot decode.</p>
+<p>R has one extra argument, <code>debug</code> (default <code>NULL</code>, which inherits <code>options(dw.debug)</code>). When <code>TRUE</code> it prints the file count, the rule count and per-family tallies, and implies <code>verbose</code>; it does not change what the auditor flags.</p>
+<p>Both return a data frame (an R <code>data.frame</code>, a pandas <code>DataFrame</code>) with seven columns: <code>file</code>, <code>line</code>, <code>rule</code>, <code>family</code>, <code>message</code>, <code>suggest</code> and <code>snippet</code>. An empty frame means a clean scan. The columns are stable, so a CI step can read them to post annotations or build a report. R returns the frame invisibly: assign it (<code>v &lt;- test_scripts(...)</code>) to inspect it, since a bare call at the console prints the summary but not the frame. Python returns it normally.</p>
+</section>
+<section id="the-rules" class="level3" data-number="11.7.2">
+<h3 data-number="11.7.2" class="anchored" data-anchor-id="the-rules"><span class="header-section-number">11.7.2</span> The rules</h3>
+<p>Every rule has five fields: <code>id</code>, <code>family</code>, <code>pattern</code>, <code>message</code> and <code>suggest</code>. The <code>family</code> is <code>"io"</code> or <code>"api"</code>, and only those two families can fail a build. The <code>pattern</code> is a regular expression (PCRE in R) matched against the scrubbed line. The <code>message</code> names the bypass and <code>suggest</code> names the wrapper that replaces it, so a caught <code>read_csv</code> does not just say that a rule matched: it says <em>Direct CSV read</em> and points to <code>dw_use(name = ..., sector = ..., kind = ...)</code>.</p>
+<!-- Generated by book/_scripts/gen_tables.py from the code and book/_data/coverage.json. Do not edit: run `sh tools/docs-tables`. -->
+<table class="caption-top table">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Rule</th>
+<th>Family</th>
+<th>R</th>
+<th>Python</th>
+<th>What it flags</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>api-download</code></td>
+<td>api</td>
+<td>Yes</td>
+<td>—</td>
+<td>Direct file download bypasses the cache.</td>
+</tr>
+<tr class="even">
+<td><code>api-fromjson-url</code></td>
+<td>api</td>
+<td>Yes</td>
+<td>—</td>
+<td>fromJSON() called on a URL string (bypasses the cache).</td>
+</tr>
+<tr class="odd">
+<td><code>api-httpx</code></td>
+<td>api</td>
+<td>—</td>
+<td>Yes</td>
+<td>Direct HTTP call via httpx.</td>
+</tr>
+<tr class="even">
+<td><code>api-httr</code></td>
+<td>api</td>
+<td>Yes</td>
+<td>—</td>
+<td>Direct HTTP call via httr / httr2.</td>
+</tr>
+<tr class="odd">
+<td><code>api-ilostat</code></td>
+<td>api</td>
+<td>Yes</td>
+<td>—</td>
+<td>Direct Rilostat::get_ilostat call.</td>
+</tr>
+<tr class="even">
+<td><code>api-requests</code></td>
+<td>api</td>
+<td>—</td>
+<td>Yes</td>
+<td>Direct HTTP call via requests.</td>
+</tr>
+<tr class="odd">
+<td><code>api-sdmx</code></td>
+<td>api</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>R: Direct rsdmx::readSDMX call. Python: Direct sdmx.Client call.</td>
+</tr>
+<tr class="even">
+<td><code>api-urllib</code></td>
+<td>api</td>
+<td>—</td>
+<td>Yes</td>
+<td>Direct HTTP call via urllib.</td>
+</tr>
+<tr class="odd">
+<td><code>api-urlretrieve</code></td>
+<td>api</td>
+<td>—</td>
+<td>Yes</td>
+<td>Direct file download bypasses the cache.</td>
+</tr>
+<tr class="even">
+<td><code>api-wbdata</code></td>
+<td>api</td>
+<td>—</td>
+<td>Yes</td>
+<td>Direct wbdata call.</td>
+</tr>
+<tr class="odd">
+<td><code>api-wbgapi</code></td>
+<td>api</td>
+<td>—</td>
+<td>Yes</td>
+<td>Direct wbgapi call.</td>
+</tr>
+<tr class="even">
+<td><code>api-wbstats</code></td>
+<td>api</td>
+<td>Yes</td>
+<td>—</td>
+<td>Direct wbstats call.</td>
+</tr>
+<tr class="odd">
+<td><code>io-dta</code></td>
+<td>io</td>
+<td>Yes</td>
+<td>—</td>
+<td>Direct Stata .dta read / write.</td>
+</tr>
+<tr class="even">
+<td><code>io-fread</code></td>
+<td>io</td>
+<td>Yes</td>
+<td>—</td>
+<td>Direct data.table fread / fwrite.</td>
+</tr>
+<tr class="odd">
+<td><code>io-json</code></td>
+<td>io</td>
+<td>—</td>
+<td>Yes</td>
+<td>Direct JSON dump / load on a file handle.</td>
+</tr>
+<tr class="even">
+<td><code>io-json-file</code></td>
+<td>io</td>
+<td>Yes</td>
+<td>—</td>
+<td>Direct JSON file read / write.</td>
+</tr>
+<tr class="odd">
+<td><code>io-load-save</code></td>
+<td>io</td>
+<td>Yes</td>
+<td>—</td>
+<td>Direct save() / load() for .RData.</td>
+</tr>
+<tr class="even">
+<td><code>io-open-write</code></td>
+<td>io</td>
+<td>—</td>
+<td>Yes</td>
+<td>Raw open(…) for IO.</td>
+</tr>
+<tr class="odd">
+<td><code>io-parquet</code></td>
+<td>io</td>
+<td>Yes</td>
+<td>—</td>
+<td>Direct Parquet read / write.</td>
+</tr>
+<tr class="even">
+<td><code>io-pickle</code></td>
+<td>io</td>
+<td>—</td>
+<td>Yes</td>
+<td>Direct pickle dump / load.</td>
+</tr>
+<tr class="odd">
+<td><code>io-rds</code></td>
+<td>io</td>
+<td>Yes</td>
+<td>—</td>
+<td>Direct RDS read / write.</td>
+</tr>
+<tr class="even">
+<td><code>io-read-csv</code></td>
+<td>io</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>R: Direct CSV read. Python: Direct CSV read via pandas.</td>
+</tr>
+<tr class="odd">
+<td><code>io-read-excel</code></td>
+<td>io</td>
+<td>—</td>
+<td>Yes</td>
+<td>Direct Excel read.</td>
+</tr>
+<tr class="even">
+<td><code>io-read-parquet</code></td>
+<td>io</td>
+<td>—</td>
+<td>Yes</td>
+<td>Direct Parquet read.</td>
+</tr>
+<tr class="odd">
+<td><code>io-read-stata</code></td>
+<td>io</td>
+<td>—</td>
+<td>Yes</td>
+<td>Direct Stata .dta read.</td>
+</tr>
+<tr class="even">
+<td><code>io-to-csv</code></td>
+<td>io</td>
+<td>—</td>
+<td>Yes</td>
+<td>Direct CSV write via pandas .to_csv().</td>
+</tr>
+<tr class="odd">
+<td><code>io-to-excel</code></td>
+<td>io</td>
+<td>—</td>
+<td>Yes</td>
+<td>Direct Excel write.</td>
+</tr>
+<tr class="even">
+<td><code>io-to-parquet</code></td>
+<td>io</td>
+<td>—</td>
+<td>Yes</td>
+<td>Direct Parquet write.</td>
+</tr>
+<tr class="odd">
+<td><code>io-to-stata</code></td>
+<td>io</td>
+<td>—</td>
+<td>Yes</td>
+<td>Direct Stata .dta write.</td>
+</tr>
+<tr class="even">
+<td><code>io-write-csv</code></td>
+<td>io</td>
+<td>Yes</td>
+<td>—</td>
+<td>Direct CSV write.</td>
+</tr>
+<tr class="odd">
+<td><code>io-xlsx</code></td>
+<td>io</td>
+<td>Yes</td>
+<td>—</td>
+<td>Direct Excel read / write / sheet-enumeration.</td>
+</tr>
+<tr class="even">
+<td><code>io-yaml</code></td>
+<td>io</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Direct YAML read / write.</td>
+</tr>
+</tbody>
+</table>
+<p>R has 16 rules and Python 19; ids are shared where the call is the same in spirit, so a <code># cso-allow:</code> directive reads the same in both.</p>
+<p>The two registries differ because the raw calls differ by ecosystem. The R rules target base R and the tidyverse, data.table, haven, readxl / openxlsx / writexl, arrow, jsonlite, yaml, httr / httr2, rsdmx, wbstats, Rilostat and curl. They catch both the bare and the namespaced form of a call (<code>read_csv(</code> and <code>readr::read_csv(</code>), and use a negative lookbehind so that <code>my_read_csv(</code> or <code>dw_save(</code> does not match. A few rules reach further than their names suggest: <code>io-xlsx</code> also flags sheet enumeration (<code>getSheetNames</code>, <code>excel_sheets</code>, <code>loadWorkbook</code>), because <code>dw_use(sheet = NULL)</code> reads all sheets; <code>io-load-save</code> flags any <code>save(</code> or <code>load(</code>; <code>api-httr</code> flags <code>GET</code>, <code>POST</code>, <code>PUT</code>, <code>PATCH</code>, <code>DELETE</code> and httr2’s <code>request</code>; and <code>api-download</code> flags <code>download.file</code> and curl’s <code>curl_download</code>, <code>curl_fetch_memory</code> and <code>curl_fetch_disk</code>.</p>
+<p>The Python rules target pandas (<code>read_*</code> and the <code>.to_*</code> methods), pickle, json, yaml, requests, httpx (including <code>Client</code> and <code>AsyncClient</code>), urllib, sdmx, wbgapi and wbdata. <code>io-json</code> flags <code>json.dump</code> and <code>json.load</code> on file handles, not <code>json.dumps</code> or <code>json.loads</code> on strings. <code>io-open-write</code> is a heuristic: it flags <code>open()</code> called with an explicit mode, read or write, as <code>open(&lt;path&gt;, "&lt;mode&gt;")</code> or <code>open(..., mode="&lt;mode&gt;")</code>, and leaves <code>open(path)</code> with no mode alone; its suggestion notes that a raw <code>open()</code> is fine for scratch files but should not touch warehouse paths.</p>
+</section>
+<section id="extending-the-rule-set" class="level3" data-number="11.7.3">
+<h3 data-number="11.7.3" class="anchored" data-anchor-id="extending-the-rule-set"><span class="header-section-number">11.7.3</span> Extending the rule set</h3>
+<p>Both implementations accept <code>custom_rules</code>, merged with the built-in registry. A consumer repository that wraps another data source adds a rule for it without editing the toolkit. Each custom rule supplies the same five fields.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content">
+<div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>my_rules <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">id      =</span> <span class="st">"api-mysource"</span>,</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>       <span class="at">family  =</span> <span class="st">"api"</span>,</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>       <span class="at">pattern =</span> <span class="st">"(?&lt;![a-zA-Z0-9_.])mysource_fetch</span><span class="sc">\\</span><span class="st">s*</span><span class="sc">\\</span><span class="st">("</span>,</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>       <span class="at">message =</span> <span class="st">"Direct mysource_fetch call bypasses the cache."</span>,</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>       <span class="at">suggest =</span> <span class="st">"dw_api_fetch(api = 'mysource', cache_key = ...)"</span>)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="fu">test_scripts</span>(<span class="st">"01_dw_prep"</span>, <span class="at">custom_rules =</span> my_rules)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> cso_toolkit.test_scripts <span class="im">import</span> _Rule, test_scripts</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>my_rules <span class="op">=</span> [</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    _Rule(</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>        <span class="bu">id</span><span class="op">=</span><span class="st">"api-mysource"</span>, family<span class="op">=</span><span class="st">"api"</span>,</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>        pattern<span class="op">=</span><span class="vs">r"</span><span class="dv">\b</span><span class="vs">mysource_fetch</span><span class="dv">\s</span><span class="op">*</span><span class="ch">\(</span><span class="vs">"</span>,</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>        message<span class="op">=</span><span class="st">"Direct mysource_fetch call bypasses the cache."</span>,</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>        suggest<span class="op">=</span><span class="st">"dw_api_fetch(api='mysource', cache_key=...)"</span>,</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>test_scripts(<span class="st">"01_dw_prep"</span>, custom_rules<span class="op">=</span>my_rules)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<p>A custom rule under some other family is reported but never fails a build, which makes it a way to add advisory checks.</p>
+</section>
+<section id="reporting-and-the-build-gate" class="level3" data-number="11.7.4">
+<h3 data-number="11.7.4" class="anchored" data-anchor-id="reporting-and-the-build-gate"><span class="header-section-number">11.7.4</span> Reporting and the build gate</h3>
+<p>With the default <code>verbose = TRUE</code>, the auditor prints a fixed-format block: a header, the file count, the violation count, then one stanza per violation with the rule id, file and line, message, offending line and suggested replacement. (It shows every column except <code>family</code>, which only governs the gate.) A clean run prints <code>[OK] Clean.</code>. The format is the same in both languages.</p>
+<pre class="text"><code>cso-toolkit contract audit
+------------------------------------------------------------------------
+Files scanned : 14
+Violations    : 1
+
+[io-read-csv] 01_dw_prep/012_codes/nt/build.R:42
+  Direct CSV read.
+  &gt; df &lt;- read_csv("raw/nt.csv")
+  -&gt; dw_use(name = ..., sector = ..., kind = ...)
+------------------------------------------------------------------------</code></pre>
+<p>By default the function only reports. The gate is <code>error_on_violation</code>. When it is <code>TRUE</code> and at least one violation belongs to the <code>io</code> or <code>api</code> family, the function raises after printing, with the toolkit’s error envelope: the <code>[cso_toolkit.test_scripts]</code> prefix, the number of violations and files, up to five offending files (with “and N more”), and a <code>Fix:</code> line that says to replace the raw call with its wrapper or annotate a legitimate exception with <code># cso-allow:</code>. In R this is a <code>stop()</code>, in Python a <code>RuntimeError</code>; either way the process exits non-zero, which is what a CI runner needs to mark the step failed.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content">
+<div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Interactive: report only, inspect the frame.</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>v <span class="ot">&lt;-</span> <span class="fu">test_scripts</span>(<span class="st">"01_dw_prep/012_codes"</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># CI gate: stop (non-zero exit) on any io/api violation.</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="fu">test_scripts</span>(<span class="st">"01_dw_prep/012_codes"</span>, <span class="at">error_on_violation =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Interactive: report only, inspect the frame.</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>v <span class="op">=</span> test_scripts(<span class="st">"01_dw_prep/012_codes"</span>)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co"># CI gate: raise RuntimeError (non-zero exit) on any io/api violation.</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>test_scripts(<span class="st">"01_dw_prep/012_codes"</span>, error_on_violation<span class="op">=</span><span class="va">True</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+</section>
+<section id="exceptions-cso-allow" class="level3" data-number="11.7.5">
+<h3 data-number="11.7.5" class="anchored" data-anchor-id="exceptions-cso-allow"><span class="header-section-number">11.7.5</span> Exceptions: <code># cso-allow:</code></h3>
+<p>The contract has principled exceptions. The canonical one is the profile’s own configuration read: a profile reads <code>user_config.yml</code> with a raw <code>yaml::read_yaml()</code> / <code>yaml.safe_load()</code> because it bootstraps the configuration before any toolkit path resolution exists, and forcing it through <code>dw_use()</code> would be circular (<a href="../chapters/profiles-and-modes.html">Profiles and the mode switch</a>).</p>
+<p>For those, append <code># cso-allow: &lt;rule-id&gt;</code> to the line. The auditor skips exactly the named rules on that one line; every other rule still applies to it, and every other line is still scanned. Several ids can be listed, comma-separated.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-5-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-1" role="tab" aria-controls="tabset-5-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-5-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-2" role="tab" aria-controls="tabset-5-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content">
+<div id="tabset-5-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-5-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Profile bootstrap: the one routine legitimate raw YAML read.</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>config <span class="ot">&lt;-</span> yaml<span class="sc">::</span><span class="fu">read_yaml</span>(config_path)  <span class="co"># cso-allow: io-yaml</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Silence two rules on one line:</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(p)  <span class="co"># cso-allow: io-read-csv, io-write-csv</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="tabset-5-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Profile bootstrap: the one routine legitimate raw YAML read.</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> <span class="bu">open</span>(config_path, encoding<span class="op">=</span><span class="st">"utf-8"</span>) <span class="im">as</span> _f:</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    user_config <span class="op">=</span> yaml.safe_load(_f)  <span class="co"># cso-allow: io-yaml</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Silence two rules on one line:</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> pd.read_csv(p)  <span class="co"># cso-allow: io-read-csv, io-to-csv</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<p>The generated profiles already carry these annotations, and so do a few toolkit files (the CSV read in <code>generate_markdown_report</code>, the fixture reader in the testthat skeleton). Two rules of discipline follow. An allow is line-scoped and rule-scoped: it never silences a whole file or a whole rule, so a stray comment cannot quietly disable the contract for a folder. And an allow is a documented exception, not a convenience: it marks a call that genuinely cannot go through a wrapper, and it asks for the reviewer’s attention rather than dodging it.</p>
+</section>
+<section id="false-positives-and-limits" class="level3" data-number="11.7.6">
+<h3 data-number="11.7.6" class="anchored" data-anchor-id="false-positives-and-limits"><span class="header-section-number">11.7.6</span> False positives and limits</h3>
+<p>Because the auditor matches text, it misfires in predictable ways.</p>
+<ul>
+<li><strong>Same name, different function.</strong> In R, any function called <code>request(</code>, <code>save(</code> or <code>load(</code> matches, whatever package it comes from. Both languages’ patterns start at a name boundary, so <code>my_read_csv(</code> or <code>pl.read_csv(</code> (polars) does not match <code>io-read-csv</code>, but a bare call with a rule’s name does. Rename the project function, or mark a genuine exception with <code># cso-allow:</code>.</li>
+<li><strong>Aliases hide calls.</strong> <code>import wbgapi as wb</code> followed by <code>wb.data.DataFrame(...)</code> is not caught; <code>api-wbgapi</code> sees only the full module name. The same holds for any call reached through an alias or a variable.</li>
+<li><strong>Only a literal URL counts for <code>api-fromjson-url</code>.</strong> Lines are matched after string literals are blanked, so this one rule is matched against the raw line instead: <code>fromJSON("https://…")</code> is flagged, but <code>fromJSON(url)</code>, with the URL in a variable, is not. Use <code>dw_api_fetch(api = 'json_get', ...)</code> either way. A custom rule that needs to look inside a string can do the same with <code>raw = TRUE</code>.</li>
+<li><strong>It cannot judge a correct call.</strong> A lexical scan cannot tell whether a <code>dw_save()</code> uses the right <code>sector</code> or <code>isid</code>. It removes the most common, most mechanical failure, a raw call written by hand; it does not replace review.</li>
+</ul>
+</section>
+<section id="using-it-in-ci" class="level3" data-number="11.7.7">
+<h3 data-number="11.7.7" class="anchored" data-anchor-id="using-it-in-ci"><span class="header-section-number">11.7.7</span> Using it in CI</h3>
+<p>In a repository created by the scaffolders, the auditor is already wired: the <code>contract-audit</code> check runs the vendored <code>test_scripts()</code> over <code>AUDIT_PATHS</code> on every <code>sh tools/check</code>, and so before every push through the check record. To run it on GitHub too, copy <code>templates/workflows/ci-contract-audit.yml</code> to <code>.github/workflows/</code> (or create the repository with <code>workflows = TRUE</code>). It runs the same command you can run locally:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">Rscript</span> <span class="at">--no-init-file</span> tools/check.R <span class="at">--only</span> contract-audit,vintage</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>A repository without <code>tools/check.R</code> can call the auditor directly. The job below uses the helpers vendored in <code>00_functions/</code>, the exact code the repository runs, rather than installing the toolkit from GitHub, and lets the non-zero exit fail the build. Like the templates, it runs on manual runs and pull requests into <code>main</code>.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-6-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-1" role="tab" aria-controls="tabset-6-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-6-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-2" role="tab" aria-controls="tabset-6-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content">
+<div id="tabset-6-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-6-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> contract-audit</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">on</span><span class="kw">:</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">workflow_dispatch</span><span class="kw">:</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">pull_request</span><span class="kw">:</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">branches</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">main</span><span class="kw">]</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="fu">permissions</span><span class="kw">:</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">contents</span><span class="kw">:</span><span class="at"> read</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="fu">jobs</span><span class="kw">:</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">audit</span><span class="kw">:</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">name</span><span class="kw">:</span><span class="at"> contract audit</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">runs-on</span><span class="kw">:</span><span class="at"> ubuntu-latest</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">steps</span><span class="kw">:</span></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> actions/checkout@v4</span></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> r-lib/actions/setup-r@v2</span></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">with</span><span class="kw">:</span></span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">use-public-rspm</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a><span class="co">      # test_scripts() needs base R only; the vendored copy is the one the repo runs.</span></span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Run contract auditor (vendored helpers)</span></span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a><span class="fu">        run</span><span class="kw">: </span><span class="ch">|</span></span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>          Rscript --no-init-file -e 'for (f in c("dw_io.R", "test_scripts.R")) sys.source(file.path("00_functions", f), envir = globalenv()); test_scripts("01_dw_prep", error_on_violation = TRUE)'</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="tabset-6-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-6-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> contract-audit</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">on</span><span class="kw">:</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">workflow_dispatch</span><span class="kw">:</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">pull_request</span><span class="kw">:</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">branches</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">main</span><span class="kw">]</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="fu">permissions</span><span class="kw">:</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">contents</span><span class="kw">:</span><span class="at"> read</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="fu">jobs</span><span class="kw">:</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">audit</span><span class="kw">:</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">name</span><span class="kw">:</span><span class="at"> contract audit</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">runs-on</span><span class="kw">:</span><span class="at"> ubuntu-latest</span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">steps</span><span class="kw">:</span></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> actions/checkout@v4</span></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> actions/setup-python@v5</span></span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">with</span><span class="kw">:</span></span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">python-version</span><span class="kw">:</span><span class="at"> </span><span class="st">"3.11"</span></span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Install the vendored package's dependencies</span></span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">run</span><span class="kw">:</span><span class="at"> pip install pandas numpy</span></span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Run contract auditor (vendored helpers)</span></span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a><span class="fu">        run</span><span class="kw">: </span><span class="ch">|</span></span>
+<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a>          python -c "import sys; sys.path.insert(0, '00_functions'); from cso_toolkit import test_scripts; test_scripts('01_dw_prep', error_on_violation=True)"</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<p>The R job sources <code>dw_io.R</code> before <code>test_scripts.R</code>, as <code>tools/check.R</code> does, because the auditor uses internals defined there. The Python job installs only the package’s own dependencies, pandas and numpy; the vendored package (in <code>00_functions/cso_toolkit/</code>; see <a href="../chapters/vendoring-and-updates.html">Vendoring and updates</a>) imports as <code>cso_toolkit</code> once <code>00_functions/</code> is on the path. Installed rather than vendored, the R package is named <code>csotoolkit</code> and the Python distribution <code>cso-toolkit</code>.</p>
+<p>A few practical notes:</p>
+<ul>
+<li><strong>Keep the audit job separate</strong> from the test or build job, so a contract violation shows as a clearly labelled red check rather than hiding inside a larger failure.</li>
+<li><strong>No credentials needed.</strong> The auditor only reads source text: no network, no database, no data. It is fast and safe on every pull request.</li>
+<li><strong>Scope the path tightly.</strong> Point it at the folder that holds analysis scripts (the sector or prep folder), not the repository root, so vendored code and generated files stay out of scope on top of <code>ignore_dirs</code>.</li>
+<li><strong>The gate fires narrowly.</strong> Only <code>io</code> and <code>api</code> violations fail it, so the build fails on exactly the bypasses the contract forbids.</li>
+<li><strong>Report, then gate.</strong> For more than pass or fail, run the auditor once with <code>error_on_violation = FALSE</code> and write the frame to an artifact (a CSV, or a Markdown table), then run the gate. The first run gives a reviewer the full list with file, line, message and fix; the second turns the build red.</li>
+</ul>
+<p>The toolkit’s own repository tests the auditor rather than running it: <code>r-check.yml</code> runs <code>R CMD check</code> on Ubuntu (release and devel), macOS and Windows, and the suite’s <code>test-test_scripts.R</code> asserts a clean frame on conforming code, catching a direct <code>read_csv</code> and a direct <code>httr::GET</code>, honouring <code># cso-allow:</code>, and raising the envelope under <code>error_on_violation = TRUE</code> and on a missing path.</p>
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Same version, not necessarily the same rules
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>python/pyproject.toml</code> and <code>r/DESCRIPTION</code> declare the same version in each release. That is not a promise that the two registries catch the same calls: R has 16 rules and Python 19, as the table shows. If a rule matters to your contract, check that the vintage you vendored carries it in the language you use. Adding a rule can newly fail a build that was green, so rule-set changes follow the same semantic-versioning discipline as the rest of the API (<a href="../chapters/44-versioning-release.html">Versioning and releases</a>).</p>
+</div>
+</div>
+</section>
+<section id="a-note-on-the-name" class="level3" data-number="11.7.8">
+<h3 data-number="11.7.8" class="anchored" data-anchor-id="a-note-on-the-name"><span class="header-section-number">11.7.8</span> A note on the name</h3>
+<p><code>test_scripts()</code> audits call sites; it is not a unit-test runner, despite a prefix that collides with testthat’s <code>test_*</code> naming. Both packages export <code>dw_test_scripts()</code> as an identical <code>dw_</code>-prefixed alias, and a future release may rename the function to something like <code>dw_audit_scripts()</code>. The aliases of the scaffolders are covered in <a href="../chapters/profiles-and-modes.html">Profiles and the mode switch</a>.</p>
+</section>
+</section>
+<section id="how-the-pieces-fit" class="level2" data-number="11.8">
+<h2 data-number="11.8" class="anchored" data-anchor-id="how-the-pieces-fit"><span class="header-section-number">11.8</span> How the pieces fit</h2>
+<p>The <code>.gitignore</code> keeps data out and the committed sidecars keep their provenance in. A handful of fast checks, none of which needs data, credentials or network, and all of which run on the author’s own machine, turn both, and the contract, into gates a pull request has to pass, and the check record proves they ran on what merges. <code>test_scripts()</code> checks that the analysis code honours the contract; <code>review_profile()</code> checks that the repository is wired to it (<a href="../chapters/profiles-and-modes.html">Profiles and the mode switch</a>). A repository worked on with AI coding agents adds <code>AGENTS.md</code>, which tells every agent to run these checks before it pushes (<a href="../chapters/46-ai-agents.html">Working with AI coding agents</a>).</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+      window.quartoDecorateExternalLinks = function (root) {
+     var links = (root || window.document).querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+          if (!link.classList.contains('no-external-icon')) {
+          }
+        }
+      }
+      };
+      window.quartoDecorateExternalLinks(window.document);
+    // Esc closes the popup (WCAG 1.4.13) and focus leaving both trigger and
+    // popup closes it (WCAG 2.4.11); tippy handles neither for interactive popups.
+    const hideOnEscAndFocusOut = {
+      name: 'hideOnEscAndFocusOut',
+      defaultValue: true,
+      fn(instance) {
+        const dismiss = () => {
+          // A show scheduled by the trigger delay would otherwise reopen it
+          instance.clearDelayTimeouts();
+          instance.hide();
+        };
+        const onKeyDown = (event) => {
+          if (event.key !== 'Escape') {
+            return;
+          }
+          // Keep Esc from also reaching page handlers (e.g. reveal.js overview),
+          // except an open reveal.js slide menu, which Esc should close too.
+          // The menu handles keys only when its keyboard option is on.
+          const menuHandlesEsc = window.Reveal?.getPlugin?.('menu')?.isOpen() &&
+            window.Reveal.getConfig().menu?.keyboard !== false;
+          if (!menuHandlesEsc) {
+            event.stopPropagation();
+          }
+          if (instance.popper.contains(window.document.activeElement)) {
+            // Disabled while refocusing so the focus trigger does not reopen it
+            instance.disable();
+            instance.reference.focus();
+            instance.enable();
+          }
+          dismiss();
+        };
+        const onFocusOut = (event) => {
+          const target = event.relatedTarget;
+          if (target && !instance.reference.contains(target) &&
+              !instance.popper.contains(target)) {
+            dismiss();
+          }
+        };
+        // On the trigger too: a click trigger (code-annotations: select) has no
+        // blur handling. Attached for the instance's lifetime so leaving the
+        // trigger also cancels a show still pending on the trigger delay.
+        instance.reference.addEventListener('focusout', onFocusOut);
+        return {
+          onShow() {
+            window.document.addEventListener('keydown', onKeyDown, true);
+            instance.popper.addEventListener('focusout', onFocusOut);
+          },
+          onHide() {
+            window.document.removeEventListener('keydown', onKeyDown, true);
+            instance.popper.removeEventListener('focusout', onFocusOut);
+          },
+          onDestroy() {
+            instance.reference.removeEventListener('focusout', onFocusOut);
+          },
+        };
+      },
+    };
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+        plugins: [hideOnEscAndFocusOut],
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          // Each band is positioned against its own containing block, which is
+          // not the offsetParent of the lines, so place it from client rects.
+          const placeBand = (band, firstEl, lastEl, codeBlock) => {
+            const container = band.offsetParent;
+            if (container === null) {
+              return;
+            }
+            const containerRect = container.getBoundingClientRect();
+            // Reveal.js scales slides with a transform, so convert client
+            // pixels back to the CSS pixels of the container.
+            const scale = containerRect.height / container.offsetHeight || 1;
+            const firstRect = firstEl.getBoundingClientRect();
+            const lastRect = lastEl.getBoundingClientRect();
+            const top = (firstRect.top - containerRect.top) / scale - container.clientTop + container.scrollTop;
+            const height = (lastRect.bottom - firstRect.top) / scale;
+            band.style.top = top - 2 + "px";
+            band.style.height = height + 4 + "px";
+            if (codeBlock) {
+              // Without the copy button wrapper, the containing block is wider
+              // than the code block, so span the code block explicitly.
+              const blockRect = codeBlock.getBoundingClientRect();
+              band.style.left = (blockRect.left - containerRect.left) / scale - container.clientLeft + container.scrollLeft + "px";
+              band.style.width = blockRect.width / scale + "px";
+            }
+          };
+          if (lineIds.length > 0) {
+            const el = window.document.getElementById(lineIds[0]);
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const parent = el.parentElement.parentElement;
+            // cook up a div (if necessary) and position it
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            placeBand(div, el, lastEl, parent.closest("div.sourceCode") || parent);
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            placeBand(gutterDiv, el, lastEl);
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+  <script type="application/javascript">
+  window.quartoScrollableRegionsLabels = {"code":"Scrollable code","output":"Scrollable output"};
+  </script>
+<nav class="page-navigation" aria-label="Page">
+  <div class="nav-page nav-page-previous">
+      <a href="../chapters/vendoring-and-updates.html" class="pagination-link" aria-label="Vendoring and updates">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Vendoring and updates</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../chapters/46-ai-agents.html" class="pagination-link" aria-label="Working with AI coding agents">
+        <span class="nav-page-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Working with AI coding agents</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>UNICEF Chief Statistician Office — Data &amp; Analytics (OSE)</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/unicef-drp/cso-toolkit/edit/main/book/chapters/checks-and-ci.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/unicef-drp/cso-toolkit/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>Built with <a href="https://quarto.org">Quarto</a></p>
+</div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

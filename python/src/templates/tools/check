@@ -3,7 +3,7 @@
 # tools/check -- run tools/check.R with the right R environment
 # ---------------------------------------------------------------------------
 # Template from unicef-drp/cso-toolkit: templates/tools/check
-# Guidance: docs/ci_cd_guidelines.md; handbook chapter 45 ("Check records").
+# Guidance: docs/ci_cd_guidelines.md; handbook chapter "Checks and CI" ("Check records").
 #
 # From anywhere in the repository:
 #   sh tools/check               # run the checks

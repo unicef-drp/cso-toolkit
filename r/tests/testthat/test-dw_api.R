@@ -116,3 +116,15 @@ test_that("dw_api_fetch(refresh = TRUE) replaces an existing cache in producer m
   prov <- dw_read_provenance(file.path(raw, "_apis", "csv", "k.csv"), verbose = FALSE)
   expect_true(isTRUE(prov$metadata$refresh_flag))
 })
+
+test_that("the reviewer stop says a refresh was asked for when a cache exists (#240)", {
+  raw <- local_tempdir()
+  dir.create(file.path(raw, "_apis", "csv"), recursive = TRUE)
+  writeLines(c("a", "1"), file.path(raw, "_apis", "csv", "k.csv"))
+  local_state(teamsRawData = raw, teamsRawDataCanonical = raw,
+              dw_mode = "reviewer", dw_apis_allowed = FALSE)
+  expect_error(dw_api_fetch("csv", cache_key = "k", url = "x.csv", refresh = TRUE),
+               "refresh requested")
+  expect_error(dw_api_fetch("csv", cache_key = "other", url = "x.csv"),
+               "cache missing")
+})

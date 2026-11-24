@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------
 # 00_functions/dw_io.R
-# Toolkit version: 0.12.0
+# Toolkit version: 0.12.1
 # Purpose: Uniform read/write helpers for DW-Production R scripts.
 # Auto-dispatch by file extension; supports every IO form the
 # sector scripts currently use; enforces the reviewer/producer
@@ -377,7 +377,7 @@ dw_is_canonical <- function(path, debug = NULL) {
 #' rely on a v0.4.0+ contract (e.g. network-first reviewer reads,
 #' mirror-to-both producer writes).
 #'
-#' @return Character. Currently `"0.12.0"`.
+#' @return Character. Currently `"0.12.1"`.
 #'
 #' @examples
 #' if (utils::compareVersion(dw_toolkit_version(), "0.4.0") < 0) {
@@ -392,8 +392,8 @@ dw_is_canonical <- function(path, debug = NULL) {
 #'   See [dw_verbosity()].
 #' @export
 dw_toolkit_version <- function(debug = NULL) {
-	.dw_dbg("dw_toolkit_version", "vendored tag = 0.12.0", d = .dw_d(debug))
-	"0.12.0"
+	.dw_dbg("dw_toolkit_version", "vendored tag = 0.12.1", d = .dw_d(debug))
+	"0.12.1"
 }
 
 # ============================================================================
@@ -975,7 +975,7 @@ dw_save <- function(x,
 			"[cso_toolkit.dw_save] `mirror_to_z` argument is deprecated in v0.4.0; ",
 			"producer-mode mirroring is now automatic (controlled by which ",
 			"remote roots the profile makes available). The argument is ",
-			"ignored; will be removed in v0.5.0.",
+			"ignored; drop it from the call.",
 			call. = FALSE
 		)
 		dots$mirror_to_z <- NULL

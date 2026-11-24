@@ -29,24 +29,25 @@ It is also not the warehouse handbook. The companion *DW-Production* handbook do
 
 The book is written for several audiences at once, and most readers will live in one or two parts of it rather than reading front to back:
 
-- **Database managers (producers)** who run sector pipelines, pull upstream APIs, and deposit canonical files. The contract — the roles, the mode that governs network access, the provenance sidecars — is your daily working environment, and Part II describes it.
-- **Reviewers** who re-run a pipeline from pre-deposited inputs and compare the result against the canonical deposit. The same mode contract governs your work, with the network deliberately unreachable; Part II explains why that constraint is enforced rather than merely advised.
-- **Publishers** who move signed-off deposits into downstream products. The role boundaries in Part II tell you where the toolkit's guarantees end and the publication infrastructure begins.
-- **Peer-institution adopters** — maintainers of other deposit-bearing repositories who want to vendor the toolkit into their own codebase and keep it in sync. Part IV is written for you, and it assumes the role and mode concepts from Part II.
+- **Database managers (producers)** who run sector pipelines, pull upstream APIs, and deposit canonical files. The contract — the roles, the mode that governs network access, the provenance sidecars — is your daily working environment, and Part I describes it.
+- **Reviewers** who re-run a pipeline from pre-deposited inputs and compare the result against the canonical deposit. The same mode contract governs your work, with the network deliberately unreachable; Part I explains why that constraint is enforced rather than merely advised.
+- **Publishers** who move signed-off deposits into downstream products. The role boundaries in Part I tell you where the toolkit's guarantees end and the publication infrastructure begins.
+- **Peer-institution adopters** — maintainers of other deposit-bearing repositories who want to vendor the toolkit into their own codebase and keep it in sync. Part III is written for you, and it assumes the role and mode concepts from Part I.
 
-Analysts and sector teams who simply need to read, write, and aggregate data the CSO way are served by Part III, which is the reference for that daily work in all three languages.
+Analysts and sector teams who simply need to read, write, and aggregate data the CSO way are served by Part II, which is the reference for that daily work in all three languages.
 
 ## How to read it
 
-The handbook is organised into four parts and a set of appendices.
+The handbook is organised into six parts and a set of appendices.
 
-- **Part I — Why & Architecture** motivates the toolkit and lays out its shape: one contract, three language siblings, many consumer repositories, and a single canonical deposit. Start here for the big picture.
-- **Part II — The Contract** is the conceptual core: the three roles, the session-level mode that governs network access, how that contract is wired into a repository, and the two cross-cutting mechanisms — provenance sidecars and the standard error envelope — that make the toolkit trustworthy.
-- **Part III — The API (cross-language)** is the daily reference, one chapter per capability family: IO, the external-API contract, aggregation, vintage sync, and scaffolding with the contract auditor. Every chapter presents R, Python, and Stata side by side and is explicit about coverage gaps.
-- **Part IV — Adoption & Operations** is for adopters and maintainers: the vendoring model, a worked onboarding example, running the contract auditor in CI, and the project's versioning and release discipline.
-- **Appendices** collect the dense reference material: the coverage matrix (A), the provenance sidecar schema (B), the error taxonomy (C), a full function reference (D), and a glossary (E).
+- **Part I — The Contract** motivates the toolkit and lays out its shape (one contract, three language siblings, many consumer repositories, one canonical deposit), then defines the three roles, the session-level mode that governs network access, and the two cross-cutting mechanisms — provenance sidecars and the standard error envelope — that make the toolkit trustworthy.
+- **Part II — Using the Helpers** is the daily reference, one chapter per capability family: reading and writing data, external APIs, and aggregation, with R, Python and Stata side by side.
+- **Part III — Setting Up and Running a Repository** is for adopters: starting a repository or adopting the toolkit in an existing one, profiles and the mode switch, vendoring and updates, checks and CI, and working with AI coding agents.
+- **Part IV — Maintaining the Toolkit** is for the toolkit's maintainers and contributors: versioning and the release discipline, how the three languages are certified to agree, and how to contribute a change.
+- **Parts V and VI** document the microdata archive (datalib) and the wider ecosystem of shared code.
+- **Appendices** collect the dense reference material: the coverage matrix (A), the provenance sidecar schema (B), the error taxonomy (C), a function reference (D), a glossary (E), and curated third-party functions (F).
 
-If you are new, read the architecture chapter in Part I and the roles chapter in Part II, then turn to the IO chapter in Part III. Those three give you enough to use the toolkit safely. If you are here to adopt it into a new repository, begin with the vendoring and onboarding chapters in Part IV, keeping the roles chapter to hand.
+If you are new, read the architecture and roles chapters in Part I, then the reading-and-writing chapter in Part II. Those three give you enough to use the toolkit safely. If you are here to start a repository or adopt the toolkit in an existing one, begin with "Starting a repository" in Part III, keeping the roles chapter to hand.
 
 ## A note on authorship
 

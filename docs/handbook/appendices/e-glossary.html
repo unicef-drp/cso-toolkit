@@ -26,41 +26,6 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
-/* CSS for syntax highlighting */
-html { -webkit-text-size-adjust: 100%; }
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-}
 </style>
 
 
@@ -202,19 +167,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-controls="quarto-sidebar-section-1" aria-expanded="true">
- <span class="menu-text" id="quarto-sidebar-section-1-label">Part I — Why &amp; Architecture</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+ <span class="menu-text" id="quarto-sidebar-section-1-label">Part I — The Contract</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
       </div>
       <ul id="quarto-sidebar-section-1" aria-labelledby="quarto-sidebar-section-1-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/11-why.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Why a toolkit</span></span></a>
+  <a href="../chapters/why-and-architecture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Why a toolkit, and how it fits together</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/12-architecture.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Architecture: one contract, three languages, many consumers</span></span></a>
+  <a href="../chapters/21-roles-and-modes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Roles and the mode contract</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/23-provenance-and-errors.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Provenance sidecars and the error envelope</span></span></a>
   </div>
 </li>
       </ul>
@@ -222,25 +193,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-controls="quarto-sidebar-section-2" aria-expanded="true">
- <span class="menu-text" id="quarto-sidebar-section-2-label">Part II — The Contract</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+ <span class="menu-text" id="quarto-sidebar-section-2-label">Part II — Using the Helpers</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
       </div>
       <ul id="quarto-sidebar-section-2" aria-labelledby="quarto-sidebar-section-2-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/21-roles-and-modes.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Roles and the mode contract</span></span></a>
+  <a href="../chapters/31-io.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">The IO contract</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/22-wiring-the-contract.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Wiring the contract into a repo</span></span></a>
+  <a href="../chapters/32-external-api.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">The external-API contract</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/23-provenance-and-errors.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Provenance sidecars and the error envelope</span></span></a>
+  <a href="../chapters/33-aggregation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Aggregation</span></span></a>
   </div>
 </li>
       </ul>
@@ -248,37 +219,37 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-controls="quarto-sidebar-section-3" aria-expanded="true">
- <span class="menu-text" id="quarto-sidebar-section-3-label">Part III — The API (cross-language)</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+ <span class="menu-text" id="quarto-sidebar-section-3-label">Part III — Setting Up and Running a Repository</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
       </div>
       <ul id="quarto-sidebar-section-3" aria-labelledby="quarto-sidebar-section-3-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/31-io.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">The IO contract</span></span></a>
+  <a href="../chapters/40-new-repository.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Starting a repository</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/32-external-api.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">The external-API contract</span></span></a>
+  <a href="../chapters/profiles-and-modes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Profiles and the mode switch</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/33-aggregation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Aggregation</span></span></a>
+  <a href="../chapters/vendoring-and-updates.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Vendoring and updates</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/34-vintage-sync.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Vintage sync</span></span></a>
+  <a href="../chapters/checks-and-ci.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Checks and CI</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/35-scaffolding-audit.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Scaffolding and the contract auditor</span></span></a>
+  <a href="../chapters/46-ai-agents.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Working with AI coding agents</span></span></a>
   </div>
 </li>
       </ul>
@@ -286,49 +257,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-controls="quarto-sidebar-section-4" aria-expanded="true">
- <span class="menu-text" id="quarto-sidebar-section-4-label">Part IV — Adoption &amp; Operations</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+ <span class="menu-text" id="quarto-sidebar-section-4-label">Part IV — Maintaining the Toolkit</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
       </div>
       <ul id="quarto-sidebar-section-4" aria-labelledby="quarto-sidebar-section-4-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/40-new-repository.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Starting a new repository</span></span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../chapters/41-vendoring.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">The vendoring model</span></span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../chapters/42-onboarding-example.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Onboarding a repo: a worked example</span></span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../chapters/43-contract-auditor-ci.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">The contract auditor in continuous integration (CI)</span></span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
   <a href="../chapters/44-versioning-release.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Versioning and releases</span></span></a>
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Versioning and releases</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/45-ci-cd.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Continuous integration and repository hygiene</span></span></a>
+  <a href="../chapters/parity.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">How the three languages stay in step</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/46-ai-agents.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Working with AI coding agents</span></span></a>
+  <a href="../chapters/contributing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Contributing</span></span></a>
   </div>
 </li>
       </ul>
@@ -342,19 +289,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/51-microdata-archive.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">The microdata archive: archive, catalogue, tool</span></span></a>
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">The microdata archive: archive, catalogue, tool</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/52-ihsn-grammar.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">The IHSN convention and the folder grammar</span></span></a>
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">The IHSN convention and the folder grammar</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/53-datalib-api-conformance.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">The <code>datalib_*</code> API and its conformance suite</span></span></a>
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">The <code>datalib_*</code> API and its conformance suite</span></span></a>
   </div>
 </li>
       </ul>
@@ -368,13 +315,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/61-ecosystem.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">The UNICEF analytics ecosystem: three tiers</span></span></a>
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">The UNICEF analytics ecosystem: three tiers</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/62-unicefdata.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">unicefData: public child statistics in three languages</span></span></a>
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">unicefData: public child statistics in three languages</span></span></a>
   </div>
 </li>
       </ul>
@@ -421,12 +368,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text"><span class="chapter-number">F</span>&nbsp; <span class="chapter-title">Curated third-party functions</span></span></a>
   </div>
 </li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../appendices/g-parity-certificate.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">G</span>&nbsp; <span class="chapter-title">Cross-language parity</span></span></a>
-  </div>
-</li>
       </ul>
   </li>
     </ul>
@@ -443,44 +384,46 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#aggregation-contract" id="toc-aggregation-contract" class="nav-link" data-scroll-target="#aggregation-contract"><span class="header-section-number">E.2</span> Aggregation contract</a></li>
   <li><a href="#cache-key" id="toc-cache-key" class="nav-link" data-scroll-target="#cache-key"><span class="header-section-number">E.3</span> Cache key</a></li>
   <li><a href="#canonical-deposit" id="toc-canonical-deposit" class="nav-link" data-scroll-target="#canonical-deposit"><span class="header-section-number">E.4</span> Canonical deposit</a></li>
-  <li><a href="#collection" id="toc-collection" class="nav-link" data-scroll-target="#collection"><span class="header-section-number">E.5</span> Collection</a></li>
-  <li><a href="#contract-auditor" id="toc-contract-auditor" class="nav-link" data-scroll-target="#contract-auditor"><span class="header-section-number">E.6</span> Contract auditor</a></li>
-  <li><a href="#coverage-threshold" id="toc-coverage-threshold" class="nav-link" data-scroll-target="#coverage-threshold"><span class="header-section-number">E.7</span> Coverage threshold</a></li>
-  <li><a href="#cross-language-parity" id="toc-cross-language-parity" class="nav-link" data-scroll-target="#cross-language-parity"><span class="header-section-number">E.8</span> Cross-language parity</a></li>
-  <li><a href="#data-steward" id="toc-data-steward" class="nav-link" data-scroll-target="#data-steward"><span class="header-section-number">E.9</span> Data Steward</a></li>
-  <li><a href="#dbm-dbr-dbp" id="toc-dbm-dbr-dbp" class="nav-link" data-scroll-target="#dbm-dbr-dbp"><span class="header-section-number">E.10</span> DBM / DBR / DBP</a></li>
-  <li><a href="#deposit-check" id="toc-deposit-check" class="nav-link" data-scroll-target="#deposit-check"><span class="header-section-number">E.11</span> Deposit check</a></li>
-  <li><a href="#domain" id="toc-domain" class="nav-link" data-scroll-target="#domain"><span class="header-section-number">E.12</span> Domain</a></li>
-  <li><a href="#dw_apis_allowed" id="toc-dw_apis_allowed" class="nav-link" data-scroll-target="#dw_apis_allowed"><span class="header-section-number">E.13</span> <code>dw_apis_allowed</code></a></li>
-  <li><a href="#dw_mode" id="toc-dw_mode" class="nav-link" data-scroll-target="#dw_mode"><span class="header-section-number">E.14</span> <code>dw_mode</code></a></li>
-  <li><a href="#error-envelope" id="toc-error-envelope" class="nav-link" data-scroll-target="#error-envelope"><span class="header-section-number">E.15</span> Error envelope</a></li>
-  <li><a href="#external-api-contract" id="toc-external-api-contract" class="nav-link" data-scroll-target="#external-api-contract"><span class="header-section-number">E.16</span> External-API contract</a></li>
-  <li><a href="#frozen-cache" id="toc-frozen-cache" class="nav-link" data-scroll-target="#frozen-cache"><span class="header-section-number">E.17</span> Frozen cache</a></li>
-  <li><a href="#https-url-freeze" id="toc-https-url-freeze" class="nav-link" data-scroll-target="#https-url-freeze"><span class="header-section-number">E.18</span> HTTPS-URL freeze</a></li>
-  <li><a href="#ihsn-convention" id="toc-ihsn-convention" class="nav-link" data-scroll-target="#ihsn-convention"><span class="header-section-number">E.19</span> IHSN convention</a></li>
-  <li><a href="#input-manifest" id="toc-input-manifest" class="nav-link" data-scroll-target="#input-manifest"><span class="header-section-number">E.20</span> Input manifest</a></li>
-  <li><a href="#io-contract" id="toc-io-contract" class="nav-link" data-scroll-target="#io-contract"><span class="header-section-number">E.21</span> IO contract</a></li>
-  <li><a href="#isid" id="toc-isid" class="nav-link" data-scroll-target="#isid"><span class="header-section-number">E.22</span> <code>isid</code></a></li>
-  <li><a href="#manifest-.toolkit_manifest.yml" id="toc-manifest-.toolkit_manifest.yml" class="nav-link" data-scroll-target="#manifest-.toolkit_manifest.yml"><span class="header-section-number">E.23</span> Manifest (<code>.toolkit_manifest.yml</code>)</a></li>
-  <li><a href="#master-vintage" id="toc-master-vintage" class="nav-link" data-scroll-target="#master-vintage"><span class="header-section-number">E.24</span> Master vintage</a></li>
-  <li><a href="#microdata-archive" id="toc-microdata-archive" class="nav-link" data-scroll-target="#microdata-archive"><span class="header-section-number">E.25</span> Microdata archive</a></li>
-  <li><a href="#microdata-catalogue" id="toc-microdata-catalogue" class="nav-link" data-scroll-target="#microdata-catalogue"><span class="header-section-number">E.26</span> Microdata catalogue</a></li>
-  <li><a href="#mode-contract" id="toc-mode-contract" class="nav-link" data-scroll-target="#mode-contract"><span class="header-section-number">E.27</span> Mode contract</a></li>
-  <li><a href="#module" id="toc-module" class="nav-link" data-scroll-target="#module"><span class="header-section-number">E.28</span> Module</a></li>
-  <li><a href="#producer" id="toc-producer" class="nav-link" data-scroll-target="#producer"><span class="header-section-number">E.29</span> Producer</a></li>
-  <li><a href="#provenance-sidecar" id="toc-provenance-sidecar" class="nav-link" data-scroll-target="#provenance-sidecar"><span class="header-section-number">E.30</span> Provenance sidecar</a></li>
-  <li><a href="#publisher" id="toc-publisher" class="nav-link" data-scroll-target="#publisher"><span class="header-section-number">E.31</span> Publisher</a></li>
-  <li><a href="#review-gate" id="toc-review-gate" class="nav-link" data-scroll-target="#review-gate"><span class="header-section-number">E.32</span> Review gate</a></li>
-  <li><a href="#reviewer" id="toc-reviewer" class="nav-link" data-scroll-target="#reviewer"><span class="header-section-number">E.33</span> Reviewer</a></li>
-  <li><a href="#sandbox-sandboxroot" id="toc-sandbox-sandboxroot" class="nav-link" data-scroll-target="#sandbox-sandboxroot"><span class="header-section-number">E.34</span> Sandbox / <code>sandboxRoot</code></a></li>
-  <li><a href="#scaffolding" id="toc-scaffolding" class="nav-link" data-scroll-target="#scaffolding"><span class="header-section-number">E.35</span> Scaffolding</a></li>
-  <li><a href="#sentinel-object" id="toc-sentinel-object" class="nav-link" data-scroll-target="#sentinel-object"><span class="header-section-number">E.36</span> Sentinel object</a></li>
-  <li><a href="#staging-area" id="toc-staging-area" class="nav-link" data-scroll-target="#staging-area"><span class="header-section-number">E.37</span> Staging area</a></li>
-  <li><a href="#stock-and-flow" id="toc-stock-and-flow" class="nav-link" data-scroll-target="#stock-and-flow"><span class="header-section-number">E.38</span> Stock and flow</a></li>
-  <li><a href="#vendoring" id="toc-vendoring" class="nav-link" data-scroll-target="#vendoring"><span class="header-section-number">E.39</span> Vendoring</a></li>
-  <li><a href="#vintage" id="toc-vintage" class="nav-link" data-scroll-target="#vintage"><span class="header-section-number">E.40</span> Vintage</a></li>
-  <li><a href="#vintage-sync" id="toc-vintage-sync" class="nav-link" data-scroll-target="#vintage-sync"><span class="header-section-number">E.41</span> Vintage sync</a></li>
-  <li><a href="#z-mirror" id="toc-z-mirror" class="nav-link" data-scroll-target="#z-mirror"><span class="header-section-number">E.42</span> Z: mirror</a></li>
+  <li><a href="#check-record" id="toc-check-record" class="nav-link" data-scroll-target="#check-record"><span class="header-section-number">E.5</span> Check record</a></li>
+  <li><a href="#collaboration-model" id="toc-collaboration-model" class="nav-link" data-scroll-target="#collaboration-model"><span class="header-section-number">E.6</span> Collaboration model</a></li>
+  <li><a href="#collection" id="toc-collection" class="nav-link" data-scroll-target="#collection"><span class="header-section-number">E.7</span> Collection</a></li>
+  <li><a href="#contract-auditor" id="toc-contract-auditor" class="nav-link" data-scroll-target="#contract-auditor"><span class="header-section-number">E.8</span> Contract auditor</a></li>
+  <li><a href="#coverage-threshold" id="toc-coverage-threshold" class="nav-link" data-scroll-target="#coverage-threshold"><span class="header-section-number">E.9</span> Coverage threshold</a></li>
+  <li><a href="#cross-language-parity" id="toc-cross-language-parity" class="nav-link" data-scroll-target="#cross-language-parity"><span class="header-section-number">E.10</span> Cross-language parity</a></li>
+  <li><a href="#data-steward" id="toc-data-steward" class="nav-link" data-scroll-target="#data-steward"><span class="header-section-number">E.11</span> Data Steward</a></li>
+  <li><a href="#dbm-dbr-dbp" id="toc-dbm-dbr-dbp" class="nav-link" data-scroll-target="#dbm-dbr-dbp"><span class="header-section-number">E.12</span> DBM / DBR / DBP</a></li>
+  <li><a href="#deposit-check" id="toc-deposit-check" class="nav-link" data-scroll-target="#deposit-check"><span class="header-section-number">E.13</span> Deposit check</a></li>
+  <li><a href="#domain" id="toc-domain" class="nav-link" data-scroll-target="#domain"><span class="header-section-number">E.14</span> Domain</a></li>
+  <li><a href="#dw_apis_allowed" id="toc-dw_apis_allowed" class="nav-link" data-scroll-target="#dw_apis_allowed"><span class="header-section-number">E.15</span> <code>dw_apis_allowed</code></a></li>
+  <li><a href="#dw_mode" id="toc-dw_mode" class="nav-link" data-scroll-target="#dw_mode"><span class="header-section-number">E.16</span> <code>dw_mode</code></a></li>
+  <li><a href="#error-envelope" id="toc-error-envelope" class="nav-link" data-scroll-target="#error-envelope"><span class="header-section-number">E.17</span> Error envelope</a></li>
+  <li><a href="#external-api-contract" id="toc-external-api-contract" class="nav-link" data-scroll-target="#external-api-contract"><span class="header-section-number">E.18</span> External-API contract</a></li>
+  <li><a href="#frozen-cache" id="toc-frozen-cache" class="nav-link" data-scroll-target="#frozen-cache"><span class="header-section-number">E.19</span> Frozen cache</a></li>
+  <li><a href="#https-url-freeze" id="toc-https-url-freeze" class="nav-link" data-scroll-target="#https-url-freeze"><span class="header-section-number">E.20</span> HTTPS-URL freeze</a></li>
+  <li><a href="#ihsn-convention" id="toc-ihsn-convention" class="nav-link" data-scroll-target="#ihsn-convention"><span class="header-section-number">E.21</span> IHSN convention</a></li>
+  <li><a href="#input-manifest" id="toc-input-manifest" class="nav-link" data-scroll-target="#input-manifest"><span class="header-section-number">E.22</span> Input manifest</a></li>
+  <li><a href="#io-contract" id="toc-io-contract" class="nav-link" data-scroll-target="#io-contract"><span class="header-section-number">E.23</span> IO contract</a></li>
+  <li><a href="#isid" id="toc-isid" class="nav-link" data-scroll-target="#isid"><span class="header-section-number">E.24</span> <code>isid</code></a></li>
+  <li><a href="#manifest-.toolkit_manifest.yml" id="toc-manifest-.toolkit_manifest.yml" class="nav-link" data-scroll-target="#manifest-.toolkit_manifest.yml"><span class="header-section-number">E.25</span> Manifest (<code>.toolkit_manifest.yml</code>)</a></li>
+  <li><a href="#master-vintage" id="toc-master-vintage" class="nav-link" data-scroll-target="#master-vintage"><span class="header-section-number">E.26</span> Master vintage</a></li>
+  <li><a href="#microdata-archive" id="toc-microdata-archive" class="nav-link" data-scroll-target="#microdata-archive"><span class="header-section-number">E.27</span> Microdata archive</a></li>
+  <li><a href="#microdata-catalogue" id="toc-microdata-catalogue" class="nav-link" data-scroll-target="#microdata-catalogue"><span class="header-section-number">E.28</span> Microdata catalogue</a></li>
+  <li><a href="#mode-contract" id="toc-mode-contract" class="nav-link" data-scroll-target="#mode-contract"><span class="header-section-number">E.29</span> Mode contract</a></li>
+  <li><a href="#module" id="toc-module" class="nav-link" data-scroll-target="#module"><span class="header-section-number">E.30</span> Module</a></li>
+  <li><a href="#producer" id="toc-producer" class="nav-link" data-scroll-target="#producer"><span class="header-section-number">E.31</span> Producer</a></li>
+  <li><a href="#provenance-sidecar" id="toc-provenance-sidecar" class="nav-link" data-scroll-target="#provenance-sidecar"><span class="header-section-number">E.32</span> Provenance sidecar</a></li>
+  <li><a href="#publisher" id="toc-publisher" class="nav-link" data-scroll-target="#publisher"><span class="header-section-number">E.33</span> Publisher</a></li>
+  <li><a href="#review-gate" id="toc-review-gate" class="nav-link" data-scroll-target="#review-gate"><span class="header-section-number">E.34</span> Review gate</a></li>
+  <li><a href="#reviewer" id="toc-reviewer" class="nav-link" data-scroll-target="#reviewer"><span class="header-section-number">E.35</span> Reviewer</a></li>
+  <li><a href="#sandbox-sandboxroot" id="toc-sandbox-sandboxroot" class="nav-link" data-scroll-target="#sandbox-sandboxroot"><span class="header-section-number">E.36</span> Sandbox / <code>sandboxRoot</code></a></li>
+  <li><a href="#scaffolding" id="toc-scaffolding" class="nav-link" data-scroll-target="#scaffolding"><span class="header-section-number">E.37</span> Scaffolding</a></li>
+  <li><a href="#sentinel-object" id="toc-sentinel-object" class="nav-link" data-scroll-target="#sentinel-object"><span class="header-section-number">E.38</span> Sentinel object</a></li>
+  <li><a href="#staging-area" id="toc-staging-area" class="nav-link" data-scroll-target="#staging-area"><span class="header-section-number">E.39</span> Staging area</a></li>
+  <li><a href="#stock-and-flow" id="toc-stock-and-flow" class="nav-link" data-scroll-target="#stock-and-flow"><span class="header-section-number">E.40</span> Stock and flow</a></li>
+  <li><a href="#vendoring" id="toc-vendoring" class="nav-link" data-scroll-target="#vendoring"><span class="header-section-number">E.41</span> Vendoring</a></li>
+  <li><a href="#vintage" id="toc-vintage" class="nav-link" data-scroll-target="#vintage"><span class="header-section-number">E.42</span> Vintage</a></li>
+  <li><a href="#vintage-sync" id="toc-vintage-sync" class="nav-link" data-scroll-target="#vintage-sync"><span class="header-section-number">E.43</span> Vintage sync</a></li>
+  <li><a href="#z-mirror" id="toc-z-mirror" class="nav-link" data-scroll-target="#z-mirror"><span class="header-section-number">E.44</span> Z: mirror</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/unicef-drp/cso-toolkit/edit/main/book/appendices/e-glossary.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/unicef-drp/cso-toolkit/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
@@ -506,267 +449,183 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>This glossary documents <code>cso-toolkit</code> as of <strong>v0.12.0</strong> (2026-11-24); version notes mark when a behaviour was added. It defines the load-bearing terms used throughout the handbook. The toolkit’s vocabulary is deliberately small, but several of the terms carry precise, contractual meaning — <em>canonical deposit</em>, <em>reviewer mode</em>, <em>provenance sidecar</em> — and the most common misreading is to take one of these in its everyday sense: to treat a <em>canonical deposit</em> as merely a file location, say, rather than as a status that depends on which role is acting. Definitions are listed alphabetically. Where a term names a function and the cross-language story is non-trivial, a tabset shows how it appears in R, Python, and Stata; where a sibling does not yet implement a term, the gap is stated explicitly.</p>
-<p>For the function-by-function reference, see the function reference appendix; for the on-disk shape of the provenance sidecar, see the provenance sidecar schema appendix; for the full vocabulary of failures, see the error taxonomy appendix.</p>
+<p>This glossary defines the terms the handbook uses with a precise meaning, as of <code>cso-toolkit</code> <strong>v0.12.1</strong> (2026-11-24). Some carry contractual weight: a <em>canonical deposit</em>, for instance, is a status that depends on which role is acting, not just a place on disk. Entries are alphabetical; each links to the chapter or appendix that owns the detail. Which languages implement what is in the <a href="../appendices/a-coverage-matrix.html">coverage matrix</a>.</p>
 <hr>
 <section id="adaptation-vintage" class="level2" data-number="E.1">
 <h2 data-number="E.1" class="anchored" data-anchor-id="adaptation-vintage"><span class="header-section-number">E.1</span> Adaptation (vintage)</h2>
-<p>A harmonized derivative of a master survey vintage, recorded as a further token block in the IHSN folder name — <code>…_v&lt;MM&gt;_M_v&lt;AA&gt;_A_&lt;HHHH&gt;</code>, where <code>v&lt;AA&gt;_A</code> is the adaptation number and <code>&lt;HHHH&gt;</code> the collection. Like master vintages, adaptations are integers, and “latest adaptation” resolves to the numeric maximum for the requested collection. Contrast <em>Master vintage</em>.</p>
+<p>A harmonised derivative of a master vintage, built for one collection and named by a further token block, <code>…_v&lt;MM&gt;_M_v&lt;AA&gt;_A_&lt;HHHH&gt;</code>, where <code>v&lt;AA&gt;_A</code> numbers the adaptation and <code>&lt;HHHH&gt;</code> names the collection. “Latest adaptation” is the numeric maximum for the requested collection. See <a href="../chapters/52-ihsn-grammar.html">The IHSN convention and the folder grammar</a>.</p>
 </section>
 <section id="aggregation-contract" class="level2" data-number="E.2">
 <h2 data-number="E.2" class="anchored" data-anchor-id="aggregation-contract"><span class="header-section-number">E.2</span> Aggregation contract</h2>
-<p>The capability family that turns country-level (or finer) observations into regional and global figures with explicit coverage accounting. Its centerpiece is <code>aggregate_data_v2()</code>, which computes <code>weighted_mean</code> / <code>mean</code> / <code>sum</code> / <code>proportion</code> / <code>total</code> while tracking population and country coverage against a coverage threshold (see <em>coverage threshold</em>: below it the aggregate is blanked to <code>NA</code> rather than published silently). Supporting members are <code>apply_time_window()</code> (keep the latest observation per country within an inclusive year window), <code>generate_agg_footnote()</code> (assemble the human-readable coverage footnote), <code>dw_nestweight()</code> (redistribute survey weights from missing nested observations so a stratified aggregate stays consistent when missingness is not completely at random within the stratum), and two demographic convenience wrappers — <code>dw_pop()</code> (fetch World Bank population) and <code>dw_regions()</code> (enrich a national table with the standard UNICEF regional aggregates). Stata has no aggregation sibling; <code>aggregate_data_v2</code> and the three aggregation helpers are R + Python, as is <code>dw_pop</code>, while <code>dw_regions</code> is R-only. See the aggregation chapter.</p>
+<p>The capability family that turns country-level observations into regional and global figures while accounting for the share of population the data cover. Its core is <code>aggregate_data_v2()</code>, with helpers for time windows, coverage footnotes and survey weights. See <a href="../chapters/33-aggregation.html">Aggregation</a>.</p>
 </section>
 <section id="cache-key" class="level2" data-number="E.3">
 <h2 data-number="E.3" class="anchored" data-anchor-id="cache-key"><span class="header-section-number">E.3</span> Cache key</h2>
-<p>The stable, descriptive identifier — snake_case, encoding the parameters that make a response distinct — under which <code>dw_api_fetch()</code> stores a cached response. It becomes the filename <code>&lt;cache_key&gt;.&lt;ext&gt;</code> in the frozen cache. A well-chosen cache key is what lets a reviewer find the exact frozen response a producer fetched. See <em>frozen cache</em>.</p>
+<p>The short snake_case name under which <code>dw_api_fetch()</code> stores a response, chosen to encode what makes it distinct; it becomes the file name <code>&lt;cache_key&gt;.&lt;ext&gt;</code> in the frozen cache, so a reviewer can find the exact response a producer fetched. See <a href="../chapters/32-external-api.html">The external-API contract</a>.</p>
 </section>
 <section id="canonical-deposit" class="level2" data-number="E.4">
 <h2 data-number="E.4" class="anchored" data-anchor-id="canonical-deposit"><span class="header-section-number">E.4</span> Canonical deposit</h2>
-<p><strong>Canonical (aggregates).</strong> The single authoritative copy of a sector’s deposited artefacts — the <code>dw_&lt;sector&gt;.&lt;ext&gt;</code> files and their provenance sidecars — living under the Teams folder at <code>060.DW-MASTER/01_dw_prep/</code>, with <code>013_wrkdata/</code> holding the promoted, publication-ready outputs and <code>011_rawdata/</code> holding inputs and API caches — is the <em>aggregate / indicator warehouse</em> sense of <em>canonical</em>, and the one the <code>dw_*</code> contract means by default. A second, distinct sense — <strong>Canonical (microdata)</strong> — belongs to the survey-microdata archive: the IHSN trees <code>Z:/datalib</code> and <code>Z:/datalib-&lt;domain&gt;</code> into which the Data Steward promotes conformed survey vintages. The two senses share an office and a single <code>~/.config/user_config.yml</code> file but name different data layers — a microdata deposit is never promoted into <code>060.DW-MASTER</code>. See <em>Microdata archive</em> and the IHSN convention chapter. Whether a path counts as canonical depends on the role acting on it, not just on where it sits: the <strong>producer</strong> writes it (with automatic mirroring to the Z: drive — see <em>Z: mirror</em>), the <strong>reviewer</strong> may only read it, and the <strong>publisher</strong> publishes from it. A reviewer-mode write that targets a canonical path is a hard error. The toolkit recognises a path as canonical via <code>dw_is_canonical()</code>, which (since v0.4.6) also understands OneDrive-mounted Teams Documents paths on UNICEF laptops, and (since v0.5.0) the <code>dwZDrive</code> (Z:) root.</p>
+<p>The single authoritative copy of a project’s deposited outputs and their sidecars: for the indicator warehouse, the Teams folder <code>060.DW-MASTER/</code> and its Z: mirror. The producer writes it, the reviewer only reads it, the publisher publishes from it. The microdata archive’s <code>Z:/datalib*</code> trees are canonical in a separate sense, and nothing passes between the two stores. See <a href="../chapters/why-and-architecture.html">Why a toolkit, and how it fits together</a>.</p>
 </section>
-<section id="collection" class="level2" data-number="E.5">
-<h2 data-number="E.5" class="anchored" data-anchor-id="collection"><span class="header-section-number">E.5</span> Collection</h2>
-<p>The harmonization code carried in the folder grammar’s final token (for example <code>HLT</code>, <code>IPUMS</code>), naming the module-and-key schema a vintage conforms to in datalib’s merge registry. A collection is <em>aligned with, but narrower than,</em> a <em>domain</em>: the domain groups an office’s holdings thematically, while the collection is the specific harmonization contract the loader merges against. As of datalib contract v1 only <code>HLT</code> and <code>IPUMS</code> are registered — the <code>IPUMS</code> keys still unverified against a real deposit, so per-module key validation guards each merge. See <em>Domain</em> and <em>Module</em>.</p>
+<section id="check-record" class="level2" data-number="E.5">
+<h2 data-number="E.5" class="anchored" data-anchor-id="check-record"><span class="header-section-number">E.5</span> Check record</h2>
+<p>A small file, <code>.checks/&lt;content-hash&gt;.json</code>, that <code>sh tools/check --record</code> commits when every local check passes on committed content, so a pull request can show its checks were run without re-running them on GitHub. See <a href="../chapters/checks-and-ci.html#check-records">Checks and CI</a>.</p>
 </section>
-<section id="contract-auditor" class="level2" data-number="E.6">
-<h2 data-number="E.6" class="anchored" data-anchor-id="contract-auditor"><span class="header-section-number">E.6</span> Contract auditor</h2>
-<p>The static-analysis helper, <code>test_scripts()</code>, that recursively scans a directory of R or Python scripts and flags any direct call to a raw file-IO or external-API command the toolkit is meant to wrap — for example <code>read_csv</code>, <code>pd.read_csv</code>, <code>httr::GET</code>, <code>requests.get</code>, <code>rsdmx::readSDMX</code>, or <code>sdmx.Client</code>. It exists to keep a vendoring repo from quietly drifting back to un-wrapped IO. A per-line escape hatch, <code># cso-allow: &lt;rule-id&gt;</code>, suppresses an intentional exception; <code>error_on_violation = TRUE</code> turns it into a build gate. The auditor is R + Python only; there is no Stata sibling. See the scaffolding and contract auditor chapter and the CI chapter.</p>
-<div class="tabset-margin-container"></div><div class="panel-tabset">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="" aria-current="page">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-3" role="tab" aria-controls="tabset-1-3" aria-selected="false" href="">Stata</a></li></ul>
-<div class="tab-content">
-<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">test_scripts</span>(<span class="st">"01_dw_prep/"</span>, <span class="at">error_on_violation =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>test_scripts(<span class="st">"01_dw_prep/"</span>, error_on_violation<span class="op">=</span><span class="va">True</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<div id="tabset-1-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-3-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>* Not implemented — the <span class="kw">contract</span> auditor has no Stata sibling.</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-</div>
-</div>
+<section id="collaboration-model" class="level2" data-number="E.6">
+<h2 data-number="E.6" class="anchored" data-anchor-id="collaboration-model"><span class="header-section-number">E.6</span> Collaboration model</h2>
+<p>The project setting, <code>single-producer</code> or <code>multi-producer</code>, that says how many people may produce results. It lives in the committed <code>cso_project.yml</code> (no file means single-producer) and is separate from each person’s <code>dw_mode</code>; in a multi-producer project <code>dw_save()</code> guards outputs against concurrent or unrecorded replacement. See <a href="../chapters/21-roles-and-modes.html">Roles and the mode contract</a>.</p>
 </section>
-<section id="coverage-threshold" class="level2" data-number="E.7">
-<h2 data-number="E.7" class="anchored" data-anchor-id="coverage-threshold"><span class="header-section-number">E.7</span> Coverage threshold</h2>
-<p>The minimum population coverage, expressed as a fraction in <code>[0, 1]</code>, that an aggregate must meet to be reported. Passed to <code>aggregate_data_v2()</code> as <code>coverage_threshold</code> (default <code>NULL</code>, meaning no threshold; the common UNICEF default is <code>0.5</code>, i.e.&nbsp;50% of population covered). When the covered population share falls below it, the helper blanks the aggregate to <code>NA</code> rather than reporting a figure built on too few countries — under-coverage is suppressed, not published silently.</p>
+<section id="collection" class="level2" data-number="E.7">
+<h2 data-number="E.7" class="anchored" data-anchor-id="collection"><span class="header-section-number">E.7</span> Collection</h2>
+<p>The harmonisation code in the last token of an adaptation folder name (for example <code>HLT</code>), naming the modules and merge keys a vintage conforms to in datalib’s registry. A <em>domain</em> says where a survey is shelved; a collection says how a vintage is harmonised and merged. See <a href="../chapters/52-ihsn-grammar.html">The IHSN convention and the folder grammar</a>.</p>
 </section>
-<section id="cross-language-parity" class="level2" data-number="E.8">
-<h2 data-number="E.8" class="anchored" data-anchor-id="cross-language-parity"><span class="header-section-number">E.8</span> Cross-language parity</h2>
-<p>The toolkit’s design commitment that the same operation carries the same function name and the same behaviour across R, Python, and Stata, sharing a single provenance sidecar schema, mode-aware path routing, and one error-envelope shape. Parity is the goal, not yet a completed state: Stata has no external-API wrapper and no Parquet support; <code>dw_merge</code>, <code>dw_verify_z</code>, <code>dw_root</code> and <code>dw_stage</code> are R + Python only; <code>dw_regions</code> is R-only; the contract auditor and the aggregation family have no Stata siblings; and the Python reference is hand-written (no pkgdown-style autodoc). The coverage matrix appendix records the gaps function by function.</p>
+<section id="contract-auditor" class="level2" data-number="E.8">
+<h2 data-number="E.8" class="anchored" data-anchor-id="contract-auditor"><span class="header-section-number">E.8</span> Contract auditor</h2>
+<p>The static check, <code>test_scripts()</code>, that flags direct calls to the raw file-IO and API functions the toolkit wraps, so a repository does not drift back to unwrapped IO. A trailing <code># cso-allow: &lt;rule-id&gt;</code> comment exempts a deliberate exception. See <a href="../chapters/checks-and-ci.html#contract-auditor">Checks and CI</a>.</p>
 </section>
-<section id="data-steward" class="level2" data-number="E.9">
-<h2 data-number="E.9" class="anchored" data-anchor-id="data-steward"><span class="header-section-number">E.9</span> Data Steward</h2>
-<p>In the microdata-deposit governance model (draft v0.3), the role — with a deputy — that <em>operates</em> the archive: it maintains <code>datalib</code>, runs the review-gate checks and the assisted move, executes promotion of conformed vintages into the canonical IHSN trees, and keeps the logs. The Data Steward operates the gate; the Microdata Core Group <em>decides</em> its outcomes. The appointment is still to be named (the governance model is pre-ratification). See the microdata-deposit governance chapter.</p>
+<section id="coverage-threshold" class="level2" data-number="E.9">
+<h2 data-number="E.9" class="anchored" data-anchor-id="coverage-threshold"><span class="header-section-number">E.9</span> Coverage threshold</h2>
+<p>The minimum population share, a fraction in <code>[0, 1]</code>, that countries with data must cover for an aggregate to be reported; below it <code>aggregate_data_v2()</code> returns a missing value instead. The default is no threshold; 0.5 is the common UNICEF choice. See <a href="../chapters/33-aggregation.html">Aggregation</a>.</p>
 </section>
-<section id="dbm-dbr-dbp" class="level2" data-number="E.10">
-<h2 data-number="E.10" class="anchored" data-anchor-id="dbm-dbr-dbp"><span class="header-section-number">E.10</span> DBM / DBR / DBP</h2>
-<p>The three role acronyms: <strong>DBM</strong> = Database Manager = <strong>producer</strong>; <strong>DBR</strong> = Database Reviewer = <strong>reviewer</strong>; <strong>DBP</strong> = Database Publisher = <strong>publisher</strong>. The third role was renamed INGESTOR → PUBLISHER in v0.4.6, aligning the label with the verb the code already uses (<code>dw_publish()</code>; there is no <code>dw_ingest()</code>). For each role’s responsibilities, see <em>producer</em>, <em>reviewer</em>, and <em>publisher</em>.</p>
+<section id="cross-language-parity" class="level2" data-number="E.10">
+<h2 data-number="E.10" class="anchored" data-anchor-id="cross-language-parity"><span class="header-section-number">E.10</span> Cross-language parity</h2>
+<p>The commitment that an operation has the same name and behaviour in R, Python and Stata, with one sidecar schema, the same mode-aware routing and one error shape. A parity certificate, written by <code>sh tools/certify --record</code>, records the shared test cases’ results in all three languages for one state of the code. See <a href="../chapters/parity.html">How the three languages stay in step</a>.</p>
 </section>
-<section id="deposit-check" class="level2" data-number="E.11">
-<h2 data-number="E.11" class="anchored" data-anchor-id="deposit-check"><span class="header-section-number">E.11</span> Deposit check</h2>
-<p>The rule, enforced by <code>dw_check_deposit()</code> (and by <code>dw_fetch_inputs()</code>, which calls it), that every input a pipeline keeps out of Git must have an identical copy — same SHA-256 — in the canonical deposit on Teams or Z:, at the same relative path as in the consumer repository’s inputs folder. A file passes when an identical copy exists on either mirror and no existing copy differs; an unmounted Z: is fine when Teams matches. A missing or differing file stops the run with a <code>[cso_toolkit.dw_check_deposit]</code> envelope listing each file’s status (<code>match</code>, <code>differs</code>, <code>missing</code>, <code>no access</code>). R and Python (Python since v0.11.0); Stata routes through R or Python (#152). See the IO contract chapter.</p>
+<section id="data-steward" class="level2" data-number="E.11">
+<h2 data-number="E.11" class="anchored" data-anchor-id="data-steward"><span class="header-section-number">E.11</span> Data Steward</h2>
+<p>In the draft microdata governance model, the role that operates the archive: it runs the review-gate checks, promotes conformed vintages into the canonical trees and keeps the logs, while the Microdata Core Group decides gate outcomes. The post is not yet filled. See <a href="../chapters/51-microdata-archive.html">The microdata archive</a>.</p>
 </section>
-<section id="domain" class="level2" data-number="E.12">
-<h2 data-number="E.12" class="anchored" data-anchor-id="domain"><span class="header-section-number">E.12</span> Domain</h2>
-<p>A thematic grouping of an office’s microdata holdings, each mapped to a library root: health → <code>Z:/datalib-hlt</code>, education → <code>Z:/datalib-edu</code>, nutrition → <code>Z:/datalib-nut</code>, child-protection → <code>Z:/datalib-chp</code>, and cross-cutting → <code>Z:/datalib</code>. A domain (an organisational grouping of holdings) and a <em>collection</em> (a harmonization code in the folder grammar) are aligned but not identical. Only the health domain — via the <code>HLT</code> collection — and <code>IPUMS</code> are in the merge registry today; the rest of the domain registry is a draft-v0.3 item still to be confirmed by the Standards Board. See <em>Collection</em>.</p>
+<section id="dbm-dbr-dbp" class="level2" data-number="E.12">
+<h2 data-number="E.12" class="anchored" data-anchor-id="dbm-dbr-dbp"><span class="header-section-number">E.12</span> DBM / DBR / DBP</h2>
+<p>The role acronyms: Database Manager (<strong>producer</strong>), Database Reviewer (<strong>reviewer</strong>) and Database Publisher (<strong>publisher</strong>, formerly INGESTOR). See <a href="../chapters/21-roles-and-modes.html">Roles and the mode contract</a>.</p>
 </section>
-<section id="dw_apis_allowed" class="level2" data-number="E.13">
-<h2 data-number="E.13" class="anchored" data-anchor-id="dw_apis_allowed"><span class="header-section-number">E.13</span> <code>dw_apis_allowed</code></h2>
-<p>The session-level boolean that gates every external network call. It is <code>TRUE</code> in producer mode and <code>FALSE</code> in reviewer mode, derived once from <code>dw_mode</code> at profile-load time rather than set per call. <code>dw_api_fetch()</code> reads it from the session and, when it is not <code>TRUE</code>, stops with the reviewer-mode envelope before any HTTP request; the profile’s <code>dw_require_no_api()</code> guard, for a sector’s own network calls, checks <code>dw_mode == "reviewer"</code> directly — so the reviewer lockout holds even inside a sector’s own scripts, not only at the top-level entry points.</p>
+<section id="deposit-check" class="level2" data-number="E.13">
+<h2 data-number="E.13" class="anchored" data-anchor-id="deposit-check"><span class="header-section-number">E.13</span> Deposit check</h2>
+<p>The rule, enforced by <code>dw_check_deposit()</code>, that every input a pipeline keeps out of Git has an identical copy (same SHA-256) at the same relative path in the deposit on Teams or Z:; a missing or differing file stops the run. See <a href="../chapters/31-io.html">The IO contract</a>.</p>
 </section>
-<section id="dw_mode" class="level2" data-number="E.14">
-<h2 data-number="E.14" class="anchored" data-anchor-id="dw_mode"><span class="header-section-number">E.14</span> <code>dw_mode</code></h2>
-<p>The session property — <code>"producer"</code> or <code>"reviewer"</code> — that selects which side of the mode contract a session operates under. It is read once at profile-load time from the user’s block in <code>~/.config/user_config.yml</code>; it is <strong>required</strong>, and profile loading hard-fails if it is absent (defaulting either way is unsafe). From it the profile derives the path globals (<code>teamsWrkData</code> and its <code>*Canonical</code> aliases) and <code>dw_apis_allowed</code>. It is a session property, never a per-call argument. See the roles and mode contract chapter.</p>
-<div class="tabset-margin-container"></div><div class="panel-tabset">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-3" role="tab" aria-controls="tabset-2-3" aria-selected="false" href="">Stata</a></li></ul>
-<div class="tab-content">
-<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>dw_mode <span class="ot">&lt;-</span> <span class="st">"producer"</span>          <span class="co"># normally set by profile_&lt;repo&gt;.R from YAML</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>dw_apis_allowed <span class="ot">&lt;-</span> <span class="cn">TRUE</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>_state.configure(dw_mode<span class="op">=</span><span class="st">"producer"</span>, dw_apis_allowed<span class="op">=</span><span class="va">True</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<div id="tabset-2-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-3-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">global</span> dw_mode <span class="st">"producer"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-</div>
-</div>
+<section id="domain" class="level2" data-number="E.14">
+<h2 data-number="E.14" class="anchored" data-anchor-id="domain"><span class="header-section-number">E.14</span> Domain</h2>
+<p>A thematic grouping of microdata holdings, each shelved under its own library root (health under <code>Z:/datalib-hlt</code>, for example). The domain list is still a draft. Contrast <em>Collection</em>. See <a href="../chapters/51-microdata-archive.html">The microdata archive</a>.</p>
 </section>
-<section id="error-envelope" class="level2" data-number="E.15">
-<h2 data-number="E.15" class="anchored" data-anchor-id="error-envelope"><span class="header-section-number">E.15</span> Error envelope</h2>
-<p>The three-part shape every <code>stop()</code> / <code>raise</code> in the toolkit follows, so a reader can both grep for the failing function and act on it:</p>
-<pre class="text"><code>[cso_toolkit.dw_save] Reviewer mode forbids writes under canonical: /path
-  Reviewer sessions must keep canonical deposits read-only to preserve
-  vintage permanence; writes go to the sandbox.
-  Fix:
-    1. Resolve a sandbox path instead, OR
-    2. If this is a deliberate DBM bootstrap, pass `allow_canonical_write = TRUE`.</code></pre>
-<p>The leading <code>[cso_toolkit.&lt;func&gt;]</code> prefix names the raising function, so a consumer project can be grepped for every site that hits a given error class; the second line says <em>why</em>; the <code>Fix:</code> block says <em>what to do</em>. The R <code>testthat</code> suite asserts the shape with <code>expect_envelope()</code>. See the error taxonomy appendix.</p>
+<section id="dw_apis_allowed" class="level2" data-number="E.15">
+<h2 data-number="E.15" class="anchored" data-anchor-id="dw_apis_allowed"><span class="header-section-number">E.15</span> <code>dw_apis_allowed</code></h2>
+<p>The session flag that gates external network calls: <code>TRUE</code> in producer mode, <code>FALSE</code> in reviewer mode, derived from <code>dw_mode</code> when the profile loads. When <code>dw_api_fetch()</code> finds no cached response and the flag is not <code>TRUE</code>, it stops before any request. See <a href="../chapters/profiles-and-modes.html">Profiles and the mode switch</a>.</p>
 </section>
-<section id="external-api-contract" class="level2" data-number="E.16">
-<h2 data-number="E.16" class="anchored" data-anchor-id="external-api-contract"><span class="header-section-number">E.16</span> External-API contract</h2>
-<p>The capability family that wraps external data sources behind a single mode-aware interface: <code>dw_api_fetch()</code> (producer hits the live API and caches; reviewer reads only the cache), <code>dw_api_cached()</code>, and <code>dw_api_inventory()</code>. Sources are selected by the <code>api =</code> argument, one of eleven identifiers — <code>"uis"</code>, <code>"sdmx"</code>, <code>"sdmx_codelist"</code>, <code>"wb"</code>, <code>"wb_indicators"</code>, <code>"ilo"</code>, <code>"unsd_sdg"</code>, <code>"github_raw"</code>, <code>"http"</code>, <code>"json_get"</code>, and <code>"csv"</code>. The family is R + Python only; Stata has no API wrapper. See the external-API contract chapter.</p>
+<section id="dw_mode" class="level2" data-number="E.16">
+<h2 data-number="E.16" class="anchored" data-anchor-id="dw_mode"><span class="header-section-number">E.16</span> <code>dw_mode</code></h2>
+<p>The session property, <code>"producer"</code> or <code>"reviewer"</code>, that decides which side of the mode contract a session is on. The profile reads it once from the user’s block in <code>~/.config/user_config.yml</code>, where a <code>dw_mode_by_project</code> entry takes precedence; there is no default, and it is never a per-call argument. See <a href="../chapters/profiles-and-modes.html">Profiles and the mode switch</a>.</p>
 </section>
-<section id="frozen-cache" class="level2" data-number="E.17">
-<h2 data-number="E.17" class="anchored" data-anchor-id="frozen-cache"><span class="header-section-number">E.17</span> Frozen cache</h2>
-<p>The on-disk store of upstream API responses that a reviewer re-runs against without ever touching the network. A producer call to <code>dw_api_fetch()</code> hits the live source and persists the response under <code>&lt;rawdata&gt;/_apis/&lt;api&gt;/&lt;cache_key&gt;.&lt;ext&gt;</code> alongside a <code>.provenance.json</code> sidecar; a reviewer call reads that file, or stops via <code>dw_require_no_api()</code> if it is absent. “Frozen” captures the contract guarantee: the cached vintage does not change under a reviewer’s feet, so a 2026 publication reproduces identically two years later. This is the canonical sense of <em>reproduces identically</em> used elsewhere in this glossary (under <em>vintage</em> and <em>vendoring</em>). A related <code>_frozen/&lt;host&gt;/&lt;path&gt;</code> store holds HTTPS responses that <code>dw_use()</code> froze from a URL (see <em>HTTPS-URL freeze</em>). See also <em>cache key</em>.</p>
+<section id="error-envelope" class="level2" data-number="E.17">
+<h2 data-number="E.17" class="anchored" data-anchor-id="error-envelope"><span class="header-section-number">E.17</span> Error envelope</h2>
+<p>The shape of every deliberate error and warning in the toolkit: a <code>[cso_toolkit.&lt;function&gt;]</code> prefix naming the function that raised it, a line saying why the rule exists, and a <code>Fix:</code> block of numbered remedies. See <a href="../chapters/23-provenance-and-errors.html">Provenance sidecars and the error envelope</a> and <a href="../appendices/c-error-taxonomy.html">Appendix C</a>.</p>
 </section>
-<section id="https-url-freeze" class="level2" data-number="E.18">
-<h2 data-number="E.18" class="anchored" data-anchor-id="https-url-freeze"><span class="header-section-number">E.18</span> HTTPS-URL freeze</h2>
-<p>The behaviour, added to <code>dw_use()</code> in v0.4.0, by which a producer may pass an HTTPS URL instead of a path: the producer downloads it once and freezes the response under <code>_frozen/&lt;host&gt;/&lt;path&gt;</code> with a provenance sidecar, and the reviewer reads only from that frozen copy. The host allowlist is configured per-consumer and is empty by default, so the capability is opt-in.</p>
+<section id="external-api-contract" class="level2" data-number="E.18">
+<h2 data-number="E.18" class="anchored" data-anchor-id="external-api-contract"><span class="header-section-number">E.18</span> External-API contract</h2>
+<p>The capability family that puts external data sources behind one mode-aware function, <code>dw_api_fetch()</code>, with the source chosen by <code>api =</code>. A producer fetches live and caches the response; a reviewer reads only the cache. See <a href="../chapters/32-external-api.html">The external-API contract</a>.</p>
 </section>
-<section id="ihsn-convention" class="level2" data-number="E.19">
-<h2 data-number="E.19" class="anchored" data-anchor-id="ihsn-convention"><span class="header-section-number">E.19</span> IHSN convention</h2>
-<p>The folder-naming grammar datalib encodes, following the International Household Survey Network shelving pattern: <code>&lt;CCC&gt;/&lt;CCC&gt;_&lt;YYYY&gt;_&lt;SSSS&gt;/</code> down to master (<code>…_v&lt;MM&gt;_M</code>) and adaptation (<code>…_v&lt;MM&gt;_M_v&lt;AA&gt;_A_&lt;HHHH&gt;</code>) vintages, with <code>Data/{Original,Stata,R,Other}</code>, <code>Doc/</code>, and <code>Programs/</code> inside each vintage. Because the vintage is legible from the path itself, the microdata archive records provenance <em>structurally</em> — the folder name plus an untouched <code>Data/Original/</code> — rather than in a <code>.provenance.json</code> sidecar. See the IHSN convention chapter and <em>Microdata archive</em>.</p>
+<section id="frozen-cache" class="level2" data-number="E.19">
+<h2 data-number="E.19" class="anchored" data-anchor-id="frozen-cache"><span class="header-section-number">E.19</span> Frozen cache</h2>
+<p>The store of upstream API responses, <code>&lt;rawdata&gt;/_apis/&lt;api&gt;/&lt;cache_key&gt;.&lt;ext&gt;</code> with a sidecar each, that a reviewer re-runs against without the network; a missing response stops a reviewer’s call. “Frozen” means the response does not change under the reviewer, so a published figure can be reproduced later. See <a href="../chapters/32-external-api.html">The external-API contract</a>.</p>
 </section>
-<section id="input-manifest" class="level2" data-number="E.20">
-<h2 data-number="E.20" class="anchored" data-anchor-id="input-manifest"><span class="header-section-number">E.20</span> Input manifest</h2>
-<p>The data frame <code>dw_fetch_inputs()</code> returns: one row per input file with <code>file</code> (path relative to the inputs folder), <code>path</code> (what to read), <code>sha256</code>, <code>origin</code> (<code>local</code>, <code>copied from Z:</code>, <code>copied from Teams</code>, or <code>read from …</code>), and the Teams / Z: deposit status. Recorded in an output’s provenance sidecar as <code>metadata.inputs</code> (<code>file</code>, <code>sha256</code>, <code>origin</code>), it names the exact inputs the output was built from, which is what lets <code>dw_provenance_diff()</code> tell whether two runs used the same inputs. See the provenance sidecar schema appendix.</p>
+<section id="https-url-freeze" class="level2" data-number="E.20">
+<h2 data-number="E.20" class="anchored" data-anchor-id="https-url-freeze"><span class="header-section-number">E.20</span> HTTPS-URL freeze</h2>
+<p><code>dw_use()</code> accepting an HTTPS URL in place of a path: a producer’s first read saves the file as <code>&lt;host&gt;/&lt;path&gt;</code> under the frozen-cache root, with a sidecar, and later reads use that copy. Only URLs matching the profile’s <code>dw_url_allowlist</code> (empty by default) are accepted; a reviewer never downloads. See <a href="../chapters/31-io.html">The IO contract</a>.</p>
 </section>
-<section id="io-contract" class="level2" data-number="E.21">
-<h2 data-number="E.21" class="anchored" data-anchor-id="io-contract"><span class="header-section-number">E.21</span> IO contract</h2>
-<p>The capability family that gives every read, write, compare, and merge a single shape: <code>dw_save</code>, <code>dw_use</code>, <code>dw_compare</code>, <code>dw_merge</code>, <code>dw_isid</code>, and <code>dw_verify_z</code>, alongside two path-and-staging helpers — <code>dw_root()</code> (resolves the mode-aware <code>wrk</code> / <code>raw</code> / <code>meta</code> root so sector scripts build paths without knowing producer-vs-reviewer mode) and <code>dw_stage()</code> (a reviewer-mode helper that copies a canonical input into the sandbox once, then hash-guards the staged copy on every later run; in producer mode it is a no-op), plus four helpers for pipelines whose inputs are kept out of Git — <code>dw_fetch_inputs()</code> and <code>dw_check_deposit()</code> (fill a gitignored local inputs folder from the Teams / Z: deposit and prove every input matches it, keeping each folder visible with a <code>.gitkeep</code>) and <code>dw_read_provenance()</code> and <code>dw_provenance_diff()</code> (read an output’s sidecar and tell whether a new run reproduced the previous one). Dispatch is automatic by file extension (CSV / TSV / XLSX / RDS-or-PKL / DTA / Parquet / JSON / YAML); every write given <code>isid =</code> runs the uniqueness check, emits a provenance sidecar, mirrors to Teams and Z: on canonical writes, and verifies integrity on canonical reads. Coverage is not uniform: <code>dw_merge</code>, <code>dw_verify_z</code>, <code>dw_root</code>, <code>dw_stage</code>, <code>dw_fetch_inputs</code>, <code>dw_check_deposit</code>, <code>dw_read_provenance</code> and <code>dw_provenance_diff</code> are R + Python only (Stata routes through R or Python, #152), and Stata has no Parquet or RDS support (<code>dw_use.ado</code> reads <code>.dta</code> / <code>.csv</code> / <code>.xlsx</code> only — pipelines needing other formats route through R or Python and <code>dw_save()</code> to <code>.dta</code> for Stata consumption). See the IO contract chapter.</p>
-<div class="tabset-margin-container"></div><div class="panel-tabset">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false" href="">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-3" role="tab" aria-controls="tabset-3-3" aria-selected="false" href="">Stata</a></li></ul>
-<div class="tab-content">
-<div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dw_save</span>(df, <span class="at">name =</span> <span class="st">"dw_ed_edu.csv"</span>, <span class="at">sector =</span> <span class="st">"ed"</span>, <span class="at">kind =</span> <span class="st">"wrk"</span>,</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>        <span class="at">isid =</span> <span class="st">"REF_AREA"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>dw_save(df, name<span class="op">=</span><span class="st">"dw_ed_edu.csv"</span>, sector<span class="op">=</span><span class="st">"ed"</span>, kind<span class="op">=</span><span class="st">"wrk"</span>,</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>        isid<span class="op">=</span>[<span class="st">"REF_AREA"</span>])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<div id="tabset-3-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-3-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>dw_save, filename(<span class="st">"dw_ed_edu.dta"</span>) path(<span class="st">"$teamsWrkData/ed"</span>) idvars(REF_AREA INDICATOR)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-</div>
-</div>
+<section id="ihsn-convention" class="level2" data-number="E.21">
+<h2 data-number="E.21" class="anchored" data-anchor-id="ihsn-convention"><span class="header-section-number">E.21</span> IHSN convention</h2>
+<p>The folder-naming grammar datalib encodes, after the International Household Survey Network’s shelving pattern: country, survey, master and adaptation vintages, each vintage holding <code>Data/</code>, <code>Doc/</code> and <code>Programs/</code>. Because the path names the vintage, the microdata archive records provenance in folder names rather than sidecars. See <a href="../chapters/52-ihsn-grammar.html">The IHSN convention and the folder grammar</a>.</p>
 </section>
-<section id="isid" class="level2" data-number="E.22">
-<h2 data-number="E.22" class="anchored" data-anchor-id="isid"><span class="header-section-number">E.22</span> <code>isid</code></h2>
-<p>A uniqueness check named after the Stata command of the same idea: assert that a given set of columns identifies rows uniquely (no duplicate key tuples). The toolkit exposes it both as a standalone helper, <code>dw_isid(df, keys)</code>, and as the <code>isid =</code> argument to <code>dw_save()</code>, which runs the check automatically before writing. A failed <code>isid</code> check is a write-blocking error: a non-unique key means the deposit cannot be trusted as a keyed table. In Stata the check is embedded in <code>dw_save</code> via <code>idvars(...)</code> rather than exposed as a separate command.</p>
-<div class="tabset-margin-container"></div><div class="panel-tabset">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false" href="">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-3" role="tab" aria-controls="tabset-4-3" aria-selected="false" href="">Stata</a></li></ul>
-<div class="tab-content">
-<div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dw_isid</span>(df, <span class="at">keys =</span> <span class="fu">c</span>(<span class="st">"REF_AREA"</span>, <span class="st">"INDICATOR"</span>, <span class="st">"SEX"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>dw_isid(df, keys<span class="op">=</span>[<span class="st">"REF_AREA"</span>, <span class="st">"INDICATOR"</span>, <span class="st">"SEX"</span>])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<div id="tabset-4-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-3-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>dw_save, filename(<span class="st">"out.dta"</span>) path(<span class="st">"$teamsWrkData/ed"</span>) idvars(REF_AREA INDICATOR SEX)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-</div>
-</div>
+<section id="input-manifest" class="level2" data-number="E.22">
+<h2 data-number="E.22" class="anchored" data-anchor-id="input-manifest"><span class="header-section-number">E.22</span> Input manifest</h2>
+<p>The table <code>dw_fetch_inputs()</code> returns, one row per input with its path, SHA-256 and origin. Stored in an output’s sidecar as <code>metadata.inputs</code>, it lets two runs be compared. See <a href="../chapters/31-io.html">The IO contract</a> and <a href="../appendices/b-provenance-schema.html">Appendix B</a>.</p>
 </section>
-<section id="manifest-.toolkit_manifest.yml" class="level2" data-number="E.23">
-<h2 data-number="E.23" class="anchored" data-anchor-id="manifest-.toolkit_manifest.yml"><span class="header-section-number">E.23</span> Manifest (<code>.toolkit_manifest.yml</code>)</h2>
-<p>The small YAML file that records which toolkit vintage a consumer repo has vendored; it lives at <code>00_functions/.toolkit_manifest.yml</code>. Its fields are <code>source</code> (the upstream <code>owner/repo</code>), <code>pulled_version</code> (the pinned tag — or the literal <code>inrepo</code>, which marks a helper this repo maintains itself and so silences sync warnings on it), <code>pulled_commit</code> (the commit that tag points to), <code>pulled_date</code>, <code>pulled_by</code>, <code>vendored</code> (the list of copied files), and <code>local_edits</code> (vendored files with local divergence, which <code>cso_toolkit_pull()</code> skips on update). It is version-controlled alongside the helpers and updated on every re-pull. The vintage-sync helpers read it. See the vendoring model chapter.</p>
+<section id="io-contract" class="level2" data-number="E.23">
+<h2 data-number="E.23" class="anchored" data-anchor-id="io-contract"><span class="header-section-number">E.23</span> IO contract</h2>
+<p>The capability family that gives every read and write one shape: <code>dw_save()</code> and <code>dw_use()</code> choose the format from the extension, route paths by mode, check uniqueness, write sidecars, mirror canonical writes and check canonical reads. See <a href="../chapters/31-io.html">The IO contract</a> and <a href="../appendices/d-function-reference.html">Appendix D</a>.</p>
 </section>
-<section id="master-vintage" class="level2" data-number="E.24">
-<h2 data-number="E.24" class="anchored" data-anchor-id="master-vintage"><span class="header-section-number">E.24</span> Master vintage</h2>
-<p>A numbered master release of a survey’s harmonized data — the fourth token block of the folder name, <code>&lt;CCC&gt;_&lt;YYYY&gt;_&lt;SSSS&gt;_v&lt;MM&gt;_M</code>. Vintages are integers (inputs accept <code>1</code> / <code>01</code> / <code>v01</code> / <code>V01</code>; the internal form is <code>v%02d</code>), and “latest master” is the numeric maximum, never the directory-listing or alphabetical order (<code>v10 &gt; v09</code>). An <em>adaptation</em> layers a harmonization on top of a master. Contrast <em>Adaptation (vintage)</em>.</p>
+<section id="isid" class="level2" data-number="E.24">
+<h2 data-number="E.24" class="anchored" data-anchor-id="isid"><span class="header-section-number">E.24</span> <code>isid</code></h2>
+<p>A uniqueness check named after the Stata command: it asserts that a set of columns identifies rows uniquely. The toolkit offers it as <code>dw_isid()</code> and as the <code>isid =</code> argument of <code>dw_save()</code>, where a failure blocks the write. See <a href="../chapters/31-io.html">The IO contract</a>.</p>
 </section>
-<section id="microdata-archive" class="level2" data-number="E.25">
-<h2 data-number="E.25" class="anchored" data-anchor-id="microdata-archive"><span class="header-section-number">E.25</span> Microdata archive</h2>
-<p>The governed store of the survey <strong>data files themselves</strong> — datalib’s <code>Z:/datalib*</code> IHSN trees, plus a staging area and a deposit process. It is one of three governance layers, distinct from the <em>microdata catalogue</em> (the metadata/discovery layer) and from <em>datalib</em> (the software tool). Crucially it is a <strong>different data layer</strong> from the aggregate / indicator warehouse <code>060.DW-MASTER</code> that the <code>dw_*</code> contract serves: microdata deposits are never promoted into <code>060.DW-MASTER</code>. See the microdata-deposit governance chapter and <em>Canonical deposit</em>.</p>
+<section id="manifest-.toolkit_manifest.yml" class="level2" data-number="E.25">
+<h2 data-number="E.25" class="anchored" data-anchor-id="manifest-.toolkit_manifest.yml"><span class="header-section-number">E.25</span> Manifest (<code>.toolkit_manifest.yml</code>)</h2>
+<p>The committed YAML file in <code>00_functions/</code> that records which toolkit release a repository has vendored: the upstream repository, the pinned tag and the copied files, among other fields. See <a href="../chapters/vendoring-and-updates.html#toolkit-manifest">Vendoring and updates</a>.</p>
 </section>
-<section id="microdata-catalogue" class="level2" data-number="E.26">
-<h2 data-number="E.26" class="anchored" data-anchor-id="microdata-catalogue"><span class="header-section-number">E.26</span> Microdata catalogue</h2>
-<p>The metadata and discovery layer over the microdata archive — an IHSN/NADA-style index built on the DDI model — as opposed to the <em>archive</em> (the files) or the <em>tool</em> (<code>datalib</code>). It is a Phase-2-plus product, seeded by the tool’s auto-generated inventories, and is not yet built. The distinction the three layers turn on: an archive without a catalogue is unfindable, a catalogue without an archive points at silos, and both without a tool are manual drudgery.</p>
+<section id="master-vintage" class="level2" data-number="E.26">
+<h2 data-number="E.26" class="anchored" data-anchor-id="master-vintage"><span class="header-section-number">E.26</span> Master vintage</h2>
+<p>A numbered release of a survey’s cleaned data, the block <code>_v&lt;MM&gt;_M</code> after the survey stem. Vintages are integers, and “latest” is the numeric maximum, never the alphabetical one (<code>v10</code> is later than <code>v09</code>). See <a href="../chapters/52-ihsn-grammar.html">The IHSN convention and the folder grammar</a>.</p>
 </section>
-<section id="mode-contract" class="level2" data-number="E.27">
-<h2 data-number="E.27" class="anchored" data-anchor-id="mode-contract"><span class="header-section-number">E.27</span> Mode contract</h2>
-<p>What each role may and may not do at every wrapped call site, decided by <code>dw_mode</code>: producers may call APIs and write canonical; reviewers may do neither — their writes route to the sandbox, and their API calls raise. The contract is enforced by the code, not by convention: every <code>dw_save</code>, <code>dw_use</code>, and <code>dw_api_fetch</code> re-checks. One operational test of whether a sector has adopted the contract is that the canonical deposit’s modification time is unchanged before and after a reviewer-mode run. See the roles and mode contract chapter and the wiring chapter.</p>
+<section id="microdata-archive" class="level2" data-number="E.27">
+<h2 data-number="E.27" class="anchored" data-anchor-id="microdata-archive"><span class="header-section-number">E.27</span> Microdata archive</h2>
+<p>The governed store of survey data files: datalib’s <code>Z:/datalib*</code> trees, a staging area and the deposit process. It is a different data layer from the indicator warehouse in <code>060.DW-MASTER</code>, and distinct from the catalogue and from datalib, the software. See <a href="../chapters/51-microdata-archive.html">The microdata archive</a>.</p>
 </section>
-<section id="module" class="level2" data-number="E.28">
-<h2 data-number="E.28" class="anchored" data-anchor-id="module"><span class="header-section-number">E.28</span> Module</h2>
-<p>A single survey data file within a vintage — for the <code>HLT</code> collection, <code>household</code>, <code>hhmembers</code>, <code>adult</code>, and <code>children</code> — stored as <code>&lt;vintage-folder-name&gt;_&lt;module&gt;.dta</code> under <code>Data/Stata/</code>. Each collection’s merge registry declares which modules are person-level and which are household-level, and the keys that validate and join them: datalib chains person modules <code>1:1</code> on the person keys and attaches household modules <code>m:1</code> on the household keys, keeping unmatched rows. See <em>Collection</em>.</p>
+<section id="microdata-catalogue" class="level2" data-number="E.28">
+<h2 data-number="E.28" class="anchored" data-anchor-id="microdata-catalogue"><span class="header-section-number">E.28</span> Microdata catalogue</h2>
+<p>The planned metadata and discovery layer over the microdata archive, an IHSN/NADA-style index on the DDI model, to be seeded by datalib’s inventories. It is not yet built. See <a href="../chapters/51-microdata-archive.html">The microdata archive</a>.</p>
 </section>
-<section id="producer" class="level2" data-number="E.29">
-<h2 data-number="E.29" class="anchored" data-anchor-id="producer"><span class="header-section-number">E.29</span> Producer</h2>
-<p>The role (Database Manager, DBM) that owns the deposit: it refreshes upstream API caches, runs the sector pipeline, writes the canonical <code>dw_&lt;sector&gt;.&lt;ext&gt;</code> artefacts (with automatic Teams + Z: mirroring — see <em>Z: mirror</em>), and completes the pre-deposit checklist. It is the only role permitted live network access (<code>dw_apis_allowed = TRUE</code>). Set with <code>dw_mode: "producer"</code>.</p>
+<section id="mode-contract" class="level2" data-number="E.29">
+<h2 data-number="E.29" class="anchored" data-anchor-id="mode-contract"><span class="header-section-number">E.29</span> Mode contract</h2>
+<p>The rules for what each mode may do at every wrapped call: a producer may call APIs and write canonical paths; a reviewer may do neither, so its writes go to the sandbox and its API calls stop. The code enforces it, at each <code>dw_save()</code>, <code>dw_use()</code> and <code>dw_api_fetch()</code>. See <a href="../chapters/21-roles-and-modes.html">Roles and the mode contract</a>.</p>
 </section>
-<section id="provenance-sidecar" class="level2" data-number="E.30">
-<h2 data-number="E.30" class="anchored" data-anchor-id="provenance-sidecar"><span class="header-section-number">E.30</span> Provenance sidecar</h2>
-<p>The <code>&lt;path&gt;.provenance.json</code> file the toolkit writes next to every primary output, recording how that output came to be: <code>written_at</code>, <code>user</code>, <code>dw_mode</code>, the <code>sha256</code> of the primary file, a schema block (rows / cols / column names), and any caller-supplied <code>metadata</code> (title, sources, vintage, contact, among other caller-chosen fields). Sidecars are on by default (opt out with <code>provenance = FALSE</code>); <code>.RData</code> / <code>.rda</code> writes skip them. Secrets passed as API call arguments are redacted before they reach the sidecar. The sidecar is what makes a deposit auditable and what a publisher’s provenance chain links back through to the original API fetches. When the caller records the input manifest as <code>metadata.inputs</code>, two sidecars of the same output also show whether a new run reproduced the previous one: <code>dw_read_provenance()</code> reads a sidecar and <code>dw_provenance_diff()</code> compares two (<code>reproduced</code>, <code>output_changed</code>, <code>inputs_changed</code>, <code>first_run</code>, <code>no_input_record</code>; R and Python, #152). See the provenance sidecar schema appendix.</p>
+<section id="module" class="level2" data-number="E.30">
+<h2 data-number="E.30" class="anchored" data-anchor-id="module"><span class="header-section-number">E.30</span> Module</h2>
+<p>A single survey data file within a vintage (<code>household</code>, for example), stored under <code>Data/Stata/</code> as <code>&lt;vintage-folder&gt;_&lt;module&gt;.dta</code>. The collection’s registry gives each module’s level and merge keys. See <a href="../chapters/52-ihsn-grammar.html">The IHSN convention and the folder grammar</a>.</p>
 </section>
-<section id="publisher" class="level2" data-number="E.31">
-<h2 data-number="E.31" class="anchored" data-anchor-id="publisher"><span class="header-section-number">E.31</span> Publisher</h2>
-<p>The role (Database Publisher, DBP) that takes producer-blessed deposits from <code>013_wrkdata/</code> and pushes them into downstream infrastructure — Helix, SDMX endpoints, data.unicef.org, and the State of the World’s Children tables. It reads canonical, writes only to infrastructure outside the deposit repo, and is gated on the producer’s checklist plus the reviewer’s compare report.</p>
-<div class="callout callout-style-simple callout-note">
-<div class="callout-body d-flex">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-body-container">
-<p>The publisher role is documented, and <code>dw_publish()</code> ships as a deliberate dry-run-only stub: <code>dry_run = TRUE</code> validates inputs and assembles a payload (<code>sha256</code>, <code>bytes</code>, <code>built_at</code>, <code>built_by</code>, version stamp), while <code>dry_run = FALSE</code> raises an envelope-shaped <em>“Live submission not yet implemented”</em> error pointing at issue #15. Despite the version number reaching v0.12.0, the live Helix submission branch has not yet landed — it remains gated on the sector leads finalising the submission contract. (Formerly INGESTOR.)</p>
-</div>
-</div>
-</div>
+<section id="producer" class="level2" data-number="E.31">
+<h2 data-number="E.31" class="anchored" data-anchor-id="producer"><span class="header-section-number">E.31</span> Producer</h2>
+<p>The role (DBM) that owns the deposit: it refreshes API caches, runs the pipeline and writes the canonical outputs, and is the only role allowed live network access. Set with <code>dw_mode: producer</code>. See <a href="../chapters/21-roles-and-modes.html">Roles and the mode contract</a>.</p>
 </section>
-<section id="review-gate" class="level2" data-number="E.32">
-<h2 data-number="E.32" class="anchored" data-anchor-id="review-gate"><span class="header-section-number">E.32</span> Review gate</h2>
-<p>The seven-item checklist a microdata deposit must pass before promotion (governance draft v0.3): (1) inventory logged; (2) naming conforms to the grammar (flow deposits only); (3) reproducibility — a non-author can re-run the script from staging; (4) no breakage outside the deposit’s staging folder; (5) licence recorded; (6) access tier assigned; (7) de-identification confirmed. The Microdata Core Group <em>decides</em> the outcome; the <em>Data Steward</em> operates the checks and, on a pass, promotes conformed vintages into the domain’s canonical IHSN tree — never into <code>060.DW-MASTER</code>. See <em>Staging area</em> and <em>Data Steward</em>.</p>
+<section id="provenance-sidecar" class="level2" data-number="E.32">
+<h2 data-number="E.32" class="anchored" data-anchor-id="provenance-sidecar"><span class="header-section-number">E.32</span> Provenance sidecar</h2>
+<p>The <code>&lt;file&gt;.provenance.json</code> written next to each output, recording when, by whom and in which mode it was written, its SHA-256 and shape, and any caller-supplied metadata. It is what makes a deposit auditable. See <a href="../chapters/23-provenance-and-errors.html">Provenance sidecars and the error envelope</a> and <a href="../appendices/b-provenance-schema.html">Appendix B</a>.</p>
 </section>
-<section id="reviewer" class="level2" data-number="E.33">
-<h2 data-number="E.33" class="anchored" data-anchor-id="reviewer"><span class="header-section-number">E.33</span> Reviewer</h2>
-<p>The role (Database Reviewer, DBR) that reproduces and validates: it re-runs the same sector pipeline from the canonical deposit, writing only into its own sandbox; compares its output against canonical; and files issues. It is physically prevented from writing canonical and from calling external APIs (<code>dw_apis_allowed = FALSE</code>). A reviewer can re-run a full pipeline offline, because the vendored helpers and the frozen cache are local. Set with <code>dw_mode: "reviewer"</code> plus a <code>sandboxRoot</code>.</p>
+<section id="publisher" class="level2" data-number="E.33">
+<h2 data-number="E.33" class="anchored" data-anchor-id="publisher"><span class="header-section-number">E.33</span> Publisher</h2>
+<p>The role (DBP) that pushes deposits the producer has signed off and the reviewer has checked to downstream platforms such as Helix. It reads canonical and writes only outside the deposit; <code>dw_publish()</code> so far supports only a dry run. See <a href="../chapters/21-roles-and-modes.html">Roles and the mode contract</a>.</p>
 </section>
-<section id="sandbox-sandboxroot" class="level2" data-number="E.34">
-<h2 data-number="E.34" class="anchored" data-anchor-id="sandbox-sandboxroot"><span class="header-section-number">E.34</span> Sandbox / <code>sandboxRoot</code></h2>
-<p>The per-user, writable directory tree a reviewer session writes into instead of the canonical deposit. <code>sandboxRoot</code> is set in the user’s <code>~/.config/user_config.yml</code> block and is used only in reviewer mode; the profile redirects <code>teamsFolder</code>, <code>teamsRawData</code>, and <code>teamsWrkData</code> under it so that existing pipeline code lands in the sandbox without per-script edits. (That the canonical deposit’s modification time is unchanged across a reviewer run is part of the operational definition of adopting the contract — see <em>mode contract</em>.)</p>
+<section id="review-gate" class="level2" data-number="E.34">
+<h2 data-number="E.34" class="anchored" data-anchor-id="review-gate"><span class="header-section-number">E.34</span> Review gate</h2>
+<p>The seven-item checklist a microdata deposit must pass before promotion from staging into a canonical tree, covering naming, reproducibility, licence, access and de-identification among others. The Core Group decides; the Data Steward runs the checks. See <a href="../chapters/51-microdata-archive.html">The microdata archive</a>.</p>
 </section>
-<section id="scaffolding" class="level2" data-number="E.35">
-<h2 data-number="E.35" class="anchored" data-anchor-id="scaffolding"><span class="header-section-number">E.35</span> Scaffolding</h2>
-<p>The capability family that generates the standard CSO project building blocks: <code>create_profile()</code> writes a <code>profile_&lt;repo&gt;.R</code> (or <code>.py</code>) with cross-platform user identification, YAML config load, producer / reviewer <code>dw_mode</code> resolution, an optional Z: drive advisory (a non-blocking block that warns when the legacy Azure mirror is unavailable but does not stop execution), a packages block, and a sentinel object; <code>review_profile()</code> audits an existing profile against the same checklist, reporting <code>pass</code> / <code>warn</code> / <code>fail</code>; <code>create_sector_script()</code> scaffolds a sector run-script template with profile verification, logging, runtime tracking, and try/catch; <code>create_dw_sector_script()</code> is the DW-Production wrapper; and <code>create_research_project()</code> and <code>create_official_stats_project()</code> (v0.10.0) scaffold a whole new repository: layout, <code>.gitignore</code>, <code>tools/check.R</code> and its wrapper, pre-push hook, testthat skeleton, <code>cso_project.yml</code> and the agent files. See the scaffolding and contract auditor chapter.</p>
+<section id="reviewer" class="level2" data-number="E.35">
+<h2 data-number="E.35" class="anchored" data-anchor-id="reviewer"><span class="header-section-number">E.35</span> Reviewer</h2>
+<p>The role (DBR) that re-runs the pipeline from the canonical deposit, writing only to its sandbox, and compares its outputs with the deposit. It cannot write canonical paths or call external APIs; the vendored helpers and the frozen cache let it work offline. Set with <code>dw_mode: reviewer</code> and a <code>sandboxRoot</code>. See <a href="../chapters/21-roles-and-modes.html">Roles and the mode contract</a>.</p>
 </section>
-<section id="sentinel-object" class="level2" data-number="E.36">
-<h2 data-number="E.36" class="anchored" data-anchor-id="sentinel-object"><span class="header-section-number">E.36</span> Sentinel object</h2>
-<p>The marker a generated profile leaves in the session to signal that the profile loaded successfully and the mode contract is wired. Downstream sector scripts check for it before running, so a script never executes against an un-initialised, mode-ambiguous session.</p>
+<section id="sandbox-sandboxroot" class="level2" data-number="E.36">
+<h2 data-number="E.36" class="anchored" data-anchor-id="sandbox-sandboxroot"><span class="header-section-number">E.36</span> Sandbox / <code>sandboxRoot</code></h2>
+<p>The per-user folder a reviewer session writes into instead of the canonical deposit, set as <code>sandboxRoot</code> in <code>~/.config/user_config.yml</code>. A profile that derives the write paths points them there in reviewer mode, so pipeline code needs no edits. See <a href="../chapters/profiles-and-modes.html">Profiles and the mode switch</a>.</p>
 </section>
-<section id="staging-area" class="level2" data-number="E.37">
-<h2 data-number="E.37" class="anchored" data-anchor-id="staging-area"><span class="header-section-number">E.37</span> Staging area</h2>
-<p>The waypoint tree — <code>Z:/staging-area/&lt;domain&gt;/&lt;team-folder-as-is&gt;/</code> — where a deposit lands before review, readable by least privilege (the depositing unit, the Data Steward, and the Core Group). <em>Stock</em> deposits arrive here exactly as-is; the area is reviewed within a quarter and retired after promotion or a no-go decision. It is a waypoint, not an archive. See <em>Stock and flow</em> and <em>Review gate</em>.</p>
+<section id="scaffolding" class="level2" data-number="E.37">
+<h2 data-number="E.37" class="anchored" data-anchor-id="scaffolding"><span class="header-section-number">E.37</span> Scaffolding</h2>
+<p>The capability family that writes a project’s standard parts: a profile (<code>create_profile()</code>), a sector script, or a whole repository with its checks, hooks and agent files (<code>create_official_stats_project()</code>, <code>create_research_project()</code>). See <a href="../chapters/40-new-repository.html">Starting a repository</a>.</p>
 </section>
-<section id="stock-and-flow" class="level2" data-number="E.38">
-<h2 data-number="E.38" class="anchored" data-anchor-id="stock-and-flow"><span class="header-section-number">E.38</span> Stock and flow</h2>
-<p>The two deposit modes in the microdata governance model. <strong>Stock</strong> is existing holdings, deposited <em>exactly as-is</em> — folder structure preserved so current scripts keep running — with conformance never a precondition (“copy it as it is, don’t touch it”), promoted survey by survey. <strong>Flow</strong> is new work, following the datalib convention from day one (“name it right from day one”). The as-is rule buys a four-phase payoff: preserve and make portable, compare inputs across teams for the same survey, reverse-engineer transformations, and eventually consolidate one file per survey.</p>
+<section id="sentinel-object" class="level2" data-number="E.38">
+<h2 data-number="E.38" class="anchored" data-anchor-id="sentinel-object"><span class="header-section-number">E.38</span> Sentinel object</h2>
+<p>The variable a generated profile sets last, <code>profile_&lt;repo&gt; &lt;- TRUE</code>, to show it loaded completely; a sector script can test it and refuse to run without it. See <a href="../chapters/profiles-and-modes.html">Profiles and the mode switch</a>.</p>
 </section>
-<section id="vendoring" class="level2" data-number="E.39">
-<h2 data-number="E.39" class="anchored" data-anchor-id="vendoring"><span class="header-section-number">E.39</span> Vendoring</h2>
-<p>The toolkit’s production adoption model: a consumer repo <strong>copies</strong> the helper files into its own <code>00_functions/</code> and pins the version in <code>.toolkit_manifest.yml</code>, rather than installing or <code>source()</code>-ing them over the network. Vendoring is what buys vintage permanence (a release re-run uses the helper code as it stood at release — <em>reproduces identically</em>, in the sense defined under <em>frozen cache</em>), survives UNICEF AppLocker restrictions on script-installable paths, and lets reviewers reproduce offline. Native install paths exist for local development (<code>devtools::install_local</code>, <code>pip install -e</code>, <code>adopath ++</code>), but vendoring stays the production model. See the vendoring model chapter.</p>
+<section id="staging-area" class="level2" data-number="E.39">
+<h2 data-number="E.39" class="anchored" data-anchor-id="staging-area"><span class="header-section-number">E.39</span> Staging area</h2>
+<p>The waypoint tree <code>Z:/staging-area/&lt;domain&gt;/&lt;team-folder-as-is&gt;/</code> where a microdata deposit waits for review, readable by default only by the depositing unit, the Data Steward and the Core Group. It is not an archive: each deposit is promoted or turned down within a quarter. See <a href="../chapters/51-microdata-archive.html">The microdata archive</a>.</p>
 </section>
-<section id="vintage" class="level2" data-number="E.40">
-<h2 data-number="E.40" class="anchored" data-anchor-id="vintage"><span class="header-section-number">E.40</span> Vintage</h2>
-<p>A dated snapshot of a data source or of a piece of code. Two senses recur: the <strong>data vintage</strong> carried in a deposit’s provenance metadata (for example, <code>vintage = "2026-05"</code>), and the <strong>toolkit vintage</strong> pinned in <code>.toolkit_manifest.yml</code>. The whole point of freezing caches and vendoring helpers is that a published vintage reproduces identically later (see <em>frozen cache</em>).</p>
+<section id="stock-and-flow" class="level2" data-number="E.40">
+<h2 data-number="E.40" class="anchored" data-anchor-id="stock-and-flow"><span class="header-section-number">E.40</span> Stock and flow</h2>
+<p>The two microdata deposit modes. <strong>Stock</strong> is existing holdings, deposited exactly as they are so current scripts keep running; <strong>flow</strong> is new work, named by the IHSN grammar from the start. See <a href="../chapters/51-microdata-archive.html">The microdata archive</a>.</p>
 </section>
-<section id="vintage-sync" class="level2" data-number="E.41">
-<h2 data-number="E.41" class="anchored" data-anchor-id="vintage-sync"><span class="header-section-number">E.41</span> Vintage sync</h2>
-<p>The capability family of consumer-side helpers that keep a vendored copy from silently falling behind upstream: <code>cso_toolkit_check()</code> reads the local manifest, queries upstream for the latest tag, and warns when the consumer is behind; <code>cso_toolkit_diff()</code> compares each vendored file with a release tag; <code>cso_toolkit_pull()</code> refreshes vendored files to a target tag and updates the manifest; <code>cso_toolkit_sync()</code> does the update in one call, after printing the release notes. In reviewer mode the check runs offline only (pinned version against <code>target_version</code>); the network lockout (<code>dw_apis_allowed = FALSE</code>) skips the upstream lookup, and <code>cso_toolkit_pull()</code> / <code>cso_toolkit_sync()</code> refuse, so reviewers always run against whatever vintage the producer pinned. See the vintage sync chapter.</p>
+<section id="vendoring" class="level2" data-number="E.41">
+<h2 data-number="E.41" class="anchored" data-anchor-id="vendoring"><span class="header-section-number">E.41</span> Vendoring</h2>
+<p>The toolkit’s production adoption model: a consumer repository copies the helper files into itself and pins the release in <code>.toolkit_manifest.yml</code>, instead of installing them or sourcing them over the network. A re-run then uses the helpers as they stood at release, offline if need be. See <a href="../chapters/vendoring-and-updates.html">Vendoring and updates</a>.</p>
 </section>
-<section id="z-mirror" class="level2" data-number="E.42">
-<h2 data-number="E.42" class="anchored" data-anchor-id="z-mirror"><span class="header-section-number">E.42</span> Z: mirror</h2>
-<p>The carbon-copy of the canonical deposit kept on the UNICEF Azure file share (the <code>Z:</code> drive). A producer’s canonical write is mirrored to Z: automatically and non-blockingly: a failed mirror emits an envelope-shaped warning rather than rolling back the primary write. On canonical reads, the toolkit can verify that the Teams copy and the Z: copy are byte-equal; <code>dw_verify_z()</code> exposes this check, and <code>dw_use()</code> runs it on canonical reads (<code>verify_z = "sha256"</code> for a deep check, <code>verify_z = FALSE</code> to skip). The mirror is a redundancy and integrity guarantee, not a separate deposit. <code>dw_verify_z</code> is R + Python only.</p>
-<div class="tabset-margin-container"></div><div class="panel-tabset">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-5-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-1" role="tab" aria-controls="tabset-5-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-5-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-2" role="tab" aria-controls="tabset-5-2" aria-selected="false" href="">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-5-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-3" role="tab" aria-controls="tabset-5-3" aria-selected="false" href="">Stata</a></li></ul>
-<div class="tab-content">
-<div id="tabset-5-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-5-1-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dw_verify_z</span>(<span class="st">"013_wrkdata/dw_ed_edu.csv"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<div id="tabset-5-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>dw_verify_z(<span class="st">"013_wrkdata/dw_ed_edu.csv"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<div id="tabset-5-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-3-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>* Not implemented — dw_verify_z has no Stata sibling.</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>* (dw_use does <span class="kw">run</span> a non-blocking Z: integrity check <span class="kw">on</span> canonical reads.)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-</div>
-</div>
+<section id="vintage" class="level2" data-number="E.42">
+<h2 data-number="E.42" class="anchored" data-anchor-id="vintage"><span class="header-section-number">E.42</span> Vintage</h2>
+<p>A dated snapshot of data or code: the <strong>data vintage</strong> in a deposit’s provenance metadata, or the <strong>toolkit vintage</strong> pinned in the manifest. <em>Vintage permanence</em> is the guarantee that a published vintage never changes, which frozen caches and vendoring exist to keep. See <a href="../chapters/why-and-architecture.html">Why a toolkit, and how it fits together</a>.</p>
+</section>
+<section id="vintage-sync" class="level2" data-number="E.43">
+<h2 data-number="E.43" class="anchored" data-anchor-id="vintage-sync"><span class="header-section-number">E.43</span> Vintage sync</h2>
+<p>The capability family that keeps a vendored copy from falling silently behind: <code>cso_toolkit_check()</code> warns when the pin is behind, and other helpers show the differences and refresh the copies. Updating is a producer’s step; reviewer mode makes no network call and refuses updates. See <a href="../chapters/vendoring-and-updates.html">Vendoring and updates</a>.</p>
+</section>
+<section id="z-mirror" class="level2" data-number="E.44">
+<h2 data-number="E.44" class="anchored" data-anchor-id="z-mirror"><span class="header-section-number">E.44</span> Z: mirror</h2>
+<p>The copy of the canonical deposit on the UNICEF Azure file share, the <code>Z:</code> drive. A producer’s canonical write is copied there automatically, and a failed copy warns rather than undoing the write; canonical reads compare the Z: copy with Teams by size, or by SHA-256 on request. See <a href="../chapters/31-io.html">The IO contract</a>.</p>
 
 
 </section>

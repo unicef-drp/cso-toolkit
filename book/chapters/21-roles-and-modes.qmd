@@ -1,14 +1,14 @@
 # Roles and the mode contract
 
-DW-Production is not one job done by one person. It is a relay. Upstream agencies publish their statistics; a Database Manager refreshes caches and produces deposited indicators; an auditor reproduces those outputs and files findings; and a publisher pushes approved data packages out to UNICEF's data warehouse and the public-facing pages that draw on it. Each runner holds a different baton, touches a different part of the filesystem, and carries a different obligation. The toolkit names these three runners explicitly — **PRODUCER**, **REVIEWER**, and **PUBLISHER** — and it does not rely on discipline alone to keep them apart. The toolkit enforces two of the three in code: a session set to reviewer mode is physically prevented from writing canonical artefacts (the single authoritative copy of the data everyone downstream trusts) or from calling live APIs.
+DW-Production is a relay. Upstream agencies publish their statistics; a Database Manager refreshes caches and produces deposited indicators; an auditor reproduces those outputs and files findings; and a publisher pushes approved data packages to UNICEF's data warehouse and the public pages that draw on it. Each runner touches a different part of the filesystem and carries a different obligation. The toolkit names the three runners **PRODUCER**, **REVIEWER** and **PUBLISHER**, and it does not rely on discipline alone to keep them apart: a session in reviewer mode is prevented in code from writing canonical artefacts (the single authoritative copy of the data everyone downstream trusts) and from calling live APIs.
 
-This chapter sets out the three roles, what each may read and write, and how the `dw_mode` session setting turns those policies into mechanical guarantees.
+This chapter sets out the three roles, what each may read and write, how the `dw_mode` session setting turns those policies into mechanical guarantees, and the second setting beside it: the project's collaboration model.
 
-Two terms recur throughout and are worth fixing now. A **deposit** is a finished data package a producer places in the canonical store. A deposit is **blessed** once it has passed the producer's pre-deposit checklist and the reviewer's compare report — only blessed deposits may be published.
+Two terms recur. A **deposit** is a finished data package a producer places in the canonical store. A deposit is **blessed** once it has passed the producer's pre-deposit checklist and the reviewer's compare report; only blessed deposits may be published.
 
 ## The three roles
 
-The roles map onto a real organisational lifecycle. Each carries a short acronym used in the repo's internal documentation; we use the plain role names — PRODUCER, REVIEWER, PUBLISHER — for the rest of this chapter.
+Each role has a short acronym used in the repository's internal documentation; this chapter uses the plain names.
 
 | Role | Acronym | Plain meaning |
 |---|---|---|
@@ -16,37 +16,31 @@ The roles map onto a real organisational lifecycle. Each carries a short acronym
 | **REVIEWER** | DBR (Database Reviewer) | Reproduces and validates. Audits, finds bugs, gathers sector-lead sign-off. |
 | **PUBLISHER** | DBP (Database Publisher) | Pushes blessed deposits into the canonical UNICEF data warehouse and downstream surfaces. |
 
-All three share the same helper functions — `dw_save`, `dw_use`, `dw_api_fetch`, `dw_compare`, and the rest — and the same path globals derived from the user profile. What differs is the slice of the filesystem each one may read and write, and whether it may reach the network at all.
+All three use the same helpers (`dw_save`, `dw_use`, `dw_api_fetch`, `dw_compare` and the rest) and the same path globals, derived from the user's profile. What differs is the slice of the filesystem each may read and write, and whether it may reach the network at all.
 
 ## What each role may read and write
 
-The read/write/API matrix is the core of this chapter; everything else elaborates it.
-
 | Role | Reads from | Writes to | API calls | Owns |
 |---|---|---|---|---|
-| **PRODUCER** | upstream APIs + the canonical deposit (`060.DW-MASTER`) | the canonical deposit (Teams + the Z: mirror, automatically) | **YES** | refreshing cached upstream data; producing the deposited outputs |
-| **REVIEWER** | the canonical deposit (read-only) + own sandbox | the sandbox only (`sandboxRoot`, per user) | **NO** — forbidden by the reviewer-mode guard | reproducibility validation; sector-lead sign-off; finding bugs |
-| **PUBLISHER** | the blessed work-data deposit (`013_wrkdata`) | the data warehouse: Helix, SDMX endpoints, data.unicef.org, SoWC tables | reads warehouse endpoints only | publication into the canonical data warehouse and downstream surfaces |
+| **PRODUCER** | upstream APIs + the canonical deposit (`060.DW-MASTER`) | the canonical deposit (Teams, and the Z: mirror automatically) | **yes** | refreshing cached upstream data; producing the deposited outputs |
+| **REVIEWER** | the canonical deposit (read only) + own sandbox | the sandbox only (`sandboxRoot`, per user) | **no**, forbidden by the reviewer-mode guard | reproducibility validation; sector-lead sign-off; finding bugs |
+| **PUBLISHER** | the blessed work-data deposit (`013_wrkdata`) | the data warehouse: Helix, SDMX endpoints, data.unicef.org, SoWC tables | reads warehouse endpoints only | publication into the warehouse and downstream surfaces |
 
-The paths are numbered by lifecycle stage. Everything lives under a single root, `060.DW-MASTER`: `011_rawdata` holds upstream pulls (including the `_apis/` cache), and `013_wrkdata` holds finished, promoted deposits. The numbering implies a sequence — raw input becomes work data — not a directory count.
+The deposit folders are numbered by lifecycle stage under one root, `060.DW-MASTER/01_dw_prep`: `011_rawdata` holds upstream pulls, including the `_apis/` cache, and `013_wrkdata` holds finished, promoted deposits. The numbering is a sequence (raw input becomes work data), not a count. The full path table for each mode is in [Profiles and the mode switch](profiles-and-modes.qmd).
 
-Three things follow from the matrix.
+Three things follow. Only the producer touches upstream: reviewers read the frozen caches the producer deposited. The reviewer reads canonical but writes sandbox: its reads fall back to the deposit (with a Z: integrity check), and an attempted canonical write fails. And the publisher consumes only blessed outputs from `013_wrkdata`, never raw or staging paths.
 
-- **Only the PRODUCER touches upstream.** Reviewer sessions never call live APIs; they read frozen, producer-deposited caches instead. This is not a convention you are trusted to honour — the reviewer-mode guard asserts it at every network call site.
-- **The REVIEWER reads canonical but writes sandbox.** Reviewer-mode reads fall back to the canonical deposit (with a Z:-drive integrity check), but reviewer-mode writes are routed to a per-user sandbox; an attempted canonical write hard-fails.
-- **The PUBLISHER consumes only blessed outputs.** It reads from `013_wrkdata`, the work-data deposit a producer has explicitly promoted, never from raw or staging paths.
+### What each role must not do
 
-### What each role MUST NOT do
-
-The matrix above says what each role *may* do; the prohibitions below say what each role *must not* — the same boundaries seen from the other side. A relay fails when a runner reaches outside their leg.
+The same boundaries, seen from the other side:
 
 | Role | Forbidden |
 |---|---|
 | **PRODUCER** | skip the pre-deposit checklist; deposit without a compare-vs-prior-vintage report; deposit without sector-lead sign-off on non-trivial deltas |
 | **REVIEWER** | write to canonical paths; call external APIs; modify caches in the deposit |
-| **PUBLISHER** | promote outputs that haven't passed the producer's checklist and the reviewer's compare; publish without a provenance chain back to original API fetches; roll back without amending the source |
+| **PUBLISHER** | promote outputs that have not passed the producer's checklist and the reviewer's compare; publish without a provenance chain back to the original API fetches; roll back without amending the source |
 
-The producer's prohibitions are *procedural* — enforced by checklist and review, not by code. The reviewer's prohibitions are *mechanical* — enforced by `dw_mode`, as the next section shows. The publisher's prohibitions are mostly procedural today, with one mechanical exception: the R `dw_publish` helper already refuses reviewer-mode submissions (see the publisher note below).
+The producer's prohibitions are *procedural*: enforced by checklist and review, not by code. The reviewer's are *mechanical*: enforced by `dw_mode`, as the next section shows. The publisher's are mostly procedural, with one mechanical exception: `dw_publish` refuses reviewer-mode calls (see [The publisher and `dw_publish`](#the-publisher-and-dw_publish)).
 
 ## The data flow
 
@@ -56,15 +50,15 @@ A single indicator moves through the relay like this:
 External APIs                 (UIS · SDMX · WB · ILO · UNSD)
   │  PRODUCER: dw_api_fetch(refresh = TRUE)
   ▼
-API cache  ── 011_rawdata/.../_apis ───────────────────────┐
+API cache  ── 011_rawdata/_apis ───────────────────────────┐
   │                                                          │ REVIEWER: dw_api_cached
-  ▼                                                          │ (cache reads only — no live calls)
+  ▼                                                          │ (cache reads only, no live calls)
 Sector pipeline  ◄─────────────────────────────────────────┘
   │  PRODUCER: dw_save(isid = ...)            REVIEWER: writes routed to sandbox
   ▼                                                   │
 Canonical deposit ── 013_wrkdata ── carbon copy ──► Z: mirror (integrity check)
   │  │  ▲                                               ▲
-  │  │  └── REVIEWER: dw_use (read-only) ───────────────┘
+  │  │  └── REVIEWER: dw_use (read only) ───────────────┘
   │  │            │
   │  │            ▼
   │  │     Compare report ──► Issues filed to PRODUCER / sector lead
@@ -72,45 +66,30 @@ Canonical deposit ── 013_wrkdata ── carbon copy ──► Z: mirror (int
   └──┴── PUBLISHER ──► Helix · SDMX endpoints · data.unicef.org · SoWC / SI tables
 ```
 
-Read the flow as three lanes. Solid arrows are normal forward flow. The reviewer's arrows into the pipeline and deposit are read-only. The publisher's arrows fan out from the blessed `013_wrkdata` deposit to downstream consumers. The diagram makes plain why mode enforcement matters: the reviewer's pipeline runs the *same scripts* as the producer's, so the only thing standing between an audit run and a corrupted deposit is the mode contract redirecting every write.
+The reviewer's arrows are read only; the publisher's fan out from the blessed `013_wrkdata` deposit. The diagram shows why enforcement matters: the reviewer's pipeline runs the *same scripts* as the producer's, so the only thing between an audit run and a corrupted deposit is the mode contract redirecting every write.
 
 ## How `dw_mode` enforces the boundaries
 
-The PRODUCER / REVIEWER split is a single session-level setting. Each user keeps a personal block in `~/.config/user_config.yml`:
+The producer/reviewer split is one session-level setting, `dw_mode`, which each person sets to `producer` or `reviewer` in their own `~/.config/user_config.yml`. It has no default, because defaulting either way is unsafe. From it the profile derives the path globals: the working globals (`teamsWrkData`, `teamsRawData`) point at the deposit for a producer and at the sandbox for a reviewer, the `*Canonical` aliases always point at the deposit, and `dw_apis_allowed` is true only for a producer. So the same scripts write to the deposit in one mode and to the sandbox in the other. How the mode is set and resolved, and the derivation, are in [Profiles and the mode switch](profiles-and-modes.qmd).
 
-```yaml
-jpazevedo:
-  githubFolder: "C:/GitHub/mytasks"
-  teamsRoot: "C:/Users/jpazevedo/UNICEF/Chief Statistician Office - Documents"
-  dw_mode: "reviewer"                          # producer | reviewer
-  sandboxRoot: "C:/Users/jpazevedo/dw-repro"   # only used when dw_mode = reviewer
-```
+Routing paths at the profile is the first layer. The write and fetch helpers then check the mode *again* at the call site, so a script that builds a canonical path by hand, or calls the network directly, is still stopped. Two guards do this work.
 
-`dw_mode` is **required**. Profile loading hard-fails if it is absent or set to anything other than `producer` or `reviewer`, because defaulting to either side is unsafe: defaulting to producer would let an unconfigured session corrupt the deposit, and defaulting to reviewer would surprise a Database Manager mid-deposit.
+### Guard 1: reviewer mode forbids canonical and Z: writes (`dw_save`)
 
-From `dw_mode` the profile derives the path globals — `teamsWrkData`, the `*Canonical` read-only aliases, and a `dw_apis_allowed` flag. That derivation lets the same conductor scripts route to the deposit in producer mode and to the sandbox in reviewer mode without per-script edits. The wiring chapter covers the derivation in full; here we focus on the two enforcement points the contract relies on.
+{{< include ../_generated/badges/dw_save.md >}}
 
-The contract is enforced by **defence in depth**. The mode setting routes paths at the profile, and then the individual write and fetch helpers check *again* at the call site. Two guards do the work.
-
-### Guard 1 — reviewer mode forbids canonical and Z: writes (`dw_save`)
-
-When `dw_save` is asked to write a path that is canonical (under the Teams deposit) or under the Z: drive mirror, and the session is in reviewer mode, it refuses. The guard broadened in v0.4.0 to cover the Z: mirror as well as the Teams deposit; v0.3.0 refused canonical Teams writes only. The single escape hatch is `allow_canonical_write = TRUE`, intended for Database Manager bootstraps, never for routine reviewer work. The `isid` argument shown below names the columns that uniquely identify a row; `dw_save` checks them before writing so a duplicate key can never reach the deposit.
+When `dw_save` is asked to write under the canonical deposit or under the Z: mirror, and the session is in reviewer mode, it refuses. The single escape hatch is `allow_canonical_write`, meant for a Database Manager's bootstrap, never for routine reviewer work.
 
 ::: {.panel-tabset}
 #### R {.unnumbered .unlisted}
 ```r
 # Reviewer-mode session. This canonical path raises an error.
-# isid = the columns that uniquely identify a row.
 dw_save(df, file.path(teamsWrkDataCanonical, "dw_im.csv"), isid = c("iso3", "year"))
-#> Error: [cso_toolkit.dw_save] Reviewer mode forbids writes to
-#>   canonical (Teams) deposit: .../dw_im.csv
-#>   Reviewer sessions must keep canonical / Z: deposits read-only to
-#>   preserve vintage permanence; writes go to the local repo sandbox.
-#>   Fix:
-#>     1. Resolve a sandbox path instead (the profile's `teamsWrkData`
-#>        should point there in reviewer mode), OR
-#>     2. If this is a deliberate Database Manager bootstrap,
-#>        pass `allow_canonical_write = TRUE`.
+#> Error: [cso_toolkit.dw_save] Reviewer mode forbids writes to canonical (Teams) deposit: .../dw_im.csv
+#>  Reviewer sessions must keep canonical / Z: deposits read-only to preserve vintage permanence; writes go to the local repo sandbox.
+#>  Fix:
+#>  1. Resolve a sandbox path instead (the profile's `teamsWrkData` should point there in reviewer mode), OR
+#>  2. If this is a deliberate Database Manager bootstrap, pass `allow_canonical_write = TRUE`.
 
 # Producer bootstrap (rare): explicit opt-in bypasses the guard.
 dw_save(df, canonical_path, isid = c("iso3", "year"), allow_canonical_write = TRUE)
@@ -118,71 +97,72 @@ dw_save(df, canonical_path, isid = c("iso3", "year"), allow_canonical_write = TR
 
 #### Python {.unnumbered .unlisted}
 ```python
-# Reviewer-mode session. This canonical path raises PermissionError.
-# isid = the columns that uniquely identify a row.
+# Reviewer-mode session. This canonical path raises PermissionError,
+# with the same Why and Fix as in R.
 dw_save(df, os.path.join(teams_wrk_data_canonical, "dw_im.csv"), isid=["iso3", "year"])
 # PermissionError: [cso_toolkit.dw_save] Reviewer mode forbids writes to
 #   canonical (Teams) deposit: .../dw_im.csv
-#   Reviewer sessions must keep canonical + Z: deposits read-only to
-#   preserve vintage permanence; writes go to the sandbox.
-#   Fix:
-#     1. Resolve a sandbox path instead (the profile's teamsWrkData
-#        usually points there in reviewer mode), OR
-#     2. If this is a deliberate Database Manager bootstrap,
-#        pass `allow_canonical_write=True` to bypass the guard.
 
 dw_save(df, canonical_path, isid=["iso3", "year"], allow_canonical_write=True)
 ```
 
 #### Stata {.unnumbered .unlisted}
 ```stata
-* The Stata dw_save mirrors the same path routing via $teamsWrkData,
-* which the profile points at the sandbox in reviewer mode, so writes
-* land in the sandbox without a per-call flag. The uniqueness check is
-* folded in via idvars() (the Stata equivalent of the R isid= argument).
+* In reviewer mode $teamsWrkData points at the sandbox, so this lands there:
 dw_save , filename("dw_im.dta") path("$teamsWrkData") idvars(iso3 year)
+
+* A path under $teamsWrkDataCanonical, $teamsRawDataCanonical or $dwZDrive
+* stops with error 459:
+*   [cso_toolkit.dw_save] Reviewer mode forbids writes to canonical (Teams)
+*   deposit [<root>]. Pass -allow_canonical_write- to override (DBM bootstraps only).
+dw_save , filename("dw_im.dta") path("$teamsWrkDataCanonical") ///
+    idvars(iso3 year) allow_canonical_write
 ```
 :::
 
+R and Python guard a few more roots than Stata does; the exact list is in [Appendix C](../appendices/c-error-taxonomy.qmd).
+
 ::: {.callout-note}
-The same guard also runs a *producer-side* pre-flight: in producer mode a non-canonical (sandbox) write requires at least one of the Teams or Z: mirrors to be reachable, so a deposit never ends up living only on the producer's laptop. Producer outputs are redundant by design — every canonical write fans out to both mirrors when available, and the Z: carbon copy is what later lets a reviewer verify Teams equals Z: byte-for-byte.
+In R and Python the same guard also runs a *producer-side* pre-flight: in producer mode, a non-canonical (sandbox) write needs at least one of the Teams or Z: mirrors to be reachable, so a deposit never ends up living only on the producer's laptop. Producer outputs are redundant by design. Every producer write fans out to both mirrors when they are available, and the Z: carbon copy is what later lets a reviewer check that Teams equals Z:.
 :::
 
-### Guard 2 — reviewer mode forbids live API calls (`dw_require_no_api`)
+### Guard 2: reviewer mode forbids live API calls (`dw_require_no_api`)
 
-The second guard sits at every entry point that would hit the network. `dw_api_fetch` reads the cache when one exists and, before any HTTP request, checks the `dw_apis_allowed` flag, and any sector-internal script that talks to a remote is expected to call `dw_require_no_api` too. In reviewer mode the call aborts; in producer mode it returns silently. The frozen cache is read with `dw_api_cached` instead of fetching live.
+{{< include ../_generated/badges/dw_require_no_api.md >}}
+
+The second guard sits at every entry point that would reach the network. There are two of them:
+
+- **`dw_api_fetch`** reads the cache first. Only when there is no cache (or the producer passed `refresh = TRUE`) does it check `dw_apis_allowed`, before any HTTP request; in reviewer mode it stops with the `[cso_toolkit.dw_api]` envelope. A reviewer reads the frozen cache with `dw_api_cached` instead.
+- **`dw_require_no_api`** is the explicit assertion for any script that reaches a remote without going through `dw_api_fetch`. Call it at the top of such a script. In a Stata pipeline it is the only check there is, so call it before every network operation.
 
 ::: {.panel-tabset}
 #### R {.unnumbered .unlisted}
 ```r
-# At the top of a remote-touching analysis script:
+# At the top of a script that calls a remote directly
+# (dw_require_no_api is defined by the generated profile):
 dw_require_no_api(context = "ed/06_pull_uis")
-# Reviewer mode:
 #> Error: [X] External API access is forbidden in reviewer mode. Context: ed/06_pull_uis
 
-# dw_api_fetch performs the same check internally before any httr::GET;
-# in reviewer mode it raises the cso_toolkit.dw_api envelope and stops.
+# dw_api_fetch with no cache, in reviewer mode:
+dw_api_fetch("uis", cache_key = "uis_entrance_age_primary")
+#> Error: [cso_toolkit.dw_api] Reviewer mode forbids live API calls.
+#>   Call:   dw_api_fetch('uis', cache_key='uis_entrance_age_primary')
+#>   Reason: cache missing at .../_apis/uis/uis_entrance_age_primary.csv
+#>   Fix:
+#>     1. The expected workflow is that a Database Manager has already populated the cache under teamsRawDataCanonical/_apis/. Verify the cache file exists at the path above.
+#>     2. If you ARE the producer, switch modes: set dw_mode: producer in user_config.yml and re-source the profile.
 
-# To read the frozen cache instead of fetching live:
+# Read the frozen cache instead:
 dw_api_cached("uis", cache_key = "uis_entrance_age_primary")
 ```
 
 #### Python {.unnumbered .unlisted}
 ```python
-# Python analogue, raised by dw_api_fetch before any request:
-_dw_require_no_api("dw_api_fetch('uis', cache_key='...')",
-                   reason="cache missing at .../uis/...")
-# PermissionError: [cso_toolkit.dw_api] Reviewer mode forbids live API calls.
-#   Call:   dw_api_fetch('uis', cache_key='...')
-#   Reason: cache missing at .../uis/...
-#   Fix:
-#     1. The expected workflow is that a Database Manager has already
-#        populated the cache under teamsRawDataCanonical/_apis/.
-#        Verify the cache file exists at the path above.
-#     2. If you ARE the producer, switch modes:
-#        from cso_toolkit import _state
-#        _state.configure(dw_mode="producer", dw_apis_allowed=True)
+dw_require_no_api(context="ed/06_pull_uis")   # defined by the generated profile
+# PermissionError: [X] External API access is forbidden in reviewer mode. Context: ed/06_pull_uis
 
+# dw_api_fetch with no cache raises PermissionError with the same envelope
+# as R; only fix 2 differs: _state.configure(dw_mode="producer", dw_apis_allowed=True)
 dw_api_cached("uis", cache_key="uis_entrance_age_primary")
 ```
 
@@ -190,7 +170,7 @@ dw_api_cached("uis", cache_key="uis_entrance_age_primary")
 ```stata
 * Assert the contract just before a live network call:
 dw_require_no_api , context("ed/06_pull_uis")
-* Reviewer mode aborts with Stata error 459 and the envelope message:
+* Reviewer mode aborts with error 459:
 *   [cso_toolkit.dw_require_no_api] Reviewer mode forbids live API calls
 *     (context: ed/06_pull_uis).
 *   Why: reviewer sessions must read frozen producer caches to preserve
@@ -200,52 +180,54 @@ dw_require_no_api , context("ed/06_pull_uis")
 ```
 :::
 
-The three guards are the same shape — same intent, same reviewer-blocks/producer-passes logic, same envelope-style message with a *Why* and a *Fix*. They differ in their language's native failure mechanism (an R `stop()`, a Python `PermissionError`, a Stata `error 459`) and in their plumbing. In R the gate is split: `dw_api_fetch` tests the `dw_apis_allowed` flag itself and raises the `cso_toolkit.dw_api` envelope, while the standalone `dw_require_no_api(context = ...)` helper — defined by the consumer profile, not exported by the package — is what analysis scripts call directly. The Stata side, by contrast, has no API wrapper at all, so `dw_require_no_api` is the *only* mechanism a Stata script has; you must call it explicitly before every network operation.
+All of these block in reviewer mode and pass silently for a producer. `dw_api_fetch` and the Stata `dw_require_no_api` raise the toolkit's full envelope; the profile-defined R and Python `dw_require_no_api` prints a one-line `[X]` message, since it is the profile's helper rather than the package's ([Profiles and the mode switch](profiles-and-modes.qmd) shows its definition).
 
 ::: {.callout-warning}
-The Stata helper carries a subtlety: an **unset** mode passes through. It blocks only when `$dw_mode == "reviewer"`; producer and any empty or unknown value pass silently. This is deliberate — it means a stray script never falsely blocks a producer — but it also means the *profile* must set `dw_mode` correctly. The required-field rule in `user_config.yml` is what closes that gap: an unconfigured session fails at profile load, before it ever reaches a guard.
+The Stata guard has a subtlety: an **unset** mode passes. It blocks only when `$dw_mode` is `"reviewer"`; `"producer"` and any empty or unknown value pass silently. This is deliberate, since a stray script never falsely blocks a producer, but it means the *profile* must set `dw_mode` correctly. The no-default rule closes the gap: an unconfigured session stops when the profile loads (`dw_load_config` stops with error 459), before it ever reaches a guard.
 :::
 
 ## The helper subset each role uses
 
-The same functions serve all three roles, but each role exercises a different subset and gets different behaviour from the shared helpers.
+The same functions serve all three roles, but each role uses a different subset and gets different behaviour from them.
 
 | Helper | PRODUCER | REVIEWER | PUBLISHER |
 |---|---|---|---|
-| `dw_save` | writes to the deposit (Z: mirror automatic) | sandbox writes only; canonical/Z: writes hard-fail | reads only |
-| `dw_use` | reads anywhere | reads sandbox with canonical fallback; network-first with Z: integrity check | reads `013_wrkdata` |
-| `dw_api_fetch` | fetches live and caches in the deposit | blocked in reviewer mode; reads cache instead | n/a |
-| `dw_api_cached` | reads cache | reads cache | n/a |
-| `dw_api_inventory` | audits cache freshness | audits what is available | audits provenance pre-publication |
+| `dw_save` | writes to the deposit (Z: mirror automatic) | sandbox writes only; canonical/Z: writes fail | reads only |
+| `dw_use` | reads anywhere | reads sandbox with canonical fallback; Z: integrity check | reads `013_wrkdata` |
+| `dw_api_fetch` | fetches live and caches in the deposit | reads the cache; a live fetch is blocked | n/a |
+| `dw_api_inventory` | audits cache freshness | audits what is available | audits provenance before publication |
 | `dw_compare` | runs on every production run | runs on every reviewer run | reads compare reports as a publication gate |
-| `dw_verify_z` | runs after a canonical write to confirm the mirror landed | runs on canonical reads to verify integrity | runs as a final pre-publication check |
-| `dw_isid` | enforces row uniqueness pre-write | spot-checks reproduced data | optional spot-check |
-| `dw_fetch_inputs` / `dw_check_deposit` | fetches gitignored inputs from the deposit and verifies them before a run (read-only on the deposit) | same: reproduces from the deposited inputs, never writes to Teams / Z: | n/a |
-| `dw_read_provenance` / `dw_provenance_diff` | checks each run against the previous one | confirms a reproduction is byte-identical | reads the sidecars as lineage evidence |
-| `dw_publish` | n/a | refused in reviewer mode | submits to Helix (R only; dry-run stub today) |
+| `dw_verify_z` | confirms the mirror landed after a canonical write | verifies integrity on canonical reads | final pre-publication check |
+| `dw_fetch_inputs` / `dw_check_deposit` | fetch gitignored inputs from the deposit and verify them (read only on the deposit) | same: reproduce from the deposited inputs, never write to Teams or Z: | n/a |
+| `dw_read_provenance` / `dw_provenance_diff` | check each run against the previous one | confirm a reproduction is byte-identical | read the sidecars as lineage evidence |
+| `dw_publish` | submits to Helix (dry-run stub today) | refused | n/a |
 
-The cross-language coverage of these helpers is uneven, and the chapters on the IO and external-API contracts cover the gaps honestly. Two are worth flagging here because they bear directly on the role split. First, Stata has **no API wrapper** — `dw_api_fetch` and `dw_api_cached` exist only in R and Python — so the producer's cache-refresh leg is an R/Python responsibility, and Stata's contribution to the reviewer guard is the standalone `dw_require_no_api` assertion alone. Second, `dw_publish` exists only in R. The coverage matrix appendix gives the full per-function picture.
+Which language has each helper is shown under its heading in [The IO contract](31-io.qmd) and [The external-API contract](32-external-api.qmd), and in full in [Appendix A](../appendices/a-coverage-matrix.qmd).
 
-## A note on the PUBLISHER role
+## The publisher and `dw_publish`
 
-Of the three roles, PRODUCER and REVIEWER are fully wired into the mode contract; PUBLISHER is only partly so. The role is documented in full — its inputs, its pre-publication gates, its targets (Helix, SDMX endpoints, data.unicef.org, the State of the World's Children tables), and its rollback procedure — and one piece of it is now code. The R package ships `dw_publish(path, indicator, vintage, sector, endpoint = "helix", dry_run = TRUE)`, parallel to `dw_save` and `dw_api_fetch`. It already enforces the call-site contract a publisher needs: a reviewer-mode call raises before any I/O, required arguments are validated, the artifact must exist on disk, and the endpoint allowlist currently admits only `"helix"`.
+{{< include ../_generated/badges/dw_publish.md >}}
 
-What `dw_publish` does *not* yet do is submit. As of v0.5.0 it is a dry-run-only stub: `dry_run = TRUE` validates the call site and assembles the exact payload the live branch will POST, while `dry_run = FALSE` raises an envelope-shaped error pointing at the issue where the Helix endpoint contract is being negotiated with sector leads. There is no Python or Stata equivalent. So the publisher's *transport* — the actual push to Helix, SDMX, the data portal, and the SoWC tables — and its remaining boundaries (read only blessed `013_wrkdata`, require a provenance chain back to original API fetches, never roll back without amending the source) are still enforced by procedure and review rather than by code. Treat the PUBLISHER role as a contract honoured mostly by hand, with the mechanical version arriving one helper at a time.
+PRODUCER and REVIEWER are fully wired into the mode contract; PUBLISHER only partly. One piece of the role is code: `dw_publish(path, indicator, vintage, sector, endpoint = "helix", dry_run = TRUE)`. Where `dw_save` writes a file to the Teams folder and its Z: mirror, `dw_publish` submits a file that already exists to Helix through its API; calling the canonical write "publish" confuses the two.
+
+It already enforces the call-site contract: a reviewer-mode call stops before any I/O (`[cso_toolkit.dw_publish] Reviewer mode forbids API submissions to 'helix'.`); `path`, `indicator`, `vintage` and `sector` must each be a single non-empty string; the artefact must exist on disk; and the endpoint allowlist admits only `"helix"`.
+
+What it does *not* yet do is submit. It is a dry-run stub: `dry_run = TRUE` validates the call and returns `status = "dry_run"` with the payload a live submission would send, including the file's `sha256`; `dry_run = FALSE` stops with an envelope pointing at issue #15, where the Helix endpoint contract is being negotiated with sector leads. The publisher's transport (to Helix, SDMX, the data portal and the SoWC tables) and its other boundaries are still enforced by procedure and review: a contract honoured mostly by hand, with the mechanical version arriving one helper at a time.
 
 ## Collaboration model: single- and multi-producer projects
 
-Everything above assumes one producer per deposit: a Database Manager who owns the outputs while reviewers reproduce them. Co-authored research projects do not work like that. Several people produce code and results, and who produces and who reviews changes over time: JP produces while Karen reviews, and a month later they swap. The toolkit handles this with a second setting that sits beside `dw_mode` rather than inside it.
+Everything above assumes one producer per deposit. Co-authored research projects do not work like that: several people produce code and results, and who produces and who reviews changes over time. JP produces while Karen reviews, and a month later they swap. The toolkit handles this with a second setting beside `dw_mode` rather than inside it.
 
 ### Modes are per session; the collaboration model is per project
 
-The two settings answer different questions and live in different places.
+{{< include ../_generated/badges/dw_collaboration.md >}}
 
 | Setting | Question | Where it lives | Who sets it | Values |
 |---|---|---|---|---|
 | `dw_mode` | Is *this session* producing or reviewing? | `~/.config/user_config.yml` (personal, never committed) | each person, as often as their role changes | `producer`, `reviewer` |
 | `collaboration` | How many people may *produce* in this project? | `cso_project.yml` at the repository root (committed) | the project, in one reviewed commit | `single-producer`, `multi-producer` |
 
-A missing `cso_project.yml` means `single-producer`, which is how the toolkit behaved before the file existed, so existing projects need no change. The file is short:
+A missing `cso_project.yml` means `single-producer`, so existing projects need no change. The file is short (template: `templates/cso_project.yml`):
 
 ```yaml
 schema: cso_project/1
@@ -256,23 +238,21 @@ members:          # optional, informational
   - kbarnes
 ```
 
-The toolkit finds it by walking up from the working directory (or from the profile's `rootFolder`) and stops at the repository root, so a repository without the file never picks up a parent folder's. The model is resolved once per session; `dw_collaboration()` returns it, and a profile generated by `create_profile()` prints it at load. A template is in `templates/cso_project.yml`.
+The toolkit finds it by walking up from the `root` you pass, the profile's `rootFolder` or the working directory, and stops at the repository root, so a repository without the file never picks up a parent folder's. The model is resolved once per session and `dw_collaboration()` returns it. A new repository chooses its model when it is created ([Starting a repository](40-new-repository.qmd)).
 
 ### Why not a third mode or a new role
 
-The obvious alternative was a third session mode (say, `co-producer`) or a fourth role. It was rejected because a mode cannot be coordinated. Modes are per person: each collaborator sets their own in a file nobody else sees. If the number of producers were a mode, two co-authors could run under different rules on the same outputs, and the protections one of them relied on would not exist for the other. A producer session that knew nothing of the other producer would overwrite their work without a trace.
-
-The number of producers is a fact about the project, not about a person, so it belongs in the repository, where it is the same for everyone, is changed in one reviewed commit, and has a history. Modes keep their meaning: a producer session writes, a reviewer session reads and writes only to its sandbox.
+The obvious alternative was a third session mode (say, `co-producer`) or a fourth role. It was rejected because a mode cannot be coordinated. Modes are per person, set in a file nobody else sees. If the number of producers were a mode, two co-authors could run under different rules on the same outputs, and a producer session that knew nothing of the other producer would overwrite their work without a trace. The number of producers is a fact about the project, so it belongs in the repository: the same for everyone, changed in one reviewed commit, with a history. Modes keep their meaning.
 
 ### What `multi-producer` changes
 
 Only `dw_save()` behaves differently, and only for an output that already exists and has a provenance sidecar. Reviewer sessions write to their sandbox and are not affected.
 
-1. **Out-of-band change.** If the file's SHA-256 no longer matches the `sha256` in its sidecar, someone changed it without `dw_save()`. Replacing it would discard a change nobody recorded, so `dw_save()` stops with the standard `[cso_toolkit.dw_save] ... Why ... Fix` envelope. A text output that differs from its sidecar only in line endings is not a change: a Windows clone with `core.autocrlf=true` checks tracked files out with CRLF. `dw_save()` then prints a note instead of stopping. To keep tracked outputs byte-exact on every platform, add `output/** -text` to `.gitattributes`; the scaffolders write it.
-2. **Concurrent write.** If the sidecar says another user wrote the file *after this session started*, two producers may be writing the same output in the same window, and one would silently overwrite the other. `dw_save()` stops. The exception is an output whose file and sidecar are both committed and unmodified in git: the other write then reached this session through git (a pull or a merge), so this write builds on it. Outputs outside git, such as deposits, keep the check.
-3. **Otherwise it writes.** When the previous writer was someone else, it prints a note, not an error. Handing the producer role back and forth is normal in a co-authored project; a guard that fired on every handover would teach people to override it without reading it.
+1. **Out-of-band change.** If the file's SHA-256 no longer matches the `sha256` in its sidecar, someone changed it without `dw_save()`; replacing it would discard a change nobody recorded, so `dw_save()` stops. A text output that differs only in line endings (a Windows clone with `core.autocrlf=true` checks tracked files out with CRLF) is not a change: `dw_save()` prints a note instead. `output/** -text` in `.gitattributes`, which the scaffolders write, keeps tracked outputs byte-exact.
+2. **Concurrent write.** If the sidecar says another user wrote the file *after this session started*, two producers may be writing the same output at once, and one would silently overwrite the other, so `dw_save()` stops. The exception is an output whose file and sidecar are committed and unmodified in git: that write reached this session through a pull or merge, so this one builds on it. Outputs outside git, such as deposits, keep the check.
+3. **Otherwise it writes.** When the previous writer was someone else, it prints a note, not an error. Handing the producer role back and forth is normal; a guard that fired on every handover would teach people to override it without reading it.
 
-Either stop can be overridden with `takeover = TRUE` once you have checked what happened, and the override is recorded in the new sidecar. Every sidecar written in a multi-producer project also records its lineage: `collaboration`, `previous_sha256`, `previous_user`, `previous_written_at`, `git_branch` and `git_commit` (Appendix B lists them). Single-producer sidecars are unchanged.
+Either stop can be overridden with `takeover = TRUE` once you have checked what happened, and the override is recorded in the new sidecar. Every sidecar written in a multi-producer project also records its lineage (the previous writer's hash, user and time, and the git branch and commit); the fields are in [Appendix B](../appendices/b-provenance-schema.qmd). Single-producer sidecars are unchanged.
 
 The API cache follows the same rule. An existing cache is read, never replaced, unless the producer passes `refresh = TRUE`; in a multi-producer project a refresh over another user's fetch says so and keeps the previous fetch (`metadata.previous_fetch`) in the new provenance.
 
@@ -326,6 +306,8 @@ dw_save, filename(table2) path("outputs") idvars(iso3 year) takeover
 
 ### How to switch, and why switching midway is safe
 
+{{< include ../_generated/badges/dw_set_collaboration.md >}}
+
 Switch with `dw_set_collaboration()`, never by editing the file alone, and commit the result as one pull request that a co-author reviews:
 
 ::: {.panel-tabset}
@@ -344,32 +326,26 @@ dw_set_collaboration("multi-producer", root=root_folder,
 ```
 :::
 
-The call writes `cso_project.yml` and adds a `baseline` object (`collaboration`, `at`, `by`) to every existing `*.provenance.json` under the root. The baseline is inserted as text: the sidecar's `sha256` and every other field stay exactly as they were. It refuses to run in reviewer mode, because it writes. It is idempotent: a second call changes nothing.
+The call writes `cso_project.yml` and adds a `baseline` object (`collaboration`, `at`, `by`) to every existing `*.provenance.json` under the root, inserted as text so `sha256` and every other field keep their bytes. It refuses to run in reviewer mode, because it writes, and a second call changes nothing. Switching back is the same call with the other value.
 
-The switch is a non-event for three reasons.
+The switch is a non-event for three reasons:
 
-- **No mixed rules.** The setting is in the repository, so every collaborator moves to the new rules at the same commit, when they pull it. Nobody's session can still run the old rules on the new branch.
-- **No flood of alarms.** Without the baseline, the first write over every artefact produced before the switch would report a change of producer. The baseline marks those artefacts as project-owned, so the first multi-producer write over them is quiet.
-- **No lineage gap.** The baseline leaves `sha256` untouched, so the first multi-producer write records that hash as its `previous_sha256`, and the chain starts from the last single-producer state of each file.
-
-Switching back to `single-producer` is the same call with the other value.
+- **No mixed rules.** The setting is in the repository, so every collaborator moves to the new rules at the same commit, when they pull it.
+- **No flood of alarms.** The baseline marks artefacts produced before the switch as project-owned, so the first multi-producer write over each is quiet instead of reporting a change of producer.
+- **No lineage gap.** The baseline leaves `sha256` untouched, so the first multi-producer write records it as `previous_sha256`, and the chain starts from the last single-producer state of each file.
 
 ### A worked example: two co-authors who swap roles
 
 JP and Karen co-author a paper in one repository. Until now JP has produced every table; Karen has reviewed.
 
-1. **The switch.** Karen will start producing the robustness tables, so JP runs `dw_set_collaboration("multi-producer", members = c("jpazevedo", "kbarnes"))` in a producer session and opens a pull request with `cso_project.yml` and the baselined sidecars. Karen reviews and merges it.
-2. **Karen produces.** Karen switches her `dw_mode` to `producer` in her own `user_config.yml`, pulls, and re-runs `03_robustness.R`. Her first write over `table3.csv` (last written by JP before the switch) is quiet, because the sidecar carries a baseline; the new sidecar records JP's hash as `previous_sha256`.
-3. **JP reviews.** JP sets his `dw_mode` to `reviewer` and reproduces Karen's tables in his sandbox. Reviewer writes never touch the shared outputs, so no guard is involved.
-4. **They overlap by accident.** One afternoon both run `02_main.R` in producer mode against the shared project folder. Karen's run finishes first. When JP's run reaches `dw_save()` for `table2.csv`, the sidecar shows that Karen wrote it after JP's session started, and `dw_save()` stops. JP pulls Karen's change, compares, and either re-runs or, if his version is the one to keep, passes `takeover = TRUE`, which is recorded.
-5. **The roles swap back.** A month later JP produces again. His first write over a table Karen last wrote prints a note ("last written by kbarnes; your write follows theirs in its lineage") and proceeds.
+1. **The switch.** Karen will produce the robustness tables, so JP runs `dw_set_collaboration("multi-producer", ...)` in a producer session and opens a pull request with `cso_project.yml` and the baselined sidecars. Karen reviews and merges it.
+2. **Karen produces.** She sets her own `dw_mode` to `producer`, pulls and re-runs `03_robustness.R`. Her first write over `table3.csv`, last written by JP, is quiet because the sidecar carries a baseline; the new sidecar records JP's hash as `previous_sha256`.
+3. **JP reviews.** He sets his `dw_mode` to `reviewer` and reproduces her tables in his sandbox. No guard is involved.
+4. **They overlap by accident.** Both run `02_main.R` in producer mode on the shared folder. Karen's run finishes first, so when JP's reaches `dw_save()` for `table2.csv` the sidecar shows a write after his session started, and it stops. JP pulls, compares, and either re-runs or passes `takeover = TRUE`, which is recorded.
+5. **The roles swap back.** A month later JP's first write over a table Karen last wrote prints a note ("last written by kbarnes; your write follows theirs in its lineage") and proceeds.
 
-At no point did either of them change the project setting again. Who produces is a session matter; how many may produce was settled once, in review.
-
-### What a new co-author sets on first clone
-
-A new co-author needs only their personal block in `~/.config/user_config.yml`, with `dw_mode: reviewer` until they start producing. The project file decides the rest: once they pull the repository, every session they open follows the same collaboration model as everyone else's. They do not need to add anything about the project to their personal configuration, and they could not override it there if they tried.
+Neither changed the project setting again: who produces is a session matter; how many may produce was settled once, in review. A new co-author needs only their personal block in `user_config.yml`, with `dw_mode: reviewer` until they start producing; the project file decides the rest, and they could not override it there if they tried.
 
 ## Why this matters
 
-The whole point of the relay is *reproducibility with permanence*. A reviewer must be able to run the producer's exact scripts and get the producer's exact numbers — which means the reviewer must read the same frozen caches the producer deposited, never a fresher pull from a live API that has moved on. Each cache is a *vintage*: the exact snapshot of the data as it stood when the producer pulled it. And a reviewer must be able to reproduce those numbers without any risk of overwriting the very deposit they are auditing. The two guards deliver exactly this: the API guard keeps the reviewer reading frozen vintages, and the `dw_save` reviewer guard keeps the reviewer's output quarantined in a sandbox. Set `dw_mode` correctly once, and the same code base behaves as a producer or as a reviewer — safely, and without editing a single sector script.
+The point of the relay is *reproducibility with permanence*. A reviewer must run the producer's exact scripts and get the producer's exact numbers, which means reading the same frozen caches (each a *vintage*: the data as they stood when the producer pulled them), never a fresher pull from a live API that has moved on. And the reviewer must do so without any risk of overwriting the deposit under audit. The API guard keeps the reviewer on frozen vintages; the `dw_save` guard keeps the reviewer's output in a sandbox. Set `dw_mode` once, and the same code base behaves as a producer or as a reviewer, without editing a single sector script.

@@ -353,7 +353,7 @@ check[["contract-audit"]] <- function(name) {
   if (!is.null(missing)) {
     return(report("FAIL", name, sprintf("%s not found", missing),
                   why = "the audit runs the vendored toolkit, the exact code the repo runs.",
-                  fix = sprintf("vendor dw_io.R and test_scripts.R into %s/ (handbook chapter 41), set TOOLKIT_DIR, or drop contract-audit from CHECKS.", td)))
+                  fix = sprintf("vendor dw_io.R and test_scripts.R into %s/ (handbook chapter 'Vendoring and updates'), set TOOLKIT_DIR, or drop contract-audit from CHECKS.", td)))
   }
   paths <- words(cfg("AUDIT_PATHS"))
   paths <- paths[file.exists(paths)]
@@ -374,7 +374,7 @@ check[["contract-audit"]] <- function(name) {
     }
     report(if (identical(mode, "advisory")) "WARN" else "FAIL", name, detail,
            why = "raw IO and HTTP calls bypass the dw_* wrappers, so they leave no provenance and ignore reviewer mode.",
-           fix = "route the call through the dw_* wrapper the rule names, or mark a documented exception with `# cso-allow: <rule>` (handbook chapter 43).")
+           fix = "route the call through the dw_* wrapper the rule names, or mark a documented exception with `# cso-allow: <rule>` (handbook chapter 'Checks and CI').")
   } else {
     report("PASS", name, sprintf("test_scripts(): no violations in %s", paste(paths, collapse = ", ")))
   }

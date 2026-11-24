@@ -5,7 +5,7 @@ description: Start a new repository with the cso-toolkit scaffolders (research p
 
 # Start a new cso-toolkit repository
 
-The rules are in the handbook chapter "Starting a new repository": <https://unicef-drp.github.io/cso-toolkit/handbook/chapters/40-new-repository.html>. Follow it; this is the procedure.
+The rules are in the handbook chapter "Starting a repository": <https://unicef-drp.github.io/cso-toolkit/handbook/chapters/40-new-repository.html>. Follow it; this is the procedure.
 
 1. **Ask which kind,** unless the person already said:
    - **research project:** a paper or study; git holds the small result tables and figures with their provenance sidecars;

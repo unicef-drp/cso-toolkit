@@ -3,7 +3,7 @@
 #
 # Keep them and add your own: a test per project function, and a regression
 # test per bug fix that names the issue in its title and fails on the old
-# code (The CSO Handbook, "Continuous integration and repository hygiene").
+# code (The CSO Handbook, "Checks and CI").
 # Tests use tiny synthetic fixtures in tests/testthat/fixtures/, never real
 # data: the data are not in the repository.
 

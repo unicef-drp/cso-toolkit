@@ -3,7 +3,7 @@
 # pre-push -- refuse a push whose content has no passing check record
 # ---------------------------------------------------------------------------
 # Template from unicef-drp/cso-toolkit: templates/hooks/pre-push
-# Guidance: docs/ci_cd_guidelines.md; handbook chapter 45 ("Check records").
+# Guidance: docs/ci_cd_guidelines.md; handbook chapter "Checks and CI" ("Check records").
 #
 # Install (once per clone; the hook is tracked):
 #   git config core.hooksPath .githooks

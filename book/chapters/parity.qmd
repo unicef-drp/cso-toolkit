@@ -1,6 +1,11 @@
-# Cross-language parity {#sec-parity}
+---
+aliases:
+  - ../appendices/g-parity-certificate.html
+---
 
-The toolkit is written three times: in R (`r/R/`, the reference implementation), in Python (`python/src/`) and in Stata (`stata/src/`). It promises that the three give the same results. The coverage matrix (Appendix A) records which functions exist in which language; it cannot show that they agree. This appendix explains how agreement is checked, and how a release proves it.
+# How the three languages stay in step {#sec-parity}
+
+The toolkit is written three times: in R (`r/R/`, the reference implementation), in Python (`python/src/`) and in Stata (`stata/src/`). It promises that the three give the same results. The coverage matrix ([Appendix A](../appendices/a-coverage-matrix.qmd)) records which functions exist in which language; it cannot show that they agree. This chapter explains how agreement is checked, and how a release proves it.
 
 ## Two layers of checking
 
@@ -74,36 +79,13 @@ The json kind is how behaviour that has no data output is checked: refusals, gua
 
 `UPDATE-REGISTER` keeps the register honest. When a gap closes or a divergence is fixed, the next run says so and fails until the case file is updated. A closed gap is therefore visible in the next certificate.
 
-## The cases at v0.12.0
+## The cases
 
-Statuses below are from the certificate recorded for v0.12.0 (R / Python / Stata).
+The table is generated from `conformance/cases/*.json` by `sh tools/docs-tables`. "Checked" means the case runs in that language and a passing certificate records it as a pass; a gap is a language the case lists as not implementing it, with the reason.
 
-| Case | Kind | Functions | R / Py / Stata |
-|---|---|---|---|
-| `io_roundtrip_csv` | values, fixture | `dw_use`, `dw_save` | pass / pass / pass |
-| `io_roundtrip_dta` | values, fixture | `dw_use`, `dw_save` (`.dta`) | pass / pass / pass |
-| `io_edge_values` | values, fixture | `dw_use`, `dw_save`: commas, quotes, accents, empty cells, tiny, large and negative numbers | pass / pass / pass |
-| `save_isid_duplicate` | json | `dw_save` refuses non-unique `isid` keys | pass / pass / pass |
-| `provenance_sidecar` | json | `dw_save`'s sidecar: shared keys, file sha256 | pass / pass / pass |
-| `collab_out_of_band` | json | multi-producer guard in `dw_save`, `takeover` | pass / pass / pass |
-| `config_user_block` | json | `dw_mode` from `user_config.yml` (`create_profile` in R and Python, `dw_load_config` in Stata) | pass / pass / pass |
-| `reviewer_refuses_api` | json | reviewer mode refuses a live API call (`dw_api_fetch`; `dw_require_no_api` in Stata) | pass / pass / pass |
-| `compare_counts` | json | `dw_compare` added / removed / changed | pass / pass / pass |
-| `compare_same_file` | json | `dw_compare` refuses a file compared with itself | pass / pass / pass |
-| `compare_diagnose` | json | `dw_compare(diagnose = TRUE)`, `dw_diff_profile` | pass / pass / gap |
-| `aggregate_weighted_mean` | values | `aggregate_data_v2`, weighted mean | pass / pass / gap |
-| `aggregate_total` | values | `aggregate_data_v2(method = "total")` | pass / pass / gap |
-| `deposit_fetch_inputs` | values | `dw_fetch_inputs`, `dw_check_deposit` | pass / pass / gap |
-| `provenance_diff_status` | json | `dw_read_provenance`, `dw_provenance_diff` | pass / pass / gap |
-| `stage_lifecycle` | json | `dw_stage`: every state, the sidecar's keys and its mtime format | pass / pass / gap |
-| `version_compare` | json | version comparison in `cso_toolkit_check` | pass / pass / gap |
+{{< include ../_generated/parity-cases.md >}}
 
-In total: 44 passes and 7 gaps, with no divergences. Every gap is Stata, and each one is a scope decision or a documented route:
-- no `aggregate_data_v2` (two cases);
-- no `dw_stage`, so a Stata reviewer reads canonical inputs in place;
-- no vendoring helpers;
-- no diagnostic profile in `dw_compare` (#111), because Stata's `r(col_changed)` gives the per-column counts;
-- deposit inputs and run-level provenance go through R or Python (#152).
+Every gap is in Stata, and each one is a scope decision or a documented route: Stata has no `aggregate_data_v2`, no `dw_stage` (a Stata reviewer reads canonical inputs in place), no vendoring helpers and no diagnostic profile in `dw_compare` (#111); deposit inputs and run-level provenance go through R or Python (#152).
 
 ## The certificate
 

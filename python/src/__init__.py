@@ -147,4 +147,4 @@ __all__ = [
     "dw_create_profile", "dw_review_profile", "dw_test_scripts",
 ]
 
-__version__ = "0.12.0"
+__version__ = "0.12.1"

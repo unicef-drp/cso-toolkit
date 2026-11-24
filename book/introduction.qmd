@@ -14,7 +14,7 @@ It does this by encoding **one way to read, write, compare, and merge data; one 
 
 ## What cso-toolkit is
 
-`cso-toolkit` (the repository `unicef-drp/cso-toolkit`, currently v0.12.0) is a set of small helpers that enforce one way of doing each task, grouped into five capability families. Part III gives each family its own chapter.
+`cso-toolkit` (the repository `unicef-drp/cso-toolkit`, currently v0.12.1) is a set of small helpers that enforce one way of doing each task, grouped into five capability families. Part III gives each family its own chapter.
 
 - **IO** — `dw_save`, `dw_use`, `dw_compare`, `dw_merge`, `dw_isid`, `dw_verify_z`, `dw_stage`, `dw_root`, `dw_fetch_inputs`, `dw_check_deposit`, `dw_read_provenance`, `dw_provenance_diff`: uniform file IO with auto-dispatch by extension, an `isid` uniqueness check, an automatic provenance sidecar on writes, a Z: drive mirror on canonical writes (a *canonical* write being the final, signed-off `dw_<sector>` file that downstream products cite, as opposed to an intermediate *working* file), an integrity check on canonical reads, fetch-and-verify of inputs kept out of Git against the deposit, and a run-level comparison of two outputs from their sidecars.
 - **External API** — `dw_api_fetch`, `dw_api_cached`, `dw_api_inventory`: a mode-aware wrapper around external data sources (UIS, SDMX, World Bank, ILO, UNSD-SDG, GitHub-raw, generic HTTP/JSON, flat CSV at a URL) with a deposit-side cache.
@@ -89,9 +89,9 @@ The mode is not a per-call argument but a **session property**. It is read once 
 
 This book is written for several audiences at once:
 
-- **Analysts and sector teams** working in R, Python, or Stata who need to read, write, and aggregate warehouse data the CSO way. You will spend most of your time in Part III (the cross-language API).
-- **Database managers** (producers) and **reviewers** who operate the producer / reviewer / publisher mode contract day to day. Part II explains the roles, how the mode is wired into a repo, and what the provenance sidecars and error envelopes guarantee.
-- **Repo adopters** — maintainers of DW-Production and of future deposit-bearing repositories such as UNPD-Population and datalib — who want to vendor the toolkit into their own codebase and keep it in sync. Part IV is your section.
+- **Analysts and sector teams** working in R, Python, or Stata who need to read, write, and aggregate warehouse data the CSO way. You will spend most of your time in Part II (using the helpers).
+- **Database managers** (producers) and **reviewers** who operate the producer / reviewer / publisher mode contract day to day. Part I explains the roles and what the provenance sidecars and error envelopes guarantee; Part III shows how the mode is wired into a repository.
+- **Repo adopters** — maintainers of DW-Production and of future deposit-bearing repositories such as UNPD-Population and datalib — who want to vendor the toolkit into their own codebase and keep it in sync. Part III is your section; Part IV is for those who maintain the toolkit itself.
 - **LLM and coding-agent developers** — building *assistants* that turn documentation, existing sector-specific helpers, and legacy code into the standard functions this toolkit supports; or *orchestrators* that compose the toolkit's deterministic functions as trusted building blocks. The handbook is written to be precise enough for a machine to follow — see [§ How coding agents should use this handbook](#sec-coding-agents).
 
 You do not need to read the book front to back. Use the part that matches your role and follow the cross-references to adjacent chapters.
@@ -108,29 +108,29 @@ For an LLM or an agentic orchestrator, that implies:
 - **Compose, don't regenerate.** An orchestrator calls the deterministic functions as building blocks; the LLM handles orchestration and glue, not the contract's enforced behaviour. The determinism is the point.
 - **Operate within the human's role and session.** An agent runs under the session's `dw_mode` — in reviewer mode the network is unreachable — and must not flip the mode or reach for the `allow_canonical_write` / producer-bootstrap escape hatches on its own; those exist for explicit human action. The agent gets no role of its own; accountability stays with the named producer, reviewer, or publisher.
 - **Never fabricate values, provenance, or coverage.** Read and cite the provenance sidecar; surface gaps from the coverage matrix ([Appendix A](appendices/a-coverage-matrix.qmd)) rather than faking parity.
-- **Treat the contract as binding.** Code that bypasses the wrappers is flagged by the contract auditor ([Part IV](chapters/43-contract-auditor-ci.qmd)); generate code that passes it.
+- **Treat the contract as binding.** Code that bypasses the wrappers is flagged by the contract auditor ([Checks and CI](chapters/checks-and-ci.qmd)); generate code that passes it.
 
 ## How to navigate this book
 
 The handbook is organised into six parts and a set of appendices.
 
-- **Part I — Why & Architecture** motivates the toolkit (why a shared repo at all) and lays out the architecture: one contract, three language siblings, many consumer repos, and a single canonical deposit. Start here if you want the big picture before the API details.
+- **Part I — The Contract** motivates the toolkit and lays out its architecture (one contract, three language siblings, many consumer repositories, one canonical deposit), then defines the three roles, the session-level mode contract, and the two mechanisms that make the toolkit trustworthy: provenance sidecars and the standard error envelope.
 
-- **Part II — The Contract** is the conceptual core. It defines the three roles and the session-level mode contract, shows how to wire that contract into a repo's profile, and explains the two cross-cutting mechanisms that make the toolkit trustworthy: provenance sidecars and the standard error envelope.
+- **Part II — Using the Helpers** is the reference for daily work, one chapter per capability family: reading and writing data, external APIs, and aggregation. Each presents R, Python and Stata together; which language has which function is shown on one line under each function, from the coverage matrix.
 
-- **Part III — The API (cross-language)** is the reference for daily work, one chapter per capability family: the IO contract; the external-API contract; aggregation; vintage sync; and scaffolding plus the contract auditor. Every chapter presents R, Python, and Stata together and is explicit about coverage gaps.
+- **Part III — Setting Up and Running a Repository** is for the people who start or adopt a repository: creating one (or adopting the toolkit in an existing one), profiles and the mode switch, vendoring and updates, checks and CI with check records and the contract auditor, and working with AI coding agents.
 
-- **Part IV — Adoption & Operations** is for adopters and maintainers: starting a new repository, the vendoring model and why it is preferred over network installation, a worked example of onboarding a repo, running the contract auditor in CI, the project's versioning and release discipline, CI/CD with check records, and working with AI coding agents.
+- **Part IV — Maintaining the Toolkit** is for the toolkit's own maintainers and contributors: versioning and the release discipline, how the three languages are certified to agree, and how to contribute a change.
 
 - **Part V — The Microdata Archive (datalib)** documents the survey-microdata archive, its IHSN folder grammar, and the `datalib_*` API and conformance suite.
 
 - **Part VI — The Ecosystem** sets out the three tiers of shared code and documents unicefData.
 
-- **Appendices** collect the dense reference material: the cross-language coverage matrix (A), the provenance sidecar schema (B), the error taxonomy (C), a full function reference (D), a glossary (E), curated third-party functions (F), and the parity certificate (G).
+- **Appendices** collect the dense reference material: the cross-language coverage matrix (A), the provenance sidecar schema (B), the error taxonomy (C), a full function reference (D), a glossary (E), and curated third-party functions (F). How the three languages are certified to agree is a chapter of its own in Part IV.
 
-If you are brand new, read the architecture chapter in Part I and the roles chapter in Part II, then jump to the IO contract chapter in Part III. Those three pages give you enough to use the toolkit safely.
+If you are brand new, read the architecture and roles chapters in Part I, then the reading-and-writing chapter in Part II. Those three pages give you enough to use the toolkit safely.
 
-If you are here to adopt the toolkit into a new repository, read the vendoring-model and onboarding chapters in Part IV first; they assume the role and mode concepts from Part II, so keep the roles chapter to hand.
+If you are here to start a repository or adopt the toolkit in an existing one, read [Starting a repository](chapters/40-new-repository.qmd) in Part III first; it assumes the role and mode concepts from Part I, so keep the roles chapter to hand.
 
 ::: {.callout-note}
 This handbook documents the toolkit as it actually exists in the repository, including its current asymmetries between languages. Where this book describes a capability as present in one language but not another, that reflects the real state of the code, not an aspiration. Treat the coverage matrix in Appendix A as the source of truth when in doubt.

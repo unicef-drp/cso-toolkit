@@ -26,41 +26,6 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
-/* CSS for syntax highlighting */
-html { -webkit-text-size-adjust: 100%; }
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-}
 </style>
 
 
@@ -202,19 +167,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-controls="quarto-sidebar-section-1" aria-expanded="true">
- <span class="menu-text" id="quarto-sidebar-section-1-label">Part I — Why &amp; Architecture</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+ <span class="menu-text" id="quarto-sidebar-section-1-label">Part I — The Contract</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
       </div>
       <ul id="quarto-sidebar-section-1" aria-labelledby="quarto-sidebar-section-1-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/11-why.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Why a toolkit</span></span></a>
+  <a href="../chapters/why-and-architecture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Why a toolkit, and how it fits together</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/12-architecture.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Architecture: one contract, three languages, many consumers</span></span></a>
+  <a href="../chapters/21-roles-and-modes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Roles and the mode contract</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/23-provenance-and-errors.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Provenance sidecars and the error envelope</span></span></a>
   </div>
 </li>
       </ul>
@@ -222,25 +193,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-controls="quarto-sidebar-section-2" aria-expanded="true">
- <span class="menu-text" id="quarto-sidebar-section-2-label">Part II — The Contract</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+ <span class="menu-text" id="quarto-sidebar-section-2-label">Part II — Using the Helpers</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
       </div>
       <ul id="quarto-sidebar-section-2" aria-labelledby="quarto-sidebar-section-2-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/21-roles-and-modes.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Roles and the mode contract</span></span></a>
+  <a href="../chapters/31-io.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">The IO contract</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/22-wiring-the-contract.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Wiring the contract into a repo</span></span></a>
+  <a href="../chapters/32-external-api.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">The external-API contract</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/23-provenance-and-errors.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Provenance sidecars and the error envelope</span></span></a>
+  <a href="../chapters/33-aggregation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Aggregation</span></span></a>
   </div>
 </li>
       </ul>
@@ -248,37 +219,37 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-controls="quarto-sidebar-section-3" aria-expanded="true">
- <span class="menu-text" id="quarto-sidebar-section-3-label">Part III — The API (cross-language)</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+ <span class="menu-text" id="quarto-sidebar-section-3-label">Part III — Setting Up and Running a Repository</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
       </div>
       <ul id="quarto-sidebar-section-3" aria-labelledby="quarto-sidebar-section-3-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/31-io.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">The IO contract</span></span></a>
+  <a href="../chapters/40-new-repository.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Starting a repository</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/32-external-api.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">The external-API contract</span></span></a>
+  <a href="../chapters/profiles-and-modes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Profiles and the mode switch</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/33-aggregation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Aggregation</span></span></a>
+  <a href="../chapters/vendoring-and-updates.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Vendoring and updates</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/34-vintage-sync.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Vintage sync</span></span></a>
+  <a href="../chapters/checks-and-ci.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Checks and CI</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/35-scaffolding-audit.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Scaffolding and the contract auditor</span></span></a>
+  <a href="../chapters/46-ai-agents.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Working with AI coding agents</span></span></a>
   </div>
 </li>
       </ul>
@@ -286,49 +257,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-controls="quarto-sidebar-section-4" aria-expanded="true">
- <span class="menu-text" id="quarto-sidebar-section-4-label">Part IV — Adoption &amp; Operations</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+ <span class="menu-text" id="quarto-sidebar-section-4-label">Part IV — Maintaining the Toolkit</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
       </div>
       <ul id="quarto-sidebar-section-4" aria-labelledby="quarto-sidebar-section-4-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/40-new-repository.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Starting a new repository</span></span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../chapters/41-vendoring.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">The vendoring model</span></span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../chapters/42-onboarding-example.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Onboarding a repo: a worked example</span></span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../chapters/43-contract-auditor-ci.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">The contract auditor in continuous integration (CI)</span></span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
   <a href="../chapters/44-versioning-release.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Versioning and releases</span></span></a>
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Versioning and releases</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/45-ci-cd.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Continuous integration and repository hygiene</span></span></a>
+  <a href="../chapters/parity.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">How the three languages stay in step</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/46-ai-agents.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Working with AI coding agents</span></span></a>
+  <a href="../chapters/contributing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Contributing</span></span></a>
   </div>
 </li>
       </ul>
@@ -342,19 +289,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/51-microdata-archive.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">The microdata archive: archive, catalogue, tool</span></span></a>
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">The microdata archive: archive, catalogue, tool</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/52-ihsn-grammar.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">The IHSN convention and the folder grammar</span></span></a>
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">The IHSN convention and the folder grammar</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/53-datalib-api-conformance.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">The <code>datalib_*</code> API and its conformance suite</span></span></a>
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">The <code>datalib_*</code> API and its conformance suite</span></span></a>
   </div>
 </li>
       </ul>
@@ -368,13 +315,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/61-ecosystem.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">The UNICEF analytics ecosystem: three tiers</span></span></a>
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">The UNICEF analytics ecosystem: three tiers</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/62-unicefdata.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">unicefData: public child statistics in three languages</span></span></a>
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">unicefData: public child statistics in three languages</span></span></a>
   </div>
 </li>
       </ul>
@@ -421,12 +368,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text"><span class="chapter-number">F</span>&nbsp; <span class="chapter-title">Curated third-party functions</span></span></a>
   </div>
 </li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../appendices/g-parity-certificate.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">G</span>&nbsp; <span class="chapter-title">Cross-language parity</span></span></a>
-  </div>
-</li>
       </ul>
   </li>
     </ul>
@@ -440,20 +381,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
    
   <ul>
   <li><a href="#where-the-per-function-reference-lives" id="toc-where-the-per-function-reference-lives" class="nav-link active" data-scroll-target="#where-the-per-function-reference-lives"><span class="header-section-number">D.1</span> Where the per-function reference lives</a></li>
-  <li><a href="#reading-the-family-tables" id="toc-reading-the-family-tables" class="nav-link" data-scroll-target="#reading-the-family-tables"><span class="header-section-number">D.2</span> Reading the family tables</a></li>
-  <li><a href="#io-contract" id="toc-io-contract" class="nav-link" data-scroll-target="#io-contract"><span class="header-section-number">D.3</span> IO contract</a></li>
-  <li><a href="#external-api-contract" id="toc-external-api-contract" class="nav-link" data-scroll-target="#external-api-contract"><span class="header-section-number">D.4</span> External-API contract</a></li>
-  <li><a href="#aggregation-and-survey-weights" id="toc-aggregation-and-survey-weights" class="nav-link" data-scroll-target="#aggregation-and-survey-weights"><span class="header-section-number">D.5</span> Aggregation and survey weights</a></li>
-  <li><a href="#demographics" id="toc-demographics" class="nav-link" data-scroll-target="#demographics"><span class="header-section-number">D.6</span> Demographics</a></li>
-  <li><a href="#vintage-sync" id="toc-vintage-sync" class="nav-link" data-scroll-target="#vintage-sync"><span class="header-section-number">D.7</span> Vintage sync</a></li>
-  <li><a href="#scaffolding-and-the-contract-auditor" id="toc-scaffolding-and-the-contract-auditor" class="nav-link" data-scroll-target="#scaffolding-and-the-contract-auditor"><span class="header-section-number">D.8</span> Scaffolding and the contract auditor</a></li>
-  <li><a href="#reporting-and-uniqueness-utilities" id="toc-reporting-and-uniqueness-utilities" class="nav-link" data-scroll-target="#reporting-and-uniqueness-utilities"><span class="header-section-number">D.9</span> Reporting and uniqueness utilities</a></li>
-  <li><a href="#stata-only-helpers" id="toc-stata-only-helpers" class="nav-link" data-scroll-target="#stata-only-helpers"><span class="header-section-number">D.10</span> Stata-only helpers</a></li>
-  <li><a href="#how-to-find-a-function-fast" id="toc-how-to-find-a-function-fast" class="nav-link" data-scroll-target="#how-to-find-a-function-fast"><span class="header-section-number">D.11</span> How to find a function fast</a></li>
-  <li><a href="#authoritative-source-files" id="toc-authoritative-source-files" class="nav-link" data-scroll-target="#authoritative-source-files"><span class="header-section-number">D.12</span> Authoritative source files</a></li>
-  <li><a href="#microdata-archive-datalib_" id="toc-microdata-archive-datalib_" class="nav-link" data-scroll-target="#microdata-archive-datalib_"><span class="header-section-number">D.13</span> Microdata archive (<code>datalib_*</code>)</a>
+  <li><a href="#names" id="toc-names" class="nav-link" data-scroll-target="#names"><span class="header-section-number">D.2</span> Names</a></li>
+  <li><a href="#the-functions" id="toc-the-functions" class="nav-link" data-scroll-target="#the-functions"><span class="header-section-number">D.3</span> The functions</a>
   <ul class="collapse">
-  <li><a href="#where-the-per-function-reference-lives-1" id="toc-where-the-per-function-reference-lives-1" class="nav-link" data-scroll-target="#where-the-per-function-reference-lives-1"><span class="header-section-number">D.13.1</span> Where the per-function reference lives</a></li>
+  <li><a href="#io-contract" id="toc-io-contract" class="nav-link" data-scroll-target="#io-contract"><span class="header-section-number">D.3.1</span> IO contract</a></li>
+  <li><a href="#external-api-contract" id="toc-external-api-contract" class="nav-link" data-scroll-target="#external-api-contract"><span class="header-section-number">D.3.2</span> External-API contract</a></li>
+  <li><a href="#aggregation-and-survey-weights" id="toc-aggregation-and-survey-weights" class="nav-link" data-scroll-target="#aggregation-and-survey-weights"><span class="header-section-number">D.3.3</span> Aggregation and survey weights</a></li>
+  <li><a href="#vintage-sync" id="toc-vintage-sync" class="nav-link" data-scroll-target="#vintage-sync"><span class="header-section-number">D.3.4</span> Vintage sync</a></li>
+  <li><a href="#scaffolding-and-contract-auditor" id="toc-scaffolding-and-contract-auditor" class="nav-link" data-scroll-target="#scaffolding-and-contract-auditor"><span class="header-section-number">D.3.5</span> Scaffolding and contract auditor</a></li>
+  </ul></li>
+  <li><a href="#how-to-find-a-function-fast" id="toc-how-to-find-a-function-fast" class="nav-link" data-scroll-target="#how-to-find-a-function-fast"><span class="header-section-number">D.4</span> How to find a function fast</a></li>
+  <li><a href="#where-this-appendix-comes-from" id="toc-where-this-appendix-comes-from" class="nav-link" data-scroll-target="#where-this-appendix-comes-from"><span class="header-section-number">D.5</span> Where this appendix comes from</a></li>
+  <li><a href="#microdata-archive-datalib_" id="toc-microdata-archive-datalib_" class="nav-link" data-scroll-target="#microdata-archive-datalib_"><span class="header-section-number">D.6</span> Microdata archive (<code>datalib_*</code>)</a>
+  <ul class="collapse">
+  <li><a href="#where-the-per-function-reference-lives-1" id="toc-where-the-per-function-reference-lives-1" class="nav-link" data-scroll-target="#where-the-per-function-reference-lives-1"><span class="header-section-number">D.6.1</span> Where the per-function reference lives</a></li>
   </ul></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/unicef-drp/cso-toolkit/edit/main/book/appendices/d-function-reference.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/unicef-drp/cso-toolkit/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
@@ -480,679 +421,512 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>This appendix is a <em>directory, not a manual</em>. It lists every public function the toolkit exports, groups them into their capability families, and points you to the authoritative per-function documentation for each language. Use it to find a function by name and see which family it belongs to, which languages implement it, and where to read the argument-by-argument details. The full prose reference — argument descriptions, return values, and runnable examples — lives in each language’s own documentation, described below.</p>
-<p>The families here mirror the chapters of Part III. For the <em>behaviour</em> of a family — what it does and why — read the matching chapter (the IO contract, the external-API contract, aggregation, vintage sync, scaffolding and the contract auditor). For the <em>signatures</em>, read each language’s reference, described in the next section. The coverage-matrix appendix is the canonical source for the cross-language gaps summarised below.</p>
-<p>A note on terms used throughout the tables. The toolkit routes paths and gates the network by <em>mode</em>: a script runs as the data <strong>producer</strong> (writes the canonical deposit, may hit the live network) or as the <strong>reviewer</strong> (reads frozen artefacts only, with the network barred). A <strong>canonical</strong> write is a final published deposit, as opposed to a working artefact. These distinctions are load-bearing for the IO and external-API tables; the external-API contract chapter explains them in full.</p>
+<p>This appendix is a directory, not a manual. It lists every public function of the toolkit with a one-line description, the languages that have it, and the chapter that explains it. The table is generated from the code by <code>sh tools/docs-tables</code>: the description is the function’s R help title (or, for a Stata-only command, its Stata help title), and a new function without one fails the check. For the argument-by-argument reference, use each language’s own help, described next. For what a function’s note in another language says (a route, a reason), see the <a href="../appendices/a-coverage-matrix.html">coverage matrix</a>.</p>
 <section id="where-the-per-function-reference-lives" class="level2" data-number="D.1">
 <h2 data-number="D.1" class="anchored" data-anchor-id="where-the-per-function-reference-lives"><span class="header-section-number">D.1</span> Where the per-function reference lives</h2>
-<p>The three language siblings document themselves in three different idioms, and coverage is uneven — complete in R, site-less in Python, partial in Stata.</p>
-<p><strong>R — roxygen2 help pages (complete).</strong> The R package is fully documented with roxygen2: every exported function has a generated <code>.Rd</code> help page; open it with <code>?dw_save</code> after installing the package (or <code>devtools::load_all("r")</code>). <code>r/_pkgdown.yml</code> groups the pages into the same capability families used below, for a pkgdown site, but no workflow builds or publishes one yet: <code>https://unicef-drp.github.io/cso-toolkit</code> serves the DW Operations dashboard and the handbook. The grouping assigns each function to a family through roxygen <code>@family</code> tags (<code>io</code>, <code>collaboration</code>, <code>api</code>, <code>sync</code>, <code>aggregate</code>, <code>demographics</code>, <code>survey-weights</code>, <code>reporting</code>, <code>scaffolding</code>, <code>audit</code>). roxygen2 renders each <code>@family</code> tag as a <code>\concept{}</code> entry in the <code>.Rd</code>, which is what the <code>has_concept()</code> selectors in <code>_pkgdown.yml</code> match. The R help pages are the most complete reference of the three and the recommended starting point even for Python and Stata users, because the behaviour contract is shared.</p>
-<p><strong>Python — module docstrings only (no autodoc site).</strong> The Python package carries full type hints (it ships <code>src/py.typed</code> per PEP 561) and per-function docstrings, but there is <strong>no generated documentation site</strong> — no Sphinx, no pkgdown equivalent. To read the Python reference, either introspect in a session (<code>help(dw_save)</code> after <code>from cso_toolkit import dw_save</code>) or read the hand-written Markdown references in the repo: <code>docs/dw_io_python_reference.md</code> and <code>docs/dw_api_python_reference.md</code>. These two files cover the IO and external-API families; the remaining Python families are documented only by their docstrings.</p>
-<p><strong>Stata — native <code>.sthlp</code> help files (partial coverage).</strong> Each shipped Stata command has a companion <code>.sthlp</code> help file next to its <code>.ado</code> in <code>stata/src/</code>, viewable with the usual <code>help dw_save</code>. Stata implements only the subset of the contract that fits its idioms, so its reference covers far fewer functions than R or Python (see the per-family coverage notes and the coverage-matrix appendix).</p>
-<div class="callout callout-style-simple callout-note">
-<div class="callout-body d-flex">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-body-container">
-<p>The family grouping in <code>r/_pkgdown.yml</code> is driven by the roxygen <code>@family</code> tags (which roxygen2 emits as <code>\concept{}</code> entries the <code>has_concept()</code> selectors match), not hand-maintained. If you add an exported R function, tag it with the right <code>@family</code> so it lands in the correct family; an untagged export is still exported but is orphaned from the reference index.</p>
-</div>
-</div>
-</div>
+<p><strong>R — help pages.</strong> Every exported R function has a roxygen2-generated help page: <code>?dw_save</code> after installing the package or <code>devtools::load_all("r")</code>. They are the most complete reference of the three, and worth reading even if you work in Python or Stata, because the behaviour is shared. <code>r/_pkgdown.yml</code> groups the pages into families through each function’s roxygen <code>@family</code> tag, ready for a pkgdown site; none is published yet.</p>
+<p><strong>Python — docstrings.</strong> Every public function has a docstring and type hints (the package ships <code>py.typed</code>): <code>help(dw_save)</code> after <code>from cso_toolkit import dw_save</code>. There is no generated site. <code>docs/dw_io_python_reference.md</code> and <code>docs/dw_api_python_reference.md</code> are hand-written references for the IO and external-API functions.</p>
+<p><strong>Stata — help files.</strong> Each command has a <code>.sthlp</code> file next to its <code>.ado</code> in <code>stata/src/</code>: <code>help dw_save</code>. Two internal files sit beside them: <code>_dw_py.ado</code> and <code>dw_stata_helpers.py</code>, the Python helpers that <code>dw_save</code> and <code>dw_collaboration</code> call through Stata’s Python integration.</p>
 </section>
-<section id="reading-the-family-tables" class="level2" data-number="D.2">
-<h2 data-number="D.2" class="anchored" data-anchor-id="reading-the-family-tables"><span class="header-section-number">D.2</span> Reading the family tables</h2>
-<p>Each family below lists its members and shows which languages export the function today. A check means the function is exported and documented in that language; an em dash means it is not implemented there; a parenthetical note records a partial or deferred state. These columns are a quick orientation only — the coverage-matrix appendix is authoritative and tracks the issues behind each gap.</p>
-<p>Two naming conventions matter when you read across the columns:</p>
-<ul>
-<li><strong>R dual names.</strong> Several R functions are exported under <strong>two names</strong> — a short historical name and a <code>dw_</code>-prefixed alias. The <code>dw_</code> aliases were introduced incrementally across v0.4.4 and v0.4.5 (issue #42 / PR #48) and remain exported alongside the bare names. The tables list the canonical <code>dw_</code>-prefixed name first and note the bare alias.</li>
-<li><strong>Python exports both names too.</strong> The Python package (<code>python/src/__init__.py</code>) exports the <strong>bare</strong> name <em>and</em> a <code>dw_</code>-prefixed alias for every dual-named function — <code>aggregate_data_v2</code> / <code>dw_aggregate_data_v2</code>, <code>create_profile</code> / <code>dw_create_profile</code>, <code>test_scripts</code> / <code>dw_test_scripts</code>, and so on — so the canonical <code>dw_</code>-prefixed spelling resolves identically in R and Python. (Earlier these aliases were R-only, and the <code>dw_</code> spelling raised <code>ImportError</code> in Python.)</li>
-</ul>
-<div class="callout callout-style-simple callout-warning">
-<div class="callout-body d-flex">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-body-container">
-<p><strong>Version stamps, not feature parity.</strong> The R and Python packages report the same version. A matching stamp is a floor, not a guarantee that every behaviour is present in both: some noted below (for example the Z:-root recognition in <code>dw_is_canonical</code>, or the read-all-sheets <code>dw_use(sheet = NULL)</code>) landed in R and may not yet be present, or may behave differently, in the Python sibling. When a feature’s vintage matters, confirm it against the language you are actually running.</p>
-</div>
-</div>
-</div>
+<section id="names" class="level2" data-number="D.2">
+<h2 data-number="D.2" class="anchored" data-anchor-id="names"><span class="header-section-number">D.2</span> Names</h2>
+<p>Several helpers have two names in both R and Python: a short historical name and a <code>dw_</code>-prefixed alias of the same function (<code>aggregate_data_v2</code> and <code>dw_aggregate_data_v2</code>, <code>create_profile</code> and <code>dw_create_profile</code>, <code>test_scripts</code> and <code>dw_test_scripts</code>, and so on). The aliases are the same objects, so either spelling works; the table lists each function once, under its short name.</p>
 </section>
-<section id="io-contract" class="level2" data-number="D.3">
-<h2 data-number="D.3" class="anchored" data-anchor-id="io-contract"><span class="header-section-number">D.3</span> IO contract</h2>
-<p>Uniform read / write / compare / merge helpers with mode-aware path routing (paths resolve differently for the producer and the reviewer), the Z: drive mirror on canonical writes, and emission of a <code>.provenance.json</code> sidecar. See the IO contract chapter for behaviour.</p>
+<section id="the-functions" class="level2" data-number="D.3">
+<h2 data-number="D.3" class="anchored" data-anchor-id="the-functions"><span class="header-section-number">D.3</span> The functions</h2>
+<!-- Generated by book/_scripts/gen_tables.py from the code and book/_data/coverage.json. Do not edit: run `sh tools/docs-tables`. -->
+<section id="io-contract" class="level3" data-number="D.3.1">
+<h3 data-number="D.3.1" class="anchored" data-anchor-id="io-contract"><span class="header-section-number">D.3.1</span> IO contract</h3>
 <table class="caption-top table">
-<colgroup>
-<col style="width: 20%">
-<col style="width: 20%">
-<col style="width: 20%">
-<col style="width: 20%">
-<col style="width: 20%">
-</colgroup>
 <thead>
 <tr class="header">
 <th>Function</th>
+<th>What it does</th>
 <th>R</th>
 <th>Python</th>
 <th>Stata</th>
-<th>Notes</th>
+<th>Documented in</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td><code>dw_save</code></td>
-<td>✅</td>
-<td>✅</td>
-<td>✅</td>
-<td>Write + uniqueness check (isid) + sidecar + Z: mirror; in R, prompts before overwriting a producer deposit (v0.5.0), <code>force = TRUE</code> to override</td>
+<td>Save an object to disk, dispatching on the file extension</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td><a href="../chapters/31-io.html">The IO contract</a></td>
 </tr>
 <tr class="even">
 <td><code>dw_use</code></td>
-<td>✅</td>
-<td>✅</td>
-<td>✅</td>
-<td>Read with mode-branched resolver; accepts HTTPS URLs since v0.4.0; in R, <code>sheet = NULL</code> reads all sheets of an <code>.xlsx</code> (v0.5.0)</td>
+<td>Read a file from disk, dispatching on the file extension</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td><a href="../chapters/31-io.html">The IO contract</a></td>
 </tr>
 <tr class="odd">
 <td><code>dw_compare</code></td>
-<td>✅</td>
-<td>✅</td>
-<td>✅</td>
-<td>Diff two artefacts on id + value vars; tolerates degenerate sides with a warning (v0.5.0); <code>diagnose = TRUE</code> (R, Python) adds a profile; stops when both sides are the same file (#111)</td>
+<td>Compare a current dataset against a reference (added / removed / changed)</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td><a href="../chapters/31-io.html">The IO contract</a></td>
 </tr>
 <tr class="even">
 <td><code>dw_diff_profile</code></td>
-<td>✅</td>
-<td>✅</td>
+<td>Profile where a dw_compare() mismatch comes from</td>
+<td>✓</td>
+<td>✓</td>
 <td>—</td>
-<td>Since v0.11.0 (#111): profile a <code>dw_compare</code> result (differing columns, numeric drift quantiles, top key values of the changed / added / removed rows); Stata’s <code>dw_compare</code> returns per-column counts in <code>r(col_changed)</code></td>
+<td><a href="../chapters/31-io.html">The IO contract</a></td>
 </tr>
 <tr class="odd">
 <td><code>dw_merge</code></td>
-<td>✅</td>
-<td>✅</td>
+<td>Stata-style merge with cardinality assertion</td>
+<td>✓</td>
+<td>✓</td>
 <td>—</td>
-<td>R + Python only</td>
+<td><a href="../chapters/31-io.html">The IO contract</a></td>
 </tr>
 <tr class="even">
 <td><code>dw_isid</code></td>
-<td>✅</td>
-<td>✅</td>
-<td>embedded</td>
-<td>In Stata the uniqueness check lives inside <code>dw_save</code></td>
+<td>Stata-style uniqueness check on a key tuple</td>
+<td>✓</td>
+<td>✓</td>
+<td>—</td>
+<td><a href="../chapters/31-io.html">The IO contract</a></td>
 </tr>
 <tr class="odd">
 <td><code>dw_verify_z</code></td>
-<td>✅</td>
-<td>✅</td>
+<td>Verify a canonical Teams file matches its Z: drive mirror</td>
+<td>✓</td>
+<td>✓</td>
 <td>—</td>
-<td>R + Python only</td>
+<td><a href="../chapters/31-io.html">The IO contract</a></td>
+</tr>
+<tr class="even">
+<td><code>dw_stage</code></td>
+<td>Stage a canonical input into the reviewer sandbox with hash-guard</td>
+<td>✓</td>
+<td>✓</td>
+<td>—</td>
+<td><a href="../chapters/31-io.html">The IO contract</a></td>
+</tr>
+<tr class="odd">
+<td><code>dw_fetch_inputs</code></td>
+<td>Fetch pipeline inputs from the canonical deposit, then verify them</td>
+<td>✓</td>
+<td>✓</td>
+<td>—</td>
+<td><a href="../chapters/31-io.html">The IO contract</a></td>
+</tr>
+<tr class="even">
+<td><code>dw_check_deposit</code></td>
+<td>Check that local input files are deposited on Teams or Z:</td>
+<td>✓</td>
+<td>✓</td>
+<td>—</td>
+<td><a href="../chapters/31-io.html">The IO contract</a></td>
+</tr>
+<tr class="odd">
+<td><code>dw_read_provenance</code></td>
+<td>Read the provenance sidecar of an output</td>
+<td>✓</td>
+<td>✓</td>
+<td>—</td>
+<td><a href="../chapters/31-io.html">The IO contract</a></td>
+</tr>
+<tr class="even">
+<td><code>dw_provenance_diff</code></td>
+<td>Compare the provenance of two runs of the same output</td>
+<td>✓</td>
+<td>✓</td>
+<td>—</td>
+<td><a href="../chapters/31-io.html">The IO contract</a></td>
+</tr>
+<tr class="odd">
+<td><code>dw_collaboration</code></td>
+<td>Resolve the collaboration model of the current project</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td><a href="../chapters/21-roles-and-modes.html">Roles and the mode contract</a></td>
+</tr>
+<tr class="even">
+<td><code>dw_set_collaboration</code></td>
+<td>Set the project’s collaboration model (cso_project.yml)</td>
+<td>✓</td>
+<td>✓</td>
+<td>—</td>
+<td><a href="../chapters/21-roles-and-modes.html">Roles and the mode contract</a></td>
+</tr>
+<tr class="odd">
+<td><code>dw_root</code></td>
+<td>Resolve the mode-aware repo / canonical root for a vendored kind</td>
+<td>✓</td>
+<td>✓</td>
+<td>—</td>
+<td><a href="../chapters/31-io.html">The IO contract</a></td>
 </tr>
 <tr class="even">
 <td><code>dw_resolve_path</code></td>
-<td>✅</td>
-<td>✅</td>
+<td>Resolve a logical DW path to a filesystem path</td>
+<td>✓</td>
+<td>✓</td>
 <td>—</td>
-<td>Mode-aware path resolver</td>
+<td><a href="../chapters/31-io.html">The IO contract</a></td>
 </tr>
 <tr class="odd">
 <td><code>dw_is_canonical</code></td>
-<td>✅</td>
-<td>✅</td>
+<td>Test whether a path lives under a canonical deposit root</td>
+<td>✓</td>
+<td>✓</td>
 <td>—</td>
-<td>Detects a canonical deposit; recognises the Z: (<code>dwZDrive</code>) root in R as of v0.5.0</td>
+<td><a href="../chapters/31-io.html">The IO contract</a></td>
 </tr>
 <tr class="even">
-<td><code>dw_root</code></td>
-<td>✅</td>
-<td>✅</td>
-<td>—</td>
-<td>Public wrapper around the root resolver (re-exported v0.4.6)</td>
-</tr>
-<tr class="odd">
-<td><code>dw_stage</code></td>
-<td>✅</td>
-<td>✅</td>
-<td>—</td>
-<td>Reviewer copy of a canonical input with a <code>.staged.json</code> hash sidecar; <code>dw_use(stage = TRUE)</code> calls it (Python since v0.12.0)</td>
-</tr>
-<tr class="even">
-<td><code>dw_fetch_inputs</code></td>
-<td>✅</td>
-<td>✅</td>
-<td>—</td>
-<td>R and Python (#152; Stata via R or Python): fill a gitignored local inputs folder from the Teams / Z: deposit, <code>.gitkeep</code> per folder, input manifest</td>
-</tr>
-<tr class="odd">
-<td><code>dw_check_deposit</code></td>
-<td>✅</td>
-<td>✅</td>
-<td>—</td>
-<td>R and Python (#152; Stata via R or Python): every local input has an identical SHA-256 copy on Teams or Z:</td>
-</tr>
-<tr class="even">
-<td><code>dw_read_provenance</code></td>
-<td>✅</td>
-<td>✅</td>
-<td>—</td>
-<td>R and Python (#152; Stata via R or Python): read the <code>.provenance.json</code> sidecar of an output</td>
-</tr>
-<tr class="odd">
-<td><code>dw_provenance_diff</code></td>
-<td>✅</td>
-<td>✅</td>
-<td>—</td>
-<td>R and Python (#152; Stata via R or Python): compare two runs from their sidecars (reproduced / output changed / inputs changed)</td>
-</tr>
-<tr class="even">
-<td><code>dw_collaboration</code></td>
-<td>✅</td>
-<td>✅</td>
-<td>✅</td>
-<td>The project’s collaboration model (<code>single-producer</code> / <code>multi-producer</code>) from <code>cso_project.yml</code>, resolved once per session (R and Python since v0.10.0); Stata <code>dw_collaboration.ado</code> since v0.11.0 (#168)</td>
-</tr>
-<tr class="odd">
-<td><code>dw_set_collaboration</code></td>
-<td>✅</td>
-<td>✅</td>
-<td>—</td>
-<td>Since v0.10.0: write <code>cso_project.yml</code> and baseline the existing sidecars (one reviewed PR); refused in reviewer mode; not in Stata (switch from R or Python)</td>
-</tr>
-<tr class="even">
-<td><code>dw_publish</code></td>
-<td>✅ (stub)</td>
-<td>—</td>
-<td>—</td>
-<td>STUB / dry-run only — see callout below</td>
-</tr>
-<tr class="odd">
-<td><code>dw_toolkit_version</code></td>
-<td>✅</td>
-<td>✅</td>
-<td>—</td>
-<td>Reports the installed toolkit version</td>
-</tr>
-<tr class="even">
-<td><code>dw_verbosity</code></td>
-<td>✅</td>
-<td>—</td>
-<td>—</td>
-<td>Sets session verbosity / debug options (v0.4.10)</td>
-</tr>
-<tr class="odd">
 <td><code>dw_mkdir</code></td>
+<td>Recursive mkdir for the cso-toolkit Stata side</td>
 <td>—</td>
 <td>—</td>
-<td>✅</td>
-<td>Stata-only: recursive mkdir (Stata’s built-in is not recursive)</td>
+<td>✓</td>
+<td><a href="../chapters/31-io.html">The IO contract</a></td>
+</tr>
+<tr class="odd">
+<td><code>dw_verbosity</code></td>
+<td>Set toolkit verbosity for the session</td>
+<td>✓</td>
+<td>—</td>
+<td>—</td>
+<td>help page only</td>
+</tr>
+<tr class="even">
+<td><code>dw_toolkit_version</code></td>
+<td>Toolkit version that this <code>dw_io.R</code> was vendored from</td>
+<td>✓</td>
+<td>✓</td>
+<td>—</td>
+<td><a href="../chapters/vendoring-and-updates.html">Vendoring and updates</a></td>
+</tr>
+<tr class="odd">
+<td><code>dw_default_unicef_allowlist</code></td>
+<td>Standard URL-allowlist patterns for UNICEF-owned reference data</td>
+<td>✓</td>
+<td>✓</td>
+<td>—</td>
+<td><a href="../chapters/31-io.html">The IO contract</a></td>
 </tr>
 <tr class="even">
 <td><code>dw_map_drive</code></td>
+<td>Map the configured network drive (default Z:)</td>
 <td>—</td>
 <td>—</td>
-<td>✅</td>
-<td>Stata-only onboarding: maps the team network drive from config (port of datalib’s <code>mapzdrive</code>)</td>
+<td>✓</td>
+<td><a href="../chapters/profiles-and-modes.html">Profiles and the mode switch</a></td>
 </tr>
 </tbody>
 </table>
-<div class="callout callout-style-simple callout-warning">
-<div class="callout-body d-flex">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-body-container">
-<p><code>dw_publish</code> is exported but remains a <strong>stub</strong>: only the dry-run path (<code>dry_run = TRUE</code>, the default) is supported, returning a validated payload with a <code>sha256</code>. A live submission (<code>dry_run = FALSE</code>) deliberately raises an error pointing at issue #15. Do not treat it as a working submission path; the live Helix branch is still pending. See the versioning and releases chapter.</p>
-</div>
-</div>
-</div>
-<div class="tabset-margin-container"></div><div class="panel-tabset">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="" aria-current="page">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-3" role="tab" aria-controls="tabset-1-3" aria-selected="false" href="">Stata</a></li></ul>
-<div class="tab-content">
-<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dw_save</span>(df, <span class="at">name =</span> <span class="st">"dw_ed_edu.csv"</span>, <span class="at">sector =</span> <span class="st">"ed"</span>, <span class="at">kind =</span> <span class="st">"wrk"</span>, <span class="at">isid =</span> <span class="st">"REF_AREA"</span>)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">dw_use</span>(<span class="at">name =</span> <span class="st">"dw_ed_edu.csv"</span>, <span class="at">sector =</span> <span class="st">"ed"</span>, <span class="at">kind =</span> <span class="st">"wrk"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>dw_save(df, name<span class="op">=</span><span class="st">"dw_ed_edu.csv"</span>, sector<span class="op">=</span><span class="st">"ed"</span>, kind<span class="op">=</span><span class="st">"wrk"</span>, isid<span class="op">=</span>[<span class="st">"REF_AREA"</span>])</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> dw_use(name<span class="op">=</span><span class="st">"dw_ed_edu.csv"</span>, sector<span class="op">=</span><span class="st">"ed"</span>, kind<span class="op">=</span><span class="st">"wrk"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<div id="tabset-1-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-3-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>dw_save, filename(<span class="st">"dw_ed_edu.dta"</span>) path(<span class="st">"$teamsWrkData/ed"</span>) idvars(REF_AREA)</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>dw_use, filename(<span class="st">"dw_ed_edu.dta"</span>) path(<span class="st">"$teamsWrkData/ed"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-</div>
-</div>
 </section>
-<section id="external-api-contract" class="level2" data-number="D.4">
-<h2 data-number="D.4" class="anchored" data-anchor-id="external-api-contract"><span class="header-section-number">D.4</span> External-API contract</h2>
-<p>Mode-aware wrappers around the supported external data sources (eleven in all, among them UIS, the World Bank, ILO, the UNSD-SDG database, SDMX endpoints, and GitHub-raw). The producer hits the live API and caches the result; the reviewer reads from the canonical cache only and is barred from the network. See the external-API contract chapter.</p>
+<section id="external-api-contract" class="level3" data-number="D.3.2">
+<h3 data-number="D.3.2" class="anchored" data-anchor-id="external-api-contract"><span class="header-section-number">D.3.2</span> External-API contract</h3>
 <table class="caption-top table">
-<colgroup>
-<col style="width: 20%">
-<col style="width: 20%">
-<col style="width: 20%">
-<col style="width: 20%">
-<col style="width: 20%">
-</colgroup>
 <thead>
 <tr class="header">
 <th>Function</th>
+<th>What it does</th>
 <th>R</th>
 <th>Python</th>
 <th>Stata</th>
-<th>Notes</th>
+<th>Documented in</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td><code>dw_api_fetch</code></td>
-<td>✅</td>
-<td>✅</td>
+<td>Fetch from an external API, mode-aware, with deposit cache</td>
+<td>✓</td>
+<td>✓</td>
 <td>—</td>
-<td>The main dispatcher (<code>api =</code> selects the source)</td>
+<td><a href="../chapters/32-external-api.html">The external-API contract</a></td>
 </tr>
 <tr class="even">
 <td><code>dw_api_cached</code></td>
-<td>✅</td>
-<td>✅</td>
+<td>Read an API cache without fetching</td>
+<td>✓</td>
+<td>✓</td>
 <td>—</td>
-<td>Cache-only read</td>
+<td><a href="../chapters/32-external-api.html">The external-API contract</a></td>
 </tr>
 <tr class="odd">
 <td><code>dw_api_inventory</code></td>
-<td>✅</td>
-<td>✅</td>
+<td>List all cached API fetches under the canonical root</td>
+<td>✓</td>
+<td>✓</td>
 <td>—</td>
-<td>List what is cached</td>
+<td><a href="../chapters/32-external-api.html">The external-API contract</a></td>
 </tr>
 <tr class="even">
-<td><code>dw_default_unicef_allowlist</code></td>
-<td>✅</td>
-<td>✅</td>
+<td><code>dw_require_no_api</code></td>
+<td>Block live API calls in reviewer mode</td>
 <td>—</td>
-<td>Default URL allowlist for <code>dw_use</code> HTTPS freezing (Python since v0.8.0)</td>
+<td>—</td>
+<td>✓</td>
+<td><a href="../chapters/profiles-and-modes.html">Profiles and the mode switch</a></td>
+</tr>
+<tr class="odd">
+<td><code>dw_publish</code></td>
+<td>Submit a warehouse artifact to the UNICEF Helix data platform (STUB)</td>
+<td>✓</td>
+<td>—</td>
+<td>—</td>
+<td><a href="../chapters/21-roles-and-modes.html">Roles and the mode contract</a></td>
 </tr>
 </tbody>
 </table>
-<div class="callout callout-style-simple callout-warning">
-<div class="callout-body d-flex">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-body-container">
-<p><strong>Stata has no external-API wrapper.</strong> The entire API family is R + Python only. A Stata reviewer can still re-run from frozen artefacts, but Stata cannot fetch from UIS, SDMX, the World Bank, ILO, UNSD-SDG, or GitHub-raw through the toolkit. Stata enforces its reviewer-mode network lockout separately, through <code>dw_require_no_api</code> (listed under Stata-only helpers below).</p>
-</div>
-</div>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Python — api= selects the source</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> dw_api_fetch(api<span class="op">=</span><span class="st">"wb"</span>, cache_key<span class="op">=</span><span class="st">"wb_SP.POP.TOTL"</span>, indicator<span class="op">=</span><span class="st">"SP.POP.TOTL"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="aggregation-and-survey-weights" class="level2" data-number="D.5">
-<h2 data-number="D.5" class="anchored" data-anchor-id="aggregation-and-survey-weights"><span class="header-section-number">D.5</span> Aggregation and survey weights</h2>
-<p>Stratified aggregation, time-window filtering, footnote formatting, and survey-weight redistribution. See the aggregation chapter.</p>
+<section id="aggregation-and-survey-weights" class="level3" data-number="D.3.3">
+<h3 data-number="D.3.3" class="anchored" data-anchor-id="aggregation-and-survey-weights"><span class="header-section-number">D.3.3</span> Aggregation and survey weights</h3>
 <table class="caption-top table">
-<colgroup>
-<col style="width: 20%">
-<col style="width: 20%">
-<col style="width: 20%">
-<col style="width: 20%">
-<col style="width: 20%">
-</colgroup>
 <thead>
 <tr class="header">
-<th>Function (R canonical)</th>
+<th>Function</th>
+<th>What it does</th>
 <th>R</th>
 <th>Python</th>
 <th>Stata</th>
-<th>Notes</th>
+<th>Documented in</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>dw_aggregate_data_v2</code></td>
-<td>✅</td>
-<td>✅</td>
+<td><code>aggregate_data</code></td>
+<td>Aggregate Data with Optional Weighting and Global Aggregation</td>
+<td>✓</td>
+<td>✓</td>
 <td>—</td>
-<td>Current aggregator; bare name <code>aggregate_data_v2</code> (the Python export)</td>
+<td><a href="../chapters/33-aggregation.html">Aggregation</a></td>
 </tr>
 <tr class="even">
-<td><code>dw_aggregate_data</code></td>
-<td>✅</td>
-<td>✅</td>
+<td><code>aggregate_data_v2</code></td>
+<td>Aggregate Data v2.0 - Enhanced for Cross-Sector Use</td>
+<td>✓</td>
+<td>✓</td>
 <td>—</td>
-<td>Earlier aggregator; bare name <code>aggregate_data</code></td>
+<td><a href="../chapters/33-aggregation.html">Aggregation</a></td>
 </tr>
 <tr class="odd">
-<td><code>dw_apply_time_window</code></td>
-<td>✅</td>
-<td>✅</td>
+<td><code>apply_time_window</code></td>
+<td>Filter data to latest observation within a time window, with exemptions</td>
+<td>✓</td>
+<td>✓</td>
 <td>—</td>
-<td>Latest obs per country in a year window; bare name <code>apply_time_window</code></td>
+<td><a href="../chapters/33-aggregation.html">Aggregation</a></td>
 </tr>
 <tr class="even">
-<td><code>dw_generate_agg_footnote</code></td>
-<td>✅</td>
-<td>✅</td>
+<td><code>generate_agg_footnote</code></td>
+<td>Generate standardized footnotes for aggregated estimates</td>
+<td>✓</td>
+<td>✓</td>
 <td>—</td>
-<td>Standardised coverage footnote; bare name <code>generate_agg_footnote</code></td>
+<td><a href="../chapters/33-aggregation.html">Aggregation</a></td>
 </tr>
 <tr class="odd">
 <td><code>dw_nestweight</code></td>
-<td>✅</td>
-<td>✅</td>
+<td>Redistribute survey weights from missing nested observations</td>
+<td>✓</td>
+<td>✓</td>
 <td>—</td>
-<td>Survey-weight redistribution; R port of EduAnalyticsToolkit’s <code>edukit_nestweight</code> (no bare alias — <code>dw_nestweight</code> is the only name in both R and Python)</td>
-</tr>
-</tbody>
-</table>
-<p>Per the naming conventions above, R and Python both export the <code>dw_</code>-prefixed and the bare name for the first four functions.</p>
-<div class="tabset-margin-container"></div><div class="panel-tabset">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-3" role="tab" aria-controls="tabset-2-3" aria-selected="false" href="">Stata</a></li></ul>
-<div class="tab-content">
-<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>out <span class="ot">&lt;-</span> <span class="fu">dw_aggregate_data_v2</span>(df, <span class="at">value =</span> <span class="st">"OBS_VALUE"</span>, <span class="at">weight =</span> <span class="st">"POP"</span>, <span class="at">by =</span> <span class="st">"REGION"</span>, <span class="at">method =</span> <span class="st">"weighted_mean"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>out <span class="op">=</span> aggregate_data_v2(df, value<span class="op">=</span><span class="st">"OBS_VALUE"</span>, weight<span class="op">=</span><span class="st">"POP"</span>, by<span class="op">=</span>[<span class="st">"REGION"</span>], method<span class="op">=</span><span class="st">"weighted_mean"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<div id="tabset-2-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-3-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>* <span class="kw">not</span> implemented <span class="kw">in</span> Stata</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-</div>
-</div>
-</section>
-<section id="demographics" class="level2" data-number="D.6">
-<h2 data-number="D.6" class="anchored" data-anchor-id="demographics"><span class="header-section-number">D.6</span> Demographics</h2>
-<p>Convenience wrappers for the population denominators and the UNICEF region taxonomy that most sector pipelines need. See the aggregation chapter for how they feed coverage.</p>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 20%">
-<col style="width: 20%">
-<col style="width: 20%">
-<col style="width: 20%">
-<col style="width: 20%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>Function</th>
-<th>R</th>
-<th>Python</th>
-<th>Stata</th>
-<th>Notes</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><code>dw_pop</code></td>
-<td>✅</td>
-<td>✅</td>
-<td>—</td>
-<td>World Bank <code>SP.POP.TOTL</code> denominators; added v0.4.0, Python sibling added for issue #17</td>
+<td><a href="../chapters/33-aggregation.html">Aggregation</a></td>
 </tr>
 <tr class="even">
+<td><code>dw_pop</code></td>
+<td>Latest country-level population numbers</td>
+<td>✓</td>
+<td>✓</td>
+<td>—</td>
+<td><a href="../chapters/33-aggregation.html">Aggregation</a></td>
+</tr>
+<tr class="odd">
 <td><code>dw_regions</code></td>
-<td>✅</td>
+<td>UNICEF regional aggregates appended to a country-level tibble</td>
+<td>✓</td>
 <td>—</td>
 <td>—</td>
-<td>Append UNICEF regional aggregate rows; added v0.4.0 (issue #18)</td>
+<td><a href="../chapters/33-aggregation.html">Aggregation</a></td>
 </tr>
 </tbody>
 </table>
-<div class="callout callout-style-simple callout-note">
-<div class="callout-body d-flex">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-body-container">
-<p><code>dw_pop</code> ships in <strong>R and Python</strong>; <code>dw_regions</code> is <strong>R-only today.</strong> Neither has a Stata sibling, by design (see the coverage matrix). <code>dw_regions</code> has no Python sibling yet; a redesign against the Country-and-Region-Metadata-API (issue #40, open) is on the roadmap.</p>
-</div>
-</div>
-</div>
 </section>
-<section id="vintage-sync" class="level2" data-number="D.7">
-<h2 data-number="D.7" class="anchored" data-anchor-id="vintage-sync"><span class="header-section-number">D.7</span> Vintage sync</h2>
-<p>Consumer-side helpers that read the local <code>.toolkit_manifest.yml</code>, query upstream for the latest tag, and warn or refresh when the vendored copy is behind. Reviewer mode forbids the network query. See the vintage sync chapter.</p>
+<section id="vintage-sync" class="level3" data-number="D.3.4">
+<h3 data-number="D.3.4" class="anchored" data-anchor-id="vintage-sync"><span class="header-section-number">D.3.4</span> Vintage sync</h3>
 <table class="caption-top table">
-<colgroup>
-<col style="width: 20%">
-<col style="width: 20%">
-<col style="width: 20%">
-<col style="width: 20%">
-<col style="width: 20%">
-</colgroup>
 <thead>
 <tr class="header">
 <th>Function</th>
+<th>What it does</th>
 <th>R</th>
 <th>Python</th>
 <th>Stata</th>
-<th>Notes</th>
+<th>Documented in</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td><code>cso_toolkit_check</code></td>
-<td>✅</td>
-<td>✅</td>
+<td>Check whether the vendored toolkit is behind a target or upstream</td>
+<td>✓</td>
+<td>✓</td>
 <td>—</td>
-<td>Compare the pinned vintage against a target version (offline; warns when behind, v0.10.0) and, in producer mode, the latest upstream tag</td>
+<td><a href="../chapters/vendoring-and-updates.html">Vendoring and updates</a></td>
 </tr>
 <tr class="even">
 <td><code>cso_toolkit_diff</code></td>
-<td>✅</td>
-<td>✅</td>
+<td>Show per-file differences between the vendored copy and a release</td>
+<td>✓</td>
+<td>✓</td>
 <td>—</td>
-<td>Compare each vendored file with a release tag (unchanged / changed / local_edit / missing_upstream / missing_local)</td>
+<td><a href="../chapters/vendoring-and-updates.html">Vendoring and updates</a></td>
 </tr>
 <tr class="odd">
 <td><code>cso_toolkit_pull</code></td>
-<td>✅</td>
-<td>✅</td>
+<td>Refresh the vendored copies to a cso-toolkit release</td>
+<td>✓</td>
+<td>✓</td>
 <td>—</td>
-<td>Refresh the vendored copy to a release tag and re-pin the manifest</td>
+<td><a href="../chapters/vendoring-and-updates.html">Vendoring and updates</a></td>
 </tr>
 <tr class="even">
 <td><code>cso_toolkit_sync</code></td>
-<td>✅</td>
-<td>✅</td>
+<td>Update the vendored cso-toolkit in one call</td>
+<td>✓</td>
+<td>✓</td>
 <td>—</td>
-<td>The one call: latest release, its NEWS since the pin, diff, then pull</td>
+<td><a href="../chapters/vendoring-and-updates.html">Vendoring and updates</a></td>
 </tr>
 </tbody>
 </table>
-<p>These four keep the <code>cso_toolkit_</code> prefix in both R and Python (no <code>dw_</code> alias).</p>
 </section>
-<section id="scaffolding-and-the-contract-auditor" class="level2" data-number="D.8">
-<h2 data-number="D.8" class="anchored" data-anchor-id="scaffolding-and-the-contract-auditor"><span class="header-section-number">D.8</span> Scaffolding and the contract auditor</h2>
-<p>Generators for the standard CSO building blocks (new repositories, profile scripts, sector run-scripts), an auditor for existing profiles, and the raw-call contract auditor. See the scaffolding and contract auditor chapter.</p>
+<section id="scaffolding-and-contract-auditor" class="level3" data-number="D.3.5">
+<h3 data-number="D.3.5" class="anchored" data-anchor-id="scaffolding-and-contract-auditor"><span class="header-section-number">D.3.5</span> Scaffolding and contract auditor</h3>
 <table class="caption-top table">
-<colgroup>
-<col style="width: 20%">
-<col style="width: 20%">
-<col style="width: 20%">
-<col style="width: 20%">
-<col style="width: 20%">
-</colgroup>
 <thead>
 <tr class="header">
-<th>Function (R canonical)</th>
+<th>Function</th>
+<th>What it does</th>
 <th>R</th>
 <th>Python</th>
 <th>Stata</th>
-<th>Notes</th>
+<th>Documented in</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>dw_create_profile</code></td>
-<td>✅</td>
-<td>✅</td>
+<td><code>create_profile</code></td>
+<td>Generate a project profile script for a CSO data-warehouse pipeline</td>
+<td>✓</td>
+<td>✓</td>
 <td>—</td>
-<td>Scaffold <code>profile_&lt;repo&gt;.R</code> / <code>.py</code>; bare name <code>create_profile</code></td>
+<td><a href="../chapters/profiles-and-modes.html">Profiles and the mode switch</a></td>
 </tr>
 <tr class="even">
-<td><code>dw_create_sector_script</code></td>
-<td>✅</td>
-<td>✅</td>
+<td><code>review_profile</code></td>
+<td>Audit a profile script for the blocks the cso-toolkit contract expects</td>
+<td>✓</td>
+<td>✓</td>
 <td>—</td>
-<td>Scaffold a sector run-script template; bare name <code>create_sector_script</code></td>
+<td><a href="../chapters/profiles-and-modes.html">Profiles and the mode switch</a></td>
 </tr>
 <tr class="odd">
+<td><code>create_sector_script</code></td>
+<td>Generate a prefilled sector-run script for a data-warehouse pipeline</td>
+<td>✓</td>
+<td>✓</td>
+<td>—</td>
+<td><a href="../chapters/profiles-and-modes.html">Profiles and the mode switch</a></td>
+</tr>
+<tr class="even">
 <td><code>create_dw_sector_script</code></td>
-<td>✅</td>
-<td>✅</td>
+<td>Generate a prefilled sector-run script using DW-Production conventions</td>
+<td>✓</td>
+<td>✓</td>
 <td>—</td>
-<td>DW-Production convenience wrapper (no <code>dw_</code>-prefixed alias by design — it already carries a <code>dw</code> infix)</td>
+<td><a href="../chapters/profiles-and-modes.html">Profiles and the mode switch</a></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>create_research_project</code></td>
-<td>✅</td>
-<td>✅</td>
+<td>Create a new research repository (paper, analysis, replication package)</td>
+<td>✓</td>
+<td>✓</td>
 <td>—</td>
-<td>Since v0.10.0: scaffold a research repository (layout, <code>.gitignore</code>, <code>tools/check.R</code>, hook, tests, <code>cso_project.yml</code>, agent files); no <code>dw_</code> alias. See “Starting a new repository”</td>
+<td><a href="../chapters/40-new-repository.html">Starting a repository</a></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>create_official_stats_project</code></td>
-<td>✅</td>
-<td>✅</td>
+<td>Create a new official-statistics repository (production pipeline)</td>
+<td>✓</td>
+<td>✓</td>
 <td>—</td>
-<td>Since v0.10.0: scaffold an official-statistics repository (embargo settings, <code>releases/</code>, <code>01_dw_prep/012_codes/</code>); no <code>dw_</code> alias</td>
+<td><a href="../chapters/40-new-repository.html">Starting a repository</a></td>
+</tr>
+<tr class="odd">
+<td><code>generate_markdown_report</code></td>
+<td>Generate a descriptive-statistics Markdown report from a single CSV file</td>
+<td>✓</td>
+<td>✓</td>
+<td>—</td>
+<td>help page only</td>
 </tr>
 <tr class="even">
-<td><code>dw_review_profile</code></td>
-<td>✅</td>
-<td>✅</td>
+<td><code>process_all_csv_files</code></td>
+<td>Generate descriptive-statistics Markdown reports for every CSV in a folder</td>
+<td>✓</td>
+<td>✓</td>
 <td>—</td>
-<td>Audit a profile for required blocks (pass/warn/fail); bare name <code>review_profile</code></td>
+<td>help page only</td>
 </tr>
 <tr class="odd">
-<td><code>dw_test_scripts</code></td>
-<td>✅</td>
-<td>✅</td>
+<td><code>test_scripts</code></td>
+<td>Audit R scripts for direct calls to commands wrapped by cso-toolkit</td>
+<td>✓</td>
+<td>✓</td>
 <td>—</td>
-<td>Contract auditor: flag raw IO / API calls; bare name <code>test_scripts</code></td>
-</tr>
-</tbody>
-</table>
-<p>As above, R and Python both export the <code>dw_</code>-prefixed and the bare name for the dual-named helpers.</p>
-<div class="callout callout-style-simple callout-note">
-<div class="callout-body d-flex">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-body-container">
-<p>A future rename of <code>test_scripts</code> / <code>dw_test_scripts</code> to <code>dw_audit_scripts</code> (to surface the audit intent and avoid the testthat name collision) is on the design horizon (not yet tracked by an issue); the current prefix-only alias keeps that cleanup additive.</p>
-</div>
-</div>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># R — audit a directory of scripts for raw IO / API calls</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dw_test_scripts</span>(<span class="st">"R/"</span>, <span class="at">error_on_violation =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="reporting-and-uniqueness-utilities" class="level2" data-number="D.9">
-<h2 data-number="D.9" class="anchored" data-anchor-id="reporting-and-uniqueness-utilities"><span class="header-section-number">D.9</span> Reporting and uniqueness utilities</h2>
-<p>Smaller exported utilities that do not anchor a chapter of their own.</p>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 20%">
-<col style="width: 20%">
-<col style="width: 20%">
-<col style="width: 20%">
-<col style="width: 20%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>Function (R canonical)</th>
-<th>R</th>
-<th>Python</th>
-<th>Stata</th>
-<th>Notes</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><code>dw_generate_markdown_report</code></td>
-<td>✅</td>
-<td>✅</td>
-<td>—</td>
-<td>Markdown report from a CSV; bare name <code>generate_markdown_report</code></td>
-</tr>
-<tr class="even">
-<td><code>dw_process_all_csv_files</code></td>
-<td>✅</td>
-<td>✅</td>
-<td>—</td>
-<td>Batch the report over a directory; bare name <code>process_all_csv_files</code></td>
-</tr>
-<tr class="odd">
-<td><code>dw_isid</code></td>
-<td>✅</td>
-<td>✅</td>
-<td>embedded</td>
-<td>Uniqueness assertion (also invoked inside <code>dw_save</code>); see the IO contract table — listed here only for cross-reference</td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="stata-only-helpers" class="level2" data-number="D.10">
-<h2 data-number="D.10" class="anchored" data-anchor-id="stata-only-helpers"><span class="header-section-number">D.10</span> Stata-only helpers</h2>
-<p>Four Stata commands have no toolkit-exported R or Python sibling because they fill gaps specific to Stata’s runtime (R and Python get a <code>dw_require_no_api()</code> function from the generated profile instead). Each is documented in its <code>.sthlp</code> file in <code>stata/src/</code>.</p>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 50%">
-<col style="width: 50%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>Command</th>
-<th>Purpose</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><code>dw_mkdir</code></td>
-<td>Recursive directory creation (Stata’s built-in <code>mkdir</code> is not recursive)</td>
-</tr>
-<tr class="even">
-<td><code>dw_map_drive</code></td>
-<td>Maps the team network drive from <code>dwZDrive</code> / <code>dwZDriveUNC</code> (port of datalib’s <code>mapzdrive</code>)</td>
-</tr>
-<tr class="odd">
-<td><code>dw_require_no_api</code></td>
-<td>Reviewer-mode no-API gate — Stata’s equivalent of the network lockout</td>
+<td><a href="../chapters/checks-and-ci.html">Checks and CI</a></td>
 </tr>
 <tr class="even">
 <td><code>dw_load_config</code></td>
-<td>AppLocker-safe YAML config loader for the profile (loads config without an external binary the corporate AppLocker policy would block)</td>
+<td>Load cso-toolkit session globals from a</td>
+<td>—</td>
+<td>—</td>
+<td>✓</td>
+<td><a href="../chapters/profiles-and-modes.html">Profiles and the mode switch</a></td>
 </tr>
 </tbody>
 </table>
-<p>The full set of commands under <code>stata/src/</code> is: <code>dw_save</code>, <code>dw_use</code>, <code>dw_compare</code>, <code>dw_collaboration</code>, <code>dw_mkdir</code>, <code>dw_map_drive</code>, <code>dw_require_no_api</code> and <code>dw_load_config</code>, each shipped as an <code>.ado</code> plus a matching <code>.sthlp</code>; alongside them sit the internal <code>_dw_py.ado</code> and <code>dw_stata_helpers.py</code>, which the Python-backed parts of <code>dw_save</code> and <code>dw_collaboration</code> use.</p>
+<p>“Help page only” marks a function no chapter explains; its help page is the reference.</p>
 </section>
-<section id="how-to-find-a-function-fast" class="level2" data-number="D.11">
-<h2 data-number="D.11" class="anchored" data-anchor-id="how-to-find-a-function-fast"><span class="header-section-number">D.11</span> How to find a function fast</h2>
+</section>
+<section id="how-to-find-a-function-fast" class="level2" data-number="D.4">
+<h2 data-number="D.4" class="anchored" data-anchor-id="how-to-find-a-function-fast"><span class="header-section-number">D.4</span> How to find a function fast</h2>
 <ul>
-<li><strong>You know the name.</strong> In R, <code>?&lt;name&gt;</code>; in Python, <code>help(&lt;name&gt;)</code> after importing it from <code>cso_toolkit</code> (either the bare name or the <code>dw_</code> prefix works for the dual-named functions); in Stata, <code>help &lt;command&gt;</code>.</li>
-<li><strong>You know the task but not the name.</strong> Find the matching chapter in Part III, then return here for the family table.</li>
-<li><strong>You want the full R reference.</strong> Install the package (or <code>devtools::load_all("r")</code>) and use <code>?&lt;name&gt;</code>; the help pages are the most complete reference of the three languages, even when you work in Python or Stata.</li>
-<li><strong>You want to know whether a language has a function.</strong> Use the tables above for a quick read and the cross-language coverage matrix appendix for the authoritative, issue-tracked answer.</li>
+<li><strong>You know the name.</strong> In R, <code>?&lt;name&gt;</code>; in Python, <code>help(&lt;name&gt;)</code> after importing it from <code>cso_toolkit</code>; in Stata, <code>help &lt;command&gt;</code>.</li>
+<li><strong>You know the task but not the name.</strong> Scan the “What it does” column above, or read the chapter for the task in Part II or III.</li>
+<li><strong>You want to know whether a language has a function, and what to do if not.</strong> The <a href="../appendices/a-coverage-matrix.html">coverage matrix</a> has the notes behind every dash above.</li>
 </ul>
 </section>
-<section id="authoritative-source-files" class="level2" data-number="D.12">
-<h2 data-number="D.12" class="anchored" data-anchor-id="authoritative-source-files"><span class="header-section-number">D.12</span> Authoritative source files</h2>
-<p>The lists on this page are generated from, and should be reconciled against, these files in the repository. When the exports drift from this page, the files below win — this appendix is a finding aid, not the contract.</p>
+<section id="where-this-appendix-comes-from" class="level2" data-number="D.5">
+<h2 data-number="D.5" class="anchored" data-anchor-id="where-this-appendix-comes-from"><span class="header-section-number">D.5</span> Where this appendix comes from</h2>
+<p>The table is generated, so it cannot drift from the code without the <code>Conformance</code> check failing. Its inputs:</p>
 <ul>
-<li><code>r/NAMESPACE</code> — the complete list of R exports (the source of truth for the R column).</li>
-<li><code>r/_pkgdown.yml</code> — the family grouping for a pkgdown site (none is published yet), driven by roxygen <code>@family</code> tags (which roxygen2 emits as <code>\concept{}</code> entries the <code>has_concept()</code> selectors match).</li>
-<li><code>python/src/__init__.py</code> — the Python <code>__all__</code> export list and the per-module import map.</li>
-<li><code>stata/src/</code> — one <code>.ado</code> plus one <code>.sthlp</code> per Stata command.</li>
-<li><code>docs/dw_io_python_reference.md</code>, <code>docs/dw_api_python_reference.md</code> — the hand-written Python IO and API references.</li>
-<li><code>docs/dw_io_reference.md</code>, <code>docs/dw_api_reference.md</code> — the R-side narrative references for the IO and API families.</li>
+<li><code>r/NAMESPACE</code>, Python’s <code>__all__</code> in <code>python/src/__init__.py</code>, and <code>stata/src/*.ado</code>: which functions exist where;</li>
+<li>the roxygen titles in <code>r/R/*.R</code> and the titles in <code>stata/src/*.sthlp</code>: the descriptions;</li>
+<li><code>book/_data/coverage.json</code>: the order of rows, the notes, and which chapter documents each function;</li>
+<li><code>book/_scripts/gen_tables.py</code>: the generator, run by <code>sh tools/docs-tables</code>.</li>
 </ul>
 </section>
-<section id="microdata-archive-datalib_" class="level2" data-number="D.13">
-<h2 data-number="D.13" class="anchored" data-anchor-id="microdata-archive-datalib_"><span class="header-section-number">D.13</span> Microdata archive (<code>datalib_*</code>)</h2>
-<p><em>Access: internal — request via the CSO team (repository visibility is tracked in datalib issue #20).</em></p>
+<section id="microdata-archive-datalib_" class="level2" data-number="D.6">
+<h2 data-number="D.6" class="anchored" data-anchor-id="microdata-archive-datalib_"><span class="header-section-number">D.6</span> Microdata archive (<code>datalib_*</code>)</h2>
+<p><em>Access: public — <code>unicef-drp/datalib-unicef</code> (public since 2026-07-27).</em></p>
 <p>This family belongs to <strong><code>datalib</code></strong>, the survey-microdata archive tool — a different data layer from the toolkit’s <code>dw_*</code> surface. It shelves and loads survey <strong>microdata</strong> under the <code>Z:/datalib*</code> IHSN trees; those deposits never enter the aggregate warehouse <code>060.DW-MASTER</code>. It is documented in full in Part V, and appears here only as a directory entry so the two contracts can be found in one place. As of datalib <strong>v0.7.0 / contract v1</strong> the surface is thirteen <code>datalib_*</code> functions: Stata and Python export all thirteen; R exports the thirteen canonical names.</p>
 <table class="caption-top table">
 <colgroup>
@@ -1265,10 +1039,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
-<section id="where-the-per-function-reference-lives-1" class="level3" data-number="D.13.1">
-<h3 data-number="D.13.1" class="anchored" data-anchor-id="where-the-per-function-reference-lives-1"><span class="header-section-number">D.13.1</span> Where the per-function reference lives</h3>
+<section id="where-the-per-function-reference-lives-1" class="level3" data-number="D.6.1">
+<h3 data-number="D.6.1" class="anchored" data-anchor-id="where-the-per-function-reference-lives-1"><span class="header-section-number">D.6.1</span> Where the per-function reference lives</h3>
 <p>datalib documents itself in the same three idioms as the toolkit. <strong>R</strong> — roxygen2 man pages for the thirteen canonical names; open one with <code>?datalib_resolve</code>. <strong>Python</strong> — per-function docstrings (<code>help(datalib_resolve)</code> after <code>from datalib import datalib_resolve</code>) plus the CLI entry point <code>python -m datalib</code>. <strong>Stata</strong> — <code>help datalib</code>, and a companion <code>.sthlp</code> file next to each command’s <code>.ado</code>.</p>
-<p>This family is tracked in its own repository, <code>unicef-drp/datalib-unicef</code>, not in this book’s source tree; the coverage-matrix appendix’s datalib note is the authoritative pointer to it. Because datalib is a tier-(ii) ecosystem package (see the architecture chapter), its cross-language coverage is asserted and tested in that repository, not in this appendix.</p>
+<p>This family is tracked in its own repository, <code>unicef-drp/datalib-unicef</code>, not in this book’s source tree; the coverage-matrix appendix’s datalib note is the authoritative pointer to it. Because datalib is a tier-(ii) ecosystem package (see <a href="../chapters/61-ecosystem.html">The UNICEF analytics ecosystem</a>), its cross-language coverage is asserted and tested in that repository, not in this appendix.</p>
 
 
 </section>

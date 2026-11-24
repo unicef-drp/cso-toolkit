@@ -4,7 +4,7 @@
 target outlet, and whether the repository is public or private. -->
 
 Created on {{date}} with cso-toolkit's `create_research_project()` (The CSO
-Handbook, chapter "Starting a new repository"). The rules in one line:
+Handbook, chapter "Starting a repository"). The rules in one line:
 **data never enter git; the provenance sidecars that say exactly which bytes
 each result came from always do.**
 

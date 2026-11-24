@@ -264,9 +264,12 @@ def dw_api_fetch(
             return dw_use(hit)
 
     if not _state._get("dw_apis_allowed"):
+        cached = Path(cache_path).exists() or Path(canonical_cache_path).exists()
         _dw_require_no_api(
             api_name=f"dw_api_fetch({api!r}, cache_key={cache_key!r})",
-            reason=f"cache missing at {canonical_cache_path}",
+            reason=(f"refresh requested; the cache at {canonical_cache_path} "
+                    "is read without refresh" if refresh and cached
+                    else f"cache missing at {canonical_cache_path}"),
         )
 
     _log.info("[dw_api/%s/%s] fetching live...", api, cache_key)
@@ -499,7 +502,8 @@ def _http_call(method: str, url: str, **kwargs: Any) -> Any:
         raise TimeoutError(
             f"[cso_toolkit.dw_api] HTTP {method.upper()} timed out: {url}\n"
             f"  Underlying error: {exc}\n"
-            "  Fix: extend the timeout (`timeout=...` kwarg) or retry "
+            "  Fix: pass a longer timeout in seconds (dw_api_fetch(..., "
+            "timeout=600)) or retry "
             "later. If this is a UNICEF-laptop corporate-network issue, "
             "try a different network — corporate proxies sometimes block "
             "long-lived API calls invisibly."
@@ -528,11 +532,12 @@ def _http_call(method: str, url: str, **kwargs: Any) -> Any:
 
 
 def _fetch_uis(endpoint: str = "indicators",
-               params: Optional[Mapping[str, Any]] = None, **_: Any) -> pd.DataFrame:
+               params: Optional[Mapping[str, Any]] = None,
+               timeout: Optional[float] = None, **_: Any) -> pd.DataFrame:
     """UNESCO UIS API fetcher.  Parses JSON; unwraps ``records`` when present."""
     base = "https://api.uis.unesco.org/api/public/data/"
     url = base + endpoint
-    resp = _http_call("get", url, params=dict(params or {}), timeout=120)
+    resp = _http_call("get", url, params=dict(params or {}), timeout=timeout or 120)
     try:
         body = resp.json()
     except ValueError as exc:
@@ -566,9 +571,22 @@ def _fetch_uis(endpoint: str = "indicators",
 
 
 def _fetch_sdmx(providerId: str, flowRef: str, key: str,
-                version: str = "1.0", start: Optional[str] = None,
+                version: Optional[str] = None, start: Optional[str] = None,
                 end: Optional[str] = None, **_: Any) -> pd.DataFrame:
-    """SDMX data fetcher via the ``sdmx1`` package."""
+    """SDMX data fetcher via the ``sdmx1`` package.
+
+    ``sdmx1`` takes a dataflow version only inside ``flowRef``
+    (``"AGENCY,FLOW,VERSION"``); a separate ``version`` cannot be sent,
+    so it is refused with a warning rather than silently dropped (#240).
+    """
+    if version is not None and "," not in flowRef:
+        import warnings
+        warnings.warn(
+            "[cso_toolkit.dw_api] sdmx: `version` is not sent on its own.\n"
+            "  Fix: put it in flowRef as 'AGENCY,FLOW,VERSION' "
+            f"(e.g. '{providerId},{flowRef},{version}'), or omit `version`.",
+            stacklevel=2,
+        )
     sdmx = _require("sdmx", install_name="sdmx1")
     client = sdmx.Client(providerId)
     params: dict = {}
@@ -581,14 +599,14 @@ def _fetch_sdmx(providerId: str, flowRef: str, key: str,
 
 
 def _fetch_sdmx_codelist(agency: str, codelist: str, version: str = "1.0",
-                         **_: Any) -> pd.DataFrame:
+                         timeout: Optional[float] = None, **_: Any) -> pd.DataFrame:
     """SDMX codelist fetcher (UNICEF SDMX REST + JSON parse)."""
     url = (
         "https://sdmx.data.unicef.org/ws/public/sdmxapi/rest/codelist/"
         f"{agency}/{codelist}/{version}"
         "?format=sdmx-json&detail=full&references=none"
     )
-    resp = _http_call("get", url, timeout=60)
+    resp = _http_call("get", url, timeout=timeout or 60)
     try:
         body = resp.json()
         codes = body["data"]["codelists"][0]["codes"]
@@ -633,14 +651,38 @@ def _fetch_sdmx_codelist(agency: str, codelist: str, version: str = "1.0",
 def _fetch_wb(indicator: Union[str, Sequence[str]],
               start_date: int = 2000,
               end_date: Optional[int] = None, **_: Any) -> pd.DataFrame:
-    """World Bank data fetcher via the ``wbgapi`` package."""
+    """World Bank data fetcher via the ``wbgapi`` package.
+
+    Returns the long layout R's ``wbstats::wb_data`` gives: one row per
+    country and year, columns ``iso3c``, ``country``, ``date`` and one
+    column per indicator, so a cache written here reads in ``dw_pop``
+    and in R (#240; the default wide frame has a ``YR<year>`` column per
+    year, which neither can read).
+    """
     wb = _require("wbgapi")
     end_date = end_date or _dt.date.today().year
-    return wb.data.DataFrame(
+    raw = wb.data.DataFrame(
         indicator,
         time=range(start_date, end_date + 1),
         labels=True,
+        columns="series",
     ).reset_index()
+    return _wb_long(raw)
+
+
+def _wb_long(raw: pd.DataFrame) -> pd.DataFrame:
+    """Rename wbgapi's series-column frame to the wbstats long layout."""
+    out = raw.rename(columns={"economy": "iso3c", "Country": "country"})
+    if "Time" in out.columns:
+        out["date"] = pd.to_numeric(out["Time"], errors="coerce").astype("Int64")
+    elif "time" in out.columns:
+        out["date"] = pd.to_numeric(
+            out["time"].astype(str).str.replace("YR", "", regex=False),
+            errors="coerce").astype("Int64")
+    out = out.drop(columns=[c for c in ("time", "Time") if c in out.columns])
+    first = [c for c in ("iso3c", "country", "date") if c in out.columns]
+    out = out[first + [c for c in out.columns if c not in first]]
+    return out.sort_values(["iso3c", "date"]).reset_index(drop=True)
 
 
 def _fetch_wb_indicators(**_: Any) -> pd.DataFrame:
@@ -659,7 +701,7 @@ def _fetch_ilo(flowRef: str, key: str,
 
 def _fetch_unsd_sdg(series_codes: Sequence[str],
                     endpoint: str = "https://unstats.un.org/SDGAPI/v1/sdg/Series/DataCSV",
-                    **_: Any) -> pd.DataFrame:
+                    timeout: Optional[float] = None, **_: Any) -> pd.DataFrame:
     """UNSD SDG API fetcher.  POSTs form-encoded ``seriesCodes`` and parses CSV."""
     import io
     if not series_codes:
@@ -676,7 +718,7 @@ def _fetch_unsd_sdg(series_codes: Sequence[str],
             "Content-Type": "application/x-www-form-urlencoded",
             "Accept": "application/octet-stream",
         },
-        timeout=300,
+        timeout=timeout or 300,
     )
     try:
         return pd.read_csv(io.StringIO(resp.text))
@@ -692,7 +734,8 @@ def _fetch_unsd_sdg(series_codes: Sequence[str],
 
 
 def _fetch_github_raw(owner_repo: str, ref: str = "main",
-                      path: Optional[str] = None, **_: Any) -> Any:
+                      path: Optional[str] = None,
+                      timeout: Optional[float] = None, **_: Any) -> Any:
     """Pinned-commit ``raw.githubusercontent.com`` fetcher."""
     if path is None:
         raise ValueError(
@@ -701,7 +744,7 @@ def _fetch_github_raw(owner_repo: str, ref: str = "main",
             "within the repo at the pinned ref."
         )
     url = f"https://raw.githubusercontent.com/{owner_repo}/{ref}/{path}"
-    resp = _http_call("get", url, timeout=60)
+    resp = _http_call("get", url, timeout=timeout or 60)
     ext = Path(path).suffix.lower().lstrip(".")
     try:
         if ext == "csv":
@@ -724,13 +767,13 @@ def _fetch_github_raw(owner_repo: str, ref: str = "main",
 
 
 def _fetch_http(url: str, headers: Optional[Mapping[str, str]] = None,
-                **_: Any) -> str:
+                timeout: Optional[float] = None, **_: Any) -> str:
     """Generic HTTP GET returning text."""
-    resp = _http_call("get", url, headers=dict(headers or {}), timeout=120)
+    resp = _http_call("get", url, headers=dict(headers or {}), timeout=timeout or 120)
     return resp.text
 
 
-def _fetch_csv(url: str, **kwargs: Any) -> pd.DataFrame:
+def _fetch_csv(url: str, timeout: Optional[float] = None, **kwargs: Any) -> pd.DataFrame:
     """Generic CSV-at-a-URL GET → parsed data frame.
 
     For flat CSV endpoints that ``github_raw`` (GitHub-only) and ``http``
@@ -744,7 +787,7 @@ def _fetch_csv(url: str, **kwargs: Any) -> pd.DataFrame:
     import io
 
     if str(url).lower().startswith(("http://", "https://")):
-        resp = _http_call("get", url, timeout=120)
+        resp = _http_call("get", url, timeout=timeout or 120)
         source: Any = io.StringIO(resp.text)
     else:
         source = url
@@ -760,9 +803,9 @@ def _fetch_csv(url: str, **kwargs: Any) -> pd.DataFrame:
         ) from exc
 
 
-def _fetch_json_get(url: str, **_: Any) -> Any:
+def _fetch_json_get(url: str, timeout: Optional[float] = None, **_: Any) -> Any:
     """Generic JSON GET → parsed object."""
-    resp = _http_call("get", url, timeout=120)
+    resp = _http_call("get", url, timeout=timeout or 120)
     try:
         return resp.json()
     except ValueError as exc:

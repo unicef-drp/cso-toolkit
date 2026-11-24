@@ -1,7 +1,7 @@
 # stata/src/ — Stata helpers
 
-Six Stata helpers covering the full IO + mode-contract surface as of
-v0.4.0; they mirror the R API contract from [`r/R/`](https://github.com/unicef-drp/cso-toolkit/tree/main/r/R/) so a
+The Stata helpers cover the IO and mode-contract surface, the
+collaboration model and onboarding; they mirror the R API contract from [`r/R/`](https://github.com/unicef-drp/cso-toolkit/tree/main/r/R/) so a
 sector that runs partly in Stata and partly in R uses the same producer
 / reviewer contract on both sides.
 

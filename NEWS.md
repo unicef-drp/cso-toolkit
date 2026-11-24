@@ -6,6 +6,104 @@ _Entries land here as PRs merge into `develop`. When the next release
 is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
+## v0.12.1 (2026-11-24)
+
+A patch: three bug fixes and a restructured handbook. Scaffolded sector
+scripts now run against a `create_profile()` profile (#236); the
+contract auditor's R `fromJSON` URL rule fires and its Python patterns
+stop flagging look-alike names (#237); a World Bank cache written by
+Python is readable by `dw_pop()`, Python's API fetchers take a
+`timeout`, and several messages say what actually happened (#240). The
+handbook was rebuilt so each fact has one home, with language coverage
+generated from the code. PRs #234, #238, #241, #243, #245, #247, #248,
+#250, #252. PATCH: no change to any function's signature except
+optional new `timeout` arguments on Python's API fetchers.
+
+### Fixed
+
+- **`create_profile()` output works with scaffolded sector scripts
+  (#236).** Scripts from `create_sector_script()` build their paths from
+  `projectFolder`, which `create_profile()` never set, so they stopped
+  with "Project profile not loaded" (R) or "missing required exports"
+  (Python). The profile now sets `rootFolder` (the working directory,
+  unless set before the profile is sourced) and `projectFolder`, in R
+  and Python.
+- **Contract auditor patterns (#237).** R's `api-fromjson-url` rule
+  could never fire, because the URL it looks for is a string literal and
+  lines are matched with strings blanked; it is now matched against the
+  raw line (a custom rule can do the same with `raw = TRUE`). Python's
+  call patterns now start at a name boundary, as R's do, so
+  `my_read_csv(` and `pl.read_csv(` (polars) are no longer flagged as
+  pandas calls.
+- **External APIs and survey weights (#240).**
+  - A World Bank (`wb`) cache written by Python now has the layout R's
+    `wbstats` gives (one row per country and year), so `dw_pop()` reads
+    it; before, Python wrote one wide row per country, which neither
+    language could read.
+  - Python's HTTP fetchers take `timeout=` through `dw_api_fetch()`, as
+    the timeout message has long advised.
+  - In reviewer mode, a refresh refused while a cache exists says so,
+    instead of "cache missing" (R and Python).
+  - Python's `sdmx` fetcher warns when `version` is given outside
+    `flowRef` (`"AGENCY,FLOW,VERSION"`), instead of dropping it.
+  - Python's `dw_nestweight()` stops on a non-numeric weight column, as
+    R does, instead of coercing it to missing.
+  - `dw_publish()` and the `mirror_to_z` deprecation no longer promise
+    a v0.5.0.
+
+### Documentation
+
+- **The handbook's reference tables are generated from the code.**
+  `sh tools/docs-tables` (`book/_scripts/gen_tables.py`, standard-library
+  Python) reads which functions exist in R, Python and Stata, the
+  `api =` dispatch tables, the auditor rule registries and the parity
+  cases, and writes `book/_generated/`: the coverage matrix, one
+  "which languages" line per function for the chapters, the API keys,
+  the auditor rules and the parity cases. Notes live in
+  `book/_data/coverage.json`. `--check` fails when a public function has
+  no row, a note contradicts the code, or the tables are stale; the
+  `Conformance` workflow runs it on every pull request. Appendices A and
+  G now include the generated tables. First step of the handbook
+  restructure.
+- **Handbook Part III restructured: eight chapters become four.**
+  "Starting a repository", "Profiles and the mode switch", "Vendoring
+  and updates" and "Checks and CI" replace chapters 22, 34, 35, 41, 42,
+  43 and 45 (and rewrite 40), each fact in one place, with language
+  coverage shown by the generated line under each function. The book's
+  parts are now: I The Contract, II Using the Helpers, III Setting Up
+  and Running a Repository, IV Maintaining the Toolkit. Old chapter URLs
+  redirect to the new pages. Bugs found while rewriting: #236
+  (`create_profile()` output lacks `projectFolder`), #237 (two auditor
+  pattern gaps).
+- **Handbook Parts I and II trimmed to what they own.** Chapters 11 and
+  12 become one opening chapter, "Why a toolkit, and how it fits
+  together"; the roles, provenance, IO, external-API and aggregation
+  chapters drop restated material (now in Part III and the appendices)
+  and show language coverage with the generated line under each
+  function. Parts I and II go from 25,007 to 18,936 words. Faults found
+  in the code are filed in #240.
+- **Handbook Part IV, "Maintaining the Toolkit", completed.** Appendix G
+  becomes the chapter "How the three languages stay in step"; a new
+  "Contributing" chapter covers branches, worktrees, stacked pull
+  requests, tests per language, the handbook rules and CI; "Versioning
+  and releases" keeps the maintainer's procedure, now as a numbered
+  release sequence. The old appendix URL redirects.
+- **Handbook appendices D and E rebuilt.** Appendix D is a directory
+  built on a generated function index: one row per public function
+  with its help-page title, the languages that have it and the chapter
+  that explains it (`sh tools/docs-tables --check` now also fails on a
+  function without a description). The glossary keeps every term as a
+  short definition linking to the chapter or appendix that owns it.
+  Together they go from 7,760 to 3,057 words.
+- **Code, templates and the Claude plugin cite handbook chapters by
+  title.** The last step of the handbook restructure: comments, messages
+  and generated-profile text no longer name chapters by number or by
+  retired titles, the plugin skills link the new pages, and the stale
+  Python and Stata package READMEs are corrected. Across the
+  restructure the handbook went from 22 chapters to 19 and from 7
+  appendices to 6, every function's language coverage is generated from
+  the code, and old chapter URLs redirect.
+
 ## v0.12.0 (2026-11-24)
 
 Python catches up with R. Three things that were R-only now work in

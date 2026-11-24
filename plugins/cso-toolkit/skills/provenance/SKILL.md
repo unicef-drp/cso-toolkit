@@ -5,7 +5,7 @@ description: Add a data input to a cso-toolkit repository with its provenance, o
 
 # Inputs and provenance
 
-The rules: data never enter git; the provenance sidecars that say exactly which bytes each result came from always do. Handbook: "Continuous integration and repository hygiene" (<https://unicef-drp.github.io/cso-toolkit/handbook/chapters/45-ci-cd.html>), the IO chapter (<https://unicef-drp.github.io/cso-toolkit/handbook/chapters/31-io.html>) and Appendix B (the sidecar schema).
+The rules: data never enter git; the provenance sidecars that say exactly which bytes each result came from always do. Handbook: "Checks and CI" (<https://unicef-drp.github.io/cso-toolkit/handbook/chapters/checks-and-ci.html>), the IO chapter (<https://unicef-drp.github.io/cso-toolkit/handbook/chapters/31-io.html>) and Appendix B (the sidecar schema).
 
 **Never print rows of the data** while doing any of this: what you read is sent to the AI service. Names, sizes, hashes and counts are fine.
 

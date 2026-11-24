@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>12&nbsp; Starting a new repository – The CSO Handbook</title>
+<title>8&nbsp; Starting a repository – The CSO Handbook</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -71,8 +71,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
-<link href="../chapters/41-vendoring.html" rel="next">
-<link href="../chapters/35-scaffolding-audit.html" rel="prev">
+<link href="../chapters/profiles-and-modes.html" rel="next">
+<link href="../chapters/33-aggregation.html" rel="prev">
 <script src="../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="../site_libs/quarto-html/scrollable-regions/scrollable-regions.js" type="module"></script>
@@ -124,7 +124,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="Breadcrumbs"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/40-new-repository.html">Part IV — Adoption &amp; Operations</a></li><li class="breadcrumb-item"><a href="../chapters/40-new-repository.html"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Starting a new repository</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="Breadcrumbs"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/40-new-repository.html">Part III — Setting Up and Running a Repository</a></li><li class="breadcrumb-item"><a href="../chapters/40-new-repository.html"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Starting a repository</span></a></li></ol></nav>
         <a class="flex-grow-1" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -202,19 +202,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-controls="quarto-sidebar-section-1" aria-expanded="true">
- <span class="menu-text" id="quarto-sidebar-section-1-label">Part I — Why &amp; Architecture</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+ <span class="menu-text" id="quarto-sidebar-section-1-label">Part I — The Contract</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
       </div>
       <ul id="quarto-sidebar-section-1" aria-labelledby="quarto-sidebar-section-1-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/11-why.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Why a toolkit</span></span></a>
+  <a href="../chapters/why-and-architecture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Why a toolkit, and how it fits together</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/12-architecture.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Architecture: one contract, three languages, many consumers</span></span></a>
+  <a href="../chapters/21-roles-and-modes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Roles and the mode contract</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/23-provenance-and-errors.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Provenance sidecars and the error envelope</span></span></a>
   </div>
 </li>
       </ul>
@@ -222,25 +228,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-controls="quarto-sidebar-section-2" aria-expanded="true">
- <span class="menu-text" id="quarto-sidebar-section-2-label">Part II — The Contract</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+ <span class="menu-text" id="quarto-sidebar-section-2-label">Part II — Using the Helpers</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
       </div>
       <ul id="quarto-sidebar-section-2" aria-labelledby="quarto-sidebar-section-2-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/21-roles-and-modes.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Roles and the mode contract</span></span></a>
+  <a href="../chapters/31-io.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">The IO contract</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/22-wiring-the-contract.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Wiring the contract into a repo</span></span></a>
+  <a href="../chapters/32-external-api.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">The external-API contract</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/23-provenance-and-errors.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Provenance sidecars and the error envelope</span></span></a>
+  <a href="../chapters/33-aggregation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Aggregation</span></span></a>
   </div>
 </li>
       </ul>
@@ -248,37 +254,37 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-controls="quarto-sidebar-section-3" aria-expanded="true">
- <span class="menu-text" id="quarto-sidebar-section-3-label">Part III — The API (cross-language)</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+ <span class="menu-text" id="quarto-sidebar-section-3-label">Part III — Setting Up and Running a Repository</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
       </div>
       <ul id="quarto-sidebar-section-3" aria-labelledby="quarto-sidebar-section-3-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/31-io.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">The IO contract</span></span></a>
+  <a href="../chapters/40-new-repository.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Starting a repository</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/32-external-api.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">The external-API contract</span></span></a>
+  <a href="../chapters/profiles-and-modes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Profiles and the mode switch</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/33-aggregation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Aggregation</span></span></a>
+  <a href="../chapters/vendoring-and-updates.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Vendoring and updates</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/34-vintage-sync.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Vintage sync</span></span></a>
+  <a href="../chapters/checks-and-ci.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Checks and CI</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/35-scaffolding-audit.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Scaffolding and the contract auditor</span></span></a>
+  <a href="../chapters/46-ai-agents.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Working with AI coding agents</span></span></a>
   </div>
 </li>
       </ul>
@@ -286,49 +292,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-controls="quarto-sidebar-section-4" aria-expanded="true">
- <span class="menu-text" id="quarto-sidebar-section-4-label">Part IV — Adoption &amp; Operations</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+ <span class="menu-text" id="quarto-sidebar-section-4-label">Part IV — Maintaining the Toolkit</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
       </div>
       <ul id="quarto-sidebar-section-4" aria-labelledby="quarto-sidebar-section-4-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/40-new-repository.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Starting a new repository</span></span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../chapters/41-vendoring.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">The vendoring model</span></span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../chapters/42-onboarding-example.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Onboarding a repo: a worked example</span></span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../chapters/43-contract-auditor-ci.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">The contract auditor in continuous integration (CI)</span></span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
   <a href="../chapters/44-versioning-release.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Versioning and releases</span></span></a>
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Versioning and releases</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/45-ci-cd.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Continuous integration and repository hygiene</span></span></a>
+  <a href="../chapters/parity.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">How the three languages stay in step</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/46-ai-agents.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Working with AI coding agents</span></span></a>
+  <a href="../chapters/contributing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Contributing</span></span></a>
   </div>
 </li>
       </ul>
@@ -342,19 +324,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/51-microdata-archive.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">The microdata archive: archive, catalogue, tool</span></span></a>
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">The microdata archive: archive, catalogue, tool</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/52-ihsn-grammar.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">The IHSN convention and the folder grammar</span></span></a>
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">The IHSN convention and the folder grammar</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/53-datalib-api-conformance.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">The <code>datalib_*</code> API and its conformance suite</span></span></a>
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">The <code>datalib_*</code> API and its conformance suite</span></span></a>
   </div>
 </li>
       </ul>
@@ -368,13 +350,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/61-ecosystem.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">The UNICEF analytics ecosystem: three tiers</span></span></a>
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">The UNICEF analytics ecosystem: three tiers</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/62-unicefdata.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">unicefData: public child statistics in three languages</span></span></a>
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">unicefData: public child statistics in three languages</span></span></a>
   </div>
 </li>
       </ul>
@@ -421,12 +403,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text"><span class="chapter-number">F</span>&nbsp; <span class="chapter-title">Curated third-party functions</span></span></a>
   </div>
 </li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../appendices/g-parity-certificate.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">G</span>&nbsp; <span class="chapter-title">Cross-language parity</span></span></a>
-  </div>
-</li>
       </ul>
   </li>
     </ul>
@@ -439,26 +415,45 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#which-one" id="toc-which-one" class="nav-link active" data-scroll-target="#which-one"><span class="header-section-number">12.1</span> Which one?</a></li>
-  <li><a href="#what-each-function-writes" id="toc-what-each-function-writes" class="nav-link" data-scroll-target="#what-each-function-writes"><span class="header-section-number">12.2</span> What each function writes</a>
+  <li><a href="#two-kinds-of-repository" id="toc-two-kinds-of-repository" class="nav-link active" data-scroll-target="#two-kinds-of-repository"><span class="header-section-number">8.1</span> Two kinds of repository</a>
   <ul class="collapse">
-  <li><a href="#the-options" id="toc-the-options" class="nav-link" data-scroll-target="#the-options"><span class="header-section-number">12.2.1</span> The options</a></li>
-  <li><a href="#the-profile" id="toc-the-profile" class="nav-link" data-scroll-target="#the-profile"><span class="header-section-number">12.2.2</span> The profile</a></li>
+  <li><a href="#which-one" id="toc-which-one" class="nav-link" data-scroll-target="#which-one"><span class="header-section-number">8.1.1</span> Which one?</a></li>
   </ul></li>
-  <li><a href="#first-steps-for-the-person-who-created-it" id="toc-first-steps-for-the-person-who-created-it" class="nav-link" data-scroll-target="#first-steps-for-the-person-who-created-it"><span class="header-section-number">12.3</span> First steps for the person who created it</a></li>
-  <li><a href="#first-clone-for-a-co-author" id="toc-first-clone-for-a-co-author" class="nav-link" data-scroll-target="#first-clone-for-a-co-author"><span class="header-section-number">12.4</span> First clone, for a co-author</a></li>
-  <li><a href="#the-collaboration-setting" id="toc-the-collaboration-setting" class="nav-link" data-scroll-target="#the-collaboration-setting"><span class="header-section-number">12.5</span> The collaboration setting</a></li>
-  <li><a href="#local-checks-first" id="toc-local-checks-first" class="nav-link" data-scroll-target="#local-checks-first"><span class="header-section-number">12.6</span> Local checks first</a></li>
-  <li><a href="#where-to-read-more" id="toc-where-to-read-more" class="nav-link" data-scroll-target="#where-to-read-more"><span class="header-section-number">12.7</span> Where to read more</a></li>
+  <li><a href="#creating-a-repository" id="toc-creating-a-repository" class="nav-link" data-scroll-target="#creating-a-repository"><span class="header-section-number">8.2</span> Creating a repository</a>
+  <ul class="collapse">
+  <li><a href="#the-arguments" id="toc-the-arguments" class="nav-link" data-scroll-target="#the-arguments"><span class="header-section-number">8.2.1</span> The arguments</a></li>
+  <li><a href="#nothing-is-replaced-silently" id="toc-nothing-is-replaced-silently" class="nav-link" data-scroll-target="#nothing-is-replaced-silently"><span class="header-section-number">8.2.2</span> Nothing is replaced silently</a></li>
+  </ul></li>
+  <li><a href="#what-each-function-writes" id="toc-what-each-function-writes" class="nav-link" data-scroll-target="#what-each-function-writes"><span class="header-section-number">8.3</span> What each function writes</a>
+  <ul class="collapse">
+  <li><a href="#a-research-project" id="toc-a-research-project" class="nav-link" data-scroll-target="#a-research-project"><span class="header-section-number">8.3.1</span> A research project</a></li>
+  <li><a href="#an-official-statistics-repository" id="toc-an-official-statistics-repository" class="nav-link" data-scroll-target="#an-official-statistics-repository"><span class="header-section-number">8.3.2</span> An official-statistics repository</a></li>
+  <li><a href="#set-for-the-kind" id="toc-set-for-the-kind" class="nav-link" data-scroll-target="#set-for-the-kind"><span class="header-section-number">8.3.3</span> Set for the kind</a></li>
+  <li><a href="#the-profile" id="toc-the-profile" class="nav-link" data-scroll-target="#the-profile"><span class="header-section-number">8.3.4</span> The profile</a></li>
+  </ul></li>
+  <li><a href="#the-collaboration-setting" id="toc-the-collaboration-setting" class="nav-link" data-scroll-target="#the-collaboration-setting"><span class="header-section-number">8.4</span> The collaboration setting</a></li>
+  <li><a href="#first-steps-for-the-person-who-created-it" id="toc-first-steps-for-the-person-who-created-it" class="nav-link" data-scroll-target="#first-steps-for-the-person-who-created-it"><span class="header-section-number">8.5</span> First steps for the person who created it</a></li>
+  <li><a href="#first-clone-for-a-co-author" id="toc-first-clone-for-a-co-author" class="nav-link" data-scroll-target="#first-clone-for-a-co-author"><span class="header-section-number">8.6</span> First clone, for a co-author</a></li>
+  <li><a href="#adopting-the-toolkit-in-an-existing-repository" id="toc-adopting-the-toolkit-in-an-existing-repository" class="nav-link" data-scroll-target="#adopting-the-toolkit-in-an-existing-repository"><span class="header-section-number">8.7</span> Adopting the toolkit in an existing repository</a>
+  <ul class="collapse">
+  <li><a href="#decide-what-to-adopt" id="toc-decide-what-to-adopt" class="nav-link" data-scroll-target="#decide-what-to-adopt"><span class="header-section-number">8.7.1</span> 1. Decide what to adopt</a></li>
+  <li><a href="#vendor-and-pin" id="toc-vendor-and-pin" class="nav-link" data-scroll-target="#vendor-and-pin"><span class="header-section-number">8.7.2</span> 2. Vendor and pin</a></li>
+  <li><a href="#wire-the-profile" id="toc-wire-the-profile" class="nav-link" data-scroll-target="#wire-the-profile"><span class="header-section-number">8.7.3</span> 3. Wire the profile</a></li>
+  <li><a href="#move-raw-io-to-dw_use-and-dw_save" id="toc-move-raw-io-to-dw_use-and-dw_save" class="nav-link" data-scroll-target="#move-raw-io-to-dw_use-and-dw_save"><span class="header-section-number">8.7.4</span> 4. Move raw IO to <code>dw_use()</code> and <code>dw_save()</code></a></li>
+  <li><a href="#re-run-as-a-reviewer-and-compare" id="toc-re-run-as-a-reviewer-and-compare" class="nav-link" data-scroll-target="#re-run-as-a-reviewer-and-compare"><span class="header-section-number">8.7.5</span> 5. Re-run as a reviewer and compare</a></li>
+  <li><a href="#run-the-checks" id="toc-run-the-checks" class="nav-link" data-scroll-target="#run-the-checks"><span class="header-section-number">8.7.6</span> 6. Run the checks</a></li>
+  <li><a href="#recap-the-adoption-checklist" id="toc-recap-the-adoption-checklist" class="nav-link" data-scroll-target="#recap-the-adoption-checklist"><span class="header-section-number">8.7.7</span> Recap: the adoption checklist</a></li>
+  </ul></li>
+  <li><a href="#where-to-read-more" id="toc-where-to-read-more" class="nav-link" data-scroll-target="#where-to-read-more"><span class="header-section-number">8.8</span> Where to read more</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/unicef-drp/cso-toolkit/edit/main/book/chapters/40-new-repository.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/unicef-drp/cso-toolkit/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content" tabindex="-1">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="Breadcrumbs"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/40-new-repository.html">Part IV — Adoption &amp; Operations</a></li><li class="breadcrumb-item"><a href="../chapters/40-new-repository.html"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Starting a new repository</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="Breadcrumbs"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/40-new-repository.html">Part III — Setting Up and Running a Repository</a></li><li class="breadcrumb-item"><a href="../chapters/40-new-repository.html"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Starting a repository</span></a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Starting a new repository</span></h1>
+<h1 class="title"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Starting a repository</span></h1>
 </div>
 
 
@@ -475,8 +470,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>Every repository that uses the toolkit needs the same floor before its first line of analysis: a <code>.gitignore</code> that keeps data out and provenance in, the local checks and the hook that requires a record of them, a test suite, the project’s collaboration setting, a home for the vendored helpers, and a README and contributing guide that tell a co-author what to do on their first clone. The chapters that follow explain each piece. This one starts a repository with all of them in one call, from the toolkit’s own templates, so a new project begins where the rest of the handbook expects it to be.</p>
-<p>There are two functions, because there are two kinds of repository:</p>
+<p>Every repository that uses the toolkit needs the same floor before its first line of analysis: a <code>.gitignore</code> that keeps data out and provenance in, the local checks and the hook that requires a record of them, a test suite, the project’s collaboration setting, a home for the vendored helpers, a profile that every script sources first, and a README and contributing guide that tell a co-author what to do on their first clone.</p>
+<p>This chapter covers both ways to get there. A new repository gets all of it in one call, from the toolkit’s own templates. An existing repository adopts it step by step, and the second half of the chapter walks through those steps. The detail of each piece lives in the next three chapters: <a href="../chapters/profiles-and-modes.html">Profiles and the mode switch</a>, <a href="../chapters/vendoring-and-updates.html">Vendoring and updates</a> and <a href="../chapters/checks-and-ci.html">Checks and CI</a>.</p>
+<section id="two-kinds-of-repository" class="level2" data-number="8.1">
+<h2 data-number="8.1" class="anchored" data-anchor-id="two-kinds-of-repository"><span class="header-section-number">8.1</span> Two kinds of repository</h2>
+<p>There are two scaffolders, because there are two kinds of repository:</p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 33%">
@@ -528,27 +526,29 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
-<section id="which-one" class="level2" data-number="12.1">
-<h2 data-number="12.1" class="anchored" data-anchor-id="which-one"><span class="header-section-number">12.1</span> Which one?</h2>
-<p>Ask where the results live and who may see them before publication. If the answer is “in git, and anyone with access to the repository may read them”, it is a research project. If the results are deposited and published by the office, and nobody may see a figure before its release date, it is an official-statistics repository, however small. The difference is not cosmetic: the official-statistics template ignores output folders outright, sidecars included, and its <code>tools/check.R</code> fails on anything tracked in them, because a pre-release table committed by accident stays in git history (<a href="../chapters/45-ci-cd.html">Continuous integration and repository hygiene</a>).</p>
+<section id="which-one" class="level3" data-number="8.1.1">
+<h3 data-number="8.1.1" class="anchored" data-anchor-id="which-one"><span class="header-section-number">8.1.1</span> Which one?</h3>
+<p>Ask where the results live and who may see them before publication. If the answer is “in git, and anyone with access to the repository may read them”, it is a research project. If the results are deposited and published by the office, and nobody may see a figure before its release date, it is an official-statistics repository, however small.</p>
+<p>The difference is not cosmetic. The official-statistics template ignores output folders outright, sidecars included, and its checks fail on anything tracked in them, because a pre-release table committed by accident stays in git history (<a href="../chapters/checks-and-ci.html">Checks and CI</a>).</p>
 <p>A paper written from official figures after their release is a research project. A research team that also runs a production pipeline keeps the two in separate repositories.</p>
 </section>
-<section id="what-each-function-writes" class="level2" data-number="12.2">
-<h2 data-number="12.2" class="anchored" data-anchor-id="what-each-function-writes"><span class="header-section-number">12.2</span> What each function writes</h2>
-<p>Both functions take the folder of the new repository and the collaboration model, which is required and has no default, as <code>dw_mode</code> has none: how many people may produce results is a decision for the project, not something the toolkit guesses.</p>
+</section>
+<section id="creating-a-repository" class="level2" data-number="8.2">
+<h2 data-number="8.2" class="anchored" data-anchor-id="creating-a-repository"><span class="header-section-number">8.2</span> Creating a repository</h2>
+<p>Both functions take the folder of the new repository and the collaboration model. The model is required and has no default, just as <code>dw_mode</code> has none: how many people may produce results is a decision for the project, not something the toolkit guesses. Leave it out and the call stops before writing anything.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="" aria-current="page">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-3" role="tab" aria-controls="tabset-1-3" aria-selected="false" href="">Stata</a></li></ul>
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="" aria-current="page">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">Python</a></li></ul>
 <div class="tab-content">
 <div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">create_research_project</span>(</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"C:/GitHub/learning-mobility"</span>,</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">collaboration  =</span> <span class="st">"multi-producer"</span>,          <span class="co"># or "single-producer"</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">members        =</span> <span class="fu">c</span>(<span class="st">"jpazvd"</span>, <span class="st">"kavanesian"</span>), <span class="co"># optional, informational</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">title          =</span> <span class="st">"Schooling Mobility Is Not Learning Mobility"</span>,</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">vendor          =</span> <span class="cn">TRUE</span>,                     <span class="co"># copy helpers from a clone ...</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">collaboration   =</span> <span class="st">"multi-producer"</span>,           <span class="co"># or "single-producer"</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">members         =</span> <span class="fu">c</span>(<span class="st">"jpazvd"</span>, <span class="st">"kavanesian"</span>),  <span class="co"># optional, informational</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">title           =</span> <span class="st">"Schooling Mobility Is Not Learning Mobility"</span>,</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">vendor          =</span> <span class="cn">TRUE</span>,                       <span class="co"># copy helpers from a clone ...</span></span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">toolkit_source  =</span> <span class="st">"C:/GitHub/cso-toolkit"</span>,</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">toolkit_version =</span> <span class="st">"v0.9.1"</span>,                 <span class="co"># ... at this tag (default: latest)</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">git             =</span> <span class="cn">TRUE</span>)                     <span class="co"># git init, develop, hook path</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">toolkit_version =</span> <span class="st">"v0.9.1"</span>,                   <span class="co"># ... at this tag (default: latest)</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">git             =</span> <span class="cn">TRUE</span>)                       <span class="co"># git init, develop, hook path</span></span>
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">create_official_stats_project</span>(</span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="st">"C:/GitHub/DW-Nutrition"</span>,</span>
@@ -569,48 +569,76 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"C:/GitHub/DW-Nutrition"</span>, <span class="st">"single-producer"</span>,</span>
 <span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    vendor<span class="op">=</span><span class="va">True</span>, toolkit_source<span class="op">=</span><span class="st">"C:/GitHub/cso-toolkit"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<div id="tabset-1-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-3-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>* No Stata <span class="kw">function</span>. Create the repository once from R <span class="kw">or</span> Python: the</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>* files are the same whichever language writes them, the .gitignore</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>* covers Stata's files, and the checks <span class="kw">in</span> tools/check.R read only files.</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
-</div>
-<p>A research project:</p>
+<p>The files are the same, byte for byte, whichever language writes them. The <code>.gitignore</code> covers Stata’s files too, and the checks in <code>tools/check.R</code> only read files, so a Stata project is created once from R or Python and then works like any other.</p>
+<section id="the-arguments" class="level3" data-number="8.2.1">
+<h3 data-number="8.2.1" class="anchored" data-anchor-id="the-arguments"><span class="header-section-number">8.2.1</span> The arguments</h3>
+<ul>
+<li><strong><code>collaboration</code>.</strong> <code>"single-producer"</code> (one person produces, the others review) or <code>"multi-producer"</code> (several co-authors produce). It is written to <code>cso_project.yml</code>; see <a href="#the-collaboration-setting">The collaboration setting</a> below.</li>
+<li><strong><code>members</code>.</strong> Optional user names or GitHub handles, listed under <code>members:</code> in <code>cso_project.yml</code>. They are informational. Each must be letters, digits, <code>.</code>, <code>_</code> or <code>-</code>, so it stays plain YAML.</li>
+<li><strong><code>title</code>.</strong> The README’s title. By default, the folder name.</li>
+<li><strong><code>vendor</code>, <code>toolkit_source</code>, <code>toolkit_version</code>.</strong> <code>vendor</code> is <code>FALSE</code> by default. <code>TRUE</code> copies the default helper set into <code>00_functions/</code> from a release tag of a git clone of cso-toolkit and writes <code>00_functions/.toolkit_manifest.yml</code>, with that tag as <code>pulled_version</code> and the commit it points to as <code>pulled_commit</code>. The clone is <code>toolkit_source</code>, else the <code>CSO_TOOLKIT_ROOT</code> environment variable, else the source checkout the package was loaded from. The tag is <code>toolkit_version</code> (<code>"0.9.1"</code> is read as <code>"v0.9.1"</code>); by default it is the clone’s latest release tag, never a pre-release such as <code>v1.0.0-rc1</code>. The files are read from the tag’s commit in the clone’s history, never from its working tree, so a clone on another branch or with local edits still vendors exactly the released bytes. A tag the clone does not have stops the call before anything is written (<code>git fetch --tags</code> first).</li>
+<li><strong>What <code>vendor = TRUE</code> copies.</strong> The R helpers from <code>r/R/</code>, whichever language runs the scaffolder: <code>dw_io.R</code>, <code>dw_api.R</code>, <code>cso_toolkit_sync.R</code>, <code>dw_provenance.R</code>, <code>dw_deposit.R</code>, <code>dw_project.R</code>, <code>test_scripts.R</code> and <code>zzz.R</code>, plus <code>profile_helpers.R</code> and <code>create_sector_script.R</code> for official statistics. A helper of that set which the tag does not have yet is skipped and named in a message. A character vector instead of <code>TRUE</code> picks the files, all of which must exist at the tag; <code>dw_io.R</code>, <code>cso_toolkit_sync.R</code> and <code>test_scripts.R</code> are always added, because <code>tools/check.R</code> needs them. Without vendoring, <code>tools/check.R</code> leaves out the <code>contract-audit</code> and <code>vintage</code> checks, with a comment saying to add them back once <code>00_functions/</code> is filled. What the manifest’s fields mean, and how to update later, is in <a href="../chapters/vendoring-and-updates.html">Vendoring and updates</a>.</li>
+<li><strong><code>workflows</code>.</strong> <code>FALSE</code> by default: checks run locally. <code>check-record.yml</code>, which only verifies the local check record on pull requests (no R, about 10 seconds), is always written. <code>TRUE</code> adds the opt-in GitHub Actions workflows: <code>ci-hygiene.yml</code>, <code>ci-contract-audit.yml</code> and <code>ci-r-tests.yml</code>, plus <code>ci-manuscript.yml</code> for a research project (<a href="../chapters/checks-and-ci.html">Checks and CI</a>).</li>
+<li><strong><code>git</code>.</strong> <code>FALSE</code> by default. <code>TRUE</code> runs <code>git init</code> (when the folder is not a repository yet) with <code>develop</code> as the first branch, because <code>main</code> is created at the first release. It sets <code>core.hooksPath</code> to <code>.githooks</code> and stages <code>.githooks/pre-push</code> and <code>tools/check</code> with their executable bit, so they also run on macOS and Linux clones. It never commits, creates a remote or pushes.</li>
+<li><strong><code>overwrite</code>.</strong> <code>FALSE</code> by default; see below.</li>
+</ul>
+<p>In R, <code>verbose</code> and <code>debug</code> control the messages, as for every helper; the Python functions log through the standard <code>logging</code> module instead. In Python every argument after <code>collaboration</code> is keyword-only.</p>
+</section>
+<section id="nothing-is-replaced-silently" class="level3" data-number="8.2.2">
+<h3 data-number="8.2.2" class="anchored" data-anchor-id="nothing-is-replaced-silently"><span class="header-section-number">8.2.2</span> Nothing is replaced silently</h3>
+<p>Before writing anything, the functions compare every target with what they would write. A file with the same bytes is left alone and reported as <code>unchanged</code>. A file with different content stops the whole call, with nothing written, unless <code>overwrite = TRUE</code>. A target path that is a folder also stops it. Both functions return a table with one row per file, <code>path</code> and <code>status</code> (<code>written</code>, <code>overwritten</code> or <code>unchanged</code>); in R it is returned invisibly. A second identical call therefore changes nothing and says so. The last message points to the README’s quick start.</p>
+</section>
+</section>
+<section id="what-each-function-writes" class="level2" data-number="8.3">
+<h2 data-number="8.3" class="anchored" data-anchor-id="what-each-function-writes"><span class="header-section-number">8.3</span> What each function writes</h2>
+<section id="a-research-project" class="level3" data-number="8.3.1">
+<h3 data-number="8.3.1" class="anchored" data-anchor-id="a-research-project"><span class="header-section-number">8.3.1</span> A research project</h3>
+<p><code>create_research_project()</code> writes:</p>
+<!-- Generated by book/_scripts/gen_tables.py from the code and book/_data/coverage.json. Do not edit: run `sh tools/docs-tables`. -->
+<p><strong>Languages:</strong> R, Python. Stata: n/a (run once from R or Python). See the <a href="../appendices/a-coverage-matrix.html">coverage matrix</a>.</p>
 <pre><code>learning-mobility/
-├── .gitignore                 research-project.gitignore, unchanged
-├── .gitattributes             LF for the hook, vendored helpers and sidecars
+├── .gitignore                   research-project.gitignore, unchanged
+├── .gitattributes               LF for the hook, tools/check, vendored helpers
+│                                and sidecars; output/ kept byte for byte
 ├── profile_learning-mobility.R  sourced first by every script and session
-├── .checks/README.md          check records: .checks/&lt;content-hash&gt;.json
-├── .githooks/pre-push         requires a check record before every push
-├── cso_project.yml            collaboration: multi-producer (committed)
-├── README.md                  quick start for a new co-author, layout
-├── CONTRIBUTING.md            ground rules, first clone, workflow, checks
-├── 00_functions/              README.md; with vendor = TRUE the helpers
-│                              and .toolkit_manifest.yml
-├── R/README.md                numbered scripts; R/functions/ for tested code
+├── .checks/README.md            check records: .checks/&lt;content-hash&gt;.json
+├── .githooks/pre-push           requires a check record before every push
+├── cso_project.yml              collaboration: multi-producer (committed)
+├── README.md                    quick start for a new co-author, layout
+├── CONTRIBUTING.md              ground rules, first clone, workflow, checks
+├── 00_functions/                README.md; with vendor = TRUE the helpers
+│                                and .toolkit_manifest.yml
+├── R/README.md                  numbered scripts; R/functions/ for tested code
 ├── data/
-│   ├── README.md              the provenance policy and the inputs table
-│   ├── input_manifest.csv     file, sha256, bytes, origin, sidecar
-│   └── provenance/README.md   sidecars of microdata kept outside the repo
-├── output/README.md           tables and figures, each with its sidecar
-├── paper/README.md            the manuscript, paper/main.tex
+│   ├── README.md                the provenance policy and the inputs table
+│   ├── input_manifest.csv       file, sha256, bytes, origin, sidecar
+│   └── provenance/README.md     sidecars of microdata kept outside the repo
+├── output/README.md             tables and figures, each with its sidecar
+├── paper/README.md              the manuscript, paper/main.tex
 ├── references/README.md
 ├── docs/README.md
 ├── tests/
-│   ├── testthat.R             the runner (reviewer mode; sources R/functions/)
+│   ├── testthat.R               the runner (reviewer mode; sources R/functions/)
 │   └── testthat/
-│       ├── helper-project.R   fixtures, local state, expect_envelope()
-│       └── test-project.R     cso_project.yml, manifest vs sidecars, mode
-├── tools/check.R              every local check
-├── tools/check                sh tools/check --record: run, then record
-├── .github/workflows/         check-record.yml (always); four more with
-│                              workflows = TRUE (opt-in)
-├── AGENTS.md, CLAUDE.md       rules for AI coding agents (CLAUDE.md: @AGENTS.md)
-├── decisions.md               decisions, who made them and why; AI use
-└── .claude/settings.json      Claude Code: the cso-toolkit plugin; no edits
-                               to 00_functions/</code></pre>
-<p>An official-statistics repository follows DW-Production and the deposit’s stage numbering:</p>
+│       ├── helper-project.R     fixtures, local state, expect_envelope()
+│       └── test-project.R       cso_project.yml, manifest vs sidecars, mode
+├── tools/check.R                every local check
+├── tools/check                  sh tools/check --record: run, then record
+├── .github/workflows/           check-record.yml (always); four more with
+│                                workflows = TRUE
+├── AGENTS.md, CLAUDE.md         rules for AI coding agents (CLAUDE.md: @AGENTS.md)
+├── decisions.md                 decisions, who made them and why; AI use
+└── .claude/settings.json        Claude Code: the cso-toolkit plugin; no edits
+                                 to 00_functions/</code></pre>
+<p>The agent files are explained in <a href="../chapters/46-ai-agents.html">Working with AI coding agents</a>.</p>
+</section>
+<section id="an-official-statistics-repository" class="level3" data-number="8.3.2">
+<h3 data-number="8.3.2" class="anchored" data-anchor-id="an-official-statistics-repository"><span class="header-section-number">8.3.2</span> An official-statistics repository</h3>
+<p><code>create_official_stats_project()</code> follows DW-Production and the deposit’s stage numbering:</p>
+<!-- Generated by book/_scripts/gen_tables.py from the code and book/_data/coverage.json. Do not edit: run `sh tools/docs-tables`. -->
+<p><strong>Languages:</strong> R, Python. Stata: n/a (run once from R or Python). See the <a href="../appendices/a-coverage-matrix.html">coverage matrix</a>.</p>
 <pre><code>DW-Nutrition/
 ├── .gitignore                       official-stats.gitignore, unchanged
 ├── .gitattributes                   LF for the hook, vendored helpers and sidecars
@@ -640,66 +668,341 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 ├── AGENTS.md, CLAUDE.md             agent rules, the embargo section included
 ├── decisions.md                     decisions and the record of AI use
 └── .claude/settings.json            the plugin; no edits to 00_functions/</code></pre>
-<p>The canonical raw data, API caches and promoted work data live in the deposit (Teams <code>060.DW-MASTER/01_dw_prep/011_rawdata</code> and <code>013_wrkdata</code>), which the profile’s <code>teamsRawData</code> and <code>teamsWrkData</code> point to in producer mode and redirect to the sandbox in reviewer mode (<a href="../chapters/22-wiring-the-contract.html">Wiring the contract</a>). The repository keeps folders of the same names for local work, as DW-Production does, because a sector script made by <code>create_sector_script()</code> reads <code>01_dw_prep/011_rawdata/&lt;sector&gt;/</code> and writes <code>01_dw_prep/013_wrkdata/&lt;sector&gt;/</code> relative to the repository (<a href="../chapters/35-scaffolding-audit.html">Scaffolding and the contract auditor</a>). Their contents never reach git: <code>.gitignore</code> ignores <code>013_wrkdata/</code> outright, like every output folder, and keeps only the READMEs, sidecars and manifests of <code>011_rawdata/</code>; <code>tools/check.R</code> fails on anything tracked in <code>013_wrkdata/</code> (<code>OUTPUT_DIRS</code>) and on data tracked in <code>011_rawdata/</code> (<code>DATA_DIRS</code>). <code>013_wrkdata/</code> has no tracked file at all, so it appears with the first run. <code>01_dw_prep/012_codes/README.md</code> shows how to scaffold a sector’s driver against the project’s own profile.</p>
-<p>The <code>.gitignore</code>, the hook, the test helper and the workflows are the toolkit’s templates byte for byte, so the rules a repository starts with are the ones the toolkit tests. Three files are set for the kind of project: <code>tools/check.R</code> (an official-statistics repository gets <code>OUTPUT_DIRS = "output outputs results wrk 013_wrkdata"</code>, the embargo check, <code>011_rawdata</code> added to <code>DATA_DIRS</code>, and <code>AUDIT_PATHS = "01_dw_prep/012_codes"</code>; the contract audit is <code>AUDIT_MODE = "advisory"</code> in a research project, where it reports raw reads such as <code>haven::read_dta()</code> without failing the checks, and <code>"blocking"</code> in official statistics, where any of them fails; see <a href="../chapters/45-ci-cd.html">Continuous integration and repository hygiene</a>), <code>tests/testthat.R</code> (which folder of function files the tests source) and <code>cso_project.yml</code> (the model, today’s date and the members).</p>
-<p>The functions never replace a file silently. Before writing anything they compare every target with what they would write: a file with the same bytes is left alone and reported as <code>unchanged</code>, and a file with different content stops the whole call, with nothing written, unless <code>overwrite = TRUE</code>. Both return the list of files with their status (<code>written</code>, <code>overwritten</code>, <code>unchanged</code>), so a second identical call changes nothing and says so. To adopt the conventions in an existing repository, follow <a href="../chapters/42-onboarding-example.html">Onboarding a repo</a>, or create a scaffold in an empty folder and copy what you need.</p>
-<section id="the-options" class="level3" data-number="12.2.1">
-<h3 data-number="12.2.1" class="anchored" data-anchor-id="the-options"><span class="header-section-number">12.2.1</span> The options</h3>
+<p>The canonical raw data, API caches and promoted work data live in the deposit (Teams <code>060.DW-MASTER/01_dw_prep/011_rawdata</code> and <code>013_wrkdata</code>). The profile’s <code>teamsRawData</code> and <code>teamsWrkData</code> point there in producer mode and to the sandbox in reviewer mode (<a href="../chapters/profiles-and-modes.html">Profiles and the mode switch</a>).</p>
+<p>The repository keeps folders of the same names for local work, as DW-Production does, because a sector script made by <code>create_sector_script()</code> reads <code>01_dw_prep/011_rawdata/&lt;sector&gt;/</code> and writes <code>01_dw_prep/013_wrkdata/&lt;sector&gt;/</code> relative to the repository. <code>01_dw_prep/012_codes/README.md</code> shows the call that scaffolds a sector’s driver against the project’s own profile. The contents of these folders never reach git: <code>.gitignore</code> ignores <code>013_wrkdata/</code> outright, like every output folder, and keeps only the READMEs, sidecars and manifests of <code>011_rawdata/</code>. <code>013_wrkdata/</code> has no tracked file at all, so it appears with the first run.</p>
+<p>After publication, the release pull request commits <code>releases/&lt;vintage&gt;/</code>: an <code>output_manifest.csv</code> (<code>file</code>, <code>sha256</code>, <code>bytes</code>, <code>deposited_at</code>, <code>deposit_path</code>) and copies of the deposited files’ sidecars. Never before the publication date: those hashes describe embargoed figures.</p>
+</section>
+<section id="set-for-the-kind" class="level3" data-number="8.3.3">
+<h3 data-number="8.3.3" class="anchored" data-anchor-id="set-for-the-kind"><span class="header-section-number">8.3.3</span> Set for the kind</h3>
+<p>The <code>.gitignore</code>, the hook, the test helper and the workflows are the toolkit’s templates byte for byte, so the rules a repository starts with are the ones the toolkit tests. Three files are set for the kind of project:</p>
 <ul>
-<li><strong><code>vendor</code>, <code>toolkit_source</code>, <code>toolkit_version</code>.</strong> <code>vendor</code> is <code>FALSE</code> by default. <code>TRUE</code> copies the helpers into <code>00_functions/</code> from a release tag of a git clone of cso-toolkit (<code>toolkit_source</code>, or <code>CSO_TOOLKIT_ROOT</code>), and writes <code>.toolkit_manifest.yml</code> with that tag as <code>pulled_version</code> and the commit it points to as <code>pulled_commit</code> (<a href="../chapters/41-vendoring.html">The vendoring model</a>). The tag is <code>toolkit_version</code>, by default the clone’s latest release tag (<code>v0.9.1</code>, never a pre-release such as <code>v1.0.0-rc1</code>). The files are read from the tag’s commit in the clone’s history, never from its working tree, so a clone on another branch or with local edits still vendors exactly the released bytes; a tag the clone does not have stops the call before anything is written (<code>git fetch --tags</code> first). The default set is <code>dw_io.R</code>, <code>dw_api.R</code>, <code>cso_toolkit_sync.R</code>, <code>dw_provenance.R</code>, <code>dw_deposit.R</code>, <code>dw_project.R</code>, <code>test_scripts.R</code> and <code>zzz.R</code>, plus <code>profile_helpers.R</code> and <code>create_sector_script.R</code> for official statistics; a helper of that set which the tag does not have yet (<code>dw_project.R</code> before the release that adds it) is skipped and named in a message. A character vector picks the files, all of which must exist at the tag, and the three that <code>tools/check.R</code> needs are always added. Without vendoring, <code>tools/check.R</code> leaves out the <code>contract-audit</code> and <code>vintage</code> checks, with a comment saying to add them back once <code>00_functions/</code> is filled.</li>
-<li><strong><code>workflows</code>.</strong> <code>FALSE</code> by default: checks run locally. <code>check-record.yml</code>, which only verifies the local check record on pull requests (no R, about 10 seconds), is always written (<a href="../chapters/45-ci-cd.html#check-records">Check records</a>). <code>TRUE</code> adds the other GitHub Actions workflows, which call the same <code>tools/check.R</code> and by default run only when started by hand and on pull requests into <code>main</code>.</li>
-<li><strong><code>git</code>.</strong> <code>FALSE</code> by default. <code>TRUE</code> runs <code>git init</code> with <code>develop</code> as the first branch (<code>main</code> is created at the first release), sets <code>core.hooksPath</code> to <code>.githooks</code>, and stages the hook and <code>tools/check</code> with their executable bit so they also run on macOS and Linux clones. It never commits, creates a remote or pushes.</li>
+<li><strong><code>tools/check.R</code>.</strong> An official-statistics repository gets <code>OUTPUT_DIRS = "output outputs results wrk 013_wrkdata"</code> (the embargo: nothing tracked there), <code>011_rawdata</code> added to <code>DATA_DIRS</code>, and <code>AUDIT_PATHS = "01_dw_prep/012_codes"</code>. The contract audit is <code>AUDIT_MODE = "advisory"</code> in a research project, where it reports raw reads such as <code>haven::read_dta()</code> without failing the checks, and <code>"blocking"</code> in official statistics, where any of them fails. What each setting does is in <a href="../chapters/checks-and-ci.html">Checks and CI</a>.</li>
+<li><strong><code>tests/testthat.R</code>.</strong> Which folder of function files the tests source: <code>R/functions/</code> in a research project, none in official statistics.</li>
+<li><strong><code>cso_project.yml</code>.</strong> The model, today’s date as <code>collaboration_since</code>, and the members.</li>
 </ul>
 </section>
-<section id="the-profile" class="level3" data-number="12.2.2">
-<h3 data-number="12.2.2" class="anchored" data-anchor-id="the-profile"><span class="header-section-number">12.2.2</span> The profile</h3>
-<p>Every repository gets <code>profile_&lt;project&gt;.R</code>, named after its folder, the script every analysis script and interactive session sources first, as <code>profile_DW-Production.R</code> is in DW-Production (<a href="../chapters/35-scaffolding-audit.html">Scaffolding and the contract auditor</a>). Both kinds are written from one template, <code>templates/profile/profile.R</code>, and both pass <code>review_profile()</code> with no failure (the research profile shows one warning, for the Z: advisory it does not need):</p>
+<section id="the-profile" class="level3" data-number="8.3.4">
+<h3 data-number="8.3.4" class="anchored" data-anchor-id="the-profile"><span class="header-section-number">8.3.4</span> The profile</h3>
+<p>Every repository gets <code>profile_&lt;project&gt;.R</code>, named after its folder: the script every analysis script and interactive session sources first, as <code>profile_DW-Production.R</code> is in DW-Production. Both kinds are written from one template, <code>templates/profile/profile.R</code>; the official-statistics one adds a deposit block from <code>templates/profile/deposit.R</code>. The generated profile:</p>
 <ul>
-<li>it reads <code>~/.config/user_config.yml</code> the way DW-Production’s template lays it out, the user’s block first (<code>user_config[[USERNAME]]</code>), top-level keys as a fallback;</li>
-<li>it resolves <code>dw_mode</code> as <code>dw_mode_by_project[["&lt;project&gt;"]]</code>, then <code>dw_mode</code>, with no default; when neither is set it stops and shows the lines to add, with the user name filled in;</li>
-<li>it sources the vendored helpers from <code>00_functions/</code>, <code>zzz.R</code> first, and reads the vintage from <code>.toolkit_manifest.yml</code>;</li>
-<li>it never installs a package: a missing one stops the session with the list to install;</li>
-<li>it resolves the collaboration model from <code>cso_project.yml</code> and ends with the sentinel <code>profile_&lt;project&gt; &lt;- TRUE</code>, which sector scripts test before they run.</li>
+<li>reads <code>~/.config/user_config.yml</code>, the user’s block first and top-level keys as a fallback, and resolves <code>dw_mode</code> with no default; when it is not set, it stops and shows the lines to add, with the user name filled in;</li>
+<li>sources the vendored helpers from <code>00_functions/</code>, <code>zzz.R</code> first, and reads the vintage from <code>.toolkit_manifest.yml</code>;</li>
+<li>never installs a package: a missing one stops the session with the list to install;</li>
+<li>resolves the collaboration model from <code>cso_project.yml</code> and ends with a sentinel, <code>profile_&lt;project&gt; &lt;- TRUE</code>, where each run of characters other than letters, digits and <code>_</code> in the folder name becomes <code>_</code> (<code>profile_DW_Nutrition</code>). Sector scripts test the sentinel before they run.</li>
 </ul>
-<p>The official-statistics profile adds the deposit paths of <a href="../chapters/22-wiring-the-contract.html">Wiring the contract</a>: <code>teamsRawData</code> and <code>teamsWrkData</code> point to Teams <code>060.DW-MASTER</code> under the user’s <code>teamsRoot</code> for a producer, and to <code>sandboxRoot</code> for a reviewer, with the <code>*Canonical</code> aliases kept for reads; and it checks the Z: mirror with a probe that cannot hang on a disconnected drive, without stopping when the mirror is missing. Its <code>user_config.yml</code> keys are in <code>_config_template/user_config.yml</code>.</p>
+<p>The official-statistics profile also derives the deposit paths from <code>dw_mode</code> (<code>teamsRoot</code> for a producer, <code>sandboxRoot</code> for a reviewer) and checks the Z: mirror without ever stopping on it. Its <code>user_config.yml</code> keys are in <code>_config_template/user_config.yml</code>.</p>
+<p>Both pass <code>review_profile()</code> with no failure; the research profile shows one warning, for the Z: advisory it does not need. How the profile reads the configuration, the precedence of <code>dw_mode_by_project</code> over <code>dw_mode</code>, the globals it derives and the ten checks of <code>review_profile()</code> are all in <a href="../chapters/profiles-and-modes.html">Profiles and the mode switch</a>. The profile is yours once written: extend it.</p>
 </section>
 </section>
-<section id="first-steps-for-the-person-who-created-it" class="level2" data-number="12.3">
-<h2 data-number="12.3" class="anchored" data-anchor-id="first-steps-for-the-person-who-created-it"><span class="header-section-number">12.3</span> First steps for the person who created it</h2>
+<section id="the-collaboration-setting" class="level2" data-number="8.4">
+<h2 data-number="8.4" class="anchored" data-anchor-id="the-collaboration-setting"><span class="header-section-number">8.4</span> The collaboration setting</h2>
+<p><code>cso_project.yml</code> records how many people may produce results. You choose it when you create the repository, and it is committed, so it is the same for everyone. A person’s <code>dw_mode</code> stays in their own configuration.</p>
+<p>Pick <code>single-producer</code> when one person produces and the others review, as in a production pipeline with one Database Manager. Pick <code>multi-producer</code> when every co-author may produce, always through a pull request; <code>dw_save()</code> then guards each output against being replaced by someone else’s concurrent or unrecorded change. Change it later with <code>dw_set_collaboration()</code>, in one reviewed pull request, never by editing the file alone. What each model changes, and why switching midway is safe, is in <a href="../chapters/21-roles-and-modes.html">Roles and the mode contract</a>, “Collaboration model”.</p>
+</section>
+<section id="first-steps-for-the-person-who-created-it" class="level2" data-number="8.5">
+<h2 data-number="8.5" class="anchored" data-anchor-id="first-steps-for-the-person-who-created-it"><span class="header-section-number">8.5</span> First steps for the person who created it</h2>
 <ol type="1">
-<li>Fill in the paragraphs the README leaves as comments: the question or the indicators, the authors, the outlet or the publication channel.</li>
-<li>Vendor the helpers if you did not (<code>00_functions/README.md</code>), and run <code>Rscript --no-init-file tools/check.R</code>. Every line should pass.</li>
-<li>Stage by path and make the first commit on <code>develop</code>; create <code>main</code> from it when you first release or circulate a version.</li>
-<li>Create the remote (private unless the project says otherwise), push both branches, make <code>develop</code> the default branch and protect both trunks, so changes reach them only through pull requests (<code>docs/git_workflow.md</code>).</li>
+<li>Fill in the paragraphs the README leaves as comments: the question or the indicators, the authors, the outlet or the publication channel (and, for official statistics, the Database Manager).</li>
+<li>Vendor the helpers if you did not (<code>00_functions/README.md</code> says how), and put <code>contract-audit</code> and <code>vintage</code> back in <code>CHECKS</code> at the top of <code>tools/check.R</code>.</li>
+<li>Run <code>sh tools/check</code>. Every line should pass.</li>
+<li>Stage by path and make the first commit on <code>develop</code>. Create <code>main</code> from it when you first release or circulate a version.</li>
+<li>Create the remote (private unless the project says otherwise), push both branches, make <code>develop</code> the default branch and protect both trunks, so changes reach them only through pull requests (<a href="https://github.com/unicef-drp/cso-toolkit/blob/develop/docs/git_workflow.md"><code>docs/git_workflow.md</code></a>). On GitHub, require the <code>check-record</code> status and up-to-date branches for both.</li>
 </ol>
 </section>
-<section id="first-clone-for-a-co-author" class="level2" data-number="12.4">
-<h2 data-number="12.4" class="anchored" data-anchor-id="first-clone-for-a-co-author"><span class="header-section-number">12.4</span> First clone, for a co-author</h2>
-<p>The generated <code>README.md</code> and <code>CONTRIBUTING.md</code> carry these steps, so a co-author can follow them without this chapter:</p>
+<section id="first-clone-for-a-co-author" class="level2" data-number="8.6">
+<h2 data-number="8.6" class="anchored" data-anchor-id="first-clone-for-a-co-author"><span class="header-section-number">8.6</span> First clone, for a co-author</h2>
+<p>The generated <code>README.md</code> (“Quick start”) and <code>CONTRIBUTING.md</code> (“Joining the project”) carry these steps, so a co-author can follow them without this chapter:</p>
 <ol type="1">
-<li>Clone, then <code>git config core.hooksPath .githooks</code>, once, so every push needs a passing check record (<code>sh tools/check --record</code>).</li>
-<li>In <code>~/.config/user_config.yml</code>, under their user name, set <code>dw_mode: reviewer</code>. They switch to <code>producer</code> only for a session in which they deliberately produce or refresh results (for this repository alone: <code>dw_mode_by_project:</code> with the repository’s name). In an official-statistics repository they also set <code>teamsRoot</code> and a <code>sandboxRoot</code> outside the repository (<code>_config_template/user_config.yml</code>). <code>source("profile_&lt;project&gt;.R")</code> then tells them what is still missing.</li>
-<li>Obtain the inputs under their own licence (research) or fill <code>inputs/</code> with <code>dw_fetch_inputs()</code> (official statistics), and verify that the bytes match the manifest: then their results are built from the same inputs.</li>
-<li>Run <code>Rscript --no-init-file tools/check.R</code>, and <code>sh tools/check --record</code> before the first push.</li>
+<li>Clone, then <code>git config core.hooksPath .githooks</code>, once, so every push needs a passing check record.</li>
+<li>In <code>~/.config/user_config.yml</code>, under their user name, set <code>dw_mode: reviewer</code>. They switch to <code>producer</code> only for a session in which they deliberately produce or refresh results, or for this repository alone with <code>dw_mode_by_project:</code> and the repository’s name. In an official-statistics repository they copy <code>_config_template/user_config.yml</code>, or add its keys to the file they already have, and also set <code>teamsRoot</code> and a <code>sandboxRoot</code> outside the repository and outside OneDrive. Their filled-in copy is never committed. <code>source("profile_&lt;project&gt;.R")</code> then tells them what is still missing.</li>
+<li>Get the inputs. In a research project they obtain each input under their own licence (<code>data/README.md</code>) and verify that the bytes match the manifest before running anything; a mismatch means a different release or vintage. In official statistics they fill <code>inputs/</code> with <code>dw_fetch_inputs()</code>, which checks every copy’s sha256 against the deposit and stops on a mismatch. Then their results are built from the same inputs.</li>
+<li>In official statistics, reproduce the latest vintage in reviewer mode and compare it with the deposit (<code>dw_compare()</code>, <code>dw_provenance_diff()</code>). A clean comparison means their setup reproduces the published figures.</li>
+<li>Run <code>sh tools/check</code>, and <code>sh tools/check --record</code> before the first push.</li>
 <li>In a multi-producer project, add their handle under <code>members:</code> in <code>cso_project.yml</code> in their first pull request.</li>
 </ol>
 </section>
-<section id="the-collaboration-setting" class="level2" data-number="12.5">
-<h2 data-number="12.5" class="anchored" data-anchor-id="the-collaboration-setting"><span class="header-section-number">12.5</span> The collaboration setting</h2>
-<p><code>cso_project.yml</code> records how many people may produce results. In a <code>single-producer</code> project one person produces and the others review; in a <code>multi-producer</code> project every co-author may produce, always through a pull request, and <code>dw_save()</code> refuses to replace an output that was changed outside it or written by someone else during the session, unless the producer passes <code>takeover = TRUE</code> after checking. The setting is committed, so it is the same for everyone; a person’s <code>dw_mode</code> stays in their own configuration. Change it later with <code>dw_set_collaboration()</code>, in one reviewed pull request (<a href="../chapters/21-roles-and-modes.html">Roles and the mode contract</a>, “Collaboration model”).</p>
+<section id="adopting-the-toolkit-in-an-existing-repository" class="level2" data-number="8.7">
+<h2 data-number="8.7" class="anchored" data-anchor-id="adopting-the-toolkit-in-an-existing-repository"><span class="header-section-number">8.7</span> Adopting the toolkit in an existing repository</h2>
+<p>An existing repository cannot simply be scaffolded over: the functions refuse to replace a file that differs, and its code already reads and writes data its own way. Adoption is a sequence of steps instead. Each step below says what to do and links to the chapter with the detail.</p>
+<p>The running example is a deposit-bearing pipeline, call it <code>unicef-drp/UNPD-Population</code>, one of the DW-Production-style repositories that publish curated data to the shared Teams and Z: warehouse. Every step is repository-neutral: substitute your own owner, repository and sector codes. A research repository follows the same steps, with outputs in <code>output/</code> instead of the deposit.</p>
+<p>By the end, the pipeline writes to the canonical deposit only in producer mode, isolates reviewer runs in a sandbox, and proves on every push that no script bypasses the IO and API contracts.</p>
+<p>A quick way to get the files you will copy: run the matching scaffolder into an empty scratch folder with <code>vendor = TRUE</code>, then copy what you need from there into the repository.</p>
+<section id="decide-what-to-adopt" class="level3" data-number="8.7.1">
+<h3 data-number="8.7.1" class="anchored" data-anchor-id="decide-what-to-adopt"><span class="header-section-number">8.7.1</span> 1. Decide what to adopt</h3>
+<p>Before copying anything, settle two questions.</p>
+<p><strong>Which helpers does the pipeline need?</strong> The toolkit is modular. A repository that only reads and writes deposit files needs the IO contract (<code>dw_save()</code>, <code>dw_use()</code>, <code>dw_compare()</code>) and the sync helper. One that also fetches from upstream APIs needs the external-API contract (<code>dw_api_fetch()</code>, <code>dw_api_cached()</code>, <code>dw_api_inventory()</code>). Vendor only what the code calls; the manifest’s <code>vendored:</code> list says what you took.</p>
+<p><strong>Which languages?</strong> The three implementations do not cover the same functions. The coverage line under each function in this handbook says where it exists, and the <a href="../appendices/a-coverage-matrix.html">coverage matrix</a> has them all. Check the functions your pipeline would use now, before the migration starts. In particular, if the Stata code needs a remote source and the API wrapper is not available there, keep the fetching in R or Python, let it cache the source in the deposit, and have the Stata code read the cache with <code>dw_use</code>.</p>
 </section>
-<section id="local-checks-first" class="level2" data-number="12.6">
-<h2 data-number="12.6" class="anchored" data-anchor-id="local-checks-first"><span class="header-section-number">12.6</span> Local checks first</h2>
-<p>The repository starts with checks that run on the author’s machine: <code>tools/check.R</code> runs every check with one command and the pre-push hook refuses a push without a passing check record, which <code>sh tools/check --record</code> writes after running every check. GitHub Actions are opt-in (<code>workflows = TRUE</code>) and run the same script; by default they run only when started by hand and on release pull requests into <code>main</code>, so routine work costs no Actions minutes. The pull request carries the output of <code>tools/check.R</code> for its head commit, and that record is the gate.</p>
+<section id="vendor-and-pin" class="level3" data-number="8.7.2">
+<h3 data-number="8.7.2" class="anchored" data-anchor-id="vendor-and-pin"><span class="header-section-number">8.7.2</span> 2. Vendor and pin</h3>
+<p>Copy the helpers into <code>00_functions/</code>, commit them, and pin the vintage in <code>00_functions/.toolkit_manifest.yml</code>, next to the helpers it tracks. The committed copies freeze the vintage in your git history, so a reviewer with no network access can still re-run the pipeline. Keep <code>vendored:</code> honest: list a file only if it is in <code>00_functions/</code>.</p>
+<p>For a deposit, <code>pulled_version</code> must be a real release tag, never <code>inrepo</code> or an <code>unreleased</code> suffix: the Database Manager’s pre-deposit checklist (<code>templates/dbm_submission_template.md</code>) blocks sign-off otherwise.</p>
+<p>The routes for R, Python and Stata, every manifest field and the update functions are in <a href="../chapters/vendoring-and-updates.html">Vendoring and updates</a>.</p>
 </section>
-<section id="where-to-read-more" class="level2" data-number="12.7">
-<h2 data-number="12.7" class="anchored" data-anchor-id="where-to-read-more"><span class="header-section-number">12.7</span> Where to read more</h2>
+<section id="wire-the-profile" class="level3" data-number="8.7.3">
+<h3 data-number="8.7.3" class="anchored" data-anchor-id="wire-the-profile"><span class="header-section-number">8.7.3</span> 3. Wire the profile</h3>
+<p>This is the load-bearing step. Which folder a <code>dw_save()</code> lands in, and whether an API fetch is allowed, both follow from <code>dw_mode</code> and the globals the profile derives from it.</p>
+<p>The profile must hard-fail when <code>dw_mode</code> is missing or is anything other than <code>producer</code> or <code>reviewer</code>. Defaulting to either side is unsafe: defaulting to producer corrupts the deposit, and defaulting to reviewer surprises a Database Manager mid-deposit. It must also print a banner that makes the session’s mode unmistakable.</p>
+<p>You can take the generated <code>profile_&lt;project&gt;.R</code> from the scratch scaffold, generate one with <code>create_profile()</code>, or keep your own and audit it with <code>review_profile()</code>. In a pipeline with a conductor script, shadow the path globals once at the top of the conductor rather than editing every sector script. All of this is in <a href="../chapters/profiles-and-modes.html">Profiles and the mode switch</a>.</p>
+</section>
+<section id="move-raw-io-to-dw_use-and-dw_save" class="level3" data-number="8.7.4">
+<h3 data-number="8.7.4" class="anchored" data-anchor-id="move-raw-io-to-dw_use-and-dw_save"><span class="header-section-number">8.7.4</span> 4. Move raw IO to <code>dw_use()</code> and <code>dw_save()</code></h3>
+<p>Now find every raw read, write and HTTP call in the pipeline and route it through the wrappers. The contract audit lists them for you: copy <code>tools/check.R</code> from the scratch scaffold, set <code>AUDIT_PATHS</code> to your code folders and run it with <code>AUDIT_MODE</code> advisory, which reports each violation without failing:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="va">AUDIT_MODE</span><span class="op">=</span>advisory <span class="fu">sh</span> tools/check <span class="at">--only</span> contract-audit</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Each reported line becomes a wrapper call. Reads go through <code>dw_use()</code>:</p>
+<!-- Generated by book/_scripts/gen_tables.py from the code and book/_data/coverage.json. Do not edit: run `sh tools/docs-tables`. -->
+<p><strong>Languages:</strong> R, Python, Stata. See the <a href="../appendices/a-coverage-matrix.html">coverage matrix</a>.</p>
+<p>Writes go through <code>dw_save()</code>:</p>
+<!-- Generated by book/_scripts/gen_tables.py from the code and book/_data/coverage.json. Do not edit: run `sh tools/docs-tables`. -->
+<p><strong>Languages:</strong> R, Python, Stata. See the <a href="../appendices/a-coverage-matrix.html">coverage matrix</a>.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-3" role="tab" aria-controls="tabset-2-3" aria-selected="false" href="">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Before: raw paths, no provenance, no mode routing</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>wpp <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="fu">file.path</span>(teamsRawData, <span class="st">"pop"</span>, <span class="st">"wpp_2024.csv"</span>))</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(df, <span class="fu">file.path</span>(teamsWrkData, <span class="st">"pop"</span>, <span class="st">"dw_pop_tot.csv"</span>), <span class="at">row.names =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co"># After: routed by dw_mode, with a provenance sidecar on every write</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>wpp <span class="ot">&lt;-</span> <span class="fu">dw_use</span>(<span class="at">name =</span> <span class="st">"wpp_2024.csv"</span>, <span class="at">sector =</span> <span class="st">"pop"</span>, <span class="at">kind =</span> <span class="st">"raw"</span>)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="fu">dw_save</span>(df, <span class="at">name =</span> <span class="st">"dw_pop_tot.csv"</span>, <span class="at">sector =</span> <span class="st">"pop"</span>, <span class="at">kind =</span> <span class="st">"wrk"</span>,</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>        <span class="at">isid =</span> <span class="fu">c</span>(<span class="st">"REF_AREA"</span>, <span class="st">"TIME_PERIOD"</span>),</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>        <span class="at">metadata =</span> <span class="fu">list</span>(<span class="at">title =</span> <span class="st">"Total population, by area and year"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Before</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>wpp <span class="op">=</span> pd.read_csv(os.path.join(teamsRawData, <span class="st">"pop"</span>, <span class="st">"wpp_2024.csv"</span>))</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>df.to_csv(os.path.join(teamsWrkData, <span class="st">"pop"</span>, <span class="st">"dw_pop_tot.csv"</span>), index<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co"># After</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>wpp <span class="op">=</span> dw_use(name<span class="op">=</span><span class="st">"wpp_2024.csv"</span>, sector<span class="op">=</span><span class="st">"pop"</span>, kind<span class="op">=</span><span class="st">"raw"</span>)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>dw_save(df, name<span class="op">=</span><span class="st">"dw_pop_tot.csv"</span>, sector<span class="op">=</span><span class="st">"pop"</span>, kind<span class="op">=</span><span class="st">"wrk"</span>,</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>        isid<span class="op">=</span>[<span class="st">"REF_AREA"</span>, <span class="st">"TIME_PERIOD"</span>],</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>        metadata<span class="op">=</span>{<span class="st">"title"</span>: <span class="st">"Total population, by area and year"</span>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="tabset-2-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-3-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>* Before</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="st">"$teamsRawData/pop/wpp_2024.dta"</span>, <span class="kw">clear</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="kw">save</span> <span class="st">"$teamsWrkData/pop/dw_pop_tot.dta"</span>, <span class="kw">replace</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>* After</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>dw_use , filename(<span class="st">"wpp_2024.dta"</span>) path(<span class="st">"$teamsRawData/pop"</span>)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>dw_save , filename(<span class="st">"dw_pop_tot.dta"</span>) path(<span class="st">"$teamsWrkData/pop"</span>) <span class="co">///</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>          idvars(<span class="st">"REF_AREA TIME_PERIOD"</span>)                       <span class="co">///</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>          <span class="bn">title</span>(<span class="st">"Total population, by area and year"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<p>Calls to an external API go through <code>dw_api_fetch()</code>, which caches the response in the deposit and records where it came from:</p>
+<!-- Generated by book/_scripts/gen_tables.py from the code and book/_data/coverage.json. Do not edit: run `sh tools/docs-tables`. -->
+<p><strong>Languages:</strong> R, Python. Stata: Route via R or Python. See the <a href="../appendices/a-coverage-matrix.html">coverage matrix</a>.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content">
+<div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>wb <span class="ot">&lt;-</span> <span class="fu">dw_api_fetch</span>(</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">api        =</span> <span class="st">"wb"</span>,</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">cache_key  =</span> <span class="st">"wb_lp_primary_2000_2024"</span>,</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">indicator  =</span> <span class="st">"SE.LPV.PRIM"</span>,</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">start_date =</span> <span class="dv">2000</span>,</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">end_date   =</span> <span class="dv">2024</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>wb <span class="op">=</span> dw_api_fetch(</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"wb"</span>, <span class="st">"wb_lp_primary_2000_2024"</span>,</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    indicator<span class="op">=</span>[<span class="st">"SE.LPV.PRIM"</span>], start_date<span class="op">=</span><span class="dv">2000</span>, end_date<span class="op">=</span><span class="dv">2024</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<p>The arguments of each wrapper, the cross-language differences in their options, and the full list of supported APIs are in <a href="../chapters/31-io.html">The IO contract</a> and <a href="../chapters/32-external-api.html">External APIs</a>. A line that legitimately reads a file raw, such as the profile’s own read of <code>user_config.yml</code>, is marked <code># cso-allow: &lt;rule&gt;</code> (<a href="../chapters/checks-and-ci.html">Checks and CI</a>).</p>
+<p><strong>The first producer run.</strong> Switch your <code>user_config.yml</code> to <code>dw_mode: "producer"</code>, confirm that the banner says PRODUCER, and run the pipeline. Two things happen on this run that never happen again, because the run fills state that later runs reuse. Each API source is fetched live and cached, so later runs hit the cache; caches never expire on their own, and the Database Manager decides when to refresh them (<code>refresh = TRUE</code>). And each output is written to the deposit where no earlier vintage exists, with its sidecar, and mirrored to Z: when the profile finds it.</p>
+<p>Then list what you cached, for the deposit checklist:</p>
+<!-- Generated by book/_scripts/gen_tables.py from the code and book/_data/coverage.json. Do not edit: run `sh tools/docs-tables`. -->
+<p><strong>Languages:</strong> R, Python. Stata: Route via R or Python. See the <a href="../appendices/a-coverage-matrix.html">coverage matrix</a>.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content">
+<div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dw_api_inventory</span>()   <span class="co"># every cache, with size, mtime and fetched_at</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>dw_api_inventory()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+</section>
+<section id="re-run-as-a-reviewer-and-compare" class="level3" data-number="8.7.5">
+<h3 data-number="8.7.5" class="anchored" data-anchor-id="re-run-as-a-reviewer-and-compare"><span class="header-section-number">8.7.5</span> 5. Re-run as a reviewer and compare</h3>
+<p>Now prove the deposit is reproducible. Switch a second person, or your own configuration, to <code>dw_mode: "reviewer"</code> with a <code>sandboxRoot</code>, and confirm the banner says REVIEWER. Run the same pipeline. Every artifact lands in the sandbox, and the canonical deposit’s modification times are the same before and after the run. A cache that is missing is not fetched: <code>dw_api_fetch()</code> stops and says the input must be deposited first, which is the contract working as designed.</p>
+<p>Then compare the reviewer’s file with the deposited one. The reference side is read through the <code>*Canonical</code> alias, which reviewer-mode code may read but never write:</p>
+<!-- Generated by book/_scripts/gen_tables.py from the code and book/_data/coverage.json. Do not edit: run `sh tools/docs-tables`. -->
+<p><strong>Languages:</strong> R, Python, Stata. See the <a href="../appendices/a-coverage-matrix.html">coverage matrix</a>.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-5-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-1" role="tab" aria-controls="tabset-5-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-5-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-2" role="tab" aria-controls="tabset-5-2" aria-selected="false" href="">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-5-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-3" role="tab" aria-controls="tabset-5-3" aria-selected="false" href="">Stata</a></li></ul>
+<div class="tab-content">
+<div id="tabset-5-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-5-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>report <span class="ot">&lt;-</span> <span class="fu">dw_compare</span>(</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">current            =</span> <span class="fu">file.path</span>(teamsWrkData, <span class="st">"pop"</span>, <span class="st">"dw_pop_tot.csv"</span>),</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">reference          =</span> <span class="fu">file.path</span>(teamsWrkDataCanonical, <span class="st">"pop"</span>, <span class="st">"dw_pop_tot.csv"</span>),</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">by                 =</span> <span class="fu">c</span>(<span class="st">"REF_AREA"</span>, <span class="st">"TIME_PERIOD"</span>),</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">value_cols         =</span> <span class="fu">c</span>(<span class="st">"OBS_VALUE"</span>, <span class="st">"DATA_SOURCE"</span>),</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">numeric_value_cols =</span> <span class="st">"OBS_VALUE"</span>,</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">tol                =</span> <span class="fl">1e-5</span>,</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">label              =</span> <span class="st">"dw_pop_tot"</span>,</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">write_report_to    =</span> <span class="fu">file.path</span>(<span class="fu">tempdir</span>(), <span class="st">"pop_compare"</span>))</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>report<span class="sc">$</span>summary</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="tabset-5-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>report <span class="op">=</span> dw_compare(</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    current<span class="op">=</span>os.path.join(teamsWrkData, <span class="st">"pop"</span>, <span class="st">"dw_pop_tot.csv"</span>),</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    reference<span class="op">=</span>os.path.join(teamsWrkDataCanonical, <span class="st">"pop"</span>, <span class="st">"dw_pop_tot.csv"</span>),</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    by<span class="op">=</span>[<span class="st">"REF_AREA"</span>, <span class="st">"TIME_PERIOD"</span>],</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    value_cols<span class="op">=</span>[<span class="st">"OBS_VALUE"</span>, <span class="st">"DATA_SOURCE"</span>],</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    numeric_value_cols<span class="op">=</span>[<span class="st">"OBS_VALUE"</span>],</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    tol<span class="op">=</span><span class="fl">1e-5</span>,</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    label<span class="op">=</span><span class="st">"dw_pop_tot"</span>,</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    write_report_to<span class="op">=</span>os.path.join(tempfile.gettempdir(), <span class="st">"pop_compare"</span>))</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>report[<span class="st">"summary"</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="tabset-5-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-3-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>dw_compare , current(<span class="st">"$teamsWrkData/pop/dw_pop_tot.dta"</span>)              <span class="co">///</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>             reference(<span class="st">"$teamsWrkDataCanonical/pop/dw_pop_tot.dta"</span>)   <span class="co">///</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>             idvars(<span class="st">"REF_AREA TIME_PERIOD"</span>)                           <span class="co">///</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>             valuevars(<span class="st">"OBS_VALUE DATA_SOURCE"</span>)                       <span class="co">///</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>             tol(1e-5) <span class="kw">label</span>(<span class="st">"dw_pop_tot"</span>)                            <span class="co">///</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>             <span class="kw">report</span>(<span class="st">"`c(tmpdir)'/pop_compare.md"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<p>The summary counts the rows <code>added</code>, <code>removed</code> and <code>changed</code>. On a clean reproduction all three are zero. When they are not, the Database Manager’s submission template classifies each non-zero result:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Class</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>stale-cache</code></td>
+<td>the API cache was not refreshed after the source changed upstream</td>
+</tr>
+<tr class="even">
+<td><code>retired-upstream-indicator</code></td>
+<td>an indicator in the earlier vintage was retired upstream</td>
+</tr>
+<tr class="odd">
+<td><code>methodology-change</code></td>
+<td>the sector’s code changed and the new outputs are correct</td>
+</tr>
+<tr class="even">
+<td><code>rounding</code></td>
+<td>floating-point differences below the tolerance</td>
+</tr>
+<tr class="odd">
+<td><code>bug</code></td>
+<td>a new finding, which needs an issue</td>
+</tr>
+<tr class="even">
+<td><code>uninvestigated</code></td>
+<td>not classified yet</td>
+</tr>
+</tbody>
+</table>
+<p>A deposit cannot be signed off while any row is still <code>uninvestigated</code>.</p>
+<p>This reviewer re-run and its compare report are what adoption means in practice: a reviewer-mode run produces every artifact under <code>sandboxRoot</code>, the canonical deposit is unchanged, and the report exists.</p>
+</section>
+<section id="run-the-checks" class="level3" data-number="8.7.6">
+<h3 data-number="8.7.6" class="anchored" data-anchor-id="run-the-checks"><span class="header-section-number">8.7.6</span> 6. Run the checks</h3>
+<p>Finally, make the guarantees hold on every push rather than depend on someone remembering them. Copy from the scratch scaffold <code>tools/check.R</code>, <code>tools/check</code>, <code>.githooks/pre-push</code>, <code>.checks/README.md</code> and <code>.github/workflows/check-record.yml</code>, set the settings at the top of <code>tools/check.R</code> for your folders, and enable the hook once per clone (<code>git config core.hooksPath .githooks</code>). Merge the scaffold’s <code>.gitignore</code> into yours rather than replacing it.</p>
+<p>Once step 4 is done and the code reads through the wrappers, set <code>AUDIT_MODE</code> to <code>"blocking"</code>, so a new raw read fails the checks. Then <code>sh tools/check --record</code> records a passing run, which the pre-push hook and the <code>check-record</code> status require.</p>
+<p>Checks never run the pipeline in producer mode. CI cannot reach the corporate-network-only APIs, and it must never write to a real deposit: it audits the contract with cached fixtures in reviewer mode, and live fetching belongs in a producer session on a machine with network access. Every check, the check records, the hook and the opt-in workflows are in <a href="../chapters/checks-and-ci.html">Checks and CI</a>.</p>
+</section>
+<section id="recap-the-adoption-checklist" class="level3" data-number="8.7.7">
+<h3 data-number="8.7.7" class="anchored" data-anchor-id="recap-the-adoption-checklist"><span class="header-section-number">8.7.7</span> Recap: the adoption checklist</h3>
+<p>A repository has adopted the contract when all of these hold. They match the sign-off section of the Database Manager’s submission template.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>#</th>
+<th>Check</th>
+<th>How to confirm</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>Helpers vendored into <code>00_functions/</code></td>
+<td>files present and committed</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>Manifest pins a real tag</td>
+<td><code>pulled_version</code> in <code>.toolkit_manifest.yml</code> is <code>vX.Y.Z</code>, not <code>inrepo</code></td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>Profile hard-fails without <code>dw_mode</code></td>
+<td>sourcing it with the key absent stops the session</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>Mode banner is unmistakable</td>
+<td>a reviewer session prints the sandbox banner</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td>Conductor shadows the path globals</td>
+<td>the globals are reassigned before any other script is sourced</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td>First producer run caches and deposits</td>
+<td><code>dw_api_inventory()</code> shows the caches; each deposited file has its sidecar</td>
+</tr>
+<tr class="odd">
+<td>7</td>
+<td>Reviewer run is deposit-safe</td>
+<td>every artifact under <code>sandboxRoot</code>; the deposit’s modification times unchanged</td>
+</tr>
+<tr class="even">
+<td>8</td>
+<td>Compare report exists</td>
+<td>the <code>dw_compare()</code> summary is written; no row left <code>uninvestigated</code></td>
+</tr>
+<tr class="odd">
+<td>9</td>
+<td>No script bypasses the contracts</td>
+<td>the contract audit, in blocking mode, passes</td>
+</tr>
+<tr class="even">
+<td>10</td>
+<td>Checks gate every push</td>
+<td><code>sh tools/check --record</code> passes; the pull request’s <code>check-record</code> status is green</td>
+</tr>
+</tbody>
+</table>
+<p>Rows 7 and 8, and the reviewer run behind them, are the test that the contract is real and not merely declared. Once they pass and the checks enforce them, the repository is a deposit-bearing consumer of the same contract as DW-Production. To keep it current as the toolkit releases new vintages, see <a href="../chapters/vendoring-and-updates.html">Vendoring and updates</a>.</p>
+</section>
+</section>
+<section id="where-to-read-more" class="level2" data-number="8.8">
+<h2 data-number="8.8" class="anchored" data-anchor-id="where-to-read-more"><span class="header-section-number">8.8</span> Where to read more</h2>
 <ul>
+<li>The profile, <code>user_config.yml</code> and the mode switch: <a href="../chapters/profiles-and-modes.html">Profiles and the mode switch</a>.</li>
+<li>Vendoring, the manifest and updating: <a href="../chapters/vendoring-and-updates.html">Vendoring and updates</a>.</li>
+<li>The checks, check records, the hook, the workflows and the contract audit: <a href="../chapters/checks-and-ci.html">Checks and CI</a>.</li>
 <li>The <code>.gitignore</code> rules and the reasoning behind each block: <a href="https://github.com/unicef-drp/cso-toolkit/blob/develop/docs/gitignore_guidelines.md"><code>docs/gitignore_guidelines.md</code></a>.</li>
-<li>The checks, the testthat skeleton, the workflows and merge gating: <a href="../chapters/45-ci-cd.html">Continuous integration and repository hygiene</a>.</li>
 <li>The collaboration model: <a href="../chapters/21-roles-and-modes.html">Roles and the mode contract</a>.</li>
-<li>Vendoring and the manifest: <a href="../chapters/41-vendoring.html">The vendoring model</a> and <a href="../chapters/34-vintage-sync.html">Vintage sync</a>.</li>
-<li>The provenance sidecar: <a href="../appendices/b-provenance-schema.html">Appendix B</a>.</li>
+<li>The provenance sidecar: <a href="../chapters/23-provenance-and-errors.html">Provenance and errors</a> and <a href="../appendices/b-provenance-schema.html">Appendix B</a>.</li>
 </ul>
 
 
@@ -1184,13 +1487,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </script>
 <nav class="page-navigation" aria-label="Page">
   <div class="nav-page nav-page-previous">
-      <a href="../chapters/35-scaffolding-audit.html" class="pagination-link" aria-label="Scaffolding and the contract auditor">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Scaffolding and the contract auditor</span></span>
+      <a href="../chapters/33-aggregation.html" class="pagination-link" aria-label="Aggregation">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Aggregation</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../chapters/41-vendoring.html" class="pagination-link" aria-label="The vendoring model">
-        <span class="nav-page-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">The vendoring model</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="../chapters/profiles-and-modes.html" class="pagination-link" aria-label="Profiles and the mode switch">
+        <span class="nav-page-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Profiles and the mode switch</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>

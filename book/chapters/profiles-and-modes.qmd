@@ -1,0 +1,500 @@
+---
+title: "Profiles and the mode switch"
+aliases:
+  - 22-wiring-the-contract.html
+  - 35-scaffolding-audit.html
+---
+
+Every session in a CSO repository starts by sourcing one script, the **profile** (`profile_<repo>.R` or `.py`, or a profile do-file in Stata). It works out who is running, reads their personal configuration, settles whether the session is a producer or a reviewer, and sets the globals every toolkit helper reads. [Roles and the mode contract](21-roles-and-modes.qmd) explains the two modes. This chapter is the operational side: how a repository makes its own code honour that contract, and the helpers that write and audit the scripts involved.
+
+The idea that holds it together is *single-switch routing*. You set `dw_mode` once, in one file, and everything downstream is derived from it: where writes land, whether live API calls are allowed, where reads fall back to. No script needs editing and no call needs a flag. Get one step wrong, though, and the failure the contract prevents comes back silently: a reviewer overwriting the canonical deposit, or a reviewer run reaching a live API and breaking provenance.
+
+## The switch: `dw_mode` in `user_config.yml`
+
+Each person keeps a configuration file at `~/.config/user_config.yml` (on Windows, `%USERPROFILE%/.config/user_config.yml`). It is per machine and per user and is never committed. One file serves every CSO project on the machine. Following DW-Production's template (`_config_template/user_config.yml`, which `create_official_stats_project()` also writes), your settings sit in a block named after your user name: `USERNAME` on Windows, `USER` on macOS and Linux.
+
+```yaml
+jpazevedo:
+  githubFolder: "C:/GitHub/mytasks"
+  teamsRoot: "C:/Users/jpazevedo/UNICEF/Chief Statistician Office - Documents"
+  dw_mode: "reviewer"                                # producer | reviewer
+  sandboxRoot: "C:/Users/jpazevedo/dw-repro"         # used only when dw_mode = reviewer
+  dw_mode_by_project:                                # optional, per repository
+    learning-mobility: "producer"
+```
+
+### Precedence
+
+The profile reads each setting from your block first and from top-level keys only as a fallback, so an older flat file still works. `dw_mode` then resolves in this order:
+
+1. `dw_mode_by_project` for this repository, keyed by the profile's `repo_name`;
+2. `dw_mode`.
+
+`dw_mode_by_project` wins over `dw_mode` the way DW-Production's `dw_mode_by_sector` wins for the active sector (that sector map stays a DW-Production extension, ahead of both). It must be a map from project names to modes: a single value such as `dw_mode_by_project: producer` stops the profile with an error saying so.
+
+### No default
+
+`dw_mode` must be exactly `"producer"` or `"reviewer"`. If neither key gives a valid value, the profile stops. Defaulting either way is unsafe. A default of `producer` would let a reviewer corrupt the canonical deposit the first time they forgot the key; a default of `reviewer` would divert a database manager's writes into a sandbox in the middle of a legitimate deposit. There is no safe default, so the profile refuses to guess and prints the YAML to add, with your user name and the project filled in:
+
+```
+[X] No valid dw_mode ("producer" or "reviewer") for Proj-X.
+    Add it to C:/Users/tester/.config/user_config.yml, in your user block:
+      tester:
+        dw_mode: "reviewer"
+    or, for this project only:
+      tester:
+        dw_mode_by_project:
+          Proj-X: "producer"
+```
+
+The three languages resolve the mode the same way:
+
+::: {.panel-tabset}
+#### R {.unnumbered .unlisted}
+```r
+user_block <- if (is.list(user_config[[USERNAME]])) user_config[[USERNAME]] else list()
+user_setting <- function(key) {
+  if (!is.null(user_block[[key]])) user_block[[key]] else user_config[[key]]
+}
+dw_mode <- user_setting("dw_mode_by_project")[[repo_name]]
+if (is.null(dw_mode)) dw_mode <- user_setting("dw_mode")
+if (!(is.character(dw_mode) && length(dw_mode) == 1 &&
+      dw_mode %in% c("producer", "reviewer"))) {
+  stop(...)  # names the file and shows the YAML to add
+}
+dw_apis_allowed <- identical(dw_mode, "producer")
+```
+
+#### Python {.unnumbered .unlisted}
+```python
+user_block = user_config.get(USERNAME) if isinstance(user_config.get(USERNAME), dict) else {}
+def user_setting(key):
+    value = user_block.get(key)
+    return value if value is not None else user_config.get(key)
+dw_mode = (user_setting("dw_mode_by_project") or {}).get(repo_name)
+if dw_mode is None:
+    dw_mode = user_setting("dw_mode")
+if dw_mode not in ("producer", "reviewer"):
+    raise ValueError(...)  # names the file and shows the YAML to add
+```
+
+#### Stata {.unnumbered .unlisted}
+```stata
+* Reads your user block (then top-level keys), resolves dw_mode as
+* dw_mode_by_project for the project, then dw_mode, and stops with
+* error 459 and the YAML to add if neither is valid.
+dw_load_config, project(my-project)
+* -> sets the global $dw_mode
+```
+:::
+
+The parity certificate's `config_user_block` case runs six configurations (the user block, a project override, another project's override, a flat file, a top-level map, and a file with no mode) through a generated R profile, a generated Python profile and `dw_load_config`, and checks that all three resolve them alike ([How the three languages stay in step](parity.qmd)).
+
+When a producer session runs inside Claude Code (which sets `CLAUDE_CODE_CHILD_SESSION=1`), the generated profiles print a notice that an agent is working as producer. Nothing is blocked; [Working with AI coding agents](46-ai-agents.qmd) explains the rule behind it.
+
+### Stata: `dw_load_config`
+
+{{< include ../_generated/badges/dw_load_config.md >}}
+
+In R and Python the profile itself reads the YAML. Stata cannot link an external YAML library on AppLocker-locked corporate Windows installs, so `dw_load_config.ado` ships a small hand-rolled parser and a profile do-file calls it near the top:
+
+```stata
+dw_load_config, project(learning-mobility)
+dw_load_config, filepath("`c(tmpdir)'/dw_test_config.yml") user(tester) project(proj-x)
+```
+
+- **`filepath()`** overrides the default path, `$HOME/.config/user_config.yml`, then `%USERPROFILE%/.config/user_config.yml`. Note the order: Stata looks at `HOME` first, the R and Python profiles at `USERPROFILE` first. If both are set and differ, pass `filepath()`.
+- **`user()`** is the block to read. The default is `USERNAME`, then `USER`, then `c(username)`, the profiles' order.
+- **`project()`** is the name looked up in `dw_mode_by_project`. The default is the name of the folder holding `.git`, searched upward from the working directory. Always pass it in a profile: in a git worktree the folder name is not the project.
+
+The parser handles the subset the schema needs: `key: value` lines, nesting by indentation two levels deep (the user block, then `dw_mode_by_project`), optional single or double quotes, blank lines, `#` comments and trailing inline comments. It does not handle lists, anchors or multi-line strings. Any other block, such as a `datalib:` block another tool reads, is skipped whole, so its keys never become toolkit globals. Unknown keys are ignored.
+
+It recognises `dw_mode`, `dw_mode_by_project`, `teamsWrkData`, `teamsRawData`, `teamsWrkDataCanonical`, `teamsRawDataCanonical`, `teamsFolderCanonical`, `dwZDrive`, `dwZDriveUNC` (read by `dw_map_drive`) and `sandboxRoot`. Each key found is set as a matching `$`-global and returned in `r()`, along with `r(filepath)`, `r(user)`, `r(project)` and `r(dw_mode_source)` (which key the mode came from). A missing file stops with error 601; a missing or invalid `dw_mode`, or a scalar `dw_mode_by_project`, stops with error 459 and the YAML to add.
+
+`dw_load_config` sets exactly the keys the YAML provides. It does not derive mode-aware paths (next section); the profile do-file does that itself after the loader returns.
+
+::: {.callout-note}
+`sandboxRoot` is mandatory in reviewer mode, because the reviewer's write globals are built from it. The official-statistics profile (`templates/profile/deposit.R`, below) stops with the YAML to add when it is missing, and stops the same way when `teamsRoot` is missing. A profile from `create_profile()` derives no paths and so never reads it, and `dw_load_config` does not check it either. If you write the derivation yourself, check `sandboxRoot` alongside `dw_mode`, or a reviewer session ends up with empty or malformed write paths instead of a clear error at load time.
+:::
+
+## Deriving the producer and reviewer globals
+
+Once `dw_mode` is known, the profile derives a small set of path globals from it. In producer mode they point at the canonical deposit; in reviewer mode the working globals point at your private sandbox, while a parallel set of `*Canonical` aliases keeps a read-only view of the deposit so that reviewer code can still compare its outputs against it.
+
+The reference derivation is the official-statistics profile's deposit block (`templates/profile/deposit.R`, patterned on DW-Production's `profile_DW-Production.R`). The deposit is Teams `060.DW-MASTER` under your `teamsRoot`:
+
+| Global | Producer mode | Reviewer mode |
+|---|---|---|
+| `teamsFolderCanonical` | `<teamsRoot>/060.DW-MASTER` | `<teamsRoot>/060.DW-MASTER` (read only) |
+| `teamsRawDataCanonical` | `teamsFolderCanonical/01_dw_prep/011_rawdata` | same |
+| `teamsWrkDataCanonical` | `teamsFolderCanonical/01_dw_prep/013_wrkdata` | same |
+| `teamsFolder` | `teamsFolderCanonical` | `sandboxRoot` |
+| `teamsRawData` | `teamsRawDataCanonical` | `sandboxRoot/01_dw_prep/011_rawdata` |
+| `teamsWrkData` | `teamsWrkDataCanonical` | `sandboxRoot/01_dw_prep/013_wrkdata` |
+| `dw_apis_allowed` | `TRUE` | `FALSE` |
+
+Two patterns matter. First, the split between diverted write globals and preserved read aliases. In reviewer mode `teamsRawData` and `teamsWrkData` lead into the sandbox, but the `*Canonical` aliases still lead to the deposit. Reviewer code can therefore *read* canonical inputs and outputs for a compare-against-warehouse step without being able to *write* over them. In producer mode the aliases and the working globals are the same paths, because the producer reads and writes the same place.
+
+Second, `dw_apis_allowed`. This one boolean is `TRUE` only in producer mode. It is what `dw_api_fetch` consults before going to the network, and it is the single place the "reviewers never touch live APIs" rule is encoded. (In the templates it is set right after `dw_mode` resolves, not in the deposit block.)
+
+The deposit block also does some housekeeping. It warns, without stopping, when the deposit folder is not there (Teams not synced). In reviewer mode it creates the two sandbox folders. It sets the repository's own stage folders (`dwMetaData`, `dwCodes`, `dwWrkData` under `01_dw_prep/`), which hold local copies only and never reach git. And it probes the Z: mirror of the deposit (`zDrive` in your block overrides the default `"Z:/"`), setting `dw_z_available` and `dwZDrive`. The probe runs `vol` in a child process capped at three seconds, because `dir.exists()` on a mapped but unreachable drive letter (Z: off VPN) can block for the full SMB timeout. A missing mirror prints a warning and never stops the session.
+
+### How each language carries the state
+
+::: {.panel-tabset}
+#### R {.unnumbered .unlisted}
+```r
+# The R profile sets the derived globals directly in .GlobalEnv.
+# The helpers read them from there (through the internal .try_get()).
+teamsRawData          <- file.path(teamsFolder, "01_dw_prep", "011_rawdata")
+teamsRawDataCanonical <- file.path(teamsFolderCanonical, "01_dw_prep", "011_rawdata")
+dw_apis_allowed       <- identical(dw_mode, "producer")
+```
+
+#### Python {.unnumbered .unlisted}
+```python
+# The Python profile pushes the state into the shared cso_toolkit._state
+# module; the helpers read it back through _state._get(...).
+from cso_toolkit import _state as _cso_state
+
+_cso_state.configure(
+    dw_mode=dw_mode,
+    dw_apis_allowed=(dw_mode == "producer"),
+    teamsRawData="/path/to/raw",
+    teamsRawDataCanonical="/path/to/raw-canonical",
+)
+```
+
+#### Stata {.unnumbered .unlisted}
+```stata
+* dw_load_config sets $dw_mode and whichever team* / canonical /
+* sandboxRoot keys the YAML holds, but derives nothing. The profile
+* do-file makes the producer/reviewer swap itself after it returns,
+* e.g. $teamsWrkData at the canonical root for a producer and under
+* $sandboxRoot for a reviewer.
+```
+:::
+
+The Python `_state` module is the explicit counterpart of R's global environment. Its `configure()` accepts only the session globals the helpers know (the error lists them) and raises `AttributeError` on any other key, so a typo such as a lowercase `teamswrkdata` fails at once instead of creating a dead attribute. The accessor `_state._get()` returns its default only when a name is unset or `None`; falsy values such as `False` or `""` come back as they are, so `dw_apis_allowed = False` is seen as `False`.
+
+### The mode banner
+
+A profile should announce its mode at load time, so you can never be unsure which side of the contract you are on. The official-statistics profile prints one of:
+
+```
+[!] PRODUCER mode: writes go to the canonical deposit, <teamsFolder>
+[OK] REVIEWER mode: writes go to <sandboxRoot>; the deposit is read only.
+```
+
+and ends with a summary line: `[OK] profile_<project>.R loaded: user <name>, dw_mode <mode>, <collaboration model>, cso-toolkit <version>`. The banner is cheap and catches most accidental cross-mode runs: you notice the wrong banner scroll past. DW-Production's own profile prints the same message with emoji markers; if your terminal renders emoji poorly, use the plain `[OK]` / `[!]` / `[X]` markers the toolkit uses everywhere else. A profile from `create_profile()` prints no mode banner, only the collaboration model and a loaded line, so add one when you add the path derivation.
+
+## The guard: `dw_require_no_api()`
+
+{{< include ../_generated/badges/dw_require_no_api.md >}}
+
+The second half of the contract is that reviewer sessions never make live API calls: every upstream input must already be frozen in a producer's cache. The profile settles the mode at load time, and each network entry point checks again at the call site. The redundancy is deliberate. A check in the profile alone could be bypassed by a script that calls `httr::GET` directly, so the guard is called wherever a live call could start.
+
+In R and Python the guard is not exported by the package: the profile defines it (when `include_dw_mode` is on). In Stata it ships as `dw_require_no_api.ado`.
+
+::: {.panel-tabset}
+#### R {.unnumbered .unlisted}
+```r
+dw_require_no_api <- function(context = NULL) {
+  if (identical(dw_mode, "reviewer")) {
+    msg <- "[X] External API access is forbidden in reviewer mode."
+    if (!is.null(context)) msg <- paste0(msg, " Context: ", context)
+    stop(msg, call. = FALSE)
+  }
+}
+```
+
+#### Python {.unnumbered .unlisted}
+```python
+def dw_require_no_api(context: str | None = None) -> None:
+    if dw_mode == "reviewer":
+        msg = "[X] External API access is forbidden in reviewer mode."
+        if context:
+            msg += f" Context: {context}"
+        raise PermissionError(msg)
+```
+
+#### Stata {.unnumbered .unlisted}
+```stata
+dw_require_no_api , context("ed/06_pull_uis")
+* With $dw_mode == "reviewer" this stops with error 459; any other
+* value passes silently.
+```
+:::
+
+All three block only in reviewer mode and pass silently for a producer. Call the guard at the top of any script that reaches a remote outside `dw_api_fetch`. The toolkit's `dw_api_fetch` carries its own stricter check against `dw_apis_allowed`, made after the cache lookup and before any HTTP request. Its message, the Stata guard's message, and the gotcha that an unset Stata mode passes are in [Roles and the mode contract](21-roles-and-modes.qmd); the fetch helper is in [The external-API contract](32-external-api.qmd).
+
+## The conductor shadow pattern
+
+The shadow pattern re-binds the path globals once, at the top of the run driver, so that no sector script needs editing. It is the most error-prone step of the wiring, and where adoption most often succeeds or fails.
+
+The problem is scale. A sector typically has ten to forty scripts, each referring to `teamsRawData`, `teamsWrkData` and the other working roots directly. Editing every one to make it mode-aware is exactly wrong: it multiplies the change, it buries the analysis diff under unrelated churn that reviewers then have to read, and sooner or later someone edits thirty-nine scripts and forgets the fortieth.
+
+Instead, at the top of each sector's run driver (`0_execute_conductor.R` in DW-Production), *after* sourcing the profile, the conductor re-binds the working globals. R, Python and Stata all look those names up when each later script runs, so every script keeps its code and still gets the right paths:
+
+::: {.panel-tabset}
+#### R {.unnumbered .unlisted}
+```r
+# After computing outputdir for this run (with branch-slug isolation):
+finaldir <- file.path(outputdir, "final")
+
+# Conductor-level shadow: redirect downstream reads and writes
+# without editing any sector script.
+teamsRawData <- teamsRawDataCanonical   # read canonical inputs
+teamsWrkData <- finaldir                # writes go to this run's final/
+dwWrkData    <- finaldir
+```
+
+#### Python {.unnumbered .unlisted}
+```python
+# After computing outputdir for this run (with branch-slug isolation):
+finaldir = os.path.join(outputdir, "final")
+
+# Conductor-level shadow: re-point the shared state so every helper
+# call downstream resolves the mode-correct paths.
+from cso_toolkit import _state
+_state.configure(
+    teamsRawData=_state.teamsRawDataCanonical,  # read canonical inputs
+    teamsWrkData=finaldir,                      # writes go to this run's final/
+)
+```
+
+#### Stata {.unnumbered .unlisted}
+```stata
+* After computing $outputdir for this run:
+global finaldir "$outputdir/final"
+
+* Conductor-level shadow: every later save or dw_save against
+* $teamsWrkData lands in final/ without per-call edits.
+global teamsRawData "$teamsRawDataCanonical"
+global teamsWrkData "$finaldir"
+```
+:::
+
+The shadow reads *from* the canonical alias and writes *to* `finaldir`, which is derived from the mode-aware `teamsRawData`. In reviewer mode, inputs come from the read-only deposit and every output stays in the sandbox. In producer mode the canonical alias equals the working global, so the first line is a harmless identity and outputs flow to the deposit as before. One pattern serves both modes, with no branching in the sector scripts.
+
+::: {.callout-note}
+The shadow must run *before any other script is sourced* by the conductor. A script sourced before the shadow captures the old values. The order is: source the profile, compute `outputdir` and `finaldir`, shadow the globals, *then* source the pipeline.
+:::
+
+### Branch-slug isolation
+
+A second, optional but recommended layer keys output folders to the current git branch, so two feature branches, or a feature branch and the canonical line, never write to the same folder, even within one sandbox. The conductor reads the branch, turns it into a filesystem-safe token, and routes non-canonical branches into `branches/<slug>/`:
+
+```r
+branch <- tryCatch(
+  system("git rev-parse --abbrev-ref HEAD", intern = TRUE),
+  error = function(e) "main"
+)
+branch_slug <- gsub("[^A-Za-z0-9._-]", "-", branch)
+
+canonical_outputdir <- file.path(teamsRawData, sector, "output")
+outputdir <- if (branch %in% c("main", "dev", "master")) {
+  canonical_outputdir
+} else {
+  file.path(canonical_outputdir, "branches", branch_slug)
+}
+```
+
+This is a conductor convention, not a toolkit function; each conductor writes it inline, in its own language. It layers cleanly on the mode contract. In reviewer mode `teamsRawData` is already under `sandboxRoot`, so a feature-branch run lands at `<sandboxRoot>/.../<sector>/output/branches/<slug>/`. Only `main`, `dev` and `master` write to the un-suffixed folder, and in reviewer mode even those stay inside the sandbox.
+
+## Scaffolding a profile: `create_profile()`
+
+{{< include ../_generated/badges/create_profile.md >}}
+
+`create_profile()` is a code generator, not a runtime helper: it writes a profile template to disk and returns its path. The template is patterned on DW-Production's `profile_DW-Production.R`.
+
+::: {.panel-tabset}
+#### R {.unnumbered .unlisted}
+```r
+# Generic project:
+create_profile("My-Sector-Project", project_title = "My Sector Project")
+
+# DW-Production, with the Z: drive advisory, replacing an existing file:
+create_profile("DW-Production",
+               project_title         = "UNICEF DW Production",
+               include_z_drive_check = TRUE,
+               overwrite             = TRUE)
+```
+#### Python {.unnumbered .unlisted}
+```python
+create_profile("My-Sector-Project", project_title="My Sector Project")
+
+create_profile("DW-Production",
+               project_title="UNICEF DW Production",
+               include_z_drive_check=True,
+               overwrite=True)
+```
+:::
+
+Stata has no scaffolder: write the profile do-file by hand, call `dw_load_config` in it, and derive the paths after it returns.
+
+| Argument | Default | Purpose |
+|---|---|---|
+| `repo_name` | (required) | Repository name. Sets the filename (`profile_<repo_name>.R` / `.py`), the literal `repo_name` that `dw_mode_by_project` is looked up by, and the sentinel `profile_<repo_name>` with runs of `-` and `.` turned into `_`. |
+| `project_title` | `repo_name` | Title for the header block. |
+| `output_path` | `"."` | Folder the file is written to; created if missing. |
+| `include_dw_mode` | `TRUE` | Emit the `dw_mode` block and the `dw_require_no_api()` guard. |
+| `include_z_drive_check` | `FALSE` | Emit the Z: advisory. The Z: drive is the legacy Azure file-share mirror of the deposit, so this is DW-Production-specific. |
+| `author` | the system user | Author in the header. |
+| `overwrite` | `FALSE` | Stop if the file exists, unless `TRUE`. |
+
+In Python every argument after `repo_name` is keyword-only, and the function raises `FileExistsError` when the file exists. The R version also takes `verbose` and `debug` (see `dw_verbosity()`) and returns the path invisibly.
+
+The generated profile opens with a header (title, filename, author, timestamp, a pointer to the toolkit repository) and a reproducibility seed (`set.seed(12345)` / `random.seed(12345)`), then nine numbered blocks:
+
+1. **User identification.** Reads `USERNAME`, falling back to `USER`, and `USERPROFILE`, falling back to the home folder, so the same file works on Windows, macOS and Linux.
+2. **Flags and controls**, such as `create_missing_folders <- FALSE`.
+3. **Repository name and root**: the literal `repo_name <- "DW-Production"`, then `rootFolder` (the working directory, unless you set `rootFolder` before sourcing the profile) and `projectFolder <- rootFolder`, the folder that sector scripts build their paths from.
+4. **Z: drive advisory** (only with `include_z_drive_check`). Non-blocking, with the three-second `vol` probe described above.
+5. **Config load.** Reads `~/.config/user_config.yml` with `yaml::read_yaml()` / `yaml.safe_load()` and stops if the file is missing (the R profile first checks that the `yaml` package is installed). Defines `user_block` and `user_setting()`: your block first, then top-level keys.
+6. **Producer/reviewer mode** (only with `include_dw_mode`). Resolves `dw_mode` as above, rejects a scalar `dw_mode_by_project`, sets `dw_apis_allowed`, prints the agent notice, and defines `dw_require_no_api()`.
+7. **Collaboration model.** Calls `dw_collaboration(refresh = TRUE)` when the toolkit is loaded and prints the model read from `cso_project.yml`; otherwise it says the model is resolved on the first `dw_save()`.
+8. **Packages / imports.** The R block lists `dplyr`, `tidyr`, `readr` and `yaml` for you to edit, and never installs anything: a missing package stops the session with the list and the `install.packages()` call to run once. The Python block imports `pandas`.
+9. **Profile sentinel.** Sets `profile_<repo> <- TRUE` (R) or `profile_<repo> = True` (Python) and prints a confirmation. Sector scripts can refuse to run without it.
+
+Block 6 hides a real difference between the languages. The Python profile imports `cso_toolkit._state` and calls `_cso_state.configure(dw_mode=..., dw_apis_allowed=(dw_mode == "producer"))`, so `dw_save`, `dw_use` and `dw_api_fetch` route by mode. The R profile needs no such call: sourced into the global environment, its `dw_mode` and `dw_apis_allowed` *are* the globals the R helpers read. Block 9 differs too: the Python profile also defines a `log_message()` there, for sector scripts to import.
+
+`create_profile()` stops at the mode. It does not derive the deposit paths of the table above or print a mode banner; add those yourself when the project has a deposit.
+
+::: {.callout-note}
+The YAML load in block 5 is the one place a profile *must* read a file directly: it bootstraps the configuration before any toolkit helper is available. The generated line carries an exemption for the contract auditor, `yaml::read_yaml(config_path)  # cso-allow: io-yaml` (`yaml.safe_load(_f) or {}  # cso-allow: io-yaml` in Python). The auditor and its `# cso-allow:` directive are in [Checks and CI](checks-and-ci.qmd).
+:::
+
+### The project profile template
+
+`create_research_project()` and `create_official_stats_project()` do not call `create_profile()`. They write `profile_<project>.R` from `templates/profile/profile.R`, and the official-statistics kind splices in `templates/profile/deposit.R`, the deposit block described above. [Starting a repository](40-new-repository.qmd) covers what each kind writes. Compared with `create_profile()` output, this template finds the repository root (the folder holding `cso_project.yml`) and sets `rootFolder` and `projectFolder` from it. It sources the vendored helpers from `00_functions/` (`zzz.R` first) and reports the vendored version from `.toolkit_manifest.yml`. And it checks packages through a `require_packages()` function that scripts can also call. Its sentinel replaces each run of characters outside `A-Za-z0-9_` with `_`. Both templates follow the same conventions: no default for `dw_mode`, no package installs, sentinel last.
+
+## Scaffolding sector drivers: `create_sector_script()`
+
+{{< include ../_generated/badges/create_sector_script.md >}}
+
+Where `create_profile()` scaffolds the once-per-repository profile, `create_sector_script()` scaffolds a once-per-sector run script, `<base_dir>/<sector_code>/00_run_<sector_code>.R` (or `.py`). The template runs out of the box: it verifies the profile, sets up logging and timing, builds input and output paths, and wraps the placeholder work in error handling.
+
+::: {.panel-tabset}
+#### R {.unnumbered .unlisted}
+```r
+# Generic: writes ./ws/00_run_ws.R
+create_sector_script("WASH", "ws")
+
+# Into a chosen subtree:
+create_sector_script("Nutrition", "nt", base_dir = "pipelines/sectors")
+```
+#### Python {.unnumbered .unlisted}
+```python
+create_sector_script("WASH", "ws")
+create_sector_script("Nutrition", "nt", base_dir="pipelines/sectors")
+```
+:::
+
+In Stata, write `00_run_<sector>.do` by hand and have it check that `$dw_mode` is set (that is, that `dw_load_config` ran) before doing the sector's work.
+
+| Argument | R default | Python default | Purpose |
+|---|---|---|---|
+| `sector_name` | (required) | (required) | Full name, e.g. `"Nutrition"`; used in headers and log lines. |
+| `sector_code` | (required) | (required) | Short code, e.g. `"nt"`; names the folder and file. |
+| `base_dir` | `"."` | `"."` | Parent of `<sector_code>/00_run_<sector_code>.*`. |
+| `profile_name` | `"projectFolder"` | `"profile_DW_Production"` | The variable the script requires before it runs. |
+| `profile_file` | `"profile_DW-Production.R"` | `"profile_DW-Production.py"` | The profile the script names (R) or loads (Python). |
+| `input_subpath` | `c("01_dw_prep", "011_rawdata")` | `("01_dw_prep", "011_input")` | Input folder, relative to `projectFolder`; the sector code is appended. |
+| `output_subpath` | `c("01_dw_prep", "013_wrkdata")` | `("01_dw_prep", "013_output")` | Output folder, likewise. |
+| `overwrite` | `FALSE` | `False` | Stop if the file exists, unless `TRUE`. |
+
+In Python the arguments after `base_dir` are keyword-only; the R version also takes `verbose` and `debug`.
+
+The generated R script has these parts:
+
+- **0. Profile verification**: `if (!exists(profile_name) || is.null(profile_name)) stop(...)`, telling you to source `profile_file`. Any non-null value satisfies it. The R default checks `projectFolder` rather than the sentinel because the script also builds its paths from `projectFolder`, so the guard and the paths share one source of truth.
+- **A `log_message()` fallback**: a minimal timestamped logger, installed only if the profile did not define one.
+- **An `errorOccurred` flag**, initialised to `FALSE` so the error handler can set it with `<<-` for the top-level runner to read.
+- **1. Logging**: a "Starting <sector> module" line and `start_time`.
+- **2. Sector execution block**: a `tryCatch()` that defines `input_folder` and `output_folder` from `projectFolder`, creates the output folder, leaves commented placeholders for load, process and export, and logs the duration. On error it sets `errorOccurred <<- TRUE` and logs the message.
+
+The Python script covers the same ground with `try`/`except` and `pathlib.Path`. Loading the profile takes more work there. A filename like `profile_DW-Production.py` contains a hyphen, so it cannot be imported as a module. The script walks up from its own folder (then the working directory) to find `profile_file`, loads it with `importlib.util.spec_from_file_location`, and reads the sentinel, `log_message` and `projectFolder` from the loaded module. It raises `RuntimeError` if the profile is not found, the sentinel is false, or `log_message` or `projectFolder` is missing; there is no logger fallback. Because it reads the sentinel from the module, the Python default `profile_name` is the sentinel, `"profile_DW_Production"` (underscores), not `"projectFolder"`.
+
+::: {.callout-warning}
+**Paths and `projectFolder`.** The default subpaths differ between the languages (R: `011_rawdata` / `013_wrkdata`; Python: `011_input` / `013_output`). If you scaffold the same sector in both, set `input_subpath` and `output_subpath` explicitly so the two drivers agree.
+
+Both templates also need `projectFolder`. A profile from `create_profile()` sets it to the folder you source the profile from, so run the sector script from the repository root, or set `rootFolder` before sourcing the profile; a hand-written profile must define it (the R script otherwise stops with `Project profile not loaded ("projectFolder" is not set)`, the Python one with `Project profile missing required exports (log_message, projectFolder)`). In Python, also pass the right `profile_name` (`"profile_<repo>"`) and `profile_file` for your repository.
+:::
+
+### `create_dw_sector_script()`
+
+{{< include ../_generated/badges/create_dw_sector_script.md >}}
+
+A thin wrapper that fills in the DW-Production layout: the script lands at `<project_root>/01_dw_prep/012_codes/<sector>/00_run_<sector>.*` and checks for the DW-Production profile. Its only other arguments are `project_root` (default `"."`, the DW-Production root) and `overwrite`. R reads from `011_rawdata` and writes to `013_wrkdata`; Python, as with the generic defaults, uses `011_input` / `013_output`.
+
+```r
+create_dw_sector_script("WASH", "ws")   # from the DW-Production root
+```
+
+Use the wrapper inside DW-Production and the generic `create_sector_script()` everywhere else.
+
+## Auditing a profile: `review_profile()`
+
+{{< include ../_generated/badges/review_profile.md >}}
+
+`review_profile()` is for a profile that someone wrote by hand, edited, or inherited from before the scaffolder existed. It reads the file and runs ten presence checks, reporting `pass`, `warn` or `fail` for each. The audit is pattern-based, not parse-based: it searches for the load-bearing lines rather than parsing the script, so it tolerates the stylistic variety of older profiles. It never runs the profile.
+
+::: {.panel-tabset}
+#### R {.unnumbered .unlisted}
+```r
+review_profile("profile_DW-Production.R")
+
+# A profile that never touches the IO or API helpers:
+review_profile("profile_my-project.R", require_dw_mode = FALSE)
+```
+#### Python {.unnumbered .unlisted}
+```python
+review_profile("profile_DW-Production.py")
+review_profile("profile_my-project.py", require_dw_mode=False)
+```
+:::
+
+| # | Check | Fails at | What it looks for |
+|---|---|---|---|
+| 1 | Profile sentinel object | `fail` | A line `profile_<name> <- TRUE` (R) or `= True` (Python). Without it, sector scripts cannot tell the profile ran. |
+| 2 | Cross-platform user identification | `fail` | `Sys.getenv("USERNAME"` or `"USER"` (R); `os.environ.get(` the same (Python). |
+| 3 | Reproducibility seed | `warn` | `set.seed(` (R); `random.seed(`, `np.random.seed(` or `numpy.random.seed(` (Python). |
+| 4 | `user_config.yml` load | `fail` | A mention of `user_config.yml` *and* a `read_yaml(` / `yaml::yaml.load` call (R) or `yaml.safe_load` / `yaml.load` (Python). |
+| 5 | User block in `user_config.yml` | `warn` | `user_config[[USERNAME]]`, `user_config$USERNAME` or `user_block` (R); `user_config[USERNAME]`, `user_config.get(USERNAME` or `user_block` (Python). A profile that reads only top-level keys finds no `dw_mode` in a file nested by user name. |
+| 6 | `dw_mode` (producer/reviewer) resolution | `fail`\* | The strings `dw_mode`, `producer` and `reviewer` all present. |
+| 7 | `dw_require_no_api` guard | `fail`\* | `dw_require_no_api` defined or called. |
+| 8 | Z: drive availability advisory | `warn`† | `dw_z_available`, or `network_root` assigned a `"Z:` string. |
+| 9 | Collaboration model block | `warn` | `dw_collaboration(`. Missing it is a warning only when the `cso_project.yml` found above the profile sets `multi-producer` (or cannot be read); otherwise the check passes. |
+| 10 | Packages block (R) / Imports block (Python) | `warn` | `requireNamespace(`, `install.packages(` or `library(` (R); an `import` or `from` statement (Python). |
+
+\* Checks 6 and 7 drop to `warn` with `require_dw_mode = FALSE`, for a profile that never touches the IO or API helpers. † Check 8 is a `warn` unless `require_z_drive_check = TRUE`, when it becomes a `fail`.
+
+Both versions return a data frame with columns `check`, `status` and `detail`: invisibly in R, directly in Python. With `verbose` (the default) they also print a summary with `[OK]` / `[!]` / `[X]` markers and a tally. In CI, gate on `status == "fail"`.
+
+A profile from `create_profile()` with its defaults scores nine passes and one warning, for the Z: advisory it does not include; with `include_z_drive_check = TRUE` it passes all ten. The project profile template likewise passes with no failure.
+
+## Verification checklist
+
+A sector is not wired until it passes this short checklist. Steps 4 to 6 are the real test of adoption: they prove the contract holds, rather than that it appears in the code.
+
+1. **The profile loads green.** With `dw_mode: "reviewer"`, sourcing the profile prints the reviewer banner naming the sandbox.
+2. **The conductor shadows the globals.** The run driver computes `finaldir` and shadows the working globals before sourcing any other script.
+3. **No back-door network calls.** No script in the sector calls a remote except through `dw_api_fetch`. Search for the obvious culprits: `httr::GET`, `httr::POST`, `httr::request`, `RETRY` and `read.csv("http` in R, and the equivalents in Python and Stata.
+4. **A reviewer run stays in the sandbox.** An end-to-end reviewer run writes every artefact under `sandboxRoot`, and the modification times in the canonical deposit are the same before and after.
+5. **A producer run reaches the deposit.** An end-to-end producer run writes every artefact to the deposit, exactly as before adoption.
+6. **The compare step works in reviewer mode.** The sector's compare-against-warehouse script runs in reviewer mode and writes a per-segment report under the sandbox's `output/temp/`.
+
+`review_profile()` checks that the profile has the blocks step 1 relies on, and the contract auditor, `test_scripts()`, finds the raw HTTP calls of step 3 ([Checks and CI](checks-and-ci.qmd)). The rest needs a person and a real run.
+
+::: {.callout-warning}
+Step 4's modification-time check is not ceremony. It is the only test that catches a script which *reads* a canonical global correctly but *writes* through a stale handle captured before the conductor shadow ran. No static check can see that; only an end-to-end run with a before-and-after comparison can.
+:::
+
+## A note on naming
+
+Both packages export `dw_`-prefixed aliases of the scaffolders: `dw_create_profile`, `dw_review_profile` and `dw_create_sector_script` (an alias of the generic helper, not of `create_dw_sector_script`), alongside `dw_test_scripts` for the auditor. They are the same functions under a second name. The `dw_` spelling avoids the cosmetic clash between `test_scripts` and unit-test naming such as `testthat::test_*`, and keeps the toolkit's names uniform. Prefer the `dw_` names in new code. The full alias map is in the [function reference](../appendices/d-function-reference.qmd).
+
+## Where this fits
+
+[Roles and the mode contract](21-roles-and-modes.qmd) sets the obligations; [The IO contract](31-io.qmd), [The external-API contract](32-external-api.qmd) and [Aggregation](33-aggregation.qmd) describe the helpers this wiring routes. [Starting a repository](40-new-repository.qmd) writes a profile that already follows this chapter, [Vendoring and updates](vendoring-and-updates.qmd) puts the helpers it loads into `00_functions/`, and [Checks and CI](checks-and-ci.qmd) keeps raw IO and HTTP out once the repository is wired. With one switch in `user_config.yml`, the derived globals, the conductor shadow, optional branch isolation and a passing checklist, every helper call a repository makes is mode-correct. Wire it once and every script inherits it.

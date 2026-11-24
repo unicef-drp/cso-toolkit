@@ -25,7 +25,7 @@ python -m pytest conformance/tests                               # certify.py's 
 2. Add `<id>` to each driver that implements it.
 3. Run `sh tools/certify --cases <id>`.
 
-`tests/test_certify.py` checks that every case is well formed. The handbook appendix *Cross-language parity* has the full protocol.
+`tests/test_certify.py` checks that every case is well formed. The handbook chapter "How the three languages stay in step" has the full protocol.
 
 The round-trip harness described below (`run_r.R`, `run_python.py`,
 `compare.py`, the `Conformance` workflow) predates the certificate and still

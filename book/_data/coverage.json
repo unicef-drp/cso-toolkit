@@ -1,0 +1,284 @@
+{
+  "_about": "Hand-kept notes for the generated coverage tables. book/_scripts/gen_tables.py reads which functions exist in each language from the code (r/NAMESPACE, python/src/__init__.py __all__, stata/src/*.ado) and this file for the order of rows and any note. A cell is 'Yes' when the function exists in that language; a note there must start with 'Yes'. A cell for a language that lacks the function must have a note, and that note must not start with 'Yes'. Every public function must have exactly one row. Run `sh tools/docs-tables` after changing this file or the code; `sh tools/docs-tables --check` fails when the committed tables are stale. Each section names the chapter that documents its functions; a function's `chapter` overrides it (null: no chapter documents it, and the index links its help page only).",
+  "sections": [
+    {
+      "id": "io",
+      "title": "IO contract",
+      "rows": [
+        "dw_save",
+        "dw_use",
+        "dw_compare",
+        "dw_diff_profile",
+        "dw_merge",
+        "dw_isid",
+        "dw_verify_z",
+        "dw_stage",
+        "dw_fetch_inputs",
+        "dw_check_deposit",
+        "dw_read_provenance",
+        "dw_provenance_diff",
+        "dw_collaboration",
+        "dw_set_collaboration",
+        "dw_save_guards",
+        "dw_root",
+        "dw_resolve_path",
+        "dw_is_canonical",
+        "dw_mkdir",
+        "dw_verbosity",
+        "dw_toolkit_version",
+        "dw_default_unicef_allowlist",
+        "dw_map_drive"
+      ],
+      "chapter": "31-io"
+    },
+    {
+      "id": "api",
+      "title": "External-API contract",
+      "rows": [
+        "dw_api_fetch",
+        "dw_api_cached",
+        "dw_api_inventory",
+        "dw_require_no_api",
+        "dw_publish"
+      ],
+      "chapter": "32-external-api"
+    },
+    {
+      "id": "aggregation",
+      "title": "Aggregation and survey weights",
+      "rows": [
+        "aggregate_data",
+        "aggregate_data_v2",
+        "apply_time_window",
+        "generate_agg_footnote",
+        "dw_nestweight",
+        "dw_pop",
+        "dw_regions"
+      ],
+      "chapter": "33-aggregation"
+    },
+    {
+      "id": "sync",
+      "title": "Vintage sync",
+      "rows": [
+        "cso_toolkit_check",
+        "cso_toolkit_diff",
+        "cso_toolkit_pull",
+        "cso_toolkit_sync"
+      ],
+      "chapter": "vendoring-and-updates"
+    },
+    {
+      "id": "scaffolding",
+      "title": "Scaffolding and contract auditor",
+      "rows": [
+        "create_profile",
+        "review_profile",
+        "create_sector_script",
+        "create_dw_sector_script",
+        "create_research_project",
+        "create_official_stats_project",
+        "generate_markdown_report",
+        "process_all_csv_files",
+        "test_scripts",
+        "dw_load_config"
+      ],
+      "chapter": "profiles-and-modes"
+    }
+  ],
+  "functions": {
+    "dw_diff_profile": {
+      "label": "`dw_diff_profile` / `dw_compare(diagnose = TRUE)`",
+      "stata": "No: `r(col_changed)` gives the per-column counts (#111)"
+    },
+    "dw_merge": {
+      "stata": "n/a"
+    },
+    "dw_isid": {
+      "stata": "Embedded in `dw_save` (no standalone command)"
+    },
+    "dw_verify_z": {
+      "stata": "n/a (integrity via `datasignature` inside `dw_use`)"
+    },
+    "dw_stage": {
+      "stata": "n/a (a Stata reviewer reads canonical inputs in place)"
+    },
+    "dw_fetch_inputs": {
+      "stata": "Route via R or Python (#152)"
+    },
+    "dw_check_deposit": {
+      "stata": "Route via R or Python (#152)"
+    },
+    "dw_read_provenance": {
+      "stata": "Route via R or Python (#152)"
+    },
+    "dw_provenance_diff": {
+      "stata": "Route via R or Python (#152)"
+    },
+    "dw_collaboration": {
+      "stata": "Yes (`dw_collaboration.ado`, #168)",
+      "chapter": "21-roles-and-modes"
+    },
+    "dw_set_collaboration": {
+      "stata": "No: switch from R or Python (one reviewed PR)",
+      "chapter": "21-roles-and-modes"
+    },
+    "dw_root": {
+      "stata": "n/a"
+    },
+    "dw_resolve_path": {
+      "stata": "Internal to `dw_use` / `dw_save`"
+    },
+    "dw_is_canonical": {
+      "stata": "Internal to the mode guard"
+    },
+    "dw_mkdir": {
+      "r": "via base R `dir.create`",
+      "python": "via `os.makedirs`",
+      "stata": "Yes (`dw_mkdir.ado`: Stata's built-in cannot nest)"
+    },
+    "dw_verbosity": {
+      "r": "Yes (session verbose/debug switch)",
+      "python": "No (Python logs through the standard `logging` module, `cso_toolkit.*` loggers)",
+      "stata": "n/a",
+      "chapter": null
+    },
+    "dw_toolkit_version": {
+      "stata": "n/a (each `.ado` carries its own version header)",
+      "chapter": "vendoring-and-updates"
+    },
+    "dw_default_unicef_allowlist": {
+      "r": "Yes (remote-URL freeze allowlist)",
+      "stata": "n/a (no remote-URL reads in Stata)"
+    },
+    "dw_map_drive": {
+      "r": "n/a",
+      "python": "n/a",
+      "stata": "Yes (`dw_map_drive.ado`: maps the team network drive from `dwZDrive` / `dwZDriveUNC`; the port of datalib's `mapzdrive`)",
+      "chapter": "profiles-and-modes"
+    },
+    "dw_api_fetch": {
+      "stata": "Route via R or Python"
+    },
+    "dw_api_cached": {
+      "stata": "Route via R or Python"
+    },
+    "dw_api_inventory": {
+      "stata": "Route via R or Python"
+    },
+    "dw_require_no_api": {
+      "label": "`dw_require_no_api` (reviewer gate)",
+      "r": "defined by the generated profile",
+      "python": "defined by the generated profile",
+      "stata": "Yes (`dw_require_no_api.ado`)",
+      "chapter": "profiles-and-modes"
+    },
+    "dw_publish": {
+      "label": "`dw_publish` (Helix submission)",
+      "r": "Yes: a dry-run stub (`dry_run = TRUE`, the default, returns a validated payload); `dry_run = FALSE` stops until live submission lands (#15)",
+      "python": "Planned (#15)",
+      "stata": "n/a (API-side capability)",
+      "chapter": "21-roles-and-modes"
+    },
+    "aggregate_data": {
+      "label": "`aggregate_data` (v1, back-compat)",
+      "stata": "n/a"
+    },
+    "aggregate_data_v2": {
+      "stata": "n/a"
+    },
+    "apply_time_window": {
+      "stata": "n/a"
+    },
+    "generate_agg_footnote": {
+      "stata": "n/a"
+    },
+    "dw_nestweight": {
+      "stata": "n/a"
+    },
+    "dw_pop": {
+      "stata": "n/a"
+    },
+    "dw_regions": {
+      "python": "No (redesign tracked in #40)",
+      "stata": "n/a"
+    },
+    "cso_toolkit_check": {
+      "stata": "n/a (update by hand; see Vendoring and updates)"
+    },
+    "cso_toolkit_diff": {
+      "stata": "n/a"
+    },
+    "cso_toolkit_pull": {
+      "stata": "n/a"
+    },
+    "cso_toolkit_sync": {
+      "stata": "n/a"
+    },
+    "create_profile": {
+      "stata": "n/a"
+    },
+    "review_profile": {
+      "stata": "n/a"
+    },
+    "create_sector_script": {
+      "stata": "n/a"
+    },
+    "create_dw_sector_script": {
+      "stata": "n/a"
+    },
+    "create_research_project": {
+      "python": "Yes (same files)",
+      "stata": "n/a (run once from R or Python)",
+      "chapter": "40-new-repository"
+    },
+    "create_official_stats_project": {
+      "python": "Yes (same files)",
+      "stata": "n/a (run once from R or Python)",
+      "chapter": "40-new-repository"
+    },
+    "generate_markdown_report": {
+      "stata": "n/a",
+      "chapter": null
+    },
+    "process_all_csv_files": {
+      "r": "Yes (folder mode of the report)",
+      "stata": "n/a",
+      "chapter": null
+    },
+    "test_scripts": {
+      "label": "`test_scripts` (contract auditor)",
+      "r": "Yes (`.R` scripts)",
+      "python": "Yes (`.py` scripts)",
+      "stata": "n/a (no Stata auditor)",
+      "chapter": "checks-and-ci"
+    },
+    "dw_load_config": {
+      "label": "`dw_load_config` (profile config loader)",
+      "r": "inside `create_profile` output",
+      "python": "inside `create_profile` output",
+      "stata": "Yes (`dw_load_config.ado`)"
+    }
+  },
+  "extra_rows": {
+    "dw_save_guards": {
+      "label": "`dw_save` multi-producer guards + lineage fields (`takeover`)",
+      "r": "Yes",
+      "python": "Yes",
+      "stata": "Yes, through Stata's Python integration (Stata 16+) (#168); without it a multi-producer write stops unless `takeover`"
+    }
+  },
+  "api_keys": {
+    "uis": "UNESCO UIS indicators and generic JSON endpoints",
+    "sdmx": "Generic SDMX data, any provider and flow",
+    "sdmx_codelist": "UNICEF SDMX codelist as `(code, name, description)`",
+    "wb": "World Bank WDI indicators",
+    "wb_indicators": "World Bank indicator catalogue",
+    "ilo": "ILO SDMX",
+    "unsd_sdg": "UNSD SDG API (form-encoded POST of series codes)",
+    "github_raw": "Pinned-commit `raw.githubusercontent.com` file",
+    "http": "Generic HTTP GET returning text",
+    "json_get": "Generic JSON GET returning a parsed object",
+    "csv": "Flat CSV at a URL (SDMX REST-CSV, Data360 files, ILOSTAT `format=.csv`)"
+  }
+}

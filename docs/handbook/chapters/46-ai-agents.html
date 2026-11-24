@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>18&nbsp; Working with AI coding agents – The CSO Handbook</title>
+<title>12&nbsp; Working with AI coding agents – The CSO Handbook</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -71,8 +71,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
-<link href="../chapters/51-microdata-archive.html" rel="next">
-<link href="../chapters/45-ci-cd.html" rel="prev">
+<link href="../chapters/44-versioning-release.html" rel="next">
+<link href="../chapters/checks-and-ci.html" rel="prev">
 <script src="../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="../site_libs/quarto-html/scrollable-regions/scrollable-regions.js" type="module"></script>
@@ -124,7 +124,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="Breadcrumbs"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/40-new-repository.html">Part IV — Adoption &amp; Operations</a></li><li class="breadcrumb-item"><a href="../chapters/46-ai-agents.html"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Working with AI coding agents</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="Breadcrumbs"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/40-new-repository.html">Part III — Setting Up and Running a Repository</a></li><li class="breadcrumb-item"><a href="../chapters/46-ai-agents.html"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Working with AI coding agents</span></a></li></ol></nav>
         <a class="flex-grow-1" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -202,19 +202,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-controls="quarto-sidebar-section-1" aria-expanded="true">
- <span class="menu-text" id="quarto-sidebar-section-1-label">Part I — Why &amp; Architecture</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+ <span class="menu-text" id="quarto-sidebar-section-1-label">Part I — The Contract</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
       </div>
       <ul id="quarto-sidebar-section-1" aria-labelledby="quarto-sidebar-section-1-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/11-why.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Why a toolkit</span></span></a>
+  <a href="../chapters/why-and-architecture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Why a toolkit, and how it fits together</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/12-architecture.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Architecture: one contract, three languages, many consumers</span></span></a>
+  <a href="../chapters/21-roles-and-modes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Roles and the mode contract</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/23-provenance-and-errors.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Provenance sidecars and the error envelope</span></span></a>
   </div>
 </li>
       </ul>
@@ -222,25 +228,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-controls="quarto-sidebar-section-2" aria-expanded="true">
- <span class="menu-text" id="quarto-sidebar-section-2-label">Part II — The Contract</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+ <span class="menu-text" id="quarto-sidebar-section-2-label">Part II — Using the Helpers</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
       </div>
       <ul id="quarto-sidebar-section-2" aria-labelledby="quarto-sidebar-section-2-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/21-roles-and-modes.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Roles and the mode contract</span></span></a>
+  <a href="../chapters/31-io.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">The IO contract</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/22-wiring-the-contract.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Wiring the contract into a repo</span></span></a>
+  <a href="../chapters/32-external-api.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">The external-API contract</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/23-provenance-and-errors.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Provenance sidecars and the error envelope</span></span></a>
+  <a href="../chapters/33-aggregation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Aggregation</span></span></a>
   </div>
 </li>
       </ul>
@@ -248,37 +254,37 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-controls="quarto-sidebar-section-3" aria-expanded="true">
- <span class="menu-text" id="quarto-sidebar-section-3-label">Part III — The API (cross-language)</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+ <span class="menu-text" id="quarto-sidebar-section-3-label">Part III — Setting Up and Running a Repository</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
       </div>
       <ul id="quarto-sidebar-section-3" aria-labelledby="quarto-sidebar-section-3-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/31-io.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">The IO contract</span></span></a>
+  <a href="../chapters/40-new-repository.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Starting a repository</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/32-external-api.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">The external-API contract</span></span></a>
+  <a href="../chapters/profiles-and-modes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Profiles and the mode switch</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/33-aggregation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Aggregation</span></span></a>
+  <a href="../chapters/vendoring-and-updates.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Vendoring and updates</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/34-vintage-sync.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Vintage sync</span></span></a>
+  <a href="../chapters/checks-and-ci.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Checks and CI</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/35-scaffolding-audit.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Scaffolding and the contract auditor</span></span></a>
+  <a href="../chapters/46-ai-agents.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Working with AI coding agents</span></span></a>
   </div>
 </li>
       </ul>
@@ -286,49 +292,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-controls="quarto-sidebar-section-4" aria-expanded="true">
- <span class="menu-text" id="quarto-sidebar-section-4-label">Part IV — Adoption &amp; Operations</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+ <span class="menu-text" id="quarto-sidebar-section-4-label">Part IV — Maintaining the Toolkit</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
       </div>
       <ul id="quarto-sidebar-section-4" aria-labelledby="quarto-sidebar-section-4-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/40-new-repository.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Starting a new repository</span></span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../chapters/41-vendoring.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">The vendoring model</span></span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../chapters/42-onboarding-example.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Onboarding a repo: a worked example</span></span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../chapters/43-contract-auditor-ci.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">The contract auditor in continuous integration (CI)</span></span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
   <a href="../chapters/44-versioning-release.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Versioning and releases</span></span></a>
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Versioning and releases</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/45-ci-cd.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Continuous integration and repository hygiene</span></span></a>
+  <a href="../chapters/parity.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">How the three languages stay in step</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/46-ai-agents.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Working with AI coding agents</span></span></a>
+  <a href="../chapters/contributing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Contributing</span></span></a>
   </div>
 </li>
       </ul>
@@ -342,19 +324,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/51-microdata-archive.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">The microdata archive: archive, catalogue, tool</span></span></a>
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">The microdata archive: archive, catalogue, tool</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/52-ihsn-grammar.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">The IHSN convention and the folder grammar</span></span></a>
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">The IHSN convention and the folder grammar</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/53-datalib-api-conformance.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">The <code>datalib_*</code> API and its conformance suite</span></span></a>
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">The <code>datalib_*</code> API and its conformance suite</span></span></a>
   </div>
 </li>
       </ul>
@@ -368,13 +350,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/61-ecosystem.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">The UNICEF analytics ecosystem: three tiers</span></span></a>
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">The UNICEF analytics ecosystem: three tiers</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/62-unicefdata.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">unicefData: public child statistics in three languages</span></span></a>
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">unicefData: public child statistics in three languages</span></span></a>
   </div>
 </li>
       </ul>
@@ -421,12 +403,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text"><span class="chapter-number">F</span>&nbsp; <span class="chapter-title">Curated third-party functions</span></span></a>
   </div>
 </li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../appendices/g-parity-certificate.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">G</span>&nbsp; <span class="chapter-title">Cross-language parity</span></span></a>
-  </div>
-</li>
       </ul>
   </li>
     </ul>
@@ -439,25 +415,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#the-instructions-file" id="toc-the-instructions-file" class="nav-link active" data-scroll-target="#the-instructions-file"><span class="header-section-number">18.1</span> The instructions file</a>
+  <li><a href="#the-instructions-file" id="toc-the-instructions-file" class="nav-link active" data-scroll-target="#the-instructions-file"><span class="header-section-number">12.1</span> The instructions file</a>
   <ul class="collapse">
-  <li><a href="#shared-claude-code-settings" id="toc-shared-claude-code-settings" class="nav-link" data-scroll-target="#shared-claude-code-settings"><span class="header-section-number">18.1.1</span> Shared Claude Code settings</a></li>
+  <li><a href="#shared-claude-code-settings" id="toc-shared-claude-code-settings" class="nav-link" data-scroll-target="#shared-claude-code-settings"><span class="header-section-number">12.1.1</span> Shared Claude Code settings</a></li>
   </ul></li>
-  <li><a href="#what-an-agent-may-do" id="toc-what-an-agent-may-do" class="nav-link" data-scroll-target="#what-an-agent-may-do"><span class="header-section-number">18.2</span> What an agent may do</a></li>
-  <li><a href="#what-an-agent-may-see" id="toc-what-an-agent-may-see" class="nav-link" data-scroll-target="#what-an-agent-may-see"><span class="header-section-number">18.3</span> What an agent may see</a></li>
-  <li><a href="#where-project-knowledge-lives" id="toc-where-project-knowledge-lives" class="nav-link" data-scroll-target="#where-project-knowledge-lives"><span class="header-section-number">18.4</span> Where project knowledge lives</a></li>
-  <li><a href="#checking-what-an-agent-produces" id="toc-checking-what-an-agent-produces" class="nav-link" data-scroll-target="#checking-what-an-agent-produces"><span class="header-section-number">18.5</span> Checking what an agent produces</a></li>
-  <li><a href="#parallel-sessions" id="toc-parallel-sessions" class="nav-link" data-scroll-target="#parallel-sessions"><span class="header-section-number">18.6</span> Parallel sessions</a></li>
-  <li><a href="#recording-and-disclosing-ai-use" id="toc-recording-and-disclosing-ai-use" class="nav-link" data-scroll-target="#recording-and-disclosing-ai-use"><span class="header-section-number">18.7</span> Recording and disclosing AI use</a></li>
+  <li><a href="#what-an-agent-may-do" id="toc-what-an-agent-may-do" class="nav-link" data-scroll-target="#what-an-agent-may-do"><span class="header-section-number">12.2</span> What an agent may do</a></li>
+  <li><a href="#what-an-agent-may-see" id="toc-what-an-agent-may-see" class="nav-link" data-scroll-target="#what-an-agent-may-see"><span class="header-section-number">12.3</span> What an agent may see</a></li>
+  <li><a href="#where-project-knowledge-lives" id="toc-where-project-knowledge-lives" class="nav-link" data-scroll-target="#where-project-knowledge-lives"><span class="header-section-number">12.4</span> Where project knowledge lives</a></li>
+  <li><a href="#checking-what-an-agent-produces" id="toc-checking-what-an-agent-produces" class="nav-link" data-scroll-target="#checking-what-an-agent-produces"><span class="header-section-number">12.5</span> Checking what an agent produces</a></li>
+  <li><a href="#parallel-sessions" id="toc-parallel-sessions" class="nav-link" data-scroll-target="#parallel-sessions"><span class="header-section-number">12.6</span> Parallel sessions</a></li>
+  <li><a href="#recording-and-disclosing-ai-use" id="toc-recording-and-disclosing-ai-use" class="nav-link" data-scroll-target="#recording-and-disclosing-ai-use"><span class="header-section-number">12.7</span> Recording and disclosing AI use</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/unicef-drp/cso-toolkit/edit/main/book/chapters/46-ai-agents.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/unicef-drp/cso-toolkit/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content" tabindex="-1">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="Breadcrumbs"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/40-new-repository.html">Part IV — Adoption &amp; Operations</a></li><li class="breadcrumb-item"><a href="../chapters/46-ai-agents.html"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Working with AI coding agents</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="Breadcrumbs"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/40-new-repository.html">Part III — Setting Up and Running a Repository</a></li><li class="breadcrumb-item"><a href="../chapters/46-ai-agents.html"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Working with AI coding agents</span></a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Working with AI coding agents</span></h1>
+<h1 class="title"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Working with AI coding agents</span></h1>
 </div>
 
 
@@ -476,8 +452,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <p>Toolkit repositories are increasingly worked on with AI coding agents: Claude Code, GitHub Copilot, OpenAI Codex and their peers read the repository, run its scripts and propose commits. An agent follows the instructions it is given and fills every gap with a plausible guess. The contract of this handbook is full of rules that a plausible guess breaks. Left to itself, an agent edits the vendored helpers in <code>00_functions/</code> to make a call work. It reads a file with <code>read.csv()</code> instead of <code>dw_use()</code>, and the output loses its provenance. It runs as a producer because that is what the person’s <code>user_config.yml</code> says. It passes <code>takeover = TRUE</code> to get past a collaboration guard. And the reasons behind the project’s choices end up in one person’s private agent memory, where co-authors cannot see them.</p>
 <p>None of this needs new machinery. It needs the repository to say, in a file every agent reads, which rules apply, and the people working with agents to keep a few habits. This chapter sets out both: the instructions file every toolkit repository carries, what an agent may and may not do, what it may see, where project knowledge lives, how agent output is checked, and how its use is disclosed.</p>
-<section id="the-instructions-file" class="level2" data-number="18.1">
-<h2 data-number="18.1" class="anchored" data-anchor-id="the-instructions-file"><span class="header-section-number">18.1</span> The instructions file</h2>
+<section id="the-instructions-file" class="level2" data-number="12.1">
+<h2 data-number="12.1" class="anchored" data-anchor-id="the-instructions-file"><span class="header-section-number">12.1</span> The instructions file</h2>
 <p>Every toolkit repository has an <code>AGENTS.md</code> at its root. <code>AGENTS.md</code> is the tool-neutral convention: Codex, Copilot’s coding agent and most other agents read it on their own. Claude Code reads <code>CLAUDE.md</code> instead, so the repository also carries a one-line <code>CLAUDE.md</code> that imports the first:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>@AGENTS.md</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>One file, read by every agent, means one set of rules, edited in one place and reviewed like code. Tool-specific files beyond that import (<code>.github/copilot-instructions.md</code>, <code>.cursor/rules/</code>) are better avoided: two copies of the rules drift apart.</p>
@@ -533,7 +509,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>Never edit <code>00_functions/</code></td>
-<td>A vendored copy that no longer matches its manifest, so results no longer trace to a toolkit release (<a href="../chapters/41-vendoring.html">the vendoring chapter</a>)</td>
+<td>A vendored copy that no longer matches its manifest, so results no longer trace to a toolkit release (<a href="../chapters/vendoring-and-updates.html">Vendoring and updates</a>)</td>
 </tr>
 <tr class="odd">
 <td>Read and write through <code>dw_use()</code> / <code>dw_save()</code></td>
@@ -541,7 +517,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>Run <code>sh tools/check --record</code> before every push</td>
-<td>Data, secrets or contract violations reaching the remote; the pre-push hook and the pull request’s <code>check-record</code> status refuse a push without a passing record (<a href="../chapters/45-ci-cd.html#check-records">the CI chapter</a>)</td>
+<td>Data, secrets or contract violations reaching the remote; the pre-push hook and the pull request’s <code>check-record</code> status refuse a push without a passing record (<a href="../chapters/checks-and-ci.html#check-records">Checks and CI</a>)</td>
 </tr>
 <tr class="odd">
 <td>Atomic commits, pull requests into <code>develop</code></td>
@@ -549,8 +525,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
-<section id="shared-claude-code-settings" class="level3" data-number="18.1.1">
-<h3 data-number="18.1.1" class="anchored" data-anchor-id="shared-claude-code-settings"><span class="header-section-number">18.1.1</span> Shared Claude Code settings</h3>
+<section id="shared-claude-code-settings" class="level3" data-number="12.1.1">
+<h3 data-number="12.1.1" class="anchored" data-anchor-id="shared-claude-code-settings"><span class="header-section-number">12.1.1</span> Shared Claude Code settings</h3>
 <p>The scaffolders also write <code>.claude/settings.json</code>, the settings every member’s Claude Code reads in that repository:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"$schema"</span><span class="fu">:</span> <span class="st">"https://json.schemastore.org/claude-code-settings.json"</span><span class="fu">,</span></span>
@@ -577,8 +553,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 </section>
 </section>
-<section id="what-an-agent-may-do" class="level2" data-number="18.2">
-<h2 data-number="18.2" class="anchored" data-anchor-id="what-an-agent-may-do"><span class="header-section-number">18.2</span> What an agent may do</h2>
+<section id="what-an-agent-may-do" class="level2" data-number="12.2">
+<h2 data-number="12.2" class="anchored" data-anchor-id="what-an-agent-may-do"><span class="header-section-number">12.2</span> What an agent may do</h2>
 <p>The toolkit’s two modes (<a href="../chapters/21-roles-and-modes.html">roles and modes</a>) apply to agents with one change of default.</p>
 <ul>
 <li><strong>An agent session runs as <code>reviewer</code></strong> unless a person deliberately sets <code>producer</code> for it. A reviewer re-runs, compares and writes to its sandbox. It cannot write canonical outputs or call live APIs: the reviewer-mode guard refuses both. Most agent work is of that kind: reproducing an output, finding why a number moved, writing tests, refactoring code whose outputs must not change.</li>
@@ -589,18 +565,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p><code>dw_mode</code> is read from the person’s <code>user_config.yml</code>, which cannot tell whether a person or an agent is running the session. The reviewer default is therefore a rule in <code>AGENTS.md</code>, not something the toolkit enforces. It does make the case visible. Claude Code sets <code>CLAUDE_CODE_CHILD_SESSION=1</code> in the commands it runs, and a profile generated by the toolkit (the scaffolders’ and <code>create_profile()</code>’s, in R and Python) prints a notice when that variable is set and <code>dw_mode</code> is <code>producer</code>: “a Claude Code session is running as producer”. Nothing is blocked; the notice puts the choice on the record of the session. (<code>CLAUDECODE=1</code> is not used for this: IDE extensions also set it in their integrated terminals, where a person works.) Other agents set no such variable.</p>
 </section>
-<section id="what-an-agent-may-see" class="level2" data-number="18.3">
-<h2 data-number="18.3" class="anchored" data-anchor-id="what-an-agent-may-see"><span class="header-section-number">18.3</span> What an agent may see</h2>
+<section id="what-an-agent-may-see" class="level2" data-number="12.3">
+<h2 data-number="12.3" class="anchored" data-anchor-id="what-an-agent-may-see"><span class="header-section-number">12.3</span> What an agent may see</h2>
 <p>Whatever an agent reads is sent to the AI service that runs it. A file the agent opens, a table it prints, the output of a command it runs: all of it leaves the machine. The rules on what may leave follow from that.</p>
 <ul>
 <li><strong>No microdata and no personal records.</strong> An agent never prints rows of a microdata file or of any file with records on individuals: no <code>head()</code>, no <code>View()</code>, no <code>cat</code> of a data file. Variable names and labels, counts, summary statistics that could be published, and code are fine.</li>
 <li><strong>Code and provenance sidecars are fine to share.</strong> They hold paths, hashes, schemas and settings, not data.</li>
-<li><strong>Pre-release figures stay unseen in official statistics.</strong> Official figures are embargoed until their publication date (<a href="../chapters/45-ci-cd.html">the CI chapter</a> sets out the release record). Before that date no external AI service sees them, unless the organization’s AI-use policy allows that service to. In practice the agent does not open the output folders of an official-statistics repository before publication.</li>
+<li><strong>Pre-release figures stay unseen in official statistics.</strong> Official figures are embargoed until their publication date (<a href="../chapters/checks-and-ci.html">Checks and CI</a> sets out the release record). Before that date no external AI service sees them, unless the organization’s AI-use policy allows that service to. In practice the agent does not open the output folders of an official-statistics repository before publication.</li>
 <li><strong>Use the services your organization has approved,</strong> under its terms for confidential material. A personal account on a public service is not the same contract.</li>
 </ul>
 </section>
-<section id="where-project-knowledge-lives" class="level2" data-number="18.4">
-<h2 data-number="18.4" class="anchored" data-anchor-id="where-project-knowledge-lives"><span class="header-section-number">18.4</span> Where project knowledge lives</h2>
+<section id="where-project-knowledge-lives" class="level2" data-number="12.4">
+<h2 data-number="12.4" class="anchored" data-anchor-id="where-project-knowledge-lives"><span class="header-section-number">12.4</span> Where project knowledge lives</h2>
 <p>An agent working for weeks on a project accumulates context: why a variable is recoded, which countries are dropped and on whose say-so, which robustness check was tried and abandoned. If that context lives in one person’s agent memory or in session transcripts, co-authors cannot see it and the next agent starts from nothing. The rule is that project knowledge goes in the repository, and personal working state does not.</p>
 <table class="caption-top table">
 <colgroup>
@@ -650,8 +626,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <p>The toolkit’s <code>decisions.md</code> template (<code>templates/agents/decisions.md</code>) has one dated entry per decision, with who decided, why and what was set aside. An agent may draft an entry when asked, but the person who made the decision confirms its wording. A decision recorded in the wrong words is worse than none.</p>
 </section>
-<section id="checking-what-an-agent-produces" class="level2" data-number="18.5">
-<h2 data-number="18.5" class="anchored" data-anchor-id="checking-what-an-agent-produces"><span class="header-section-number">18.5</span> Checking what an agent produces</h2>
+<section id="checking-what-an-agent-produces" class="level2" data-number="12.5">
+<h2 data-number="12.5" class="anchored" data-anchor-id="checking-what-an-agent-produces"><span class="header-section-number">12.5</span> Checking what an agent produces</h2>
 <p>An agent’s output is checked like a junior colleague’s, with one difference: it is fluent and confident whether or not it is right. Four checks catch most of what goes wrong.</p>
 <ol type="1">
 <li><strong>Every number traces to a file.</strong> A number in a paper, a brief or a release note traces to a file in <code>output/</code> (or, for official statistics, to the release record). A number that traces to nothing is removed or recomputed.</li>
@@ -659,18 +635,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>Comparative claims are checked after every rerun.</strong> Levels can barely move while a comparison flips: “flat”, “the same”, “robust”, “larger than”. After a rerun, each comparative claim in the text is checked against the new tables, not only the numbers it quotes.</li>
 <li><strong>An independent claim check before submission or release.</strong> Someone who did not write the text recomputes every number in it from <code>output/</code>: a co-author, or a fresh agent session given only the text and the repository. The agent that wrote the text is the wrong one to check it: it tends to confirm what it wrote.</li>
 </ol>
-<p>The local checks and the check record (<a href="../chapters/45-ci-cd.html#check-records">the CI chapter</a>) apply to agents as they do to people. An agent that cannot make the checks pass reports the failure. It does not push with <code>--no-verify</code>, and it never writes a check record by hand: a record says the checks passed on that exact content.</p>
+<p>The local checks and the check record (<a href="../chapters/checks-and-ci.html#check-records">Checks and CI</a>) apply to agents as they do to people. An agent that cannot make the checks pass reports the failure. It does not push with <code>--no-verify</code>, and it never writes a check record by hand: a record says the checks passed on that exact content.</p>
 </section>
-<section id="parallel-sessions" class="level2" data-number="18.6">
-<h2 data-number="18.6" class="anchored" data-anchor-id="parallel-sessions"><span class="header-section-number">18.6</span> Parallel sessions</h2>
+<section id="parallel-sessions" class="level2" data-number="12.6">
+<h2 data-number="12.6" class="anchored" data-anchor-id="parallel-sessions"><span class="header-section-number">12.6</span> Parallel sessions</h2>
 <p>When two sessions work on one repository at the same time, people or agents, each gets its own <strong>git worktree</strong> of the one local clone. Two sessions in one folder switch branches under each other. A second clone drifts from the first and gets edited by mistake.</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="va">MAIN</span><span class="op">=</span><span class="st">"</span><span class="va">$(</span><span class="fu">dirname</span> <span class="st">"</span><span class="va">$(</span><span class="fu">git</span> rev-parse <span class="at">--path-format</span><span class="op">=</span>absolute <span class="at">--git-common-dir</span><span class="va">)</span><span class="st">"</span><span class="va">)</span><span class="st">"</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> <span class="at">-C</span> <span class="st">"</span><span class="va">$MAIN</span><span class="st">"</span> fetch origin</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> <span class="at">-C</span> <span class="st">"</span><span class="va">$MAIN</span><span class="st">"</span> worktree add <span class="at">--no-track</span> <span class="st">"</span><span class="va">$MAIN</span><span class="st">/../&lt;repo&gt;-wt-&lt;topic&gt;"</span> <span class="at">-b</span> feature/<span class="op">&lt;</span>topic<span class="op">&gt;</span> origin/develop</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Branches, stashes and configuration are shared between worktrees, so each session works only on its own branch. It never switches, resets or deletes another session’s branch, and it commits instead of stashing, because all worktrees share one stash list. Git-ignored files, inputs among them, are not shared. A new worktree fills its inputs folder with <code>dw_fetch_inputs()</code>, which copies each input from the deposit and checks its SHA-256 against the deposited copy. When the pull request has merged, <code>git worktree remove</code> deletes the worktree. Deleting the folder by hand leaves a stale entry, which <code>git worktree prune</code> clears.</p>
 </section>
-<section id="recording-and-disclosing-ai-use" class="level2" data-number="18.7">
-<h2 data-number="18.7" class="anchored" data-anchor-id="recording-and-disclosing-ai-use"><span class="header-section-number">18.7</span> Recording and disclosing AI use</h2>
+<section id="recording-and-disclosing-ai-use" class="level2" data-number="12.7">
+<h2 data-number="12.7" class="anchored" data-anchor-id="recording-and-disclosing-ai-use"><span class="header-section-number">12.7</span> Recording and disclosing AI use</h2>
 <p>Journals and statistical offices increasingly ask how AI was used in producing a paper or a release. The answer is easy to give at the end only if it was recorded along the way. The <code>decisions.md</code> template ends with an <em>AI use</em> table: from when, to when, which tool and version, used for what, and who checked the result. Add a row when a tool starts being used for a new purpose, not at submission time.</p>
 <p>The declaration then follows from the table. A template line, to adapt to the venue’s own wording:</p>
 <blockquote class="blockquote">
@@ -1162,13 +1138,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </script>
 <nav class="page-navigation" aria-label="Page">
   <div class="nav-page nav-page-previous">
-      <a href="../chapters/45-ci-cd.html" class="pagination-link" aria-label="Continuous integration and repository hygiene">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Continuous integration and repository hygiene</span></span>
+      <a href="../chapters/checks-and-ci.html" class="pagination-link" aria-label="Checks and CI">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Checks and CI</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../chapters/51-microdata-archive.html" class="pagination-link" aria-label="The microdata archive: archive, catalogue, tool">
-        <span class="nav-page-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">The microdata archive: archive, catalogue, tool</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="../chapters/44-versioning-release.html" class="pagination-link" aria-label="Versioning and releases">
+        <span class="nav-page-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Versioning and releases</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>

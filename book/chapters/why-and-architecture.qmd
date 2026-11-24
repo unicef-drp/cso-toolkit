@@ -1,0 +1,183 @@
+---
+title: "Why a toolkit, and how it fits together"
+aliases:
+  - 11-why.html
+  - 12-architecture.html
+---
+
+A 2026 analysis must re-run identically in 2028. That single requirement, call it the *reproducibility floor*, is the reason `cso-toolkit` exists. Everything else in this book follows from it.
+
+The toolkit is the shared, cross-language contract that the UNICEF Chief Statistician Office (CSO), within the Office of Strategy and Evidence (OSE), uses to read, write, compare and merge data; to call external APIs; to aggregate; and to keep copied-in ("vendored") helper code in sync. In practice it is one input/output (IO) contract, one external-API contract and one *mode contract*, a session-level switch that decides whether a run may touch the network, implemented three times (R, Python, Stata) and shipped by copying rather than installing.
+
+The first half of this chapter sets out the problem and the design choices it forces. The second half describes the shape that delivers on them: four layers, from the contract down to the deposit it protects, and the wider ecosystem of shared code around it.
+
+## The problem: analytics that cannot be re-run
+
+A statistical office publishes numbers, and those numbers carry a promise: that they are not an accident of the machine, the week, or the analyst who happened to produce them. A figure cited in a 2026 publication, say an education indicator deposited as `dw_ed.csv`, must produce the *same* number two years later when a different person re-runs the pipeline.
+
+That promise is surprisingly hard to keep. Three things routinely break it:
+
+- **Upstream drift.** The external source changes between the original run and the re-run. An SDMX (the statistical data-exchange standard) dataflow is revised, a World Bank indicator is re-based, a UIS (UNESCO Institute for Statistics) endpoint returns a slightly different shape. The re-run pulls live data and quietly produces different numbers.
+- **Ambient version skew.** The original analyst had one version of `dplyr` (or `pandas`, or a Stata `.ado`); the reviewer has another. A default changes, a sort becomes unstable, a join behaves differently. Nothing errors; the answer just shifts.
+- **Untracked provenance.** Nobody recorded what was read, from where, with what schema, by whom and when. When the numbers disagree there is no artefact to point at and no way to tell which run is wrong.
+
+These are not hypothetical. An internal cross-sector audit (23 May 2026) found four regional-metadata CSV files being read independently across five sectors, each with no shared vintage record: four chances for the same kind of file to disagree, and nothing recording which copy any run actually used.
+
+The toolkit's answer is to route every data touch-point through a wrapper that applies the same discipline everywhere: one way to read and write that records provenance automatically, one way to call an external API that can be frozen and replayed, and one session-level contract that decides whether the network may be touched at all. The repository README states the goal directly: the toolkit exists "to facilitate the reproducibility and scalability of analytics developed by the UNICEF Chief Statistician Office."
+
+## The reproducibility floor
+
+A floor is a guarantee you inherit, not a feature you opt into. Any codebase that vendors the helpers gets it: you do not have to remember to record provenance, wire up a cache, or police whether a reviewer accidentally hit the network. The wrappers do it.
+
+The floor rests on three primitives that recur throughout the book:
+
+- **Provenance sidecars.** Every write through `dw_save()` emits a `.provenance.json` sidecar by default, recording a content hash of the file, its schema, the user, a timestamp and any metadata you pass. When two runs disagree, the sidecars tell you which input changed. [Provenance sidecars and the error envelope](23-provenance-and-errors.qmd) explains the idea; [Appendix B](../appendices/b-provenance-schema.qmd) lists the fields.
+- **A frozen deposit you can replay.** External API calls go through `dw_api_fetch()`, which caches each response in the deposit. A re-run reads the cache rather than the live source, so upstream drift cannot leak into a reviewer's numbers. See [The external-API contract](32-external-api.qmd).
+- **Uniqueness and integrity checks.** Writes assert that the identifier columns you name are unique, and reads of the canonical deposit compare it with its Z: mirror. Silent duplication and silent corruption are caught at the call site, not three steps downstream.
+
+Routing every call through a wrapper is not ceremony. The README is emphatic that the contract is enforced "at every wrapped call site, not by convention". Convention is what fails when someone is in a hurry; an enforced contract does not.
+
+The floor needs one more idea to hold: someone must be allowed to touch the live network and someone must be forbidden from it, and the toolkit must *enforce* the difference. So it distinguishes roles by what they may do, and makes the distinction a session-level mode, `dw_mode`, set once in your profile rather than passed to each call:
+
+- The **producer** (the Database Manager) runs the pipeline, pulls upstream APIs through the cache, and deposits the canonical artefacts, the official version of record that other people read and trust. The producer is the only role with network access.
+- The **reviewer** re-runs the pipeline from the frozen deposit, compares against it, and files issues. In reviewer mode a wrapped API call reads the frozen cache or stops with an error; it never reaches out, so a reviewer cannot "fix" a discrepancy by quietly pulling fresh data. That is what makes the re-run a real check.
+- The **publisher** takes signed-off deposits on to `data.unicef.org`, SDMX and other products, largely outside the toolkit's boundary.
+
+The producer's run is the run of record; the reviewer's run, with the network sealed off, is the proof that it reproduces. [Roles and the mode contract](21-roles-and-modes.qmd) defines the roles and how the mode enforces them, and [Profiles and the mode switch](profiles-and-modes.qmd) shows how you set it.
+
+## Vendoring, not installing
+
+If a 2026 analysis must re-run identically in 2028, the helper code itself must be the same in 2028 as it was in 2026. A toolkit installed over the network (`devtools::install_github()`, `pip install`, `net install`) gives you whatever version the network serves at session start, which is upstream drift applied to your own tools. So repositories do not install the toolkit; they *vendor* it. They copy the helper files into their own `00_functions/` folder, commit them to their own history, and record the release they copied in a small manifest, `.toolkit_manifest.yml`. Every commit then shows exactly which helper code was in effect; updates happen only when a producer reads the release notes and chooses to refresh; a reviewer with no network can still re-run everything; and the same copy-and-pin model works for Stata, which a package model would serve poorly. On UNICEF laptops it has a further, blunt advantage: copying files into a project folder works where AppLocker blocks a network installer. [Vendoring and updates](vendoring-and-updates.qmd) sets out these reasons in full and covers the manifest, the development install and the update flow.
+
+::: {.callout-note}
+Vendoring trades a little convenience for a hard guarantee. You take on the small chore of an explicit refresh; in return, the helper code can never drift out from under a published result. For a statistical office, that trade is the whole point.
+:::
+
+## Scaling across sectors and projects
+
+The CSO is not one pipeline but many: education, water and sanitation, nutrition, health, poverty, immunisation and more. The toolkit's users extend beyond DW-Production (the cross-sector deposit pipeline) to other repositories that will deposit canonical data, such as `UNPD-Population` and `datalib`. Without a shared contract each of them would re-invent the same primitives, and each re-invention is a new chance to drift, as the five-sector regional-metadata duplication showed.
+
+A single vendored toolkit changes the economics. The same helpers, templates and audit functions go into every codebase, so a new sector or project "inherits the reproducibility floor for free instead of re-inventing it". Adding the next sector is a vendoring step, not a re-implementation. The idea also gates the toolkit's `v1.0.0`: that release waits until the education pilot lands *and a second sector vendors the helpers without modification*, proof that the contract generalises rather than being bent to one team's habits. [Versioning and releases](44-versioning-release.qmd) describes the gate.
+
+Scale is also why the contract spans three languages. Sectors work in R, Python and Stata, and the next sections show how one contract serves all three.
+
+## The four layers
+
+The shape that delivers the floor can be read in one sentence: the toolkit encodes a contract once; three language siblings implement it; consumer repositories vendor one sibling into their own code; and everything they produce lands in a single canonical deposit that the contract keeps reproducible.
+
+| Layer | What it is | Where it lives |
+|---|---|---|
+| The toolkit | One contract, expressed as five capability families | `unicef-drp/cso-toolkit` |
+| Language siblings | Three idiomatic implementations of that contract | `r/R/`, `python/src/`, `stata/src/` |
+| Consumer repositories | Codebases that vendor the helpers and use the contract | DW-Production, the sector pipelines, CCRI (the Children's Climate Risk Index) and geospatial work |
+| Canonical deposit | The frozen store every producer writes and every reviewer reads | The Teams folder `060.DW-MASTER/`, its Z: drive mirror, and downstream Helix and SDMX |
+
+Dependence runs one way. The toolkit knows nothing about any consumer. The siblings know nothing about each other: they agree on the contract, never on shared code. A consumer depends on a pinned release of one sibling. The deposit depends on nothing; it is the inert artefact at the end of the flow, and that inertness is the point, because a reviewer can read it without re-running anything upstream.
+
+Three names in the last row recur. The **Z: drive** is a network-mapped mirror of the Teams deposit, so that scripts can address the canonical store through a stable drive letter rather than a synced-folder path. **Helix** is UNICEF's internal data platform. **SDMX** (Statistical Data and Metadata eXchange) is the exchange standard through which signed-off artefacts reach `data.unicef.org`. Helix and SDMX are downstream of the toolkit, not part of it: the architecture's job ends when the deposit is written.
+
+## The toolkit: five capability families
+
+The helpers fall into five families. Each is the *single* sanctioned way to do its job inside a CSO analytics product, not a grab-bag of utilities. This section says what each family is for and where it is documented; [Appendix D](../appendices/d-function-reference.qmd) gives every signature, and [Appendix A](../appendices/a-coverage-matrix.qmd) records which language has which function.
+
+### IO
+
+One way to read, write, compare and join data. `dw_save()` and `dw_use()` choose the reader or writer from the file extension, and the chapter linked below lists the formats each language handles. Every write checks that the identifier columns you name are unique and leaves a provenance sidecar. Paths follow the session's mode: a producer's write is copied to the Teams deposit and its Z: mirror, while a reviewer writes to a local sandbox and is stopped if a path points at the deposit. The same family fills a gitignored inputs folder from the deposit and checks it, compares a new output with a reference, and tells you whether a run reproduced the previous one. See [The IO contract](31-io.qmd).
+
+### External API
+
+One mode-aware wrapper around a set of named external sources (UIS, SDMX, the World Bank, ILO, the UNSD SDG API, pinned GitHub files, plain HTTP and CSV at a URL). A producer fetches live and caches the response under `_apis/<api>/<cache_key>.<ext>` in the deposit, with its own sidecar; a reviewer reads only from that cache. [The external-API contract](32-external-api.qmd) lists the sources, generated from the code, and the arguments each takes.
+
+### Vintage sync
+
+The consumer-side half of vendoring. These helpers read your `.toolkit_manifest.yml`, find the latest release, show its release notes since the release you pinned, compare your vendored files with it, and refresh them when you ask. They never update anything on their own. Reaching GitHub for a release and changing the vendored files are a producer's acts, so in reviewer mode the helpers only make offline checks. See [Vendoring and updates](vendoring-and-updates.qmd).
+
+### Aggregation and survey weights
+
+The arithmetic that turns country rows into regional and global figures: weighted means, sums and proportions with population and country coverage and a coverage threshold; the latest observation per country within a year window; the matching coverage footnote; redistribution of survey weights over missing nested observations; and the population denominators and regional groupings the aggregators consume. See [Aggregation](33-aggregation.qmd).
+
+### Scaffolding and audit
+
+The helpers that set a repository up and keep it honest. They create a new research or official-statistics repository with its checks, hooks, tests and agent files; write a profile with the standard building blocks (user identification, configuration load, mode resolution, a reproducibility seed, the no-API guard); write sector run-scripts; review an existing profile against the same blocks; and audit a folder of scripts for raw file-IO or API calls that should go through the wrappers. See [Starting a repository](40-new-repository.qmd), [Profiles and the mode switch](profiles-and-modes.qmd) and [Checks and CI](checks-and-ci.qmd).
+
+### The error envelope cuts across all five
+
+One behaviour belongs to no family because it belongs to all of them. Every error the toolkit raises, in any language, has the same shape: a `[cso_toolkit.<function>]` prefix, what went wrong, why the rule exists, and a numbered fix. The fixed prefix lets a consumer find every site that hits a given error class with one search, and the fixed shape lets tests assert on it. [Provenance sidecars and the error envelope](23-provenance-and-errors.qmd) explains the design; [Appendix C](../appendices/c-error-taxonomy.qmd) catalogues the messages.
+
+## Three languages, one contract
+
+The toolkit ships three implementations: R under `r/R/`, Python under `python/src/` and Stata under `stata/src/`. The word that matters is *siblings*, not ports and not bindings. They are not generated from a common source and do not call one another at run time. They are independent code that agrees on a contract: the same function names, the same `.provenance.json` schema, the same mode-aware path routing, the same error-envelope shape.
+
+The contract is defined by behaviour, not by shared code. A `dw_save` in any sibling enforces uniqueness on the identifier columns, writes a sidecar with the same JSON schema, and refuses a reviewer's write to the canonical deposit. Given the same inputs it produces the same numbers, which is what reproducibility cares about. Here is the same write in each language:
+
+::: {.panel-tabset}
+
+#### R {.unnumbered .unlisted}
+
+```r
+dw_save(df, name = "dw_ed.csv", sector = "ed", kind = "wrk",
+        isid = c("REF_AREA", "INDICATOR"),
+        metadata = list(title = "Education indicators", vintage = "2026-05"))
+```
+
+#### Python {.unnumbered .unlisted}
+
+```python
+dw_save(df, name="dw_ed.csv", sector="ed", kind="wrk",
+        isid=["REF_AREA", "INDICATOR"],
+        metadata={"title": "Education indicators", "vintage": "2026-05"})
+```
+
+#### Stata {.unnumbered .unlisted}
+
+```stata
+dw_save, filename("dw_ed") path("$teamsWrkData/ed") ///
+    idvars(REF_AREA INDICATOR)                       ///
+    title("Education indicators")                    ///
+    vintage("2026-05")
+```
+
+:::
+
+Each sibling stays idiomatic. R and Python take a logical store (`name`, `sector`, `kind`) and resolve the path from the mode; Stata takes comma options in the usual Stata way (`dw_save, filename(...) path(...)`, not a `using` form) and an explicit path built from the profile's globals. The contract is in what the calls do, not in how they are spelled.
+
+Equal support in all three languages is the pledge, and two devices keep the pledge honest. [Appendix A](../appendices/a-coverage-matrix.qmd), generated from the code, records for every function whether each language has it, has it in a documented narrower scope, or does not need it, and each function's chapter carries the same information as a one-line badge. The conformance harness under `conformance/` runs the same cases in R, Python and Stata and compares the results; `sh tools/certify` records a parity certificate ([How the three languages stay in step](parity.qmd)). A repository vendors *one* sibling and gets whatever that sibling implements, so before choosing a language for a new pipeline, check the matrix rather than assuming every name works everywhere.
+
+## Consumer repositories
+
+A consumer repository vendors the sibling for its language into `00_functions/` and pins the release in `.toolkit_manifest.yml`. DW-Production is the first consumer, and the sector pipelines (education, water and sanitation, nutrition, HIV/AIDS, child poverty, immunisation and the rest) consume through it. The CCRI and geospatial work uses the Python sibling directly. Future repositories, such as UNPD-Population and datalib, are expected to vendor the same way.
+
+The architectural fact is that the dependency from consumer to toolkit is a *copy plus a pin*, not a live link. That is what lets a consumer be re-run identically years later, and what lets the vintage-sync family detect, without ever forcing, that a consumer has fallen behind the latest release. [Starting a repository](40-new-repository.qmd) walks through adopting the toolkit in a new or existing repository.
+
+## The canonical deposit
+
+Everything the consumers produce in producer mode flows to one place. Physically it is the Teams folder `060.DW-MASTER/`, carbon-copied to the Z: drive mirror, and from there published downstream to Helix, the SDMX endpoints and `data.unicef.org`. Architecturally it is the immutable record that closes the reproducibility loop: the producer writes it, the reviewer reads it frozen and never re-runs anything upstream of it, and the publisher takes signed-off copies to the outside world.
+
+The deposit is where the contract's parts meet. The IO family writes artefacts there with their sidecars and mirrors. The API family caches upstream pulls there, so they too become part of the frozen record. And the mode contract draws its hard line at this boundary: a producer may write canonical paths, while a reviewer's writes are forced into a sandbox. Because the deposit can be read without being recomputed, the numbers it holds stay reproducible.
+
+## Reading the architecture diagram
+
+The README's "Architecture at a glance" diagram (a Mermaid flowchart) draws the four layers in one picture: external sources at the top, the toolkit and its families, the three siblings, the consumers, and the canonical deposit. It uses two line styles.
+
+- **Solid arrows** are the normal producing flow: external sources into the API family in producer mode, the siblings into the consumers, and consumers depositing into the canonical store. The arrow from the siblings to the consumers is the vendoring edge, and it is the one labelled with a file, `.toolkit_manifest.yml`, the pin that the vintage-sync family watches.
+- **Dashed arrows** mark the two reproducibility relationships, and there are exactly two. The one from the toolkit to the siblings, "language-parallel implementations", is the one-contract, three-implementations relationship. The one from the deposit back to the consumers, "reviewer reads (frozen)", is the reviewer's path: reading the deposit without recomputing it.
+
+## The wider ecosystem: three tiers
+
+The toolkit is not the only shared code a CSO pipeline touches, and this book's authority is not the same for all of it. The shared code falls into three tiers, and the tier decides both who maintains the code and what the book asserts about it:
+
+- **(i) The toolkit.** The `dw_*` contract and its three siblings, everything this chapter describes. The book is normative here: it *is* the documentation.
+- **(ii) UNICEF-supported packages.** Full packages with their own repositories and release lines, maintained by CSO staff: `unicefData` as a full member, `datalib` as a provisional one, and a mapping and boundaries capability under evaluation. Membership follows published criteria, not reputation. The book documents how these packages fit together and points to each package's own documentation; it never re-documents their functions.
+- **(iii) Third-party functions.** External packages used inside production pipelines. The book asserts only that a named version behaved as described on a stated date in a stated pipeline; [Appendix F](../appendices/f-third-party-functions.qmd) holds the rules and the list.
+
+[The UNICEF analytics ecosystem: three tiers](61-ecosystem.qmd) in Part VI sets out the tiers in full, with the membership gate and what "supported" does and does not promise.
+
+### Configuration across the tiers
+
+The tiers do not yet share a configuration contract, and the divergence is deliberate until a common design is agreed. The toolkit reads your block of `~/.config/user_config.yml` through the generated profile and `dw_load_config`. `datalib` reads a `datalib:` block from its own configuration file; `dw_load_config` skips such a block without adopting its keys, so sharing a file is safe for the toolkit. `unicefData` is configured through environment variables and reads no user file at all. If you work across tiers, treat the three as separate namespaces. [Profiles and the mode switch](profiles-and-modes.qmd) covers the toolkit's file; the ecosystem chapter covers the other two.
+
+## What this buys you
+
+Pulling it together: the toolkit gives the CSO a reproducibility floor (provenance, frozen replay and integrity checks, enforced at the call site); a vendoring model that pins helper code to a release so published results never drift; and one contract in three languages that lets new sectors and repositories inherit all of it instead of rebuilding it. The producer and reviewer split turns "we wrote it down" into "we can prove it re-runs".
+
+Hold the four layers (toolkit, siblings, consumers, deposit) as the frame for the rest of the book. The rest of Part I sets out the contract they carry: the roles and the mode, then provenance and the error envelope. Part II gives each user-facing family its own chapter. Part III covers how a repository joins the architecture and stays in sync, and Part IV is for the toolkit's maintainers.

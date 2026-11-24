@@ -1,8 +1,16 @@
-# Starting a new repository
+---
+title: "Starting a repository"
+aliases:
+  - 42-onboarding-example.html
+---
 
-Every repository that uses the toolkit needs the same floor before its first line of analysis: a `.gitignore` that keeps data out and provenance in, the local checks and the hook that requires a record of them, a test suite, the project's collaboration setting, a home for the vendored helpers, and a README and contributing guide that tell a co-author what to do on their first clone. The chapters that follow explain each piece. This one starts a repository with all of them in one call, from the toolkit's own templates, so a new project begins where the rest of the handbook expects it to be.
+Every repository that uses the toolkit needs the same floor before its first line of analysis: a `.gitignore` that keeps data out and provenance in, the local checks and the hook that requires a record of them, a test suite, the project's collaboration setting, a home for the vendored helpers, a profile that every script sources first, and a README and contributing guide that tell a co-author what to do on their first clone.
 
-There are two functions, because there are two kinds of repository:
+This chapter covers both ways to get there. A new repository gets all of it in one call, from the toolkit's own templates. An existing repository adopts it step by step, and the second half of the chapter walks through those steps. The detail of each piece lives in the next three chapters: [Profiles and the mode switch](profiles-and-modes.qmd), [Vendoring and updates](vendoring-and-updates.qmd) and [Checks and CI](checks-and-ci.qmd).
+
+## Two kinds of repository
+
+There are two scaffolders, because there are two kinds of repository:
 
 | | `create_research_project()` | `create_official_stats_project()` |
 |---|---|---|
@@ -14,15 +22,17 @@ There are two functions, because there are two kinds of repository:
 | Inputs | `data/` | the deposit's `011_rawdata`; local copies in `01_dw_prep/011_rawdata/<sector>/` and `inputs/` (filled by `dw_fetch_inputs()`) |
 | `.gitignore` | `research-project.gitignore` | `official-stats.gitignore` |
 
-## Which one?
+### Which one?
 
-Ask where the results live and who may see them before publication. If the answer is "in git, and anyone with access to the repository may read them", it is a research project. If the results are deposited and published by the office, and nobody may see a figure before its release date, it is an official-statistics repository, however small. The difference is not cosmetic: the official-statistics template ignores output folders outright, sidecars included, and its `tools/check.R` fails on anything tracked in them, because a pre-release table committed by accident stays in git history ([Continuous integration and repository hygiene](45-ci-cd.qmd)).
+Ask where the results live and who may see them before publication. If the answer is "in git, and anyone with access to the repository may read them", it is a research project. If the results are deposited and published by the office, and nobody may see a figure before its release date, it is an official-statistics repository, however small.
+
+The difference is not cosmetic. The official-statistics template ignores output folders outright, sidecars included, and its checks fail on anything tracked in them, because a pre-release table committed by accident stays in git history ([Checks and CI](checks-and-ci.qmd)).
 
 A paper written from official figures after their release is a research project. A research team that also runs a production pipeline keeps the two in separate repositories.
 
-## What each function writes
+## Creating a repository
 
-Both functions take the folder of the new repository and the collaboration model, which is required and has no default, as `dw_mode` has none: how many people may produce results is a decision for the project, not something the toolkit guesses.
+Both functions take the folder of the new repository and the collaboration model. The model is required and has no default, just as `dw_mode` has none: how many people may produce results is a decision for the project, not something the toolkit guesses. Leave it out and the call stops before writing anything.
 
 ::: {.panel-tabset}
 
@@ -31,13 +41,13 @@ Both functions take the folder of the new repository and the collaboration model
 ```r
 create_research_project(
   "C:/GitHub/learning-mobility",
-  collaboration  = "multi-producer",          # or "single-producer"
-  members        = c("jpazvd", "kavanesian"), # optional, informational
-  title          = "Schooling Mobility Is Not Learning Mobility",
-  vendor          = TRUE,                     # copy helpers from a clone ...
+  collaboration   = "multi-producer",           # or "single-producer"
+  members         = c("jpazvd", "kavanesian"),  # optional, informational
+  title           = "Schooling Mobility Is Not Learning Mobility",
+  vendor          = TRUE,                       # copy helpers from a clone ...
   toolkit_source  = "C:/GitHub/cso-toolkit",
-  toolkit_version = "v0.9.1",                 # ... at this tag (default: latest)
-  git             = TRUE)                     # git init, develop, hook path
+  toolkit_version = "v0.9.1",                   # ... at this tag (default: latest)
+  git             = TRUE)                       # git init, develop, hook path
 
 create_official_stats_project(
   "C:/GitHub/DW-Nutrition",
@@ -62,55 +72,79 @@ create_official_stats_project(
     vendor=True, toolkit_source="C:/GitHub/cso-toolkit")
 ```
 
-#### Stata {.unnumbered .unlisted}
-
-```stata
-* No Stata function. Create the repository once from R or Python: the
-* files are the same whichever language writes them, the .gitignore
-* covers Stata's files, and the checks in tools/check.R read only files.
-```
-
 :::
 
-A research project:
+The files are the same, byte for byte, whichever language writes them. The `.gitignore` covers Stata's files too, and the checks in `tools/check.R` only read files, so a Stata project is created once from R or Python and then works like any other.
+
+### The arguments
+
+- **`collaboration`.** `"single-producer"` (one person produces, the others review) or `"multi-producer"` (several co-authors produce). It is written to `cso_project.yml`; see [The collaboration setting](#the-collaboration-setting) below.
+- **`members`.** Optional user names or GitHub handles, listed under `members:` in `cso_project.yml`. They are informational. Each must be letters, digits, `.`, `_` or `-`, so it stays plain YAML.
+- **`title`.** The README's title. By default, the folder name.
+- **`vendor`, `toolkit_source`, `toolkit_version`.** `vendor` is `FALSE` by default. `TRUE` copies the default helper set into `00_functions/` from a release tag of a git clone of cso-toolkit and writes `00_functions/.toolkit_manifest.yml`, with that tag as `pulled_version` and the commit it points to as `pulled_commit`. The clone is `toolkit_source`, else the `CSO_TOOLKIT_ROOT` environment variable, else the source checkout the package was loaded from. The tag is `toolkit_version` (`"0.9.1"` is read as `"v0.9.1"`); by default it is the clone's latest release tag, never a pre-release such as `v1.0.0-rc1`. The files are read from the tag's commit in the clone's history, never from its working tree, so a clone on another branch or with local edits still vendors exactly the released bytes. A tag the clone does not have stops the call before anything is written (`git fetch --tags` first).
+- **What `vendor = TRUE` copies.** The R helpers from `r/R/`, whichever language runs the scaffolder: `dw_io.R`, `dw_api.R`, `cso_toolkit_sync.R`, `dw_provenance.R`, `dw_deposit.R`, `dw_project.R`, `test_scripts.R` and `zzz.R`, plus `profile_helpers.R` and `create_sector_script.R` for official statistics. A helper of that set which the tag does not have yet is skipped and named in a message. A character vector instead of `TRUE` picks the files, all of which must exist at the tag; `dw_io.R`, `cso_toolkit_sync.R` and `test_scripts.R` are always added, because `tools/check.R` needs them. Without vendoring, `tools/check.R` leaves out the `contract-audit` and `vintage` checks, with a comment saying to add them back once `00_functions/` is filled. What the manifest's fields mean, and how to update later, is in [Vendoring and updates](vendoring-and-updates.qmd).
+- **`workflows`.** `FALSE` by default: checks run locally. `check-record.yml`, which only verifies the local check record on pull requests (no R, about 10 seconds), is always written. `TRUE` adds the opt-in GitHub Actions workflows: `ci-hygiene.yml`, `ci-contract-audit.yml` and `ci-r-tests.yml`, plus `ci-manuscript.yml` for a research project ([Checks and CI](checks-and-ci.qmd)).
+- **`git`.** `FALSE` by default. `TRUE` runs `git init` (when the folder is not a repository yet) with `develop` as the first branch, because `main` is created at the first release. It sets `core.hooksPath` to `.githooks` and stages `.githooks/pre-push` and `tools/check` with their executable bit, so they also run on macOS and Linux clones. It never commits, creates a remote or pushes.
+- **`overwrite`.** `FALSE` by default; see below.
+
+In R, `verbose` and `debug` control the messages, as for every helper; the Python functions log through the standard `logging` module instead. In Python every argument after `collaboration` is keyword-only.
+
+### Nothing is replaced silently
+
+Before writing anything, the functions compare every target with what they would write. A file with the same bytes is left alone and reported as `unchanged`. A file with different content stops the whole call, with nothing written, unless `overwrite = TRUE`. A target path that is a folder also stops it. Both functions return a table with one row per file, `path` and `status` (`written`, `overwritten` or `unchanged`); in R it is returned invisibly. A second identical call therefore changes nothing and says so. The last message points to the README's quick start.
+
+## What each function writes
+
+### A research project
+
+`create_research_project()` writes:
+
+{{< include ../_generated/badges/create_research_project.md >}}
 
 ```
 learning-mobility/
-├── .gitignore                 research-project.gitignore, unchanged
-├── .gitattributes             LF for the hook, vendored helpers and sidecars
+├── .gitignore                   research-project.gitignore, unchanged
+├── .gitattributes               LF for the hook, tools/check, vendored helpers
+│                                and sidecars; output/ kept byte for byte
 ├── profile_learning-mobility.R  sourced first by every script and session
-├── .checks/README.md          check records: .checks/<content-hash>.json
-├── .githooks/pre-push         requires a check record before every push
-├── cso_project.yml            collaboration: multi-producer (committed)
-├── README.md                  quick start for a new co-author, layout
-├── CONTRIBUTING.md            ground rules, first clone, workflow, checks
-├── 00_functions/              README.md; with vendor = TRUE the helpers
-│                              and .toolkit_manifest.yml
-├── R/README.md                numbered scripts; R/functions/ for tested code
+├── .checks/README.md            check records: .checks/<content-hash>.json
+├── .githooks/pre-push           requires a check record before every push
+├── cso_project.yml              collaboration: multi-producer (committed)
+├── README.md                    quick start for a new co-author, layout
+├── CONTRIBUTING.md              ground rules, first clone, workflow, checks
+├── 00_functions/                README.md; with vendor = TRUE the helpers
+│                                and .toolkit_manifest.yml
+├── R/README.md                  numbered scripts; R/functions/ for tested code
 ├── data/
-│   ├── README.md              the provenance policy and the inputs table
-│   ├── input_manifest.csv     file, sha256, bytes, origin, sidecar
-│   └── provenance/README.md   sidecars of microdata kept outside the repo
-├── output/README.md           tables and figures, each with its sidecar
-├── paper/README.md            the manuscript, paper/main.tex
+│   ├── README.md                the provenance policy and the inputs table
+│   ├── input_manifest.csv       file, sha256, bytes, origin, sidecar
+│   └── provenance/README.md     sidecars of microdata kept outside the repo
+├── output/README.md             tables and figures, each with its sidecar
+├── paper/README.md              the manuscript, paper/main.tex
 ├── references/README.md
 ├── docs/README.md
 ├── tests/
-│   ├── testthat.R             the runner (reviewer mode; sources R/functions/)
+│   ├── testthat.R               the runner (reviewer mode; sources R/functions/)
 │   └── testthat/
-│       ├── helper-project.R   fixtures, local state, expect_envelope()
-│       └── test-project.R     cso_project.yml, manifest vs sidecars, mode
-├── tools/check.R              every local check
-├── tools/check                sh tools/check --record: run, then record
-├── .github/workflows/         check-record.yml (always); four more with
-│                              workflows = TRUE (opt-in)
-├── AGENTS.md, CLAUDE.md       rules for AI coding agents (CLAUDE.md: @AGENTS.md)
-├── decisions.md               decisions, who made them and why; AI use
-└── .claude/settings.json      Claude Code: the cso-toolkit plugin; no edits
-                               to 00_functions/
+│       ├── helper-project.R     fixtures, local state, expect_envelope()
+│       └── test-project.R       cso_project.yml, manifest vs sidecars, mode
+├── tools/check.R                every local check
+├── tools/check                  sh tools/check --record: run, then record
+├── .github/workflows/           check-record.yml (always); four more with
+│                                workflows = TRUE
+├── AGENTS.md, CLAUDE.md         rules for AI coding agents (CLAUDE.md: @AGENTS.md)
+├── decisions.md                 decisions, who made them and why; AI use
+└── .claude/settings.json        Claude Code: the cso-toolkit plugin; no edits
+                                 to 00_functions/
 ```
 
-An official-statistics repository follows DW-Production and the deposit's stage numbering:
+The agent files are explained in [Working with AI coding agents](46-ai-agents.qmd).
+
+### An official-statistics repository
+
+`create_official_stats_project()` follows DW-Production and the deposit's stage numbering:
+
+{{< include ../_generated/badges/create_official_stats_project.md >}}
 
 ```
 DW-Nutrition/
@@ -144,59 +178,305 @@ DW-Nutrition/
 └── .claude/settings.json            the plugin; no edits to 00_functions/
 ```
 
-The canonical raw data, API caches and promoted work data live in the deposit (Teams `060.DW-MASTER/01_dw_prep/011_rawdata` and `013_wrkdata`), which the profile's `teamsRawData` and `teamsWrkData` point to in producer mode and redirect to the sandbox in reviewer mode ([Wiring the contract](22-wiring-the-contract.qmd)). The repository keeps folders of the same names for local work, as DW-Production does, because a sector script made by `create_sector_script()` reads `01_dw_prep/011_rawdata/<sector>/` and writes `01_dw_prep/013_wrkdata/<sector>/` relative to the repository ([Scaffolding and the contract auditor](35-scaffolding-audit.qmd)). Their contents never reach git: `.gitignore` ignores `013_wrkdata/` outright, like every output folder, and keeps only the READMEs, sidecars and manifests of `011_rawdata/`; `tools/check.R` fails on anything tracked in `013_wrkdata/` (`OUTPUT_DIRS`) and on data tracked in `011_rawdata/` (`DATA_DIRS`). `013_wrkdata/` has no tracked file at all, so it appears with the first run. `01_dw_prep/012_codes/README.md` shows how to scaffold a sector's driver against the project's own profile.
+The canonical raw data, API caches and promoted work data live in the deposit (Teams `060.DW-MASTER/01_dw_prep/011_rawdata` and `013_wrkdata`). The profile's `teamsRawData` and `teamsWrkData` point there in producer mode and to the sandbox in reviewer mode ([Profiles and the mode switch](profiles-and-modes.qmd)).
 
-The `.gitignore`, the hook, the test helper and the workflows are the toolkit's templates byte for byte, so the rules a repository starts with are the ones the toolkit tests. Three files are set for the kind of project: `tools/check.R` (an official-statistics repository gets `OUTPUT_DIRS = "output outputs results wrk 013_wrkdata"`, the embargo check, `011_rawdata` added to `DATA_DIRS`, and `AUDIT_PATHS = "01_dw_prep/012_codes"`; the contract audit is `AUDIT_MODE = "advisory"` in a research project, where it reports raw reads such as `haven::read_dta()` without failing the checks, and `"blocking"` in official statistics, where any of them fails; see [Continuous integration and repository hygiene](45-ci-cd.qmd)), `tests/testthat.R` (which folder of function files the tests source) and `cso_project.yml` (the model, today's date and the members).
+The repository keeps folders of the same names for local work, as DW-Production does, because a sector script made by `create_sector_script()` reads `01_dw_prep/011_rawdata/<sector>/` and writes `01_dw_prep/013_wrkdata/<sector>/` relative to the repository. `01_dw_prep/012_codes/README.md` shows the call that scaffolds a sector's driver against the project's own profile. The contents of these folders never reach git: `.gitignore` ignores `013_wrkdata/` outright, like every output folder, and keeps only the READMEs, sidecars and manifests of `011_rawdata/`. `013_wrkdata/` has no tracked file at all, so it appears with the first run.
 
-The functions never replace a file silently. Before writing anything they compare every target with what they would write: a file with the same bytes is left alone and reported as `unchanged`, and a file with different content stops the whole call, with nothing written, unless `overwrite = TRUE`. Both return the list of files with their status (`written`, `overwritten`, `unchanged`), so a second identical call changes nothing and says so. To adopt the conventions in an existing repository, follow [Onboarding a repo](42-onboarding-example.qmd), or create a scaffold in an empty folder and copy what you need.
+After publication, the release pull request commits `releases/<vintage>/`: an `output_manifest.csv` (`file`, `sha256`, `bytes`, `deposited_at`, `deposit_path`) and copies of the deposited files' sidecars. Never before the publication date: those hashes describe embargoed figures.
 
-### The options
+### Set for the kind
 
-- **`vendor`, `toolkit_source`, `toolkit_version`.** `vendor` is `FALSE` by default. `TRUE` copies the helpers into `00_functions/` from a release tag of a git clone of cso-toolkit (`toolkit_source`, or `CSO_TOOLKIT_ROOT`), and writes `.toolkit_manifest.yml` with that tag as `pulled_version` and the commit it points to as `pulled_commit` ([The vendoring model](41-vendoring.qmd)). The tag is `toolkit_version`, by default the clone's latest release tag (`v0.9.1`, never a pre-release such as `v1.0.0-rc1`). The files are read from the tag's commit in the clone's history, never from its working tree, so a clone on another branch or with local edits still vendors exactly the released bytes; a tag the clone does not have stops the call before anything is written (`git fetch --tags` first). The default set is `dw_io.R`, `dw_api.R`, `cso_toolkit_sync.R`, `dw_provenance.R`, `dw_deposit.R`, `dw_project.R`, `test_scripts.R` and `zzz.R`, plus `profile_helpers.R` and `create_sector_script.R` for official statistics; a helper of that set which the tag does not have yet (`dw_project.R` before the release that adds it) is skipped and named in a message. A character vector picks the files, all of which must exist at the tag, and the three that `tools/check.R` needs are always added. Without vendoring, `tools/check.R` leaves out the `contract-audit` and `vintage` checks, with a comment saying to add them back once `00_functions/` is filled.
-- **`workflows`.** `FALSE` by default: checks run locally. `check-record.yml`, which only verifies the local check record on pull requests (no R, about 10 seconds), is always written ([Check records](45-ci-cd.qmd#check-records)). `TRUE` adds the other GitHub Actions workflows, which call the same `tools/check.R` and by default run only when started by hand and on pull requests into `main`.
-- **`git`.** `FALSE` by default. `TRUE` runs `git init` with `develop` as the first branch (`main` is created at the first release), sets `core.hooksPath` to `.githooks`, and stages the hook and `tools/check` with their executable bit so they also run on macOS and Linux clones. It never commits, creates a remote or pushes.
+The `.gitignore`, the hook, the test helper and the workflows are the toolkit's templates byte for byte, so the rules a repository starts with are the ones the toolkit tests. Three files are set for the kind of project:
+
+- **`tools/check.R`.** An official-statistics repository gets `OUTPUT_DIRS = "output outputs results wrk 013_wrkdata"` (the embargo: nothing tracked there), `011_rawdata` added to `DATA_DIRS`, and `AUDIT_PATHS = "01_dw_prep/012_codes"`. The contract audit is `AUDIT_MODE = "advisory"` in a research project, where it reports raw reads such as `haven::read_dta()` without failing the checks, and `"blocking"` in official statistics, where any of them fails. What each setting does is in [Checks and CI](checks-and-ci.qmd).
+- **`tests/testthat.R`.** Which folder of function files the tests source: `R/functions/` in a research project, none in official statistics.
+- **`cso_project.yml`.** The model, today's date as `collaboration_since`, and the members.
 
 ### The profile
 
-Every repository gets `profile_<project>.R`, named after its folder, the script every analysis script and interactive session sources first, as `profile_DW-Production.R` is in DW-Production ([Scaffolding and the contract auditor](35-scaffolding-audit.qmd)). Both kinds are written from one template, `templates/profile/profile.R`, and both pass `review_profile()` with no failure (the research profile shows one warning, for the Z: advisory it does not need):
+Every repository gets `profile_<project>.R`, named after its folder: the script every analysis script and interactive session sources first, as `profile_DW-Production.R` is in DW-Production. Both kinds are written from one template, `templates/profile/profile.R`; the official-statistics one adds a deposit block from `templates/profile/deposit.R`. The generated profile:
 
-- it reads `~/.config/user_config.yml` the way DW-Production's template lays it out, the user's block first (`user_config[[USERNAME]]`), top-level keys as a fallback;
-- it resolves `dw_mode` as `dw_mode_by_project[["<project>"]]`, then `dw_mode`, with no default; when neither is set it stops and shows the lines to add, with the user name filled in;
-- it sources the vendored helpers from `00_functions/`, `zzz.R` first, and reads the vintage from `.toolkit_manifest.yml`;
-- it never installs a package: a missing one stops the session with the list to install;
-- it resolves the collaboration model from `cso_project.yml` and ends with the sentinel `profile_<project> <- TRUE`, which sector scripts test before they run.
+- reads `~/.config/user_config.yml`, the user's block first and top-level keys as a fallback, and resolves `dw_mode` with no default; when it is not set, it stops and shows the lines to add, with the user name filled in;
+- sources the vendored helpers from `00_functions/`, `zzz.R` first, and reads the vintage from `.toolkit_manifest.yml`;
+- never installs a package: a missing one stops the session with the list to install;
+- resolves the collaboration model from `cso_project.yml` and ends with a sentinel, `profile_<project> <- TRUE`, where each run of characters other than letters, digits and `_` in the folder name becomes `_` (`profile_DW_Nutrition`). Sector scripts test the sentinel before they run.
 
-The official-statistics profile adds the deposit paths of [Wiring the contract](22-wiring-the-contract.qmd): `teamsRawData` and `teamsWrkData` point to Teams `060.DW-MASTER` under the user's `teamsRoot` for a producer, and to `sandboxRoot` for a reviewer, with the `*Canonical` aliases kept for reads; and it checks the Z: mirror with a probe that cannot hang on a disconnected drive, without stopping when the mirror is missing. Its `user_config.yml` keys are in `_config_template/user_config.yml`.
+The official-statistics profile also derives the deposit paths from `dw_mode` (`teamsRoot` for a producer, `sandboxRoot` for a reviewer) and checks the Z: mirror without ever stopping on it. Its `user_config.yml` keys are in `_config_template/user_config.yml`.
 
-## First steps for the person who created it
-
-1. Fill in the paragraphs the README leaves as comments: the question or the indicators, the authors, the outlet or the publication channel.
-2. Vendor the helpers if you did not (`00_functions/README.md`), and run `Rscript --no-init-file tools/check.R`. Every line should pass.
-3. Stage by path and make the first commit on `develop`; create `main` from it when you first release or circulate a version.
-4. Create the remote (private unless the project says otherwise), push both branches, make `develop` the default branch and protect both trunks, so changes reach them only through pull requests (`docs/git_workflow.md`).
-
-## First clone, for a co-author
-
-The generated `README.md` and `CONTRIBUTING.md` carry these steps, so a co-author can follow them without this chapter:
-
-1. Clone, then `git config core.hooksPath .githooks`, once, so every push needs a passing check record (`sh tools/check --record`).
-2. In `~/.config/user_config.yml`, under their user name, set `dw_mode: reviewer`. They switch to `producer` only for a session in which they deliberately produce or refresh results (for this repository alone: `dw_mode_by_project:` with the repository's name). In an official-statistics repository they also set `teamsRoot` and a `sandboxRoot` outside the repository (`_config_template/user_config.yml`). `source("profile_<project>.R")` then tells them what is still missing.
-3. Obtain the inputs under their own licence (research) or fill `inputs/` with `dw_fetch_inputs()` (official statistics), and verify that the bytes match the manifest: then their results are built from the same inputs.
-4. Run `Rscript --no-init-file tools/check.R`, and `sh tools/check --record` before the first push.
-5. In a multi-producer project, add their handle under `members:` in `cso_project.yml` in their first pull request.
+Both pass `review_profile()` with no failure; the research profile shows one warning, for the Z: advisory it does not need. How the profile reads the configuration, the precedence of `dw_mode_by_project` over `dw_mode`, the globals it derives and the ten checks of `review_profile()` are all in [Profiles and the mode switch](profiles-and-modes.qmd). The profile is yours once written: extend it.
 
 ## The collaboration setting
 
-`cso_project.yml` records how many people may produce results. In a `single-producer` project one person produces and the others review; in a `multi-producer` project every co-author may produce, always through a pull request, and `dw_save()` refuses to replace an output that was changed outside it or written by someone else during the session, unless the producer passes `takeover = TRUE` after checking. The setting is committed, so it is the same for everyone; a person's `dw_mode` stays in their own configuration. Change it later with `dw_set_collaboration()`, in one reviewed pull request ([Roles and the mode contract](21-roles-and-modes.qmd), "Collaboration model").
+`cso_project.yml` records how many people may produce results. You choose it when you create the repository, and it is committed, so it is the same for everyone. A person's `dw_mode` stays in their own configuration.
 
-## Local checks first
+Pick `single-producer` when one person produces and the others review, as in a production pipeline with one Database Manager. Pick `multi-producer` when every co-author may produce, always through a pull request; `dw_save()` then guards each output against being replaced by someone else's concurrent or unrecorded change. Change it later with `dw_set_collaboration()`, in one reviewed pull request, never by editing the file alone. What each model changes, and why switching midway is safe, is in [Roles and the mode contract](21-roles-and-modes.qmd), "Collaboration model".
 
-The repository starts with checks that run on the author's machine: `tools/check.R` runs every check with one command and the pre-push hook refuses a push without a passing check record, which `sh tools/check --record` writes after running every check. GitHub Actions are opt-in (`workflows = TRUE`) and run the same script; by default they run only when started by hand and on release pull requests into `main`, so routine work costs no Actions minutes. The pull request carries the output of `tools/check.R` for its head commit, and that record is the gate.
+## First steps for the person who created it
+
+1. Fill in the paragraphs the README leaves as comments: the question or the indicators, the authors, the outlet or the publication channel (and, for official statistics, the Database Manager).
+2. Vendor the helpers if you did not (`00_functions/README.md` says how), and put `contract-audit` and `vintage` back in `CHECKS` at the top of `tools/check.R`.
+3. Run `sh tools/check`. Every line should pass.
+4. Stage by path and make the first commit on `develop`. Create `main` from it when you first release or circulate a version.
+5. Create the remote (private unless the project says otherwise), push both branches, make `develop` the default branch and protect both trunks, so changes reach them only through pull requests ([`docs/git_workflow.md`](https://github.com/unicef-drp/cso-toolkit/blob/develop/docs/git_workflow.md)). On GitHub, require the `check-record` status and up-to-date branches for both.
+
+## First clone, for a co-author
+
+The generated `README.md` ("Quick start") and `CONTRIBUTING.md` ("Joining the project") carry these steps, so a co-author can follow them without this chapter:
+
+1. Clone, then `git config core.hooksPath .githooks`, once, so every push needs a passing check record.
+2. In `~/.config/user_config.yml`, under their user name, set `dw_mode: reviewer`. They switch to `producer` only for a session in which they deliberately produce or refresh results, or for this repository alone with `dw_mode_by_project:` and the repository's name. In an official-statistics repository they copy `_config_template/user_config.yml`, or add its keys to the file they already have, and also set `teamsRoot` and a `sandboxRoot` outside the repository and outside OneDrive. Their filled-in copy is never committed. `source("profile_<project>.R")` then tells them what is still missing.
+3. Get the inputs. In a research project they obtain each input under their own licence (`data/README.md`) and verify that the bytes match the manifest before running anything; a mismatch means a different release or vintage. In official statistics they fill `inputs/` with `dw_fetch_inputs()`, which checks every copy's sha256 against the deposit and stops on a mismatch. Then their results are built from the same inputs.
+4. In official statistics, reproduce the latest vintage in reviewer mode and compare it with the deposit (`dw_compare()`, `dw_provenance_diff()`). A clean comparison means their setup reproduces the published figures.
+5. Run `sh tools/check`, and `sh tools/check --record` before the first push.
+6. In a multi-producer project, add their handle under `members:` in `cso_project.yml` in their first pull request.
+
+## Adopting the toolkit in an existing repository
+
+An existing repository cannot simply be scaffolded over: the functions refuse to replace a file that differs, and its code already reads and writes data its own way. Adoption is a sequence of steps instead. Each step below says what to do and links to the chapter with the detail.
+
+The running example is a deposit-bearing pipeline, call it `unicef-drp/UNPD-Population`, one of the DW-Production-style repositories that publish curated data to the shared Teams and Z: warehouse. Every step is repository-neutral: substitute your own owner, repository and sector codes. A research repository follows the same steps, with outputs in `output/` instead of the deposit.
+
+By the end, the pipeline writes to the canonical deposit only in producer mode, isolates reviewer runs in a sandbox, and proves on every push that no script bypasses the IO and API contracts.
+
+A quick way to get the files you will copy: run the matching scaffolder into an empty scratch folder with `vendor = TRUE`, then copy what you need from there into the repository.
+
+### 1. Decide what to adopt
+
+Before copying anything, settle two questions.
+
+**Which helpers does the pipeline need?** The toolkit is modular. A repository that only reads and writes deposit files needs the IO contract (`dw_save()`, `dw_use()`, `dw_compare()`) and the sync helper. One that also fetches from upstream APIs needs the external-API contract (`dw_api_fetch()`, `dw_api_cached()`, `dw_api_inventory()`). Vendor only what the code calls; the manifest's `vendored:` list says what you took.
+
+**Which languages?** The three implementations do not cover the same functions. The coverage line under each function in this handbook says where it exists, and the [coverage matrix](../appendices/a-coverage-matrix.qmd) has them all. Check the functions your pipeline would use now, before the migration starts. In particular, if the Stata code needs a remote source and the API wrapper is not available there, keep the fetching in R or Python, let it cache the source in the deposit, and have the Stata code read the cache with `dw_use`.
+
+### 2. Vendor and pin
+
+Copy the helpers into `00_functions/`, commit them, and pin the vintage in `00_functions/.toolkit_manifest.yml`, next to the helpers it tracks. The committed copies freeze the vintage in your git history, so a reviewer with no network access can still re-run the pipeline. Keep `vendored:` honest: list a file only if it is in `00_functions/`.
+
+For a deposit, `pulled_version` must be a real release tag, never `inrepo` or an `unreleased` suffix: the Database Manager's pre-deposit checklist (`templates/dbm_submission_template.md`) blocks sign-off otherwise.
+
+The routes for R, Python and Stata, every manifest field and the update functions are in [Vendoring and updates](vendoring-and-updates.qmd).
+
+### 3. Wire the profile
+
+This is the load-bearing step. Which folder a `dw_save()` lands in, and whether an API fetch is allowed, both follow from `dw_mode` and the globals the profile derives from it.
+
+The profile must hard-fail when `dw_mode` is missing or is anything other than `producer` or `reviewer`. Defaulting to either side is unsafe: defaulting to producer corrupts the deposit, and defaulting to reviewer surprises a Database Manager mid-deposit. It must also print a banner that makes the session's mode unmistakable.
+
+You can take the generated `profile_<project>.R` from the scratch scaffold, generate one with `create_profile()`, or keep your own and audit it with `review_profile()`. In a pipeline with a conductor script, shadow the path globals once at the top of the conductor rather than editing every sector script. All of this is in [Profiles and the mode switch](profiles-and-modes.qmd).
+
+### 4. Move raw IO to `dw_use()` and `dw_save()`
+
+Now find every raw read, write and HTTP call in the pipeline and route it through the wrappers. The contract audit lists them for you: copy `tools/check.R` from the scratch scaffold, set `AUDIT_PATHS` to your code folders and run it with `AUDIT_MODE` advisory, which reports each violation without failing:
+
+```bash
+AUDIT_MODE=advisory sh tools/check --only contract-audit
+```
+
+Each reported line becomes a wrapper call. Reads go through `dw_use()`:
+
+{{< include ../_generated/badges/dw_use.md >}}
+
+Writes go through `dw_save()`:
+
+{{< include ../_generated/badges/dw_save.md >}}
+
+::: {.panel-tabset}
+
+#### R {.unnumbered .unlisted}
+
+```r
+# Before: raw paths, no provenance, no mode routing
+wpp <- read.csv(file.path(teamsRawData, "pop", "wpp_2024.csv"))
+write.csv(df, file.path(teamsWrkData, "pop", "dw_pop_tot.csv"), row.names = FALSE)
+
+# After: routed by dw_mode, with a provenance sidecar on every write
+wpp <- dw_use(name = "wpp_2024.csv", sector = "pop", kind = "raw")
+dw_save(df, name = "dw_pop_tot.csv", sector = "pop", kind = "wrk",
+        isid = c("REF_AREA", "TIME_PERIOD"),
+        metadata = list(title = "Total population, by area and year"))
+```
+
+#### Python {.unnumbered .unlisted}
+
+```python
+# Before
+wpp = pd.read_csv(os.path.join(teamsRawData, "pop", "wpp_2024.csv"))
+df.to_csv(os.path.join(teamsWrkData, "pop", "dw_pop_tot.csv"), index=False)
+
+# After
+wpp = dw_use(name="wpp_2024.csv", sector="pop", kind="raw")
+dw_save(df, name="dw_pop_tot.csv", sector="pop", kind="wrk",
+        isid=["REF_AREA", "TIME_PERIOD"],
+        metadata={"title": "Total population, by area and year"})
+```
+
+#### Stata {.unnumbered .unlisted}
+
+```stata
+* Before
+use "$teamsRawData/pop/wpp_2024.dta", clear
+save "$teamsWrkData/pop/dw_pop_tot.dta", replace
+
+* After
+dw_use , filename("wpp_2024.dta") path("$teamsRawData/pop")
+dw_save , filename("dw_pop_tot.dta") path("$teamsWrkData/pop") ///
+          idvars("REF_AREA TIME_PERIOD")                       ///
+          title("Total population, by area and year")
+```
+
+:::
+
+Calls to an external API go through `dw_api_fetch()`, which caches the response in the deposit and records where it came from:
+
+{{< include ../_generated/badges/dw_api_fetch.md >}}
+
+::: {.panel-tabset}
+
+#### R {.unnumbered .unlisted}
+
+```r
+wb <- dw_api_fetch(
+  api        = "wb",
+  cache_key  = "wb_lp_primary_2000_2024",
+  indicator  = "SE.LPV.PRIM",
+  start_date = 2000,
+  end_date   = 2024)
+```
+
+#### Python {.unnumbered .unlisted}
+
+```python
+wb = dw_api_fetch(
+    "wb", "wb_lp_primary_2000_2024",
+    indicator=["SE.LPV.PRIM"], start_date=2000, end_date=2024)
+```
+
+:::
+
+The arguments of each wrapper, the cross-language differences in their options, and the full list of supported APIs are in [The IO contract](31-io.qmd) and [External APIs](32-external-api.qmd). A line that legitimately reads a file raw, such as the profile's own read of `user_config.yml`, is marked `# cso-allow: <rule>` ([Checks and CI](checks-and-ci.qmd)).
+
+**The first producer run.** Switch your `user_config.yml` to `dw_mode: "producer"`, confirm that the banner says PRODUCER, and run the pipeline. Two things happen on this run that never happen again, because the run fills state that later runs reuse. Each API source is fetched live and cached, so later runs hit the cache; caches never expire on their own, and the Database Manager decides when to refresh them (`refresh = TRUE`). And each output is written to the deposit where no earlier vintage exists, with its sidecar, and mirrored to Z: when the profile finds it.
+
+Then list what you cached, for the deposit checklist:
+
+{{< include ../_generated/badges/dw_api_inventory.md >}}
+
+::: {.panel-tabset}
+
+#### R {.unnumbered .unlisted}
+
+```r
+dw_api_inventory()   # every cache, with size, mtime and fetched_at
+```
+
+#### Python {.unnumbered .unlisted}
+
+```python
+dw_api_inventory()
+```
+
+:::
+
+### 5. Re-run as a reviewer and compare
+
+Now prove the deposit is reproducible. Switch a second person, or your own configuration, to `dw_mode: "reviewer"` with a `sandboxRoot`, and confirm the banner says REVIEWER. Run the same pipeline. Every artifact lands in the sandbox, and the canonical deposit's modification times are the same before and after the run. A cache that is missing is not fetched: `dw_api_fetch()` stops and says the input must be deposited first, which is the contract working as designed.
+
+Then compare the reviewer's file with the deposited one. The reference side is read through the `*Canonical` alias, which reviewer-mode code may read but never write:
+
+{{< include ../_generated/badges/dw_compare.md >}}
+
+::: {.panel-tabset}
+
+#### R {.unnumbered .unlisted}
+
+```r
+report <- dw_compare(
+  current            = file.path(teamsWrkData, "pop", "dw_pop_tot.csv"),
+  reference          = file.path(teamsWrkDataCanonical, "pop", "dw_pop_tot.csv"),
+  by                 = c("REF_AREA", "TIME_PERIOD"),
+  value_cols         = c("OBS_VALUE", "DATA_SOURCE"),
+  numeric_value_cols = "OBS_VALUE",
+  tol                = 1e-5,
+  label              = "dw_pop_tot",
+  write_report_to    = file.path(tempdir(), "pop_compare"))
+report$summary
+```
+
+#### Python {.unnumbered .unlisted}
+
+```python
+report = dw_compare(
+    current=os.path.join(teamsWrkData, "pop", "dw_pop_tot.csv"),
+    reference=os.path.join(teamsWrkDataCanonical, "pop", "dw_pop_tot.csv"),
+    by=["REF_AREA", "TIME_PERIOD"],
+    value_cols=["OBS_VALUE", "DATA_SOURCE"],
+    numeric_value_cols=["OBS_VALUE"],
+    tol=1e-5,
+    label="dw_pop_tot",
+    write_report_to=os.path.join(tempfile.gettempdir(), "pop_compare"))
+report["summary"]
+```
+
+#### Stata {.unnumbered .unlisted}
+
+```stata
+dw_compare , current("$teamsWrkData/pop/dw_pop_tot.dta")              ///
+             reference("$teamsWrkDataCanonical/pop/dw_pop_tot.dta")   ///
+             idvars("REF_AREA TIME_PERIOD")                           ///
+             valuevars("OBS_VALUE DATA_SOURCE")                       ///
+             tol(1e-5) label("dw_pop_tot")                            ///
+             report("`c(tmpdir)'/pop_compare.md")
+```
+
+:::
+
+The summary counts the rows `added`, `removed` and `changed`. On a clean reproduction all three are zero. When they are not, the Database Manager's submission template classifies each non-zero result:
+
+| Class | Meaning |
+|---|---|
+| `stale-cache` | the API cache was not refreshed after the source changed upstream |
+| `retired-upstream-indicator` | an indicator in the earlier vintage was retired upstream |
+| `methodology-change` | the sector's code changed and the new outputs are correct |
+| `rounding` | floating-point differences below the tolerance |
+| `bug` | a new finding, which needs an issue |
+| `uninvestigated` | not classified yet |
+
+A deposit cannot be signed off while any row is still `uninvestigated`.
+
+This reviewer re-run and its compare report are what adoption means in practice: a reviewer-mode run produces every artifact under `sandboxRoot`, the canonical deposit is unchanged, and the report exists.
+
+### 6. Run the checks
+
+Finally, make the guarantees hold on every push rather than depend on someone remembering them. Copy from the scratch scaffold `tools/check.R`, `tools/check`, `.githooks/pre-push`, `.checks/README.md` and `.github/workflows/check-record.yml`, set the settings at the top of `tools/check.R` for your folders, and enable the hook once per clone (`git config core.hooksPath .githooks`). Merge the scaffold's `.gitignore` into yours rather than replacing it.
+
+Once step 4 is done and the code reads through the wrappers, set `AUDIT_MODE` to `"blocking"`, so a new raw read fails the checks. Then `sh tools/check --record` records a passing run, which the pre-push hook and the `check-record` status require.
+
+Checks never run the pipeline in producer mode. CI cannot reach the corporate-network-only APIs, and it must never write to a real deposit: it audits the contract with cached fixtures in reviewer mode, and live fetching belongs in a producer session on a machine with network access. Every check, the check records, the hook and the opt-in workflows are in [Checks and CI](checks-and-ci.qmd).
+
+### Recap: the adoption checklist
+
+A repository has adopted the contract when all of these hold. They match the sign-off section of the Database Manager's submission template.
+
+| # | Check | How to confirm |
+|---|---|---|
+| 1 | Helpers vendored into `00_functions/` | files present and committed |
+| 2 | Manifest pins a real tag | `pulled_version` in `.toolkit_manifest.yml` is `vX.Y.Z`, not `inrepo` |
+| 3 | Profile hard-fails without `dw_mode` | sourcing it with the key absent stops the session |
+| 4 | Mode banner is unmistakable | a reviewer session prints the sandbox banner |
+| 5 | Conductor shadows the path globals | the globals are reassigned before any other script is sourced |
+| 6 | First producer run caches and deposits | `dw_api_inventory()` shows the caches; each deposited file has its sidecar |
+| 7 | Reviewer run is deposit-safe | every artifact under `sandboxRoot`; the deposit's modification times unchanged |
+| 8 | Compare report exists | the `dw_compare()` summary is written; no row left `uninvestigated` |
+| 9 | No script bypasses the contracts | the contract audit, in blocking mode, passes |
+| 10 | Checks gate every push | `sh tools/check --record` passes; the pull request's `check-record` status is green |
+
+Rows 7 and 8, and the reviewer run behind them, are the test that the contract is real and not merely declared. Once they pass and the checks enforce them, the repository is a deposit-bearing consumer of the same contract as DW-Production. To keep it current as the toolkit releases new vintages, see [Vendoring and updates](vendoring-and-updates.qmd).
 
 ## Where to read more
 
+- The profile, `user_config.yml` and the mode switch: [Profiles and the mode switch](profiles-and-modes.qmd).
+- Vendoring, the manifest and updating: [Vendoring and updates](vendoring-and-updates.qmd).
+- The checks, check records, the hook, the workflows and the contract audit: [Checks and CI](checks-and-ci.qmd).
 - The `.gitignore` rules and the reasoning behind each block: [`docs/gitignore_guidelines.md`](https://github.com/unicef-drp/cso-toolkit/blob/develop/docs/gitignore_guidelines.md).
-- The checks, the testthat skeleton, the workflows and merge gating: [Continuous integration and repository hygiene](45-ci-cd.qmd).
 - The collaboration model: [Roles and the mode contract](21-roles-and-modes.qmd).
-- Vendoring and the manifest: [The vendoring model](41-vendoring.qmd) and [Vintage sync](34-vintage-sync.qmd).
-- The provenance sidecar: [Appendix B](../appendices/b-provenance-schema.qmd).
+- The provenance sidecar: [Provenance and errors](23-provenance-and-errors.qmd) and [Appendix B](../appendices/b-provenance-schema.qmd).
