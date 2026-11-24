@@ -72,7 +72,11 @@
   list(id = "api-fromjson-url", family = "api",
        pattern = "(?<![a-zA-Z0-9_.])(?:jsonlite::)?fromJSON\\s*\\(\\s*[\"'](?:https?|ftp)://",
        message = "fromJSON() called on a URL string (bypasses the cache).",
-       suggest = "dw_api_fetch(api = 'json_get', cache_key = ..., url = ...)"),
+       suggest = "dw_api_fetch(api = 'json_get', cache_key = ..., url = ...)",
+       # The URL is a string literal, which every other rule sees scrubbed to
+       # "": match this one against the raw line (comment removed) instead,
+       # or it can never fire (#237).
+       raw = TRUE),
   list(id = "api-sdmx",        family = "api",
        pattern = "(?<![a-zA-Z0-9_.])(?:rsdmx::)?readSDMX\\s*\\(",
        message = "Direct rsdmx::readSDMX call.",
@@ -115,8 +119,10 @@
 #' @param ignore_dirs Character vector. Directory basenames to skip (e.g.
 #'   `"renv"`, `"packrat"`, `".git"`).
 #' @param custom_rules Optional list of additional rules -- each element a
-#'   list with `id`, `pattern`, `family`, `message`, `suggest`. Merged with
-#'   the built-in registry.
+#'   list with `id`, `pattern`, `family`, `message`, `suggest`, and
+#'   optionally `raw = TRUE` to match the pattern against the line before
+#'   string literals are blanked (for a rule that looks inside a string, such
+#'   as a URL). Merged with the built-in registry.
 #' @param error_on_violation Logical. If `TRUE`, `stop()` after reporting
 #'   when any `family == "io"` or `"api"` violation is found (useful in CI).
 #'   Default `FALSE`.
@@ -202,10 +208,12 @@ test_scripts <- function(path,
         trimws(strsplit(ids_str, ",")[[1]])
       } else character(0)
       no_comment <- sub("#.*$", "", no_str)
+      raw_no_comment <- sub("#.*$", "", raw)
 
       for (rule in rules) {
         if (rule$id %in% allowed_ids) next
-        if (grepl(rule$pattern, no_comment, perl = TRUE)) {
+        target <- if (isTRUE(rule$raw)) raw_no_comment else no_comment
+        if (grepl(rule$pattern, target, perl = TRUE)) {
           violations[[length(violations) + 1]] <- data.frame(
             file    = f,
             line    = i,
