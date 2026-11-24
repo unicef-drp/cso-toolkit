@@ -1,0 +1,6 @@
+REF_AREA,Region_Code,value,weight
+AAA,R1,100,10
+BBB,R1,,20
+CCC,R2,50,5
+DDD,R2,25,1000
+EEE,R3,,7

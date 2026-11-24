@@ -148,6 +148,14 @@ def aggregate_weighted_mean(cid: str) -> None:
     out_csv(a, cid)
 
 
+def aggregate_total(cid: str) -> None:
+    plain()
+    x = m.dw_use(fx("aggregate_total_input.csv"))
+    a = m.aggregate_data_v2(x, value="value", weight="weight", by=["Region_Code"],
+                            method="total", global_=True, global_label="WORLD")
+    out_csv(a, cid)
+
+
 def version_compare(cid: str) -> None:
     case = json.loads((REPO / "conformance" / "cases" / f"{cid}.json").read_text(encoding="utf-8"))
     out_json({"behind": [sync._cso_version_behind(a, b) for a, b in case["pairs"]]}, cid)
@@ -289,6 +297,7 @@ CASES = {
     "provenance_sidecar": provenance_sidecar,
     "compare_counts": compare_counts,
     "aggregate_weighted_mean": aggregate_weighted_mean,
+    "aggregate_total": aggregate_total,
     "version_compare": version_compare,
     "config_user_block": config_user_block,
     "compare_diagnose": compare_diagnose,
