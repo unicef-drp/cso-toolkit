@@ -110,17 +110,65 @@ def test_a_language_that_did_not_run(tmp_path):
 
 
 def test_every_shipped_case_is_well_formed():
-    ids = set()
-    for p in sorted((HERE / "cases").glob("*.json")):
-        c = json.loads(p.read_text(encoding="utf-8"))
-        assert c["id"] == p.stem and c["id"] not in ids
-        ids.add(c["id"])
-        assert c["kind"] in ("values", "json")
-        for lang in certify.LANGS:
-            assert (lang in c["languages"]) != (lang in c.get("gaps", {})), (p.name, lang)
-        for f in c["fixtures"]:
-            assert (HERE / "fixtures" / f).exists(), (p.name, f)
-        if c["kind"] == "values":
-            assert set(c["keys"]) <= set(c["columns"])
-        else:
-            assert isinstance(c["expect"], dict) and c["expect"]
+    assert list((HERE / "cases").glob("*.json"))
+    assert certify.lint_cases(HERE.parent) == []
+
+
+def lint_repo(tmp: Path, cases: dict, retired: str = "") -> list:
+    (tmp / "conformance" / "cases").mkdir(parents=True)
+    (tmp / "conformance" / "fixtures").mkdir()
+    for name, c in cases.items():
+        (tmp / "conformance" / "cases" / f"{name}.json").write_text(json.dumps(c), encoding="utf-8")
+    if retired:
+        (tmp / "conformance" / "retired_ids.txt").write_text(retired, encoding="utf-8")
+    return certify.lint_cases(tmp)
+
+
+def test_lint_names_a_wrong_id_a_retired_id_and_a_bad_register(tmp_path):
+    errs = lint_repo(tmp_path, {
+        "good": case(id="good"),
+        "renamed": case(id="old_name"),
+        "gone": case(id="gone"),
+        "both": case(id="both", gaps={"stata": {"issue": "#1", "reason": "r"}}),
+    }, retired="# comment\ngone 2026-11-24 merged into good\n")
+    assert len(errs) == 3
+    assert any(e.startswith("renamed.json: id 'old_name' is not the file name") for e in errs)
+    assert any(e.startswith("gone.json: id 'gone' is retired") for e in errs)
+    assert any(e.startswith("both.json: stata must be in") for e in errs)
+
+
+def test_lint_checks_fixtures_and_kinds(tmp_path):
+    errs = lint_repo(tmp_path, {
+        "v": case(id="v", kind="values", fixtures=["absent.csv"], columns=["a"], keys=["b"]),
+        "j": case(id="j", expect={}),
+    })
+    assert sorted(e.split(":")[0] for e in errs) == ["j.json", "v.json", "v.json"]
+
+
+# Stata's own suites ---------------------------------------------------------
+
+def test_the_certificate_covers_the_stata_suites():
+    assert "stata/tests" in certify.CERT_PATHS
+    assert [s.name for s in certify.stata_suites(HERE.parent)] == sorted(
+        p.name for p in (HERE.parent / "stata" / "tests").glob("test_*.do"))
+
+
+def test_the_wrapper_captures_the_suite_and_writes_its_return_code(tmp_path):
+    w = certify.suite_wrapper(tmp_path, tmp_path / "stata/tests/test_x.do", tmp_path / "x.result")
+    lines = w.splitlines()
+    assert lines[0] == f'cd "{tmp_path.as_posix()}"'
+    assert lines[1].startswith("capture noisily do ") and "test_x.do" in lines[1]
+    assert "local cert_rc = _rc" in lines
+    assert f'"{(tmp_path / "x.result").as_posix()}"' in w and "\"rc `cert_rc'\"" in w
+
+
+def test_suites_pass_fail_missing_and_not_run(tmp_path):
+    (tmp_path / "ok.result").write_text("rc 0\n", encoding="utf-8")
+    (tmp_path / "bad.result").write_text("rc 9\n", encoding="utf-8")
+    res = certify.judge_suites(["ok", "bad", "died"], tmp_path, None)
+    assert {k: v["status"] for k, v in res.items()} == {"ok": "pass", "bad": "fail",
+                                                         "died": "missing"}
+    assert res["bad"]["note"].startswith("r(9)")
+    assert "no result file" in res["died"]["note"]
+    res = certify.judge_suites(["ok"], tmp_path, "Stata not found (set STATA_EXE)")
+    assert res["ok"] == {"status": "not_run", "note": "Stata not found (set STATA_EXE)"}
