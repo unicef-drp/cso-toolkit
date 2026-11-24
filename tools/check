@@ -1,14 +1,18 @@
 #!/bin/sh
 # The toolkit's own check: run it before you push. The pre-push hook in
 # .githooks/ runs it for you once enabled (git config core.hooksPath .githooks).
-#   sh tools/check             fast checks, standard-library Python only: seconds
-#   sh tools/check --full      also the Python and R test suites: minutes
-#   sh tools/check --release   a missing parity certificate fails instead of warning
-#   sh tools/check --rev <c>   check commit <c>'s certificate instead of HEAD's
-#                              (repeatable; the pre-push hook passes the pushed commits)
-# The fast checks: version stamps, parity case files, generated handbook tables
-# (all three read the working tree), and whether the commit has a committed
-# parity certificate (read from git). CI repeats the first three on pull requests.
+#   sh tools/check                   fast checks, standard-library Python only: seconds
+#   sh tools/check --full            also the Python and R test suites: minutes
+#   sh tools/check --rev <c>         check commit <c>'s certificate instead of HEAD's;
+#                                    a missing one is a warning (repeatable)
+#   sh tools/check --release-rev <c> commit <c> is a release (main, a v* tag): its
+#                                    certificate must exist, and it must be the clean
+#                                    checkout, since the file checks read the tree (repeatable)
+#   sh tools/check --release         the same for HEAD, or for every --rev given
+# The fast checks: version stamps, parity case files and generated handbook
+# tables, which read the working tree, and the parity certificate, read from git.
+# CI repeats the first three on pull requests. The pre-push hook passes the
+# pushed commits: --release-rev for main and v* tags, --rev for the rest.
 # CSO_PYTHON: the Python to use (for --full, one with pytest and the toolkit's
 # dependencies). CSO_RSCRIPT: Rscript, if it is not on the PATH.
 cd "$(git rev-parse --show-toplevel)" || exit 1
@@ -16,19 +20,37 @@ cd "$(git rev-parse --show-toplevel)" || exit 1
 full=0
 release=0
 revs=""
+rrevs=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --full) full=1 ;;
     --release) release=1 ;;
-    --rev)
-      [ -n "${2:-}" ] || { echo "tools/check: --rev needs a commit" >&2; exit 2; }
-      revs="$revs $2"
+    --rev|--release-rev)
+      [ -n "${2:-}" ] || { echo "tools/check: $1 needs a commit" >&2; exit 2; }
+      if [ "$1" = "--rev" ]; then revs="$revs $2"; else rrevs="$rrevs $2"; fi
       shift ;;
-    *) echo "tools/check: unknown option $1 (use --full, --release or --rev <commit>)" >&2; exit 2 ;;
+    *) echo "tools/check: unknown option $1 (use --full, --release, --rev <c> or --release-rev <c>)" >&2
+       exit 2 ;;
   esac
   shift
 done
-[ -n "$revs" ] || revs="HEAD"
+if [ "$release" = 1 ]; then
+  rrevs="$rrevs ${revs:-HEAD}"
+  revs=""
+fi
+[ -n "$revs$rrevs" ] || revs="HEAD"
+
+# Resolve every commit first: a bad one is reported before the slow checks.
+resolve() {
+  for r in "$@"; do
+    git rev-parse --verify --quiet "$r^{commit}" 2>/dev/null || {
+      echo "tools/check: unknown commit $r" >&2
+      return 2
+    }
+  done
+}
+shas=$(resolve $revs) || exit 2
+rshas=$(resolve $rrevs) || exit 2
 
 # A Python that runs: `command -v python3` also finds Windows' Store placeholder.
 PY=""
@@ -40,44 +62,47 @@ if [ -z "$PY" ]; then echo "tools/check: no Python found; set CSO_PYTHON." >&2; 
 py_run() { if [ "$PY" = "py -3" ]; then py -3 "$@"; else "$PY" "$@"; fi; }
 
 failed=""
+fail() { failed="$failed
+  - $1"; }
 step() {
   name=$1
   shift
   echo "== $name"
-  "$@" || failed="$failed
-  - $name"
+  "$@" || fail "$name"
 }
 
 step "version stamps" py_run tools/check_versions.py
 step "parity case files" py_run conformance/certify.py --lint
 step "handbook tables" py_run book/_scripts/gen_tables.py --check
 
-# The three checks above read the working tree: say so when it is not what is
-# being checked or pushed.
+# The three checks above read the working tree. For an ordinary push that is a
+# note; for a release it must be exactly the commit being released.
 head=$(git rev-parse HEAD)
-if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
-  echo "   note: uncommitted changes; the checks above read them, a push does not"
-fi
-shas=""
-for r in $revs; do
-  sha=$(git rev-parse --verify --quiet "$r^{commit}") || { echo "tools/check: unknown commit $r" >&2; exit 2; }
-  shas="$shas $sha"
-  if [ "$sha" != "$head" ]; then
-    echo "   note: the checks above read the working tree at HEAD, not $r"
+dirty=$(git status --porcelain --untracked-files=no)
+[ -z "$dirty" ] || echo "   note: uncommitted changes; the checks above read them, a push does not"
+others=0
+for s in $shas; do [ "$s" = "$head" ] || others=$((others + 1)); done
+[ "$others" = 0 ] || echo "   note: the checks above read the working tree at HEAD, not $others other pushed commit(s)"
+for s in $rshas; do
+  short=$(git rev-parse --short "$s")
+  if [ "$s" != "$head" ] || [ -n "$dirty" ]; then
+    echo "== release commit $short"
+    echo "   the file checks read the working tree, so check out the release commit cleanly"
+    echo "   and push from there: git switch --detach $short"
+    fail "release commit $short is not the clean checkout"
   fi
 done
 
-for r in $shas; do
-  echo "== parity certificate ($(git rev-parse --short "$r"))"
-  if ! py_run conformance/certify.py --verify --rev "$r"; then
-    if [ "$release" = 1 ]; then
-      failed="$failed
-  - parity certificate ($r)"
-    else
-      echo "   (a warning here: record one with sh tools/certify --record before the pull request"
-      echo "    merges, if the branch changes r/R, python/src, stata/src, stata/tests or conformance/)"
-    fi
-  fi
+for s in $shas $rshas; do
+  short=$(git rev-parse --short "$s")
+  echo "== parity certificate ($short)"
+  py_run conformance/certify.py --verify --rev "$s" && continue
+  case " $rshas " in
+    *" $s "*) fail "parity certificate ($short)" ;;
+    *) echo "   (a warning here: record one with sh tools/certify --record before the pull request"
+       echo "    merges, if the branch changes r/R, python/src, stata/src, stata/tests or the"
+       echo "    conformance harness)" ;;
+  esac
 done
 
 if [ "$full" = 1 ]; then
