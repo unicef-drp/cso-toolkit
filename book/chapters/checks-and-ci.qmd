@@ -443,9 +443,9 @@ The generated profiles already carry these annotations, and so do a few toolkit 
 
 Because the auditor matches text, it misfires in predictable ways.
 
-- **Same name, different function.** In R, any function called `request(`, `save(` or `load(` matches, whatever package it comes from. The Python patterns have no lookbehind, so `pl.read_csv(` (polars) and a project function named `my_read_csv(` both match `io-read-csv`. Rename the project function, or mark a genuine exception with `# cso-allow:`.
+- **Same name, different function.** In R, any function called `request(`, `save(` or `load(` matches, whatever package it comes from. Both languages' patterns start at a name boundary, so `my_read_csv(` or `pl.read_csv(` (polars) does not match `io-read-csv`, but a bare call with a rule's name does. Rename the project function, or mark a genuine exception with `# cso-allow:`.
 - **Aliases hide calls.** `import wbgapi as wb` followed by `wb.data.DataFrame(...)` is not caught; `api-wbgapi` sees only the full module name. The same holds for any call reached through an alias or a variable.
-- **`api-fromjson-url` does not fire.** The rule looks for `fromJSON("https://…")`, but the URL is a string literal and is scrubbed before matching, so the call passes the audit. Use `dw_api_fetch(api = 'json_get', ...)` regardless.
+- **Only a literal URL counts for `api-fromjson-url`.** Lines are matched after string literals are blanked, so this one rule is matched against the raw line instead: `fromJSON("https://…")` is flagged, but `fromJSON(url)`, with the URL in a variable, is not. Use `dw_api_fetch(api = 'json_get', ...)` either way. A custom rule that needs to look inside a string can do the same with `raw = TRUE`.
 - **It cannot judge a correct call.** A lexical scan cannot tell whether a `dw_save()` uses the right `sector` or `isid`. It removes the most common, most mechanical failure, a raw call written by hand; it does not replace review.
 
 ### Using it in CI
