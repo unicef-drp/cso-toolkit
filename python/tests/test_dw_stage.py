@@ -198,6 +198,68 @@ def test_unchanged_source_is_not_rehashed(fx, monkeypatch):
     assert calls == [_normalize(fx["sandbox"])]
 
 
+def test_a_recopy_changes_the_sandbox_mtime(fx):
+    # Guards T2 and T8: their "mtime unchanged" check only proves no re-copy
+    # if a re-copy would change the mtime (copyfile, not copy2, as in R).
+    m.dw_stage(str(fx["sandbox"]))
+    before = fx["sandbox"].stat().st_mtime
+    time.sleep(1.1)
+    m.dw_stage(str(fx["sandbox"]), overwrite=True)
+    assert fx["sandbox"].stat().st_mtime != before
+
+
+def test_failed_copy_retries_then_stops_and_cleans_up(fx, monkeypatch):
+    import shutil
+    calls = []
+
+    def failing_copy(src, dst, *a, **k):
+        calls.append(dst)
+        Path(dst).write_text("partial", encoding="utf-8")
+        raise OSError(28, "No space left on device")
+
+    monkeypatch.setattr(shutil, "copyfile", failing_copy)
+    with pytest.raises(RuntimeError, match="COPY INTEGRITY"):
+        m.dw_stage(str(fx["sandbox"]))
+    assert len(calls) == 2  # one retry, as in R
+    assert not Path(str(fx["sandbox"]) + ".dw_stage.tmp").exists()
+    assert not fx["sandbox"].exists()
+    assert not fx["sidecar"].exists()
+
+
+def test_verifies_a_sidecar_written_by_r(fx, monkeypatch):
+    # The layout jsonlite::write_json(auto_unbox = TRUE, pretty = TRUE,
+    # na = "null") gives for R's dw_stage sidecar, with the source's real
+    # size and mtime: Python must accept it without warning or re-hashing
+    # the source.
+    from cso_toolkit import dw_io
+    fx["sandbox"].write_bytes(fx["z"].read_bytes())
+    digest = _sha(fx["z"])
+    size = fx["z"].stat().st_size
+    mtime = dw_io._stage_mtime_iso(fx["z"])
+    src = _normalize(fx["z"])
+    fx["sidecar"].write_text(
+        "{\n"
+        '  "type": "dw_stage",\n'
+        f'  "source": "{src}",\n'
+        '  "source_root": "z",\n'
+        f'  "sha256": "{digest}",\n'
+        f'  "size": {size},\n'
+        f'  "mtime": "{mtime}",\n'
+        '  "staged_at": "2026-11-23T23:00:14Z",\n'
+        '  "dw_toolkit_version": "0.11.1"\n'
+        "}\n",
+        encoding="utf-8",
+    )
+    hashed = []
+    real = dw_io._sha256_file
+    monkeypatch.setattr(dw_io, "_sha256_file", lambda p: (hashed.append(_normalize(p)), real(p))[1])
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        out = m.dw_stage(str(fx["sandbox"]))
+    assert _normalize(out) == _normalize(fx["sandbox"])
+    assert hashed == [_normalize(fx["sandbox"])]
+
+
 def test_dw_use_stage_true_reads_the_staged_copy(fx):
     df = m.dw_use(str(fx["teams"]), stage=True, verify_z=False)
     assert df["id"].tolist() == ["AFG", "BGD"]
