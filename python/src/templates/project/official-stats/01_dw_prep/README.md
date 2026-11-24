@@ -2,7 +2,7 @@
 
 Data-warehouse preparation, numbered by lifecycle stage as in the deposit
 (Teams `060.DW-MASTER/01_dw_prep/`) and in DW-Production (The CSO Handbook,
-"Roles and the mode contract" and "Wiring the contract").
+"Roles and the mode contract" and "Profiles and the mode switch").
 
 | Stage | Holds | In this repository | In git |
 |---|---|---|---|

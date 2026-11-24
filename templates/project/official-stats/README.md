@@ -5,7 +5,7 @@ indicators, where it publishes (Helix, SDMX, data.unicef.org), and who the
 Database Manager is. -->
 
 Created on {{date}} with cso-toolkit's `create_official_stats_project()`
-(The CSO Handbook, chapter "Starting a new repository"). An
+(The CSO Handbook, chapter "Starting a repository"). An
 official-statistics repository holds **code, vendored helpers, manifests,
 provenance sidecars of inputs, and release records**. Its outputs live in
 the deposit (Teams `060.DW-MASTER` and its Z: mirror), then SDMX and

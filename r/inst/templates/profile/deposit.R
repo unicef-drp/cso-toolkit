@@ -1,5 +1,5 @@
 #----------------------------------------
-# 6. Deposit paths (The CSO Handbook, "Wiring the contract")
+# 6. Deposit paths (The CSO Handbook, "Profiles and the mode switch")
 #----------------------------------------
 # The canonical deposit is Teams 060.DW-MASTER under your teamsRoot. A
 # producer reads and writes it; a reviewer writes only to sandboxRoot, a

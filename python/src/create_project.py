@@ -13,7 +13,7 @@ data or inputs README and manifest, from the templates the package ships in
 kept in step by ``tools/sync_templates.py`` and a test). The scaffold is the
 same whichever language creates it; its checks and tests are in R.
 
-Handbook: chapter "Starting a new repository". Stata: not provided.
+Handbook: chapter "Starting a repository". Stata: not provided.
 """
 
 from __future__ import annotations
@@ -166,7 +166,7 @@ def _project_files(kind: str, project_name: str, title: str, collaboration: str,
     files["tools/check"] = (tpl / "tools" / "check").read_bytes()
     files[".checks/README.md"] = (tpl / "checks" / "README.md").read_bytes()
     files[".github/workflows/check-record.yml"] = (tpl / "workflows" / "check-record.yml").read_bytes()
-    # AI coding agents (#173; handbook chapter 46): one instructions file for
+    # AI coding agents (#173; handbook chapter "Working with AI coding agents"): one instructions file for
     # every agent (CLAUDE.md imports it), the decision log, and the shared
     # Claude Code settings (the plugin; no edits to the vendored copy).
     agents = (tpl / "agents" / "AGENTS.md").read_bytes()
@@ -399,7 +399,7 @@ def _create_project(kind: str, path: Union[str, Path], collaboration: Optional[s
                   len(vendored["files"]), vendored["tag"], vendored["sha"][:7])
     _log.info("[%s] check records: run `sh tools/check --record` before each push; on "
               "GitHub require the status `check-record` and up-to-date branches for develop "
-              "and main (handbook chapter 45)", fn)
+              "and main (handbook chapter 'Checks and CI')", fn)
     _log.info("[%s] next: README.md > Quick start%s", fn,
               "" if vendor_files else
               "; vendor the toolkit into 00_functions/ (00_functions/README.md)")

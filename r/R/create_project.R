@@ -18,7 +18,7 @@
 #
 # Python sibling: python/src/create_project.py (same files, same bytes).
 # Stata: not provided; run the R or Python function once per repository.
-# Handbook: chapter "Starting a new repository".
+# Handbook: chapter "Starting a repository".
 
 .CSO_PROJECT_KINDS <- list(
 	research = list(
@@ -153,7 +153,7 @@
 	files[["tools/check"]] <- .cso_bytes(file.path(tpl, "tools", "check"))
 	files[[".checks/README.md"]] <- .cso_bytes(file.path(tpl, "checks", "README.md"))
 	files[[".github/workflows/check-record.yml"]] <- .cso_bytes(file.path(tpl, "workflows", "check-record.yml"))
-	# AI coding agents (#173; handbook chapter 46): one instructions file for
+	# AI coding agents (#173; handbook chapter "Working with AI coding agents"): one instructions file for
 	# every agent (CLAUDE.md imports it), the decision log, and the shared
 	# Claude Code settings (the plugin; no edits to the vendored copy).
 	agents <- .cso_bytes(file.path(tpl, "agents", "AGENTS.md"))
@@ -354,7 +354,7 @@
 		                    length(vendored$files), vendored$tag, substr(vendored$sha, 1, 7)), v = v)
 	}
 	.dw_msg(fn, "check records: run `sh tools/check --record` before each push; on GitHub require the ",
-	        "status `check-record` and up-to-date branches for develop and main (handbook chapter 45)", v = v)
+	        "status `check-record` and up-to-date branches for develop and main (handbook chapter 'Checks and CI')", v = v)
 	.dw_msg(fn, "next: README.md > Quick start", if (!length(vendor_files))
 		"; vendor the toolkit into 00_functions/ (00_functions/README.md)", v = v)
 	invisible(out)
@@ -399,7 +399,7 @@
 #' `.gitignore`, `tools/check.R`, the pre-push hook and the workflows are
 #' the toolkit's own.
 #'
-#' The layout (handbook chapter "Starting a new repository"):
+#' The layout (handbook chapter "Starting a repository"):
 #' \preformatted{
 #' .gitignore               templates/gitignore/research-project.gitignore
 #' .gitattributes           LF for the hook, vendored helpers and sidecars
@@ -545,7 +545,7 @@ create_research_project <- function(path, collaboration, members = NULL,
 #' `012_codes`, `013_wrkdata`), and the contract audit reads the code in
 #' `01_dw_prep/012_codes/` (`AUDIT_PATHS`, blocking).
 #'
-#' The layout (handbook chapter "Starting a new repository"):
+#' The layout (handbook chapter "Starting a repository"):
 #' \preformatted{
 #' .gitignore                templates/gitignore/official-stats.gitignore
 #' .gitattributes            LF for the hook, vendored helpers and sidecars

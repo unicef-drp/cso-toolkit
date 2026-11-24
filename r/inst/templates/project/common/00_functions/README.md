@@ -4,7 +4,7 @@ Vendored cso-toolkit helpers: pinned copies of files from
 [`unicef-drp/cso-toolkit`](https://github.com/unicef-drp/cso-toolkit)
 `r/R/`, committed with the code that uses them, so every commit records the
 exact helper code it ran with and a reviewer can re-run it offline (The CSO
-Handbook, chapter "The vendoring model").
+Handbook, chapter "Vendoring and updates").
 
 - **`.toolkit_manifest.yml`** records the toolkit release (`pulled_version`)
   and the files copied (`vendored:`). `tools/check.R` (check `vintage`)
