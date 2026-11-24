@@ -13,7 +13,7 @@ This part documents datalib **contract v1** as shipped in **datalib v0.7.0**, an
 :::
 
 ::: {.callout-note}
-Access: internal — request via the CSO team (repository visibility is tracked in datalib issue #20).
+Access: public — `unicef-drp/datalib-unicef` (public since 2026-07-27; the decision is `unicef-drp/datalib-unicef-dev#20`).
 :::
 
 ## Why a microdata archive
@@ -44,7 +44,7 @@ The single most important thing to hold clear before reading the rest of Part V 
 
 State it plainly: **microdata deposits NEVER enter `060.DW-MASTER`, and indicator deposits never land in the `Z:/datalib*` trees.** The warehouse holds the aggregates a producer blesses and a publisher pushes downstream to Helix and the public pages; the archive holds the survey records those aggregates were computed from. Same office, two contracts, two stores, different data layer. Everything in Part V lives on the microdata side of that line, and the boundary is referenced again in both the IHSN-grammar chapter and the datalib API and conformance chapter.
 
-The one genuinely shared thing is the operator config file. Both contracts are designed to key off the single `~/.config/user_config.yml`, datalib reading a `datalib:` block from its user section for the library root. As the configuration-across-tiers discussion in the architecture chapter notes, the *toolkit* side of that shared-file coexistence is still gated on a parser guard, so the `datalib:` block is not yet added to the toolkit's own `user_config.yml`; treat the two contracts as separate namespaces that happen to share a file.
+The one genuinely shared thing is the operator config file. Both contracts are designed to key off the single `~/.config/user_config.yml`, datalib reading a `datalib:` block from its user section for the library root. As the configuration-across-tiers discussion in the architecture chapter notes, the *toolkit* side of that shared-file coexistence is in place: `dw_load_config` skips a `datalib:` block without adopting its keys (v0.7.0, #138). Treat the two contracts as separate namespaces that happen to share a file.
 
 ## Archive, catalogue, tool
 

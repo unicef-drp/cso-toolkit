@@ -107,7 +107,7 @@ With `global = TRUE` (the default), the same calculation is run once more over t
 
 ### Validation and the error envelope
 
-When `validate` is on (the default), the function checks that `value`, `weight`, and every `by` column exist, and on failure emits the toolkit's standard error envelope — a structured message carrying the offending columns and a one-line fix hint (`[cso_toolkit.aggregate_data_v2] ...`). This is the same envelope shape described in the provenance-and-error-envelope chapter, and it is identical across R and Python down to the wording. Set `validate = FALSE` to skip the checks on hot paths where you have already verified the schema (again, `dw_regions()` does this and re-implements the checks itself so callers still get a clean envelope).
+When `validate` is on (the default), the function checks that `value`, `weight`, and every `by` column exist, and on failure emits the toolkit's standard error envelope — a structured message carrying the offending columns and a one-line fix hint (`[cso_toolkit.aggregate_data_v2] ...`). This is the same envelope shape described in the provenance-and-error-envelope chapter, and it carries the same WHAT, `Data columns`, and `Fix` lines in R and Python (R raises with `stop()`, Python with `KeyError`; the argument spellings follow each language). Set `validate = FALSE` to skip the checks on hot paths where you have already verified the schema (again, `dw_regions()` does this and re-implements the checks itself so callers still get a clean envelope).
 
 ## Building the standard footnote: `generate_agg_footnote`
 

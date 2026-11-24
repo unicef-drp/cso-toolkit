@@ -17,7 +17,11 @@ python -m pytest conformance/tests                               # certify.py's 
 - `CSO_RSCRIPT`, `STATA_EXE`: override where R and Stata are found.
 
 **Adding a case**
-1. Write `cases/<id>.json`: `kind` `values` or `json`, `fixtures`, `languages`, and `gaps` or `divergences` with the issue.
+1. Write `cases/<id>.json` with `id` (the file name), `title`, `surface`, `kind`
+   (`values`, with `columns`, `keys`, `rows`, `tolerance`; or `json`, with
+   `expect`), `fixtures`, `languages`, and `gaps` / `divergences` keyed by
+   language with `issue` and `reason`. Each language is in `languages` or in
+   `gaps`, never both.
 2. Add `<id>` to each driver that implements it.
 3. Run `sh tools/certify --cases <id>`.
 
@@ -30,9 +34,10 @@ runs in CI for R and Python.
 ## The original round-trip harness
 
 Proves the toolkit's core claim — **R, Python, and Stata yield the same
-results** — with an executed test, not just the coverage-matrix prose. This
-closes the regression gap flagged for version upgrades: today R is CI-gated,
-Python is manual-only, Stata has no tests, and parity is asserted but never run.
+results** — with an executed test, not just the coverage-matrix prose. When this
+harness was written, R was CI-gated, Python was manual-only, Stata had no
+tests, and parity was asserted but never run; the parity certificate above
+now runs it in all three languages.
 
 ## What it tests
 
@@ -40,11 +45,9 @@ Each language driver takes the **same committed fixture**, runs the **shared
 IO contract** on it, and emits a **normalised** output CSV. A comparator then
 asserts the three outputs are **value-equal within tolerance**.
 
-- **Core (3-way):** `dw_use` → `dw_save` → `dw_use` round-trip. This is the
-  surface all three implement (Stata ships `dw_save`, `dw_use`, `dw_compare`
-  only — no `aggregate_data_v2` / `dw_api_fetch`).
-- **Extension (R ↔ Python):** `aggregate_data_v2`, `dw_compare` semantics —
-  the R/Python-only surface, compared pairwise.
+- **Round-trip (R ↔ Python in CI):** `dw_use` → `dw_save` → `dw_use` on
+  `fixtures/indicators.csv`. Aggregation, `dw_compare` and the other
+  surfaces are covered by the certificate's cases in `cases/`.
 
 ## Layout
 
@@ -53,7 +56,7 @@ conformance/
   fixtures/indicators.csv   # shared canonical input (edge cases below)
   run_r.R                   # driver: dw_use -> dw_save -> dw_use -> out_r.csv
   run_python.py             # driver -> out_python.csv
-  run_stata.do              # driver -> out_stata.csv           (TODO)
+  drivers/driver_stata.do   # the Stata driver is part of the parity certificate (no round-trip run_stata.do)
   compare.py                # asserts out_r == out_python == out_stata
 ```
 
@@ -89,9 +92,10 @@ Jobs: `r-conformance`, `python-conformance` — each runs its driver and uploads
 - [x] Fixture + design
 - [x] `run_r.R` — **working** (verified locally)
 - [x] `run_python.py` — R ↔ Python round-trip verified locally (6/6 rows agree)
-- [ ] `run_stata.do` (after Stata-in-CI provisioning, issue #133)
+- [x] Stata: `drivers/driver_stata.do`, run locally by `sh tools/certify`
+      (#190); CI still needs #133
 - [x] `compare.py`
 - [x] `.github/workflows/conformance.yml` (R + Python + compare)
-- [ ] `.github/workflows/python-check.yml` (Phase 0 — promote the manual Python
-      tests to CI; independent of this harness)
+- [ ] Python unit tests (`python/tests/`, pytest) in CI — not planned; they
+      run locally
 - [ ] `STATA_LIC` secret / self-hosted runner provisioned (admin — issue #133)

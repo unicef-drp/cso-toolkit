@@ -1,71 +1,190 @@
 # Cross-language parity {#sec-parity}
 
-The toolkit promises that R, Python and Stata give the same results. The coverage matrix (Appendix A) records which functions exist in which language; it cannot show that they agree. The **parity certificate** shows it: one command runs the same cases in the three languages, compares the outputs, and, when they agree, writes a record that a release can point to.
+The toolkit is written three times: in R (`r/R/`, the reference implementation), in Python (`python/src/`) and in Stata (`stata/src/`). It promises that the three give the same results. The coverage matrix (Appendix A) records which functions exist in which language; it cannot show that they agree. This appendix explains how agreement is checked, and how a release proves it.
 
-## What it checks
+## Two layers of checking
 
-A **case** is a small JSON file in `conformance/cases/`. It names the function under test, the input fixtures in `conformance/fixtures/`, and what is compared:
+| | CI round trip | Parity certificate |
+|---|---|---|
+| Languages | R and Python | R, Python and Stata |
+| What it runs | one fixture through `dw_use` and `dw_save` | every case in `conformance/cases/` (17 at v0.12.0) |
+| Where | GitHub Actions, workflow `Conformance`, on every push and pull request to `main` and `develop` | the producer's machine, `sh tools/certify` |
+| Files | `conformance/run_r.R`, `run_python.py`, `compare.py` | `conformance/certify.py`, `drivers/`, `cases/`, `fixtures/` |
+| Result | a pass or fail on the pull request | a committed record, `.parity/<content-hash>.json` |
 
-- **values**: the data a call returns, column by column. Rows are matched on the case's keys. Numbers are equal within the case's tolerance, strings exactly, and an empty cell equals a missing one, since CSV cannot tell them apart. Column names are compared without regard to case. A round-trip case uses the fixture itself as the reference, so R is checked too; any other case uses R's output.
-- **json**: a small record of what happened, compared with the answer the case expects. Examples: did the call stop, did the message carry the `[cso_toolkit.<fn>]` envelope, was a file written, how many rows were added.
+The CI round trip is a fast guard on the input/output contract. The certificate is the full check, and the one a release depends on. Stata is only in the certificate: GitHub's runners have no Stata licence (#133), so Stata runs where it is installed.
 
-The first ten cases cover:
-- `dw_use` and `dw_save` round trips through CSV and `.dta`, and edge values (commas, quotes, accents, empty cells, very small, very large and negative numbers);
-- the `isid` refusal;
-- the reviewer-mode refusal of live API calls;
-- the provenance sidecar;
-- `dw_compare`'s counts;
-- `aggregate_data_v2`;
-- version comparison;
-- the multi-producer out-of-band guard.
+## How a run works
 
-## Gaps and divergences
+`sh tools/certify` finds a Python (`CSO_PYTHON`, else `python3`, `python` or `py -3`) and runs `conformance/certify.py`. That script uses only Python's standard library, so any Python 3.8 or later can run it.
 
-Not every language implements every function, and some known differences take time to fix. The register in each case says so explicitly:
+1. **It reads the cases**, every `conformance/cases/*.json`, or only those named with `--cases`.
+2. **It runs one driver per language**, passing it the list of case ids, the fixture folder and an output folder. Each driver loads the implementation from the working tree, never an installed copy:
+   - **R:** `Rscript --no-init-file conformance/drivers/driver_r.R` loads `r/` with `devtools::load_all()`. Rscript comes from `CSO_RSCRIPT`, the PATH, or `C:/Program Files/R/R-*/bin` on Windows. On Windows the run drops Git Bash's `HOME`, so that R finds its own `.Renviron`.
+   - **Python:** `conformance/drivers/driver_python.py`, under `CSO_PYTHON` or the interpreter running `certify.py`, copies `python/src` into a temporary package named `cso_toolkit` and imports that copy. The interpreter needs the toolkit's dependencies (pandas, PyYAML and so on).
+   - **Stata:** `certify.py` writes a small do-file that sets `CERT_CASES`, `CERT_FIX`, `CERT_OUT` and `CERT_ADO`, then runs `conformance/drivers/driver_stata.do` in batch (`StataMP-64.exe /e` on Windows, `-b` elsewhere). The driver puts `stata/src` first on the ado-path. Stata comes from `STATA_EXE` or the usual install folders.
 
-- `gaps`: languages that do not implement the case yet, with the issue or the reason. For example, Stata has no `aggregate_data_v2`.
-- `divergences`: languages that implement it but are known to disagree, with the issue. For example, Stata's sidecar has no `sha256` (#191).
+   Each driver gets up to 30 minutes. A case that crashes writes `<id>.error.txt`; a driver that stops part way is judged on the outputs it did write.
+3. **Each driver writes one output per case:** `<id>.csv` for a values case, `<id>.json` for a json case. It also writes `_versions.json`, recording its language version and, for R and Python, the toolkit version it loaded; Stata's ado files carry no version stamp, so Stata records its own version and edition.
+4. **`certify.py` judges every case in every language** (next sections) and prints a table of statuses.
+5. **With `--record`**, if everything passed, it writes the certificate and commits it.
 
-A gap or divergence that disappears also needs attention. If a gapped language starts writing output, or a divergent one starts agreeing, the run reports **UPDATE-REGISTER**, which fails until the entry is removed. A closed gap or a resolved divergence is therefore visible in the next certificate.
+Outputs and logs (`r.log`, `python.log`, `stata.log`) stay in a temporary folder, or the one given with `--out`, and the run prints where.
+
+## What a case checks
+
+A case is a small JSON file. It gives:
+- `id` and `title`;
+- the `surface`: the functions under test;
+- the `kind`;
+- the `fixtures` it reads;
+- `languages`: those expected to run it;
+- `gaps` and `divergences` (see below).
+
+There are two kinds.
+
+**`values`**: the data a call returns. The case lists the `columns` to compare, the `keys` that identify a row, a numeric `tolerance` (default `1e-9`) and, optionally, the expected number of `rows`.
+- The **reference** is R's output. A round-trip case sets `"reference": "fixture"` and compares every language, R included, with the input file itself.
+- **Cells** are compared after normalisation:
+  - `""`, `NA`, `NaN`, `nan`, `.` and `None` all count as missing, since CSV cannot tell them apart and each language spells missing its own way;
+  - numbers are equal when `|a − b| ≤ tolerance × max(1, |a|, |b|)`, so `1e+05` and `100000` agree;
+  - anything else is a string and must match exactly;
+  - column names are compared without regard to case.
+- Rows are sorted by the keys before comparing, so row order never matters. A different row count is a failure.
+
+**`json`**: a small record of what happened, compared with the `expect` block of the case. Examples: did the call stop, did the message carry the `[cso_toolkit.<fn>]` envelope, was a file written, how many rows were added.
+- Each key in `expect` must match.
+- Numbers compare as numbers, so `1` and `1.0` agree, and nested objects compare without regard to key order.
+- Extra keys in the output are ignored.
+
+The json kind is how behaviour that has no data output is checked: refusals, guards, sidecars and lifecycle states.
+
+## Statuses
+
+| Status | Meaning | Blocks a certificate? |
+|---|---|---|
+| `PASS` | output agrees with the reference or the expectation | no |
+| `gap` | listed in the case's `gaps`, and the language wrote no output | no |
+| `DIVERGES` | listed in `divergences`, and the output still disagrees | no |
+| `FAIL` | output disagrees | **yes** |
+| `ERROR` | the case crashed (`<id>.error.txt`), or the case names the language neither in `languages` nor in `gaps` | **yes** |
+| `MISSING` | the driver wrote nothing for the case | **yes** |
+| `UPDATE-REGISTER` | a listed gap now writes output, or a listed divergence now agrees | **yes**, until the entry is removed |
+| `not run` | language not requested (`--languages`), or not found | no, but `--record` refuses |
+
+`UPDATE-REGISTER` keeps the register honest. When a gap closes or a divergence is fixed, the next run says so and fails until the case file is updated. A closed gap is therefore visible in the next certificate.
+
+## The cases at v0.12.0
+
+Statuses below are from the certificate recorded for v0.12.0 (R / Python / Stata).
+
+| Case | Kind | Functions | R / Py / Stata |
+|---|---|---|---|
+| `io_roundtrip_csv` | values, fixture | `dw_use`, `dw_save` | pass / pass / pass |
+| `io_roundtrip_dta` | values, fixture | `dw_use`, `dw_save` (`.dta`) | pass / pass / pass |
+| `io_edge_values` | values, fixture | `dw_use`, `dw_save`: commas, quotes, accents, empty cells, tiny, large and negative numbers | pass / pass / pass |
+| `save_isid_duplicate` | json | `dw_save` refuses non-unique `isid` keys | pass / pass / pass |
+| `provenance_sidecar` | json | `dw_save`'s sidecar: shared keys, file sha256 | pass / pass / pass |
+| `collab_out_of_band` | json | multi-producer guard in `dw_save`, `takeover` | pass / pass / pass |
+| `config_user_block` | json | `dw_mode` from `user_config.yml` (`create_profile` in R and Python, `dw_load_config` in Stata) | pass / pass / pass |
+| `reviewer_refuses_api` | json | reviewer mode refuses a live API call (`dw_api_fetch`; `dw_require_no_api` in Stata) | pass / pass / pass |
+| `compare_counts` | json | `dw_compare` added / removed / changed | pass / pass / pass |
+| `compare_same_file` | json | `dw_compare` refuses a file compared with itself | pass / pass / pass |
+| `compare_diagnose` | json | `dw_compare(diagnose = TRUE)`, `dw_diff_profile` | pass / pass / gap |
+| `aggregate_weighted_mean` | values | `aggregate_data_v2`, weighted mean | pass / pass / gap |
+| `aggregate_total` | values | `aggregate_data_v2(method = "total")` | pass / pass / gap |
+| `deposit_fetch_inputs` | values | `dw_fetch_inputs`, `dw_check_deposit` | pass / pass / gap |
+| `provenance_diff_status` | json | `dw_read_provenance`, `dw_provenance_diff` | pass / pass / gap |
+| `stage_lifecycle` | json | `dw_stage`: every state, the sidecar's keys and its mtime format | pass / pass / gap |
+| `version_compare` | json | version comparison in `cso_toolkit_check` | pass / pass / gap |
+
+In total: 44 passes and 7 gaps, with no divergences. Every gap is Stata, and each one is a scope decision or a documented route:
+- no `aggregate_data_v2` (two cases);
+- no `dw_stage`, so a Stata reviewer reads canonical inputs in place;
+- no vendoring helpers;
+- no diagnostic profile in `dw_compare` (#111), because Stata's `r(col_changed)` gives the per-column counts;
+- deposit inputs and run-level provenance go through R or Python (#152).
+
+## The certificate
+
+`sh tools/certify --record` writes a certificate only when:
+- all three languages ran;
+- every case is `PASS`, `gap` or `DIVERGES` in every language;
+- the certified paths have no uncommitted change.
+
+It then commits the file on its own, with the message `Parity certificate <hash>`.
+
+**The name is a content hash:** SHA-256 over the git trees, at `HEAD`, of the seven certified paths:
+- `r/R`, `python/src` and `stata/src`, the three implementations;
+- `conformance/certify.py`, `conformance/cases`, `conformance/drivers` and `conformance/fixtures`, the harness.
+
+Any change to an implementation, a case, a driver or a fixture needs a new certificate. Changes elsewhere keep the old one: the handbook, READMEs, NEWS, templates, CI.
+
+**The file**, `.parity/<content-hash>.json` with schema `cso_toolkit.parity/1`, records:
+- `content_hash` and `trees`: the hash and the tree id of each certified path;
+- `commit`, `created_at` (UTC), `created_by` and `platform`;
+- `versions`: per language, what its driver reported (for example `R version 4.6.1`, Python `3.11.9`, Stata `17` `MP`);
+- `result` (`pass`) and `summary`: the count per status;
+- `cases`: per case and language, the status, a note, and the SHA-256 of the output file.
+
+The output hashes let anyone check, later, that a re-run produced byte-identical outputs.
+
+**`sh tools/certify --verify`** runs no language. It recomputes the content hash and checks that `.parity/<hash>.json` exists and records a pass for that hash. The `Parity certificate` workflow (`.github/workflows/parity-certificate.yml`) runs exactly this on pull requests into `main`, and on demand. It takes a few seconds and needs only Python and git.
 
 ## Running it
 
 ```sh
-sh tools/certify             # all cases in R, Python and Stata; PASS / FAIL per case and language
-sh tools/certify --record    # if everything passes, write and commit .parity/<content-hash>.json
-sh tools/certify --verify    # run nothing: is there a passing certificate for this tree?
+sh tools/certify                              # all cases, all three languages; exit 1 on any failure
+sh tools/certify --languages r,python         # a subset while developing
+sh tools/certify --cases stage_lifecycle      # one or more cases (comma separated)
+sh tools/certify --out /tmp/parity            # keep outputs in a chosen folder
+sh tools/certify --record                     # all three languages; write and commit the certificate
+sh tools/certify --verify                     # is there a passing certificate for this tree?
 ```
 
-`conformance/certify.py` uses only Python's standard library. It runs:
-- the R driver with `Rscript --no-init-file` on `devtools::load_all("r")`;
-- the Python driver on a copy of `python/src`, never an installed package. Point `CSO_PYTHON` at a Python that has the toolkit's dependencies;
-- the Stata driver in batch: `StataMP-64.exe /e` on Windows, `-b` elsewhere. Stata is found through `STATA_EXE` or the usual install folders.
+Environment variables:
+- `CSO_PYTHON`: a Python with the toolkit's dependencies, for the Python driver;
+- `CSO_RSCRIPT`: Rscript, if it is not on the PATH;
+- `STATA_EXE`: the Stata executable, if it is not in a usual folder.
 
-`--languages r,python` and `--cases <ids>` narrow a run while developing. Each run keeps its outputs and logs in a temporary folder, and prints where.
+On Windows, a typical call from Git Bash is:
 
-Stata runs on the producer's machine, not in GitHub Actions. That is why the certificate is recorded locally rather than produced by CI (#133).
+```sh
+CSO_PYTHON=/path/to/venv/Scripts/python.exe \
+STATA_EXE=C:/Users/Public/Software/Stata17/StataMP-64.exe \
+sh tools/certify --record
+```
 
-## The certificate
+The harness has its own tests in `conformance/tests/test_certify.py`. They write the outputs a driver would have written and check how `certify.py` judges them, without running R or Stata: `python -m pytest conformance/tests`.
 
-`--record` writes a certificate only when every case passes, or is a listed gap or divergence, **in all three languages**, from a tree with no uncommitted change in the certified paths. The file holds:
-- the toolkit commit;
-- the R, Python and Stata versions;
-- per case and language, the status and the SHA-256 of the output;
-- a summary.
+## Adding a case
 
-Its name is a **content hash**: the git trees of `r/R`, `python/src`, `stata/src` and the harness (`conformance/certify.py`, `cases/`, `drivers/`, `fixtures/`). A change to any implementation or case needs a new certificate. Documentation changes, including handbook rebuilds, keep the old one.
+1. Write `conformance/cases/<id>.json`, copying a case of the same kind. List every language either in `languages` or in `gaps`, with the issue (or "coverage matrix") and a one-line reason.
+2. Add any input file to `conformance/fixtures/`. Prefer a small, purpose-built file that exercises the edge you care about: missing values, an all-missing group, a duplicate key.
+3. Add a function named after the id to each driver that implements it:
+   - `driver_r.R`: an entry in the `cases` list;
+   - `driver_python.py`: a function plus an entry in `CASES`;
+   - `driver_stata.do`: a program named `case_<id>`.
 
-`--verify` recomputes the hash and checks for a passing certificate, without running any language. The `Parity certificate` workflow runs it on pull requests into `main` and on demand.
+   A driver that does not know an id skips it silently, so a missing driver entry shows up as `MISSING`.
+4. Reset any session state the case sets. The R and Python drivers' `plain()` returns to a plain local session; leaking reviewer mode or a canonical root into the next case makes failures hard to read.
+5. Run `sh tools/certify --cases <id>`, then the full run, then `--record` once the code is committed.
+
+For a json case, prefer facts that would differ if the behaviour broke: whether a file exists, whether its hash changed, which error text appeared. "No error" alone is a weak check. For example, `stage_lifecycle` records whether a second call re-copied the file, and the test suite separately checks that a re-copy would change the file's modification time.
 
 ## In the release checklist
 
-A release is tagged only when `sh tools/certify --verify` passes on the commit being tagged, and the release notes link the certificate (chapter "Versioning and releases").
+A release is tagged only when `sh tools/certify --verify` passes on the commit being tagged, and the release notes link the certificate (chapter "Versioning and releases"). The release-prep pull request records a fresh certificate after the version stamps change, since `r/R` and `python/src` carry the version.
 
-## What it found first
+## What it has found
 
 The first full run, in November 2026, found three defects that had been in the toolkit since May 2026, and fixed them:
 - **Stata's `dw_compare` failed on every call:** a `} else {` on one line.
 - **Stata's `dw_save` failed on every call that wrote a sidecar, the default:** its JSON escaping expanded to invalid syntax, and the sidecar's `file write` lines used a `_q` directive that does not exist.
 - **R's `dw_api_fetch` lacked the envelope in reviewer mode:** it called a profile-only function with arguments the profile's version does not take, so the error said "could not find function" or "unused arguments".
 
-It also registered two divergences, both fixed since: Stata's sidecar had no `sha256` (#191, fixed with #168 through Stata's Python integration), and R read a doubled quote in CSV as two quotes (#192: `data.table::fread()` keeps them, a long-standing upstream limitation, so `dw_use()` now unescapes them).
+It also registered two divergences, both fixed since:
+- Stata's sidecar had no `sha256` (#191). Fixed with #168 through Stata's Python integration.
+- R read a doubled quote in CSV as two quotes (#192). `data.table::fread()` keeps them, a long-standing upstream limitation, so `dw_use()` now unescapes them.
+
+For v0.12.0, the new cases `aggregate_total` and `stage_lifecycle` came with the Python ports of `method = "total"` and `dw_stage`. The `stage_lifecycle` case also caught a mistake in its own first draft: it checked the staged file's hash after the test had already changed the source.

@@ -6,16 +6,22 @@ _Entries land here as PRs merge into `develop`. When the next release
 is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
-### Fixed
+## v0.12.0 (2026-11-24)
 
-- **Python finds Z: on a mapped network drive (#225).** On Windows the
-  path normaliser turns a mapped drive (`Z:/`) into its UNC form
-  (`//server/share`), and the Z: and Teams mirror helpers then
-  collapsed every `//`, leaving `/server/share/...`, a folder on the
-  current drive. So `dw_save()` never wrote its Z: mirror and
-  `dw_verify_z()` never found the Z: copy. The helpers now join the
-  root and the relative path without touching the root. R was not
-  affected.
+Python catches up with R. Three things that were R-only now work in
+Python too: `aggregate_data_v2(method = "total")`,
+`dw_api_fetch(api = "csv")`, and the reviewer helper `dw_stage()` with
+`dw_use(stage =)`. That leaves three R exports without a Python
+sibling: `dw_regions()`, `dw_publish()` (a dry-run placeholder in R)
+and `dw_verbosity()` (R's message switch; Python uses `logging`).
+Python also finds Z: again when it is a mapped network drive, and two
+smaller Python faults found while checking the handbook against the
+code are fixed. Two new parity cases cover the new code; the
+certificate for this release passes 44 checks, with 7 gaps, all in
+Stata. The handbook and READMEs were checked line by line against the
+code, and appendix G now explains in full how the three languages are
+certified. PRs #221, #222, #223, #227. MINOR: new
+functions and options in Python; nothing changes for R or Stata users.
 
 ### Added
 
@@ -49,6 +55,48 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
   R writes it. New parity case `stage_lifecycle` (Stata: gap).
   Handbook chapter 31 and appendices A and D updated; appendix D no
   longer says `dw_root` is R-only.
+
+### Fixed
+
+- **Python finds Z: on a mapped network drive (#225).** On Windows the
+  path normaliser turns a mapped drive (`Z:/`) into its UNC form
+  (`//server/share`), and the Z: and Teams mirror helpers then
+  collapsed every `//`, leaving `/server/share/...`, a folder on the
+  current drive. So `dw_save()` never wrote its Z: mirror and
+  `dw_verify_z()` never found the Z: copy. The helpers now join the
+  root and the relative path without touching the root. R was not
+  affected.
+- **The Python auditor's `io-open-write` rule now fires.**
+  `test_scripts()` blanks string literals before matching, and the rule
+  looked for a quoted file mode, so it could never match. It now flags
+  `open()` called with an explicit mode (`open(p, "w")`,
+  `open(p, mode="wb")`); `open(p)` alone is still left alone. First
+  Python tests for the rule.
+- **Python `dw_api_fetch()` no longer warns on every live fetch.** It
+  passed `dw_save()` the `mirror_to_z` keyword that was removed in
+  v0.4.0, so each fetch raised a DeprecationWarning; `dw_save()`
+  mirrors to Z: on its own. R stopped passing it in v0.6.0.
+
+### Documentation
+
+- **Appendix G, "Cross-language parity", rewritten** as a full account
+  of how R, Python and Stata are certified: the two layers (the CI
+  round trip and the parity certificate), how a run works driver by
+  driver, the comparison rules, every status, the 17 cases with their
+  status per language, the certificate's fields and content hash, how
+  to add a case, and the release gate.
+- **Handbook, README and conformance README checked against the code.**
+  A line-by-line pass compared every chapter and appendix with the R,
+  Python and Stata sources and corrected what had drifted: examples
+  that no longer ran (missing `cache_key`, a string where a list is
+  needed, the README quick starts and Stata `dw_save` syntax), helpers
+  still called R-only after their Python ports, Stata's sha256 and UTC
+  sidecar fields, the `inrepo` pin (only a plain `inrepo` is exempt),
+  the pre-push hook (it requires a check record), datalib's repository
+  being public, the coverage matrix and function reference (every
+  export now has a row), and the release chapter's stamp list. The
+  Python vendoring example now uses the package layout; syncing a
+  package copy is not supported yet (#230).
 
 ## v0.11.1 (2026-11-22)
 

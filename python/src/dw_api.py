@@ -344,7 +344,7 @@ def dw_api_fetch(
         api_metadata.update(metadata)
 
     dw_save(result, path=cache_path, metadata=api_metadata,
-            overwrite=replacing, takeover=takeover, mirror_to_z=True)
+            overwrite=replacing, takeover=takeover)
     return result
 
 

@@ -22,6 +22,7 @@ The roles-and-mode-contract chapter develops all four in full; the glosses above
 | Yes | Supported in this language. |
 | Planned | On the roadmap; tracked by an issue. Not callable today. |
 | n/a | Not applicable to this language by design — a deliberate scope decision, not an oversight. |
+| No | Not available in this language and not tracked; the cell says what to use instead. |
 | Route via R/Python | The capability does not exist in this language and is not planned; the documented workaround: do the operation in a sibling language and hand the result back. |
 
 The tables below render as text, not colour; read the cell contents, not cell shading.
@@ -34,12 +35,12 @@ The mode contract itself is at parity across all three languages: a reviewer-ses
 
 ::: {.callout-note}
 ## A version skew worth knowing
-The repository headline version is **v0.7.0**, carried by the R package (`csotoolkit` 0.7.0), the Python package (`__version__ = "0.7.0"`), and the shared `NEWS.md`. The R and Python version stamps are now level; the Stata package versions per-command via its `.ado` files. A matching version number is a floor, not a guarantee of feature parity, though: where a cell below says "Yes" for a recent feature, R is the sibling guaranteed to have it first.
+The repository version is carried by the R package (`csotoolkit`, `r/DESCRIPTION`), the Python package (`__version__` in `python/src/__init__.py`, and `python/pyproject.toml`) and the shared `NEWS.md`. The R and Python version stamps are now level; the Stata package versions per-command via its `.ado` files. A matching version number is a floor, not a guarantee of feature parity, though: where a cell below says "Yes" for a recent feature, R is the sibling guaranteed to have it first.
 :::
 
 ## Function coverage matrix
 
-The table below is grouped by the five capability families. Each row is one public function; each cell is the state of that function in that language. (The R package additionally exports `dw_`-prefixed aliases of most public names — `dw_save`/`dw_use` already carry the prefix, while `aggregate_data` is also reachable as `dw_aggregate_data`. The aliases are conveniences, not separate functions, and are omitted from the rows below.)
+The table below is grouped by the five capability families. Each row is one public function; each cell is the state of that function in that language. (R and Python both export `dw_`-prefixed aliases of the bare-named helpers — `dw_save`/`dw_use` already carry the prefix, while `aggregate_data` is also reachable as `dw_aggregate_data` in both. The aliases are the same objects, not separate functions, and are omitted from the rows below.)
 
 ### IO contract
 
@@ -64,7 +65,8 @@ The table below is grouped by the five capability families. Each row is one publ
 | `dw_resolve_path` | Yes | Yes | Internal to `dw_use` / `dw_save` |
 | `dw_is_canonical` | Yes | Yes | Internal to the mode guard |
 | `dw_mkdir` | via base R `dir.create` | via `os.makedirs` | Yes (`dw_mkdir.ado` — Stata's built-in cannot nest) |
-| `dw_verbosity` | Yes (session verbose/debug switch) | Planned | n/a |
+| `dw_verbosity` | Yes (session verbose/debug switch) | No (Python logs through the standard `logging` module, `cso_toolkit.*` loggers) | n/a |
+| `dw_toolkit_version` | Yes | Yes | n/a |
 | `dw_default_unicef_allowlist` | Yes (remote-URL freeze allowlist) | Yes | n/a (no remote-URL reads in Stata) |
 | `dw_map_drive` | n/a | n/a | Yes (`dw_map_drive.ado` — Stata-only onboarding: maps the team network drive from `dwZDrive`/`dwZDriveUNC`; the toolkit port of datalib's `mapzdrive`) |
 
@@ -73,7 +75,7 @@ A few caveats sit behind the "Yes" cells:
 - **`dw_use` reached Stata at v0.4.0.** The Stata package README and source catalogue confirm it shipped, scoped to `.dta` / `.csv` / `.xlsx`. Treat it as available.
 - **`dw_merge` and `dw_verify_z` are R-and-Python only.** There is no Stata sibling and none is planned. `dw_merge` is a join-with-duplicate-key guard (it warns when left/right duplicate structure does not match the declared `how`); `dw_verify_z` compares a file against its Z:-drive mirror, by file size (default, fast) or by deep SHA-256. A Stata pipeline needing either routes through R or Python.
 - **`dw_mkdir` is the mirror image.** It is a first-class *Stata* helper because Stata's built-in `mkdir` does not accept nested paths; R and Python have no need for it because their standard libraries already create directories recursively.
-- **`dw_root` and `dw_stage` are R + Python.** `dw_root` resolves the mode-aware repo/canonical root for a vendored `kind` (`"wrk"` / `"raw"` / `"meta"`) so a sector script can build paths without knowing whether the session is producer or reviewer; `dw_stage` copies a reviewer-mode sandbox file into place with a `.staged.json` integrity sidecar, the same in both languages. Neither has a Stata sibling.
+- **`dw_root` and `dw_stage` are R + Python.** `dw_root` resolves the mode-aware repo/canonical root for a vendored `kind` (`"wrk"` / `"raw"` / `"meta"`) so a sector script can build paths without knowing whether the session is producer or reviewer; `dw_stage` copies a canonical input into the reviewer's sandbox once and hash-guards the copy with a `.staged.json` sidecar (`dw_use(stage = TRUE)`, or the `dw_autostage` session key, calls it), the same in both languages. Neither has a Stata sibling.
 - **`dw_fetch_inputs` and `dw_check_deposit` are R and Python.** They serve pipelines that keep raw inputs out of Git in a local folder mirroring a deposit folder: `dw_fetch_inputs` copies deposit-only inputs locally (or reads them in place), keeps the folder layout visible with `.gitkeep` placeholders, and returns an input manifest; `dw_check_deposit` proves every local input has an identical SHA-256 copy on Teams or Z:. Stata routes via R or Python (#152): the fetch and the check run once before the pipeline, and Stata reads the fetched inputs with `dw_use`. The parity case `deposit_fetch_inputs` checks R and Python return the same manifest.
 - **`dw_read_provenance` and `dw_provenance_diff` are R and Python.** They read the `dw_save` sidecar and compare two runs of an output from their sidecars (`reproduced`, `output_changed`, `inputs_changed`, `first_run`, `no_input_record`). Stata routes via R or Python (#152); Stata sidecars carry `sha256` (through Stata's Python integration), so R and Python can compare Stata outputs too. The parity case `provenance_diff_status` checks R and Python agree on all five statuses.
 - **The collaboration model is in all three languages (Stata since #168).** `dw_collaboration()` reads the project's `cso_project.yml` (`single-producer` or `multi-producer`), `dw_set_collaboration()` writes it and baselines the existing sidecars, and in a multi-producer project `dw_save()` refuses out-of-band and concurrent writes (unless `takeover`) and records lineage fields in the sidecar. Stata's `dw_collaboration.ado` and `dw_save.ado` apply the same rules (`takeover` option) and write the same lineage fields. Stata has no SHA-256, UTC clock, JSON reader or portable git call of its own, so the hashing, timestamps, sidecar reading and git checks run through Stata's Python integration (Stata 16+), in `dw_stata_helpers.py` shipped next to the `.ado` files; with it, every Stata sidecar also records `sha256` and an ISO-8601 UTC `written_at`. Without Python a multi-producer write stops (it cannot be guarded) unless `takeover` is passed; single-producer projects are unaffected. `dw_set_collaboration` stays R and Python: the switch is a one-off, reviewed pull request. The parity certificate's `collab_out_of_band` case checks the three agree. See the roles and mode-contract chapter.
@@ -117,7 +119,7 @@ Note the surface difference in how metadata is passed: R and Python accept a sin
 | `dw_api_cached` | Yes | Yes | Route via R/Python |
 | `dw_api_inventory` | Yes | Yes | Route via R/Python |
 | `dw_require_no_api` (reviewer gate) | via profile helpers | via profile helpers | Yes (`dw_require_no_api.ado`) |
-| `dw_publish` (Helix submission) | Skeleton — exported but errors with guidance; the Helix endpoint integration is tracked in issue #15 | Planned | n/a (API-side capability) |
+| `dw_publish` (Helix submission) | Stub: dry run only (`dry_run = TRUE`, the default, returns a validated payload); `dry_run = FALSE` stops, live Helix submission tracked in #15 (open) | Planned (#15) | n/a (API-side capability) |
 
 The largest gap in the toolkit: **Stata has no external-API wrapper.** There is no `dw_api_fetch` in Stata and none is planned. External data must be pulled in R or Python, which writes the result into the deposit cache (`teamsRawData/_apis/<api>/<cache_key>.<ext>`, the canonical landing place for fetched upstream data, mirrored to the Z: drive); the Stata pipeline then reads that cache with `dw_use`.
 
@@ -133,17 +135,17 @@ R and Python share all **eleven** `api=` dispatch keys — `uis`, `sdmx`, `sdmx_
 #### R {.unnumbered .unlisted}
 ```r
 df <- dw_api_fetch(api = "wb", cache_key = "wb_SI.POV.DDAY",
-                   indicator = "SI.POV.DDAY", country = "AGO")
+                   indicator = "SI.POV.DDAY")
 ```
 #### Python {.unnumbered .unlisted}
 ```python
 df = dw_api_fetch(api="wb", cache_key="wb_SI.POV.DDAY",
-                  indicator="SI.POV.DDAY", country="AGO")
+                  indicator="SI.POV.DDAY")
 ```
 #### Stata {.unnumbered .unlisted}
 ```stata
 * No dw_api_fetch in Stata. Pull in R/Python, then:
-dw_use , filename("wb_SI.POV.DDAY.dta") path("$teamsRawData/_apis/wb")
+dw_use , filename("wb_SI.POV.DDAY.csv") path("$teamsRawData/_apis/wb")
 ```
 :::
 
@@ -157,7 +159,7 @@ dw_use , filename("wb_SI.POV.DDAY.dta") path("$teamsRawData/_apis/wb")
 | `generate_agg_footnote` | Yes | Yes | n/a |
 | `dw_nestweight` | Yes | Yes | n/a |
 | `dw_pop` | Yes | Yes | n/a |
-| `dw_regions` | Yes | n/a | n/a |
+| `dw_regions` | Yes | No (R-only; redesign tracked in #40) | n/a |
 
 Most of the aggregation family is R-and-Python; of the two demographics convenience wrappers added at v0.4.0, `dw_pop` now ships in R and Python while `dw_regions` remains R-only. None of these functions has a Stata sibling, and none is on the roadmap. This is a scope decision: Stata sector pipelines aggregate with native commands (`collapse`, `egen`). `dw_nestweight` ports the World Bank EduAnalyticsToolkit's Stata command `edukit_nestweight` to R and Python; it was deliberately not ported back to Stata, since a Stata pipeline can call the upstream `edukit` command directly. `dw_pop` wraps `dw_api_fetch()` for the World Bank total-population indicator (`SP.POP.TOTL`); `dw_regions` fetches the UNICEF region taxonomy and appends regional aggregates computed via `aggregate_data_v2()`. `dw_regions` ships in the R package only; both still lack a Stata sibling.
 
@@ -170,7 +172,7 @@ out <- aggregate_data_v2(df, value = "OBS_VALUE", by = "REGION",
 ```
 #### Python {.unnumbered .unlisted}
 ```python
-out = aggregate_data_v2(df, value="OBS_VALUE", by="REGION",
+out = aggregate_data_v2(df, value="OBS_VALUE", by=["REGION"],
                         method="weighted_mean", weight="POP",
                         coverage_threshold=0.5)
 ```
@@ -210,7 +212,7 @@ The version-drift helpers are R-and-Python only. They read the consumer's `.tool
 Two points here:
 
 - **The contract auditor does not cover Stata.** `test_scripts` scans `.R` scripts in R and `.py` scripts in Python, flagging raw IO/API calls the toolkit is meant to wrap (its `io-xlsx` rule, for instance, catches `getSheetNames`/`excel_sheets`/`loadWorkbook` and points the author at `dw_use(sheet = NULL)`). There is no equivalent scanner for `.do` / `.ado` files. A Stata sector's discipline is enforced at runtime by `dw_require_no_api` and the `dw_save` mode guard, not by a static auditor in CI. See the contract-auditor chapter.
-- **`dw_load_config` is Stata's standalone analogue of the profile config-load step.** In R and Python, `create_profile` emits the YAML config load and `dw_mode` resolution into the scaffolded profile. Stata exposes a dedicated `dw_load_config.ado` that reads `~/.config/user_config.yml` with a hand-rolled parser (no external dependency, AppLocker-safe) and populates the session globals. Since v0.10.1 it reads the user's block and `dw_mode_by_project` as the R and Python profiles do (#180; parity case `config_user_block`). Same effect, different packaging — note that `dw_load_config` sets exactly the keys the YAML provides; it does not derive mode-aware globals on its own.
+- **`dw_load_config` is Stata's standalone analogue of the profile config-load step.** In R and Python, `create_profile` emits the YAML config load and `dw_mode` resolution into the scaffolded profile. Stata exposes a dedicated `dw_load_config.ado` that reads `~/.config/user_config.yml` with a hand-rolled parser (no external dependency, AppLocker-safe) and populates the session globals. Since v0.11.0 it reads the user's block and `dw_mode_by_project` as the R and Python profiles do (#180; parity case `config_user_block`). Same effect, different packaging — note that `dw_load_config` sets exactly the keys the YAML provides; it does not derive mode-aware globals on its own.
 
 ## File-format support matrix
 
@@ -245,9 +247,9 @@ The provenance sidecar records a content hash, but the hash is not computed the 
 |---|---|---|
 | R | File-level SHA-256 | `sha256` |
 | Python | File-level SHA-256 | `sha256` |
-| Stata | `datasignature` (Stata-native SHA-1 of variables and values) | `datasignature` |
+| Stata | `datasignature` (Stata-native SHA-1 of variables and values), always; plus file-level SHA-256 when Stata's Python integration is available (Stata 16+) | `datasignature`, and `sha256` when Python is available |
 
-Stata deliberately uses `datasignature` rather than a file-level SHA-256 so the helper never has to shell out — which keeps it AppLocker-safe on UNICEF laptops. The mechanisms differ in two ways: Stata's signature is SHA-1 over the dataset's *content* (variables and values), whereas R and Python hash the *bytes of the file on disk*. The consequence is twofold — an R-written file and a Stata-written file of the same data share neither the byte-for-byte file hash nor the same field name in the sidecar. Cross-tool integrity comparisons should therefore compare like with like, and a comparison that spans the Stata/R-or-Python boundary cannot rely on a single hash field. See the provenance-sidecar appendix for the full schema and the integrity-check semantics.
+Stata deliberately uses `datasignature` rather than a file-level SHA-256 so the helper never has to shell out — which keeps it AppLocker-safe on UNICEF laptops. The mechanisms differ in two ways: Stata's signature is SHA-1 over the dataset's *content* (variables and values), whereas R and Python hash the *bytes of the file on disk*. The consequence is twofold — an R-written file and a Stata-written file of the same data share neither the byte-for-byte file hash nor the same field name in the sidecar. Cross-tool integrity comparisons should therefore compare like with like, and a comparison across the Stata/R-or-Python boundary can use `sha256` only when the Stata sidecar has one (written with Python available); otherwise compare like with like. See the provenance-sidecar appendix for the full schema and the integrity-check semantics.
 
 ## Supporting machinery: documentation, tests, CI
 
@@ -256,25 +258,25 @@ Parity is about more than the functions. The scaffolding around each language �
 | Capability | R | Python | Stata |
 |---|---|---|---|
 | Native package install | `devtools::install_local("r/")` | `pip install -e python/` | n/a (vendoring only; no native install) |
-| Generated API reference | Yes (Roxygen → 34 `.Rd` files + pkgdown site) | No autodoc; prose reference in `docs/` only | `.sthlp` help file per command |
-| Type/interface metadata | NAMESPACE exports (~44, incl. aliases) | PEP 561 `py.typed`, full type hints | n/a |
-| Unit/regression test suite | Yes (`testthat`: 32 test files, 370+ `expect_*` assertions) | Manual smoke test + error-envelope test | No automated suite |
-| Wired into CI | Yes (`r-check.yml`: Ubuntu release+devel, macOS, Windows) | Conformance driver only (`conformance.yml`); unit tests manual-only | No (Stata conformance driver pending license provisioning, issue #133) |
+| Generated API reference | Yes (Roxygen → 44 `.Rd` files; `r/_pkgdown.yml` groups them, but no pkgdown site is built or published) | No autodoc; prose reference in `docs/` only | `.sthlp` help file per command |
+| Type/interface metadata | NAMESPACE exports (54, incl. aliases) | PEP 561 `py.typed`, full type hints | n/a |
+| Unit/regression test suite | Yes (`testthat`: 44 test files, 880+ `expect_*` assertions) | pytest suite (`python/tests/`, 17 files) + manual smoke and error-envelope scripts (`python/tests/manual/`) | No automated suite |
+| Wired into CI | Yes (`r-check.yml`: Ubuntu release+devel, macOS, Windows) | Conformance round-trip only (`conformance.yml`); the pytest suite runs locally, not in CI | No (Stata conformance driver pending license provisioning, issue #133) |
 | Cross-language conformance gate | Yes (driver + comparator in `conformance.yml`; parity certificate) | Yes (driver + comparator in `conformance.yml`; parity certificate) | Parity certificate, run locally (`sh tools/certify`, #190); CI pending (issue #133) |
-| Error-envelope verification | `expect_envelope()` helper used across the suite | dedicated `error_envelope_test.py` | Enforced at call site; not separately tested |
+| Error-envelope verification | `expect_envelope()` helper used across the suite | dedicated `tests/manual/error_envelope_test.py` | Enforced at call site; not separately tested |
 
 The headline gaps:
 
-- **R is the only sibling whose *unit tests* run in CI.** GitHub Actions runs `R CMD check` (which invokes the `testthat` suite) on every push and pull request to `main`/`develop` across four configurations: Ubuntu on R-release and R-devel, macOS, and Windows. The Python smoke and error-envelope tests are real and runnable, but they are **manual-only** — bootstrapped by copying `python/src/` into a temp dir and run by hand, not gated in CI. The Stata side has no automated test suite at all.
+- **R is the only sibling whose *unit tests* run in CI.** GitHub Actions runs `R CMD check` (which invokes the `testthat` suite) on every push and pull request to `main`/`develop` across four configurations: Ubuntu on R-release and R-devel, macOS, and Windows. Python has a pytest suite (`python/tests/`) and two manual scripts (`python/tests/manual/`); none of them runs in CI. The Stata side has no automated test suite at all.
 - **Cross-language parity is now executed, not just asserted.** The `Conformance` workflow (`conformance.yml`, on every push and PR to `main`/`develop`) runs the R and Python drivers over the shared fixture — a `dw_use → dw_save → dw_use` round-trip — and a comparator asserts the outputs are value-equal within `1e-9`. The Stata leg of the same harness waits on a `STATA_LIC` secret or self-hosted runner (issue #133); until provisioned, Stata parity remains a local release gate.
-- **Python lacks a generated reference site.** R ships a pkgdown-style autodoc built from Roxygen comments (34 `.Rd` files); Python has no equivalent pkgdown/Sphinx-style autodoc. Its public surface is documented in prose under `docs/` and in the per-module catalogue, and its interfaces are machine-readable via full type hints and a PEP 561 `py.typed` marker, but there is no rendered API site.
+- **Python lacks a generated reference site.** R ships Roxygen-generated help pages (44 `.Rd` files, read with `?name`; no pkgdown site is published); Python has no equivalent pkgdown/Sphinx-style autodoc. Its public surface is documented in prose under `docs/` and in the per-module catalogue, and its interfaces are machine-readable via full type hints and a PEP 561 `py.typed` marker, but there is no rendered API site.
 - **Stata documents per-command via `.sthlp`.** Each Stata `.ado` ships a companion `.sthlp` help file, accessible with `help dw_save` and friends. There is no aggregated reference site.
 
 ## Summary: how complete is each sibling?
 
-- **R** is the reference implementation: every capability family, the full format set including `.rds` and gzipped CSV/TSV, the only generated reference site, and the only CI-gated test suite. Its version stamp is v0.11.1, level with Python. If a behaviour is ambiguous, R defines it.
-- **Python** is a near-complete functional port — core IO (including `.pkl`), all eleven external-API dispatch keys, aggregation, vintage sync, and scaffolding — with full type hints, but no generated reference site, CI-manual-only testing, one R-only helper it has not yet picked up (`dw_regions`; `dw_root` and `dw_stage` now ship in Python too). Its version stamp matches R at 0.11.1, though that helper gap remains.
-- **Stata** is a deliberately scoped subset: full IO and mode contract for `.dta` / `.csv` / `.xlsx`, the reviewer no-API gate, recursive `mkdir`, and config loading — but **no external-API wrapper, no aggregation, no vintage-sync helpers, no contract auditor, no Parquet/binary formats, and no automated tests**. It enforces every half of the mode contract it can reach, and routes everything else through R or Python.
+- **R** is the reference implementation: every capability family, the full format set including `.rds` and gzipped CSV/TSV, the only generated reference (`.Rd` help pages), and the only CI-gated test suite. Its version stamp is v0.12.0, level with Python. If a behaviour is ambiguous, R defines it.
+- **Python** is a near-complete functional port — core IO (including `.pkl`), all eleven external-API dispatch keys, aggregation, vintage sync, and scaffolding — with full type hints, but no generated reference site, a local pytest suite not run in CI, and three R exports it lacks (`dw_regions`, `dw_verbosity` and the `dw_publish` stub; `dw_root` and `dw_stage` now ship in Python too). Its version stamp matches R at 0.12.0, though those gaps remain.
+- **Stata** is a deliberately scoped subset: full IO and mode contract for `.dta` / `.csv` / `.xlsx`, `dw_compare`, the collaboration model and multi-producer guards (`dw_collaboration`, `dw_save … takeover`), `dw_map_drive`, the reviewer no-API gate, recursive `mkdir`, and config loading — but **no external-API wrapper, no aggregation, no vintage-sync helpers, no contract auditor, no Parquet/binary formats, and no automated tests**. It enforces every half of the mode contract it can reach, and routes everything else through R or Python.
 
 When you vendor, choose the language that fits the pipeline — and where a Stata pipeline needs a capability this matrix marks "Route via R/Python," plan that crossing explicitly. The vendoring-model and onboarding chapters walk through how to wire a multi-language sector so the crossings are clean.
 

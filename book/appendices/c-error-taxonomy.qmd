@@ -10,7 +10,7 @@ Every error the toolkit raises shares one shape. Wherever a `dw_*` helper calls 
     2. Do that.
 ```
 
-The leading `[cso_toolkit.<func>]` prefix is the load-bearing convention. It separates library messages from your own code's errors, and — because it is a stable literal — it lets you grep a whole consumer project for every site that hits a given error class. The R `testthat` suite holds raises to this shape through a custom `expect_envelope()` matcher (it asserts the `^[cso_toolkit.<func>]` prefix on the raised condition), and the Python suite runs a parallel `error_envelope_test.py` that exercises 30 raise-paths. The `WHAT` / `Why` / `Fix` structure is therefore a tested invariant, not a stylistic suggestion.
+The leading `[cso_toolkit.<func>]` prefix is the load-bearing convention. It separates library messages from your own code's errors, and — because it is a stable literal — it lets you grep a whole consumer project for every site that hits a given error class. The R `testthat` suite holds raises to this shape through a custom `expect_envelope()` matcher (it asserts the `^[cso_toolkit.<func>]` prefix on the raised condition), and a manual Python script, `python/tests/manual/error_envelope_test.py` (run by hand, not in CI), checks 33 raise-paths. The `WHAT` / `Why` / `Fix` structure is therefore a tested invariant, not a stylistic suggestion.
 
 This appendix is a debugging quick-reference. It groups the toolkit's errors into five categories, gives the actual envelope text for each, explains the contract the envelope defends, and tells you how to fix it. For the full per-function reference see the function reference appendix and the IO and external-API contract chapters; for the sidecar fields named below, see the provenance sidecar schema appendix.
 
@@ -36,7 +36,7 @@ The toolkit enforces the producer / reviewer / publisher mode contract at every 
 
 ### Reviewer writing under canonical
 
-This is the canonical example of the whole envelope convention. A `dw_save()` whose resolved destination lies under `teamsWrkDataCanonical`, `teamsRawDataCanonical`, or the configured Z: drive root (`dwZDrive`) stops in reviewer mode:
+This is the canonical example of the whole envelope convention. A `dw_save()` whose resolved destination lies under `teamsWrkDataCanonical`, `teamsRawDataCanonical`, or the configured Z: drive root (`dwZDrive`) stops in reviewer mode. R and Python also guard `teamsFolderCanonical`, and R additionally matches the OneDrive-synced `060.DW-MASTER` path; Stata guards only the two `*Canonical` roots and `dwZDrive`. The R text:
 
 ```text
 [cso_toolkit.dw_save] Reviewer mode forbids writes to <root>: <path>
@@ -90,7 +90,7 @@ dw_save, filename("dw_ed_edu.dta") path("$teamsWrkDataCanonical/ed") ///
     2. Otherwise, a producer must call dw_use('<url>') once and commit the frozen file + sidecar before the reviewer pipeline can read it.
 ```
 
-The tier line was added after a costly miss: a reviewer-mode audit spent three runs (75+ minutes on a slow network) tracing a fallback that resolved to `<githubFolder>/_frozen` instead of the project's expected `_frozen` path. The envelope now surfaces that mismatch at the point of failure. The frozen root resolves in tiers — an explicit `dw_frozen_root` global first, a `githubFolder` fallback next — and the toolkit warns once per session whenever it falls back past the first tier.
+The tier line was added after a costly miss: a reviewer-mode audit spent three runs (75+ minutes on a slow network) tracing a fallback that resolved to `<githubFolder>/_frozen` instead of the project's expected `_frozen` path. The envelope now surfaces that mismatch at the point of failure. The frozen root resolves in tiers — an explicit `dw_frozen_root` global first, a `githubFolder` fallback next, then `<working dir>/_frozen` — and R notes the fallback once per session whenever it falls back past the first tier (a warning for the last tier). The envelope above is R's; the Python envelope omits the `Frozen-root resolution` line and the once-per-session notice.
 
 ### Reviewer reaching a live API
 
@@ -102,7 +102,7 @@ The external-API wrapper carries the same lock. When `dw_apis_allowed` is false 
   Reason: cache missing at /data/raw-canonical/_apis/sdmx_codelist/sdmx_codelist_UNICEF_CL_RESIDENCE_1_0.csv
   Fix:
     1. The expected workflow is that a Database Manager has already populated
-       the cache under teamsRawDataCanonical/_apis/. Verify the cache file exists.
+       the cache under teamsRawDataCanonical/_apis/. Verify the cache file exists at the path above.
     2. If you ARE the producer, switch modes:
        from cso_toolkit import _state
        _state.configure(dw_mode="producer", dw_apis_allowed=True)
@@ -114,7 +114,7 @@ The fix for a reviewer is to confirm the producer has deposited the cache — mo
 The `Fix:` block here is genuinely the *expected* remedy for a reviewer: **verify the cache exists**, not "switch to producer." Switching modes is the producer's path. A reviewer who flips `dw_apis_allowed = TRUE` to make this stop go away has silently left the reproducibility floor.
 :::
 
-The R and Stata siblings enforce the same lock through a `dw_require_no_api()` guard rather than a per-call envelope. In Stata, `dw_require_no_api` aborts with Stata error 459 and its own prefix:
+R raises the same `[cso_toolkit.dw_api]` envelope from `dw_api_fetch()` (its fix step 2 says to set `dw_mode: producer` in `user_config.yml` and re-source the profile). Stata, which has no fetcher, enforces the lock through a `dw_require_no_api` guard that aborts with Stata error 459 and its own prefix:
 
 ```text
 [cso_toolkit.dw_require_no_api] Reviewer mode forbids live API calls.
@@ -122,7 +122,7 @@ The R and Stata siblings enforce the same lock through a `dw_require_no_api()` g
   vintage permanence; any live API call breaks provenance.
 ```
 
-In R the guard is installed by the repo profile; its exact text depends on that profile, so match on the `[cso_toolkit.dw_api]` or `dw_require_no_api` token rather than on a fixed string.
+A repo profile may also define its own `dw_require_no_api()` for scripts that call the network directly; its exact text depends on that profile, so match on the `dw_require_no_api` token rather than on a fixed string.
 
 ::: {.callout-note}
 Coverage note: Stata ships the *guard* (`dw_require_no_api.ado`) but not the *fetcher*. `dw_api_fetch` / `dw_api_cached` / `dw_api_inventory` are R + Python only. A Stata pipeline that needs live data routes the fetch through R or Python on the producer side, then reads the cached `.dta`. See the coverage matrix appendix.
@@ -130,7 +130,7 @@ Coverage note: Stata ships the *guard* (`dw_require_no_api.ado`) but not the *fe
 
 ## 2. Unsupported / mismatched format
 
-The R and Python IO helpers auto-dispatch on the file extension, covering CSV / TSV / TXT, XLSX (single and multi-sheet), RDS, RData, DTA, Parquet, JSON, and YAML, with optional `.csv.gz` compression. An extension outside that set raises from `dw_save()` / `dw_use()` in the same envelope shape:
+The R and Python IO helpers auto-dispatch on the file extension, covering CSV / TSV / TXT, XLSX (single and multi-sheet), DTA, Parquet, JSON, and YAML (plus RDS / RData in R, pickle in Python), with optional `.csv.gz` compression. An extension outside that set raises from `dw_save()` / `dw_use()` in the same envelope shape. The R text:
 
 ```text
 [cso_toolkit.dw_save] Unsupported file extension '<ext>' (path: <path>).
@@ -138,12 +138,14 @@ The R and Python IO helpers auto-dispatch on the file extension, covering CSV / 
   Fix: rename the output so it has one of the supported extensions.
 ```
 
+In Python the list reads `csv, tsv, txt, xlsx, pkl, dta, parquet, json, yml, yaml`, and `dw_save`'s fix adds "or extend dw_save's dispatch table."
+
 The real gap, though, is **coverage asymmetry across siblings** (see the coverage matrix appendix). The format you can write in R is not always the format you can write in Stata or Python:
 
 - **Stata `dw_save` writes `.dta` only.** It does not dispatch on extension — it always saves a Stata dataset, so there is no Parquet, RDS, or CSV write path on the Stata side. Pipelines that need those formats produce them in R or Python and let Stata consume the `.dta`.
 - **Stata `dw_use` reads `.dta`, `.csv`, and `.xlsx` only.** Parquet, RDS, and RData reads are out of scope on the Stata side; route them through R or Python.
 - **`dw_merge`, `dw_verify_z`, `dw_stage`, and the standalone `dw_isid` are R + Python only.** Calling a name that exists in R but not in Stata fails as an *unknown command*, not as a toolkit envelope — so a "command not found" from Stata is itself a coverage signal, not a bug.
-- **`dw_fetch_inputs`, `dw_check_deposit`, `dw_read_provenance`, and `dw_provenance_diff` are R and Python** (#152). Python raises the same envelopes: `FileNotFoundError` (no deposit reachable, no input anywhere, no current sidecar), `ValueError` (a path outside `local_root`, a failed check, Teams and Z: disagreeing, an invalid sidecar), `OSError` (a copy that cannot be verified), and a `UserWarning` for `output_changed`. Stata routes via R or Python, so the names are undefined there.
+- **`dw_fetch_inputs`, `dw_check_deposit`, `dw_read_provenance`, and `dw_provenance_diff` are R and Python** (#152, closed: Stata routes through R or Python). Python raises the same envelopes: `FileNotFoundError` (no deposit reachable, no input anywhere, no current sidecar), `ValueError` (a path outside `local_root`, a failed check, Teams and Z: disagreeing, an invalid sidecar), `OSError` (a copy that cannot be verified), and a `UserWarning` for `output_changed`. Stata routes via R or Python, so the names are undefined there.
 - **`.RData` / `.rda` writes skip the provenance sidecar** — not an error, but expect it: the write succeeds silently, with no `.provenance.json` companion.
 
 The fix is to choose an extension the target sibling supports, or move the step to the language whose sibling implements the format. The contract is identical *where the format is implemented*; the gaps are in coverage, not in semantics. When in doubt, the coverage matrix appendix is the authoritative source for what each sibling can read and write.
@@ -245,10 +247,12 @@ dw_save, filename("dw_ed_edu.dta") path("$teamsWrkData/ed") ///
 ```
 :::
 
-In Stata the uniqueness check is embedded in `dw_save` (the `idvars()` option), not exposed as a standalone command. Note that the Stata failure message is terser and does *not* carry the `[cso_toolkit.*]` prefix:
+In Stata the uniqueness check is embedded in `dw_save` (the `idvars()` option), not exposed as a standalone command. The Stata message carries the same prefix and envelope:
 
 ```text
-dw_save: idvars [<keys>] do not uniquely identify the dataset (or contain missing). No file written.
+[cso_toolkit.dw_save] idvars [<keys>] do not uniquely identify the dataset (or contain missing). No file written.
+  Why: every output must be unique on its id variables, so a later merge or dw_compare is well defined.
+  Fix: find the duplicates with -duplicates report <keys>-, then drop them or add the variable that tells them apart.
 ```
 
 In R and Python, `dw_isid(df, keys)` is also callable on its own as a pre-flight check, and that standalone path raises the full `[cso_toolkit.dw_isid]` envelope above. Either way the fix is the same: the duplicates are real — collapse, de-duplicate, or widen the key set so the declared keys truly identify a row. The printed sample tells you *which* keys collide.
@@ -265,11 +269,11 @@ An upstream-changed condition (the sandbox still matches its own archive, but th
 
 ### Z: mirror integrity (`dw_verify_z`)
 
-On a canonical read in producer mode, `dw_use()` compares the Teams and Z: copies (by file size by default; `verify_z = "sha256"` for a deep check). A mismatch emits a **warning** and the read still completes — this is intentionally non-fatal, because a size difference is often a benign line-ending artefact rather than a content divergence. Pass `verify_z = FALSE` to skip the check, or `verify_z = "sha256"` when you need certainty. (`dw_verify_z` is R + Python only; the Stata `dw_use` runs an equivalent non-blocking size/`datasignature` check inline.)
+On any read that resolves to a canonical file while Z: is available (producer or reviewer mode), `dw_use()` compares the Teams and Z: copies (by file size by default; `verify_z = "sha256"` for a deep check). A mismatch emits a **warning** and the read still completes — this is intentionally non-fatal, because a size difference is often a benign line-ending artefact rather than a content divergence. Pass `verify_z = FALSE` to skip the check, or `verify_z = "sha256"` when you need certainty. (`dw_verify_z` is R + Python only; the Stata `dw_use` runs an equivalent non-blocking size/`datasignature` check inline.)
 
 ### Input-deposit integrity (`dw_fetch_inputs`, `dw_check_deposit`)
 
-For pipelines whose inputs are kept out of Git, the deposit on Teams / Z: is the source of truth, and every local input must have an identical copy there. The stops (R only):
+For pipelines whose inputs are kept out of Git, the deposit on Teams / Z: is the source of truth, and every local input must have an identical copy there. The stops (R and Python; Python raises the exception types listed in category 2):
 
 - `[cso_toolkit.dw_fetch_inputs] No input files … were found locally or in the deposit.` — nothing matches the pattern in the local folder, on Teams, or on Z:. Fix: deposit the inputs in the Teams folder named in the message (same relative layout) and rerun; if the deposit is unreachable too, source the consumer profile, sync Teams, or connect to Z:.
 - `[cso_toolkit.dw_fetch_inputs] Teams and Z: hold different versions of '<file>'.` — a canonical-integrity stop, as in `dw_stage`: nothing is copied. Fix: decide which version is correct and replace the other.
@@ -282,7 +286,7 @@ For pipelines whose inputs are kept out of Git, the deposit on Teams / Z: is the
 
 ### Run comparison (`dw_read_provenance`, `dw_provenance_diff`)
 
-Run comparison is informational: a difference between two runs is a **status**, not an error. Only these conditions raise (R only):
+Run comparison is informational: a difference between two runs is a **status**, not an error. Only these conditions raise (R and Python):
 
 - `[cso_toolkit.dw_read_provenance] The provenance sidecar is not valid JSON` — Fix: rewrite the output with `dw_save()` to regenerate its sidecar, or restore the sidecar from version control. A *missing* sidecar is not an error: `dw_read_provenance` returns `NULL`.
 - `[cso_toolkit.dw_provenance_diff] The current output has no provenance sidecar.` — Fix: write the output with `dw_save()` (`provenance = TRUE`, the default) before comparing runs.
@@ -356,9 +360,9 @@ When behind, run `cso_toolkit_sync()`: it prints the release notes since the pin
 When you hit a `[cso_toolkit.*]` stop and are not sure which category it is:
 
 1. **Read the `<func>` token** — it tells you the contract layer: `dw_save` / `dw_use` (IO), `dw_api` / `dw_require_no_api` (external API), `dw_isid` / `dw_stage` / `dw_verify_z` (integrity), `cso_toolkit_pull` / `cso_toolkit_sync` (drift).
-2. **Read the second word of the `WHAT` line.** `Reviewer mode forbids` → category 1. `COPY INTEGRITY` / `SANDBOX DRIFT` / `CANONICAL INTEGRITY` → category 4. `duplicate row(s)` → category 4 (`isid`). `HTTP ... returned status` → category 3. `newer tag available` → category 5.
+2. **Read the second word of the `WHAT` line.** `Reviewer mode forbids` → category 1. `COPY INTEGRITY` / `SANDBOX DRIFT` / `CANONICAL INTEGRITY` → category 4. `duplicate row(s)` → category 4 (`isid`). `HTTP ... returned status` → category 3. `is behind its target version` (a warning), or the informational notice `A newer cso-toolkit release is available` → category 5.
 3. **Check your `dw_mode` first.** A large share of these stops dissolve once you confirm whether the session is a producer or a reviewer and whether that role is *correct* for the step you are running.
-4. **Grep the consumer project for the prefix** (for example `[cso_toolkit.dw_save]`) to find every other site that can hit the same class — useful when one fix should be applied repo-wide. Remember the R transport errors (category 3) and the Stata `isid` message are the two cases that do *not* carry the prefix.
+4. **Grep the consumer project for the prefix** (for example `[cso_toolkit.dw_save]`) to find every other site that can hit the same class — useful when one fix should be applied repo-wide. Remember the R transport errors (category 3) do *not* carry the prefix.
 5. **Do what the `Fix:` block says, in order.** The numbered options are ranked: option 1 is the expected remedy; option 2 is usually the deliberate escape hatch reserved for the Database Manager.
 
 For the precise arguments and return values behind each helper named above, see the function reference appendix; for the sidecar fields the integrity checks compare, see the provenance sidecar schema appendix.
