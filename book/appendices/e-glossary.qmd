@@ -28,7 +28,7 @@ The harmonization code carried in the folder grammar's final token (for example 
 
 ## Contract auditor
 
-The static-analysis helper, `test_scripts()`, that recursively scans a directory of R or Python scripts and flags any direct call to a raw file-IO or external-API command the toolkit is meant to wrap — for example `read_csv`, `pd.read_csv`, `httr::GET`, `requests.get`, `rsdmx::readSDMX`, or `sdmx.Client`. It exists to keep a vendoring repo from quietly drifting back to un-wrapped IO. A per-line escape hatch, `# cso-allow: <rule-id>`, suppresses an intentional exception; `error_on_violation = TRUE` turns it into a build gate. The auditor is R + Python only; there is no Stata sibling. See the scaffolding and contract auditor chapter and the CI chapter.
+The static-analysis helper, `test_scripts()`, that recursively scans a directory of R or Python scripts and flags any direct call to a raw file-IO or external-API command the toolkit is meant to wrap — for example `read_csv`, `pd.read_csv`, `httr::GET`, `requests.get`, `rsdmx::readSDMX`, or `sdmx.Client`. It exists to keep a vendoring repo from quietly drifting back to un-wrapped IO. A per-line escape hatch, `# cso-allow: <rule-id>`, suppresses an intentional exception; `error_on_violation = TRUE` turns it into a build gate. The auditor is R + Python only; there is no Stata sibling. See [Checks and CI](../chapters/checks-and-ci.qmd).
 
 ::: {.panel-tabset}
 #### R {.unnumbered .unlisted}
@@ -210,7 +210,7 @@ The metadata and discovery layer over the microdata archive — an IHSN/NADA-sty
 
 ## Mode contract
 
-What each role may and may not do at every wrapped call site, decided by `dw_mode`: producers may call APIs and write canonical; reviewers may do neither — their writes route to the sandbox, and their API calls raise. The contract is enforced by the code, not by convention: every `dw_save`, `dw_use`, and `dw_api_fetch` re-checks. One operational test of whether a sector has adopted the contract is that the canonical deposit's modification time is unchanged before and after a reviewer-mode run. See the roles and mode contract chapter and the wiring chapter.
+What each role may and may not do at every wrapped call site, decided by `dw_mode`: producers may call APIs and write canonical; reviewers may do neither — their writes route to the sandbox, and their API calls raise. The contract is enforced by the code, not by convention: every `dw_save`, `dw_use`, and `dw_api_fetch` re-checks. One operational test of whether a sector has adopted the contract is that the canonical deposit's modification time is unchanged before and after a reviewer-mode run. See the roles and mode contract chapter and [Profiles and the mode switch](../chapters/profiles-and-modes.qmd).
 
 ## Module
 
@@ -246,7 +246,7 @@ The per-user, writable directory tree a reviewer session writes into instead of 
 
 ## Scaffolding
 
-The capability family that generates the standard CSO project building blocks: `create_profile()` writes a `profile_<repo>.R` (or `.py`) with cross-platform user identification, YAML config load, producer / reviewer `dw_mode` resolution, an optional Z: drive advisory (a non-blocking block that warns when the legacy Azure mirror is unavailable but does not stop execution), a packages block, and a sentinel object; `review_profile()` audits an existing profile against the same checklist, reporting `pass` / `warn` / `fail`; `create_sector_script()` scaffolds a sector run-script template with profile verification, logging, runtime tracking, and try/catch; `create_dw_sector_script()` is the DW-Production wrapper; and `create_research_project()` and `create_official_stats_project()` (v0.10.0) scaffold a whole new repository: layout, `.gitignore`, `tools/check.R` and its wrapper, pre-push hook, testthat skeleton, `cso_project.yml` and the agent files. See the scaffolding and contract auditor chapter.
+The capability family that generates the standard CSO project building blocks: `create_profile()` writes a `profile_<repo>.R` (or `.py`) with cross-platform user identification, YAML config load, producer / reviewer `dw_mode` resolution, an optional Z: drive advisory (a non-blocking block that warns when the legacy Azure mirror is unavailable but does not stop execution), a packages block, and a sentinel object; `review_profile()` audits an existing profile against the same checklist, reporting `pass` / `warn` / `fail`; `create_sector_script()` scaffolds a sector run-script template with profile verification, logging, runtime tracking, and try/catch; `create_dw_sector_script()` is the DW-Production wrapper; and `create_research_project()` and `create_official_stats_project()` (v0.10.0) scaffold a whole new repository: layout, `.gitignore`, `tools/check.R` and its wrapper, pre-push hook, testthat skeleton, `cso_project.yml` and the agent files. See [Starting a repository](../chapters/40-new-repository.qmd) and [Profiles and the mode switch](../chapters/profiles-and-modes.qmd).
 
 ## Sentinel object
 
@@ -270,7 +270,7 @@ A dated snapshot of a data source or of a piece of code. Two senses recur: the *
 
 ## Vintage sync
 
-The capability family of consumer-side helpers that keep a vendored copy from silently falling behind upstream: `cso_toolkit_check()` reads the local manifest, queries upstream for the latest tag, and warns when the consumer is behind; `cso_toolkit_diff()` compares each vendored file with a release tag; `cso_toolkit_pull()` refreshes vendored files to a target tag and updates the manifest; `cso_toolkit_sync()` does the update in one call, after printing the release notes. In reviewer mode the check runs offline only (pinned version against `target_version`); the network lockout (`dw_apis_allowed = FALSE`) skips the upstream lookup, and `cso_toolkit_pull()` / `cso_toolkit_sync()` refuse, so reviewers always run against whatever vintage the producer pinned. See the vintage sync chapter.
+The capability family of consumer-side helpers that keep a vendored copy from silently falling behind upstream: `cso_toolkit_check()` reads the local manifest, queries upstream for the latest tag, and warns when the consumer is behind; `cso_toolkit_diff()` compares each vendored file with a release tag; `cso_toolkit_pull()` refreshes vendored files to a target tag and updates the manifest; `cso_toolkit_sync()` does the update in one call, after printing the release notes. In reviewer mode the check runs offline only (pinned version against `target_version`); the network lockout (`dw_apis_allowed = FALSE`) skips the upstream lookup, and `cso_toolkit_pull()` / `cso_toolkit_sync()` refuse, so reviewers always run against whatever vintage the producer pinned. See [Vendoring and updates](../chapters/vendoring-and-updates.qmd).
 
 ## Z: mirror
 

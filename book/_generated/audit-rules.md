@@ -8,7 +8,7 @@
 | `api-httr` | api | Yes | — | Direct HTTP call via httr / httr2. |
 | `api-ilostat` | api | Yes | — | Direct Rilostat::get_ilostat call. |
 | `api-requests` | api | — | Yes | Direct HTTP call via requests. |
-| `api-sdmx` | api | Yes | Yes | Direct rsdmx::readSDMX call. |
+| `api-sdmx` | api | Yes | Yes | R: Direct rsdmx::readSDMX call. Python: Direct sdmx.Client call. |
 | `api-urllib` | api | — | Yes | Direct HTTP call via urllib. |
 | `api-urlretrieve` | api | — | Yes | Direct file download bypasses the cache. |
 | `api-wbdata` | api | — | Yes | Direct wbdata call. |
@@ -23,7 +23,7 @@
 | `io-parquet` | io | Yes | — | Direct Parquet read / write. |
 | `io-pickle` | io | — | Yes | Direct pickle dump / load. |
 | `io-rds` | io | Yes | — | Direct RDS read / write. |
-| `io-read-csv` | io | Yes | Yes | Direct CSV read. |
+| `io-read-csv` | io | Yes | Yes | R: Direct CSV read. Python: Direct CSV read via pandas. |
 | `io-read-excel` | io | — | Yes | Direct Excel read. |
 | `io-read-parquet` | io | — | Yes | Direct Parquet read. |
 | `io-read-stata` | io | — | Yes | Direct Stata .dta read. |

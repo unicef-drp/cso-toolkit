@@ -2,7 +2,7 @@
 
 | Function | R | Python | Stata |
 |---|---|---|---|
-| `cso_toolkit_check` | Yes | Yes | n/a (update by hand; see Vintage sync) |
+| `cso_toolkit_check` | Yes | Yes | n/a (update by hand; see Vendoring and updates) |
 | `cso_toolkit_diff` | Yes | Yes | n/a |
 | `cso_toolkit_pull` | Yes | Yes | n/a |
 | `cso_toolkit_sync` | Yes | Yes | n/a |

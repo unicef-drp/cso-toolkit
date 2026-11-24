@@ -294,7 +294,7 @@ Run comparison is informational: a difference between two runs is a **status**, 
 
 ## 5. Vendor drift
 
-The toolkit is **vendored**, not installed over the network: consumers copy the helpers into their own `00_functions/` and pin a version in `.toolkit_manifest.yml` (see the vendoring-model chapter). Drift is the gap between that pinned version and the upstream latest tag.
+The toolkit is **vendored**, not installed over the network: consumers copy the helpers into their own `00_functions/` and pin a version in `.toolkit_manifest.yml` (see [Vendoring and updates](../chapters/vendoring-and-updates.qmd)). Drift is the gap between that pinned version and the upstream latest tag.
 
 `cso_toolkit_check()` reads the local manifest and compares the pinned version with two references (v0.10.0):
 

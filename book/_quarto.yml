@@ -23,31 +23,27 @@ book:
     - front-matter/acknowledgements.qmd
     - front-matter/how-to-cite.qmd
     - introduction.qmd
-    - part: "Part I — Why & Architecture"
+    - part: "Part I — The Contract"
       chapters:
         - chapters/11-why.qmd
         - chapters/12-architecture.qmd
-    - part: "Part II — The Contract"
-      chapters:
         - chapters/21-roles-and-modes.qmd
-        - chapters/22-wiring-the-contract.qmd
         - chapters/23-provenance-and-errors.qmd
-    - part: "Part III — The API (cross-language)"
+    - part: "Part II — Using the Helpers"
       chapters:
         - chapters/31-io.qmd
         - chapters/32-external-api.qmd
         - chapters/33-aggregation.qmd
-        - chapters/34-vintage-sync.qmd
-        - chapters/35-scaffolding-audit.qmd
-    - part: "Part IV — Adoption & Operations"
+    - part: "Part III — Setting Up and Running a Repository"
       chapters:
         - chapters/40-new-repository.qmd
-        - chapters/41-vendoring.qmd
-        - chapters/42-onboarding-example.qmd
-        - chapters/43-contract-auditor-ci.qmd
-        - chapters/44-versioning-release.qmd
-        - chapters/45-ci-cd.qmd
+        - chapters/profiles-and-modes.qmd
+        - chapters/vendoring-and-updates.qmd
+        - chapters/checks-and-ci.qmd
         - chapters/46-ai-agents.qmd
+    - part: "Part IV — Maintaining the Toolkit"
+      chapters:
+        - chapters/44-versioning-release.qmd
     - part: "Part V — The Microdata Archive (datalib)"
       chapters:
         - chapters/51-microdata-archive.qmd

@@ -20,6 +20,16 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
   `Conformance` workflow runs it on every pull request. Appendices A and
   G now include the generated tables. First step of the handbook
   restructure.
+- **Handbook Part III restructured: eight chapters become four.**
+  "Starting a repository", "Profiles and the mode switch", "Vendoring
+  and updates" and "Checks and CI" replace chapters 22, 34, 35, 41, 42,
+  43 and 45 (and rewrite 40), each fact in one place, with language
+  coverage shown by the generated line under each function. The book's
+  parts are now: I The Contract, II Using the Helpers, III Setting Up
+  and Running a Repository, IV Maintaining the Toolkit. Old chapter URLs
+  redirect to the new pages. Bugs found while rewriting: #236
+  (`create_profile()` output lacks `projectFolder`), #237 (two auditor
+  pattern gaps).
 
 ## v0.12.0 (2026-11-24)
 

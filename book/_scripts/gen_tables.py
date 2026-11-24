@@ -247,7 +247,10 @@ def render_rules(rules: dict) -> str:
     order = sorted(rules, key=lambda r: (rules[r]["family"], r))
     for rid in order:
         v = rules[rid]
-        msg = v["r"] if v["r"] else (v["python"] or "")
+        if v["r"] and v["python"] and v["r"] != v["python"]:
+            msg = f"R: {v['r']} Python: {v['python']}"
+        else:
+            msg = v["r"] or v["python"] or ""
         lines.append(f"| `{rid}` | {v['family']} | {'Yes' if v['r'] is not None else '—'} | "
                      f"{'Yes' if v['python'] is not None else '—'} | {md_escape(msg)} |")
     n_r = sum(1 for v in rules.values() if v["r"] is not None)

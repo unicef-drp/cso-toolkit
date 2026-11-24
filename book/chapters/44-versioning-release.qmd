@@ -89,7 +89,7 @@ Releases are Git tags of the form `vX.Y.Z` (and `vX.Y.Z-rcN` for release candida
 
 ### The version is stamped in more than one place
 
-A version stamp that disagrees with the tag silently mislabels the provenance of every artefact written under that release, because `dw_toolkit_version()` is recorded into `.provenance.json` sidecars and into `dw_publish()` payloads. A release cut must therefore keep several stamps in agreement; they are read by different consumers:
+A version stamp that disagrees with the tag silently mislabels the provenance of every artefact written under that release, because `dw_toolkit_version()` is recorded in `dw_stage()`'s `.staged.json` sidecars and in `dw_publish()` payloads. A release cut must therefore keep several stamps in agreement; they are read by different consumers:
 
 ```
 r/DESCRIPTION                    Version: X.Y.Z
@@ -158,7 +158,7 @@ cso_toolkit_sync(target_version="v0.5.0")
 ```stata
 * Coverage gap: no Stata sibling of the vintage-sync helpers ships.
 * Stata consumers pin .toolkit_manifest.yml by hand and refresh the
-* vendored .ado files manually. See the vintage sync chapter and the
+* vendored .ado files manually. See "Vendoring and updates" and the
 * coverage matrix appendix.
 ```
 :::

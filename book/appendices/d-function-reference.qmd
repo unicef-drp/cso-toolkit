@@ -2,7 +2,7 @@
 
 This appendix is a *directory, not a manual*. It lists every public function the toolkit exports, groups them into their capability families, and points you to the authoritative per-function documentation for each language. Use it to find a function by name and see which family it belongs to, which languages implement it, and where to read the argument-by-argument details. The full prose reference — argument descriptions, return values, and runnable examples — lives in each language's own documentation, described below.
 
-The families here mirror the chapters of Part III. For the *behaviour* of a family — what it does and why — read the matching chapter (the IO contract, the external-API contract, aggregation, vintage sync, scaffolding and the contract auditor). For the *signatures*, read each language's reference, described in the next section. The coverage-matrix appendix is the canonical source for the cross-language gaps summarised below.
+The families here mirror the chapters of Part II, plus the Part III chapters on profiles, vendoring and checks. For the *behaviour* of a family — what it does and why — read the matching chapter (the IO contract, the external-API contract, aggregation, vintage sync, scaffolding and the contract auditor). For the *signatures*, read each language's reference, described in the next section. The coverage-matrix appendix is the canonical source for the cross-language gaps summarised below.
 
 A note on terms used throughout the tables. The toolkit routes paths and gates the network by *mode*: a script runs as the data **producer** (writes the canonical deposit, may hit the live network) or as the **reviewer** (reads frozen artefacts only, with the network barred). A **canonical** write is a final published deposit, as opposed to a working artefact. These distinctions are load-bearing for the IO and external-API tables; the external-API contract chapter explains them in full.
 
@@ -148,7 +148,7 @@ Convenience wrappers for the population denominators and the UNICEF region taxon
 
 ## Vintage sync
 
-Consumer-side helpers that read the local `.toolkit_manifest.yml`, query upstream for the latest tag, and warn or refresh when the vendored copy is behind. Reviewer mode forbids the network query. See the vintage sync chapter.
+Consumer-side helpers that read the local `.toolkit_manifest.yml`, query upstream for the latest tag, and warn or refresh when the vendored copy is behind. Reviewer mode forbids the network query. See [Vendoring and updates](../chapters/vendoring-and-updates.qmd).
 
 | Function | R | Python | Stata | Notes |
 |---|---|---|---|---|
@@ -161,7 +161,7 @@ These four keep the `cso_toolkit_` prefix in both R and Python (no `dw_` alias).
 
 ## Scaffolding and the contract auditor
 
-Generators for the standard CSO building blocks (new repositories, profile scripts, sector run-scripts), an auditor for existing profiles, and the raw-call contract auditor. See the scaffolding and contract auditor chapter.
+Generators for the standard CSO building blocks (new repositories, profile scripts, sector run-scripts), an auditor for existing profiles, and the raw-call contract auditor. See [Starting a repository](../chapters/40-new-repository.qmd), [Profiles and the mode switch](../chapters/profiles-and-modes.qmd) and [Checks and CI](../chapters/checks-and-ci.qmd).
 
 | Function (R canonical) | R | Python | Stata | Notes |
 |---|---|---|---|---|
@@ -210,7 +210,7 @@ The full set of commands under `stata/src/` is: `dw_save`, `dw_use`, `dw_compare
 ## How to find a function fast
 
 - **You know the name.** In R, `?<name>`; in Python, `help(<name>)` after importing it from `cso_toolkit` (either the bare name or the `dw_` prefix works for the dual-named functions); in Stata, `help <command>`.
-- **You know the task but not the name.** Find the matching chapter in Part III, then return here for the family table.
+- **You know the task but not the name.** Find the matching chapter in Part II or III, then return here for the family table.
 - **You want the full R reference.** Install the package (or `devtools::load_all("r")`) and use `?<name>`; the help pages are the most complete reference of the three languages, even when you work in Python or Stata.
 - **You want to know whether a language has a function.** Use the tables above for a quick read and the cross-language coverage matrix appendix for the authoritative, issue-tracked answer.
 

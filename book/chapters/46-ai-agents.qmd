@@ -31,9 +31,9 @@ The file is a starting point, not a ceiling. A repository adds what is specific 
 | Rule | What it prevents |
 |---|---|
 | `Rscript --no-init-file`, never `--vanilla` | A run that misses the user library and fails, or silently uses another package version |
-| Never edit `00_functions/` | A vendored copy that no longer matches its manifest, so results no longer trace to a toolkit release ([the vendoring chapter](41-vendoring.qmd)) |
+| Never edit `00_functions/` | A vendored copy that no longer matches its manifest, so results no longer trace to a toolkit release ([Vendoring and updates](vendoring-and-updates.qmd)) |
 | Read and write through `dw_use()` / `dw_save()` | Outputs without provenance sidecars ([Appendix B](../appendices/b-provenance-schema.qmd)) |
-| Run `sh tools/check --record` before every push | Data, secrets or contract violations reaching the remote; the pre-push hook and the pull request's `check-record` status refuse a push without a passing record ([the CI chapter](45-ci-cd.qmd#check-records)) |
+| Run `sh tools/check --record` before every push | Data, secrets or contract violations reaching the remote; the pre-push hook and the pull request's `check-record` status refuse a push without a passing record ([Checks and CI](checks-and-ci.qmd#check-records)) |
 | Atomic commits, pull requests into `develop` | Changes no reviewer can follow, and unreviewed changes on `main` |
 
 ### Shared Claude Code settings
@@ -65,7 +65,7 @@ Whatever an agent reads is sent to the AI service that runs it. A file the agent
 
 - **No microdata and no personal records.** An agent never prints rows of a microdata file or of any file with records on individuals: no `head()`, no `View()`, no `cat` of a data file. Variable names and labels, counts, summary statistics that could be published, and code are fine.
 - **Code and provenance sidecars are fine to share.** They hold paths, hashes, schemas and settings, not data.
-- **Pre-release figures stay unseen in official statistics.** Official figures are embargoed until their publication date ([the CI chapter](45-ci-cd.qmd) sets out the release record). Before that date no external AI service sees them, unless the organization's AI-use policy allows that service to. In practice the agent does not open the output folders of an official-statistics repository before publication.
+- **Pre-release figures stay unseen in official statistics.** Official figures are embargoed until their publication date ([Checks and CI](checks-and-ci.qmd) sets out the release record). Before that date no external AI service sees them, unless the organization's AI-use policy allows that service to. In practice the agent does not open the output folders of an official-statistics repository before publication.
 - **Use the services your organization has approved,** under its terms for confidential material. A personal account on a public service is not the same contract.
 
 ## Where project knowledge lives
@@ -92,7 +92,7 @@ An agent's output is checked like a junior colleague's, with one difference: it 
 3. **Comparative claims are checked after every rerun.** Levels can barely move while a comparison flips: "flat", "the same", "robust", "larger than". After a rerun, each comparative claim in the text is checked against the new tables, not only the numbers it quotes.
 4. **An independent claim check before submission or release.** Someone who did not write the text recomputes every number in it from `output/`: a co-author, or a fresh agent session given only the text and the repository. The agent that wrote the text is the wrong one to check it: it tends to confirm what it wrote.
 
-The local checks and the check record ([the CI chapter](45-ci-cd.qmd#check-records)) apply to agents as they do to people. An agent that cannot make the checks pass reports the failure. It does not push with `--no-verify`, and it never writes a check record by hand: a record says the checks passed on that exact content.
+The local checks and the check record ([Checks and CI](checks-and-ci.qmd#check-records)) apply to agents as they do to people. An agent that cannot make the checks pass reports the failure. It does not push with `--no-verify`, and it never writes a check record by hand: a record says the checks passed on that exact content.
 
 ## Parallel sessions
 
