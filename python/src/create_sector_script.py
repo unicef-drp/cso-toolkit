@@ -142,7 +142,9 @@ if not {profile_name}:
 if log_message is None or projectFolder is None:
     raise RuntimeError(
         "[X] Project profile missing required exports (log_message, "
-        "projectFolder). Re-generate the profile via create_profile()."
+        "projectFolder). A profile from create_profile() defines both; "
+        "add them to a hand-written profile (projectFolder is the folder "
+        "the input and output subpaths hang from)."
     )
 
 # Sector-error flag consumed by the top-level runner.

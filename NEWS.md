@@ -6,6 +6,16 @@ _Entries land here as PRs merge into `develop`. When the next release
 is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
+### Fixed
+
+- **`create_profile()` output works with scaffolded sector scripts
+  (#236).** Scripts from `create_sector_script()` build their paths from
+  `projectFolder`, which `create_profile()` never set, so they stopped
+  with "Project profile not loaded" (R) or "missing required exports"
+  (Python). The profile now sets `rootFolder` (the working directory,
+  unless set before the profile is sourced) and `projectFolder`, in R
+  and Python.
+
 ### Documentation
 
 - **The handbook's reference tables are generated from the code.**

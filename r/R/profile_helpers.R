@@ -140,6 +140,13 @@ create_profile <- function(repo_name,
     "# 3. Repository name",
     "#----------------------------------------",
     paste0("repo_name <- \"", repo_name, "\""),
+    "",
+    "# Repository root: the folder the profile is sourced from, unless rootFolder",
+    "# is set first. Sector scripts build their input and output paths from",
+    "# projectFolder (create_sector_script()).",
+    "if (!exists(\"rootFolder\")) rootFolder <- getwd()",
+    "rootFolder <- normalizePath(rootFolder, winslash = \"/\", mustWork = FALSE)",
+    "projectFolder <- rootFolder",
     ""
   )
 
