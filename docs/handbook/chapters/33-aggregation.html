@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>9&nbsp; Aggregation – The CSO Handbook</title>
+<title>8&nbsp; Aggregation – The CSO Handbook</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -71,7 +71,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
-<link href="../chapters/34-vintage-sync.html" rel="next">
+<link href="../chapters/40-new-repository.html" rel="next">
 <link href="../chapters/32-external-api.html" rel="prev">
 <script src="../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
@@ -153,7 +153,7 @@ window.Quarto = {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="Breadcrumbs"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/31-io.html">Part III — The API (cross-language)</a></li><li class="breadcrumb-item"><a href="../chapters/33-aggregation.html"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Aggregation</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="Breadcrumbs"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/31-io.html">Part II — Using the Helpers</a></li><li class="breadcrumb-item"><a href="../chapters/33-aggregation.html"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Aggregation</span></a></li></ol></nav>
         <a class="flex-grow-1" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -231,7 +231,7 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-controls="quarto-sidebar-section-1" aria-expanded="true">
- <span class="menu-text" id="quarto-sidebar-section-1-label">Part I — Why &amp; Architecture</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+ <span class="menu-text" id="quarto-sidebar-section-1-label">Part I — The Contract</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
       </div>
       <ul id="quarto-sidebar-section-1" aria-labelledby="quarto-sidebar-section-1-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
@@ -246,14 +246,6 @@ window.Quarto = {
  <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Architecture: one contract, three languages, many consumers</span></span></a>
   </div>
 </li>
-      </ul>
-  </li>
-        <li class="sidebar-item sidebar-item-section">
-      <div class="sidebar-item-container"> 
-            <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-controls="quarto-sidebar-section-2" aria-expanded="true">
- <span class="menu-text" id="quarto-sidebar-section-2-label">Part II — The Contract</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
-      </div>
-      <ul id="quarto-sidebar-section-2" aria-labelledby="quarto-sidebar-section-2-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/21-roles-and-modes.html" class="sidebar-item-text sidebar-link">
@@ -262,14 +254,34 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/22-wiring-the-contract.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Wiring the contract into a repo</span></span></a>
+  <a href="../chapters/23-provenance-and-errors.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Provenance sidecars and the error envelope</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-controls="quarto-sidebar-section-2" aria-expanded="true">
+ <span class="menu-text" id="quarto-sidebar-section-2-label">Part II — Using the Helpers</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+      </div>
+      <ul id="quarto-sidebar-section-2" aria-labelledby="quarto-sidebar-section-2-label" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/31-io.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">The IO contract</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/23-provenance-and-errors.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Provenance sidecars and the error envelope</span></span></a>
+  <a href="../chapters/32-external-api.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">The external-API contract</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/33-aggregation.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Aggregation</span></span></a>
   </div>
 </li>
       </ul>
@@ -277,37 +289,37 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-controls="quarto-sidebar-section-3" aria-expanded="true">
- <span class="menu-text" id="quarto-sidebar-section-3-label">Part III — The API (cross-language)</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+ <span class="menu-text" id="quarto-sidebar-section-3-label">Part III — Setting Up and Running a Repository</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
       </div>
       <ul id="quarto-sidebar-section-3" aria-labelledby="quarto-sidebar-section-3-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/31-io.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">The IO contract</span></span></a>
+  <a href="../chapters/40-new-repository.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Starting a repository</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/32-external-api.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">The external-API contract</span></span></a>
+  <a href="../chapters/profiles-and-modes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Profiles and the mode switch</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/33-aggregation.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Aggregation</span></span></a>
+  <a href="../chapters/vendoring-and-updates.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Vendoring and updates</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/34-vintage-sync.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Vintage sync</span></span></a>
+  <a href="../chapters/checks-and-ci.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Checks and CI</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/35-scaffolding-audit.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Scaffolding and the contract auditor</span></span></a>
+  <a href="../chapters/46-ai-agents.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Working with AI coding agents</span></span></a>
   </div>
 </li>
       </ul>
@@ -315,49 +327,13 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-controls="quarto-sidebar-section-4" aria-expanded="true">
- <span class="menu-text" id="quarto-sidebar-section-4-label">Part IV — Adoption &amp; Operations</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+ <span class="menu-text" id="quarto-sidebar-section-4-label">Part IV — Maintaining the Toolkit</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
       </div>
       <ul id="quarto-sidebar-section-4" aria-labelledby="quarto-sidebar-section-4-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/40-new-repository.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Starting a new repository</span></span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../chapters/41-vendoring.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">The vendoring model</span></span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../chapters/42-onboarding-example.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Onboarding a repo: a worked example</span></span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../chapters/43-contract-auditor-ci.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">The contract auditor in continuous integration (CI)</span></span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
   <a href="../chapters/44-versioning-release.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Versioning and releases</span></span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../chapters/45-ci-cd.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Continuous integration and repository hygiene</span></span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../chapters/46-ai-agents.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Working with AI coding agents</span></span></a>
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Versioning and releases</span></span></a>
   </div>
 </li>
       </ul>
@@ -371,19 +347,19 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/51-microdata-archive.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">The microdata archive: archive, catalogue, tool</span></span></a>
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">The microdata archive: archive, catalogue, tool</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/52-ihsn-grammar.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">The IHSN convention and the folder grammar</span></span></a>
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">The IHSN convention and the folder grammar</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/53-datalib-api-conformance.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">The <code>datalib_*</code> API and its conformance suite</span></span></a>
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">The <code>datalib_*</code> API and its conformance suite</span></span></a>
   </div>
 </li>
       </ul>
@@ -397,13 +373,13 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/61-ecosystem.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">The UNICEF analytics ecosystem: three tiers</span></span></a>
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">The UNICEF analytics ecosystem: three tiers</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/62-unicefdata.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">unicefData: public child statistics in three languages</span></span></a>
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">unicefData: public child statistics in three languages</span></span></a>
   </div>
 </li>
       </ul>
@@ -468,32 +444,32 @@ window.Quarto = {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#the-core-aggregator-aggregate_data_v2" id="toc-the-core-aggregator-aggregate_data_v2" class="nav-link active" data-scroll-target="#the-core-aggregator-aggregate_data_v2"><span class="header-section-number">9.1</span> The core aggregator: <code>aggregate_data_v2</code></a>
+  <li><a href="#the-core-aggregator-aggregate_data_v2" id="toc-the-core-aggregator-aggregate_data_v2" class="nav-link active" data-scroll-target="#the-core-aggregator-aggregate_data_v2"><span class="header-section-number">8.1</span> The core aggregator: <code>aggregate_data_v2</code></a>
   <ul class="collapse">
-  <li><a href="#arguments" id="toc-arguments" class="nav-link" data-scroll-target="#arguments"><span class="header-section-number">9.1.1</span> Arguments</a></li>
-  <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods"><span class="header-section-number">9.1.2</span> Methods</a></li>
-  <li><a href="#coverage-and-the-threshold" id="toc-coverage-and-the-threshold" class="nav-link" data-scroll-target="#coverage-and-the-threshold"><span class="header-section-number">9.1.3</span> Coverage and the threshold</a></li>
-  <li><a href="#the-global-row" id="toc-the-global-row" class="nav-link" data-scroll-target="#the-global-row"><span class="header-section-number">9.1.4</span> The global row</a></li>
-  <li><a href="#validation-and-the-error-envelope" id="toc-validation-and-the-error-envelope" class="nav-link" data-scroll-target="#validation-and-the-error-envelope"><span class="header-section-number">9.1.5</span> Validation and the error envelope</a></li>
+  <li><a href="#arguments" id="toc-arguments" class="nav-link" data-scroll-target="#arguments"><span class="header-section-number">8.1.1</span> Arguments</a></li>
+  <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods"><span class="header-section-number">8.1.2</span> Methods</a></li>
+  <li><a href="#coverage-and-the-threshold" id="toc-coverage-and-the-threshold" class="nav-link" data-scroll-target="#coverage-and-the-threshold"><span class="header-section-number">8.1.3</span> Coverage and the threshold</a></li>
+  <li><a href="#the-global-row" id="toc-the-global-row" class="nav-link" data-scroll-target="#the-global-row"><span class="header-section-number">8.1.4</span> The global row</a></li>
+  <li><a href="#validation-and-the-error-envelope" id="toc-validation-and-the-error-envelope" class="nav-link" data-scroll-target="#validation-and-the-error-envelope"><span class="header-section-number">8.1.5</span> Validation and the error envelope</a></li>
   </ul></li>
-  <li><a href="#building-the-standard-footnote-generate_agg_footnote" id="toc-building-the-standard-footnote-generate_agg_footnote" class="nav-link" data-scroll-target="#building-the-standard-footnote-generate_agg_footnote"><span class="header-section-number">9.2</span> Building the standard footnote: <code>generate_agg_footnote</code></a></li>
-  <li><a href="#picking-the-latest-observation-apply_time_window" id="toc-picking-the-latest-observation-apply_time_window" class="nav-link" data-scroll-target="#picking-the-latest-observation-apply_time_window"><span class="header-section-number">9.3</span> Picking the latest observation: <code>apply_time_window</code></a></li>
-  <li><a href="#redistributing-weights-over-missing-rows-dw_nestweight" id="toc-redistributing-weights-over-missing-rows-dw_nestweight" class="nav-link" data-scroll-target="#redistributing-weights-over-missing-rows-dw_nestweight"><span class="header-section-number">9.4</span> Redistributing weights over missing rows: <code>dw_nestweight</code></a></li>
-  <li><a href="#demographics-helpers-dw_pop-and-dw_regions" id="toc-demographics-helpers-dw_pop-and-dw_regions" class="nav-link" data-scroll-target="#demographics-helpers-dw_pop-and-dw_regions"><span class="header-section-number">9.5</span> Demographics helpers: <code>dw_pop</code> and <code>dw_regions</code></a>
+  <li><a href="#building-the-standard-footnote-generate_agg_footnote" id="toc-building-the-standard-footnote-generate_agg_footnote" class="nav-link" data-scroll-target="#building-the-standard-footnote-generate_agg_footnote"><span class="header-section-number">8.2</span> Building the standard footnote: <code>generate_agg_footnote</code></a></li>
+  <li><a href="#picking-the-latest-observation-apply_time_window" id="toc-picking-the-latest-observation-apply_time_window" class="nav-link" data-scroll-target="#picking-the-latest-observation-apply_time_window"><span class="header-section-number">8.3</span> Picking the latest observation: <code>apply_time_window</code></a></li>
+  <li><a href="#redistributing-weights-over-missing-rows-dw_nestweight" id="toc-redistributing-weights-over-missing-rows-dw_nestweight" class="nav-link" data-scroll-target="#redistributing-weights-over-missing-rows-dw_nestweight"><span class="header-section-number">8.4</span> Redistributing weights over missing rows: <code>dw_nestweight</code></a></li>
+  <li><a href="#demographics-helpers-dw_pop-and-dw_regions" id="toc-demographics-helpers-dw_pop-and-dw_regions" class="nav-link" data-scroll-target="#demographics-helpers-dw_pop-and-dw_regions"><span class="header-section-number">8.5</span> Demographics helpers: <code>dw_pop</code> and <code>dw_regions</code></a>
   <ul class="collapse">
-  <li><a href="#dw_pop-population-denominators" id="toc-dw_pop-population-denominators" class="nav-link" data-scroll-target="#dw_pop-population-denominators"><span class="header-section-number">9.5.1</span> <code>dw_pop</code> — population denominators</a></li>
-  <li><a href="#dw_regions-unicef-regional-aggregates" id="toc-dw_regions-unicef-regional-aggregates" class="nav-link" data-scroll-target="#dw_regions-unicef-regional-aggregates"><span class="header-section-number">9.5.2</span> <code>dw_regions</code> — UNICEF regional aggregates</a></li>
+  <li><a href="#dw_pop-population-denominators" id="toc-dw_pop-population-denominators" class="nav-link" data-scroll-target="#dw_pop-population-denominators"><span class="header-section-number">8.5.1</span> <code>dw_pop</code> — population denominators</a></li>
+  <li><a href="#dw_regions-unicef-regional-aggregates" id="toc-dw_regions-unicef-regional-aggregates" class="nav-link" data-scroll-target="#dw_regions-unicef-regional-aggregates"><span class="header-section-number">8.5.2</span> <code>dw_regions</code> — UNICEF regional aggregates</a></li>
   </ul></li>
-  <li><a href="#putting-it-together" id="toc-putting-it-together" class="nav-link" data-scroll-target="#putting-it-together"><span class="header-section-number">9.6</span> Putting it together</a></li>
+  <li><a href="#putting-it-together" id="toc-putting-it-together" class="nav-link" data-scroll-target="#putting-it-together"><span class="header-section-number">8.6</span> Putting it together</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/unicef-drp/cso-toolkit/edit/main/book/chapters/33-aggregation.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/unicef-drp/cso-toolkit/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content" tabindex="-1">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="Breadcrumbs"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/31-io.html">Part III — The API (cross-language)</a></li><li class="breadcrumb-item"><a href="../chapters/33-aggregation.html"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Aggregation</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="Breadcrumbs"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/31-io.html">Part II — Using the Helpers</a></li><li class="breadcrumb-item"><a href="../chapters/33-aggregation.html"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Aggregation</span></a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Aggregation</span></h1>
+<h1 class="title"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Aggregation</span></h1>
 </div>
 
 
@@ -522,8 +498,8 @@ window.Quarto = {
 </div>
 </div>
 </div>
-<section id="the-core-aggregator-aggregate_data_v2" class="level2" data-number="9.1">
-<h2 data-number="9.1" class="anchored" data-anchor-id="the-core-aggregator-aggregate_data_v2"><span class="header-section-number">9.1</span> The core aggregator: <code>aggregate_data_v2</code></h2>
+<section id="the-core-aggregator-aggregate_data_v2" class="level2" data-number="8.1">
+<h2 data-number="8.1" class="anchored" data-anchor-id="the-core-aggregator-aggregate_data_v2"><span class="header-section-number">8.1</span> The core aggregator: <code>aggregate_data_v2</code></h2>
 <p><code>aggregate_data_v2()</code> takes a long-format data frame — one observation per row — of country (or unit) observations and returns one row per group, where a <em>group</em> is defined by the <code>by</code> columns. Each output row carries the aggregated value plus a configurable set of coverage columns.</p>
 <p>The signature is the same in both languages, apart from two mechanical differences: R uses <code>.</code>-separated logical flags (<code>pop.coverage</code>, <code>country.coverage</code>) and a positional/named mix, while Python makes everything after <code>by</code> keyword-only and renames the handful of arguments whose R spelling collides with Python syntax (<code>global</code> becomes <code>global_</code>, the dotted flags become underscored).</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
@@ -555,8 +531,8 @@ window.Quarto = {
 </div>
 </div>
 </div>
-<section id="arguments" class="level3" data-number="9.1.1">
-<h3 data-number="9.1.1" class="anchored" data-anchor-id="arguments"><span class="header-section-number">9.1.1</span> Arguments</h3>
+<section id="arguments" class="level3" data-number="8.1.1">
+<h3 data-number="8.1.1" class="anchored" data-anchor-id="arguments"><span class="header-section-number">8.1.1</span> Arguments</h3>
 <p>The full argument set, with R and Python spellings side by side:</p>
 <table class="caption-top table">
 <colgroup>
@@ -662,8 +638,8 @@ window.Quarto = {
 </table>
 <p>The R function additionally accepts <code>verbose</code> and <code>debug</code>, which inherit from <code>getOption("dw.verbose")</code> / <code>getOption("dw.debug")</code> when left <code>NULL</code> — the standard toolkit verbosity contract described in the roles-and-mode chapter. The Python aggregator does not expose those two arguments.</p>
 </section>
-<section id="methods" class="level3" data-number="9.1.2">
-<h3 data-number="9.1.2" class="anchored" data-anchor-id="methods"><span class="header-section-number">9.1.2</span> Methods</h3>
+<section id="methods" class="level3" data-number="8.1.2">
+<h3 data-number="8.1.2" class="anchored" data-anchor-id="methods"><span class="header-section-number">8.1.2</span> Methods</h3>
 <p>Pick the method to match the <em>kind</em> of indicator, because each method encodes a different assumption about what the numbers mean:</p>
 <table class="caption-top table">
 <colgroup>
@@ -709,8 +685,8 @@ window.Quarto = {
 <p>Two method names mislead. <code>sum</code> does <strong>not</strong> return a plain additive total; it returns a population-weighted rate, dividing the summed values by the summed weights. If you want a genuine additive count — the regional figure being the literal sum of the country figures — you want <code>total</code>. Both languages drop missing values, so a group with no reported values totals 0; use <code>coverage_threshold</code> if such a group should come back missing instead.</p>
 <p><code>proportion</code> interprets the value column as a percentage (it divides by 100 internally) and reconstructs the number affected before re-expressing the result as a proportion of the covered population. It is the right choice when each country reports, say, “12.4 % of children stunted” and you want a population-correct regional percentage rather than an average of the country percentages.</p>
 </section>
-<section id="coverage-and-the-threshold" class="level3" data-number="9.1.3">
-<h3 data-number="9.1.3" class="anchored" data-anchor-id="coverage-and-the-threshold"><span class="header-section-number">9.1.3</span> Coverage and the threshold</h3>
+<section id="coverage-and-the-threshold" class="level3" data-number="8.1.3">
+<h3 data-number="8.1.3" class="anchored" data-anchor-id="coverage-and-the-threshold"><span class="header-section-number">8.1.3</span> Coverage and the threshold</h3>
 <p>The reason to prefer this aggregator over a hand-written group-and-summarise (R’s <code>group_by |&gt; summarise</code>, or pandas’ <code>groupby().agg()</code>) is the coverage accounting. For every group, the function computes:</p>
 <ul>
 <li><strong><code>Pop_Covered</code></strong> — the fraction of the group’s total weight that sits on rows with a non-missing value. A region whose reporting countries hold 90 % of its population has <code>Pop_Covered = 0.9</code>; the 10 % living in non-reporting countries show up in <code>Pop_Covered</code>, rather than vanishing into a falsely confident average.</li>
@@ -723,17 +699,17 @@ window.Quarto = {
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Output column order, given default flags:</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co">#   &lt;by...&gt;, Aggregate, Pop_Covered, Country_Coverage, Total_Countries</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="the-global-row" class="level3" data-number="9.1.4">
-<h3 data-number="9.1.4" class="anchored" data-anchor-id="the-global-row"><span class="header-section-number">9.1.4</span> The global row</h3>
+<section id="the-global-row" class="level3" data-number="8.1.4">
+<h3 data-number="8.1.4" class="anchored" data-anchor-id="the-global-row"><span class="header-section-number">8.1.4</span> The global row</h3>
 <p>With <code>global = TRUE</code> (the default), the same calculation is run once more over the entire input, ignoring the grouping, and the result is appended as one extra row whose <code>by</code> columns are all set to <code>global_label</code> (default <code>"WORLD"</code>). This is convenient for charts that want a “world” reference line without a second call. Set <code>global = FALSE</code> when you are stacking aggregates yourself — which is exactly what <code>dw_regions()</code> does internally, so it never asks the aggregator for a global row.</p>
 </section>
-<section id="validation-and-the-error-envelope" class="level3" data-number="9.1.5">
-<h3 data-number="9.1.5" class="anchored" data-anchor-id="validation-and-the-error-envelope"><span class="header-section-number">9.1.5</span> Validation and the error envelope</h3>
+<section id="validation-and-the-error-envelope" class="level3" data-number="8.1.5">
+<h3 data-number="8.1.5" class="anchored" data-anchor-id="validation-and-the-error-envelope"><span class="header-section-number">8.1.5</span> Validation and the error envelope</h3>
 <p>When <code>validate</code> is on (the default), the function checks that <code>value</code>, <code>weight</code>, and every <code>by</code> column exist, and on failure emits the toolkit’s standard error envelope — a structured message carrying the offending columns and a one-line fix hint (<code>[cso_toolkit.aggregate_data_v2] ...</code>). This is the same envelope shape described in the provenance-and-error-envelope chapter, and it carries the same WHAT, <code>Data columns</code>, and <code>Fix</code> lines in R and Python (R raises with <code>stop()</code>, Python with <code>KeyError</code>; the argument spellings follow each language). Set <code>validate = FALSE</code> to skip the checks on hot paths where you have already verified the schema (again, <code>dw_regions()</code> does this and re-implements the checks itself so callers still get a clean envelope).</p>
 </section>
 </section>
-<section id="building-the-standard-footnote-generate_agg_footnote" class="level2" data-number="9.2">
-<h2 data-number="9.2" class="anchored" data-anchor-id="building-the-standard-footnote-generate_agg_footnote"><span class="header-section-number">9.2</span> Building the standard footnote: <code>generate_agg_footnote</code></h2>
+<section id="building-the-standard-footnote-generate_agg_footnote" class="level2" data-number="8.2">
+<h2 data-number="8.2" class="anchored" data-anchor-id="building-the-standard-footnote-generate_agg_footnote"><span class="header-section-number">8.2</span> Building the standard footnote: <code>generate_agg_footnote</code></h2>
 <p>Coverage numbers are only useful if they reach the reader. <code>generate_agg_footnote()</code> turns the coverage outputs into the canonical one-line caption that sits under aggregated tables and charts: <code>"N/M countries (P % population coverage)"</code>, with an optional <code>"Based on latest estimates from YYYY to YYYY."</code> prefix and optional <code>Exemptions:</code> / <code>Exclusions:</code> suffixes. It ships in both R and Python.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-3" role="tab" aria-controls="tabset-2-3" aria-selected="false" href="">Stata</a></li></ul>
@@ -762,8 +738,8 @@ window.Quarto = {
 </div>
 <p><code>pop_coverage</code> is a fraction in <code>[0, 1]</code> and is rendered as an integer percent. The <code>exemptions</code> and <code>exclusions</code> arguments take vectors of country codes and append human-readable notes — the same codes you would pass to <code>apply_time_window()</code>, described next, so a window-filtered aggregate and its footnote stay consistent.</p>
 </section>
-<section id="picking-the-latest-observation-apply_time_window" class="level2" data-number="9.3">
-<h2 data-number="9.3" class="anchored" data-anchor-id="picking-the-latest-observation-apply_time_window"><span class="header-section-number">9.3</span> Picking the latest observation: <code>apply_time_window</code></h2>
+<section id="picking-the-latest-observation-apply_time_window" class="level2" data-number="8.3">
+<h2 data-number="8.3" class="anchored" data-anchor-id="picking-the-latest-observation-apply_time_window"><span class="header-section-number">8.3</span> Picking the latest observation: <code>apply_time_window</code></h2>
 <p>Most regional aggregates are “latest available estimate per country within a window.” <code>apply_time_window()</code> performs that selection. Within each country it keeps the single row with the most recent <code>time_col</code>, but only if that latest year falls inside the inclusive <code>[start_year, end_year]</code> window. The helper ships in both R and Python.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false" href="">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-3" role="tab" aria-controls="tabset-3-3" aria-selected="false" href="">Stata</a></li></ul>
@@ -805,8 +781,8 @@ window.Quarto = {
 </div>
 </div>
 </section>
-<section id="redistributing-weights-over-missing-rows-dw_nestweight" class="level2" data-number="9.4">
-<h2 data-number="9.4" class="anchored" data-anchor-id="redistributing-weights-over-missing-rows-dw_nestweight"><span class="header-section-number">9.4</span> Redistributing weights over missing rows: <code>dw_nestweight</code></h2>
+<section id="redistributing-weights-over-missing-rows-dw_nestweight" class="level2" data-number="8.4">
+<h2 data-number="8.4" class="anchored" data-anchor-id="redistributing-weights-over-missing-rows-dw_nestweight"><span class="header-section-number">8.4</span> Redistributing weights over missing rows: <code>dw_nestweight</code></h2>
 <p>When a survey value is missing on some rows and that missingness is not completely at random within a stratum, a naive weighted mean over the non-missing rows under-counts. <code>dw_nestweight()</code> corrects this by reweighting: within each stratum (a group defined by the <code>by</code> argument) it scales the weights on the <em>observed</em> rows up so their sum equals the sum of weights over <em>all</em> rows in the stratum. The stratum total is preserved; the mass is concentrated on the rows that actually contribute to the estimate. It ships in <strong>R and Python</strong>.</p>
 <p>The scale factor for stratum <em>l</em> is the ratio of total stratum weight to eligible stratum weight, and the new weight is the original weight times that scale on observed rows, zero elsewhere:</p>
 <p><span class="math display">\[ \text{scale}_l = \frac{\sum_{i \in l} w_i}{\sum_{i \in l,\ v_i \text{ observed}} w_i}, \qquad w'_i = w_i \cdot \text{scale}_l \ \text{ if } v_i \text{ observed, else } 0. \]</span></p>
@@ -849,11 +825,11 @@ window.Quarto = {
 </ul>
 <p>Note one small interface difference: the R signature carries both <code>verbose</code> and <code>debug</code> (inheriting from the global options), while the Python signature exposes <code>verbose</code> only.</p>
 </section>
-<section id="demographics-helpers-dw_pop-and-dw_regions" class="level2" data-number="9.5">
-<h2 data-number="9.5" class="anchored" data-anchor-id="demographics-helpers-dw_pop-and-dw_regions"><span class="header-section-number">9.5</span> Demographics helpers: <code>dw_pop</code> and <code>dw_regions</code></h2>
+<section id="demographics-helpers-dw_pop-and-dw_regions" class="level2" data-number="8.5">
+<h2 data-number="8.5" class="anchored" data-anchor-id="demographics-helpers-dw_pop-and-dw_regions"><span class="header-section-number">8.5</span> Demographics helpers: <code>dw_pop</code> and <code>dw_regions</code></h2>
 <p>The remaining two helpers wrap the demographics-and-regions workflow. <code>dw_pop</code> now ships in <strong>R and Python</strong> (<code>python/src/dw_pop.py</code>); <code>dw_regions</code> is still <strong>R-only</strong>. Each file carries a <code>TODO</code> marking the siblings that remain: a Stata port for <code>dw_pop</code> (<code>stata/src/dw_pop.ado</code>) and both a Python and a Stata port for <code>dw_regions</code> (<code>python/src/dw_regions.py</code>, <code>stata/src/dw_regions.ado</code>). Issues #17 and #18 shipped the R versions and are closed; no open issue tracks these ports. There is no Stata equivalent for either today, and Stata has no API wrapper to build on — see the external-API contract chapter for why the Stata side stops at file IO.</p>
-<section id="dw_pop-population-denominators" class="level3" data-number="9.5.1">
-<h3 data-number="9.5.1" class="anchored" data-anchor-id="dw_pop-population-denominators"><span class="header-section-number">9.5.1</span> <code>dw_pop</code> — population denominators</h3>
+<section id="dw_pop-population-denominators" class="level3" data-number="8.5.1">
+<h3 data-number="8.5.1" class="anchored" data-anchor-id="dw_pop-population-denominators"><span class="header-section-number">8.5.1</span> <code>dw_pop</code> — population denominators</h3>
 <p><code>dw_pop()</code> is a thin convenience wrapper over <code>dw_api_fetch(api = "wb")</code> for the World Bank total-population indicator <code>SP.POP.TOTL</code>. Every sector that wants a population-weighted regional mean needs a denominator; <code>dw_pop()</code> hides the indicator code, the cache key, and the work of normalising column names, returning a clean three-column table: <code>REF_AREA</code>, <code>TIME_PERIOD</code>, <code>OBS_VALUE</code>.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-5-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-1" role="tab" aria-controls="tabset-5-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-5-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-2" role="tab" aria-controls="tabset-5-2" aria-selected="false" href="">Python</a></li></ul>
@@ -885,8 +861,8 @@ window.Quarto = {
 <p>Arguments: <code>year</code> (a year or list of years; <code>None</code> returns the latest year per country), <code>indicator</code> (default <code>"SP.POP.TOTL"</code>), <code>countries</code> (ISO3/M49 filter; <code>None</code> keeps all), <code>refresh</code> (force a live fetch and overwrite the cache, producer mode only), and <code>cache_key</code> (the cache basename forwarded to <code>dw_api_fetch</code>, default <code>"wb_population_sp_pop_totl"</code>). The function tolerates the fact that the World Bank client packages have changed their response columns across versions — it probes for <code>iso3c</code>/<code>iso2c</code>, <code>date</code>/<code>TIME_PERIOD</code>, and <code>value</code>/<code>OBS_VALUE</code> columns — and drops rows missing any of the key triplet so sparse regional-aggregate rows from the World Bank do not leak through. The R and Python siblings share the same argument names, defaults, and cache key, so a producer can populate the cache in one language and a reviewer read it back in the other.</p>
 <p>Because it routes through <code>dw_api_fetch</code>, <code>dw_pop</code> inherits the mode contract exactly: a producer session may hit the network and cache the result, while a reviewer session reads the cached deposit only and never fetches live. The mode mechanics live in the roles-and-mode chapter; the cache layer in the external-API contract chapter.</p>
 </section>
-<section id="dw_regions-unicef-regional-aggregates" class="level3" data-number="9.5.2">
-<h3 data-number="9.5.2" class="anchored" data-anchor-id="dw_regions-unicef-regional-aggregates"><span class="header-section-number">9.5.2</span> <code>dw_regions</code> — UNICEF regional aggregates</h3>
+<section id="dw_regions-unicef-regional-aggregates" class="level3" data-number="8.5.2">
+<h3 data-number="8.5.2" class="anchored" data-anchor-id="dw_regions-unicef-regional-aggregates"><span class="header-section-number">8.5.2</span> <code>dw_regions</code> — UNICEF regional aggregates</h3>
 <p><code>dw_regions()</code> is the highest-level helper in this chapter: hand it a country-level tibble and it returns that tibble with UNICEF regional rows appended — one summary row per UNICEF reporting region (for example <code>ESA</code>, <code>WCA</code>, <code>SA</code>), each carrying the population-weighted aggregate and its coverage metadata. It ties together everything above.</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Country-level tibble with INDICATOR + TIME_PERIOD + OBS_VALUE</span></span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>national <span class="ot">&lt;-</span> <span class="fu">dw_use</span>(<span class="at">name =</span> <span class="st">"dw_ed_edu.csv"</span>, <span class="at">sector =</span> <span class="st">"ed"</span>, <span class="at">kind =</span> <span class="st">"wrk"</span>)</span>
@@ -908,8 +884,8 @@ window.Quarto = {
 <p><code>dw_regions</code> adds two guards beyond what the aggregator does. It validates up front that <code>REF_AREA</code>, <code>value</code>, and every <code>by</code> column are present (re-emitting the toolkit envelope, since it disables the aggregator’s own validation for speed), and it refuses a <code>value</code> argument that collides with one of the aggregator’s reserved output column names (<code>Aggregate</code>, <code>Pop_Covered</code>, <code>Country_Coverage</code>, <code>Total_Countries</code>, <code>Total_Population</code>, <code>Data_Population</code>, <code>Number_Affected</code>) — a collision that would otherwise surface as an obscure aggregator error. If you hit it, rename the value column on your tibble before calling.</p>
 </section>
 </section>
-<section id="putting-it-together" class="level2" data-number="9.6">
-<h2 data-number="9.6" class="anchored" data-anchor-id="putting-it-together"><span class="header-section-number">9.6</span> Putting it together</h2>
+<section id="putting-it-together" class="level2" data-number="8.6">
+<h2 data-number="8.6" class="anchored" data-anchor-id="putting-it-together"><span class="header-section-number">8.6</span> Putting it together</h2>
 <p>The helpers are designed to chain. A typical sector regional-aggregate pipeline, in R, reads:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>latest <span class="ot">&lt;-</span> <span class="fu">apply_time_window</span>(national, <span class="at">start_year =</span> <span class="dv">2015</span>, <span class="at">end_year =</span> <span class="dv">2023</span>,</span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>                            <span class="at">exemptions =</span> <span class="fu">c</span>(<span class="st">"SOM"</span>, <span class="st">"YEM"</span>))</span>
@@ -1405,12 +1381,12 @@ window.Quarto = {
 <nav class="page-navigation" aria-label="Page">
   <div class="nav-page nav-page-previous">
       <a href="../chapters/32-external-api.html" class="pagination-link" aria-label="The external-API contract">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">The external-API contract</span></span>
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">The external-API contract</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../chapters/34-vintage-sync.html" class="pagination-link" aria-label="Vintage sync">
-        <span class="nav-page-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Vintage sync</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="../chapters/40-new-repository.html" class="pagination-link" aria-label="Starting a repository">
+        <span class="nav-page-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Starting a repository</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
