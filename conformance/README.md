@@ -9,9 +9,14 @@ one driver per language in `drivers/`, compared by `certify.py`.
 sh tools/certify             # every case in R, Python and Stata
 sh tools/certify --record    # all pass -> commit .parity/<content-hash>.json
 sh tools/certify --verify    # is there a passing certificate for this tree?
+sh tools/certify --lint      # are the case files well formed? (runs no language)
 sh tools/certify --languages r,python --cases io_roundtrip_csv   # while developing
 python -m pytest conformance/tests                               # certify.py's own tests
 ```
+
+With Stata, a full run also runs Stata's own suites, `stata/tests/test_*.do`,
+each in its own batch Stata; a wrapper writes each suite's return code to a
+result file, and a missing file is a failure. `stata/tests` is a certified path.
 
 - `CSO_PYTHON`: a Python with the toolkit's dependencies, for the Python driver.
 - `CSO_RSCRIPT`, `STATA_EXE`: override where R and Stata are found.
@@ -25,7 +30,12 @@ python -m pytest conformance/tests                               # certify.py's 
 2. Add `<id>` to each driver that implements it.
 3. Run `sh tools/certify --cases <id>`.
 
-`tests/test_certify.py` checks that every case is well formed. The handbook chapter "How the three languages stay in step" has the full protocol.
+**Ids are permanent.** Certificates and the gap register name cases by id. A
+removed case's id goes in `retired_ids.txt` (with the date and the reason) and
+is never used again; `sh tools/certify --lint`, which every run and the
+`Conformance` workflow make, fails when a case uses one.
+
+`tests/test_certify.py` checks the harness, and that every case is well formed. The handbook chapter "How the three languages stay in step" has the full protocol.
 
 The round-trip harness described below (`run_r.R`, `run_python.py`,
 `compare.py`, the `Conformance` workflow) predates the certificate and still

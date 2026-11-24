@@ -12,7 +12,7 @@ The toolkit is written three times: in R (`r/R/`, the reference implementation),
 | | CI round trip | Parity certificate |
 |---|---|---|
 | Languages | R and Python | R, Python and Stata |
-| What it runs | one fixture through `dw_use` and `dw_save` | every case in `conformance/cases/` (17 at v0.12.0) |
+| What it runs | one fixture through `dw_use` and `dw_save` | every case in `conformance/cases/` (17 at v0.12.0), and Stata's own suites in `stata/tests/` |
 | Where | GitHub Actions, workflow `Conformance`, on every push and pull request to `main` and `develop` | the producer's machine, `sh tools/certify` |
 | Files | `conformance/run_r.R`, `run_python.py`, `compare.py` | `conformance/certify.py`, `drivers/`, `cases/`, `fixtures/` |
 | Result | a pass or fail on the pull request | a committed record, `.parity/<content-hash>.json` |
@@ -31,10 +31,30 @@ The CI round trip is a fast guard on the input/output contract. The certificate 
 
    Each driver gets up to 30 minutes. A case that crashes writes `<id>.error.txt`; a driver that stops part way is judged on the outputs it did write.
 3. **Each driver writes one output per case:** `<id>.csv` for a values case, `<id>.json` for a json case. It also writes `_versions.json`, recording its language version and, for R and Python, the toolkit version it loaded; Stata's ado files carry no version stamp, so Stata records its own version and edition.
-4. **`certify.py` judges every case in every language** (next sections) and prints a table of statuses.
-5. **With `--record`**, if everything passed, it writes the certificate and commits it.
+4. **It runs Stata's own test suites**, every `stata/tests/test_*.do`, when Stata is found and no `--cases` subset was asked for (below).
+5. **`certify.py` judges every case in every language** (next sections), and every suite, and prints a table of statuses.
+6. **With `--record`**, if everything passed, it writes the certificate and commits it.
 
-Outputs and logs (`r.log`, `python.log`, `stata.log`) stay in a temporary folder, or the one given with `--out`, and the run prints where.
+Outputs and logs (`r.log`, `python.log`, `stata.log`, and `stata_suites/<suite>.log`) stay in a temporary folder, or the one given with `--out`, and the run prints where.
+
+### Stata's own suites
+
+The cases check what the three languages share. Stata also has behaviour of its own to test, such as how `dw_load_config` reads the user block or how `dw_save` guards a multi-producer project, and those tests live in `stata/tests/`, one do-file per area. GitHub's runners have no Stata licence, so the certificate is where they run.
+
+Each suite runs in its own batch Stata, so one suite's programs and globals cannot leak into the next. The verdict comes from a file, not from the log or the exit code:
+- **Batch Stata always exits 0**, whatever happened inside.
+- **The log repeats the source.** A suite's closing `display "PASS: ..."` line appears in the log as an echoed command even when the suite stopped before reaching it, so finding "PASS" in a log proves nothing.
+
+So `certify.py` writes a small wrapper per suite. It changes to the repository root, runs the suite under `capture noisily do`, and writes the return code to `<suite>.result`. A suite stops at its first failed `assert`, so `rc 0` means it ran to the end. Only execution creates the result file, so a missing one means Stata stopped or timed out (15 minutes per suite), and counts as a failure.
+
+| Suite status | Meaning | Blocks a certificate? |
+|---|---|---|
+| `PASS` | the suite ran to the end (`rc 0`) | no |
+| `FAIL` | the suite stopped with an error, `r(<rc>)` | **yes** |
+| `MISSING` | no result file: Stata stopped or timed out | **yes** |
+| `not run` | Stata not requested or not found, or `--cases` given | no, but `--record` refuses |
+
+`stata/tests/test_dw_stata_helpers.py` tests the Python helpers that Stata calls; it runs with pytest, not here.
 
 ## What a case checks
 
@@ -90,24 +110,29 @@ Every gap is in Stata, and each one is a scope decision or a documented route: S
 ## The certificate
 
 `sh tools/certify --record` writes a certificate only when:
-- all three languages ran;
+- all three languages ran, and every case was run (no `--cases`);
 - every case is `PASS`, `gap` or `DIVERGES` in every language;
+- every Stata suite is `PASS`;
 - the certified paths have no uncommitted change.
 
 It then commits the file on its own, with the message `Parity certificate <hash>`.
 
-**The name is a content hash:** SHA-256 over the git trees, at `HEAD`, of the seven certified paths:
+**The name is a content hash:** SHA-256 over the git trees, at `HEAD`, of the eight certified paths:
 - `r/R`, `python/src` and `stata/src`, the three implementations;
+- `stata/tests`, Stata's own suites;
 - `conformance/certify.py`, `conformance/cases`, `conformance/drivers` and `conformance/fixtures`, the harness.
 
-Any change to an implementation, a case, a driver or a fixture needs a new certificate. Changes elsewhere keep the old one: the handbook, READMEs, NEWS, templates, CI.
+Any change to an implementation, a Stata suite, a case, a driver or a fixture needs a new certificate. Changes elsewhere keep the old one: the handbook, READMEs, NEWS, templates, CI.
 
-**The file**, `.parity/<content-hash>.json` with schema `cso_toolkit.parity/1`, records:
+**The file**, `.parity/<content-hash>.json` with schema `cso_toolkit.parity/2`, records:
 - `content_hash` and `trees`: the hash and the tree id of each certified path;
 - `commit`, `created_at` (UTC), `created_by` and `platform`;
 - `versions`: per language, what its driver reported (for example `R version 4.6.1`, Python `3.11.9`, Stata `17` `MP`);
-- `result` (`pass`) and `summary`: the count per status;
-- `cases`: per case and language, the status, a note, and the SHA-256 of the output file.
+- `result` (`pass`), `summary` (the count per case status) and `suites_summary` (the count per suite status);
+- `cases`: per case and language, the status, a note, and the SHA-256 of the output file;
+- `stata_suites`: per suite, the status and a note.
+
+Certificates up to v0.12.1 have schema `cso_toolkit.parity/1`: seven certified paths, and no suites.
 
 The output hashes let anyone check, later, that a re-run produced byte-identical outputs.
 
@@ -118,11 +143,14 @@ The output hashes let anyone check, later, that a re-run produced byte-identical
 ```sh
 sh tools/certify                              # all cases, all three languages; exit 1 on any failure
 sh tools/certify --languages r,python         # a subset while developing
-sh tools/certify --cases stage_lifecycle      # one or more cases (comma separated)
+sh tools/certify --cases stage_lifecycle      # one or more cases (comma separated); no Stata suites
 sh tools/certify --out /tmp/parity            # keep outputs in a chosen folder
 sh tools/certify --record                     # all three languages; write and commit the certificate
 sh tools/certify --verify                     # is there a passing certificate for this tree?
+sh tools/certify --lint                       # are the case files well formed? (runs no language)
 ```
+
+Every run first checks the case files (what `--lint` checks), and stops if one is malformed. The `Conformance` workflow runs `--lint` on every pull request.
 
 Environment variables:
 - `CSO_PYTHON`: a Python with the toolkit's dependencies, for the Python driver;
@@ -141,7 +169,9 @@ The harness has its own tests in `conformance/tests/test_certify.py`. They write
 
 ## Adding a case
 
-1. Write `conformance/cases/<id>.json`, copying a case of the same kind. List every language either in `languages` or in `gaps`, with the issue (or "coverage matrix") and a one-line reason.
+1. Write `conformance/cases/<id>.json`, copying a case of the same kind; the `id` is the file name. List every language either in `languages` or in `gaps`, with the issue (or "coverage matrix") and a one-line reason.
+
+   **An id is permanent.** Certificates and the gap register name cases by id, so an id keeps one meaning for ever. When a case is removed, or changes so much that its old results no longer describe it, add its id to `conformance/retired_ids.txt` with the date and the reason, and give any replacement a new id. `--lint` fails when a case uses a retired id.
 2. Add any input file to `conformance/fixtures/`. Prefer a small, purpose-built file that exercises the edge you care about: missing values, an all-missing group, a duplicate key.
 3. Add a function named after the id to each driver that implements it:
    - `driver_r.R`: an entry in the `cases` list;
