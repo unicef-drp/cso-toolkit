@@ -26,11 +26,16 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
   helper that copies a canonical input into the sandbox, checks its
   hash and keeps it in a `.staged.json` sidecar was R-only; Python now
   has it, with the same five states (first stage, clean re-run, sandbox
-  drift, forced re-stage, upstream changed) and the same messages.
+  drift, forced re-stage, upstream changed) and the same error and
+  warning text. Its progress notes ("staged from Z:", "verified") go to
+  the `cso_toolkit.dw_io` logger, as elsewhere in the Python package, where R
+  prints them; Python's warning filter shows a repeated UPSTREAM
+  CHANGED warning once per call site, where R repeats it.
   `dw_use(stage = True)`, or `dw_autostage = True` in the session state,
   turns it on; reading in place stays the default. Both languages write
   the same sidecar, so a file staged in R verifies in Python and the
-  other way round. New parity case `stage_lifecycle` (Stata: gap).
+  other way round; a test checks Python against a sidecar laid out as
+  R writes it. New parity case `stage_lifecycle` (Stata: gap).
   Handbook chapter 31 and appendices A and D updated; appendix D no
   longer says `dw_root` is R-only.
 
