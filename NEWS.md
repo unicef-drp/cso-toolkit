@@ -63,6 +63,16 @@ functions and options in Python; nothing changes for R or Stata users.
   `dw_verify_z()` never found the Z: copy. The helpers now join the
   root and the relative path without touching the root. R was not
   affected.
+- **The Python auditor's `io-open-write` rule now fires.**
+  `test_scripts()` blanks string literals before matching, and the rule
+  looked for a quoted file mode, so it could never match. It now flags
+  `open()` called with an explicit mode (`open(p, "w")`,
+  `open(p, mode="wb")`); `open(p)` alone is still left alone. First
+  Python tests for the rule.
+- **Python `dw_api_fetch()` no longer warns on every live fetch.** It
+  passed `dw_save()` the `mirror_to_z` keyword that was removed in
+  v0.4.0, so each fetch raised a DeprecationWarning; `dw_save()`
+  mirrors to Z: on its own. R stopped passing it in v0.6.0.
 
 ### Documentation
 
@@ -72,6 +82,18 @@ functions and options in Python; nothing changes for R or Stata users.
   driver, the comparison rules, every status, the 17 cases with their
   status per language, the certificate's fields and content hash, how
   to add a case, and the release gate.
+- **Handbook, README and conformance README checked against the code.**
+  A line-by-line pass compared every chapter and appendix with the R,
+  Python and Stata sources and corrected what had drifted: examples
+  that no longer ran (missing `cache_key`, a string where a list is
+  needed, the README quick starts and Stata `dw_save` syntax), helpers
+  still called R-only after their Python ports, Stata's sha256 and UTC
+  sidecar fields, the `inrepo` pin (only a plain `inrepo` is exempt),
+  the pre-push hook (it requires a check record), datalib's repository
+  being public, the coverage matrix and function reference (every
+  export now has a row), and the release chapter's stamp list. The
+  Python vendoring example now uses the package layout; syncing a
+  package copy is not supported yet (#230).
 
 ## v0.11.1 (2026-11-22)
 
