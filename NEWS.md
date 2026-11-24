@@ -6,6 +6,17 @@ _Entries land here as PRs merge into `develop`. When the next release
 is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
+### Fixed
+
+- **Python finds Z: on a mapped network drive (#225).** On Windows the
+  path normaliser turns a mapped drive (`Z:/`) into its UNC form
+  (`//server/share`), and the Z: and Teams mirror helpers then
+  collapsed every `//`, leaving `/server/share/...`, a folder on the
+  current drive. So `dw_save()` never wrote its Z: mirror and
+  `dw_verify_z()` never found the Z: copy. The helpers now join the
+  root and the relative path without touching the root. R was not
+  affected.
+
 ### Added
 
 - **`aggregate_data_v2(method = "total")` in Python.** The additive
