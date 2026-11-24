@@ -1,6 +1,11 @@
-# Cross-language parity {#sec-parity}
+---
+aliases:
+  - ../appendices/g-parity-certificate.html
+---
 
-The toolkit is written three times: in R (`r/R/`, the reference implementation), in Python (`python/src/`) and in Stata (`stata/src/`). It promises that the three give the same results. The coverage matrix (Appendix A) records which functions exist in which language; it cannot show that they agree. This appendix explains how agreement is checked, and how a release proves it.
+# How the three languages stay in step {#sec-parity}
+
+The toolkit is written three times: in R (`r/R/`, the reference implementation), in Python (`python/src/`) and in Stata (`stata/src/`). It promises that the three give the same results. The coverage matrix ([Appendix A](../appendices/a-coverage-matrix.qmd)) records which functions exist in which language; it cannot show that they agree. This chapter explains how agreement is checked, and how a release proves it.
 
 ## Two layers of checking
 
