@@ -73,7 +73,8 @@ One command runs, in seconds and with nothing but Python's standard library, the
 ```bash
 sh tools/check             # version stamps, parity case files, handbook tables, certificate
 sh tools/check --full      # also the Python and R test suites (minutes)
-sh tools/check --release   # a missing parity certificate fails instead of warning
+sh tools/check --release   # HEAD is a release: a missing certificate, or a dirty tree, fails
+sh tools/check --rev <c> --release-rev <r>   # check these commits' certificates (see below)
 ```
 
 The fast checks are:
@@ -84,15 +85,20 @@ The fast checks are:
 
 A missing certificate is only a warning while you work, because the certificate is recorded after the code is committed. It must be there before the pull request merges, if the branch touches the certified paths. `--full` needs a `CSO_PYTHON` with pytest and the toolkit's dependencies, and an Rscript with devtools.
 
-The first three checks read the working tree; `tools/check` notes it when you have uncommitted changes. The certificate check reads git: it checks `HEAD`, or each commit given with `--rev <commit>`.
+The first three checks read the working tree; `tools/check` notes it when you have uncommitted changes. The certificate check reads git: it checks `HEAD`, or each commit given with `--rev <commit>` (a missing certificate warns) or `--release-rev <commit>` (it fails). A release commit must also be the clean checkout, since the file checks cannot see any other commit: release from `git switch --detach <commit>`.
 
-**The pre-push hook** runs `sh tools/check` before every push and checks the certificate of each commit being pushed, not of what is checked out. It adds `--release` for a push to `main` or of a `v*` tag, and checks nothing for a deletion. Turn it on once per clone:
+**The pre-push hook** runs `sh tools/check` before every push. It passes each commit being pushed, not what is checked out:
+- a commit pushed to `main` or as a `v*` tag is a release (`--release-rev`);
+- any other commit only warns (`--rev`), even in the same push;
+- a deletion checks nothing.
+
+Turn it on once per clone:
 
 ```bash
 git config core.hooksPath .githooks
 ```
 
-`git push --no-verify` skips it once; say why in the pull request.
+The hook runs only when git runs inside this working tree. It does not run when `GIT_DIR` points here from elsewhere, or when the checked-out commit predates the hook. `git push --no-verify` skips it once; say why in the pull request.
 
 ## Tests
 

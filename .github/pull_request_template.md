@@ -14,7 +14,7 @@
   ```
 
 - [ ] A parity case, if the three languages must agree on this behaviour
-- [ ] A new parity certificate (`sh tools/certify --record`), if `r/R`, `python/src`, `stata/` or `conformance/` changed
+- [ ] A new parity certificate (`sh tools/certify --record`), if `r/R`, `python/src`, `stata/src`, `stata/tests` or the conformance harness (`certify.py`, `cases/`, `drivers/`, `fixtures/`) changed
 - [ ] The handbook chapter that owns the behaviour, and `sh tools/docs-tables` if a function was added, removed or ported
 - [ ] A `NEWS.md` entry under `## Unreleased`
 
