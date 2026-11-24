@@ -214,7 +214,7 @@ Each capability family is implemented in all three language siblings
 unless flagged. Per-function reference docs are linked in the right
 column.
 
-### IO contract — `dw_save`, `dw_use`, `dw_compare`, `dw_merge`, `dw_isid`, `dw_verify_z`, `dw_fetch_inputs`, `dw_check_deposit`, `dw_read_provenance`, `dw_provenance_diff`
+### IO contract — `dw_save`, `dw_use`, `dw_compare`, `dw_merge`, `dw_isid`, `dw_verify_z`, `dw_stage`, `dw_fetch_inputs`, `dw_check_deposit`, `dw_read_provenance`, `dw_provenance_diff`
 
 Uniform file IO with auto-dispatch by extension
 (CSV / TSV / XLSX / RDS-or-PKL / DTA / Parquet / JSON / YAML), `isid`
@@ -226,11 +226,12 @@ run-level comparison of two outputs from their sidecars.
 | Function | R | Python | Stata | Reference |
 |---|---|---|---|---|
 | `dw_save` | ✅ | ✅ | ✅ | [R](docs/dw_io_reference.md) · [Python](docs/dw_io_python_reference.md) |
-| `dw_use` | ✅ | ✅ | ⏳ (#5) | same as above |
+| `dw_use` | ✅ | ✅ | ✅ | same as above |
 | `dw_compare` | ✅ | ✅ | ✅ | same |
 | `dw_merge` | ✅ | ✅ | — | R + Python only |
 | `dw_isid` | ✅ | ✅ | (embedded in `dw_save`) | same |
 | `dw_verify_z` | ✅ | ✅ | — | R + Python only |
+| `dw_stage` | ✅ | ✅ | — | Reviewer: copy a canonical input into the sandbox under a hash guard (`.staged.json`); `dw_use(stage = TRUE)` or the `dw_autostage` session key |
 | `dw_fetch_inputs` | ✅ | ✅ | ➖ via R/Python (#152) | Fill a gitignored inputs folder from the Teams / Z: deposit ([reference](docs/dw_io_reference.md)) |
 | `dw_check_deposit` | ✅ | ✅ | ➖ via R/Python (#152) | Every local input has an identical copy on Teams or Z: |
 | `dw_read_provenance` | ✅ | ✅ | ➖ via R/Python (#152) | Read an output's `.provenance.json` sidecar |
@@ -243,8 +244,8 @@ copy. Allowlist is configured per-consumer (empty by default).
 
 ### Cached external APIs — `dw_api_fetch`, `dw_api_cached`, `dw_api_inventory`
 
-Mode-aware wrapper around 11 external data sources (10 shared with
-Python; `csv` is R-only so far). Producer hits the live API and caches
+Mode-aware wrapper around 11 external data sources, the same in R and
+Python. Producer hits the live API and caches
 under `_apis/<api>/<cache_key>.<ext>`; reviewer reads only from the
 cache. Secrets in caller kwargs are redacted before they reach the
 provenance sidecar.
@@ -259,14 +260,15 @@ provenance sidecar.
 | `"unsd_sdg"` | UNSD SDG API | ✅ | ✅ |
 | `"github_raw"` | Pinned-commit raw.githubusercontent.com | ✅ | ✅ |
 | `"http"`, `"json_get"` | Generic HTTP / JSON | ✅ | ✅ |
-| `"csv"` | Flat CSV-at-a-URL (SDMX REST-CSV, Data360, ILOSTAT rplumber) | ✅ | ⏳ |
+| `"csv"` | Flat CSV-at-a-URL (SDMX REST-CSV, Data360, ILOSTAT rplumber) | ✅ | ✅ |
 
 References: [R](docs/dw_api_reference.md) · [Python](docs/dw_api_python_reference.md).
 
 ### Aggregation and survey weights — `aggregate_data_v2`, `apply_time_window`, `generate_agg_footnote`, `dw_nestweight`
 
 `aggregate_data_v2()` covers `weighted_mean` / `mean` / `sum` /
-`proportion` with population + country coverage and a coverage
+`proportion` / `total` (an additive count, for person-count indicators)
+with population + country coverage and a coverage
 threshold. `apply_time_window()` filters to the latest observation
 per country within an inclusive year window. `dw_nestweight()` is an
 R port of World Bank EduAnalyticsToolkit's
@@ -278,9 +280,10 @@ observations so per-stratum totals are preserved (R + Python).
 
 `create_research_project()` and `create_official_stats_project()` (R and
 Python, same files) start a new repository with the toolkit's floor in
-place: the matching `.gitignore`, `tools/check.R` and the pre-push hook, a
-testthat suite, `cso_project.yml` (the collaboration model, required),
-README and CONTRIBUTING skeletons with first-clone steps, the data or
+place: the matching `.gitignore`, `tools/check.R` with its `tools/check`
+wrapper and the pre-push hook, a testthat suite, `cso_project.yml` (the
+collaboration model, required), the AI-agent files (`AGENTS.md`,
+`CLAUDE.md`, `decisions.md`, `.claude/settings.json`), README and CONTRIBUTING skeletons with first-clone steps, the data or
 inputs README and manifest, and optionally the vendored helpers
 (`vendor = TRUE`), the opt-in workflows (`workflows = TRUE`) and
 `git init` with `develop` and the hook path (`git = TRUE`). They never
@@ -349,6 +352,7 @@ source("00_functions/dw_api.R")
 dw_mode <- "producer"
 dw_apis_allowed <- TRUE
 teamsWrkData <- "/path/to/wrk"
+teamsWrkDataCanonical <- teamsWrkData   # producer: the working root is the deposit
 
 # 3. Use the contract
 library(dplyr)
@@ -366,6 +370,7 @@ import pandas as pd
 
 _state.configure(
     teamsWrkData="/path/to/wrk",
+    teamsWrkDataCanonical="/path/to/wrk",  # producer: the working root is the deposit
     dw_mode="producer",
     dw_apis_allowed=True,
 )
@@ -385,9 +390,10 @@ global teamsWrkDataCanonical "C:/.../013_wrkdata"
 
 * Use the contract
 use "input.dta", clear
-dw_save using "dw_ed_edu.dta",      ///
-    idvars(REF_AREA INDICATOR)      ///
-    title("Education indicators")   ///
+dw_save, filename("dw_ed_edu.dta")         ///
+    path("$teamsWrkDataCanonical/ed")      ///
+    idvars(REF_AREA INDICATOR)             ///
+    title("Education indicators")          ///
     vintage("2026-05")
 ```
 
@@ -461,17 +467,20 @@ separate `CHANGELOG.md`).
 
 ## Testing and CI
 
-The toolkit ships a layered test surface. Every layer runs both
-locally and on CI (`.github/workflows/r-check.yml`).
+The toolkit ships a layered test surface; the table says where each
+layer runs.
 
 | Layer | What it catches |
 |---|---|
 | **R `testthat` suite** (`r/tests/testthat/`, 125+ assertions) | Unit + regression coverage for every helper. `expect_envelope()` asserts the `[cso_toolkit.<func>] WHAT / Why / Fix` shape on every raise. |
 | **R `R CMD check`** | Rd syntax, NAMESPACE drift, undefined globals, `\examples{}` blocks. Target: 0 errors / 0 warnings / 0 notes. |
+| **Python pytest suite** (`python/tests/`) | Unit and regression tests for the Python port. Local: `pytest python/tests`. Not run in CI. |
+| **Conformance harness** (`conformance/`, `.github/workflows/conformance.yml`) | R and Python round-trip the shared fixture and must agree within 1e-9; runs on push / PR to `main` and `develop`. Stata has no CI job ([#133](https://github.com/unicef-drp/cso-toolkit/issues/133)). |
+| **Parity certificate** (`sh tools/certify`, `.github/workflows/parity-certificate.yml`) | The cross-language cases in `conformance/cases/` run in R, Python and Stata locally; `--record` commits `.parity/<hash>.json`; CI verifies a passing certificate on PRs into `main`. |
 | **Python smoke test** (`python/tests/manual/smoke_test.py`, 20 invariants) | Round-trip behaviour, provenance sidecar, mode contract, B1–B4 regressions. **Manual-only** — run via `python python/tests/manual/smoke_test.py`. |
 | **Python error-envelope test** (`python/tests/manual/error_envelope_test.py`, 30 paths) | Every public raise carries the standard envelope. **Manual-only.** |
 | **R manual smoke** (`r/tests/manual/check_consumer_side.R`) | End-to-end vendoring scenario against `api.github.com`. **Manual-only.** |
-| **GitHub Actions** (`.github/workflows/r-check.yml`) | Runs `R CMD check` (which invokes the R `testthat` suite) across `ubuntu-latest` (R release + devel), `macos-latest` (release), and `windows-latest` (release) on every push / PR. The Python and R-manual layers above are **not yet wired into CI** — tracked as a follow-up. |
+| **GitHub Actions** (`.github/workflows/r-check.yml`) | Runs `R CMD check` (which invokes the R `testthat` suite) across `ubuntu-latest` (R release + devel), `macos-latest` (release), and `windows-latest` (release) on every push / PR. The Python pytest, Python manual and R-manual layers above are **not run in CI**. |
 
 ---
 
@@ -486,9 +495,12 @@ or `create_official_stats_project()`):
   in [`templates/gitignore/`](templates/gitignore/).
 - [`docs/ci_cd_guidelines.md`](docs/ci_cd_guidelines.md) — design
   principles and the default check menu, local first: every check runs
-  with `Rscript --no-init-file tools/check.R`
-  ([`templates/tools/check.R`](templates/tools/check.R)), optionally from a
-  pre-push hook ([`templates/hooks/`](templates/hooks/)); opt-in GitHub
+  with `sh tools/check` ([`templates/tools/check`](templates/tools/check),
+  a wrapper around [`templates/tools/check.R`](templates/tools/check.R));
+  `sh tools/check --record` commits a check record
+  (`.checks/<content-hash>.json`) that the pre-push hook
+  ([`templates/hooks/`](templates/hooks/)) requires by default (set
+  `MODE=run` in the hook to run the checks instead); opt-in GitHub
   Actions that call the same script in
   [`templates/workflows/`](templates/workflows/), and a testthat skeleton
   in [`templates/testthat/`](templates/testthat/).
@@ -500,7 +512,7 @@ or `create_official_stats_project()`):
 Code under [MIT](LICENSE); documentation under CC BY 4.0.
 
 > UNICEF Chief Statistician Office, *cso-toolkit: Shared helpers and
-> operating model for child-indicator data warehousing*, v0.6.0 (2026),
+> operating model for child-indicator data warehousing*, v0.12.0 (2026),
 > <https://github.com/unicef-drp/cso-toolkit>
 
 ---
@@ -524,4 +536,4 @@ Code under [MIT](LICENSE); documentation under CC BY 4.0.
   [`docs/dw_api_python_reference.md`](docs/dw_api_python_reference.md)
   — per-function API references.
 - [`templates/dbm_submission_template.md`](templates/dbm_submission_template.md)
-  — eight-section pre-deposit checklist.
+  — nine-section pre-deposit checklist.

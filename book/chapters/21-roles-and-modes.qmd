@@ -140,7 +140,7 @@ dw_save(df, canonical_path, isid=["iso3", "year"], allow_canonical_write=True)
 * which the profile points at the sandbox in reviewer mode, so writes
 * land in the sandbox without a per-call flag. The uniqueness check is
 * folded in via idvars() (the Stata equivalent of the R isid= argument).
-dw_save , filename("dw_im.csv") path("$teamsWrkData") idvars(iso3 year)
+dw_save , filename("dw_im.dta") path("$teamsWrkData") idvars(iso3 year)
 ```
 :::
 
@@ -150,7 +150,7 @@ The same guard also runs a *producer-side* pre-flight: in producer mode a non-ca
 
 ### Guard 2 — reviewer mode forbids live API calls (`dw_require_no_api`)
 
-The second guard sits at every entry point that would hit the network. `dw_api_fetch` checks the `dw_apis_allowed` flag at the very top, before any HTTP request, and any sector-internal script that talks to a remote is expected to call `dw_require_no_api` too. In reviewer mode the call aborts; in producer mode it returns silently. The frozen cache is read with `dw_api_cached` instead of fetching live.
+The second guard sits at every entry point that would hit the network. `dw_api_fetch` reads the cache when one exists and, before any HTTP request, checks the `dw_apis_allowed` flag, and any sector-internal script that talks to a remote is expected to call `dw_require_no_api` too. In reviewer mode the call aborts; in producer mode it returns silently. The frozen cache is read with `dw_api_cached` instead of fetching live.
 
 ::: {.panel-tabset}
 #### R {.unnumbered .unlisted}
