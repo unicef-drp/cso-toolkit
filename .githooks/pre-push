@@ -1,12 +1,18 @@
 #!/bin/sh
-# Runs sh tools/check before every push of this repository. A push to main,
-# or of a v* tag, runs it with --release, so a missing parity certificate stops
-# it. Enable once per clone:   git config core.hooksPath .githooks
+# Runs sh tools/check before every push of this repository, checking the
+# parity certificate of each commit being pushed (not of what is checked out).
+# A push to main, or of a v* tag, runs it with --release, so a missing
+# certificate stops it. Deleting a ref checks nothing.
+# Enable once per clone:   git config core.hooksPath .githooks
 # Skip once (say why in the pull request):   git push --no-verify
 release=""
+revs=""
 while read -r local_ref local_sha remote_ref remote_sha; do
+  case "$local_sha" in *[!0]*) ;; *) continue ;; esac   # a deletion: nothing to check
+  revs="$revs --rev $local_sha"
   case "$remote_ref" in
     refs/heads/main|refs/tags/v*) release="--release" ;;
   esac
 done
-exec sh tools/check $release
+[ -n "$revs" ] || exit 0
+exec sh tools/check $release $revs

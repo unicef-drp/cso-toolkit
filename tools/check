@@ -4,21 +4,31 @@
 #   sh tools/check             fast checks, standard-library Python only: seconds
 #   sh tools/check --full      also the Python and R test suites: minutes
 #   sh tools/check --release   a missing parity certificate fails instead of warning
-# The fast checks: version stamps, parity case files, generated handbook tables,
-# and whether this tree has a parity certificate. CI repeats the first three.
+#   sh tools/check --rev <c>   check commit <c>'s certificate instead of HEAD's
+#                              (repeatable; the pre-push hook passes the pushed commits)
+# The fast checks: version stamps, parity case files, generated handbook tables
+# (all three read the working tree), and whether the commit has a committed
+# parity certificate (read from git). CI repeats the first three on pull requests.
 # CSO_PYTHON: the Python to use (for --full, one with pytest and the toolkit's
 # dependencies). CSO_RSCRIPT: Rscript, if it is not on the PATH.
 cd "$(git rev-parse --show-toplevel)" || exit 1
 
 full=0
 release=0
-for a in "$@"; do
-  case "$a" in
+revs=""
+while [ $# -gt 0 ]; do
+  case "$1" in
     --full) full=1 ;;
     --release) release=1 ;;
-    *) echo "tools/check: unknown option $a (use --full or --release)" >&2; exit 2 ;;
+    --rev)
+      [ -n "${2:-}" ] || { echo "tools/check: --rev needs a commit" >&2; exit 2; }
+      revs="$revs $2"
+      shift ;;
+    *) echo "tools/check: unknown option $1 (use --full, --release or --rev <commit>)" >&2; exit 2 ;;
   esac
+  shift
 done
+[ -n "$revs" ] || revs="HEAD"
 
 # A Python that runs: `command -v python3` also finds Windows' Store placeholder.
 PY=""
@@ -42,23 +52,41 @@ step "version stamps" py_run tools/check_versions.py
 step "parity case files" py_run conformance/certify.py --lint
 step "handbook tables" py_run book/_scripts/gen_tables.py --check
 
-echo "== parity certificate"
-if ! py_run conformance/certify.py --verify; then
-  if [ "$release" = 1 ]; then
-    failed="$failed
-  - parity certificate"
-  else
-    echo "   (a warning here: record one with sh tools/certify --record before the pull"
-    echo "    request merges, if this branch changes r/R, python/src, stata/ or conformance/)"
-  fi
+# The three checks above read the working tree: say so when it is not what is
+# being checked or pushed.
+head=$(git rev-parse HEAD)
+if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
+  echo "   note: uncommitted changes; the checks above read them, a push does not"
 fi
+shas=""
+for r in $revs; do
+  sha=$(git rev-parse --verify --quiet "$r^{commit}") || { echo "tools/check: unknown commit $r" >&2; exit 2; }
+  shas="$shas $sha"
+  if [ "$sha" != "$head" ]; then
+    echo "   note: the checks above read the working tree at HEAD, not $r"
+  fi
+done
+
+for r in $shas; do
+  echo "== parity certificate ($(git rev-parse --short "$r"))"
+  if ! py_run conformance/certify.py --verify --rev "$r"; then
+    if [ "$release" = 1 ]; then
+      failed="$failed
+  - parity certificate ($r)"
+    else
+      echo "   (a warning here: record one with sh tools/certify --record before the pull request"
+      echo "    merges, if the branch changes r/R, python/src, stata/src, stata/tests or conformance/)"
+    fi
+  fi
+done
 
 if [ "$full" = 1 ]; then
   step "Python tests" py_run -m pytest python/tests conformance/tests book/_scripts tools stata/tests -q
   RS=${CSO_RSCRIPT:-}
   if [ -z "$RS" ]; then RS=$(command -v Rscript 2>/dev/null); fi
   if [ -z "$RS" ]; then
-    for c in "C:/Program Files/R"/R-*/bin/Rscript.exe; do [ -x "$c" ] && RS=$c; done
+    # The newest installed R, by version number (R-4.10 after R-4.9).
+    RS=$(ls -d "C:/Program Files/R"/R-*/bin/Rscript.exe 2>/dev/null | sort -V | tail -n 1)
   fi
   if [ -z "$RS" ]; then
     echo "== R tests"
