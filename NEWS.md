@@ -6,16 +6,19 @@ _Entries land here as PRs merge into `develop`. When the next release
 is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
-### Fixed
+## v0.12.0 (2026-11-24)
 
-- **Python finds Z: on a mapped network drive (#225).** On Windows the
-  path normaliser turns a mapped drive (`Z:/`) into its UNC form
-  (`//server/share`), and the Z: and Teams mirror helpers then
-  collapsed every `//`, leaving `/server/share/...`, a folder on the
-  current drive. So `dw_save()` never wrote its Z: mirror and
-  `dw_verify_z()` never found the Z: copy. The helpers now join the
-  root and the relative path without touching the root. R was not
-  affected.
+Python catches up with R. Three things that were R-only now work in
+Python too: `aggregate_data_v2(method = "total")`,
+`dw_api_fetch(api = "csv")`, and the reviewer helper `dw_stage()` with
+`dw_use(stage =)`. That leaves three R exports without a Python
+sibling: `dw_regions()`, `dw_publish()` (a dry-run placeholder in R)
+and `dw_verbosity()` (R's message switch; Python uses `logging`).
+Python also finds Z: again when it is a mapped network drive. Two new
+parity cases cover the new code; the certificate for this release
+passes 44 checks, with 7 gaps, all in Stata. Handbook appendix G now
+explains in full how the three languages are certified. PRs #221, #222, #223, #227. MINOR: new
+functions and options in Python; nothing changes for R or Stata users.
 
 ### Added
 
@@ -49,6 +52,26 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
   R writes it. New parity case `stage_lifecycle` (Stata: gap).
   Handbook chapter 31 and appendices A and D updated; appendix D no
   longer says `dw_root` is R-only.
+
+### Fixed
+
+- **Python finds Z: on a mapped network drive (#225).** On Windows the
+  path normaliser turns a mapped drive (`Z:/`) into its UNC form
+  (`//server/share`), and the Z: and Teams mirror helpers then
+  collapsed every `//`, leaving `/server/share/...`, a folder on the
+  current drive. So `dw_save()` never wrote its Z: mirror and
+  `dw_verify_z()` never found the Z: copy. The helpers now join the
+  root and the relative path without touching the root. R was not
+  affected.
+
+### Documentation
+
+- **Appendix G, "Cross-language parity", rewritten** as a full account
+  of how R, Python and Stata are certified: the two layers (the CI
+  round trip and the parity certificate), how a run works driver by
+  driver, the comparison rules, every status, the 17 cases with their
+  status per language, the certificate's fields and content hash, how
+  to add a case, and the release gate.
 
 ## v0.11.1 (2026-11-22)
 
