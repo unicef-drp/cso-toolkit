@@ -43,6 +43,13 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
   requests, tests per language, the handbook rules and CI; "Versioning
   and releases" keeps the maintainer's procedure, now as a numbered
   release sequence. The old appendix URL redirects.
+- **Handbook appendices D and E rebuilt.** Appendix D is a directory
+  built on a generated function index: one row per public function
+  with its help-page title, the languages that have it and the chapter
+  that explains it (`sh tools/docs-tables --check` now also fails on a
+  function without a description). The glossary keeps every term as a
+  short definition linking to the chapter or appendix that owns it.
+  Together they go from 7,760 to 3,057 words.
 
 ## v0.12.0 (2026-11-24)
 
