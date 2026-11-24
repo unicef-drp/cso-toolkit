@@ -1,0 +1,12 @@
+#!/bin/sh
+# Runs sh tools/check before every push of this repository. A push to main,
+# or of a v* tag, runs it with --release, so a missing parity certificate stops
+# it. Enable once per clone:   git config core.hooksPath .githooks
+# Skip once (say why in the pull request):   git push --no-verify
+release=""
+while read -r local_ref local_sha remote_ref remote_sha; do
+  case "$remote_ref" in
+    refs/heads/main|refs/tags/v*) release="--release" ;;
+  esac
+done
+exec sh tools/check $release
