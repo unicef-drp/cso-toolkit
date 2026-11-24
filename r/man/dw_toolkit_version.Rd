@@ -12,7 +12,7 @@ troubleshooting. `NULL` (default) inherits `getOption("dw.debug", FALSE)`.
 See [dw_verbosity()].}
 }
 \value{
-Character. Currently `"0.11.1"`.
+Character. Currently `"0.12.0"`.
 }
 \description{
 Returns the upstream `cso-toolkit` tag the current `dw_io.R` /

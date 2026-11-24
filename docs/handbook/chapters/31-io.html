@@ -496,7 +496,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <p>Every analytics pipeline begins and ends with reading and writing files. In the DW-Production world, however, an unguarded <code>read_csv</code> or <code>to_csv</code> is a liability: it can silently overwrite a published deposit, leave a producer’s only copy on a laptop, read a stale cached file with no provenance, or let a duplicate-keyed table into the warehouse. The IO contract is <code>cso-toolkit</code>’s answer to all of these. It is a small family of paired read and write helpers — chiefly <code>dw_save</code> and <code>dw_use</code> — that wrap ordinary language-native IO with three layers of discipline: auto-dispatch on the file extension, mode-aware path routing, and a uniqueness and integrity contract enforced at the call site.</p>
-<p>The toolkit promises parity — but not <em>full</em> parity. The same function names, the same arguments, and the same behaviour hold across R, Python, and Stata, so a sector that runs partly in R and partly in Stata uses one mental model on both sides. Where the languages must diverge, this chapter says where. Stata reads and writes only <code>.dta</code>, <code>.csv</code>, and <code>.xlsx</code>; it has no parquet, no RDS, no remote-URL fetch, and a few of the helpers below have no Stata sibling at all.</p>
+<p>The toolkit promises parity — but not <em>full</em> parity. The same function names, the same arguments, and the same behaviour hold across R, Python, and Stata, so a sector that runs partly in R and partly in Stata uses one mental model on both sides. Where the languages must diverge, this chapter says where. Stata’s <code>dw_use</code> reads only <code>.dta</code>, <code>.csv</code>, and <code>.xlsx</code>, and its <code>dw_save</code> writes only <code>.dta</code>; it has no parquet, no RDS, no remote-URL fetch, and a few of the helpers below have no Stata sibling at all.</p>
 <section id="orientation-five-terms-this-chapter-leans-on" class="level2" data-number="7.1">
 <h2 data-number="7.1" class="anchored" data-anchor-id="orientation-five-terms-this-chapter-leans-on"><span class="header-section-number">7.1</span> Orientation: five terms this chapter leans on</h2>
 <p>Before the mechanics, five load-bearing terms. The whole argument of the chapter — every guard, every mirror, every warning — rests on them, so they are worth fixing in place first.</p>
@@ -507,7 +507,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>An <strong>error envelope</strong> is the toolkit’s structured failure message: it always states WHAT failed, WHY, and HOW to fix it. The same shape is used for hard stops and for non-blocking warnings (see the error-taxonomy appendix).</li>
 <li><strong>AppLocker</strong> is the Windows policy on locked-down UNICEF laptops that blocks unsigned executables. It is why the Stata side never shells out to an external binary — a constraint that shapes two of the design boundaries below.</li>
 </ul>
-<p>The <code>kind</code> argument that appears throughout selects which of three data roots a path resolves against: <code>raw</code> (inputs), <code>wrk</code> (working outputs), or <code>meta</code> (metadata). The functions covered here are <code>dw_save</code>, <code>dw_use</code>, <code>dw_compare</code>, <code>dw_merge</code>, <code>dw_isid</code>, <code>dw_verify_z</code>, <code>dw_stage</code>, <code>dw_root</code>, <code>dw_fetch_inputs</code>, <code>dw_check_deposit</code>, <code>dw_read_provenance</code>, and <code>dw_provenance_diff</code>. They live in <code>r/R/dw_io.R</code>, <code>python/src/dw_io.py</code>, and the <code>.ado</code> files under <code>stata/src/</code>.</p>
+<p>The <code>kind</code> argument that appears throughout selects which of three data roots a path resolves against: <code>raw</code> (inputs), <code>wrk</code> (working outputs), or <code>meta</code> (metadata). The functions covered here are <code>dw_save</code>, <code>dw_use</code>, <code>dw_compare</code>, <code>dw_diff_profile</code>, <code>dw_merge</code>, <code>dw_isid</code>, <code>dw_verify_z</code>, <code>dw_stage</code>, <code>dw_root</code>, <code>dw_resolve_path</code>, <code>dw_fetch_inputs</code>, <code>dw_check_deposit</code>, <code>dw_read_provenance</code>, and <code>dw_provenance_diff</code>. They live in <code>r/R/dw_io.R</code> and <code>python/src/dw_io.py</code> (<code>dw_fetch_inputs</code> and <code>dw_check_deposit</code> in <code>dw_deposit.R</code> / <code>dw_deposit.py</code>; <code>dw_read_provenance</code> and <code>dw_provenance_diff</code> in <code>dw_provenance.R</code> / <code>dw_provenance.py</code>), and in the <code>.ado</code> files under <code>stata/src/</code>.</p>
 </section>
 <section id="auto-dispatch-by-extension" class="level2" data-number="7.2">
 <h2 data-number="7.2" class="anchored" data-anchor-id="auto-dispatch-by-extension"><span class="header-section-number">7.2</span> Auto-dispatch by extension</h2>
@@ -533,7 +533,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><code>.csv</code> / <code>.tsv</code> / <code>.txt</code></td>
 <td><code>data.table::fwrite</code> / <code>fread</code></td>
 <td><code>pandas.to_csv</code> / <code>read_csv</code></td>
-<td>yes (<code>.csv</code> only)</td>
+<td>read only (<code>dw_use</code>; <code>.csv</code> only)</td>
 </tr>
 <tr class="even">
 <td><code>.csv.gz</code> / <code>.tsv.gz</code></td>
@@ -545,16 +545,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><code>.xlsx</code></td>
 <td><code>writexl</code> / <code>openxlsx</code>; <code>readxl</code></td>
 <td><code>openpyxl</code> via pandas</td>
-<td>yes</td>
+<td>read only (<code>dw_use</code>)</td>
 </tr>
 <tr class="even">
 <td><code>.dta</code></td>
 <td><code>haven::write_dta</code> / <code>read_dta</code></td>
 <td><code>pandas.to_stata</code> / <code>read_stata</code></td>
-<td>yes (native)</td>
+<td>read and write (native)</td>
 </tr>
 <tr class="odd">
-<td><code>.rds</code> (R) / <code>.pkl</code> (Py)</td>
+<td><code>.rds</code> (R) / <code>.pkl</code>, <code>.pickle</code> (Py)</td>
 <td><code>saveRDS</code> / <code>readRDS</code></td>
 <td><code>pickle.dump</code> / <code>load</code></td>
 <td>—</td>
@@ -585,7 +585,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
-<p>The R and Python rows are near-complete mirrors. The only deliberate split is the in-language binary format: R’s <code>.rds</code> versus Python’s <code>.pkl</code>, both serving the same “fast native object dump” role. Stata covers <code>.dta</code>, <code>.csv</code>, and <code>.xlsx</code>, and nothing else.</p>
+<p>The R and Python rows are near-complete mirrors. The only deliberate split is the in-language binary format: R’s <code>.rds</code> versus Python’s <code>.pkl</code>, both serving the same “fast native object dump” role. Stata reads <code>.dta</code>, <code>.csv</code>, and <code>.xlsx</code>, and writes <code>.dta</code> only.</p>
 <div class="callout callout-style-simple callout-warning callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -694,7 +694,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>On the Stata side, <code>title()</code>, <code>producer()</code>, <code>sources()</code>, <code>contact()</code>, and <code>vintage()</code> are dedicated options; arbitrary extra fields go through a semicolon-separated <code>metadata("key1 value1; key2 value2")</code> option. Stata also offers <code>nosidecar</code> to skip the sidecar entirely and <code>nocompress</code> to skip the <code>compress</code> step.</p>
-<p>The sidecar schema is shared across all three languages, with one deliberate substitution: R and Python record a file-level <strong>SHA-256</strong>, while Stata records its native <code>datasignature</code> (a content hash of the dataset’s values, not a hash of the file’s bytes). The reason is the same AppLocker constraint that excludes the binary formats — computing SHA-256 in Stata would mean shelling out to an external binary. The practical consequence is that cross-tool integrity comparisons must compare <em>content</em> hashes, not <em>file</em> hashes. The full schema is documented in the provenance-sidecar appendix.</p>
+<p>The sidecar schema is shared across all three languages. Stata adds its native <code>datasignature</code> (a content hash of the dataset’s values, not a hash of the file’s bytes) alongside the file-level <strong>SHA-256</strong> that all three record. Stata computes the SHA-256 through its Python integration (Stata 16+), so it never shells out to an external binary, which the AppLocker constraint would block. In a Stata session without Python the sidecar has no <code>sha256</code> key, only <code>datasignature</code>, and a byte-level comparison against that file is not possible. The full schema is documented in the provenance-sidecar appendix.</p>
 <p>In R and Python, the sidecar write is wrapped so that a non-serialisable metadata value (a <code>Date</code> object or a numpy scalar, say) emits a warning rather than rolling back the primary write — the asset is what matters; the sidecar is metadata about it.</p>
 </section>
 <section id="mode-aware-write-routing" class="level3" data-number="7.3.3">
@@ -717,7 +717,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>In R the guard raises <code>stop()</code>; in Python it raises <code>PermissionError</code>; in Stata it raises error 459. All three carry the same WHAT / WHY / HOW envelope (see the error-taxonomy appendix).</p>
-<p><strong>Producer mode mirrors redundantly.</strong> A producer’s output must never live only on the producer’s laptop. So in producer mode each successful primary write is carbon-copied — along with its sidecar — to both its Teams canonical equivalent and its Z: drive equivalent, whichever are configured. The helper performs a pre-flight check: if <em>neither</em> mirror is reachable, <code>dw_save</code> hard-stops before writing, because the deposit would not be recoverable. Each mirror copy is non-blocking: a failure to reach Teams or Z: after the primary write emits an envelope-shaped warning (tagged “Teams mirror” or “Z: mirror”) but does not roll back the primary.</p>
+<p><strong>Producer mode mirrors redundantly.</strong> A producer’s output must never live only on the producer’s laptop. So in producer mode each successful primary write is carbon-copied — along with its sidecar — to both its Teams canonical equivalent and its Z: drive equivalent, whichever are configured. The helper performs a pre-flight check: if <em>neither</em> mirror is reachable, <code>dw_save</code> hard-stops before writing, because the deposit would not be recoverable. Each mirror copy is non-blocking: a failure to reach Teams or Z: after the primary write emits an envelope-shaped warning (tagged “Teams mirror” or “Z: mirror”) but does not roll back the primary. Mirroring and the pre-flight are R and Python behaviour. Stata’s <code>dw_save</code> writes only the primary <code>.dta</code> and its sidecar.</p>
 <div class="callout callout-style-simple callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -798,7 +798,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="column-subsetting-strict-and-lenient" class="level3" data-number="7.4.2">
 <h3 data-number="7.4.2" class="anchored" data-anchor-id="column-subsetting-strict-and-lenient"><span class="header-section-number">7.4.2</span> Column subsetting: strict and lenient</h3>
-<p><code>dw_use</code> accepts a <code>cols</code> vector to restrict the read. The default is <strong>strict</strong>: every requested column must exist in the file’s schema, matching the contract of the underlying readers (<code>fread(select=)</code>, <code>read_parquet(col_select=)</code>, <code>read_dta(col_select=)</code>, pandas <code>usecols</code>). On the Stata side, <code>cols()</code> is a column subset on the dispatched <code>.dta</code> / <code>.csv</code> / <code>.xlsx</code>.</p>
+<p><code>dw_use</code> accepts a <code>cols</code> vector to restrict the read. The default is <strong>strict</strong> for parquet and dta: a requested column missing from the schema is an error (<code>read_parquet(col_select=)</code>, <code>read_dta(col_select=)</code>, pandas <code>columns=</code>). CSV differs: R’s <code>fread(select=)</code> warns and skips the column, while Python’s <code>usecols</code> raises. For <code>.xlsx</code>, both languages silently keep only the columns present. On the Stata side <code>cols()</code> subsets a <code>.dta</code> read only; <code>.csv</code> and <code>.xlsx</code> are read whole.</p>
 <p>R adds a <code>cols_lenient = TRUE</code> flag that flips to “select if present” semantics: it introspects the file’s schema cheaply (parquet metadata, or a header-only read for dta / csv / xlsx), intersects the request with the actual columns, silently drops the missing ones, and — on an empty intersection — warns and reads all columns. The point is to give sector scripts the <code>dplyr::any_of()</code> intent <em>inside</em> <code>dw_use</code>, because calling <code>any_of()</code> at the top level errors fatally under tidyselect ≥ 1.2.0.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-8-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-1" role="tab" aria-controls="tabset-8-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-8-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-2" role="tab" aria-controls="tabset-8-2" aria-selected="false" href="">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-8-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-3" role="tab" aria-controls="tabset-8-3" aria-selected="false" href="">Stata</a></li></ul>
@@ -817,13 +817,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> dw_use(path<span class="op">=</span>parquet_path, cols<span class="op">=</span>[<span class="st">"REF_AREA"</span>, <span class="st">"OBS_VALUE"</span>])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div id="tabset-8-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-8-3-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>* Stata <span class="bn">cols</span>() subsets the dispatched .dta / .csv / .xlsx</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>* Stata <span class="bn">cols</span>() subsets a .dta read only (ignored <span class="kw">for</span> .csv / .xlsx)</span>
 <span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>dw_use , filename(<span class="st">"dw_ed_edu.dta"</span>) path(<span class="st">"$teamsWrkData/ed"</span>) <span class="co">///</span></span>
 <span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    <span class="bn">cols</span>(REF_AREA OBS_VALUE)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 </div>
-<p>The <code>cols_lenient</code> flag and its metadata-only schema introspection are an R-side feature; Python and Stata offer the strict subset only.</p>
+<p>The <code>cols_lenient</code> flag and its metadata-only schema introspection are an R-side feature. Python has no <code>cols_lenient</code> (its <code>.xlsx</code> read already drops missing columns), and Stata subsets <code>.dta</code> only.</p>
 <div class="callout callout-style-simple callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -873,20 +873,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 data-number="7.5.3" class="anchored" data-anchor-id="dw_root-mode-aware-data-root"><span class="header-section-number">7.5.3</span> <code>dw_root</code> — mode-aware data root</h3>
 <p><code>dw_root("wrk" | "raw" | "meta")</code> returns the absolute path to one of the three vendored data roots, already resolved for the current mode. Sector scripts use it to build paths without knowing whether they are in producer or reviewer mode:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>final_path <span class="ot">&lt;-</span> <span class="fu">file.path</span>(<span class="fu">dw_root</span>(<span class="st">"wrk"</span>), <span class="st">"nt"</span>, <span class="st">"2025"</span>, <span class="st">"dw_nut.csv"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>This is an R helper. The richer structured resolver, <code>dw_resolve_path(name=, sector=, kind=, vintage=)</code>, is the full path-builder that <code>dw_save</code> and <code>dw_use</code> call internally; it is available in both R and Python.</p>
+<p>It exists in R and Python (Python returns <code>None</code> when the profile has not set the root); Stata has no sibling. The richer structured resolver, <code>dw_resolve_path(name=, sector=, kind=, vintage=)</code>, is the full path-builder that <code>dw_save</code> and <code>dw_use</code> call internally; it is available in both R and Python.</p>
 </section>
 <section id="dw_stage-reviewer-mode-sandbox-staging" class="level3" data-number="7.5.4">
 <h3 data-number="7.5.4" class="anchored" data-anchor-id="dw_stage-reviewer-mode-sandbox-staging"><span class="header-section-number">7.5.4</span> <code>dw_stage</code> — reviewer-mode sandbox staging</h3>
-<p><code>dw_stage</code> (R only) is an opt-in reviewer helper that copies a canonical input from Z: (preferred) or Teams into the local sandbox the first time a script needs it, verifies the copy’s hash against the source, and archives that hash in a <code>&lt;path&gt;.staged.json</code> sidecar. On every later run it re-checks the sandbox copy against the archived hash before letting the read proceed. It is a no-op outside reviewer mode.</p>
+<p><code>dw_stage</code> (R and Python) is an opt-in reviewer helper that copies a canonical input from Z: (preferred) or Teams into the local sandbox the first time a script needs it, verifies the copy’s hash against the source, and archives that hash in a <code>&lt;path&gt;.staged.json</code> sidecar. On every later run it re-checks the sandbox copy against the archived hash before letting the read proceed. It is a no-op outside reviewer mode.</p>
 <p>The lifecycle has five states:</p>
 <ul>
 <li><strong>First stage</strong> — the sandbox copy is missing, so copy from the first available source (Z: before Teams), re-hash the copy against the source, and archive the hash.</li>
 <li><strong>Clean later run</strong> — the sandbox copy still matches its archived hash; skip the copy and return the sandbox path.</li>
 <li><strong>Sandbox drift</strong> — the staged copy was modified out of band; stop with the SANDBOX DRIFT envelope.</li>
-<li><strong>Forced re-stage</strong> — <code>overwrite = TRUE</code> unconditionally re-copies, re-verifies, and re-archives.</li>
+<li><strong>Forced re-stage</strong> — <code>overwrite = TRUE</code> on <code>dw_stage</code>, or on <code>dw_use(..., stage = TRUE)</code>, which passes it on, unconditionally re-copies, re-verifies, and re-archives.</li>
 <li><strong>Upstream changed</strong> — the canonical source moved on; warn, but do not auto-refresh, because rolling canonical inputs forward is the reviewer’s explicit decision.</li>
 </ul>
 <p>When both Z: and Teams hold the file, the two are hash-compared before either is used; disagreement is a canonical-integrity stop.</p>
+<p>One known limit is tracked in open issue #226: in a reviewer session whose <code>teamsFolder</code> is not redirected to a sandbox, <code>dw_stage</code> can target the canonical folder itself. The standard profiles always redirect it.</p>
 <p>You rarely call <code>dw_stage</code> directly. The usual path is to let <code>dw_use</code> invoke it, per call or globally:</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-10-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-10-1" role="tab" aria-controls="tabset-10-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-10-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-10-2" role="tab" aria-controls="tabset-10-2" aria-selected="false" href="">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-10-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-10-3" role="tab" aria-controls="tabset-10-3" aria-selected="false" href="">Stata</a></li></ul>
@@ -899,16 +900,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="co">#   dw_autostage &lt;- TRUE</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div id="tabset-10-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-10-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Not available — dw_stage is an R-only helper.</span></span>
-<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> dw_use(name<span class="op">=</span><span class="st">"dw_nut.csv"</span>, sector<span class="op">=</span><span class="st">"nt"</span>, kind<span class="op">=</span><span class="st">"wrk"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Per-call opt-in: stage the canonical input into the sandbox, then read it</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> dw_use(name<span class="op">=</span><span class="st">"dw_nut.csv"</span>, sector<span class="op">=</span><span class="st">"nt"</span>, kind<span class="op">=</span><span class="st">"wrk"</span>, stage<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Or for the session:</span></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="co">#   _state.configure(dw_autostage=True)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div id="tabset-10-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-10-3-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>* Not available — dw_stage is an R-only helper.</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>* Not available — Stata has no dw_stage; a Stata reviewer reads <span class="kw">in</span> place.</span>
 <span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>dw_use , filename(<span class="st">"dw_nut.dta"</span>) path(<span class="st">"$teamsWrkData/nt"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 </div>
-<p><code>dw_stage</code> and <code>dw_use</code>’s <code>stage =</code> integration are R-only. The <code>.staged.json</code> sidecar is deliberately distinct from <code>dw_save</code>’s <code>.provenance.json</code>, so a file that is both written by <code>dw_save</code> and staged by <code>dw_stage</code> carries both metadata blocks side by side; each reader refuses to misread the other’s schema by checking a <code>type</code> discriminator.</p>
+<p><code>dw_stage</code> and <code>dw_use</code>’s <code>stage =</code> integration ship in R and Python; Stata has neither. Both languages write the same sidecar, so a file staged in R verifies in Python and the other way round. The <code>.staged.json</code> sidecar is deliberately distinct from <code>dw_save</code>’s <code>.provenance.json</code>, so a file that is both written by <code>dw_save</code> and staged by <code>dw_stage</code> carries both metadata blocks side by side. <code>dw_stage</code> refuses a <code>.staged.json</code> whose <code>type</code> is not <code>dw_stage</code>; <code>dw_save</code>’s <code>.provenance.json</code> carries no <code>type</code> field.</p>
 </section>
 <section id="dw_fetch_inputs-and-dw_check_deposit-inputs-kept-out-of-git" class="level3" data-number="7.5.5">
 <h3 data-number="7.5.5" class="anchored" data-anchor-id="dw_fetch_inputs-and-dw_check_deposit-inputs-kept-out-of-git"><span class="header-section-number">7.5.5</span> <code>dw_fetch_inputs</code> and <code>dw_check_deposit</code> — inputs kept out of Git</h3>
@@ -947,8 +951,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>inputs <span class="op">=</span> [pd.read_csv(p) <span class="cf">for</span> p <span class="kw">in</span> manifest[<span class="st">"path"</span>]]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div id="tabset-11-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-11-3-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>* Route via R <span class="kw">or</span> Python (#152): <span class="kw">run</span> dw_fetch_inputs there once, then read</span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>* the fetched inputs from the <span class="kw">local</span> folder.</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>* No Stata sibling (#152, closed: Stata routes through R <span class="kw">or</span> Python): <span class="kw">run</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>* dw_fetch_inputs there once, then read the fetched inputs from the <span class="kw">local</span> folder.</span>
 <span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>dw_use, filename(NUTRITION_2024.csv) path(<span class="st">"$projectFolder/02_consultations/023_targets/inputs/2024"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
@@ -960,7 +964,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 data-number="7.6" class="anchored" data-anchor-id="comparing-and-joining"><span class="header-section-number">7.6</span> Comparing and joining</h2>
 <section id="dw_compare-three-way-diff-against-a-reference" class="level3" data-number="7.6.1">
 <h3 data-number="7.6.1" class="anchored" data-anchor-id="dw_compare-three-way-diff-against-a-reference"><span class="header-section-number">7.6.1</span> <code>dw_compare</code> — three-way diff against a reference</h3>
-<p><code>dw_compare</code> answers “what changed since the last deposit?” It keys two data frames on <code>by</code>, then classifies rows as <strong>added</strong> (present in current, absent in reference), <strong>removed</strong> (the reverse), and <strong>changed</strong> (present in both, with a differing value column). Numeric columns can compare within a tolerance; string columns normalise missing-equivalents (<code>""</code>, <code>"NA"</code>, <code>"N/A"</code>, <code>"NULL"</code>, <code>"."</code>) to equal. In R and Python it returns a list with a one-row <code>summary</code> plus the <code>added</code>, <code>removed</code>, and <code>changed</code> frames, and can optionally write per-segment CSV reports.</p>
+<p><code>dw_compare</code> answers “what changed since the last deposit?” It keys two data frames on <code>by</code>, then classifies rows as <strong>added</strong> (present in current, absent in reference), <strong>removed</strong> (the reverse), and <strong>changed</strong> (present in both, with a differing value column). Numeric columns can compare within a tolerance; string columns normalise missing-equivalents (<code>""</code>, <code>"NA"</code>, <code>"N/A"</code>, <code>"NULL"</code>, <code>"."</code>) to equal (R and Python; Stata compares strings exactly). In R and Python it returns a list with a one-row <code>summary</code> plus the <code>added</code>, <code>removed</code>, and <code>changed</code> frames, and can optionally write per-segment CSV reports.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-12-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-12-1" role="tab" aria-controls="tabset-12-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-12-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-12-2" role="tab" aria-controls="tabset-12-2" aria-selected="false" href="">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-12-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-12-3" role="tab" aria-controls="tabset-12-3" aria-selected="false" href="">Stata</a></li></ul>
 <div class="tab-content">
@@ -999,7 +1003,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
-<p><code>dw_compare</code> tolerates a degenerate first deposit gracefully: in R and Python a missing or unreadable reference is treated as empty (with a warning), so every current row reports as added rather than crashing the run. Note the divergences. R and Python name the arguments <code>value_cols</code> / <code>numeric_value_cols</code>; Stata uses <code>valuevars</code> and infers numeric-versus-string comparison from each variable’s storage type. The numeric tolerance defaults differ too — <code>1e-5</code> in R and Python, <code>1e-8</code> in Stata — so set <code>tol</code> explicitly when it matters. The Stata <code>dw_compare</code> prints a console summary and, via <code>report()</code>, an optional Markdown file of row counts and per-column change counts; it is sized for a publication-gate diff, not the rich row-level Markdown of its upstream <code>comparefiles</code> ancestor.</p>
+<p><code>dw_compare</code> tolerates a degenerate first deposit in R: a missing or unreadable reference is treated as empty (with a warning), so every current row reports as added rather than crashing the run. Python raises <code>FileNotFoundError</code> for a missing reference path (pass an empty DataFrame for a first deposit), and Stata stops with error 601. Note the divergences. R and Python name the arguments <code>value_cols</code> / <code>numeric_value_cols</code>; Stata uses <code>valuevars</code> and infers numeric-versus-string comparison from each variable’s storage type. The numeric tolerance defaults differ too — <code>1e-5</code> in R and Python, <code>1e-8</code> in Stata — so set <code>tol</code> explicitly when it matters. The Stata <code>dw_compare</code> prints a console summary and, via <code>report()</code>, an optional Markdown file of row counts and per-column change counts; it is sized for a publication-gate diff, not the rich row-level Markdown of its upstream <code>comparefiles</code> ancestor.</p>
 <p><strong>When the counts are not enough</strong> (R and Python, #111). <code>diagnose = TRUE</code> adds a <code>profile</code>, also available on its own as <code>dw_diff_profile(cmp, by, numeric_value_cols)</code>. It turns “36,334 changed” into a diagnosis:</p>
 <ul>
 <li>which value columns differ, most first;</li>
@@ -1051,8 +1055,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb40-10"><a href="#cb40-10" aria-hidden="true" tabindex="-1"></a>dw_compare(current<span class="op">=</span>result, reference<span class="op">=</span>previous_df, by<span class="op">=</span>key)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div id="tabset-13-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-13-3-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb41"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>* Route via R <span class="kw">or</span> Python (#152). Stata sidecars record sha256 (through</span>
-<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>* Stata's Python integration), so dw_provenance_diff can <span class="kw">compare</span> them.</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb41"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>* No Stata sibling (#152, closed: Stata routes through R <span class="kw">or</span> Python). Stata</span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>* sidecars record sha256 when Stata's Python integration is available, so</span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>* dw_provenance_diff can <span class="kw">compare</span> them.</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 </div>
@@ -1075,8 +1080,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div id="tabset-14-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-14-2-tab">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb43"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>enriched <span class="op">=</span> dw_merge(</span>
 <span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>    edu_sdg_uis,</span>
-<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>    using<span class="op">=</span>os.path.join(teamsRawData, <span class="st">"ed/metadata/regions.csv"</span>),</span>
-<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>    by<span class="op">=</span><span class="st">"ISO3"</span>,</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>    using<span class="op">=</span>os.path.join(_state.teamsRawData, <span class="st">"ed/metadata/regions.csv"</span>),</span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>    by<span class="op">=</span>[<span class="st">"ISO3"</span>],</span>
 <span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>    how<span class="op">=</span><span class="st">"m:1"</span>,</span>
 <span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
@@ -1092,7 +1097,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="putting-it-together" class="level2" data-number="7.7">
 <h2 data-number="7.7" class="anchored" data-anchor-id="putting-it-together"><span class="header-section-number">7.7</span> Putting it together</h2>
-<p>A typical producer step reads its inputs, prepares the data, asserts uniqueness, and deposits the result with provenance — all through the contract, so the same script runs unmodified in reviewer mode (reading network-first, writing only to the sandbox) and in producer mode (reading local-first, writing redundantly to Teams and Z:):</p>
+<p>A typical producer step reads its inputs, prepares the data, asserts uniqueness, and deposits the result with provenance — all through the contract, so the same script runs unmodified in reviewer mode (reading network-first, writing only to the sandbox) and in producer mode (in R and Python, reading local-first and writing redundantly to Teams and Z:):</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-15-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-15-1" role="tab" aria-controls="tabset-15-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-15-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-15-2" role="tab" aria-controls="tabset-15-2" aria-selected="false" href="">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-15-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-15-3" role="tab" aria-controls="tabset-15-3" aria-selected="false" href="">Stata</a></li></ul>
 <div class="tab-content">

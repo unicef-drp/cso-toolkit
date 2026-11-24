@@ -517,6 +517,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Not applicable to this language by design — a deliberate scope decision, not an oversight.</td>
 </tr>
 <tr class="even">
+<td>No</td>
+<td>Not available in this language and not tracked; the cell says what to use instead.</td>
+</tr>
+<tr class="odd">
 <td>Route via R/Python</td>
 <td>The capability does not exist in this language and is not planned; the documented workaround: do the operation in a sibling language and hand the result back.</td>
 </tr>
@@ -538,13 +542,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>The repository headline version is <strong>v0.7.0</strong>, carried by the R package (<code>csotoolkit</code> 0.7.0), the Python package (<code>__version__ = "0.7.0"</code>), and the shared <code>NEWS.md</code>. The R and Python version stamps are now level; the Stata package versions per-command via its <code>.ado</code> files. A matching version number is a floor, not a guarantee of feature parity, though: where a cell below says “Yes” for a recent feature, R is the sibling guaranteed to have it first.</p>
+<p>The repository version is carried by the R package (<code>csotoolkit</code>, <code>r/DESCRIPTION</code>), the Python package (<code>__version__</code> in <code>python/src/__init__.py</code>, and <code>python/pyproject.toml</code>) and the shared <code>NEWS.md</code>. The R and Python version stamps are now level; the Stata package versions per-command via its <code>.ado</code> files. A matching version number is a floor, not a guarantee of feature parity, though: where a cell below says “Yes” for a recent feature, R is the sibling guaranteed to have it first.</p>
 </div>
 </div>
 </section>
 <section id="function-coverage-matrix" class="level2" data-number="A.3">
 <h2 data-number="A.3" class="anchored" data-anchor-id="function-coverage-matrix"><span class="header-section-number">A.3</span> Function coverage matrix</h2>
-<p>The table below is grouped by the five capability families. Each row is one public function; each cell is the state of that function in that language. (The R package additionally exports <code>dw_</code>-prefixed aliases of most public names — <code>dw_save</code>/<code>dw_use</code> already carry the prefix, while <code>aggregate_data</code> is also reachable as <code>dw_aggregate_data</code>. The aliases are conveniences, not separate functions, and are omitted from the rows below.)</p>
+<p>The table below is grouped by the five capability families. Each row is one public function; each cell is the state of that function in that language. (R and Python both export <code>dw_</code>-prefixed aliases of the bare-named helpers — <code>dw_save</code>/<code>dw_use</code> already carry the prefix, while <code>aggregate_data</code> is also reachable as <code>dw_aggregate_data</code> in both. The aliases are the same objects, not separate functions, and are omitted from the rows below.)</p>
 <section id="io-contract" class="level3" data-number="A.3.1">
 <h3 data-number="A.3.1" class="anchored" data-anchor-id="io-contract"><span class="header-section-number">A.3.1</span> IO contract</h3>
 <table class="caption-top table">
@@ -608,7 +612,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td><code>dw_stage</code></td>
 <td>Yes</td>
-<td>n/a</td>
+<td>Yes</td>
 <td>n/a</td>
 </tr>
 <tr class="odd">
@@ -680,16 +684,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td><code>dw_verbosity</code></td>
 <td>Yes (session verbose/debug switch)</td>
-<td>Planned</td>
+<td>No (Python logs through the standard <code>logging</code> module, <code>cso_toolkit.*</code> loggers)</td>
 <td>n/a</td>
 </tr>
 <tr class="odd">
+<td><code>dw_toolkit_version</code></td>
+<td>Yes</td>
+<td>Yes</td>
+<td>n/a</td>
+</tr>
+<tr class="even">
 <td><code>dw_default_unicef_allowlist</code></td>
 <td>Yes (remote-URL freeze allowlist)</td>
 <td>Yes</td>
 <td>n/a (no remote-URL reads in Stata)</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>dw_map_drive</code></td>
 <td>n/a</td>
 <td>n/a</td>
@@ -702,7 +712,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong><code>dw_use</code> reached Stata at v0.4.0.</strong> The Stata package README and source catalogue confirm it shipped, scoped to <code>.dta</code> / <code>.csv</code> / <code>.xlsx</code>. Treat it as available.</li>
 <li><strong><code>dw_merge</code> and <code>dw_verify_z</code> are R-and-Python only.</strong> There is no Stata sibling and none is planned. <code>dw_merge</code> is a join-with-duplicate-key guard (it warns when left/right duplicate structure does not match the declared <code>how</code>); <code>dw_verify_z</code> compares a file against its Z:-drive mirror, by file size (default, fast) or by deep SHA-256. A Stata pipeline needing either routes through R or Python.</li>
 <li><strong><code>dw_mkdir</code> is the mirror image.</strong> It is a first-class <em>Stata</em> helper because Stata’s built-in <code>mkdir</code> does not accept nested paths; R and Python have no need for it because their standard libraries already create directories recursively.</li>
-<li><strong><code>dw_root</code> is R + Python; <code>dw_stage</code> is R-only.</strong> <code>dw_root</code> resolves the mode-aware repo/canonical root for a vendored <code>kind</code> (<code>"wrk"</code> / <code>"raw"</code> / <code>"meta"</code>) so a sector script can build paths without knowing whether the session is producer or reviewer; <code>dw_stage</code> copies a reviewer-mode sandbox file into place with a <code>.staged.json</code> integrity sidecar. <code>dw_stage</code> has no Python or Stata sibling yet.</li>
+<li><strong><code>dw_root</code> and <code>dw_stage</code> are R + Python.</strong> <code>dw_root</code> resolves the mode-aware repo/canonical root for a vendored <code>kind</code> (<code>"wrk"</code> / <code>"raw"</code> / <code>"meta"</code>) so a sector script can build paths without knowing whether the session is producer or reviewer; <code>dw_stage</code> copies a canonical input into the reviewer’s sandbox once and hash-guards the copy with a <code>.staged.json</code> sidecar (<code>dw_use(stage = TRUE)</code>, or the <code>dw_autostage</code> session key, calls it), the same in both languages. Neither has a Stata sibling.</li>
 <li><strong><code>dw_fetch_inputs</code> and <code>dw_check_deposit</code> are R and Python.</strong> They serve pipelines that keep raw inputs out of Git in a local folder mirroring a deposit folder: <code>dw_fetch_inputs</code> copies deposit-only inputs locally (or reads them in place), keeps the folder layout visible with <code>.gitkeep</code> placeholders, and returns an input manifest; <code>dw_check_deposit</code> proves every local input has an identical SHA-256 copy on Teams or Z:. Stata routes via R or Python (#152): the fetch and the check run once before the pipeline, and Stata reads the fetched inputs with <code>dw_use</code>. The parity case <code>deposit_fetch_inputs</code> checks R and Python return the same manifest.</li>
 <li><strong><code>dw_read_provenance</code> and <code>dw_provenance_diff</code> are R and Python.</strong> They read the <code>dw_save</code> sidecar and compare two runs of an output from their sidecars (<code>reproduced</code>, <code>output_changed</code>, <code>inputs_changed</code>, <code>first_run</code>, <code>no_input_record</code>). Stata routes via R or Python (#152); Stata sidecars carry <code>sha256</code> (through Stata’s Python integration), so R and Python can compare Stata outputs too. The parity case <code>provenance_diff_status</code> checks R and Python agree on all five statuses.</li>
 <li><strong>The collaboration model is in all three languages (Stata since #168).</strong> <code>dw_collaboration()</code> reads the project’s <code>cso_project.yml</code> (<code>single-producer</code> or <code>multi-producer</code>), <code>dw_set_collaboration()</code> writes it and baselines the existing sidecars, and in a multi-producer project <code>dw_save()</code> refuses out-of-band and concurrent writes (unless <code>takeover</code>) and records lineage fields in the sidecar. Stata’s <code>dw_collaboration.ado</code> and <code>dw_save.ado</code> apply the same rules (<code>takeover</code> option) and write the same lineage fields. Stata has no SHA-256, UTC clock, JSON reader or portable git call of its own, so the hashing, timestamps, sidecar reading and git checks run through Stata’s Python integration (Stata 16+), in <code>dw_stata_helpers.py</code> shipped next to the <code>.ado</code> files; with it, every Stata sidecar also records <code>sha256</code> and an ISO-8601 UTC <code>written_at</code>. Without Python a multi-producer write stops (it cannot be guarded) unless <code>takeover</code> is passed; single-producer projects are unaffected. <code>dw_set_collaboration</code> stays R and Python: the switch is a one-off, reviewed pull request. The parity certificate’s <code>collab_out_of_band</code> case checks the three agree. See the roles and mode-contract chapter.</li>
@@ -786,8 +796,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td><code>dw_publish</code> (Helix submission)</td>
-<td>Skeleton — exported but errors with guidance; the Helix endpoint integration is tracked in issue #15</td>
-<td>Planned</td>
+<td>Stub: dry run only (<code>dry_run = TRUE</code>, the default, returns a validated payload); <code>dry_run = FALSE</code> stops, live Helix submission tracked in #15 (open)</td>
+<td>Planned (#15)</td>
 <td>n/a (API-side capability)</td>
 </tr>
 </tbody>
@@ -804,21 +814,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
-<p>R and Python share <strong>ten</strong> <code>api=</code> dispatch keys — <code>uis</code>, <code>sdmx</code>, <code>sdmx_codelist</code>, <code>wb</code>, <code>wb_indicators</code>, <code>ilo</code>, <code>unsd_sdg</code>, <code>github_raw</code>, <code>http</code>, and <code>json_get</code> — with complete parity. Since v0.6.0, R adds an eleventh, <code>csv</code> (flat CSV-at-a-URL: SDMX REST-CSV, World Bank Data360 file URLs, ILOSTAT rplumber <code>format=.csv</code>); the Python sibling has not yet picked it up, so the two are level at ten shared keys with <code>csv</code> R-only.</p>
+<p>R and Python share all <strong>eleven</strong> <code>api=</code> dispatch keys — <code>uis</code>, <code>sdmx</code>, <code>sdmx_codelist</code>, <code>wb</code>, <code>wb_indicators</code>, <code>ilo</code>, <code>unsd_sdg</code>, <code>github_raw</code>, <code>http</code>, <code>json_get</code> and <code>csv</code> — with complete parity. <code>csv</code> (flat CSV-at-a-URL: SDMX REST-CSV, World Bank Data360 file URLs, ILOSTAT rplumber <code>format=.csv</code>) came to R in v0.6.0 and to Python in v0.12.0.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-3" role="tab" aria-controls="tabset-2-3" aria-selected="false" href="">Stata</a></li></ul>
 <div class="tab-content">
 <div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">dw_api_fetch</span>(<span class="at">api =</span> <span class="st">"wb"</span>, <span class="at">cache_key =</span> <span class="st">"wb_SI.POV.DDAY"</span>,</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>                   <span class="at">indicator =</span> <span class="st">"SI.POV.DDAY"</span>, <span class="at">country =</span> <span class="st">"AGO"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>                   <span class="at">indicator =</span> <span class="st">"SI.POV.DDAY"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> dw_api_fetch(api<span class="op">=</span><span class="st">"wb"</span>, cache_key<span class="op">=</span><span class="st">"wb_SI.POV.DDAY"</span>,</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>                  indicator<span class="op">=</span><span class="st">"SI.POV.DDAY"</span>, country<span class="op">=</span><span class="st">"AGO"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>                  indicator<span class="op">=</span><span class="st">"SI.POV.DDAY"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div id="tabset-2-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-3-tab">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>* No dw_api_fetch <span class="kw">in</span> Stata. Pull <span class="kw">in</span> R/Python, then:</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>dw_use , filename(<span class="st">"wb_SI.POV.DDAY.dta"</span>) path(<span class="st">"$teamsRawData/_apis/wb"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>dw_use , filename(<span class="st">"wb_SI.POV.DDAY.csv"</span>) path(<span class="st">"$teamsRawData/_apis/wb"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 </div>
@@ -874,7 +884,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td><code>dw_regions</code></td>
 <td>Yes</td>
-<td>n/a</td>
+<td>No (R-only; redesign tracked in #40)</td>
 <td>n/a</td>
 </tr>
 </tbody>
@@ -889,7 +899,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>                         <span class="at">coverage_threshold =</span> <span class="fl">0.5</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>out <span class="op">=</span> aggregate_data_v2(df, value<span class="op">=</span><span class="st">"OBS_VALUE"</span>, by<span class="op">=</span><span class="st">"REGION"</span>,</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>out <span class="op">=</span> aggregate_data_v2(df, value<span class="op">=</span><span class="st">"OBS_VALUE"</span>, by<span class="op">=</span>[<span class="st">"REGION"</span>],</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>                        method<span class="op">=</span><span class="st">"weighted_mean"</span>, weight<span class="op">=</span><span class="st">"POP"</span>,</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>                        coverage_threshold<span class="op">=</span><span class="fl">0.5</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
@@ -1023,7 +1033,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Two points here:</p>
 <ul>
 <li><strong>The contract auditor does not cover Stata.</strong> <code>test_scripts</code> scans <code>.R</code> scripts in R and <code>.py</code> scripts in Python, flagging raw IO/API calls the toolkit is meant to wrap (its <code>io-xlsx</code> rule, for instance, catches <code>getSheetNames</code>/<code>excel_sheets</code>/<code>loadWorkbook</code> and points the author at <code>dw_use(sheet = NULL)</code>). There is no equivalent scanner for <code>.do</code> / <code>.ado</code> files. A Stata sector’s discipline is enforced at runtime by <code>dw_require_no_api</code> and the <code>dw_save</code> mode guard, not by a static auditor in CI. See the contract-auditor chapter.</li>
-<li><strong><code>dw_load_config</code> is Stata’s standalone analogue of the profile config-load step.</strong> In R and Python, <code>create_profile</code> emits the YAML config load and <code>dw_mode</code> resolution into the scaffolded profile. Stata exposes a dedicated <code>dw_load_config.ado</code> that reads <code>~/.config/user_config.yml</code> with a hand-rolled parser (no external dependency, AppLocker-safe) and populates the session globals. Since v0.10.1 it reads the user’s block and <code>dw_mode_by_project</code> as the R and Python profiles do (#180; parity case <code>config_user_block</code>). Same effect, different packaging — note that <code>dw_load_config</code> sets exactly the keys the YAML provides; it does not derive mode-aware globals on its own.</li>
+<li><strong><code>dw_load_config</code> is Stata’s standalone analogue of the profile config-load step.</strong> In R and Python, <code>create_profile</code> emits the YAML config load and <code>dw_mode</code> resolution into the scaffolded profile. Stata exposes a dedicated <code>dw_load_config.ado</code> that reads <code>~/.config/user_config.yml</code> with a hand-rolled parser (no external dependency, AppLocker-safe) and populates the session globals. Since v0.11.0 it reads the user’s block and <code>dw_mode_by_project</code> as the R and Python profiles do (#180; parity case <code>config_user_block</code>). Same effect, different packaging — note that <code>dw_load_config</code> sets exactly the keys the YAML provides; it does not derive mode-aware globals on its own.</li>
 </ul>
 </section>
 </section>
@@ -1164,12 +1174,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>Stata</td>
-<td><code>datasignature</code> (Stata-native SHA-1 of variables and values)</td>
-<td><code>datasignature</code></td>
+<td><code>datasignature</code> (Stata-native SHA-1 of variables and values), always; plus file-level SHA-256 when Stata’s Python integration is available (Stata 16+)</td>
+<td><code>datasignature</code>, and <code>sha256</code> when Python is available</td>
 </tr>
 </tbody>
 </table>
-<p>Stata deliberately uses <code>datasignature</code> rather than a file-level SHA-256 so the helper never has to shell out — which keeps it AppLocker-safe on UNICEF laptops. The mechanisms differ in two ways: Stata’s signature is SHA-1 over the dataset’s <em>content</em> (variables and values), whereas R and Python hash the <em>bytes of the file on disk</em>. The consequence is twofold — an R-written file and a Stata-written file of the same data share neither the byte-for-byte file hash nor the same field name in the sidecar. Cross-tool integrity comparisons should therefore compare like with like, and a comparison that spans the Stata/R-or-Python boundary cannot rely on a single hash field. See the provenance-sidecar appendix for the full schema and the integrity-check semantics.</p>
+<p>Stata deliberately uses <code>datasignature</code> rather than a file-level SHA-256 so the helper never has to shell out — which keeps it AppLocker-safe on UNICEF laptops. The mechanisms differ in two ways: Stata’s signature is SHA-1 over the dataset’s <em>content</em> (variables and values), whereas R and Python hash the <em>bytes of the file on disk</em>. The consequence is twofold — an R-written file and a Stata-written file of the same data share neither the byte-for-byte file hash nor the same field name in the sidecar. Cross-tool integrity comparisons should therefore compare like with like, and a comparison across the Stata/R-or-Python boundary can use <code>sha256</code> only when the Stata sidecar has one (written with Python available); otherwise compare like with like. See the provenance-sidecar appendix for the full schema and the integrity-check semantics.</p>
 </section>
 <section id="supporting-machinery-documentation-tests-ci" class="level2" data-number="A.6">
 <h2 data-number="A.6" class="anchored" data-anchor-id="supporting-machinery-documentation-tests-ci"><span class="header-section-number">A.6</span> Supporting machinery: documentation, tests, CI</h2>
@@ -1198,26 +1208,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>Generated API reference</td>
-<td>Yes (Roxygen → 34 <code>.Rd</code> files + pkgdown site)</td>
+<td>Yes (Roxygen → 44 <code>.Rd</code> files; <code>r/_pkgdown.yml</code> groups them, but no pkgdown site is built or published)</td>
 <td>No autodoc; prose reference in <code>docs/</code> only</td>
 <td><code>.sthlp</code> help file per command</td>
 </tr>
 <tr class="odd">
 <td>Type/interface metadata</td>
-<td>NAMESPACE exports (~44, incl.&nbsp;aliases)</td>
+<td>NAMESPACE exports (54, incl.&nbsp;aliases)</td>
 <td>PEP 561 <code>py.typed</code>, full type hints</td>
 <td>n/a</td>
 </tr>
 <tr class="even">
 <td>Unit/regression test suite</td>
-<td>Yes (<code>testthat</code>: 32 test files, 370+ <code>expect_*</code> assertions)</td>
-<td>Manual smoke test + error-envelope test</td>
+<td>Yes (<code>testthat</code>: 44 test files, 880+ <code>expect_*</code> assertions)</td>
+<td>pytest suite (<code>python/tests/</code>, 17 files) + manual smoke and error-envelope scripts (<code>python/tests/manual/</code>)</td>
 <td>No automated suite</td>
 </tr>
 <tr class="odd">
 <td>Wired into CI</td>
 <td>Yes (<code>r-check.yml</code>: Ubuntu release+devel, macOS, Windows)</td>
-<td>Conformance driver only (<code>conformance.yml</code>); unit tests manual-only</td>
+<td>Conformance round-trip only (<code>conformance.yml</code>); the pytest suite runs locally, not in CI</td>
 <td>No (Stata conformance driver pending license provisioning, issue #133)</td>
 </tr>
 <tr class="even">
@@ -1229,25 +1239,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>Error-envelope verification</td>
 <td><code>expect_envelope()</code> helper used across the suite</td>
-<td>dedicated <code>error_envelope_test.py</code></td>
+<td>dedicated <code>tests/manual/error_envelope_test.py</code></td>
 <td>Enforced at call site; not separately tested</td>
 </tr>
 </tbody>
 </table>
 <p>The headline gaps:</p>
 <ul>
-<li><strong>R is the only sibling whose <em>unit tests</em> run in CI.</strong> GitHub Actions runs <code>R CMD check</code> (which invokes the <code>testthat</code> suite) on every push and pull request to <code>main</code>/<code>develop</code> across four configurations: Ubuntu on R-release and R-devel, macOS, and Windows. The Python smoke and error-envelope tests are real and runnable, but they are <strong>manual-only</strong> — bootstrapped by copying <code>python/src/</code> into a temp dir and run by hand, not gated in CI. The Stata side has no automated test suite at all.</li>
+<li><strong>R is the only sibling whose <em>unit tests</em> run in CI.</strong> GitHub Actions runs <code>R CMD check</code> (which invokes the <code>testthat</code> suite) on every push and pull request to <code>main</code>/<code>develop</code> across four configurations: Ubuntu on R-release and R-devel, macOS, and Windows. Python has a pytest suite (<code>python/tests/</code>) and two manual scripts (<code>python/tests/manual/</code>); none of them runs in CI. The Stata side has no automated test suite at all.</li>
 <li><strong>Cross-language parity is now executed, not just asserted.</strong> The <code>Conformance</code> workflow (<code>conformance.yml</code>, on every push and PR to <code>main</code>/<code>develop</code>) runs the R and Python drivers over the shared fixture — a <code>dw_use → dw_save → dw_use</code> round-trip — and a comparator asserts the outputs are value-equal within <code>1e-9</code>. The Stata leg of the same harness waits on a <code>STATA_LIC</code> secret or self-hosted runner (issue #133); until provisioned, Stata parity remains a local release gate.</li>
-<li><strong>Python lacks a generated reference site.</strong> R ships a pkgdown-style autodoc built from Roxygen comments (34 <code>.Rd</code> files); Python has no equivalent pkgdown/Sphinx-style autodoc. Its public surface is documented in prose under <code>docs/</code> and in the per-module catalogue, and its interfaces are machine-readable via full type hints and a PEP 561 <code>py.typed</code> marker, but there is no rendered API site.</li>
+<li><strong>Python lacks a generated reference site.</strong> R ships Roxygen-generated help pages (44 <code>.Rd</code> files, read with <code>?name</code>; no pkgdown site is published); Python has no equivalent pkgdown/Sphinx-style autodoc. Its public surface is documented in prose under <code>docs/</code> and in the per-module catalogue, and its interfaces are machine-readable via full type hints and a PEP 561 <code>py.typed</code> marker, but there is no rendered API site.</li>
 <li><strong>Stata documents per-command via <code>.sthlp</code>.</strong> Each Stata <code>.ado</code> ships a companion <code>.sthlp</code> help file, accessible with <code>help dw_save</code> and friends. There is no aggregated reference site.</li>
 </ul>
 </section>
 <section id="summary-how-complete-is-each-sibling" class="level2" data-number="A.7">
 <h2 data-number="A.7" class="anchored" data-anchor-id="summary-how-complete-is-each-sibling"><span class="header-section-number">A.7</span> Summary: how complete is each sibling?</h2>
 <ul>
-<li><strong>R</strong> is the reference implementation: every capability family, the full format set including <code>.rds</code> and gzipped CSV/TSV, the only generated reference site, and the only CI-gated test suite. Its version stamp is v0.11.1, level with Python. If a behaviour is ambiguous, R defines it.</li>
-<li><strong>Python</strong> is a near-complete functional port — core IO (including <code>.pkl</code>), all ten external-API dispatch keys, aggregation, vintage sync, and scaffolding — with full type hints, but no generated reference site, CI-manual-only testing, a couple of R-only helpers it has not yet picked up (<code>dw_stage</code>, <code>dw_regions</code>; <code>dw_root</code> now ships in Python too). Its version stamp matches R at 0.11.1, though those helper gaps remain.</li>
-<li><strong>Stata</strong> is a deliberately scoped subset: full IO and mode contract for <code>.dta</code> / <code>.csv</code> / <code>.xlsx</code>, the reviewer no-API gate, recursive <code>mkdir</code>, and config loading — but <strong>no external-API wrapper, no aggregation, no vintage-sync helpers, no contract auditor, no Parquet/binary formats, and no automated tests</strong>. It enforces every half of the mode contract it can reach, and routes everything else through R or Python.</li>
+<li><strong>R</strong> is the reference implementation: every capability family, the full format set including <code>.rds</code> and gzipped CSV/TSV, the only generated reference (<code>.Rd</code> help pages), and the only CI-gated test suite. Its version stamp is v0.12.0, level with Python. If a behaviour is ambiguous, R defines it.</li>
+<li><strong>Python</strong> is a near-complete functional port — core IO (including <code>.pkl</code>), all eleven external-API dispatch keys, aggregation, vintage sync, and scaffolding — with full type hints, but no generated reference site, a local pytest suite not run in CI, and three R exports it lacks (<code>dw_regions</code>, <code>dw_verbosity</code> and the <code>dw_publish</code> stub; <code>dw_root</code> and <code>dw_stage</code> now ship in Python too). Its version stamp matches R at 0.12.0, though those gaps remain.</li>
+<li><strong>Stata</strong> is a deliberately scoped subset: full IO and mode contract for <code>.dta</code> / <code>.csv</code> / <code>.xlsx</code>, <code>dw_compare</code>, the collaboration model and multi-producer guards (<code>dw_collaboration</code>, <code>dw_save … takeover</code>), <code>dw_map_drive</code>, the reviewer no-API gate, recursive <code>mkdir</code>, and config loading — but <strong>no external-API wrapper, no aggregation, no vintage-sync helpers, no contract auditor, no Parquet/binary formats, and no automated tests</strong>. It enforces every half of the mode contract it can reach, and routes everything else through R or Python.</li>
 </ul>
 <p>When you vendor, choose the language that fits the pipeline — and where a Stata pipeline needs a capability this matrix marks “Route via R/Python,” plan that crossing explicitly. The vendoring-model and onboarding chapters walk through how to wire a multi-language sector so the crossings are clean.</p>
 </section>

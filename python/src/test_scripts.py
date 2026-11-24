@@ -115,7 +115,12 @@ _BUILTIN_RULES: tuple[_Rule, ...] = (
     ),
     _Rule(
         id="io-open-write", family="io",
-        pattern=r"\bopen\s*\([^)]*['\"][rwba+xt]+['\"]",
+        # Lines are matched after string literals are scrubbed to "", so
+        # the mode itself is gone: match open(<path>, "<mode>") or
+        # open(..., mode="<mode>") by the scrubbed "" in the mode slot.
+        # (The old pattern looked for a non-empty quoted mode and so never
+        # fired.)  open(path) with no mode is left alone.
+        pattern=r"\bopen\s*\([^)]*,\s*(?:mode\s*=\s*)?\"\"",
         message="Raw open(...) for IO.",
         suggest=(
             "Prefer dw_save / dw_use for canonical paths; raw open() is "

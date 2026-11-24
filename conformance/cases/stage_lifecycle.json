@@ -1,0 +1,45 @@
+{
+  "id": "stage_lifecycle",
+  "title": "dw_stage: first stage, skip on match, sandbox drift, forced re-stage, upstream change, mirror disagreement",
+  "surface": [
+    "dw_stage"
+  ],
+  "kind": "json",
+  "fixtures": [],
+  "expect": {
+    "returns_sandbox": true,
+    "sidecar_keys": [
+      "dw_toolkit_version",
+      "mtime",
+      "sha256",
+      "size",
+      "source",
+      "source_root",
+      "staged_at",
+      "type"
+    ],
+    "sidecar_type": "dw_stage",
+    "source_root": "z",
+    "sidecar_sha_matches": true,
+    "mtime_format_ok": true,
+    "second_call_copied": false,
+    "drift_stops": true,
+    "overwrite_restores": true,
+    "upstream_warns": true,
+    "upstream_recopied": false,
+    "mirrors_disagree_stops": true,
+    "envelope": true
+  },
+  "languages": [
+    "r",
+    "python"
+  ],
+  "notes": "The sidecar keys and the mtime format are part of the contract: a file staged in one language must verify in the other.",
+  "gaps": {
+    "stata": {
+      "issue": "coverage matrix",
+      "reason": "Stata has no dw_stage; a Stata reviewer reads canonical inputs in place."
+    }
+  },
+  "divergences": {}
+}

@@ -18,8 +18,10 @@
 #      regional rows so downstream consumers see a single tibble.
 #
 # TODO: Python sibling at `python/src/dw_regions.py`, Stata sibling
-# at `stata/src/dw_regions.ado`.  R-only in v0.4.0; cross-language
-# parity tracked at GitHub issue #18.
+# at `stata/src/dw_regions.ado`.  R-only since v0.4.0 (issue #18,
+# closed, shipped the R version only); no open issue tracks the
+# siblings.  The redesign against Country-and-Region-Metadata-API
+# (issue #40) comes first, so any port should follow it.
 
 #' UNICEF regional aggregates appended to a country-level tibble
 #'

@@ -66,7 +66,7 @@ The two signatures match except for one R-only argument. R's `debug` (default `N
 
 ::: {.callout-warning}
 ## Coverage gap: Stata has no auditor
-The contract auditor exists in R (`r/R/test_scripts.R`) and Python (`python/src/test_scripts.py`) only. There is no Stata implementation — the Stata source tree (`stata/src/`) ships `dw_save.ado`, `dw_use.ado`, `dw_compare.ado`, `dw_load_config.ado`, `dw_mkdir.ado`, and `dw_require_no_api.ado`, but nothing named `test_scripts.ado`. Stata consumers must enforce the contract by reading each other's code, since there is no automated scan to wire into a Stata build. Treat the R/Python parity below as the limit of automated coverage, not a claim about Stata.
+The contract auditor exists in R (`r/R/test_scripts.R`) and Python (`python/src/test_scripts.py`) only. There is no Stata implementation — the Stata source tree (`stata/src/`) ships `dw_save.ado`, `dw_use.ado`, `dw_compare.ado`, `dw_load_config.ado`, `dw_mkdir.ado`, `dw_require_no_api.ado`, `dw_map_drive.ado` and `dw_collaboration.ado`, but nothing named `test_scripts.ado`. Stata consumers must enforce the contract by reading each other's code, since there is no automated scan to wire into a Stata build. Treat the R/Python parity below as the limit of automated coverage, not a claim about Stata.
 :::
 
 In both languages the return value is a data frame (an R `data.frame`, a pandas `DataFrame`) with the same seven columns: `file`, `line`, `rule`, `family`, `message`, `suggest`, and `snippet`. An empty frame means a clean scan. The columns are stable, which matters for CI: a downstream step can read them to post annotations or build a report.
@@ -89,7 +89,7 @@ The two registries are not identical, because the raw calls differ by language e
 | Parquet | `io-parquet` | `read_parquet`, `write_parquet` | `io-read-parquet` / `io-to-parquet` | `pd.read_parquet`, `.to_parquet(` |
 | JSON file | `io-json-file` | `read_json`, `write_json` | `io-json` | `json.dump`, `json.load` |
 | YAML | `io-yaml` | `read_yaml`, `write_yaml`, `yaml.load_file` | `io-yaml` | `yaml.safe_load`, `yaml.load`, `yaml.safe_dump`, `yaml.dump` |
-| Raw file handle | — | — | `io-open-write` | `open(..., "w")` and other write/append/binary modes |
+| Raw file handle | — | — | `io-open-write` | `open()` with an explicit mode, read or write: `open(<path>, "<mode>")`, `open(..., mode="<mode>")`; `open(path)` with no mode is left alone |
 | HTTP | `api-httr` | `httr::GET`/`POST`/`PUT`/`PATCH`/`DELETE`, `httr2::request` | `api-requests` / `api-httpx` / `api-urllib` | `requests.get`, `httpx.get`, `urllib.request.urlopen` |
 | JSON-from-URL | `api-fromjson-url` | `fromJSON("https://…")` | — | (covered by HTTP rules) |
 | SDMX | `api-sdmx` | `readSDMX` | `api-sdmx` | `sdmx.Client(` |
@@ -242,9 +242,9 @@ Two discipline points. First, `# cso-allow` is line-scoped and rule-scoped: it n
 
 ## Wiring the auditor into a GitHub Actions job
 
-Today the toolkit's own repository ships one R workflow, `.github/workflows/r-check.yml`, which runs `R CMD check` across a four-way matrix (Ubuntu release and devel, macOS release, Windows release). That `R CMD check` run exercises the toolkit's testthat suite, and the suite includes `test-test_scripts.R`, which asserts that the auditor returns a clean frame on conforming code, catches a direct `read_csv`, catches a direct `httr::GET`, honors the `# cso-allow` escape hatch, raises the proper error envelope under `error_on_violation = TRUE`, and raises the envelope on a missing path. CI today proves the *auditor itself* works; it does not yet run the auditor against a consumer's analysis scripts, because the toolkit repository has no consumer scripts to scan.
+Today the toolkit's own repository runs its R test suite in `.github/workflows/r-check.yml`, which runs `R CMD check` across a four-way matrix (Ubuntu release and devel, macOS release, Windows release). That `R CMD check` run exercises the toolkit's testthat suite, and the suite includes `test-test_scripts.R`, which asserts that the auditor returns a clean frame on conforming code, catches a direct `read_csv`, catches a direct `httr::GET`, honors the `# cso-allow` escape hatch, raises the proper error envelope under `error_on_violation = TRUE`, and raises the envelope on a missing path. CI today proves the *auditor itself* works; it does not yet run the auditor against a consumer's analysis scripts, because the toolkit repository has no consumer scripts to scan.
 
-A consumer repo — DW-Production, UNPD-Population, a datalib analysis project — is where the auditor becomes a contract gate. The pattern is a small dedicated job that installs the toolkit, runs `test_scripts(..., error_on_violation = TRUE)` over the analysis tree, and lets the non-zero exit fail the build. The two language variants:
+A consumer repo — DW-Production, UNPD-Population, a datalib analysis project — is where the auditor becomes a contract gate. Repositories made by `create_research_project()` / `create_official_stats_project()` already have it: the `contract-audit` check in `tools/check.R` runs the *vendored* `test_scripts()` over `AUDIT_PATHS` (`AUDIT_MODE = "blocking"` fails the run on any violation; `"advisory"` reports them as warnings), locally, before every push, through the check record. To run it on GitHub too, copy `templates/workflows/ci-contract-audit.yml`; it runs `Rscript --no-init-file tools/check.R --only contract-audit,vintage` on manual runs and pull requests into `main`. A repository without `tools/check.R` can call the auditor directly. The job runs the helpers vendored in `00_functions/` — the exact code, and vintage, the repository runs — rather than installing the toolkit from GitHub, runs `test_scripts(..., error_on_violation = TRUE)` over the analysis tree, and lets the non-zero exit fail the build. The two language variants, opt-in like the template (manual runs and pull requests into `main`):
 
 ::: {.panel-tabset}
 
@@ -253,10 +253,9 @@ A consumer repo — DW-Production, UNPD-Population, a datalib analysis project �
 ```yaml
 name: contract-audit
 on:
-  push:
-    branches: [main, develop]
+  workflow_dispatch:
   pull_request:
-    branches: [main, develop]
+    branches: [main]
 
 jobs:
   audit:
@@ -266,11 +265,10 @@ jobs:
       - uses: r-lib/actions/setup-r@v2
         with:
           use-public-rspm: true
-      - name: Install cso-toolkit
-        run: Rscript -e 'install.packages("remotes"); remotes::install_github("unicef-drp/cso-toolkit", subdir = "r")'
-      - name: Run contract auditor
+      # test_scripts() needs base R only; the vendored copy is the one the repo runs.
+      - name: Run contract auditor (vendored helpers)
         run: |
-          Rscript -e 'csotoolkit::test_scripts("01_dw_prep", error_on_violation = TRUE)'
+          Rscript --no-init-file -e 'for (f in c("dw_io.R", "test_scripts.R")) sys.source(file.path("00_functions", f), envir = globalenv()); test_scripts("01_dw_prep", error_on_violation = TRUE)'
 ```
 
 #### Python {.unnumbered .unlisted}
@@ -278,10 +276,9 @@ jobs:
 ```yaml
 name: contract-audit
 on:
-  push:
-    branches: [main, develop]
+  workflow_dispatch:
   pull_request:
-    branches: [main, develop]
+    branches: [main]
 
 jobs:
   audit:
@@ -291,11 +288,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Install cso-toolkit
-        run: pip install "cso-toolkit @ git+https://github.com/unicef-drp/cso-toolkit#subdirectory=python"
-      - name: Run contract auditor
+      - name: Install the vendored package's dependencies
+        run: pip install pandas numpy
+      # The package is vendored in 00_functions/cso_toolkit/ (the vendoring chapter).
+      - name: Run contract auditor (vendored helpers)
         run: |
-          python -c "from cso_toolkit import test_scripts; test_scripts('01_dw_prep', error_on_violation=True)"
+          python -c "import sys; sys.path.insert(0, '00_functions'); from cso_toolkit import test_scripts; test_scripts('01_dw_prep', error_on_violation=True)"
 ```
 
 #### Stata {.unnumbered .unlisted}
@@ -307,11 +305,11 @@ jobs:
 
 :::
 
-The R package installs under the name `csotoolkit` (note: no hyphen, no underscore), so the call is `csotoolkit::test_scripts(...)`. The Python distribution is named `cso-toolkit` but imports as `cso_toolkit`, so the install line uses the hyphen and the call uses the underscore.
+The R job sources `dw_io.R` before `test_scripts.R`, as `tools/check.R` does, because the auditor uses its shared internals. The Python job installs only the package's own dependencies (`pandas`, `numpy`); the vendored copy imports as `cso_toolkit` once `00_functions/` is on the path. (Installed rather than vendored, the R package is named `csotoolkit` and the Python distribution `cso-toolkit`.)
 
 ::: {.callout-warning}
 ## Version skew between the two packages
-As of writing, `python/pyproject.toml` and `r/DESCRIPTION` both declare `0.6.0`. A matching version is not a promise of rule-set parity, though: if it matters to you, pin the version you install and check that the Python registry carries the rules your contract relies on, rather than assuming the two languages catch exactly the same calls. The versioning-and-releases chapter explains how the two version lines are reconciled.
+`python/pyproject.toml` and `r/DESCRIPTION` declare the same version in each release. A matching version is not a promise of rule-set parity, though: if it matters to you, check against the vintage you vendored that the Python registry carries the rules your contract relies on, rather than assuming the two languages catch exactly the same calls. The versioning-and-releases chapter explains how the two version lines are reconciled.
 :::
 
 A few practical notes, each worth keeping distinct:

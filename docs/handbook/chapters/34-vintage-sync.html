@@ -563,7 +563,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Two values of <code>pulled_version</code> carry special meaning:</p>
 <ul>
 <li>A tag like <code>"v0.4.0"</code> is a normal pin. The check compares it against the upstream latest tag and flags a newer release.</li>
-<li>The substring <strong><code>inrepo</code></strong> (e.g.&nbsp;<code>"0.0.0-inrepo-2026-05-24"</code>) marks helpers that were edited locally and should never trigger a sync warning. <code>cso_toolkit_check</code> treats any <code>pulled_version</code> containing <code>inrepo</code> as “do not nag me” and reports no updates available regardless of upstream state. This is the escape hatch for the case where the toolkit’s own scaffolding lived inside the consuming repo before the upstream repo existed.</li>
+<li>A value that is not a version number, such as <strong><code>inrepo</code></strong>, marks helpers that were edited locally and should never trigger a sync warning: <code>cso_toolkit_check</code> cannot compare it, so it reports no update and no target shortfall, regardless of upstream state. A value that starts with a version (<code>"0.0.0-inrepo-2026-05-24"</code>) is read as that version (<code>0.0.0</code>) and <em>is</em> reported as behind; write plain <code>inrepo</code>. This is the escape hatch for the case where the toolkit’s own scaffolding lived inside the consuming repo before the upstream repo existed.</li>
 </ul>
 <div class="callout callout-style-simple callout-warning">
 <div class="callout-body d-flex">
@@ -669,7 +669,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>The function returns <code>NULL</code>/<code>None</code> — silently, unless <code>quiet</code> is off — when there is nothing it can check:</p>
 <ol type="1">
 <li><strong>Reviewer mode without a target.</strong> Reviewer mode — the offline, no-network role defined in the roles and mode-contract chapter — forbids external network calls, and a GitHub release lookup is exactly such a call, so the upstream poll is skipped. With no target version to compare offline, there is nothing left to check. (With a target, reviewers <em>do</em> get the comparison: it needs no network.)</li>
-<li><strong>Missing or unreadable manifest.</strong> If the <code>yaml</code>/PyYAML package is absent, or no <code>.toolkit_manifest.yml</code> exists next to the helpers, the helper warns and bails. Helpers that are not vendored from any upstream simply have nothing to check.</li>
+<li><strong>Missing or unreadable manifest.</strong> If the <code>yaml</code>/PyYAML package is absent, the helper warns (even with <code>quiet</code> on) and bails; if no <code>.toolkit_manifest.yml</code> exists next to the helpers, it says so only with <code>quiet</code> off. Helpers that are not vendored from any upstream simply have nothing to check.</li>
 <li><strong>Manifest with no <code>source</code>.</strong> A manifest that does not name an upstream repo cannot be checked.</li>
 <li><strong>Upstream unreachable or has no releases.</strong> The release lookup is wrapped so that a blocked proxy, an absent repo, or a repo with zero releases all resolve to “no result” rather than an error.</li>
 </ol>
@@ -950,7 +950,7 @@ tools/check.R + tests -&gt;  one commit: "Update cso-toolkit v0.9.1 -&gt; v0.10.
 <i class="callout-icon"></i>
 </div>
 <div class="callout-body-container">
-<p>The R and Python stamps are meant to track each other but can drift between releases — in earlier releases the R <code>dw_toolkit_version()</code> returned <code>"0.5.0"</code> while the Python port returned <code>"0.4.0"</code>; they are aligned at <code>"0.6.0"</code> in the version this handbook documents. The stamp is a hard-coded constant in each port (<code>_TOOLKIT_VERSION</code> in Python), so a release that bumps only one side can still leave the other behind. Treat the value as a floor for the language you are calling it from, not as a cross-language equality check.</p>
+<p>The R and Python stamps are meant to track each other but can drift between releases — in earlier releases the R <code>dw_toolkit_version()</code> returned <code>"0.5.0"</code> while the Python port returned <code>"0.4.0"</code>; in the release this handbook documents both return the release’s version. The stamp is a hard-coded constant in each port (<code>_TOOLKIT_VERSION</code> in Python), so a release that bumps only one side can still leave the other behind. Treat the value as a floor for the language you are calling it from, not as a cross-language equality check.</p>
 </div>
 </div>
 </div>
@@ -976,7 +976,7 @@ tools/check.R + tests -&gt;  one commit: "Update cso-toolkit v0.9.1 -&gt; v0.10.
 </div>
 <div id="tabset-5-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-3-tab">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>* No dw_toolkit_version equivalent <span class="kw">in</span> Stata. Each .ado carries its own</span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>* per-file `version` header (<span class="fu">e</span>.g. dw_save.ado: <span class="st">"*! version 1.1 26MAY2026"</span>).</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>* per-file `version` header (<span class="fu">e</span>.g. dw_save.ado: <span class="st">"*! version 1.3 21NOV2026"</span>).</span>
 <span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>* The header stamps a per-file <span class="kw">version</span> + <span class="fu">date</span>, <span class="kw">not</span> the toolkit <span class="fu">tag</span>.</span>
 <span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>* Record the pinned toolkit <span class="fu">tag</span> <span class="kw">by</span> hand <span class="kw">in</span> .toolkit_manifest.yml.</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
@@ -1035,14 +1035,14 @@ tools/check.R + tests -&gt;  one commit: "Update cso-toolkit v0.9.1 -&gt; v0.10.
 </tr>
 <tr class="even">
 <td><code>dw_toolkit_version</code></td>
-<td>yes (<code>"0.6.0"</code>)</td>
-<td>yes (<code>"0.6.0"</code>)</td>
+<td>yes (the release version)</td>
+<td>yes (the release version)</td>
 <td><strong>none</strong> (per-<code>.ado</code> <code>version</code> headers)</td>
 </tr>
 </tbody>
 </table>
-<p>The R and Python ports of the sync helpers are genuine mirrors of each other: same function names, same arguments, same return structure, same guard order, same <code>gh</code>-then-HTTP-then-<code>ls-remote</code> tag resolver, the same manifest edits byte for byte (a test pulls one consumer with both and compares), even the same <code>inrepo</code> escape hatch. Both also expose <code>dw_toolkit_version</code>, though the two stamps can fall out of step across a release, as the callout above warns.</p>
-<p>Stata has <strong>no sync helpers at all</strong>. Its <code>stata/src/</code> directory ships the IO and config helpers (<code>dw_save</code>, <code>dw_use</code>, <code>dw_compare</code>, <code>dw_load_config</code>, <code>dw_mkdir</code>, <code>dw_require_no_api</code>) but nothing named <code>cso_toolkit_check</code> / <code>_diff</code> / <code>_pull</code> / <code>_sync</code>, and no <code>dw_toolkit_version</code> — each <code>.ado</code> instead carries its own per-file <code>version</code> header. The Stata README acknowledges the manifest only as a place to <em>record</em> the pinned version by hand; refreshing a Stata consumer means copying <code>stata/src/</code> from a tagged checkout into the project’s adopath and editing <code>.toolkit_manifest.yml</code> manually. There is no automated drift detection on the Stata side. This is consistent with the broader Stata coverage gaps noted in the cross-language coverage appendix (no API wrapper, no parquet). When you adopt the toolkit in a Stata-only repo, treat vintage management as a manual, documented step rather than a tooled one.</p>
+<p>The R and Python ports of the sync helpers are genuine mirrors of each other: same function names, the same arguments (Python’s <code>cso_toolkit_check</code> has no <code>verbose</code>/<code>debug</code>, and <code>toolkit_source</code>/<code>allow_downgrade</code> are keyword-only), same return structure, same guard order, same <code>gh</code>-then-HTTP-then-<code>ls-remote</code> tag resolver, the same manifest edits byte for byte (a test pulls one consumer with both and compares), even the same <code>inrepo</code> escape hatch. Both also expose <code>dw_toolkit_version</code>, though the two stamps can fall out of step across a release, as the callout above warns.</p>
+<p>Stata has <strong>no sync helpers at all</strong>. Its <code>stata/src/</code> directory ships the IO, config and collaboration helpers (<code>dw_save</code>, <code>dw_use</code>, <code>dw_compare</code>, <code>dw_load_config</code>, <code>dw_mkdir</code>, <code>dw_require_no_api</code>, <code>dw_map_drive</code>, <code>dw_collaboration</code>) but nothing named <code>cso_toolkit_check</code> / <code>_diff</code> / <code>_pull</code> / <code>_sync</code>, and no <code>dw_toolkit_version</code> — each <code>.ado</code> instead carries its own per-file <code>version</code> header. The Stata README acknowledges the manifest only as a place to <em>record</em> the pinned version by hand; refreshing a Stata consumer means copying <code>stata/src/</code> from a tagged checkout into the project’s adopath and editing <code>.toolkit_manifest.yml</code> manually. There is no automated drift detection on the Stata side. This is consistent with the broader Stata coverage gaps noted in the cross-language coverage appendix (no API wrapper, no parquet). When you adopt the toolkit in a Stata-only repo, treat vintage management as a manual, documented step rather than a tooled one.</p>
 
 
 </section>

@@ -7,20 +7,20 @@
 `cso-toolkit` is the shared, cross-language contract that the UNICEF Chief Statistician Office (CSO) uses to make its analytics reproducible. The CSO runs a **data warehouse**: a shared store of signed-off statistical files, named `dw_<sector>.<ext>` (one per sector — education, water and sanitation, immunisation, and so on), that UNICEF's public data products draw from. The repository that holds the operational copy of that warehouse is `DW-Production`. The toolkit is what lets anyone, not just the file's original author, re-run a sector's pipeline and reproduce those files exactly.
 
 ::: {.content-visible when-format="html"}
-[Download the handbook (PDF)](The-CSO-Toolkit-Handbook.pdf){.btn .btn-primary role="button"}
+[Download the handbook (PDF)](The-CSO-Handbook.pdf){.btn .btn-primary role="button"}
 :::
 
 It does this by encoding **one way to read, write, compare, and merge data; one way to call external APIs; one way to aggregate, version-sync, and scaffold projects** — and it does so identically in R, Python, and Stata. Every call routes through wrappers that enforce provenance sidecars (a `.provenance.json` file written next to every output, recording who made it, when, and from what), a uniqueness check (`isid` — that rows are unique on a stated key), and a producer / reviewer mode contract, so that any analytics product can be re-run by someone other than its original author and yield the same numbers. This handbook documents that contract.
 
 ## What cso-toolkit is
 
-`cso-toolkit` (the repository `unicef-drp/cso-toolkit`, currently v0.6.0) is a set of small helpers that enforce one way of doing each task, grouped into five capability families. Part III gives each family its own chapter.
+`cso-toolkit` (the repository `unicef-drp/cso-toolkit`, currently v0.12.0) is a set of small helpers that enforce one way of doing each task, grouped into five capability families. Part III gives each family its own chapter.
 
 - **IO** — `dw_save`, `dw_use`, `dw_compare`, `dw_merge`, `dw_isid`, `dw_verify_z`, `dw_stage`, `dw_root`, `dw_fetch_inputs`, `dw_check_deposit`, `dw_read_provenance`, `dw_provenance_diff`: uniform file IO with auto-dispatch by extension, an `isid` uniqueness check, an automatic provenance sidecar on writes, a Z: drive mirror on canonical writes (a *canonical* write being the final, signed-off `dw_<sector>` file that downstream products cite, as opposed to an intermediate *working* file), an integrity check on canonical reads, fetch-and-verify of inputs kept out of Git against the deposit, and a run-level comparison of two outputs from their sidecars.
-- **External API** — `dw_api_fetch`, `dw_api_cached`, `dw_api_inventory`: a mode-aware wrapper around external data sources (UIS, SDMX, World Bank, ILO, UNSD-SDG, GitHub-raw, generic HTTP/JSON) with a deposit-side cache.
+- **External API** — `dw_api_fetch`, `dw_api_cached`, `dw_api_inventory`: a mode-aware wrapper around external data sources (UIS, SDMX, World Bank, ILO, UNSD-SDG, GitHub-raw, generic HTTP/JSON, flat CSV at a URL) with a deposit-side cache.
 - **Aggregation** — `aggregate_data_v2`, `apply_time_window`, `generate_agg_footnote`, `dw_nestweight`, `dw_pop`, `dw_regions` (the earlier `aggregate_data` is kept for back-compat): weighted aggregation with population and country coverage, latest-observation time windowing, survey-weight redistribution, and population / region lookups.
-- **Vintage sync** — `cso_toolkit_check`, `cso_toolkit_diff`, `cso_toolkit_pull`: consumer-side helpers that compare the locally **vendored** copy of the toolkit (its source files copied into the consumer's own repository rather than installed over the network) against the latest upstream release and refresh it on demand.
-- **Scaffolding and contract auditing** — `create_profile`, `create_sector_script`, `review_profile`, `test_scripts`: project scaffolds plus a static auditor that flags raw IO/API calls that should have gone through the toolkit.
+- **Vintage sync** — `cso_toolkit_check`, `cso_toolkit_diff`, `cso_toolkit_pull`, `cso_toolkit_sync`: consumer-side helpers that compare the locally **vendored** copy of the toolkit (its source files copied into the consumer's own repository rather than installed over the network) against the latest upstream release and refresh it on demand.
+- **Scaffolding and contract auditing** — `create_research_project`, `create_official_stats_project`, `create_profile`, `create_sector_script`, `review_profile`, `test_scripts`: project scaffolds plus a static auditor that flags raw IO/API calls that should have gone through the toolkit.
 
 These families look miscellaneous, but one idea ties them together: **vintage permanence**. A *vintage* is a dated snapshot of upstream data — the data as it stood when a release was cut. Vintage permanence is the guarantee that a publication citing `dw_<sector>.csv` in 2026 will, years later, produce identical numbers when re-run by a reviewer who has only the canonical deposit and the vendored helpers — no network access, no upstream package drift, no ambient `dplyr` version skew. Everything in the toolkit serves that goal.
 
@@ -68,7 +68,7 @@ That parity is the ideal, and most of this handbook is organised around it. But 
 - **Stata has no external-API wrapper** — the API contract (`dw_api_fetch` and friends) exists only in R and Python. Stata also has no Parquet support; pipelines that need Parquet route through R or Python on the producer side and deposit a `.dta` for Stata consumption.
 - **`dw_fetch_inputs`, `dw_check_deposit`, `dw_read_provenance` and `dw_provenance_diff` are R and Python** (#152); Stata routes via R or Python.
 - **`dw_merge` and `dw_verify_z` are R + Python only.** Stata folds the uniqueness check into `dw_save` (via its `idvars()` option) rather than exposing a standalone `dw_isid`.
-- **The demographics family**: `dw_pop` ships in R and Python; `dw_regions` is still R-only. A Stata sibling for `dw_pop` and Python/Stata siblings for `dw_regions` remain on the roadmap.
+- **The demographics family**: `dw_pop` ships in R and Python; `dw_regions` is R-only, and neither has a Stata sibling (a scope decision: Stata pipelines aggregate natively; see Appendix A).
 - **Reference documentation is asymmetric.** R has Roxygen-complete reference pages and a pkgdown site; Python has hand-written references rather than autogenerated, pkgdown-style docs.
 
 The cross-language coverage matrix in Appendix A is the authoritative, function-by-function record of what exists where. Wherever this book shows code, it shows all three siblings side by side; where a language is missing a capability, it is marked, not faked.
@@ -112,7 +112,7 @@ For an LLM or an agentic orchestrator, that implies:
 
 ## How to navigate this book
 
-The handbook is organised into four parts and a set of appendices.
+The handbook is organised into six parts and a set of appendices.
 
 - **Part I — Why & Architecture** motivates the toolkit (why a shared repo at all) and lays out the architecture: one contract, three language siblings, many consumer repos, and a single canonical deposit. Start here if you want the big picture before the API details.
 
@@ -120,9 +120,13 @@ The handbook is organised into four parts and a set of appendices.
 
 - **Part III — The API (cross-language)** is the reference for daily work, one chapter per capability family: the IO contract; the external-API contract; aggregation; vintage sync; and scaffolding plus the contract auditor. Every chapter presents R, Python, and Stata together and is explicit about coverage gaps.
 
-- **Part IV — Adoption & Operations** is for adopters and maintainers: the vendoring model and why it is preferred over network installation, a worked example of onboarding a repo, running the contract auditor in CI, and the project's versioning and release discipline.
+- **Part IV — Adoption & Operations** is for adopters and maintainers: starting a new repository, the vendoring model and why it is preferred over network installation, a worked example of onboarding a repo, running the contract auditor in CI, the project's versioning and release discipline, CI/CD with check records, and working with AI coding agents.
 
-- **Appendices** collect the dense reference material: the cross-language coverage matrix (A), the provenance sidecar schema (B), the error taxonomy (C), a full function reference (D), and a glossary (E).
+- **Part V — The Microdata Archive (datalib)** documents the survey-microdata archive, its IHSN folder grammar, and the `datalib_*` API and conformance suite.
+
+- **Part VI — The Ecosystem** sets out the three tiers of shared code and documents unicefData.
+
+- **Appendices** collect the dense reference material: the cross-language coverage matrix (A), the provenance sidecar schema (B), the error taxonomy (C), a full function reference (D), a glossary (E), curated third-party functions (F), and the parity certificate (G).
 
 If you are brand new, read the architecture chapter in Part I and the roles chapter in Part II, then jump to the IO contract chapter in Part III. Those three pages give you enough to use the toolkit safely.
 

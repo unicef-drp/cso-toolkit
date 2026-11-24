@@ -46,7 +46,7 @@ A reviewer with no network access — on a plane, behind a corporate proxy, sitt
 
 ### 4. Cross-language symmetry
 
-A package model fits R and Python tolerably but fits Stata poorly. Stata has no native package-install path that matters for this workflow. Vendoring works uniformly across all three languages: copy the files in, pin the vintage, done. The R helpers copy into `00_functions/`, the Python modules into the same place, and the Stata `.ado`/`.sthlp` files into `ado/`. One model, three languages, no special case.
+A package model fits R and Python tolerably but fits Stata poorly. Stata has no native package-install path that matters for this workflow. Vendoring works uniformly across all three languages: copy the files in, pin the vintage, done. The R helpers copy into `00_functions/`, the Python package into `00_functions/cso_toolkit/`, and the Stata `.ado`/`.sthlp` files into `ado/`. One model, three languages, no special case. (The sync helpers still expect vendored files flat, next to the manifest, so syncing a Python package copy is not yet supported; see issue #230.)
 
 A practical fifth consideration reinforces the rest: **AppLocker reality.** UNICEF laptops block many script-installable paths outright. Copying files into a project directory always works where a network installer might be silently denied.
 
@@ -102,9 +102,9 @@ The boundary between the toolkit and its consumers is sharp, and keeping it shar
 | `r/R/` | Canonical R helper source (`dw_io.R`, `dw_api.R`, `cso_toolkit_sync.R`, aggregation, scaffolding, demographics) |
 | `python/src/` | Python siblings of the same helpers, plus `_state.py` for session configuration |
 | `stata/src/` | Stata `.ado` + `.sthlp` equivalents for the subset of helpers that fit Stata idioms |
-| `templates/` | Repo-neutral templates: `.toolkit_manifest.yml`, `dbm_submission_template.md` |
+| `templates/` | Repo-neutral templates: `.toolkit_manifest.yml`, `cso_project.yml`, the project scaffolds (`project/`, `profile/`, `testthat/`, `agents/`), `tools/check.R` and the pre-push hook, the `.gitignore`/`.gitattributes` files, the opt-in workflows, `dbm_submission_template.md` |
 | `docs/` | Canonical operational docs: roles and workflow, mode-contract integration, per-function references |
-| `tests/` | Unit and regression tests for the helpers |
+| `r/tests/`, `python/tests/`, `stata/tests/`, `conformance/` | Unit and regression tests for the helpers |
 | `NEWS.md` + git tags | Per-version release notes and semantic-version tags |
 
 **Lives in the consumer, never in the toolkit** — anything sector- or repo-specific:
@@ -162,18 +162,18 @@ cso_toolkit_pull("v0.10.0")
 :::
 
 ::: {.callout-warning}
-**Coverage gap — Stata has no sync helper.** `cso_toolkit_check`, `cso_toolkit_diff`, `cso_toolkit_pull` and `cso_toolkit_sync` exist in R and Python only. The `stata/src/` directory ships `dw_save`, `dw_use`, `dw_compare`, `dw_mkdir`, `dw_require_no_api`, and `dw_load_config` — but no `cso_toolkit_sync` equivalent. A Stata consumer keeps its vendored vintage current by hand: re-copy the `.ado`/`.sthlp` files and edit `pulled_version` in the manifest. (See the cross-language coverage matrix appendix for the full parity picture.)
+**Coverage gap — Stata has no sync helper.** `cso_toolkit_check`, `cso_toolkit_diff`, `cso_toolkit_pull` and `cso_toolkit_sync` exist in R and Python only. The `stata/src/` directory ships `dw_save`, `dw_use`, `dw_compare`, `dw_load_config`, `dw_mkdir`, `dw_require_no_api`, `dw_map_drive` and `dw_collaboration` — but no `cso_toolkit_sync` equivalent. A Stata consumer keeps its vendored vintage current by hand: re-copy the `.ado`/`.sthlp` files and edit `pulled_version` in the manifest. (See the cross-language coverage matrix appendix for the full parity picture.)
 :::
 
 The decision flow runs as follows.
 
-**Step 1 — Check (producer only, quiet by default).** At session start the producer runs `cso_toolkit_check()`. It reads the local `.toolkit_manifest.yml`, queries the upstream repository for its latest release tag, and compares that tag against the pinned `pulled_version`. The check is gated by the mode contract: if the session's `dw_apis_allowed` flag is not `TRUE` — that is, in reviewer mode — it returns immediately and silently. Reviewers never see this branch, because the contract forbids the GitHub lookup. The lookup itself prefers the `gh` CLI (`gh api repos/<source>/releases/latest --jq .tag_name`), falls back to a raw `api.github.com` request — via `httr` in R, `requests` in Python — and then to `git ls-remote --tags` over HTTPS, which gets through proxies that block the API. If no path reaches the network, the check returns `NULL` (R) or `None` (Python) and stays quiet.
+**Step 1 — Check (quiet by default).** At session start the producer runs `cso_toolkit_check()`. It reads the local `.toolkit_manifest.yml`, queries the upstream repository for its latest release tag, and compares that tag against the pinned `pulled_version`. The lookup is gated by the mode contract: in reviewer mode the upstream lookup is skipped (the contract forbids it); the check still compares `pulled_version` with a `target_version`, offline, and warns when the copy is behind, and with no target it returns `NULL`. The lookup itself prefers the `gh` CLI (`gh api repos/<source>/releases/latest --jq .tag_name`), falls back to a raw `api.github.com` request — via `httr` in R, `requests` in Python — and then to `git ls-remote --tags` over HTTPS, which gets through proxies that block the API. If no path reaches the network, the check returns `NULL` (R) or `None` (Python) and stays quiet.
 
-**Step 2 — Decide.** If a newer tag is detected, `cso_toolkit_check(quiet = FALSE)` prints a boxed notice: it names the pinned and upstream versions and the exact `cso_toolkit_diff()` / `cso_toolkit_pull()` calls to run (or simply `cso_toolkit_sync()`). If the pinned version is current — or if `pulled_version` is set to `inrepo`, the convention for a copy whose helpers have been edited locally and should never trigger sync warnings — the check reports no update and stays quiet. Note how this differs from the `local_edits` list: `inrepo` is a manifest-wide switch on `pulled_version` that silences the whole comparison (the check skips any tag whose pinned value contains the string `inrepo`), whereas `local_edits` is a per-file skip list that lets the check still run but tells `cso_toolkit_pull()` which individual files to leave untouched. The producer now chooses: refresh, or keep the pinned vintage. Nothing changes unless the producer acts.
+**Step 2 — Decide.** If a newer tag is detected, `cso_toolkit_check(quiet = FALSE)` prints a boxed notice: it names the pinned and upstream versions and the exact `cso_toolkit_diff()` / `cso_toolkit_sync()` calls to run. If the pinned version is current — or if `pulled_version` is set to `inrepo`, the convention for a copy whose helpers have been edited locally and should never trigger sync warnings — the check reports no update and stays quiet. Note how this differs from the `local_edits` list: `inrepo` is a manifest-wide switch on `pulled_version` that silences the whole comparison (a `pulled_version` that is not a version number, such as plain `inrepo`, cannot be compared, so nothing is reported), whereas `local_edits` is a per-file skip list that lets the check still run but tells `cso_toolkit_pull()` which individual files to leave untouched. The producer now chooses: refresh, or keep the pinned vintage. Nothing changes unless the producer acts.
 
 **Step 3 — Diff (look before you leap).** `cso_toolkit_diff()` reads each vendored file at the target tag — from git history, never a working tree: a local clone named by `toolkit_source`, or a shallow clone of the tag from GitHub — and gives each a status: `unchanged`, `changed`, `local_edit` (listed under `local_edits`, or edited here since `pulled_version`), `missing_upstream` or `missing_local`, with both sha256s. It writes nothing, and with a local clone it runs offline, in reviewer mode too.
 
-**Step 4 — Pull.** `cso_toolkit_pull("v0.10.0")` performs the refresh: it starts from a clean vendored folder (an update must be one reviewable commit), refuses a downgrade unless asked, skips local edits, keeps files the release no longer has (with a warning), writes the changed files atomically after asking per file (overwrite, skip, or show diff), and re-pins the manifest in place — `pulled_version`, `pulled_commit`, the date and `pulled_by` — leaving comments, `vendored` and `local_edits` alone. Like `check`, `pull` is producer-only: in reviewer mode it raises a mode-lock error rather than touching anything, with the standard three-part error message — what failed, why, and how to fix it — directing the user to switch to producer mode (see the error taxonomy appendix). `cso_toolkit_sync()` runs Steps 3 and 4 after printing the release notes between the two versions, which is how most producers should update. Then run `tools/check.R` and the tests and commit `00_functions/` in one commit naming the old and new tags.
+**Step 4 — Pull.** `cso_toolkit_pull("v0.10.0")` performs the refresh: it starts from a clean vendored folder (an update must be one reviewable commit), refuses a downgrade unless asked, skips local edits, keeps files the release no longer has (with a warning), writes the changed files atomically after asking per file (overwrite, skip, or show diff), and re-pins the manifest in place — `pulled_version`, `pulled_commit`, the date and `pulled_by` — leaving comments, `vendored` and `local_edits` alone. `pull` is producer-only: in reviewer mode it raises a mode-lock error rather than touching anything, with the standard three-part error message — what failed, why, and how to fix it — directing the user to switch to producer mode (see the error taxonomy appendix). `cso_toolkit_sync()` runs Steps 3 and 4 after printing the release notes between the two versions, which is how most producers should update. Then run `tools/check.R` and the tests and commit `00_functions/` in one commit naming the old and new tags.
 
 The decision flow, in outline:
 
@@ -186,14 +186,15 @@ The decision flow, in outline:
                              v
                   Newer tag detected?
                   -----------------------------------
-                  YES: log a yellow alert with
-                       pinned version, upstream
-                       version, pointer to NEWS.md,
-                       and a suggested pull command
+                  YES: print a boxed notice with
+                       the pinned and upstream
+                       versions and the
+                       cso_toolkit_diff() /
+                       cso_toolkit_sync() commands
                   NO:  stay silent
                              |
-        (producer decides; reviewer never reaches this branch
-         because the check is gated by dw_apis_allowed)
+        (producer decides; reviewers skip the upstream lookup;
+         they see only a target-version warning)
                              |
                 +------------+------------+
                 v                         v

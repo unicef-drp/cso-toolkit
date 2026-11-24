@@ -5,7 +5,7 @@ Aggregation is the step where many country-level observations collapse into a fe
 The contract has two layers. At the bottom sits `aggregate_data_v2()`, a general-purpose grouped aggregator that computes a value together with the coverage metadata needed to judge whether that value is trustworthy. On top sit a set of convenience helpers, each pairing one recurring problem with one function: `apply_time_window()` (picking the latest observation in a window), `dw_nestweight()` (redistributing weights over missing rows), `dw_pop()` (fetching population denominators), and `dw_regions()` (producing UNICEF regional aggregates). Each feeds its output into the aggregator. A companion helper, `generate_agg_footnote()`, turns the aggregator's coverage numbers into the caption that travels with the result.
 
 ::: {.callout-warning}
-Cross-language parity is partial here, and this chapter flags every gap. `aggregate_data_v2`, `apply_time_window`, `generate_agg_footnote`, `dw_nestweight`, and `dw_pop` ship in **R and Python**. `dw_regions` is **R-only**: its source file carries a `TODO` marker for the missing Python and Stata siblings (tracked at issue #18); `dw_pop`'s remaining gap is its Stata sibling (tracked at issue #17). **Stata has none of the aggregation helpers** — its `src/` directory stops at file IO (`dw_save`, `dw_use`, and friends). And even where R and Python both ship a function, one method differs: the R aggregator supports a `"total"` method that the Python aggregator does not. See the cross-language coverage matrix appendix for the consolidated picture.
+Cross-language parity is partial here, and this chapter flags every gap. `aggregate_data_v2`, `apply_time_window`, `generate_agg_footnote`, `dw_nestweight`, and `dw_pop` ship in **R and Python**. `dw_regions` is **R-only**: its source file carries a `TODO` marker for the missing Python and Stata siblings (issue #18 shipped the R version and is closed; no open issue tracks the siblings, and the redesign at issue #40 comes first); `dw_pop`'s remaining gap is its Stata sibling (issue #17 is closed, and no open issue tracks it). **Stata has none of the aggregation helpers** — its `src/` directory stops at file IO (`dw_save`, `dw_use`, and friends). See the cross-language coverage matrix appendix for the consolidated picture.
 :::
 
 ## The core aggregator: `aggregate_data_v2`
@@ -77,9 +77,9 @@ Pick the method to match the *kind* of indicator, because each method encodes a 
 | `mean` | `mean(value)` | simple unweighted average |
 | `sum` | `sum(value) / sum(weight) * 100` **— not an additive total; see note below** | a population-weighted *rate* expressed as a percent |
 | `proportion` | `sum((value/100) * weight) / sum(weight_non_na) * 100` | indicators given as percentages, reweighted to a population proportion |
-| `total` (R only) | `sum(value)` | additive person-count stocks (refugees, displaced persons, births) where the regional value is the sum of country values |
+| `total` | `sum(value)` | additive person-count stocks (refugees, displaced persons, births) where the regional value is the sum of country values |
 
-Two method names mislead. `sum` does **not** return a plain additive total; it returns a population-weighted rate, dividing the summed values by the summed weights. If you want a genuine additive count — the regional figure being the literal sum of the country figures — you want `total`, and `total` exists only in the R implementation. The Python aggregator's valid set is `("weighted_mean", "mean", "sum", "proportion")`; passing `"total"` to it raises a `ValueError`. Until the Python sibling gains the method, person-count totals must be aggregated in R (or computed by hand).
+Two method names mislead. `sum` does **not** return a plain additive total; it returns a population-weighted rate, dividing the summed values by the summed weights. If you want a genuine additive count — the regional figure being the literal sum of the country figures — you want `total`. Both languages drop missing values, so a group with no reported values totals 0; use `coverage_threshold` if such a group should come back missing instead.
 
 `proportion` interprets the value column as a percentage (it divides by 100 internally) and reconstructs the number affected before re-expressing the result as a proportion of the covered population. It is the right choice when each country reports, say, "12.4 % of children stunted" and you want a population-correct regional percentage rather than an average of the country percentages.
 
@@ -107,7 +107,7 @@ With `global = TRUE` (the default), the same calculation is run once more over t
 
 ### Validation and the error envelope
 
-When `validate` is on (the default), the function checks that `value`, `weight`, and every `by` column exist, and on failure emits the toolkit's standard error envelope — a structured message carrying the offending columns and a one-line fix hint (`[cso_toolkit.aggregate_data_v2] ...`). This is the same envelope shape described in the provenance-and-error-envelope chapter, and it is identical across R and Python down to the wording. Set `validate = FALSE` to skip the checks on hot paths where you have already verified the schema (again, `dw_regions()` does this and re-implements the checks itself so callers still get a clean envelope).
+When `validate` is on (the default), the function checks that `value`, `weight`, and every `by` column exist, and on failure emits the toolkit's standard error envelope — a structured message carrying the offending columns and a one-line fix hint (`[cso_toolkit.aggregate_data_v2] ...`). This is the same envelope shape described in the provenance-and-error-envelope chapter, and it carries the same WHAT, `Data columns`, and `Fix` lines in R and Python (R raises with `stop()`, Python with `KeyError`; the argument spellings follow each language). Set `validate = FALSE` to skip the checks on hot paths where you have already verified the schema (again, `dw_regions()` does this and re-implements the checks itself so callers still get a clean envelope).
 
 ## Building the standard footnote: `generate_agg_footnote`
 
@@ -232,7 +232,7 @@ Note one small interface difference: the R signature carries both `verbose` and 
 
 ## Demographics helpers: `dw_pop` and `dw_regions`
 
-The remaining two helpers wrap the demographics-and-regions workflow. `dw_pop` now ships in **R and Python** (`python/src/dw_pop.py`); `dw_regions` is still **R-only**. Each file carries a `TODO` marking the siblings that remain: a Stata port for `dw_pop` (`stata/src/dw_pop.ado`, issue #17) and both a Python and a Stata port for `dw_regions` (`python/src/dw_regions.py`, `stata/src/dw_regions.ado`, issue #18). There is no Stata equivalent for either today, and Stata has no API wrapper to build on — see the external-API contract chapter for why the Stata side stops at file IO.
+The remaining two helpers wrap the demographics-and-regions workflow. `dw_pop` now ships in **R and Python** (`python/src/dw_pop.py`); `dw_regions` is still **R-only**. Each file carries a `TODO` marking the siblings that remain: a Stata port for `dw_pop` (`stata/src/dw_pop.ado`) and both a Python and a Stata port for `dw_regions` (`python/src/dw_regions.py`, `stata/src/dw_regions.ado`). Issues #17 and #18 shipped the R versions and are closed; no open issue tracks these ports. There is no Stata equivalent for either today, and Stata has no API wrapper to build on — see the external-API contract chapter for why the Stata side stops at file IO.
 
 ### `dw_pop` — population denominators
 
@@ -313,4 +313,4 @@ note   <- generate_agg_footnote(country_coverage = 41, total_countries = 48,
                                 exemptions = c("SOM", "YEM"))
 ```
 
-A Python pipeline can run the first two steps and the footnote identically (`apply_time_window`, `dw_nestweight`, `generate_agg_footnote` all ship in Python), fetch population denominators with `dw_pop`, then call `aggregate_data_v2` directly for the grouped aggregate — but it cannot yet call `dw_regions`, and it cannot use `method = "total"`. A Stata pipeline has none of these helpers and must perform aggregation with native Stata commands, treating this contract as R/Python-only for now. The function reference and coverage matrix appendices give the authoritative per-language inventory.
+A Python pipeline can run the first two steps and the footnote identically (`apply_time_window`, `dw_nestweight`, `generate_agg_footnote` all ship in Python), fetch population denominators with `dw_pop`, then call `aggregate_data_v2` directly for the grouped aggregate — but it cannot yet call `dw_regions`. A Stata pipeline has none of these helpers and must perform aggregation with native Stata commands, treating this contract as R/Python-only for now. The function reference and coverage matrix appendices give the authoritative per-language inventory.

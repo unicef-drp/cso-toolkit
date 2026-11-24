@@ -1,6 +1,6 @@
 # Starting a new repository
 
-Every repository that uses the toolkit needs the same floor before its first line of analysis: a `.gitignore` that keeps data out and provenance in, the local checks and the hook that runs them, a test suite, the project's collaboration setting, a home for the vendored helpers, and a README and contributing guide that tell a co-author what to do on their first clone. The chapters that follow explain each piece. This one starts a repository with all of them in one call, from the toolkit's own templates, so a new project begins where the rest of the handbook expects it to be.
+Every repository that uses the toolkit needs the same floor before its first line of analysis: a `.gitignore` that keeps data out and provenance in, the local checks and the hook that requires a record of them, a test suite, the project's collaboration setting, a home for the vendored helpers, and a README and contributing guide that tell a co-author what to do on their first clone. The chapters that follow explain each piece. This one starts a repository with all of them in one call, from the toolkit's own templates, so a new project begins where the rest of the handbook expects it to be.
 
 There are two functions, because there are two kinds of repository:
 
@@ -154,11 +154,11 @@ The functions never replace a file silently. Before writing anything they compar
 
 - **`vendor`, `toolkit_source`, `toolkit_version`.** `vendor` is `FALSE` by default. `TRUE` copies the helpers into `00_functions/` from a release tag of a git clone of cso-toolkit (`toolkit_source`, or `CSO_TOOLKIT_ROOT`), and writes `.toolkit_manifest.yml` with that tag as `pulled_version` and the commit it points to as `pulled_commit` ([The vendoring model](41-vendoring.qmd)). The tag is `toolkit_version`, by default the clone's latest release tag (`v0.9.1`, never a pre-release such as `v1.0.0-rc1`). The files are read from the tag's commit in the clone's history, never from its working tree, so a clone on another branch or with local edits still vendors exactly the released bytes; a tag the clone does not have stops the call before anything is written (`git fetch --tags` first). The default set is `dw_io.R`, `dw_api.R`, `cso_toolkit_sync.R`, `dw_provenance.R`, `dw_deposit.R`, `dw_project.R`, `test_scripts.R` and `zzz.R`, plus `profile_helpers.R` and `create_sector_script.R` for official statistics; a helper of that set which the tag does not have yet (`dw_project.R` before the release that adds it) is skipped and named in a message. A character vector picks the files, all of which must exist at the tag, and the three that `tools/check.R` needs are always added. Without vendoring, `tools/check.R` leaves out the `contract-audit` and `vintage` checks, with a comment saying to add them back once `00_functions/` is filled.
 - **`workflows`.** `FALSE` by default: checks run locally. `check-record.yml`, which only verifies the local check record on pull requests (no R, about 10 seconds), is always written ([Check records](45-ci-cd.qmd#check-records)). `TRUE` adds the other GitHub Actions workflows, which call the same `tools/check.R` and by default run only when started by hand and on pull requests into `main`.
-- **`git`.** `FALSE` by default. `TRUE` runs `git init` with `develop` as the first branch (`main` is created at the first release), sets `core.hooksPath` to `.githooks`, and stages the hook with its executable bit so it also runs on macOS and Linux clones. It never commits, creates a remote or pushes.
+- **`git`.** `FALSE` by default. `TRUE` runs `git init` with `develop` as the first branch (`main` is created at the first release), sets `core.hooksPath` to `.githooks`, and stages the hook and `tools/check` with their executable bit so they also run on macOS and Linux clones. It never commits, creates a remote or pushes.
 
 ### The profile
 
-Every repository gets `profile_<project>.R`, named after its folder, the script every analysis script and interactive session sources first, as `profile_DW-Production.R` is in DW-Production ([Scaffolding and the contract auditor](35-scaffolding-audit.qmd)). Both kinds are written from one template, `templates/profile/profile.R`, and both pass `review_profile()`:
+Every repository gets `profile_<project>.R`, named after its folder, the script every analysis script and interactive session sources first, as `profile_DW-Production.R` is in DW-Production ([Scaffolding and the contract auditor](35-scaffolding-audit.qmd)). Both kinds are written from one template, `templates/profile/profile.R`, and both pass `review_profile()` with no failure (the research profile shows one warning, for the Z: advisory it does not need):
 
 - it reads `~/.config/user_config.yml` the way DW-Production's template lays it out, the user's block first (`user_config[[USERNAME]]`), top-level keys as a fallback;
 - it resolves `dw_mode` as `dw_mode_by_project[["<project>"]]`, then `dw_mode`, with no default; when neither is set it stops and shows the lines to add, with the user name filled in;
@@ -179,10 +179,10 @@ The official-statistics profile adds the deposit paths of [Wiring the contract](
 
 The generated `README.md` and `CONTRIBUTING.md` carry these steps, so a co-author can follow them without this chapter:
 
-1. Clone, then `git config core.hooksPath .githooks`, once, so the checks run on every push.
+1. Clone, then `git config core.hooksPath .githooks`, once, so every push needs a passing check record (`sh tools/check --record`).
 2. In `~/.config/user_config.yml`, under their user name, set `dw_mode: reviewer`. They switch to `producer` only for a session in which they deliberately produce or refresh results (for this repository alone: `dw_mode_by_project:` with the repository's name). In an official-statistics repository they also set `teamsRoot` and a `sandboxRoot` outside the repository (`_config_template/user_config.yml`). `source("profile_<project>.R")` then tells them what is still missing.
 3. Obtain the inputs under their own licence (research) or fill `inputs/` with `dw_fetch_inputs()` (official statistics), and verify that the bytes match the manifest: then their results are built from the same inputs.
-4. Run `Rscript --no-init-file tools/check.R`.
+4. Run `Rscript --no-init-file tools/check.R`, and `sh tools/check --record` before the first push.
 5. In a multi-producer project, add their handle under `members:` in `cso_project.yml` in their first pull request.
 
 ## The collaboration setting
@@ -191,7 +191,7 @@ The generated `README.md` and `CONTRIBUTING.md` carry these steps, so a co-autho
 
 ## Local checks first
 
-The repository starts with checks that run on the author's machine: `tools/check.R` runs every check with one command and the pre-push hook runs it before each push. GitHub Actions are opt-in (`workflows = TRUE`) and run the same script; by default they run only when started by hand and on release pull requests into `main`, so routine work costs no Actions minutes. The pull request carries the output of `tools/check.R` for its head commit, and that record is the gate.
+The repository starts with checks that run on the author's machine: `tools/check.R` runs every check with one command and the pre-push hook refuses a push without a passing check record, which `sh tools/check --record` writes after running every check. GitHub Actions are opt-in (`workflows = TRUE`) and run the same script; by default they run only when started by hand and on release pull requests into `main`, so routine work costs no Actions minutes. The pull request carries the output of `tools/check.R` for its head commit, and that record is the gate.
 
 ## Where to read more
 

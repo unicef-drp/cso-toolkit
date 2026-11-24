@@ -148,6 +148,14 @@ def aggregate_weighted_mean(cid: str) -> None:
     out_csv(a, cid)
 
 
+def aggregate_total(cid: str) -> None:
+    plain()
+    x = m.dw_use(fx("aggregate_total_input.csv"))
+    a = m.aggregate_data_v2(x, value="value", weight="weight", by=["Region_Code"],
+                            method="total", global_=True, global_label="WORLD")
+    out_csv(a, cid)
+
+
 def version_compare(cid: str) -> None:
     case = json.loads((REPO / "conformance" / "cases" / f"{cid}.json").read_text(encoding="utf-8"))
     out_json({"behind": [sync._cso_version_behind(a, b) for a, b in case["pairs"]]}, cid)
@@ -280,6 +288,83 @@ def collab_out_of_band(cid: str) -> None:
         plain()
 
 
+def stage_lifecycle(cid: str) -> None:
+    import re
+    import time
+    d = work / cid
+    shutil.rmtree(d, ignore_errors=True)
+    teams, z, sb = d / "teams", d / "z", d / "sandbox"
+    rel = Path("nt") / "regions.csv"
+    for r in (teams, z, sb):
+        (r / "nt").mkdir(parents=True, exist_ok=True)
+
+    def put(root: Path, lines: list, f: Path = rel) -> None:
+        (root / f).write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    def sha(p: Path) -> str:
+        return hashlib.sha256(Path(p).read_bytes()).hexdigest()
+
+    put(teams, ["id,value", "AFG,1"])
+    put(z, ["id,value", "AFG,1"])
+    state.configure(dw_mode="reviewer", teamsRawData=str(sb), teamsWrkData=str(sb),
+                    teamsFolder=str(sb), teamsRawDataCanonical=str(teams),
+                    teamsWrkDataCanonical=str(teams), teamsFolderCanonical=str(teams),
+                    dwZDrive=str(z), dw_z_available=True)
+    try:
+        sbp = sb / rel
+        scp = Path(str(sbp) + ".staged.json")
+        out = m.dw_stage(str(teams / rel))                 # canonical input -> sandbox
+        sc = json.loads(scp.read_text(encoding="utf-8"))
+        sc_sha_ok = sc.get("sha256") == sha(z / rel)
+        mt = sbp.stat().st_mtime
+        time.sleep(1.1)
+        m.dw_stage(str(sbp))
+        second_copied = sbp.stat().st_mtime != mt
+        sbp.write_text("id,value\nXXX,9\n", encoding="utf-8")   # tampered sandbox
+        e_drift = None
+        try:
+            m.dw_stage(str(sbp))
+        except Exception as e:  # noqa: BLE001
+            e_drift = e
+        m.dw_stage(str(sbp), overwrite=True)
+        restored = sha(sbp) == sha(teams / rel)
+        time.sleep(1.1)
+        put(teams, ["id,value", "AFG,9"])
+        put(z, ["id,value", "AFG,9"])
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            m.dw_stage(str(sbp))
+        w = next((str(x.message) for x in caught), None)
+        rel2 = Path("nt") / "other.csv"
+        put(teams, ["id", "A"], rel2)
+        put(z, ["id", "B"], rel2)
+        e_mirror = None
+        try:
+            m.dw_stage(str(sb / rel2))
+        except Exception as e:  # noqa: BLE001
+            e_mirror = e
+        norm = m.dw_io._normalize
+        out_json({
+            "returns_sandbox": norm(out) == norm(sbp),
+            "sidecar_keys": sorted(sc), "sidecar_type": sc.get("type"),
+            "source_root": sc.get("source_root"),
+            "sidecar_sha_matches": sc_sha_ok,
+            "mtime_format_ok": bool(re.match(r"^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d[+-]\d{4}$",
+                                             sc.get("mtime") or "")),
+            "second_call_copied": second_copied,
+            "drift_stops": e_drift is not None and "SANDBOX DRIFT" in str(e_drift),
+            "overwrite_restores": restored,
+            "upstream_warns": w is not None and "UPSTREAM CHANGED" in w,
+            "upstream_recopied": sha(sbp) == sha(teams / rel),
+            "mirrors_disagree_stops": e_mirror is not None
+            and "CANONICAL INTEGRITY" in str(e_mirror),
+            "envelope": e_drift is not None and is_envelope(e_drift),
+        }, cid)
+    finally:
+        state.configure(teamsRawData=None, teamsWrkData=None, teamsFolder=None, dwZDrive=None)
+        plain()
+
+
 CASES = {
     "io_roundtrip_csv": lambda cid: roundtrip("indicators.csv", "csv", cid),
     "io_roundtrip_dta": lambda cid: roundtrip("indicators.csv", "dta", cid),
@@ -289,6 +374,7 @@ CASES = {
     "provenance_sidecar": provenance_sidecar,
     "compare_counts": compare_counts,
     "aggregate_weighted_mean": aggregate_weighted_mean,
+    "aggregate_total": aggregate_total,
     "version_compare": version_compare,
     "config_user_block": config_user_block,
     "compare_diagnose": compare_diagnose,
@@ -296,6 +382,7 @@ CASES = {
     "deposit_fetch_inputs": deposit_fetch_inputs,
     "provenance_diff_status": provenance_diff_status,
     "collab_out_of_band": collab_out_of_band,
+    "stage_lifecycle": stage_lifecycle,
 }
 
 for cid in case_ids:
