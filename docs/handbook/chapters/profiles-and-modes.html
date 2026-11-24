@@ -83,7 +83,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-7f6c64e0d652c61cb9aac081886fc576.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-554944da459c622dc457c1ed647c448c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -858,7 +858,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <ol type="1">
 <li><strong>User identification.</strong> Reads <code>USERNAME</code>, falling back to <code>USER</code>, and <code>USERPROFILE</code>, falling back to the home folder, so the same file works on Windows, macOS and Linux.</li>
 <li><strong>Flags and controls</strong>, such as <code>create_missing_folders &lt;- FALSE</code>.</li>
-<li><strong>Repository name</strong>, as a literal: <code>repo_name &lt;- "DW-Production"</code>.</li>
+<li><strong>Repository name and root</strong>: the literal <code>repo_name &lt;- "DW-Production"</code>, then <code>rootFolder</code> (the working directory, unless you set <code>rootFolder</code> before sourcing the profile) and <code>projectFolder &lt;- rootFolder</code>, the folder that sector scripts build their paths from.</li>
 <li><strong>Z: drive advisory</strong> (only with <code>include_z_drive_check</code>). Non-blocking, with the three-second <code>vol</code> probe described above.</li>
 <li><strong>Config load.</strong> Reads <code>~/.config/user_config.yml</code> with <code>yaml::read_yaml()</code> / <code>yaml.safe_load()</code> and stops if the file is missing (the R profile first checks that the <code>yaml</code> package is installed). Defines <code>user_block</code> and <code>user_setting()</code>: your block first, then top-level keys.</li>
 <li><strong>Producer/reviewer mode</strong> (only with <code>include_dw_mode</code>). Resolves <code>dw_mode</code> as above, rejects a scalar <code>dw_mode_by_project</code>, sets <code>dw_apis_allowed</code>, prints the agent notice, and defines <code>dw_require_no_api()</code>.</li>
@@ -867,7 +867,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>Profile sentinel.</strong> Sets <code>profile_&lt;repo&gt; &lt;- TRUE</code> (R) or <code>profile_&lt;repo&gt; = True</code> (Python) and prints a confirmation. Sector scripts can refuse to run without it.</li>
 </ol>
 <p>Block 6 hides a real difference between the languages. The Python profile imports <code>cso_toolkit._state</code> and calls <code>_cso_state.configure(dw_mode=..., dw_apis_allowed=(dw_mode == "producer"))</code>, so <code>dw_save</code>, <code>dw_use</code> and <code>dw_api_fetch</code> route by mode. The R profile needs no such call: sourced into the global environment, its <code>dw_mode</code> and <code>dw_apis_allowed</code> <em>are</em> the globals the R helpers read. Block 9 differs too: the Python profile also defines a <code>log_message()</code> there, for sector scripts to import.</p>
-<p><code>create_profile()</code> stops at the mode. It does not derive the deposit paths of the table above, print a mode banner, or define <code>projectFolder</code>. Add those yourself when the project has a deposit, and see the warning under the sector scripts below.</p>
+<p><code>create_profile()</code> stops at the mode. It does not derive the deposit paths of the table above or print a mode banner; add those yourself when the project has a deposit.</p>
 <div class="callout callout-style-simple callout-note">
 <div class="callout-body d-flex">
 <div class="callout-icon-container">
@@ -988,7 +988,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div class="callout-body-container">
 <p><strong>Paths and <code>projectFolder</code>.</strong> The default subpaths differ between the languages (R: <code>011_rawdata</code> / <code>013_wrkdata</code>; Python: <code>011_input</code> / <code>013_output</code>). If you scaffold the same sector in both, set <code>input_subpath</code> and <code>output_subpath</code> explicitly so the two drivers agree.</p>
-<p>Both templates also need <code>projectFolder</code>, and a profile from <code>create_profile()</code> does not define it. With the defaults, the R script stops with <code>Project profile not loaded ("projectFolder" is not set)</code> and the Python script with <code>Project profile missing required exports (log_message, projectFolder)</code>, even though the profile loaded. Add a <code>projectFolder</code> line to the profile, pointing at the folder the subpaths hang from (the project profile template sets it to the repository root). In Python, also pass the right <code>profile_name</code> (<code>"profile_&lt;repo&gt;"</code>) and <code>profile_file</code> for your repository. Making <code>create_profile()</code> set <code>projectFolder</code> itself is tracked in #236.</p>
+<p>Both templates also need <code>projectFolder</code>. A profile from <code>create_profile()</code> sets it to the folder you source the profile from, so run the sector script from the repository root, or set <code>rootFolder</code> before sourcing the profile; a hand-written profile must define it (the R script otherwise stops with <code>Project profile not loaded ("projectFolder" is not set)</code>, the Python one with <code>Project profile missing required exports (log_message, projectFolder)</code>). In Python, also pass the right <code>profile_name</code> (<code>"profile_&lt;repo&gt;"</code>) and <code>profile_file</code> for your repository.</p>
 </div>
 </div>
 </div>
