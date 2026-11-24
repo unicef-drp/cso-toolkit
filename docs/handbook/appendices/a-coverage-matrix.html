@@ -301,6 +301,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Versioning and releases</span></span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/parity.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">How the three languages stay in step</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/contributing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Contributing</span></span></a>
+  </div>
+</li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
@@ -312,19 +324,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/51-microdata-archive.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">The microdata archive: archive, catalogue, tool</span></span></a>
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">The microdata archive: archive, catalogue, tool</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/52-ihsn-grammar.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">The IHSN convention and the folder grammar</span></span></a>
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">The IHSN convention and the folder grammar</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/53-datalib-api-conformance.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">The <code>datalib_*</code> API and its conformance suite</span></span></a>
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">The <code>datalib_*</code> API and its conformance suite</span></span></a>
   </div>
 </li>
       </ul>
@@ -338,13 +350,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/61-ecosystem.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">The UNICEF analytics ecosystem: three tiers</span></span></a>
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">The UNICEF analytics ecosystem: three tiers</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/62-unicefdata.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">unicefData: public child statistics in three languages</span></span></a>
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">unicefData: public child statistics in three languages</span></span></a>
   </div>
 </li>
       </ul>
@@ -389,12 +401,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <div class="sidebar-item-container"> 
   <a href="../appendices/f-third-party-functions.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">F</span>&nbsp; <span class="chapter-title">Curated third-party functions</span></span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../appendices/g-parity-certificate.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">G</span>&nbsp; <span class="chapter-title">Cross-language parity</span></span></a>
   </div>
 </li>
       </ul>
@@ -1228,7 +1234,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>The headline gaps:</p>
 <ul>
 <li><strong>R is the only sibling whose <em>unit tests</em> run in CI.</strong> GitHub Actions runs <code>R CMD check</code> (which invokes the <code>testthat</code> suite) on every push and pull request to <code>main</code>/<code>develop</code> across four configurations: Ubuntu on R-release and R-devel, macOS, and Windows. Python has a pytest suite (<code>python/tests/</code>) and two manual scripts (<code>python/tests/manual/</code>); none of them runs in CI. The Stata side has no automated test suite at all.</li>
-<li><strong>Cross-language parity is now executed, not just asserted.</strong> The <code>Conformance</code> workflow (<code>conformance.yml</code>, on every push and PR to <code>main</code>/<code>develop</code>) runs the R and Python drivers over the shared fixture — a <code>dw_use → dw_save → dw_use</code> round-trip — and a comparator asserts the outputs are value-equal within <code>1e-9</code>. The Stata leg of the same harness waits on a <code>STATA_LIC</code> secret or self-hosted runner (issue #133); until provisioned, Stata parity remains a local release gate.</li>
+<li><strong>Cross-language parity is now executed, not just asserted.</strong> The <code>Conformance</code> workflow (<code>conformance.yml</code>, on every push and PR to <code>main</code>/<code>develop</code>) runs the R and Python drivers over the shared fixture — a <code>dw_use → dw_save → dw_use</code> round-trip — and a comparator asserts the outputs are value-equal within <code>1e-9</code>. The Stata leg of the same harness waits on a <code>STATA_LIC</code> secret or self-hosted runner (issue #133); until provisioned, Stata parity remains a local release gate, through the parity certificate (<a href="../chapters/parity.html">How the three languages stay in step</a>).</li>
 <li><strong>Python lacks a generated reference site.</strong> R ships Roxygen-generated help pages (44 <code>.Rd</code> files, read with <code>?name</code>; no pkgdown site is published); Python has no equivalent pkgdown/Sphinx-style autodoc. Its public surface is documented in prose under <code>docs/</code> and in the per-module catalogue, and its interfaces are machine-readable via full type hints and a PEP 561 <code>py.typed</code> marker, but there is no rendered API site.</li>
 <li><strong>Stata documents per-command via <code>.sthlp</code>.</strong> Each Stata <code>.ado</code> ships a companion <code>.sthlp</code> help file, accessible with <code>help dw_save</code> and friends. There is no aggregated reference site.</li>
 </ul>
@@ -1738,7 +1744,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <nav class="page-navigation" aria-label="Page">
   <div class="nav-page nav-page-previous">
       <a href="../chapters/62-unicefdata.html" class="pagination-link" aria-label="unicefData: public child statistics in three languages">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">unicefData: public child statistics in three languages</span></span>
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">unicefData: public child statistics in three languages</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
