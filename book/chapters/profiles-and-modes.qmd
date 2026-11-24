@@ -349,7 +349,7 @@ The generated profile opens with a header (title, filename, author, timestamp, a
 
 1. **User identification.** Reads `USERNAME`, falling back to `USER`, and `USERPROFILE`, falling back to the home folder, so the same file works on Windows, macOS and Linux.
 2. **Flags and controls**, such as `create_missing_folders <- FALSE`.
-3. **Repository name**, as a literal: `repo_name <- "DW-Production"`.
+3. **Repository name and root**: the literal `repo_name <- "DW-Production"`, then `rootFolder` (the working directory, unless you set `rootFolder` before sourcing the profile) and `projectFolder <- rootFolder`, the folder that sector scripts build their paths from.
 4. **Z: drive advisory** (only with `include_z_drive_check`). Non-blocking, with the three-second `vol` probe described above.
 5. **Config load.** Reads `~/.config/user_config.yml` with `yaml::read_yaml()` / `yaml.safe_load()` and stops if the file is missing (the R profile first checks that the `yaml` package is installed). Defines `user_block` and `user_setting()`: your block first, then top-level keys.
 6. **Producer/reviewer mode** (only with `include_dw_mode`). Resolves `dw_mode` as above, rejects a scalar `dw_mode_by_project`, sets `dw_apis_allowed`, prints the agent notice, and defines `dw_require_no_api()`.
@@ -359,7 +359,7 @@ The generated profile opens with a header (title, filename, author, timestamp, a
 
 Block 6 hides a real difference between the languages. The Python profile imports `cso_toolkit._state` and calls `_cso_state.configure(dw_mode=..., dw_apis_allowed=(dw_mode == "producer"))`, so `dw_save`, `dw_use` and `dw_api_fetch` route by mode. The R profile needs no such call: sourced into the global environment, its `dw_mode` and `dw_apis_allowed` *are* the globals the R helpers read. Block 9 differs too: the Python profile also defines a `log_message()` there, for sector scripts to import.
 
-`create_profile()` stops at the mode. It does not derive the deposit paths of the table above, print a mode banner, or define `projectFolder`. Add those yourself when the project has a deposit, and see the warning under the sector scripts below.
+`create_profile()` stops at the mode. It does not derive the deposit paths of the table above or print a mode banner; add those yourself when the project has a deposit.
 
 ::: {.callout-note}
 The YAML load in block 5 is the one place a profile *must* read a file directly: it bootstraps the configuration before any toolkit helper is available. The generated line carries an exemption for the contract auditor, `yaml::read_yaml(config_path)  # cso-allow: io-yaml` (`yaml.safe_load(_f) or {}  # cso-allow: io-yaml` in Python). The auditor and its `# cso-allow:` directive are in [Checks and CI](checks-and-ci.qmd).
@@ -419,7 +419,7 @@ The Python script covers the same ground with `try`/`except` and `pathlib.Path`.
 ::: {.callout-warning}
 **Paths and `projectFolder`.** The default subpaths differ between the languages (R: `011_rawdata` / `013_wrkdata`; Python: `011_input` / `013_output`). If you scaffold the same sector in both, set `input_subpath` and `output_subpath` explicitly so the two drivers agree.
 
-Both templates also need `projectFolder`, and a profile from `create_profile()` does not define it. With the defaults, the R script stops with `Project profile not loaded ("projectFolder" is not set)` and the Python script with `Project profile missing required exports (log_message, projectFolder)`, even though the profile loaded. Add a `projectFolder` line to the profile, pointing at the folder the subpaths hang from (the project profile template sets it to the repository root). In Python, also pass the right `profile_name` (`"profile_<repo>"`) and `profile_file` for your repository. Making `create_profile()` set `projectFolder` itself is tracked in #236.
+Both templates also need `projectFolder`. A profile from `create_profile()` sets it to the folder you source the profile from, so run the sector script from the repository root, or set `rootFolder` before sourcing the profile; a hand-written profile must define it (the R script otherwise stops with `Project profile not loaded ("projectFolder" is not set)`, the Python one with `Project profile missing required exports (log_message, projectFolder)`). In Python, also pass the right `profile_name` (`"profile_<repo>"`) and `profile_file` for your repository.
 :::
 
 ### `create_dw_sector_script()`
