@@ -86,3 +86,14 @@ jobs:
       # tables in book/_generated/ are stale. Standard library only: seconds.
       - name: Handbook tables match the code
         run: python3 book/_scripts/gen_tables.py --check
+
+      # Every version stamp (r/DESCRIPTION, dw_io.R/.py, pyproject, CITATION,
+      # Zenodo, README, NEWS, the handbook's as-of lines, the tests that pin
+      # it) names the same release and date. Standard library only.
+      - name: Version stamps agree
+        run: python3 tools/check_versions.py
+
+      # Parity case files are well formed and no retired case id is reused
+      # (conformance/retired_ids.txt). Runs no language.
+      - name: Parity cases are well formed
+        run: python3 conformance/certify.py --lint
