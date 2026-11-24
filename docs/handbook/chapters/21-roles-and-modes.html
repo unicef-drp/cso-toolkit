@@ -686,7 +686,7 @@ Canonical deposit ── 013_wrkdata ── carbon copy ──► Z: mirror (int
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>* which the profile points <span class="fu">at</span> the sandbox <span class="kw">in</span> reviewer <span class="kw">mode</span>, so writes</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>* land <span class="kw">in</span> the sandbox without a per-call flag. The uniqueness check is</span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>* folded <span class="kw">in</span> via idvars() (the Stata equivalent <span class="kw">of</span> the R <span class="kw">isid</span>= argument).</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>dw_save , filename(<span class="st">"dw_im.csv"</span>) path(<span class="st">"$teamsWrkData"</span>) idvars(iso3 <span class="fu">year</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>dw_save , filename(<span class="st">"dw_im.dta"</span>) path(<span class="st">"$teamsWrkData"</span>) idvars(iso3 <span class="fu">year</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 </div>
@@ -703,7 +703,7 @@ Canonical deposit ── 013_wrkdata ── carbon copy ──► Z: mirror (int
 </section>
 <section id="guard-2-reviewer-mode-forbids-live-api-calls-dw_require_no_api" class="level3" data-number="4.4.2">
 <h3 data-number="4.4.2" class="anchored" data-anchor-id="guard-2-reviewer-mode-forbids-live-api-calls-dw_require_no_api"><span class="header-section-number">4.4.2</span> Guard 2 — reviewer mode forbids live API calls (<code>dw_require_no_api</code>)</h3>
-<p>The second guard sits at every entry point that would hit the network. <code>dw_api_fetch</code> checks the <code>dw_apis_allowed</code> flag at the very top, before any HTTP request, and any sector-internal script that talks to a remote is expected to call <code>dw_require_no_api</code> too. In reviewer mode the call aborts; in producer mode it returns silently. The frozen cache is read with <code>dw_api_cached</code> instead of fetching live.</p>
+<p>The second guard sits at every entry point that would hit the network. <code>dw_api_fetch</code> reads the cache when one exists and, before any HTTP request, checks the <code>dw_apis_allowed</code> flag, and any sector-internal script that talks to a remote is expected to call <code>dw_require_no_api</code> too. In reviewer mode the call aborts; in producer mode it returns silently. The frozen cache is read with <code>dw_api_cached</code> instead of fetching live.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-3" role="tab" aria-controls="tabset-2-3" aria-selected="false" href="">Stata</a></li></ul>
 <div class="tab-content">

@@ -490,7 +490,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   Fix:
     1. Do this, OR
     2. Do that.</code></pre>
-<p>The leading <code>[cso_toolkit.&lt;func&gt;]</code> prefix is the load-bearing convention. It separates library messages from your own code’s errors, and — because it is a stable literal — it lets you grep a whole consumer project for every site that hits a given error class. The R <code>testthat</code> suite holds raises to this shape through a custom <code>expect_envelope()</code> matcher (it asserts the <code>^[cso_toolkit.&lt;func&gt;]</code> prefix on the raised condition), and the Python suite runs a parallel <code>error_envelope_test.py</code> that exercises 30 raise-paths. The <code>WHAT</code> / <code>Why</code> / <code>Fix</code> structure is therefore a tested invariant, not a stylistic suggestion.</p>
+<p>The leading <code>[cso_toolkit.&lt;func&gt;]</code> prefix is the load-bearing convention. It separates library messages from your own code’s errors, and — because it is a stable literal — it lets you grep a whole consumer project for every site that hits a given error class. The R <code>testthat</code> suite holds raises to this shape through a custom <code>expect_envelope()</code> matcher (it asserts the <code>^[cso_toolkit.&lt;func&gt;]</code> prefix on the raised condition), and a manual Python script, <code>python/tests/manual/error_envelope_test.py</code> (run by hand, not in CI), checks 33 raise-paths. The <code>WHAT</code> / <code>Why</code> / <code>Fix</code> structure is therefore a tested invariant, not a stylistic suggestion.</p>
 <p>This appendix is a debugging quick-reference. It groups the toolkit’s errors into five categories, gives the actual envelope text for each, explains the contract the envelope defends, and tells you how to fix it. For the full per-function reference see the function reference appendix and the IO and external-API contract chapters; for the sidecar fields named below, see the provenance sidecar schema appendix.</p>
 <p>Two terms anchor everything that follows. An <strong>error envelope</strong> is the three-part message above. A session’s <strong>role</strong> is one of three: a <em>producer</em> may write canonical data and reach the network; a <em>reviewer</em> is read-only and offline; a <em>publisher</em> submits to the upstream warehouse. The roles and mode-contract chapter is the full treatment; this appendix leans only on the producer-versus-reviewer split.</p>
 <div class="callout callout-style-simple callout-note">
@@ -559,7 +559,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>The toolkit enforces the producer / reviewer / publisher mode contract at every wrapped call site, not by convention (see the roles and mode-contract chapter). A reviewer session is <em>physically</em> prevented from two things: writing under canonical paths, and reaching the network. When a reviewer-mode session attempts either, the toolkit stops before any side effect occurs.</p>
 <section id="reviewer-writing-under-canonical" class="level3" data-number="C.2.1">
 <h3 data-number="C.2.1" class="anchored" data-anchor-id="reviewer-writing-under-canonical"><span class="header-section-number">C.2.1</span> Reviewer writing under canonical</h3>
-<p>This is the canonical example of the whole envelope convention. A <code>dw_save()</code> whose resolved destination lies under <code>teamsWrkDataCanonical</code>, <code>teamsRawDataCanonical</code>, or the configured Z: drive root (<code>dwZDrive</code>) stops in reviewer mode:</p>
+<p>This is the canonical example of the whole envelope convention. A <code>dw_save()</code> whose resolved destination lies under <code>teamsWrkDataCanonical</code>, <code>teamsRawDataCanonical</code>, or the configured Z: drive root (<code>dwZDrive</code>) stops in reviewer mode. R and Python also guard <code>teamsFolderCanonical</code>, and R additionally matches the OneDrive-synced <code>060.DW-MASTER</code> path; Stata guards only the two <code>*Canonical</code> roots and <code>dwZDrive</code>. The R text:</p>
 <pre class="text"><code>[cso_toolkit.dw_save] Reviewer mode forbids writes to &lt;root&gt;: &lt;path&gt;
   Reviewer sessions must keep canonical / Z: deposits read-only to preserve
   vintage permanence; writes go to the local repo sandbox.
@@ -599,7 +599,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   Fix:
     1. If the path above is wrong, set `dw_frozen_root &lt;- '&lt;your-canonical-frozen-path&gt;'` in your profile.
     2. Otherwise, a producer must call dw_use('&lt;url&gt;') once and commit the frozen file + sidecar before the reviewer pipeline can read it.</code></pre>
-<p>The tier line was added after a costly miss: a reviewer-mode audit spent three runs (75+ minutes on a slow network) tracing a fallback that resolved to <code>&lt;githubFolder&gt;/_frozen</code> instead of the project’s expected <code>_frozen</code> path. The envelope now surfaces that mismatch at the point of failure. The frozen root resolves in tiers — an explicit <code>dw_frozen_root</code> global first, a <code>githubFolder</code> fallback next — and the toolkit warns once per session whenever it falls back past the first tier.</p>
+<p>The tier line was added after a costly miss: a reviewer-mode audit spent three runs (75+ minutes on a slow network) tracing a fallback that resolved to <code>&lt;githubFolder&gt;/_frozen</code> instead of the project’s expected <code>_frozen</code> path. The envelope now surfaces that mismatch at the point of failure. The frozen root resolves in tiers — an explicit <code>dw_frozen_root</code> global first, a <code>githubFolder</code> fallback next, then <code>&lt;working dir&gt;/_frozen</code> — and R notes the fallback once per session whenever it falls back past the first tier (a warning for the last tier). The envelope above is R’s; the Python envelope omits the <code>Frozen-root resolution</code> line and the once-per-session notice.</p>
 </section>
 <section id="reviewer-reaching-a-live-api" class="level3" data-number="C.2.3">
 <h3 data-number="C.2.3" class="anchored" data-anchor-id="reviewer-reaching-a-live-api"><span class="header-section-number">C.2.3</span> Reviewer reaching a live API</h3>
@@ -609,7 +609,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   Reason: cache missing at /data/raw-canonical/_apis/sdmx_codelist/sdmx_codelist_UNICEF_CL_RESIDENCE_1_0.csv
   Fix:
     1. The expected workflow is that a Database Manager has already populated
-       the cache under teamsRawDataCanonical/_apis/. Verify the cache file exists.
+       the cache under teamsRawDataCanonical/_apis/. Verify the cache file exists at the path above.
     2. If you ARE the producer, switch modes:
        from cso_toolkit import _state
        _state.configure(dw_mode="producer", dw_apis_allowed=True)</code></pre>
@@ -624,11 +624,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
-<p>The R and Stata siblings enforce the same lock through a <code>dw_require_no_api()</code> guard rather than a per-call envelope. In Stata, <code>dw_require_no_api</code> aborts with Stata error 459 and its own prefix:</p>
+<p>R raises the same <code>[cso_toolkit.dw_api]</code> envelope from <code>dw_api_fetch()</code> (its fix step 2 says to set <code>dw_mode: producer</code> in <code>user_config.yml</code> and re-source the profile). Stata, which has no fetcher, enforces the lock through a <code>dw_require_no_api</code> guard that aborts with Stata error 459 and its own prefix:</p>
 <pre class="text"><code>[cso_toolkit.dw_require_no_api] Reviewer mode forbids live API calls.
   Why: reviewer sessions must read frozen producer caches to preserve
   vintage permanence; any live API call breaks provenance.</code></pre>
-<p>In R the guard is installed by the repo profile; its exact text depends on that profile, so match on the <code>[cso_toolkit.dw_api]</code> or <code>dw_require_no_api</code> token rather than on a fixed string.</p>
+<p>A repo profile may also define its own <code>dw_require_no_api()</code> for scripts that call the network directly; its exact text depends on that profile, so match on the <code>dw_require_no_api</code> token rather than on a fixed string.</p>
 <div class="callout callout-style-simple callout-note">
 <div class="callout-body d-flex">
 <div class="callout-icon-container">
@@ -643,16 +643,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="unsupported-mismatched-format" class="level2" data-number="C.3">
 <h2 data-number="C.3" class="anchored" data-anchor-id="unsupported-mismatched-format"><span class="header-section-number">C.3</span> 2. Unsupported / mismatched format</h2>
-<p>The R and Python IO helpers auto-dispatch on the file extension, covering CSV / TSV / TXT, XLSX (single and multi-sheet), RDS, RData, DTA, Parquet, JSON, and YAML, with optional <code>.csv.gz</code> compression. An extension outside that set raises from <code>dw_save()</code> / <code>dw_use()</code> in the same envelope shape:</p>
+<p>The R and Python IO helpers auto-dispatch on the file extension, covering CSV / TSV / TXT, XLSX (single and multi-sheet), DTA, Parquet, JSON, and YAML (plus RDS / RData in R, pickle in Python), with optional <code>.csv.gz</code> compression. An extension outside that set raises from <code>dw_save()</code> / <code>dw_use()</code> in the same envelope shape. The R text:</p>
 <pre class="text"><code>[cso_toolkit.dw_save] Unsupported file extension '&lt;ext&gt;' (path: &lt;path&gt;).
   Supported extensions: csv, tsv, txt, xlsx, rds, RData, rda, dta, parquet, json, yml, yaml
   Fix: rename the output so it has one of the supported extensions.</code></pre>
+<p>In Python the list reads <code>csv, tsv, txt, xlsx, pkl, dta, parquet, json, yml, yaml</code>, and <code>dw_save</code>’s fix adds “or extend dw_save’s dispatch table.”</p>
 <p>The real gap, though, is <strong>coverage asymmetry across siblings</strong> (see the coverage matrix appendix). The format you can write in R is not always the format you can write in Stata or Python:</p>
 <ul>
 <li><strong>Stata <code>dw_save</code> writes <code>.dta</code> only.</strong> It does not dispatch on extension — it always saves a Stata dataset, so there is no Parquet, RDS, or CSV write path on the Stata side. Pipelines that need those formats produce them in R or Python and let Stata consume the <code>.dta</code>.</li>
 <li><strong>Stata <code>dw_use</code> reads <code>.dta</code>, <code>.csv</code>, and <code>.xlsx</code> only.</strong> Parquet, RDS, and RData reads are out of scope on the Stata side; route them through R or Python.</li>
 <li><strong><code>dw_merge</code>, <code>dw_verify_z</code>, <code>dw_stage</code>, and the standalone <code>dw_isid</code> are R + Python only.</strong> Calling a name that exists in R but not in Stata fails as an <em>unknown command</em>, not as a toolkit envelope — so a “command not found” from Stata is itself a coverage signal, not a bug.</li>
-<li><strong><code>dw_fetch_inputs</code>, <code>dw_check_deposit</code>, <code>dw_read_provenance</code>, and <code>dw_provenance_diff</code> are R and Python</strong> (#152). Python raises the same envelopes: <code>FileNotFoundError</code> (no deposit reachable, no input anywhere, no current sidecar), <code>ValueError</code> (a path outside <code>local_root</code>, a failed check, Teams and Z: disagreeing, an invalid sidecar), <code>OSError</code> (a copy that cannot be verified), and a <code>UserWarning</code> for <code>output_changed</code>. Stata routes via R or Python, so the names are undefined there.</li>
+<li><strong><code>dw_fetch_inputs</code>, <code>dw_check_deposit</code>, <code>dw_read_provenance</code>, and <code>dw_provenance_diff</code> are R and Python</strong> (#152, closed: Stata routes through R or Python). Python raises the same envelopes: <code>FileNotFoundError</code> (no deposit reachable, no input anywhere, no current sidecar), <code>ValueError</code> (a path outside <code>local_root</code>, a failed check, Teams and Z: disagreeing, an invalid sidecar), <code>OSError</code> (a copy that cannot be verified), and a <code>UserWarning</code> for <code>output_changed</code>. Stata routes via R or Python, so the names are undefined there.</li>
 <li><strong><code>.RData</code> / <code>.rda</code> writes skip the provenance sidecar</strong> — not an error, but expect it: the write succeeds silently, with no <code>.provenance.json</code> companion.</li>
 </ul>
 <p>The fix is to choose an extension the target sibling supports, or move the step to the language whose sibling implements the format. The contract is identical <em>where the format is implemented</em>; the gaps are in coverage, not in semantics. When in doubt, the coverage matrix appendix is the authoritative source for what each sibling can read and write.</p>
@@ -771,8 +772,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
-<p>In Stata the uniqueness check is embedded in <code>dw_save</code> (the <code>idvars()</code> option), not exposed as a standalone command. Note that the Stata failure message is terser and does <em>not</em> carry the <code>[cso_toolkit.*]</code> prefix:</p>
-<pre class="text"><code>dw_save: idvars [&lt;keys&gt;] do not uniquely identify the dataset (or contain missing). No file written.</code></pre>
+<p>In Stata the uniqueness check is embedded in <code>dw_save</code> (the <code>idvars()</code> option), not exposed as a standalone command. The Stata message carries the same prefix and envelope:</p>
+<pre class="text"><code>[cso_toolkit.dw_save] idvars [&lt;keys&gt;] do not uniquely identify the dataset (or contain missing). No file written.
+  Why: every output must be unique on its id variables, so a later merge or dw_compare is well defined.
+  Fix: find the duplicates with -duplicates report &lt;keys&gt;-, then drop them or add the variable that tells them apart.</code></pre>
 <p>In R and Python, <code>dw_isid(df, keys)</code> is also callable on its own as a pre-flight check, and that standalone path raises the full <code>[cso_toolkit.dw_isid]</code> envelope above. Either way the fix is the same: the duplicates are real — collapse, de-duplicate, or widen the key set so the declared keys truly identify a row. The printed sample tells you <em>which</em> keys collide.</p>
 </section>
 <section id="frozen-copy-staging-integrity-dw_stage" class="level3" data-number="C.5.2">
@@ -787,11 +790,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="z-mirror-integrity-dw_verify_z" class="level3" data-number="C.5.3">
 <h3 data-number="C.5.3" class="anchored" data-anchor-id="z-mirror-integrity-dw_verify_z"><span class="header-section-number">C.5.3</span> Z: mirror integrity (<code>dw_verify_z</code>)</h3>
-<p>On a canonical read in producer mode, <code>dw_use()</code> compares the Teams and Z: copies (by file size by default; <code>verify_z = "sha256"</code> for a deep check). A mismatch emits a <strong>warning</strong> and the read still completes — this is intentionally non-fatal, because a size difference is often a benign line-ending artefact rather than a content divergence. Pass <code>verify_z = FALSE</code> to skip the check, or <code>verify_z = "sha256"</code> when you need certainty. (<code>dw_verify_z</code> is R + Python only; the Stata <code>dw_use</code> runs an equivalent non-blocking size/<code>datasignature</code> check inline.)</p>
+<p>On any read that resolves to a canonical file while Z: is available (producer or reviewer mode), <code>dw_use()</code> compares the Teams and Z: copies (by file size by default; <code>verify_z = "sha256"</code> for a deep check). A mismatch emits a <strong>warning</strong> and the read still completes — this is intentionally non-fatal, because a size difference is often a benign line-ending artefact rather than a content divergence. Pass <code>verify_z = FALSE</code> to skip the check, or <code>verify_z = "sha256"</code> when you need certainty. (<code>dw_verify_z</code> is R + Python only; the Stata <code>dw_use</code> runs an equivalent non-blocking size/<code>datasignature</code> check inline.)</p>
 </section>
 <section id="input-deposit-integrity-dw_fetch_inputs-dw_check_deposit" class="level3" data-number="C.5.4">
 <h3 data-number="C.5.4" class="anchored" data-anchor-id="input-deposit-integrity-dw_fetch_inputs-dw_check_deposit"><span class="header-section-number">C.5.4</span> Input-deposit integrity (<code>dw_fetch_inputs</code>, <code>dw_check_deposit</code>)</h3>
-<p>For pipelines whose inputs are kept out of Git, the deposit on Teams / Z: is the source of truth, and every local input must have an identical copy there. The stops (R only):</p>
+<p>For pipelines whose inputs are kept out of Git, the deposit on Teams / Z: is the source of truth, and every local input must have an identical copy there. The stops (R and Python; Python raises the exception types listed in category 2):</p>
 <ul>
 <li><code>[cso_toolkit.dw_fetch_inputs] No input files … were found locally or in the deposit.</code> — nothing matches the pattern in the local folder, on Teams, or on Z:. Fix: deposit the inputs in the Teams folder named in the message (same relative layout) and rerun; if the deposit is unreachable too, source the consumer profile, sync Teams, or connect to Z:.</li>
 <li><code>[cso_toolkit.dw_fetch_inputs] Teams and Z: hold different versions of '&lt;file&gt;'.</code> — a canonical-integrity stop, as in <code>dw_stage</code>: nothing is copied. Fix: decide which version is correct and replace the other.</li>
@@ -804,7 +807,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="run-comparison-dw_read_provenance-dw_provenance_diff" class="level3" data-number="C.5.5">
 <h3 data-number="C.5.5" class="anchored" data-anchor-id="run-comparison-dw_read_provenance-dw_provenance_diff"><span class="header-section-number">C.5.5</span> Run comparison (<code>dw_read_provenance</code>, <code>dw_provenance_diff</code>)</h3>
-<p>Run comparison is informational: a difference between two runs is a <strong>status</strong>, not an error. Only these conditions raise (R only):</p>
+<p>Run comparison is informational: a difference between two runs is a <strong>status</strong>, not an error. Only these conditions raise (R and Python):</p>
 <ul>
 <li><code>[cso_toolkit.dw_read_provenance] The provenance sidecar is not valid JSON</code> — Fix: rewrite the output with <code>dw_save()</code> to regenerate its sidecar, or restore the sidecar from version control. A <em>missing</em> sidecar is not an error: <code>dw_read_provenance</code> returns <code>NULL</code>.</li>
 <li><code>[cso_toolkit.dw_provenance_diff] The current output has no provenance sidecar.</code> — Fix: write the output with <code>dw_save()</code> (<code>provenance = TRUE</code>, the default) before comparing runs.</li>
@@ -865,9 +868,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>When you hit a <code>[cso_toolkit.*]</code> stop and are not sure which category it is:</p>
 <ol type="1">
 <li><strong>Read the <code>&lt;func&gt;</code> token</strong> — it tells you the contract layer: <code>dw_save</code> / <code>dw_use</code> (IO), <code>dw_api</code> / <code>dw_require_no_api</code> (external API), <code>dw_isid</code> / <code>dw_stage</code> / <code>dw_verify_z</code> (integrity), <code>cso_toolkit_pull</code> / <code>cso_toolkit_sync</code> (drift).</li>
-<li><strong>Read the second word of the <code>WHAT</code> line.</strong> <code>Reviewer mode forbids</code> → category 1. <code>COPY INTEGRITY</code> / <code>SANDBOX DRIFT</code> / <code>CANONICAL INTEGRITY</code> → category 4. <code>duplicate row(s)</code> → category 4 (<code>isid</code>). <code>HTTP ... returned status</code> → category 3. <code>newer tag available</code> → category 5.</li>
+<li><strong>Read the second word of the <code>WHAT</code> line.</strong> <code>Reviewer mode forbids</code> → category 1. <code>COPY INTEGRITY</code> / <code>SANDBOX DRIFT</code> / <code>CANONICAL INTEGRITY</code> → category 4. <code>duplicate row(s)</code> → category 4 (<code>isid</code>). <code>HTTP ... returned status</code> → category 3. <code>is behind its target version</code> (a warning), or the informational notice <code>A newer cso-toolkit release is available</code> → category 5.</li>
 <li><strong>Check your <code>dw_mode</code> first.</strong> A large share of these stops dissolve once you confirm whether the session is a producer or a reviewer and whether that role is <em>correct</em> for the step you are running.</li>
-<li><strong>Grep the consumer project for the prefix</strong> (for example <code>[cso_toolkit.dw_save]</code>) to find every other site that can hit the same class — useful when one fix should be applied repo-wide. Remember the R transport errors (category 3) and the Stata <code>isid</code> message are the two cases that do <em>not</em> carry the prefix.</li>
+<li><strong>Grep the consumer project for the prefix</strong> (for example <code>[cso_toolkit.dw_save]</code>) to find every other site that can hit the same class — useful when one fix should be applied repo-wide. Remember the R transport errors (category 3) do <em>not</em> carry the prefix.</li>
 <li><strong>Do what the <code>Fix:</code> block says, in order.</strong> The numbered options are ranked: option 1 is the expected remedy; option 2 is usually the deliberate escape hatch reserved for the Database Manager.</li>
 </ol>
 <p>For the precise arguments and return values behind each helper named above, see the function reference appendix; for the sidecar fields the integrity checks compare, see the provenance sidecar schema appendix.</p>
