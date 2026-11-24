@@ -7,7 +7,7 @@
 # Usage  : source("profile_{{project_name}}.R") from the repository root,
 #          first thing in every script and interactive session.
 # Created: {{date}} by cso-toolkit's {{fn}}() (The CSO Handbook,
-#          "Starting a new repository"). It is yours now: extend it.
+#          "Starting a repository"). It is yours now: extend it.
 #
 # Conventions (cso-toolkit create_profile(), review_profile()):
 #   - dw_mode has no default: the profile stops until user_config.yml
@@ -121,7 +121,7 @@ if (!(is.character(dw_mode) && length(dw_mode) == 1 &&
        config_hint, call. = FALSE)
 }
 dw_apis_allowed <- identical(dw_mode, "producer")
-# Agent sessions (handbook chapter 46): Claude Code sets
+# Agent sessions (handbook chapter "Working with AI coding agents"): Claude Code sets
 # CLAUDE_CODE_CHILD_SESSION=1 in the commands it runs (CLAUDECODE is also
 # set in IDE terminals, so it would also flag a person's own terminal). An
 # agent works as reviewer unless the person running the session chose

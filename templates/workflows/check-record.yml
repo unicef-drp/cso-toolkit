@@ -2,7 +2,7 @@
 # check-record -- verify the local check record of a pull request
 # ---------------------------------------------------------------------------
 # Template from unicef-drp/cso-toolkit: templates/workflows/check-record.yml
-# Guidance: docs/ci_cd_guidelines.md; handbook chapter 45 ("Check records").
+# Guidance: docs/ci_cd_guidelines.md; handbook chapter "Checks and CI" ("Check records").
 #
 # The checks run locally (sh tools/check --record), which commits
 # .checks/<content-hash>.json. This job only confirms that a passing record

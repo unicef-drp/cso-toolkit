@@ -232,7 +232,7 @@ if dw_mode not in ("producer", "reviewer"):
         f'      {USERNAME}:\\n        dw_mode_by_project:\\n          {repo_name}: "producer"'
     )
 
-# Agent sessions (handbook chapter 46): Claude Code sets CLAUDE_CODE_CHILD_SESSION=1
+# Agent sessions (handbook chapter 'Working with AI coding agents'): Claude Code sets CLAUDE_CODE_CHILD_SESSION=1
 # in the commands it runs. An agent works as reviewer unless the person running the
 # session chose producer (AGENTS.md); say so when it is a producer. Nothing is blocked.
 if dw_mode == "producer" and os.environ.get("CLAUDE_CODE_CHILD_SESSION") == "1":

@@ -5,7 +5,7 @@ description: Update the vendored cso-toolkit copy (00_functions/) in a consumer 
 
 # Update the vendored toolkit
 
-Handbook: "The vendoring model" (<https://unicef-drp.github.io/cso-toolkit/handbook/chapters/41-vendoring.html>) and "Vintage sync" (<https://unicef-drp.github.io/cso-toolkit/handbook/chapters/34-vintage-sync.html>).
+Handbook: "Vendoring and updates" (<https://unicef-drp.github.io/cso-toolkit/handbook/chapters/vendoring-and-updates.html>).
 
 An update is a producer decision, made by a person: nothing updates on its own, and a repository may stay on an older release on purpose. `cso_toolkit_sync()` refuses in reviewer mode. If the session is a reviewer, tell the person, who decides whether to run this one call as producer; never edit their `user_config.yml`.
 

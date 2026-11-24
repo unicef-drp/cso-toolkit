@@ -3,7 +3,7 @@
 # Purpose: Vintage-management helpers for the vendored copies of
 #          unicef-drp/cso-toolkit functions in this folder.
 #
-# Design (handbook chapters "Vintage sync" and "The vendoring model"):
+# Design (handbook chapter "Vendoring and updates"):
 #   - Helpers in 00_functions/ are VENDORED COPIES of cso-toolkit code,
 #     not sourced live. This pins the vintage per consuming repo.
 #   - .toolkit_manifest.yml records the upstream release tag the copies

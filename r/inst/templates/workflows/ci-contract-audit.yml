@@ -2,8 +2,8 @@
 # ci-contract-audit.yml -- Tier 0 contract audit + toolkit vintage check
 # ---------------------------------------------------------------------------
 # Template from unicef-drp/cso-toolkit: templates/workflows/ci-contract-audit.yml
-# Guidance: docs/ci_cd_guidelines.md; handbook chapters 43 (auditor) and
-# 34 / 44 (vintage sync, versioning). Copy to .github/workflows/, with
+# Guidance: docs/ci_cd_guidelines.md; handbook chapters "Checks and CI"
+# (the auditor) and "Vendoring and updates". Copy to .github/workflows/, with
 # templates/tools/check.R copied to tools/check.R.
 #
 # LOCAL FIRST. Both checks live in tools/check.R:
