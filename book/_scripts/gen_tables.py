@@ -126,6 +126,34 @@ def audit_rules() -> dict:
     return rules
 
 
+def r_titles() -> dict:
+    """{function: roxygen title}, the first line of the #' block above each definition."""
+    titles = {}
+    for path in sorted((REPO / "r" / "R").glob("*.R")):
+        block: list = []
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if line.startswith("#'"):
+                block.append(line[2:].strip())
+                continue
+            m = re.match(r"^([A-Za-z_.][A-Za-z0-9_.]*)\s*<-\s*function\b", line)
+            if m and block:
+                text = next((b for b in block if b and not b.startswith("@")), "")
+                titles.setdefault(m.group(1), text.rstrip("."))
+            if line.strip():
+                block = []
+    return titles
+
+
+def stata_titles() -> dict:
+    """{command: title} from the {bf:name} {hline 2} line of each .sthlp."""
+    titles = {}
+    for path in sorted((REPO / "stata" / "src").glob("*.sthlp")):
+        m = re.search(r"\{bf:([A-Za-z_]+)\}\s*\{hline 2\}\s*(.+)", path.read_text(encoding="utf-8"))
+        if m:
+            titles[m.group(1)] = m.group(2).strip().rstrip(".")
+    return titles
+
+
 def cases() -> list:
     out = []
     for p in sorted((REPO / "conformance" / "cases").glob("*.json")):
@@ -221,6 +249,54 @@ def render_badges(cells, extra_ids) -> dict:
     return files
 
 
+def chapter_title(path: Path) -> str:
+    """A chapter's title: front-matter `title:`, else its first level-1 heading."""
+    text = path.read_text(encoding="utf-8")
+    m = re.match(r"---\n(.*?)\n---", text, flags=re.S)
+    if m:
+        t = re.search(r'^title:\s*"?(.*?)"?\s*$', m.group(1), flags=re.M)
+        if t:
+            return t.group(1)
+    h = re.search(r"^# (.+?)(\s*\{#[^}]*\})?\s*$", text, flags=re.M)
+    return h.group(1).strip() if h else path.stem
+
+
+def render_index(sections, cells, notes, errors) -> str:
+    """One row per public function: what it does, where it exists, where it is documented."""
+    extra = set(notes.get("extra_rows", {}))
+    fn_notes = notes.get("functions", {})
+    r_t, st_t = r_titles(), stata_titles()
+    chapters = REPO / "book" / "chapters"
+    lines = [HEADER]
+    for sec in sections:
+        lines += [f"### {sec['title']}", "",
+                  "| Function | What it does | R | Python | Stata | Documented in |",
+                  "|---|---|---|---|---|---|"]
+        for row in sec["rows"]:
+            if row in extra:
+                continue
+            title = r_t.get(row) or st_t.get(row)
+            if not title:
+                errors.append(f"`{row}` has no one-line description: give it a roxygen title "
+                              f"(R) or a {{bf:{row}}} {{hline 2}} line in its .sthlp (Stata).")
+                title = "?"
+            chap = fn_notes.get(row, {}).get("chapter", sec.get("chapter"))
+            if chap:
+                f = chapters / f"{chap}.qmd"
+                if not f.exists():
+                    errors.append(f"`{row}` points to chapter {chap}.qmd, which does not exist.")
+                    where = "?"
+                else:
+                    where = f"[{chapter_title(f)}](../chapters/{chap}.qmd)"
+            else:
+                where = "help page only"
+            c = cells[row]
+            have = ["✓" if c[lg].startswith("Yes") else "—" for lg in LANGS]
+            lines.append(f"| `{row}` | {md_escape(title)} | " + " | ".join(have) + f" | {where} |")
+        lines.append("")
+    return "\n".join(lines)
+
+
 def render_api(keys: dict, notes: dict, errors: list) -> str:
     desc = notes.get("api_keys", {})
     for k in sorted(set(keys) - set(desc)):
@@ -300,6 +376,7 @@ def build() -> tuple:
     if not errors:
         files.update(render_functions(sections, cells))
         files.update(render_badges(cells, set(notes.get("extra_rows", {}))))
+        files["function-index.md"] = render_index(sections, cells, notes, errors)
     files["api-keys.md"] = render_api(api_keys(), notes, errors)
     files["audit-rules.md"] = render_rules(audit_rules())
     files["parity-cases.md"] = render_cases(cases())

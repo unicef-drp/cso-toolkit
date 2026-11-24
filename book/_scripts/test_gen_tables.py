@@ -83,3 +83,30 @@ def test_rule_counts_match_the_registries():
     rules = gt.audit_rules()
     assert sum(1 for v in rules.values() if v["r"] is not None) >= 16
     assert sum(1 for v in rules.values() if v["python"] is not None) >= 19
+
+
+def test_index_flags_a_function_without_a_description(monkeypatch):
+    n = copy.deepcopy(NOTES)
+    sections, cells, errs = gt.coverage(n)
+    monkeypatch.setattr(gt, "r_titles", lambda: {})
+    monkeypatch.setattr(gt, "stata_titles", lambda: {})
+    errors = []
+    gt.render_index(sections, cells, n, errors)
+    assert any("has no one-line description" in e for e in errors)
+
+
+def test_index_flags_a_chapter_that_does_not_exist():
+    n = copy.deepcopy(NOTES)
+    n["functions"]["dw_stage"]["chapter"] = "no-such-chapter"
+    sections, cells, _ = gt.coverage(n)
+    errors = []
+    gt.render_index(sections, cells, n, errors)
+    assert any("no-such-chapter.qmd, which does not exist" in e for e in errors)
+
+
+def test_index_links_use_chapter_titles():
+    sections, cells, _ = gt.coverage(NOTES)
+    errors = []
+    text = gt.render_index(sections, cells, NOTES, errors)
+    assert errors == []
+    assert "[The IO contract](../chapters/31-io.qmd)" in text
