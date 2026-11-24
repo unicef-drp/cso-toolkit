@@ -57,7 +57,7 @@ Here `isid` names the columns that uniquely identify a row; the IO family enforc
 
 ### External-API contract
 
-One mode-aware wrapper around ten external data sources — UNESCO UIS, generic SDMX, the UNICEF SDMX codelist endpoint, World Bank WDI, ILO SDMX, the UNSD SDG API, pinned-commit GitHub-raw, and generic HTTP / JSON. A producer hits the live API and caches the response under `_apis/<api>/<cache_key>.<ext>`; a reviewer reads only from that cache and is physically prevented from reaching the network. Secrets in caller keyword arguments are redacted before they reach the provenance sidecar. See the external-API contract chapter.
+One mode-aware wrapper around eleven external data sources — UNESCO UIS, generic SDMX, the UNICEF SDMX codelist endpoint, World Bank WDI and its indicator catalogue, ILO SDMX, the UNSD SDG API, pinned-commit GitHub-raw, generic HTTP / JSON, and flat CSV at a URL. A producer hits the live API and caches the response under `_apis/<api>/<cache_key>.<ext>`; a reviewer reads only from that cache and is physically prevented from reaching the network. Secrets in caller keyword arguments are redacted before they reach the provenance sidecar. See the external-API contract chapter.
 
 ::: {.panel-tabset}
 #### R {.unnumbered .unlisted}

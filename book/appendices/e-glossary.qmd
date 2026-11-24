@@ -122,7 +122,7 @@ The leading `[cso_toolkit.<func>]` prefix names the raising function, so a consu
 
 ## External-API contract
 
-The capability family that wraps external data sources behind a single mode-aware interface: `dw_api_fetch()` (producer hits the live API and caches; reviewer reads only the cache), `dw_api_cached()`, and `dw_api_inventory()`. Sources are selected by the `api =` argument, one of ten identifiers — `"uis"`, `"sdmx"`, `"sdmx_codelist"`, `"wb"`, `"wb_indicators"`, `"ilo"`, `"unsd_sdg"`, `"github_raw"`, `"http"`, and `"json_get"`. The family is R + Python only; Stata has no API wrapper. See the external-API contract chapter.
+The capability family that wraps external data sources behind a single mode-aware interface: `dw_api_fetch()` (producer hits the live API and caches; reviewer reads only the cache), `dw_api_cached()`, and `dw_api_inventory()`. Sources are selected by the `api =` argument, one of eleven identifiers — `"uis"`, `"sdmx"`, `"sdmx_codelist"`, `"wb"`, `"wb_indicators"`, `"ilo"`, `"unsd_sdg"`, `"github_raw"`, `"http"`, `"json_get"`, and `"csv"`. The family is R + Python only; Stata has no API wrapper. See the external-API contract chapter.
 
 ## Frozen cache
 

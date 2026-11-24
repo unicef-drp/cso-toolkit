@@ -86,7 +86,7 @@ dw_use, filename("dw_ed_edu.dta") path("$teamsWrkData/ed")
 
 ## External-API contract
 
-Mode-aware wrappers around the supported external data sources (ten in all, among them UIS, the World Bank, ILO, the UNSD-SDG database, SDMX endpoints, and GitHub-raw). The producer hits the live API and caches the result; the reviewer reads from the canonical cache only and is barred from the network. See the external-API contract chapter.
+Mode-aware wrappers around the supported external data sources (eleven in all, among them UIS, the World Bank, ILO, the UNSD-SDG database, SDMX endpoints, and GitHub-raw). The producer hits the live API and caches the result; the reviewer reads from the canonical cache only and is barred from the network. See the external-API contract chapter.
 
 | Function | R | Python | Stata | Notes |
 |---|---|---|---|---|
