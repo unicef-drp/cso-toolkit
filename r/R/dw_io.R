@@ -975,7 +975,7 @@ dw_save <- function(x,
 			"[cso_toolkit.dw_save] `mirror_to_z` argument is deprecated in v0.4.0; ",
 			"producer-mode mirroring is now automatic (controlled by which ",
 			"remote roots the profile makes available). The argument is ",
-			"ignored; will be removed in v0.5.0.",
+			"ignored; drop it from the call.",
 			call. = FALSE
 		)
 		dots$mirror_to_z <- NULL
