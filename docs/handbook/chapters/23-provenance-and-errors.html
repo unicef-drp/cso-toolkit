@@ -639,7 +639,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="comparing-two-runs" class="level3" data-number="6.1.5">
 <h3 data-number="6.1.5" class="anchored" data-anchor-id="comparing-two-runs"><span class="header-section-number">6.1.5</span> Comparing two runs</h3>
-<p>The same sidecar answers a second question: did a new run of a pipeline reproduce the previous one? If the caller records the inputs in the <code>metadata</code> block — one row per input file with its SHA-256, which is exactly the manifest <code>dw_fetch_inputs</code> returns — then two sidecars of the same output carry everything needed. <code>dw_read_provenance</code> reads a sidecar (read the previous one before the new run overwrites the output) and <code>dw_provenance_diff</code> compares two of them: <code>reproduced</code> means the same inputs and a byte-identical output; <code>inputs_changed</code> lists the input files added, removed, or changed; <code>output_changed</code> — the same inputs but a different output — warns, because only the code or the environment can explain it. The comparison is run-level and needs no data read; <code>dw_compare</code> then shows which records moved. Both functions are R-only for now (Python and Stata siblings: #152).</p>
+<p>The same sidecar answers a second question: did a new run of a pipeline reproduce the previous one? If the caller records the inputs in the <code>metadata</code> block — one row per input file with its SHA-256, which is exactly the manifest <code>dw_fetch_inputs</code> returns — then two sidecars of the same output carry everything needed. <code>dw_read_provenance</code> reads a sidecar (read the previous one before the new run overwrites the output) and <code>dw_provenance_diff</code> compares two of them: <code>reproduced</code> means the same inputs and a byte-identical output; <code>inputs_changed</code> lists the input files added, removed, or changed; <code>output_changed</code> — the same inputs but a different output — warns, because only the code or the environment can explain it. The comparison is run-level and needs no data read; <code>dw_compare</code> then shows which records moved. Both functions are in R and Python; Stata routes through either (#152).</p>
 </section>
 <section id="a-second-sidecar-shape-frozen-remote-files" class="level3" data-number="6.1.6">
 <h3 data-number="6.1.6" class="anchored" data-anchor-id="a-second-sidecar-shape-frozen-remote-files"><span class="header-section-number">6.1.6</span> A second sidecar shape: frozen remote files</h3>
@@ -693,13 +693,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><code>written_at</code></td>
 <td>ISO-8601 UTC (<code>+0000</code>)</td>
 <td>ISO-8601 UTC (<code>+0000</code>)</td>
-<td>Stata <code>c(current_date)</code>/<code>c(current_time)</code> string (not ISO, not UTC)</td>
+<td>ISO-8601 UTC (<code>+0000</code>) with Stata’s Python integration (Stata 16+); otherwise the local <code>c(current_date) c(current_time)</code> string</td>
 </tr>
 <tr class="odd">
 <td>content hash</td>
 <td><code>sha256</code> (file bytes)</td>
 <td><code>sha256</code> (file bytes)</td>
-<td><code>datasignature</code> — Stata’s SHA-1 of variable values, <strong>not</strong> a sha256 of the file</td>
+<td><code>sha256</code> (file bytes) with Stata’s Python integration, always plus <code>datasignature</code> (SHA-1 of the values); <code>datasignature</code> only without Python</td>
 </tr>
 <tr class="even">
 <td><code>schema.columns</code></td>
@@ -721,7 +721,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
-<p>Two gaps matter. First, <strong>Stata records a <code>datasignature</code>, not a <code>sha256</code></strong>: a content checksum (SHA-1 over the data values) rather than a hash of the file on disk. The upside is that two artefacts with identical data but different on-disk bytes — say, different compression — still match; the cost is that a Stata sidecar can never be cross-checked byte-for-byte against an R/Python <code>sha256</code>, so <code>dw_verify_z</code>’s deep comparison cannot bridge a Stata-written file and an R/Python-written one. Second, <strong>Stata omits the <code>columns</code> list</strong>, recording only row and column counts.</p>
+<p>Two gaps matter. First, <strong>without Stata’s Python integration a Stata sidecar records only a <code>datasignature</code></strong>, a checksum of the data values (SHA-1) rather than of the file, so it cannot be checked against an R/Python <code>sha256</code>; with Python (Stata 16+) it also records the file’s <code>sha256</code>, and R and Python can verify and compare Stata outputs. The <code>datasignature</code>, written either way, has its own use: two artefacts with identical data but different on-disk bytes — say, different compression — still match on it. Second, <strong>Stata omits the <code>columns</code> list</strong>, recording only row and column counts.</p>
 <p>Stata’s sidecar also carries an explicit version tag, <code>"format": "dw_save.provenance/1"</code>, and an <code>_end</code> sentinel in its metadata block, reflecting that the JSON is hand-assembled by a <code>.ado</code> file rather than emitted by a JSON library. The <code>.ado</code> escapes every user-supplied value before writing it — backslashes first, then double-quotes, then control characters — so Windows paths and quotes or newlines in metadata do not produce malformed JSON that an R reader would later reject.</p>
 </section>
 </section>

@@ -476,7 +476,7 @@ ul.task-list li input[type="checkbox"] {
 <td>Full packages with their own release lines, maintained by CSO staff in their own repos</td>
 <td>unicefData (FULL); datalib (PROVISIONAL); a mapping / boundaries capability (CANDIDATE)</td>
 <td>Each package’s own <code>unicef-drp</code> repo</td>
-<td>PUBLIC (unicefData) · internal, pending #20 (datalib) · private candidate (mapping)</td>
+<td>PUBLIC (unicefData) · PUBLIC since 2026-07-27, membership decision open (datalib) · private candidate (mapping)</td>
 <td>A named CSO maintainer, per package</td>
 <td><strong>Relationships and cross-cutting contracts.</strong> The book documents how the packages fit together (config, conformance conventions) and points at each package’s own per-function docs. It never re-documents a package’s API.</td>
 </tr>
@@ -491,7 +491,7 @@ ul.task-list li input[type="checkbox"] {
 </tr>
 </tbody>
 </table>
-<p><strong>Tier (i) is normative.</strong> For the toolkit’s own functions there is no separate reference manual that the book could fall out of sync with — the book is the reference. That is a strong claim, and it is earned by a strong honesty device: the coverage-matrix appendix records, function by function and language by language, where the three implementations actually reach parity and where they do not. The steady-state pledge for tier (i) is equal R, Python, and Stata support, and that pledge is not just prose — the toolkit’s conformance harness executes it, comparing the three implementations against one another to a tolerance of <code>1e-9</code> (shipped in PR #134).</p>
+<p><strong>Tier (i) is normative.</strong> For the toolkit’s own functions there is no separate reference manual that the book could fall out of sync with — the book is the reference. That is a strong claim, and it is earned by a strong honesty device: the coverage-matrix appendix records, function by function and language by language, where the three implementations actually reach parity and where they do not. The steady-state pledge for tier (i) is equal R, Python, and Stata support, and that pledge is not just prose — the toolkit’s conformance harness executes it, comparing the three implementations against one another to a tolerance of <code>1e-9</code> (R and Python in CI since PR #134; all three through the parity certificate, <code>sh tools/certify</code>, since PR #193).</p>
 <p><strong>Tier (ii) is relational.</strong> These are full packages with their own release cadences, their own changelogs, and their own maintainers. The book’s job for tier (ii) is <em>not</em> to mirror their documentation — that would drift the moment either side changed — but to document the <strong>relationships</strong> and the <strong>cross-cutting contracts</strong> that hold the ecosystem together: how configuration is (and is not) shared, what conformance conventions a member is expected to follow. For anything package-specific, the book points at that package’s own docs. The chapters that follow this one in Part VI are the worked example of that pointing.</p>
 <p><strong>Tier (iii) is evidentiary.</strong> A third-party function earns a row only because it was actually used in a production pipeline and a sector lead verified its behaviour. The book’s claim is correspondingly narrow: this version, this pipeline, this date, this observed behaviour. Nothing about future releases, nothing about cross-language parity. The rules and the table live in the curated-third-party appendix.</p>
 </section>
@@ -510,7 +510,7 @@ ul.task-list li input[type="checkbox"] {
 <p>Applying the gate today:</p>
 <ul>
 <li><strong>unicefData — FULL member.</strong> It meets all six criteria: a public <code>unicef-drp/unicefData</code> home, tagged public releases on CRAN / PyPI / SSC, CI-executed tests, trilingual coverage, a maintained changelog, and governance wording reconciled with its author disclaimer. The unicefData chapter that follows is its per-package pointer.</li>
-<li><strong>datalib — PROVISIONAL member.</strong> It meets (a), (c), (d), (e), and (f), but criterion (b) — a <em>public</em> tagged release — is pending. datalib is maintained in <code>unicef-drp/datalib-unicef</code>, which is internal today; the move to a public release is tracked by datalib issue #20. Until that closes, datalib is a full ecosystem member in every respect except public visibility, and the book labels it exactly that. The microdata-archive chapters in Part V document datalib itself.</li>
+<li><strong>datalib — PROVISIONAL member.</strong> It meets (a), (c), (d), (e), and (f). datalib is maintained in <code>unicef-drp/datalib-unicef</code>, which has been public since 2026-07-27 (the decision is <code>unicef-drp/datalib-unicef-dev#20</code>) and carries tagged public releases, so the visibility criterion (b) is now met; the decision on its membership is still open, and until it is taken the book keeps the provisional label. The microdata-archive chapters in Part V document datalib itself.</li>
 <li><strong>A mapping / boundaries capability — CANDIDATE only.</strong> This capability is still under evaluation. There are two internal candidates, and <strong>neither is named in this book</strong> — not because they are secret, but because naming a winner before the fork resolves and before the winner has actually passed the gate would be a claim the book cannot yet stand behind. When one candidate clears the gate, it will be named here and given its pointer; until then it is a candidate, not a member.</li>
 </ul>
 <div class="callout callout-style-simple callout-note callout-titled">
@@ -555,7 +555,7 @@ ul.task-list li input[type="checkbox"] {
 <tr class="odd">
 <td><strong>Toolkit (tier i)</strong></td>
 <td><code>~/.config/user_config.yml</code></td>
-<td><strong>Flat keys</strong>, written as generated profile blocks and read by <code>dw_load_config</code></td>
+<td><strong>The user’s block</strong> (keys under the user name, top-level keys as a fallback), read by the generated profile blocks and <code>dw_load_config</code></td>
 <td>Yes — this <em>is</em> its file</td>
 </tr>
 <tr class="even">
@@ -572,20 +572,7 @@ ul.task-list li input[type="checkbox"] {
 </tr>
 </tbody>
 </table>
-<p>The toolkit reads <strong>flat keys</strong> from <code>~/.config/user_config.yml</code>, populated as generated profile blocks and consumed by <code>dw_load_config</code>. datalib reads a <code>datalib:</code> block from its <strong>own</strong> package-specific config file. A shared-file arrangement — a single <code>user_config.yml</code> carrying a <code>datalib:</code> block alongside the toolkit’s flat keys — is attractive, but it waits on a <strong>parser guard</strong> in <code>dw_load_config</code> that does not exist yet.</p>
-<div class="callout callout-style-simple callout-warning callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Warning</span>Do not add a <code>datalib:</code> block to the toolkit’s <code>user_config.yml</code> yet
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>The shared-file arrangement is not shipped. Until <code>dw_load_config</code> grows the parser guard that lets it ignore a nested <code>datalib:</code> block cleanly, adding one to the toolkit’s <code>user_config.yml</code> risks the toolkit’s flat-key reader tripping over it. Keep datalib’s configuration in datalib’s own file for now.</p>
-</div>
-</div>
+<p>The toolkit reads <strong>the user’s block</strong> of <code>~/.config/user_config.yml</code> (keys under the user name, top-level keys as a fallback), through the generated profile blocks and <code>dw_load_config</code>. datalib reads a <code>datalib:</code> block from its <strong>own</strong> package-specific config file. <code>dw_load_config</code> already skips a <code>datalib:</code> block, at the top level or inside the user block, without adopting its keys (v0.7.0, #138), so a shared file is safe for the toolkit; whether datalib reads from it is datalib’s decision.</p>
 <p>unicefData sits apart from both. It is configured entirely by <strong>environment variables</strong> — <code>UNICEF_DATA_HOME</code> and <code>UNICEF_CONFIG_PATH</code> — and reads <strong>no user config file at all</strong>. This is not an oversight: unicefData is CRAN-track, and CRAN policy dislikes packages that read user files by surprise. The environment-variable contract keeps it CRAN-clean.</p>
 <p>Convergence of these three contracts onto a single shared configuration surface is a <strong>Phase-4 decision</strong>, not something the ecosystem has shipped. Until that decision is taken, the safe mental model is three namespaces that happen to sit near one another, not one namespace with three dialects.</p>
 </section>
@@ -593,7 +580,7 @@ ul.task-list li input[type="checkbox"] {
 <h2 data-number="22.5" class="anchored" data-anchor-id="what-the-handbook-asserts-tier-by-tier"><span class="header-section-number">22.5</span> What the handbook asserts, tier by tier</h2>
 <p>Pulling the policy back into one place, so a reader can carry it without the table:</p>
 <ul>
-<li><strong>Tier (i) — normative.</strong> For the toolkit’s own <code>dw_*</code> functions, the book is the specification. The coverage-matrix appendix records where the three languages have and have not reached parity, and the conformance harness (#134) executes the parity pledge to <code>1e-9</code>.</li>
+<li><strong>Tier (i) — normative.</strong> For the toolkit’s own <code>dw_*</code> functions, the book is the specification. The coverage-matrix appendix records where the three languages have and have not reached parity, and the conformance harness (R and Python in CI since #134; all three through <code>sh tools/certify</code> since #193) executes the parity pledge to <code>1e-9</code>.</li>
 <li><strong>Tier (ii) — relationships and cross-cutting contracts, never the API.</strong> For UNICEF-supported packages, the book documents how they fit together — configuration namespaces, conformance conventions, membership status — and points at each package’s own per-function docs. It does not re-document a package’s API, and each package’s support is a named CSO maintainer, not an institutional SLA.</li>
 <li><strong>Tier (iii) — behaved as described, on a date.</strong> For curated third-party functions, the book asserts only that a named version behaved as described on a stated date in a stated pipeline. The list is derived from production use plus a sector lead’s verification stamp; stale stamps display stale and never block a release.</li>
 </ul>

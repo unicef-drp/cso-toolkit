@@ -506,7 +506,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 data-number="14.1" class="anchored" data-anchor-id="step-0-decide-what-you-are-adopting"><span class="header-section-number">14.1</span> Step 0: Decide what you are adopting</h2>
 <p>Before copying any files, settle two questions.</p>
 <p><strong>Which helpers does your pipeline actually need?</strong> The toolkit is modular. A repo that only reads and writes deposit files needs the IO contract (<code>dw_save</code> / <code>dw_use</code> / <code>dw_compare</code>) and the sync helper. A repo that also fetches from upstream APIs needs the external-API contract (<code>dw_api_fetch</code> / <code>dw_api_cached</code> / <code>dw_api_inventory</code>). The vendoring manifest’s <code>vendored:</code> list is meant to be trimmed to exactly what you use — do not copy files your pipeline never calls.</p>
-<p><strong>Which languages?</strong> R and Python are at near-parity. Stata covers the producer/reviewer IO and config contract (<code>dw_save</code>, <code>dw_use</code>, <code>dw_compare</code>, <code>dw_load_config</code>, <code>dw_mkdir</code>, <code>dw_require_no_api</code>) but has <strong>no API wrapper</strong> (<code>dw_api_fetch</code> and friends are R+Python only) and <strong>no sync helper</strong> (<code>cso_toolkit_check</code> / <code>_pull</code> are R+Python only), and Parquet output is R+Python-only (Stata writes <code>.dta</code>; R adds <code>.rds</code>, Python adds <code>.pkl</code>). If your Stata code needs a remote source, it cannot route through <code>dw_api_fetch</code>; you must keep API fetching in R or Python and have Stata read the cached deposit with <code>dw_use</code>. Plan around that gap now rather than discovering it mid-onboarding.</p>
+<p><strong>Which languages?</strong> R and Python are at near-parity. Stata covers the producer/reviewer IO and config contract (<code>dw_save</code>, <code>dw_use</code>, <code>dw_compare</code>, <code>dw_load_config</code>, <code>dw_mkdir</code>, <code>dw_require_no_api</code>, <code>dw_map_drive</code>, <code>dw_collaboration</code>) but has <strong>no API wrapper</strong> (<code>dw_api_fetch</code> and friends are R+Python only) and <strong>no sync helper</strong> (<code>cso_toolkit_check</code> / <code>_pull</code> are R+Python only), and Parquet output is R+Python-only (Stata writes <code>.dta</code>; R adds <code>.rds</code>, Python adds <code>.pkl</code>). If your Stata code needs a remote source, it cannot route through <code>dw_api_fetch</code>; you must keep API fetching in R or Python and have Stata read the cached deposit with <code>dw_use</code>. Plan around that gap now rather than discovering it mid-onboarding.</p>
 </section>
 <section id="step-1-vendor-the-helpers" class="level2" data-number="14.2">
 <h2 data-number="14.2" class="anchored" data-anchor-id="step-1-vendor-the-helpers"><span class="header-section-number">14.2</span> Step 1: Vendor the helpers</h2>
@@ -527,15 +527,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
-<p>The Python implementation lives under <code>python/src/</code>. For the vendoring model, copy the modules alongside your pipeline code:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> 00_functions</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> /path/to/cso-toolkit/python/src/dw_io.py            00_functions/</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> /path/to/cso-toolkit/python/src/dw_api.py           00_functions/</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> /path/to/cso-toolkit/python/src/cso_toolkit_sync.py 00_functions/</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The Python implementation lives under <code>python/src/</code> and is one package (its modules import each other), so copy the whole folder into <code>00_functions/cso_toolkit/</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> 00_functions/cso_toolkit</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> <span class="at">-r</span> /path/to/cso-toolkit/python/src/<span class="pp">*</span> 00_functions/cso_toolkit/</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sys</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>sys.path.insert(<span class="dv">0</span>, <span class="st">"00_functions"</span>)</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dw_io <span class="im">import</span> dw_save, dw_use, dw_compare</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dw_api <span class="im">import</span> dw_api_fetch, dw_api_inventory</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>sys.path.insert(<span class="dv">0</span>, <span class="st">"00_functions"</span>)           <span class="co"># makes `cso_toolkit` importable</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> cso_toolkit <span class="im">import</span> dw_save, dw_use, dw_compare, dw_api_fetch, dw_api_inventory</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The sync helpers still expect vendored files flat, next to the manifest, so syncing a Python package copy is not yet supported (issue #230).</p>
 </div>
 <div id="tabset-1-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-3-tab">
 <p>Stata has no native package install path that matters here; vendoring is the production model. Either extend the adopath during development or copy the <code>.ado</code> / <code>.sthlp</code> files into the consumer’s <code>ado/</code> (or <code>PERSONAL</code> adopath) for production.</p>
@@ -589,20 +587,28 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>The tag at the time of the most recent pull (e.g.&nbsp;<code>v0.5.0</code>). Use <code>inrepo</code> if you edited the helpers locally and do not want sync warnings.</td>
 </tr>
 <tr class="odd">
+<td><code>pulled_commit</code></td>
+<td>Optional: the 40-hex commit <code>pulled_version</code> points to, so a moved tag can be noticed; the scaffolders and <code>cso_toolkit_pull()</code> write it.</td>
+</tr>
+<tr class="even">
 <td><code>pulled_date</code></td>
 <td>ISO-8601 date of the pull. Free-form; the helper does not parse it.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>pulled_by</code></td>
 <td>Human breadcrumb for who ran the pull.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>vendored</code></td>
 <td>List of files copied from the toolkit into your <code>00_functions/</code>. Trim to what you use.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>local_edits</code></td>
 <td>Files in <code>vendored:</code> that you have diverged locally; <code>cso_toolkit_pull()</code> skips these on update. Empty by default.</td>
+</tr>
+<tr class="even">
+<td><code>target_version</code></td>
+<td>Optional: the version this repo must run on; <code>cso_toolkit_check()</code> warns, offline and in both modes, when <code>pulled_version</code> is behind it.</td>
 </tr>
 </tbody>
 </table>
@@ -613,11 +619,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <i class="callout-icon"></i>
 </div>
 <div class="callout-body-container">
-<p><code>pulled_version</code> must be a real tag once the upstream repo has releases. The Database Manager (DBM) pre-deposit checklist (the submission template referenced in the roles chapter) gates a deposit on the manifest being on a tagged version — no <code>inrepo</code> or <code>unreleased</code> suffixes. Use <code>inrepo</code> only during local development of the helpers themselves, never for a deposit run. Note that <code>cso_toolkit_check()</code> still queries upstream when <code>pulled_version</code> contains <code>inrepo</code> but forces <code>updates_available</code> to <code>FALSE</code>, so a stray <code>inrepo</code> silently suppresses drift warnings.</p>
+<p><code>pulled_version</code> must be a real tag once the upstream repo has releases. The Database Manager (DBM) pre-deposit checklist (the submission template referenced in the roles chapter) gates a deposit on the manifest being on a tagged version — no <code>inrepo</code> or <code>unreleased</code> suffixes. Use <code>inrepo</code> only during local development of the helpers themselves, never for a deposit run. Note that <code>cso_toolkit_check()</code> still queries upstream when <code>pulled_version</code> is <code>inrepo</code>, but cannot compare it, so <code>updates_available</code> is <code>FALSE</code> and a stray <code>inrepo</code> silently suppresses drift warnings.</p>
 </div>
 </div>
 </div>
-<p>You can confirm at any point that the helper sees your manifest by running the sync check. In producer mode it queries the GitHub API for the latest upstream tag and warns if you are behind; in reviewer mode it quietly returns <code>NULL</code> because the mode contract forbids network calls.</p>
+<p>You can confirm at any point that the helper sees your manifest by running the sync check. In producer mode it looks up the latest upstream tag (gh CLI, GitHub API, then <code>git ls-remote</code>) and, with <code>quiet = FALSE</code>, prints a notice if a newer release exists; in either mode it warns if the copy is behind the manifest’s <code>target_version</code>. In reviewer mode with no target it returns <code>NULL</code>, because the mode contract forbids the network lookup.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-3" role="tab" aria-controls="tabset-2-3" aria-selected="false" href="">Stata</a></li></ul>
 <div class="tab-content">
@@ -822,7 +828,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
-<p>The supported <code>api</code> values are <code>uis</code>, <code>sdmx</code>, <code>sdmx_codelist</code>, <code>wb</code>, <code>wb_indicators</code>, <code>ilo</code>, <code>unsd_sdg</code>, <code>github_raw</code>, <code>http</code>, and <code>json_get</code>; the API-specific arguments (<code>indicator</code>, <code>flowRef</code>, <code>series_codes</code>, and so on) pass straight through to the per-API fetcher.</p>
+<p>The supported <code>api</code> values are <code>uis</code>, <code>sdmx</code>, <code>sdmx_codelist</code>, <code>wb</code>, <code>wb_indicators</code>, <code>ilo</code>, <code>unsd_sdg</code>, <code>github_raw</code>, <code>http</code>, <code>json_get</code>, and <code>csv</code>; the API-specific arguments (<code>indicator</code>, <code>flowRef</code>, <code>series_codes</code>, and so on) pass straight through to the per-API fetcher.</p>
 <p>If you run this in reviewer mode and the cache is missing, <code>dw_api_fetch</code> does not fall back to the network — it raises through the <code>dw_require_no_api</code> guard, telling you the input must be pre-deposited and to escalate to the sector DBM rather than calling the API. That is the contract working as designed.</p>
 </section>
 <section id="b.-write-a-deposit-output" class="level3" data-number="14.5.2">
@@ -946,47 +952,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="step-6-add-the-contract-auditor-to-ci" class="level2" data-number="14.7">
 <h2 data-number="14.7" class="anchored" data-anchor-id="step-6-add-the-contract-auditor-to-ci"><span class="header-section-number">14.7</span> Step 6: Add the contract auditor to CI</h2>
-<p>The final step makes the guarantees enforceable on every push rather than dependent on the operator remembering to run them. The toolkit’s own CI is a useful reference: <code>r-check.yml</code> runs <code>R CMD check</code> across a Linux/macOS/Windows matrix, and because the helper tests live in <code>tests/testthat</code>, the check runs them automatically — no separate test step. The workflow deliberately does not set <code>dw_mode</code> at the job level; the mode is a session-level concept that each test sets explicitly, so a test never leaks producer-mode behaviour into another.</p>
-<p>For your consumer repo, add a workflow that (a) runs your pipeline’s unit tests under both modes and (b) runs the contract auditor — the scaffolding check that verifies no script bypasses the contract (see the scaffolding and contract-auditor chapter for what the auditor inspects). The auditor’s job mirrors the verification checklist from the mode-contract integration doc:</p>
+<p>The final step makes the guarantees enforceable on every push rather than dependent on the operator remembering to run them. The toolkit’s own CI is a useful reference: <code>r-check.yml</code> runs <code>R CMD check</code> across a Linux/macOS/Windows matrix, and because the helper tests live in <code>r/tests/testthat</code>, the check runs them automatically — no separate test step. The workflow deliberately does not set <code>dw_mode</code> at the job level; the mode is a session-level concept that each test sets explicitly, so a test never leaks producer-mode behaviour into another.</p>
+<p>For your consumer repo, use the checks the scaffolders write (<a href="../chapters/40-new-repository.html">Starting a new repository</a>): <code>tools/check.R</code> runs the contract auditor over <code>AUDIT_PATHS</code> with the vendored <code>test_scripts()</code> (<code>AUDIT_MODE = "blocking"</code> fails on any violation) and the <code>vintage</code> check; <code>sh tools/check --record</code> records a passing run, which the pre-push hook and <code>check-record.yml</code> require. To run the audit on GitHub as well, copy <code>templates/workflows/ci-contract-audit.yml</code> to <code>.github/workflows/</code>; it runs <code>Rscript --no-init-file tools/check.R --only contract-audit,vintage</code> on manual runs and pull requests into <code>main</code>.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="ex">Rscript</span> <span class="at">--no-init-file</span> tools/check.R    <span class="co"># every check, locally</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sh</span> tools/check <span class="at">--record</span>                 <span class="co"># run, then record; needed before each push</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> /path/to/cso-toolkit/templates/workflows/ci-contract-audit.yml .github/workflows/   <span class="co"># optional</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The auditor covers the no-bypass item of the verification checklist in the mode-contract integration doc; keep verifying the others too:</p>
 <ul>
 <li>Sourcing the profile with <code>dw_mode: "reviewer"</code> produces the green banner.</li>
 <li>The conductor writes <code>finaldir</code> and shadows the path globals before any other script is sourced.</li>
 <li>No script inside the sector calls a remote without going through <code>dw_api_fetch</code> (grep for <code>httr::GET</code>, <code>httr::POST</code>, <code>RETRY</code>, <code>read.csv("http</code>, and the like).</li>
 <li>A reviewer-mode run leaves the canonical deposit’s <code>mtime</code> unchanged.</li>
 </ul>
-<p>A minimal addition to <code>.github/workflows/</code>:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> contract-audit</span></span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="fu">on</span><span class="kw">:</span></span>
-<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">push</span><span class="kw">:</span></span>
-<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">branches</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">main</span><span class="kw">,</span><span class="at"> develop</span><span class="kw">]</span></span>
-<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">pull_request</span><span class="kw">:</span></span>
-<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">branches</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">main</span><span class="kw">,</span><span class="at"> develop</span><span class="kw">]</span></span>
-<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a><span class="fu">jobs</span><span class="kw">:</span></span>
-<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">audit</span><span class="kw">:</span></span>
-<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">runs-on</span><span class="kw">:</span><span class="at"> ubuntu-latest</span></span>
-<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">env</span><span class="kw">:</span></span>
-<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a><span class="co">      # Mode is set per-test inside the suite; do not set it job-wide.</span></span>
-<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">GITHUB_PAT</span><span class="kw">:</span><span class="at"> ${{ secrets.GITHUB_TOKEN }}</span></span>
-<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">steps</span><span class="kw">:</span></span>
-<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> actions/checkout@v4</span></span>
-<span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> r-lib/actions/setup-r@v2</span></span>
-<span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">with</span><span class="kw">:</span></span>
-<span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">use-public-rspm</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
-<span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> r-lib/actions/setup-r-dependencies@v2</span></span>
-<span id="cb28-21"><a href="#cb28-21" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">with</span><span class="kw">:</span></span>
-<span id="cb28-22"><a href="#cb28-22" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">working-directory</span><span class="kw">:</span><span class="at"> ./00_functions</span></span>
-<span id="cb28-23"><a href="#cb28-23" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">extra-packages</span><span class="kw">:</span><span class="at"> any::testthat</span></span>
-<span id="cb28-24"><a href="#cb28-24" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Run pipeline tests + contract auditor</span></span>
-<span id="cb28-25"><a href="#cb28-25" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">run</span><span class="kw">:</span><span class="at"> Rscript -e 'testthat::test_dir("tests/testthat")'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="callout callout-style-simple callout-warning">
 <div class="callout-body d-flex">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-body-container">
-<p>CI cannot fetch from the corporate-net-only upstream APIs, and it must never run in producer mode against a real deposit. Audit the <em>contract</em> — banner, shadow, no-bypass, deposit-mtime-unchanged — using the cached fixtures and reviewer mode. Live API fetching belongs in a producer-mode session on a machine with network access, not in CI. This is the same reason <code>cso_toolkit_check</code> is a producer-mode-only operation: reviewers, and CI by extension, run against whatever vintage the producer has pinned.</p>
+<p>CI cannot fetch from the corporate-net-only upstream APIs, and it must never run in producer mode against a real deposit. Audit the <em>contract</em> — banner, shadow, no-bypass, deposit-mtime-unchanged — using the cached fixtures and reviewer mode. Live API fetching belongs in a producer-mode session on a machine with network access, not in CI. This is the same reason <code>cso_toolkit_check</code> looks up upstream releases only in producer mode: reviewers, and CI by extension, run against whatever vintage the producer has pinned.</p>
 </div>
 </div>
 </div>
@@ -1055,8 +1039,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>10</td>
-<td>CI audits the contract on every push</td>
-<td><code>contract-audit</code> workflow green</td>
+<td>Checks gate every push</td>
+<td><code>sh tools/check --record</code> passes; the pull request’s <code>check-record</code> status is green</td>
 </tr>
 </tbody>
 </table>

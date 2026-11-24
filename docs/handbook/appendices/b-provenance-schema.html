@@ -451,7 +451,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#the-baseline-object" id="toc-the-baseline-object" class="nav-link" data-scroll-target="#the-baseline-object"><span class="header-section-number">B.4.1</span> The <code>baseline</code> object</a></li>
   </ul></li>
   <li><a href="#the-stata-sidecar-same-shape-one-difference-that-matters" id="toc-the-stata-sidecar-same-shape-one-difference-that-matters" class="nav-link" data-scroll-target="#the-stata-sidecar-same-shape-one-difference-that-matters"><span class="header-section-number">B.5</span> The Stata sidecar: same shape, one difference that matters</a></li>
-  <li><a href="#a-note-on-the-api-fetch-sidecar" id="toc-a-note-on-the-api-fetch-sidecar" class="nav-link" data-scroll-target="#a-note-on-the-api-fetch-sidecar"><span class="header-section-number">B.6</span> A note on the API-fetch sidecar</a></li>
+  <li><a href="#a-note-on-the-remote-url-freeze-sidecar" id="toc-a-note-on-the-remote-url-freeze-sidecar" class="nav-link" data-scroll-target="#a-note-on-the-remote-url-freeze-sidecar"><span class="header-section-number">B.6</span> A note on the remote-URL freeze sidecar</a></li>
   <li><a href="#consuming-the-sidecar" id="toc-consuming-the-sidecar" class="nav-link" data-scroll-target="#consuming-the-sidecar"><span class="header-section-number">B.7</span> Consuming the sidecar</a>
   <ul class="collapse">
   <li><a href="#comparing-the-sidecars-of-two-runs" id="toc-comparing-the-sidecars-of-two-runs" class="nav-link" data-scroll-target="#comparing-the-sidecars-of-two-runs"><span class="header-section-number">B.7.1</span> Comparing the sidecars of two runs</a></li>
@@ -482,7 +482,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>Every successful write through <code>dw_save()</code> deposits a companion file next to the primary artifact: <code>&lt;path&gt;.provenance.json</code>. Write <code>ed/dw_ed_edu.csv</code> and you also get <code>ed/dw_ed_edu.csv.provenance.json</code> in the same directory. The sidecar is the toolkit’s record of who made the file and a way to check whether the bytes on disk have since been altered — it answers <em>who wrote this, when, in which session mode, from what shape of data, and does the content still match what was recorded</em>. Reviewer-mode integrity checks (re-hashing a file to confirm it has not changed since it was written) depend on it, which is why a producer-mode write copies the sidecar alongside the primary file to the two backup locations the toolkit mirrors canonical files to (a Teams folder and the shared <code>Z:</code> drive). The IO contract chapter and the vintage-sync chapter both lean on these checks.</p>
+<p>Every successful write through <code>dw_save()</code> deposits a companion file next to the primary artifact: <code>&lt;path&gt;.provenance.json</code>. Write <code>ed/dw_ed_edu.csv</code> and you also get <code>ed/dw_ed_edu.csv.provenance.json</code> in the same directory. The sidecar is the toolkit’s record of who made the file and a way to check whether the bytes on disk have since been altered — it answers <em>who wrote this, when, in which session mode, from what shape of data, and does the content still match what was recorded</em>. Reviewer-mode integrity checks (re-hashing a file to confirm it has not changed since it was written) depend on it, which is why a producer-mode write in R or Python copies the sidecar alongside the primary file to the two backup locations the toolkit mirrors canonical files to (a Teams folder and the shared <code>Z:</code> drive); Stata’s <code>dw_save</code> does not mirror. The IO contract chapter and the vintage-sync chapter both lean on these checks.</p>
 <p>The three languages diverge in one field that matters; this appendix is explicit about where.</p>
 <section id="where-the-sidecar-comes-from" class="level2" data-number="B.1">
 <h2 data-number="B.1" class="anchored" data-anchor-id="where-the-sidecar-comes-from"><span class="header-section-number">B.1</span> Where the sidecar comes from</h2>
@@ -574,13 +574,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td><code>vintage</code></td>
 <td>string | null</td>
-<td>Optional vintage tag (e.g.&nbsp;<code>"2026-05"</code>), echoed from the <code>vintage</code> argument; <code>null</code> when not supplied. <strong>R/Python only</strong> (Stata records vintage inside <code>metadata</code>, see below).</td>
+<td>Optional vintage tag (e.g.&nbsp;<code>"2026-05"</code>), echoed from the <code>vintage</code> argument; <code>null</code> when not supplied (Python); R writes <code>{}</code>. <strong>R/Python only</strong> (Stata records vintage inside <code>metadata</code>, see below).</td>
 <td>R / Py</td>
 </tr>
 <tr class="odd">
 <td><code>isid</code></td>
 <td>array&lt;string&gt; | null</td>
-<td>The key columns asserted unique before the write (the <code>isid</code> quality contract). <code>null</code> when no uniqueness check was requested. <strong>R/Python key is <code>isid</code>.</strong></td>
+<td>The key columns asserted unique before the write (the <code>isid</code> quality contract). <code>null</code> (Python) / <code>{}</code> (R) when no uniqueness check was requested. <strong>R/Python key is <code>isid</code>.</strong></td>
 <td>R / Py</td>
 </tr>
 <tr class="even">
@@ -592,13 +592,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td><code>schema</code></td>
 <td>object</td>
-<td>The shape of the written data: <code>rows</code>, <code>cols</code>, and (R/Python only) <code>columns</code>. Empty object <code>{}</code> when the object was not a data frame.</td>
+<td>The shape of the written data: <code>rows</code>, <code>cols</code>, and (R/Python only) <code>columns</code>. Empty object <code>{}</code> (Python) or empty array <code>[]</code> (R) when the object was not a data frame.</td>
 <td>R / Py / Stata</td>
 </tr>
 <tr class="even">
 <td><code>metadata</code></td>
 <td>object</td>
-<td>The caller-supplied descriptive metadata. Present only when the caller passed a <code>metadata</code> argument.</td>
+<td>The caller-supplied descriptive metadata. Present only when the caller passed <code>metadata</code> (R/Python); Stata always writes the block.</td>
 <td>R / Py / Stata</td>
 </tr>
 </tbody>
@@ -613,7 +613,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p><code>dw_mode</code> reflects whatever the profile placed in the session state. If no profile set a mode, the key is still emitted but carries a falsy value: in R it serialises as the empty string (<code>""</code>) because <code>Sys.getenv</code> / the unset global resolve to empty; in Python it serialises as <code>null</code> (the unset state returns <code>None</code>). The key is therefore always present — a sidecar with a blank or <code>null</code> <code>dw_mode</code> was written by a session that never declared producer or reviewer mode. (The API-fetch sidecar below substitutes the literal <code>"unknown"</code> in this case; the write sidecar does not.)</p>
+<p><code>dw_mode</code> reflects whatever the profile placed in the session state. If no profile set a mode, the key is still emitted as <code>null</code>, in R and Python alike. The key is therefore always present — a sidecar with a <code>null</code> <code>dw_mode</code> was written by a session that never declared producer or reviewer mode. (The remote-URL freeze sidecar below substitutes the literal <code>"unknown"</code> in this case; the write sidecar does not.)</p>
 </div>
 </div>
 <section id="the-schema-object" class="level3" data-number="B.2.1">
@@ -762,7 +762,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="multi-producer-lineage-fields" class="level2" data-number="B.4">
 <h2 data-number="B.4" class="anchored" data-anchor-id="multi-producer-lineage-fields"><span class="header-section-number">B.4</span> Multi-producer lineage fields</h2>
-<p>In a project whose <code>cso_project.yml</code> sets <code>collaboration: multi-producer</code> (see the roles and mode-contract chapter), every R or Python write adds lineage fields after <code>schema</code> and before <code>metadata</code>. Single-producer sidecars, including every sidecar written in a repository without <code>cso_project.yml</code>, keep exactly the key set in the core schema above.</p>
+<p>In a project whose <code>cso_project.yml</code> sets <code>collaboration: multi-producer</code> (see the roles and mode-contract chapter), every R, Python, or Stata write adds lineage fields (R/Python after <code>schema</code> and before <code>metadata</code>; Stata after <code>sha256</code>). Single-producer sidecars, including every sidecar written in a repository without <code>cso_project.yml</code>, keep exactly the key set in the core schema above.</p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 25%">
@@ -783,43 +783,43 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><code>collaboration</code></td>
 <td>string</td>
 <td>Always <code>"multi-producer"</code>; marks a sidecar written under the multi-producer rules.</td>
-<td>R / Py</td>
+<td>R / Py / Stata</td>
 </tr>
 <tr class="even">
 <td><code>previous_sha256</code></td>
 <td>string | null</td>
 <td>SHA-256 of the file this write replaced, computed from its bytes just before the write (so after a <code>takeover</code> over an out-of-band change it is the hash of the bytes actually replaced). <code>null</code> when the output is new.</td>
-<td>R / Py</td>
+<td>R / Py / Stata</td>
 </tr>
 <tr class="odd">
 <td><code>previous_user</code></td>
 <td>string | null</td>
 <td><code>user</code> of the replaced file’s sidecar; <code>null</code> when there was none.</td>
-<td>R / Py</td>
+<td>R / Py / Stata</td>
 </tr>
 <tr class="even">
 <td><code>previous_written_at</code></td>
 <td>string | null</td>
 <td><code>written_at</code> of the replaced file’s sidecar; <code>null</code> when there was none.</td>
-<td>R / Py</td>
+<td>R / Py / Stata</td>
 </tr>
 <tr class="odd">
 <td><code>git_branch</code></td>
 <td>string | null</td>
 <td><code>git rev-parse --abbrev-ref HEAD</code> in the output’s folder, best effort; <code>null</code> outside a repository or without git.</td>
-<td>R / Py</td>
+<td>R / Py / Stata</td>
 </tr>
 <tr class="even">
 <td><code>git_commit</code></td>
 <td>string | null</td>
 <td><code>git rev-parse HEAD</code>, likewise.</td>
-<td>R / Py</td>
+<td>R / Py / Stata</td>
 </tr>
 <tr class="odd">
 <td><code>takeover</code></td>
 <td>object</td>
 <td>Present only when the write passed <code>takeover = TRUE</code>: <code>user</code>, <code>at</code> (ISO-8601 UTC) and <code>overrode</code>, the guards it overrode (<code>"out_of_band"</code>, <code>"concurrent"</code>, or an empty array when none fired).</td>
-<td>R / Py</td>
+<td>R / Py / Stata</td>
 </tr>
 </tbody>
 </table>
@@ -864,7 +864,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
-<p>The object is inserted as text, before the sidecar’s closing brace, so <code>sha256</code> and every other field keep their bytes and the out-of-band check still holds. It marks the artefact as project-owned: the first multi-producer write over it does not report a change of producer, and that write’s <code>previous_sha256</code> is the baselined hash, so the lineage chain starts from the last single-producer state. Sidecars that already carry a <code>baseline</code>, or that were written under the multi-producer rules (they have <code>collaboration</code>), are left alone, which is what makes the call idempotent. A new multi-producer sidecar never carries a <code>baseline</code>. Stata sidecars receive the object too, since it is added to every <code>*.provenance.json</code>; Stata itself neither writes nor reads the lineage fields yet (#168).</p>
+<p>The object is inserted as text, before the sidecar’s closing brace, so <code>sha256</code> and every other field keep their bytes and the out-of-band check still holds. It marks the artefact as project-owned: the first multi-producer write over it does not report a change of producer, and that write’s <code>previous_sha256</code> is the baselined hash, so the lineage chain starts from the last single-producer state. Sidecars that already carry a <code>baseline</code>, or that were written under the multi-producer rules (they have <code>collaboration</code>), are left alone, which is what makes the call idempotent. A new multi-producer sidecar never carries a <code>baseline</code>. Stata sidecars receive the object too, since it is added to every <code>*.provenance.json</code>. Stata writes the lineage fields too and runs the guards through its Python integration (#168); without Python a multi-producer Stata write stops unless <code>takeover</code> is passed, and its <code>takeover.overrode</code> is then <code>["unguarded"]</code>.</p>
 </section>
 </section>
 <section id="the-stata-sidecar-same-shape-one-difference-that-matters" class="level2" data-number="B.5">
@@ -873,36 +873,37 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"format"</span><span class="fu">:</span> <span class="st">"dw_save.provenance/1"</span><span class="fu">,</span></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"path"</span><span class="fu">:</span> <span class="st">"C:</span><span class="ch">\\</span><span class="st">Users</span><span class="ch">\\</span><span class="st">...</span><span class="ch">\\</span><span class="st">teamsWrkData</span><span class="ch">\\</span><span class="st">ed</span><span class="ch">\\</span><span class="st">dw_ed_edu.dta"</span><span class="fu">,</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"written_at"</span><span class="fu">:</span> <span class="st">"28 Jun 2026 14:03:51"</span><span class="fu">,</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"written_at"</span><span class="fu">:</span> <span class="st">"2026-06-28T14:03:51+0000"</span><span class="fu">,</span></span>
 <span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"user"</span><span class="fu">:</span> <span class="st">"jpazevedo"</span><span class="fu">,</span></span>
 <span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"dw_mode"</span><span class="fu">:</span> <span class="st">"producer"</span><span class="fu">,</span></span>
 <span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"datasignature"</span><span class="fu">:</span> <span class="st">"9:9(12345):1234567890:0987654321"</span><span class="fu">,</span></span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"schema"</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">"rows"</span><span class="fu">:</span> <span class="dv">48213</span><span class="fu">,</span> <span class="dt">"cols"</span><span class="fu">:</span> <span class="dv">9</span> <span class="fu">},</span></span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"idvars"</span><span class="fu">:</span> <span class="st">"DATAFLOW REF_AREA INDICATOR TIME_PERIOD"</span><span class="fu">,</span></span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"metadata"</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"title"</span><span class="fu">:</span> <span class="st">"Education indicators — UNICEF DW format"</span><span class="fu">,</span></span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"producer"</span><span class="fu">:</span> <span class="st">"01_dw_prep/012_codes/ed/02_aggregate_uis_sdg.R"</span><span class="fu">,</span></span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"vintage"</span><span class="fu">:</span> <span class="st">"2026-05"</span><span class="fu">,</span></span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"_end"</span><span class="fu">:</span> <span class="st">"true"</span></span>
-<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
-<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The <code>datasignature</code> value above — <code>"9:9(12345):..."</code> — is a colon-delimited string of variable count, observation count, and two checksums, opaque by design. It is what stands in for <code>sha256</code>.</p>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"sha256"</span><span class="fu">:</span> <span class="st">"4b7e0c9d2a…"</span><span class="fu">,</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"schema"</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">"rows"</span><span class="fu">:</span> <span class="dv">48213</span><span class="fu">,</span> <span class="dt">"cols"</span><span class="fu">:</span> <span class="dv">9</span> <span class="fu">},</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"idvars"</span><span class="fu">:</span> <span class="st">"DATAFLOW REF_AREA INDICATOR TIME_PERIOD"</span><span class="fu">,</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"metadata"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"title"</span><span class="fu">:</span> <span class="st">"Education indicators — UNICEF DW format"</span><span class="fu">,</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"producer"</span><span class="fu">:</span> <span class="st">"01_dw_prep/012_codes/ed/02_aggregate_uis_sdg.R"</span><span class="fu">,</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"vintage"</span><span class="fu">:</span> <span class="st">"2026-05"</span><span class="fu">,</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"_end"</span><span class="fu">:</span> <span class="st">"true"</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The <code>datasignature</code> value above — <code>"9:9(12345):..."</code> — is a colon-delimited string of variable count, observation count, and two checksums, opaque by design. It is written alongside <code>sha256</code>, and is the only hash when Stata runs without Python: such a session writes no <code>sha256</code> key and a local <code>written_at</code> (<code>28 Jun 2026 14:03:51</code>).</p>
 <div class="callout callout-style-simple callout-warning callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Warning</span>The integrity field is not portable across Stata and R/Python
+<span class="screen-reader-only">Warning</span><code>datasignature</code> is not comparable to <code>sha256</code>
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>R and Python record a <code>sha256</code> — a hash of the file’s <em>bytes</em>. Stata records <code>datasignature</code> — a hash of the <em>dataset’s variables and values</em>, computed by Stata’s built-in <code>datasignature</code> command. These are not comparable: a <code>.dta</code> and a <code>.csv</code> of the same logical table have different bytes (so different <code>sha256</code>) but could share a <code>datasignature</code>; conversely the same <code>datasignature</code> says nothing about file-byte equality. The choice is intentional. <code>datasignature</code> is Stata-native, needs no external dependency, and survives the UNICEF-laptop AppLocker restrictions that would block a third-party hashing binary. The practical consequence: the byte-equality check <code>dw_verify_z(compare = "sha256")</code> (which re-hashes a canonical file against its <code>Z:</code> mirror) works between R and Python sidecars, but a Stata-written file’s integrity is verified against <em>its own</em> <code>datasignature</code>, not against an R/Python <code>sha256</code>.</p>
+<p>With Stata’s Python integration (Stata 16+) a Stata sidecar records the file’s <code>sha256</code> — a hash of the file’s <em>bytes</em> — as R and Python do (#191), so byte-level checks such as <code>dw_verify_z(compare = "sha256")</code> and <code>dw_provenance_diff()</code> work across all three languages. <code>datasignature</code> is extra and Stata-only: a hash of the <em>dataset’s variables and values</em>, computed by Stata’s built-in <code>datasignature</code> command. It is not comparable to <code>sha256</code>: a <code>.dta</code> and a <code>.csv</code> of the same logical table have different bytes (so different <code>sha256</code>) but could share a <code>datasignature</code>; conversely the same <code>datasignature</code> says nothing about file-byte equality. <code>datasignature</code> is Stata-native, needs no external dependency, and survives the UNICEF-laptop AppLocker restrictions that would block a third-party hashing binary. Without Python, Stata records only <code>datasignature</code>, and that file’s integrity can be checked only inside Stata, against <em>its own</em> <code>datasignature</code>.</p>
 </div>
 </div>
 <p>The other differences are smaller but worth cataloguing:</p>
 <ul>
-<li><strong><code>written_at</code> format.</strong> R/Python emit ISO-8601 UTC (<code>2026-06-28T14:03:51+0000</code>). Stata emits its local human-readable clock (<code>28 Jun 2026 14:03:51</code>). A parser that wants a single timestamp type must normalise.</li>
+<li><strong><code>written_at</code> format.</strong> R/Python emit ISO-8601 UTC (<code>2026-06-28T14:03:51+0000</code>). Stata emits the same through its Python integration; without it, its local human-readable clock (<code>28 Jun 2026 14:03:51</code>). A parser that wants a single timestamp type must normalise.</li>
 <li><strong>Key name for the uniqueness columns.</strong> R/Python use <code>isid</code> (an array). Stata uses <code>idvars</code> (a single space-separated string).</li>
 <li><strong><code>format</code> field meaning.</strong> In R/Python <code>format</code> is the file’s dispatch format (<code>"csv"</code>, <code>"parquet"</code>, …). In Stata <code>format</code> is a literal schema-version tag, <code>"dw_save.provenance/1"</code>. The same key carries different semantics — do not assume <code>format</code> tells you the file type across all three languages.</li>
 <li><strong><code>schema.columns</code>.</strong> Present in R/Python, absent in Stata (which records only <code>rows</code> and <code>cols</code>).</li>
@@ -910,13 +911,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong><code>_end</code> sentinel.</strong> Stata appends <code>"_end": "true"</code> as the final key of the <code>metadata</code> block — a harmless artifact of hand-writing JSON one line at a time to avoid a dangling comma. Consumers should ignore it.</li>
 </ul>
 </section>
-<section id="a-note-on-the-api-fetch-sidecar" class="level2" data-number="B.6">
-<h2 data-number="B.6" class="anchored" data-anchor-id="a-note-on-the-api-fetch-sidecar"><span class="header-section-number">B.6</span> A note on the API-fetch sidecar</h2>
-<p><code>dw_save()</code> is not the only producer of <code>.provenance.json</code> files. The external-API contract (see that chapter) freezes a fetched payload to disk and writes its own sidecar with a <em>different</em> shape — <code>url</code>, <code>sha256</code>, <code>bytes</code>, <code>fetched_at</code>, <code>fetched_by</code>, <code>dw_mode</code> (which falls back to the literal <code>"unknown"</code> when no mode is set). That variant records the provenance of a network fetch rather than a local write. It shares the <code>.provenance.json</code> extension and the <code>dw_mode</code> / hashing conventions, but its key set is distinct; do not parse it with the same reader you use for the write sidecar. This appendix documents only the <code>dw_save()</code> write sidecar.</p>
+<section id="a-note-on-the-remote-url-freeze-sidecar" class="level2" data-number="B.6">
+<h2 data-number="B.6" class="anchored" data-anchor-id="a-note-on-the-remote-url-freeze-sidecar"><span class="header-section-number">B.6</span> A note on the remote-URL freeze sidecar</h2>
+<p><code>dw_save()</code> is not the only producer of <code>.provenance.json</code> files. <code>dw_use()</code> called with an allowlisted <code>http(s)</code> URL (the remote-URL freeze) downloads the file once and writes its own sidecar with a <em>different</em> shape — <code>url</code>, <code>sha256</code>, <code>bytes</code>, <code>fetched_at</code>, <code>fetched_by</code>, <code>dw_mode</code> (which falls back to the literal <code>"unknown"</code> when no mode is set). API caches written by <code>dw_api_fetch()</code> are not of this kind: they go through <code>dw_save()</code> and carry the standard write sidecar, with the fetch details in its <code>metadata</code> block. The remote-URL variant records the provenance of a network fetch rather than a local write. It shares the <code>.provenance.json</code> extension and the <code>dw_mode</code> / hashing conventions, but its key set is distinct; do not parse it with the same reader you use for the write sidecar. This appendix documents only the <code>dw_save()</code> write sidecar.</p>
 </section>
 <section id="consuming-the-sidecar" class="level2" data-number="B.7">
 <h2 data-number="B.7" class="anchored" data-anchor-id="consuming-the-sidecar"><span class="header-section-number">B.7</span> Consuming the sidecar</h2>
-<p>A reviewer or a CI check typically does three things with a sidecar: read it, confirm the recorded <code>sha256</code> still matches the file on disk, and inspect <code>dw_mode</code> / <code>metadata</code> for lineage. Reading is plain JSON; in R, <code>dw_read_provenance()</code> does it for you (output path or sidecar path; <code>NULL</code> when there is no sidecar):</p>
+<p>A reviewer or a CI check typically does three things with a sidecar: read it, confirm the recorded <code>sha256</code> still matches the file on disk, and inspect <code>dw_mode</code> / <code>metadata</code> for lineage. Reading is plain JSON; in R and Python, <code>dw_read_provenance()</code> does it for you (output path or sidecar path; <code>NULL</code> / <code>None</code> when there is no sidecar):</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-3" role="tab" aria-controls="tabset-2-3" aria-selected="false" href="">Stata</a></li></ul>
 <div class="tab-content">
@@ -926,10 +927,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">algo =</span> <span class="st">"sha256"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> json, hashlib</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>prov <span class="op">=</span> json.load(<span class="bu">open</span>(<span class="st">"ed/dw_ed_edu.csv.provenance.json"</span>))</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>h <span class="op">=</span> hashlib.sha256(<span class="bu">open</span>(<span class="st">"ed/dw_ed_edu.csv"</span>, <span class="st">"rb"</span>).read()).hexdigest()</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>prov[<span class="st">"sha256"</span>] <span class="op">==</span> h</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> hashlib</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> cso_toolkit <span class="im">import</span> dw_read_provenance</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>prov <span class="op">=</span> dw_read_provenance(<span class="st">"ed/dw_ed_edu.csv"</span>)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>h <span class="op">=</span> hashlib.sha256(<span class="bu">open</span>(<span class="st">"ed/dw_ed_edu.csv"</span>, <span class="st">"rb"</span>).read()).hexdigest()</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>prov[<span class="st">"sha256"</span>] <span class="op">==</span> h</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div id="tabset-2-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-3-tab">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>* Stata has no JSON reader <span class="kw">in</span> the toolkit; verify via the native signature</span>
@@ -940,25 +942,27 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
-<p>A <code>FALSE</code> / <code>False</code> result here means the file changed since it was written — the lineage record no longer describes the bytes on disk, so the sidecar can no longer vouch for the artifact. R and Python can run this byte-integrity check directly because they recorded a byte hash. Stata verification is intra-Stata: re-open the dataset, recompute <code>datasignature</code>, and compare against the value in the sidecar. There is no toolkit-provided JSON reader on the Stata side — a real coverage gap, consistent with Stata’s lack of an API wrapper and parquet support documented in the cross-language coverage matrix appendix.</p>
+<p>A <code>FALSE</code> / <code>False</code> result here means the file changed since it was written — the lineage record no longer describes the bytes on disk, so the sidecar can no longer vouch for the artifact. R and Python can run this byte-integrity check directly because the sidecar records a byte hash, which a Stata sidecar also carries when Stata’s Python integration is available. Inside Stata itself, verification uses <code>datasignature</code>: re-open the dataset, recompute it, and compare against the value in the sidecar. There is no toolkit-provided JSON reader on the Stata side — a real coverage gap, consistent with Stata’s lack of an API wrapper and parquet support documented in the cross-language coverage matrix appendix.</p>
 <section id="comparing-the-sidecars-of-two-runs" class="level3" data-number="B.7.1">
 <h3 data-number="B.7.1" class="anchored" data-anchor-id="comparing-the-sidecars-of-two-runs"><span class="header-section-number">B.7.1</span> Comparing the sidecars of two runs</h3>
-<p>Two sidecars of the same output answer a fourth question: did the new run reproduce the previous one? In R and Python, <code>dw_provenance_diff(previous, current)</code> compares the <code>metadata.inputs</code> records (inputs) and the <code>sha256</code> fields (outputs) and returns <code>reproduced</code>, <code>inputs_changed</code> (with the input files added, removed, and changed), <code>output_changed</code> (same inputs, different output; warns), <code>first_run</code>, or <code>no_input_record</code>. Read the previous sidecar with <code>dw_read_provenance()</code> before the new run overwrites the output. Stata routes via R or Python (#152).</p>
+<p>Two sidecars of the same output answer a fourth question: did the new run reproduce the previous one? In R and Python, <code>dw_provenance_diff(previous, current)</code> compares the <code>metadata.inputs</code> records (inputs) and the <code>sha256</code> fields (outputs) and returns <code>reproduced</code>, <code>inputs_changed</code> (with the input files added, removed, and changed), <code>output_changed</code> (same inputs, different output; warns), <code>first_run</code>, or <code>no_input_record</code>. Read the previous sidecar with <code>dw_read_provenance()</code> before the new run overwrites the output. Stata has no sibling (#152, closed: Stata routes through R or Python).</p>
 </section>
 </section>
 <section id="summary" class="level2" data-number="B.8">
 <h2 data-number="B.8" class="anchored" data-anchor-id="summary"><span class="header-section-number">B.8</span> Summary</h2>
-<p>Across R and Python the sidecar is effectively identical — same keys, same types, a byte-level <code>sha256</code>, ISO-8601 UTC timestamps, an <code>isid</code> array, and a full <code>schema.columns</code> list. Stata emits a parallel file with the same intent and most of the same keys, but substitutes <code>datasignature</code> for <code>sha256</code>, <code>idvars</code> for <code>isid</code>, a local timestamp for the UTC one, and a version tag for <code>format</code>, and omits <code>schema.columns</code>. A cross-language consumer must therefore key off the right integrity field per language, normalise the timestamp, and treat a Stata sidecar’s hash as non-comparable to an R or Python one.</p>
-<p>Relevant source files (all under <code>C:/GitHub/myados/cso-toolkit</code>):</p>
+<p>Across R and Python the sidecar is effectively identical — same keys, same types, a byte-level <code>sha256</code>, ISO-8601 UTC timestamps, an <code>isid</code> array, and a full <code>schema.columns</code> list. Stata emits a parallel file with the same intent and most of the same keys, but adds <code>datasignature</code> (and, without Python, has it in place of <code>sha256</code>, with a local timestamp in place of the UTC one), uses <code>idvars</code> for <code>isid</code> and a version tag for <code>format</code>, and omits <code>schema.columns</code>. A cross-language consumer must therefore check whether a Stata sidecar carries <code>sha256</code>, normalise the timestamp when it does not, and never compare <code>datasignature</code> with an R or Python <code>sha256</code>.</p>
+<p>Relevant source files (paths relative to the repository root):</p>
 <ul>
-<li><code>r/R/dw_io.R</code> — <code>.write_provenance()</code> (R write sidecar) and <code>.write_remote_provenance()</code> (API-fetch sidecar)</li>
+<li><code>r/R/dw_io.R</code> — <code>.write_provenance()</code> (R write sidecar) and <code>.write_remote_provenance()</code> (remote-URL freeze sidecar)</li>
 <li><code>r/R/dw_io.R</code> — also the multi-producer guards and lineage fields (<code>.dw_collab_preflight()</code>) and <code>dw_collaboration()</code></li>
 <li><code>r/R/dw_project.R</code> — <code>dw_set_collaboration()</code> (writes <code>cso_project.yml</code>, inserts the <code>baseline</code> object)</li>
 <li><code>python/src/dw_project.py</code> — the Python siblings of both</li>
 <li><code>r/R/dw_provenance.R</code> — <code>dw_read_provenance()</code> and <code>dw_provenance_diff()</code> (read a sidecar; compare two runs)</li>
 <li><code>r/R/dw_deposit.R</code> — <code>dw_fetch_inputs()</code> (returns the input manifest recorded as <code>metadata.inputs</code>)</li>
-<li><code>python/src/dw_io.py</code> — <code>_write_provenance()</code>, <code>_sha256_file()</code>, <code>_utc_now_iso()</code> (Python write sidecar); <code>_write_remote_provenance()</code> (API-fetch sidecar)</li>
+<li><code>python/src/dw_io.py</code> — <code>_write_provenance()</code>, <code>_sha256_file()</code>, <code>_utc_now_iso()</code> (Python write sidecar); <code>_write_remote_provenance()</code> (remote-URL freeze sidecar)</li>
+<li><code>python/src/dw_provenance.py</code> and <code>python/src/dw_deposit.py</code> — the Python siblings of <code>dw_read_provenance()</code>, <code>dw_provenance_diff()</code> and <code>dw_fetch_inputs()</code></li>
 <li><code>stata/src/dw_save.ado</code> — Stata sidecar emission (<code>datasignature</code>, <code>idvars</code>, <code>format: dw_save.provenance/1</code>)</li>
+<li><code>stata/src/dw_stata_helpers.py</code> — the Python helpers Stata calls for <code>sha256</code>, the UTC <code>written_at</code> and the multi-producer guards</li>
 <li><code>docs/dw_io_reference.md</code> — sidecar field overview</li>
 </ul>
 <div class="callout callout-style-simple callout-note callout-titled">
