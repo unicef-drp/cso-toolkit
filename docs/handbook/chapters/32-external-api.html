@@ -474,7 +474,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <p>A reproducible analysis must be able to re-run today and produce the same numbers it produced last month — even if a remote statistical agency has since revised its figures, renamed an indicator, or simply gone down for maintenance. Yet most analytics code reaches for live data with bare calls to <code>fromJSON()</code>, <code>rsdmx::readSDMX()</code>, <code>wbstats::wb_data()</code>, <code>httr::GET</code>, <code>requests.get()</code>, or <code>wbgapi</code>. Each such call is a silent dependency on the network and on whatever the upstream server happens to be serving at that instant. The external-API contract removes that fragility. It gives every consumer of <code>cso-toolkit</code> a single, mode-aware wrapper that fetches once, freezes the result to a provenance-stamped cache, and thereafter reads from the frozen copy.</p>
 <p>Three roles govern who may touch the network. A <em>producer</em> (a session running in producer mode) hits the live API and populates the cache; a <em>reviewer</em> (a session running in reviewer mode) reads the frozen cache and is forbidden from touching the network at all; and the <em>Database Manager</em> — the team member who owns the deposit — is the producer who decides when each cache is refreshed. These are session modes and a stewardship role, not three separate job titles: the same person is a producer one day and a reviewer the next, depending on how their session is configured. The roles-and-mode contract chapter defines all three in full; this chapter shows how the API wrapper enforces them.</p>
-<p>This chapter documents the three public entry points of the contract — <code>dw_api_fetch</code>, <code>dw_api_cached</code>, and <code>dw_api_inventory</code> — the eleven external sources they cover (ten shared with Python; <code>csv</code> is R-only so far), the cache layout and provenance sidecars they emit, and the producer/reviewer behaviour that makes the whole thing reproducible. It builds on the roles-and-mode contract (the chapter on roles and the mode contract), on the IO contract (the wrapper writes and reads its cache through <code>dw_save</code> and <code>dw_use</code>, covered in the IO contract chapter), and on the provenance-sidecar and error-envelope conventions (the provenance-sidecars chapter and the error-taxonomy chapter).</p>
+<p>This chapter documents the three public entry points of the contract — <code>dw_api_fetch</code>, <code>dw_api_cached</code>, and <code>dw_api_inventory</code> — the eleven external sources they cover (all shared by R and Python), the cache layout and provenance sidecars they emit, and the producer/reviewer behaviour that makes the whole thing reproducible. It builds on the roles-and-mode contract (the chapter on roles and the mode contract), on the IO contract (the wrapper writes and reads its cache through <code>dw_save</code> and <code>dw_use</code>, covered in the IO contract chapter), and on the provenance-sidecar and error-envelope conventions (the provenance-sidecars chapter and the error-taxonomy chapter).</p>
 <section id="why-a-wrapper-at-all" class="level2" data-number="8.1">
 <h2 data-number="8.1" class="anchored" data-anchor-id="why-a-wrapper-at-all"><span class="header-section-number">8.1</span> Why a wrapper at all</h2>
 <p>Calling a remote API directly couples three concerns that ought to be separate: <em>what</em> you want (an indicator, a codelist, a flow), <em>how</em> you reach it (the package, the URL shape, the auth), and <em>when</em> it was last retrieved. The wrapper separates them. You name the source with a short <code>api =</code> string, you name the result with a stable <code>cache_key</code>, and the wrapper dispatches to the right package, builds the URL, retries or fails with a readable error, writes the result to disk, and records the provenance of the fetch. A sector script stops being a tangle of bespoke HTTP and becomes a manifest of named fetches.</p>
@@ -586,7 +586,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="the-supported-sources" class="level2" data-number="8.4">
 <h2 data-number="8.4" class="anchored" data-anchor-id="the-supported-sources"><span class="header-section-number">8.4</span> The supported sources</h2>
-<p>The wrapper dispatches on the <code>api =</code> string. The R implementation supports eleven values; the Python port supports the same ten with the exception of <code>csv</code>, which was added to R in v0.6.0. Each maps to a thin internal fetcher that knows the URL shape for that source and imports its package lazily — that is, the package is loaded only when that source is actually fetched, so a consumer that never touches SDMX need not have <code>rsdmx</code> or <code>sdmx1</code> installed.</p>
+<p>The wrapper dispatches on the <code>api =</code> string. R and Python support the same eleven values (<code>csv</code> came to R in v0.6.0 and to Python in v0.12.0). Each maps to a thin internal fetcher that knows the URL shape for that source and imports its package lazily — that is, the package is loaded only when that source is actually fetched, so a consumer that never touches SDMX need not have <code>rsdmx</code> or <code>sdmx1</code> installed.</p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 13%">
@@ -676,10 +676,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><code>url</code></td>
 </tr>
 <tr class="odd">
-<td><code>"csv"</code> (R-only, v0.6.0)</td>
-<td>Flat CSV-at-a-URL: SDMX REST-CSV, WB Data360 files, ILOSTAT rplumber <code>format=.csv</code> (<code>readr::read_csv</code>)</td>
+<td><code>"csv"</code></td>
+<td>Flat CSV-at-a-URL: SDMX REST-CSV, WB Data360 files, ILOSTAT rplumber <code>format=.csv</code> (<code>readr::read_csv</code> / <code>pandas.read_csv</code>)</td>
 <td><code>readr</code></td>
-<td>— (not yet ported)</td>
+<td><code>requests</code>, <code>pandas</code></td>
 <td><code>url</code></td>
 </tr>
 </tbody>
