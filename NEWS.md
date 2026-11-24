@@ -22,6 +22,21 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
   call patterns now start at a name boundary, as R's do, so
   `my_read_csv(` and `pl.read_csv(` (polars) are no longer flagged as
   pandas calls.
+- **External APIs and survey weights (#240).**
+  - A World Bank (`wb`) cache written by Python now has the layout R's
+    `wbstats` gives (one row per country and year), so `dw_pop()` reads
+    it; before, Python wrote one wide row per country, which neither
+    language could read.
+  - Python's HTTP fetchers take `timeout=` through `dw_api_fetch()`, as
+    the timeout message has long advised.
+  - In reviewer mode, a refresh refused while a cache exists says so,
+    instead of "cache missing" (R and Python).
+  - Python's `sdmx` fetcher warns when `version` is given outside
+    `flowRef` (`"AGENCY,FLOW,VERSION"`), instead of dropping it.
+  - Python's `dw_nestweight()` stops on a non-numeric weight column, as
+    R does, instead of coercing it to missing.
+  - `dw_publish()` and the `mirror_to_z` deprecation no longer promise
+    a v0.5.0.
 
 ### Documentation
 
