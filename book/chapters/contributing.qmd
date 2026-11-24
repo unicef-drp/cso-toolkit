@@ -117,7 +117,7 @@ python -m pytest python/tests conformance/tests book/_scripts tools
 * In batch from the repository root (Windows: StataMP-64.exe /e do ...):
 do stata/tests/test_config_user_block.do
 ```
-`stata/tests/` holds a do-file per area, plus `test_dw_stata_helpers.py`, run with pytest, for the Python helpers that Stata's `dw_save` and `dw_collaboration` call. GitHub's runners have no Stata licence (#133), so Stata is tested locally: `sh tools/certify` runs every `stata/tests/test_*.do` in its own batch Stata and reads each verdict from a result file, not the log (see "Stata's own suites" in [How the three languages stay in step](parity.qmd)). A new suite needs only the file name `test_<area>.do`, to stop on its first failed `assert`, and to run from the repository root.
+`stata/tests/` holds a do-file per area, plus `test_dw_stata_helpers.py`, run with pytest, for the Python helpers that Stata's `dw_save` and `dw_collaboration` call. GitHub's runners have no Stata licence (#133), so Stata is tested locally: `sh tools/certify` runs every `stata/tests/test_*.do` in its own batch Stata and reads each verdict from a result file, not the log (see "Stata's own suites" in [How the three languages stay in step](parity.qmd)). A new suite needs the file name `test_<area>.do`, to run from the repository root, to stop on its first failed `assert`, and to end with the line `global cert_suite_done 1`, which tells the certificate it ran to the end.
 :::
 
 Behaviour the three languages must share belongs in a parity case as well as in each language's suite: see "Adding a case" in [How the three languages stay in step](parity.qmd).

@@ -163,3 +163,6 @@ assert _rc == 459
 macro drop dw_collaboration_model dw_project_file dw_session_start
 cd "`repo'"
 display as result "PASS: Stata dw_save multi-producer guards (out-of-band, concurrent, git, follow-on, reviewer, takeover)."
+
+* Last line: tells sh tools/certify the suite ran to the end; an -exit- part way would not reach it.
+global cert_suite_done 1

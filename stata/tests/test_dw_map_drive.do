@@ -42,3 +42,6 @@ cap dw_map_drive, config("`cfg2'") dryrun
 assert _rc==198
 
 display as result "PASS: dw_map_drive dryrun + config read + no-share error OK."
+
+* Last line: tells sh tools/certify the suite ran to the end; an -exit- part way would not reach it.
+global cert_suite_done 1

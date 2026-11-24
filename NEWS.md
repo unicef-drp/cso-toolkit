@@ -13,19 +13,27 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
   own batch Stata. A wrapper runs each suite under `capture` and writes its
   return code to a result file, because batch Stata always exits 0 and its
   log echoes source lines, so a "PASS" string in the log proves nothing; a
-  missing result file is a failure. `stata/tests` joins the certified paths,
+  missing result file is a failure. Each suite ends with
+  `global cert_suite_done 1`, so one that `exit`s part way, which also
+  returns 0, fails too. `stata/tests` joins the certified paths,
   so a certificate now also proves the Stata suites passed on that tree
   (schema `cso_toolkit.parity/2`, with `stata_suites` and `suites_summary`).
   `--record` refuses `--cases`, since a certificate covers every case.
+  `--verify` reads the certificate from git rather than the working tree,
+  and `--verify --rev <commit>` checks another commit; `--record`,
+  `--verify` and `--lint` can no longer be combined.
 - **Version stamps are checked.** `python3 tools/check_versions.py` fails
   when any of the stamps a release writes by hand (in `r/`, `python/`,
   `CITATION.cff`, `.zenodo.json`, `README.md`, `NEWS.md` and the handbook)
   names another version or date than `r/DESCRIPTION` and its `NEWS.md`
-  heading. The `Conformance` workflow runs it.
+  heading. The `Conformance` workflow runs it. `r/DESCRIPTION`'s `Date:`,
+  left at 2026-06-28 since v0.5.1, now carries the release date.
 - **Parity case ids are permanent.** `sh tools/certify --lint` checks the
   case files (the checks `conformance/tests` already made, now in
-  `certify.py`) and fails when a case reuses an id listed in
-  `conformance/retired_ids.txt`. The `Conformance` workflow runs it.
+  `certify.py`, plus the fields each kind needs). It fails when a case
+  reuses an id listed in `conformance/retired_ids.txt`, or when a case a
+  committed certificate records has gone without its id being retired. The
+  `Conformance` workflow runs it.
 - **One local check before pushing: `sh tools/check`.** It runs the version,
   case-file, handbook-table and certificate checks in seconds
   (`--full` adds the R and Python suites; `--release` makes a missing

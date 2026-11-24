@@ -101,3 +101,6 @@ dw_load_config, filepath("`cfg'") user(tester)
 assert "`r(project)'" != ""
 
 display as result "PASS: dw_load_config reads the user block, the project override and the top-level fallback."
+
+* Last line: tells sh tools/certify the suite ran to the end; an -exit- part way would not reach it.
+global cert_suite_done 1

@@ -44,3 +44,6 @@ assert "$root"        == ""                    // datalib block's `root:` never 
 
 display as result ///
     "PASS: indent guard ignored the nested datalib: block; toolkit globals intact."
+
+* Last line: tells sh tools/certify the suite ran to the end; an -exit- part way would not reach it.
+global cert_suite_done 1
