@@ -877,7 +877,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="dw_stage-reviewer-mode-sandbox-staging" class="level3" data-number="7.5.4">
 <h3 data-number="7.5.4" class="anchored" data-anchor-id="dw_stage-reviewer-mode-sandbox-staging"><span class="header-section-number">7.5.4</span> <code>dw_stage</code> — reviewer-mode sandbox staging</h3>
-<p><code>dw_stage</code> (R only) is an opt-in reviewer helper that copies a canonical input from Z: (preferred) or Teams into the local sandbox the first time a script needs it, verifies the copy’s hash against the source, and archives that hash in a <code>&lt;path&gt;.staged.json</code> sidecar. On every later run it re-checks the sandbox copy against the archived hash before letting the read proceed. It is a no-op outside reviewer mode.</p>
+<p><code>dw_stage</code> (R and Python) is an opt-in reviewer helper that copies a canonical input from Z: (preferred) or Teams into the local sandbox the first time a script needs it, verifies the copy’s hash against the source, and archives that hash in a <code>&lt;path&gt;.staged.json</code> sidecar. On every later run it re-checks the sandbox copy against the archived hash before letting the read proceed. It is a no-op outside reviewer mode.</p>
 <p>The lifecycle has five states:</p>
 <ul>
 <li><strong>First stage</strong> — the sandbox copy is missing, so copy from the first available source (Z: before Teams), re-hash the copy against the source, and archive the hash.</li>
@@ -899,16 +899,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="co">#   dw_autostage &lt;- TRUE</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div id="tabset-10-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-10-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Not available — dw_stage is an R-only helper.</span></span>
-<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> dw_use(name<span class="op">=</span><span class="st">"dw_nut.csv"</span>, sector<span class="op">=</span><span class="st">"nt"</span>, kind<span class="op">=</span><span class="st">"wrk"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Per-call opt-in: stage the canonical input into the sandbox, then read it</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> dw_use(name<span class="op">=</span><span class="st">"dw_nut.csv"</span>, sector<span class="op">=</span><span class="st">"nt"</span>, kind<span class="op">=</span><span class="st">"wrk"</span>, stage<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Or for the session:</span></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="co">#   _state.configure(dw_autostage=True)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div id="tabset-10-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-10-3-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>* Not available — dw_stage is an R-only helper.</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>* Not available — Stata has no dw_stage; a Stata reviewer reads <span class="kw">in</span> place.</span>
 <span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>dw_use , filename(<span class="st">"dw_nut.dta"</span>) path(<span class="st">"$teamsWrkData/nt"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 </div>
-<p><code>dw_stage</code> and <code>dw_use</code>’s <code>stage =</code> integration are R-only. The <code>.staged.json</code> sidecar is deliberately distinct from <code>dw_save</code>’s <code>.provenance.json</code>, so a file that is both written by <code>dw_save</code> and staged by <code>dw_stage</code> carries both metadata blocks side by side; each reader refuses to misread the other’s schema by checking a <code>type</code> discriminator.</p>
+<p><code>dw_stage</code> and <code>dw_use</code>’s <code>stage =</code> integration ship in R and Python; Stata has neither. Both languages write the same sidecar, so a file staged in R verifies in Python and the other way round. The <code>.staged.json</code> sidecar is deliberately distinct from <code>dw_save</code>’s <code>.provenance.json</code>, so a file that is both written by <code>dw_save</code> and staged by <code>dw_stage</code> carries both metadata blocks side by side; each reader refuses to misread the other’s schema by checking a <code>type</code> discriminator.</p>
 </section>
 <section id="dw_fetch_inputs-and-dw_check_deposit-inputs-kept-out-of-git" class="level3" data-number="7.5.5">
 <h3 data-number="7.5.5" class="anchored" data-anchor-id="dw_fetch_inputs-and-dw_check_deposit-inputs-kept-out-of-git"><span class="header-section-number">7.5.5</span> <code>dw_fetch_inputs</code> and <code>dw_check_deposit</code> — inputs kept out of Git</h3>
