@@ -231,9 +231,12 @@ dw_api_fetch <- function(api,
 
 	# No cache hit (or refresh). Producer mode required to fetch.
 	if (!isTRUE(.try_get("dw_apis_allowed"))) {
+		cached <- file.exists(cache_path) || file.exists(canonical_cache_path)
 		.dw_require_no_api(
 			api_name = sprintf("dw_api_fetch('%s', cache_key='%s')", api, cache_key),
-			reason = sprintf("cache missing at %s", canonical_cache_path)
+			reason = if (isTRUE(refresh) && cached)
+				sprintf("refresh requested; the cache at %s is read without refresh", canonical_cache_path)
+			else sprintf("cache missing at %s", canonical_cache_path)
 		)
 		return(invisible(NULL))  # defensive; .dw_require_no_api already stop()'d
 	}
