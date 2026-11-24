@@ -1,8 +1,8 @@
 # Function reference
 
-This appendix is a *directory, not a manual*. It lists every public function the toolkit exports, groups them into their capability families, and points you to the authoritative per-function documentation for each language. Use it to find a function by name and see which family it belongs to, which languages implement it, and where to read the argument-by-argument details. The full prose reference — argument descriptions, return values, and runnable examples — lives in the generated documentation sites described below.
+This appendix is a *directory, not a manual*. It lists every public function the toolkit exports, groups them into their capability families, and points you to the authoritative per-function documentation for each language. Use it to find a function by name and see which family it belongs to, which languages implement it, and where to read the argument-by-argument details. The full prose reference — argument descriptions, return values, and runnable examples — lives in each language's own documentation, described below.
 
-The families here mirror the chapters of Part III. For the *behaviour* of a family — what it does and why — read the matching chapter (the IO contract, the external-API contract, aggregation, vintage sync, scaffolding and the contract auditor). For the *signatures*, read the language-specific reference sites named at the foot of this page. The coverage-matrix appendix is the canonical source for the cross-language gaps summarised below.
+The families here mirror the chapters of Part III. For the *behaviour* of a family — what it does and why — read the matching chapter (the IO contract, the external-API contract, aggregation, vintage sync, scaffolding and the contract auditor). For the *signatures*, read each language's reference, described in the next section. The coverage-matrix appendix is the canonical source for the cross-language gaps summarised below.
 
 A note on terms used throughout the tables. The toolkit routes paths and gates the network by *mode*: a script runs as the data **producer** (writes the canonical deposit, may hit the live network) or as the **reviewer** (reads frozen artefacts only, with the network barred). A **canonical** write is a final published deposit, as opposed to a working artefact. These distinctions are load-bearing for the IO and external-API tables; the external-API contract chapter explains them in full.
 
@@ -10,14 +10,14 @@ A note on terms used throughout the tables. The toolkit routes paths and gates t
 
 The three language siblings document themselves in three different idioms, and coverage is uneven — complete in R, site-less in Python, partial in Stata.
 
-**R — pkgdown site (complete).** The R package is fully documented with roxygen2 and rendered to a pkgdown site published at `https://unicef-drp.github.io/cso-toolkit`. Every exported function has a generated `.Rd` help page; open it in R with `?dw_save`, or browse the site's *Reference* tab. The *Reference* index is organised into the same capability families used below. That grouping is driven by `r/_pkgdown.yml`, which assigns each function to a family through roxygen `@family` tags (`io`, `api`, `sync`, `aggregate`, `demographics`, `survey-weights`, `reporting`, `scaffolding`, `audit`). roxygen2 renders each `@family` tag as a `\concept{}` entry in the `.Rd`, which is what the `has_concept()` selectors in `_pkgdown.yml` match. The R site is the most complete reference of the three and is the recommended starting point even for Python and Stata users, because the behaviour contract is shared.
+**R — roxygen2 help pages (complete).** The R package is fully documented with roxygen2: every exported function has a generated `.Rd` help page; open it with `?dw_save` after installing the package (or `devtools::load_all("r")`). `r/_pkgdown.yml` groups the pages into the same capability families used below, for a pkgdown site, but no workflow builds or publishes one yet: `https://unicef-drp.github.io/cso-toolkit` serves the DW Operations dashboard and the handbook. The grouping assigns each function to a family through roxygen `@family` tags (`io`, `collaboration`, `api`, `sync`, `aggregate`, `demographics`, `survey-weights`, `reporting`, `scaffolding`, `audit`). roxygen2 renders each `@family` tag as a `\concept{}` entry in the `.Rd`, which is what the `has_concept()` selectors in `_pkgdown.yml` match. The R help pages are the most complete reference of the three and the recommended starting point even for Python and Stata users, because the behaviour contract is shared.
 
 **Python — module docstrings only (no autodoc site).** The Python package carries full type hints (it ships `src/py.typed` per PEP 561) and per-function docstrings, but there is **no generated documentation site** — no Sphinx, no pkgdown equivalent. To read the Python reference, either introspect in a session (`help(dw_save)` after `from cso_toolkit import dw_save`) or read the hand-written Markdown references in the repo: `docs/dw_io_python_reference.md` and `docs/dw_api_python_reference.md`. These two files cover the IO and external-API families; the remaining Python families are documented only by their docstrings.
 
 **Stata — native `.sthlp` help files (partial coverage).** Each shipped Stata command has a companion `.sthlp` help file next to its `.ado` in `stata/src/`, viewable with the usual `help dw_save`. Stata implements only the subset of the contract that fits its idioms, so its reference covers far fewer functions than R or Python (see the per-family coverage notes and the coverage-matrix appendix).
 
 ::: {.callout-note}
-The pkgdown *Reference* index is generated from the roxygen `@family` tags (which roxygen2 emits as `\concept{}` entries the `has_concept()` selectors match), not hand-maintained. If you add an exported R function, tag it with the right `@family` so it lands in the correct family on the site; an untagged export is still exported but is orphaned from the reference index.
+The family grouping in `r/_pkgdown.yml` is driven by the roxygen `@family` tags (which roxygen2 emits as `\concept{}` entries the `has_concept()` selectors match), not hand-maintained. If you add an exported R function, tag it with the right `@family` so it lands in the correct family; an untagged export is still exported but is orphaned from the reference index.
 :::
 
 ## Reading the family tables
@@ -30,7 +30,7 @@ Two naming conventions matter when you read across the columns:
 - **Python exports both names too.** The Python package (`python/src/__init__.py`) exports the **bare** name *and* a `dw_`-prefixed alias for every dual-named function — `aggregate_data_v2` / `dw_aggregate_data_v2`, `create_profile` / `dw_create_profile`, `test_scripts` / `dw_test_scripts`, and so on — so the canonical `dw_`-prefixed spelling resolves identically in R and Python. (Earlier these aliases were R-only, and the `dw_` spelling raised `ImportError` in Python.)
 
 ::: {.callout-warning}
-**Version stamps, not feature parity.** The R and Python packages both report **v0.6.0**. A matching stamp is a floor, not a guarantee that every behaviour is present in both: some noted below (for example the Z:-root recognition in `dw_is_canonical`, or the read-all-sheets `dw_use(sheet = NULL)`) landed in R and may not yet be present, or may behave differently, in the Python sibling. When a feature's vintage matters, confirm it against the language you are actually running.
+**Version stamps, not feature parity.** The R and Python packages report the same version. A matching stamp is a floor, not a guarantee that every behaviour is present in both: some noted below (for example the Z:-root recognition in `dw_is_canonical`, or the read-all-sheets `dw_use(sheet = NULL)`) landed in R and may not yet be present, or may behave differently, in the Python sibling. When a feature's vintage matters, confirm it against the language you are actually running.
 :::
 
 ## IO contract
@@ -39,10 +39,10 @@ Uniform read / write / compare / merge helpers with mode-aware path routing (pat
 
 | Function | R | Python | Stata | Notes |
 |---|---|---|---|---|
-| `dw_save` | ✅ | ✅ | ✅ | Write + uniqueness check (isid) + sidecar + Z: mirror; prompts before overwriting a producer deposit (v0.5.0), `force = TRUE` to override |
+| `dw_save` | ✅ | ✅ | ✅ | Write + uniqueness check (isid) + sidecar + Z: mirror; in R, prompts before overwriting a producer deposit (v0.5.0), `force = TRUE` to override |
 | `dw_use` | ✅ | ✅ | ✅ | Read with mode-branched resolver; accepts HTTPS URLs since v0.4.0; in R, `sheet = NULL` reads all sheets of an `.xlsx` (v0.5.0) |
 | `dw_compare` | ✅ | ✅ | ✅ | Diff two artefacts on id + value vars; tolerates degenerate sides with a warning (v0.5.0); `diagnose = TRUE` (R, Python) adds a profile; stops when both sides are the same file (#111) |
-| `dw_diff_profile` | ✅ | ✅ | — | Unreleased (#111): profile a `dw_compare` result (differing columns, numeric drift quantiles, top key values of the changed / added / removed rows) |
+| `dw_diff_profile` | ✅ | ✅ | — | Since v0.11.0 (#111): profile a `dw_compare` result (differing columns, numeric drift quantiles, top key values of the changed / added / removed rows); Stata's `dw_compare` returns per-column counts in `r(col_changed)` |
 | `dw_merge` | ✅ | ✅ | — | R + Python only |
 | `dw_isid` | ✅ | ✅ | embedded | In Stata the uniqueness check lives inside `dw_save` |
 | `dw_verify_z` | ✅ | ✅ | — | R + Python only |
@@ -54,8 +54,8 @@ Uniform read / write / compare / merge helpers with mode-aware path routing (pat
 | `dw_check_deposit` | ✅ | ✅ | — | R and Python (#152; Stata via R or Python): every local input has an identical SHA-256 copy on Teams or Z: |
 | `dw_read_provenance` | ✅ | ✅ | — | R and Python (#152; Stata via R or Python): read the `.provenance.json` sidecar of an output |
 | `dw_provenance_diff` | ✅ | ✅ | — | R and Python (#152; Stata via R or Python): compare two runs from their sidecars (reproduced / output changed / inputs changed) |
-| `dw_collaboration` | ✅ | ✅ | ✅ | Unreleased: the project's collaboration model (`single-producer` / `multi-producer`) from `cso_project.yml`, resolved once per session; Stata `dw_collaboration.ado` (#168) |
-| `dw_set_collaboration` | ✅ | ✅ | — | Unreleased: write `cso_project.yml` and baseline the existing sidecars (one reviewed PR); refused in reviewer mode; not in Stata (switch from R or Python) |
+| `dw_collaboration` | ✅ | ✅ | ✅ | The project's collaboration model (`single-producer` / `multi-producer`) from `cso_project.yml`, resolved once per session (R and Python since v0.10.0); Stata `dw_collaboration.ado` since v0.11.0 (#168) |
+| `dw_set_collaboration` | ✅ | ✅ | — | Since v0.10.0: write `cso_project.yml` and baseline the existing sidecars (one reviewed PR); refused in reviewer mode; not in Stata (switch from R or Python) |
 | `dw_publish` | ✅ (stub) | — | — | STUB / dry-run only — see callout below |
 | `dw_toolkit_version` | ✅ | ✅ | — | Reports the installed toolkit version |
 | `dw_verbosity` | ✅ | — | — | Sets session verbosity / debug options (v0.4.10) |
@@ -63,7 +63,7 @@ Uniform read / write / compare / merge helpers with mode-aware path routing (pat
 | `dw_map_drive` | — | — | ✅ | Stata-only onboarding: maps the team network drive from config (port of datalib's `mapzdrive`) |
 
 ::: {.callout-warning}
-`dw_publish` is exported but remains a **stub** as of v0.5.0: only the dry-run path (`dry_run = TRUE`, the default) is supported, returning a validated payload with a `sha256`. A live submission (`dry_run = FALSE`) deliberately raises an error pointing at issue #15. Do not treat it as a working submission path; the live Helix branch is still pending. See the versioning and releases chapter.
+`dw_publish` is exported but remains a **stub**: only the dry-run path (`dry_run = TRUE`, the default) is supported, returning a validated payload with a `sha256`. A live submission (`dry_run = FALSE`) deliberately raises an error pointing at issue #15. Do not treat it as a working submission path; the live Helix branch is still pending. See the versioning and releases chapter.
 :::
 
 ::: {.panel-tabset}
@@ -74,7 +74,7 @@ df <- dw_use(name = "dw_ed_edu.csv", sector = "ed", kind = "wrk")
 ```
 #### Python {.unnumbered .unlisted}
 ```python
-dw_save(df, name="dw_ed_edu.csv", sector="ed", kind="wrk", isid="REF_AREA")
+dw_save(df, name="dw_ed_edu.csv", sector="ed", kind="wrk", isid=["REF_AREA"])
 df = dw_use(name="dw_ed_edu.csv", sector="ed", kind="wrk")
 ```
 #### Stata {.unnumbered .unlisted}
@@ -93,7 +93,7 @@ Mode-aware wrappers around the supported external data sources (eleven in all, a
 | `dw_api_fetch` | ✅ | ✅ | — | The main dispatcher (`api =` selects the source) |
 | `dw_api_cached` | ✅ | ✅ | — | Cache-only read |
 | `dw_api_inventory` | ✅ | ✅ | — | List what is cached |
-| `dw_default_unicef_allowlist` | ✅ | — | — | Default URL allowlist for `dw_use` HTTPS freezing (R only) |
+| `dw_default_unicef_allowlist` | ✅ | ✅ | — | Default URL allowlist for `dw_use` HTTPS freezing (Python since v0.8.0) |
 
 ::: {.callout-warning}
 **Stata has no external-API wrapper.** The entire API family is R + Python only. A Stata reviewer can still re-run from frozen artefacts, but Stata cannot fetch from UIS, SDMX, the World Bank, ILO, UNSD-SDG, or GitHub-raw through the toolkit. Stata enforces its reviewer-mode network lockout separately, through `dw_require_no_api` (listed under Stata-only helpers below).
@@ -101,7 +101,7 @@ Mode-aware wrappers around the supported external data sources (eleven in all, a
 
 ```python
 # Python — api= selects the source
-df = dw_api_fetch(api="wb", indicator="SP.POP.TOTL", sector="ed", kind="wrk")
+df = dw_api_fetch(api="wb", cache_key="wb_SP.POP.TOTL", indicator="SP.POP.TOTL")
 ```
 
 ## Aggregation and survey weights
@@ -121,11 +121,11 @@ Per the naming conventions above, R and Python both export the `dw_`-prefixed an
 ::: {.panel-tabset}
 #### R {.unnumbered .unlisted}
 ```r
-out <- dw_aggregate_data_v2(df, stat = "weighted_mean", by = "REGION")
+out <- dw_aggregate_data_v2(df, value = "OBS_VALUE", weight = "POP", by = "REGION", method = "weighted_mean")
 ```
 #### Python {.unnumbered .unlisted}
 ```python
-out = aggregate_data_v2(df, stat="weighted_mean", by="REGION")
+out = aggregate_data_v2(df, value="OBS_VALUE", weight="POP", by=["REGION"], method="weighted_mean")
 ```
 #### Stata {.unnumbered .unlisted}
 ```stata
@@ -143,7 +143,7 @@ Convenience wrappers for the population denominators and the UNICEF region taxon
 | `dw_regions` | ✅ | — | — | Append UNICEF regional aggregate rows; added v0.4.0 (issue #18) |
 
 ::: {.callout-note}
-`dw_pop` ships in **R and Python**; `dw_regions` is **R-only today.** The Stata sibling of `dw_pop` and the Python and Stata siblings of `dw_regions` are not yet shipped; a `dw_regions()` redesign against the Country-and-Region-Metadata-API (issue #40) is on the roadmap.
+`dw_pop` ships in **R and Python**; `dw_regions` is **R-only today.** Neither has a Stata sibling, by design (see the coverage matrix). `dw_regions` has no Python sibling yet; a redesign against the Country-and-Region-Metadata-API (issue #40, open) is on the roadmap.
 :::
 
 ## Vintage sync
@@ -168,15 +168,15 @@ Generators for the standard CSO building blocks (new repositories, profile scrip
 | `dw_create_profile` | ✅ | ✅ | — | Scaffold `profile_<repo>.R` / `.py`; bare name `create_profile` |
 | `dw_create_sector_script` | ✅ | ✅ | — | Scaffold a sector run-script template; bare name `create_sector_script` |
 | `create_dw_sector_script` | ✅ | ✅ | — | DW-Production convenience wrapper (no `dw_`-prefixed alias by design — it already carries a `dw` infix) |
-| `create_research_project` | ✅ | ✅ | — | Unreleased: scaffold a research repository (layout, `.gitignore`, `tools/check.R`, hook, tests, `cso_project.yml`); no `dw_` alias. See "Starting a new repository" |
-| `create_official_stats_project` | ✅ | ✅ | — | Unreleased: scaffold an official-statistics repository (embargo settings, `releases/`, `01_dw_prep/012_codes/`); no `dw_` alias |
+| `create_research_project` | ✅ | ✅ | — | Since v0.10.0: scaffold a research repository (layout, `.gitignore`, `tools/check.R`, hook, tests, `cso_project.yml`, agent files); no `dw_` alias. See "Starting a new repository" |
+| `create_official_stats_project` | ✅ | ✅ | — | Since v0.10.0: scaffold an official-statistics repository (embargo settings, `releases/`, `01_dw_prep/012_codes/`); no `dw_` alias |
 | `dw_review_profile` | ✅ | ✅ | — | Audit a profile for required blocks (pass/warn/fail); bare name `review_profile` |
 | `dw_test_scripts` | ✅ | ✅ | — | Contract auditor: flag raw IO / API calls; bare name `test_scripts` |
 
 As above, R and Python both export the `dw_`-prefixed and the bare name for the dual-named helpers.
 
 ::: {.callout-note}
-A future v0.5.x rename of `test_scripts` / `dw_test_scripts` to `dw_audit_scripts` (to surface the audit intent and avoid the testthat name collision) is on the design horizon; the current prefix-only alias keeps that cleanup additive.
+A future rename of `test_scripts` / `dw_test_scripts` to `dw_audit_scripts` (to surface the audit intent and avoid the testthat name collision) is on the design horizon (not yet tracked by an issue); the current prefix-only alias keeps that cleanup additive.
 :::
 
 ```r
@@ -196,21 +196,22 @@ Smaller exported utilities that do not anchor a chapter of their own.
 
 ## Stata-only helpers
 
-Three Stata commands have no R or Python sibling because they fill gaps specific to Stata's runtime. Each is documented in its `.sthlp` file in `stata/src/`.
+Four Stata commands have no toolkit-exported R or Python sibling because they fill gaps specific to Stata's runtime (R and Python get a `dw_require_no_api()` function from the generated profile instead). Each is documented in its `.sthlp` file in `stata/src/`.
 
 | Command | Purpose |
 |---|---|
 | `dw_mkdir` | Recursive directory creation (Stata's built-in `mkdir` is not recursive) |
+| `dw_map_drive` | Maps the team network drive from `dwZDrive` / `dwZDriveUNC` (port of datalib's `mapzdrive`) |
 | `dw_require_no_api` | Reviewer-mode no-API gate — Stata's equivalent of the network lockout |
 | `dw_load_config` | AppLocker-safe YAML config loader for the profile (loads config without an external binary the corporate AppLocker policy would block) |
 
-The full set of files under `stata/src/` is: `dw_save`, `dw_use`, `dw_compare`, `dw_mkdir`, `dw_map_drive`, `dw_require_no_api`, and `dw_load_config`, each shipped as an `.ado` plus a matching `.sthlp`.
+The full set of commands under `stata/src/` is: `dw_save`, `dw_use`, `dw_compare`, `dw_collaboration`, `dw_mkdir`, `dw_map_drive`, `dw_require_no_api` and `dw_load_config`, each shipped as an `.ado` plus a matching `.sthlp`; alongside them sit the internal `_dw_py.ado` and `dw_stata_helpers.py`, which the Python-backed parts of `dw_save` and `dw_collaboration` use.
 
 ## How to find a function fast
 
 - **You know the name.** In R, `?<name>`; in Python, `help(<name>)` after importing it from `cso_toolkit` (either the bare name or the `dw_` prefix works for the dual-named functions); in Stata, `help <command>`.
 - **You know the task but not the name.** Find the matching chapter in Part III, then return here for the family table.
-- **You want the rendered web reference.** Open the pkgdown site at `https://unicef-drp.github.io/cso-toolkit` and use the *Reference* tab; it is the most complete of the three languages even when you work in Python or Stata.
+- **You want the full R reference.** Install the package (or `devtools::load_all("r")`) and use `?<name>`; the help pages are the most complete reference of the three languages, even when you work in Python or Stata.
 - **You want to know whether a language has a function.** Use the tables above for a quick read and the cross-language coverage matrix appendix for the authoritative, issue-tracked answer.
 
 ## Authoritative source files
@@ -218,7 +219,7 @@ The full set of files under `stata/src/` is: `dw_save`, `dw_use`, `dw_compare`, 
 The lists on this page are generated from, and should be reconciled against, these files in the repository. When the exports drift from this page, the files below win — this appendix is a finding aid, not the contract.
 
 - `r/NAMESPACE` — the complete list of R exports (the source of truth for the R column).
-- `r/_pkgdown.yml` — the family grouping rendered on the pkgdown site, driven by roxygen `@family` tags (which roxygen2 emits as `\concept{}` entries the `has_concept()` selectors match).
+- `r/_pkgdown.yml` — the family grouping for a pkgdown site (none is published yet), driven by roxygen `@family` tags (which roxygen2 emits as `\concept{}` entries the `has_concept()` selectors match).
 - `python/src/__init__.py` — the Python `__all__` export list and the per-module import map.
 - `stata/src/` — one `.ado` plus one `.sthlp` per Stata command.
 - `docs/dw_io_python_reference.md`, `docs/dw_api_python_reference.md` — the hand-written Python IO and API references.

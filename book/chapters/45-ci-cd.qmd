@@ -17,7 +17,7 @@ Everything here ships as copyable material in the toolkit repository, so a new p
 | GitHub Actions workflows (opt-in; they call `check.R`) | `templates/workflows/ci-hygiene.yml`, `ci-contract-audit.yml`, `ci-r-tests.yml`, `ci-manuscript.yml` |
 | testthat skeleton for a non-package project | `templates/testthat/` |
 
-A new repository gets all of them, set for its kind, from `create_research_project()` or `create_official_stats_project()` ([Starting a new repository](40-new-repository.qmd)).
+A new repository gets them, set for its kind (the opt-in workflows only with `workflows = TRUE`; an official-statistics repository has no manuscript workflow), from `create_research_project()` or `create_official_stats_project()` ([Starting a new repository](40-new-repository.qmd)).
 
 ## Data stay out; their provenance goes in
 
@@ -67,7 +67,7 @@ The ignore file is the safety net, not the first line of defence. That is the st
 
 Ten principles shape the menu. Each earns its place by a failure it prevents.
 
-1. **Checks run locally first.** Every check in the menu runs on your machine with one command from the repository root, `Rscript --no-init-file tools/check.R`, which prints a `PASS` / `FAIL` / `SKIP` line per check and exits non-zero on any failure. `sh tools/check --record` also commits a check record of the result, and the pre-push hook refuses a push without one. GitHub Actions are opt-in and call the same script, so they add an independent run, never a different check. Actions minutes run out, and a failure reproduced on your machine gets fixed before the push.
+1. **Checks run locally first.** Every check in the menu runs on your machine with one command from the repository root, `Rscript --no-init-file tools/check.R`, which prints a `PASS` / `WARN` / `FAIL` / `SKIP` line per check and exits non-zero on any failure. `sh tools/check --record` also commits a check record of the result, and the pre-push hook refuses a push without one. GitHub Actions are opt-in and call the same script, so they add an independent run, never a different check. Actions minutes run out, and a failure reproduced on your machine gets fixed before the push.
 2. **CI never needs real data.** Tests use tiny synthetic fixtures. Reproduction against real data runs locally in reviewer mode, and its evidence — the `dw_provenance_diff()` status, `dw_check_deposit()` output, a `dw_compare()` summary — goes in the pull request. Data must not be on a hosted runner, and a check that needs data cannot run on every push.
 3. **Default checks are fast, under ten minutes.** A check people wait for gets skipped, and a pre-push hook that takes too long gets bypassed.
 4. **Merges are gated by the check record.** The gate is a committed record that `check.R` passed on the pull request's exact content, verified on GitHub in seconds without running R (see [Check records](#check-records)), and required by branch protection. A check that can be merged around is advice, not a gate.
