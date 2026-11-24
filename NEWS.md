@@ -6,6 +6,19 @@ _Entries land here as PRs merge into `develop`. When the next release
 is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 `## Unreleased` section is added back._
 
+## v0.12.1 (2026-11-24)
+
+A patch: three bug fixes and a restructured handbook. Scaffolded sector
+scripts now run against a `create_profile()` profile (#236); the
+contract auditor's R `fromJSON` URL rule fires and its Python patterns
+stop flagging look-alike names (#237); a World Bank cache written by
+Python is readable by `dw_pop()`, Python's API fetchers take a
+`timeout`, and several messages say what actually happened (#240). The
+handbook was rebuilt so each fact has one home, with language coverage
+generated from the code. PRs #234, #238, #241, #243, #245, #247, #248,
+#250, #252. PATCH: no change to any function's signature except
+optional new `timeout` arguments on Python's API fetchers.
+
 ### Fixed
 
 - **`create_profile()` output works with scaffolded sector scripts
