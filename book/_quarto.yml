@@ -43,6 +43,8 @@ book:
     - part: "Part IV — Maintaining the Toolkit"
       chapters:
         - chapters/44-versioning-release.qmd
+        - chapters/parity.qmd
+        - chapters/contributing.qmd
     - part: "Part V — The Microdata Archive (datalib)"
       chapters:
         - chapters/51-microdata-archive.qmd
@@ -59,7 +61,6 @@ book:
     - appendices/d-function-reference.qmd
     - appendices/e-glossary.qmd
     - appendices/f-third-party-functions.qmd
-    - appendices/g-parity-certificate.qmd
 
 format:
   html:

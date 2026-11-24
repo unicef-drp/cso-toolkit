@@ -120,13 +120,13 @@ The handbook is organised into six parts and a set of appendices.
 
 - **Part III — Setting Up and Running a Repository** is for the people who start or adopt a repository: creating one (or adopting the toolkit in an existing one), profiles and the mode switch, vendoring and updates, checks and CI with check records and the contract auditor, and working with AI coding agents.
 
-- **Part IV — Maintaining the Toolkit** is for the toolkit's own maintainers: versioning and the release discipline.
+- **Part IV — Maintaining the Toolkit** is for the toolkit's own maintainers and contributors: versioning and the release discipline, how the three languages are certified to agree, and how to contribute a change.
 
 - **Part V — The Microdata Archive (datalib)** documents the survey-microdata archive, its IHSN folder grammar, and the `datalib_*` API and conformance suite.
 
 - **Part VI — The Ecosystem** sets out the three tiers of shared code and documents unicefData.
 
-- **Appendices** collect the dense reference material: the cross-language coverage matrix (A), the provenance sidecar schema (B), the error taxonomy (C), a full function reference (D), a glossary (E), curated third-party functions (F), and the parity certificate (G).
+- **Appendices** collect the dense reference material: the cross-language coverage matrix (A), the provenance sidecar schema (B), the error taxonomy (C), a full function reference (D), a glossary (E), and curated third-party functions (F). How the three languages are certified to agree is a chapter of its own in Part IV.
 
 If you are brand new, read the architecture and roles chapters in Part I, then the reading-and-writing chapter in Part II. Those three pages give you enough to use the toolkit safely.
 

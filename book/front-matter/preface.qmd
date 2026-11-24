@@ -43,9 +43,9 @@ The handbook is organised into six parts and a set of appendices.
 - **Part I — The Contract** motivates the toolkit and lays out its shape (one contract, three language siblings, many consumer repositories, one canonical deposit), then defines the three roles, the session-level mode that governs network access, and the two cross-cutting mechanisms — provenance sidecars and the standard error envelope — that make the toolkit trustworthy.
 - **Part II — Using the Helpers** is the daily reference, one chapter per capability family: reading and writing data, external APIs, and aggregation, with R, Python and Stata side by side.
 - **Part III — Setting Up and Running a Repository** is for adopters: starting a repository or adopting the toolkit in an existing one, profiles and the mode switch, vendoring and updates, checks and CI, and working with AI coding agents.
-- **Part IV — Maintaining the Toolkit** is for the toolkit's maintainers: versioning and the release discipline.
+- **Part IV — Maintaining the Toolkit** is for the toolkit's maintainers and contributors: versioning and the release discipline, how the three languages are certified to agree, and how to contribute a change.
 - **Parts V and VI** document the microdata archive (datalib) and the wider ecosystem of shared code.
-- **Appendices** collect the dense reference material: the coverage matrix (A), the provenance sidecar schema (B), the error taxonomy (C), a function reference (D), a glossary (E), curated third-party functions (F) and cross-language parity (G).
+- **Appendices** collect the dense reference material: the coverage matrix (A), the provenance sidecar schema (B), the error taxonomy (C), a function reference (D), a glossary (E), and curated third-party functions (F).
 
 If you are new, read the architecture and roles chapters in Part I, then the reading-and-writing chapter in Part II. Those three give you enough to use the toolkit safely. If you are here to start a repository or adopt the toolkit in an existing one, begin with "Starting a repository" in Part III, keeping the roles chapter to hand.
 

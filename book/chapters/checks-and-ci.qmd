@@ -234,7 +234,7 @@ To skip the hook once, when you must, use `git push --no-verify` or `CHECK_SKIP=
 
 **Automated pull requests** (a bot rebuilding the handbook, a sync job) carry no record. List the generated paths they touch in the workflow's `EXEMPT_PATHS` (space-separated shell patterns, where `*` also matches `/`, for example `docs/handbook/*`). A pull request whose every changed file matches one passes without a record. Anything that changes other files still needs one, whoever opened it.
 
-**Branch protection** (Settings > Branches, for `develop` and `main`): require the status check `check-record`, and tick *Require branches to be up to date before merging*. Then what merges is exactly the checked content. The toolkit repository itself uses its parity certificate ([Appendix G](../appendices/g-parity-certificate.qmd)) and its package CI instead.
+**Branch protection** (Settings > Branches, for `develop` and `main`): require the status check `check-record`, and tick *Require branches to be up to date before merging*. Then what merges is exactly the checked content. The toolkit repository itself uses its parity certificate ([How the three languages stay in step](parity.qmd)) and its package CI instead.
 
 ## The opt-in workflows
 
