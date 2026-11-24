@@ -23,7 +23,7 @@ Before copying any files, settle two questions.
 
 **Which helpers does your pipeline actually need?** The toolkit is modular. A repo that only reads and writes deposit files needs the IO contract (`dw_save` / `dw_use` / `dw_compare`) and the sync helper. A repo that also fetches from upstream APIs needs the external-API contract (`dw_api_fetch` / `dw_api_cached` / `dw_api_inventory`). The vendoring manifest's `vendored:` list is meant to be trimmed to exactly what you use — do not copy files your pipeline never calls.
 
-**Which languages?** R and Python are at near-parity. Stata covers the producer/reviewer IO and config contract (`dw_save`, `dw_use`, `dw_compare`, `dw_load_config`, `dw_mkdir`, `dw_require_no_api`) but has **no API wrapper** (`dw_api_fetch` and friends are R+Python only) and **no sync helper** (`cso_toolkit_check` / `_pull` are R+Python only), and Parquet output is R+Python-only (Stata writes `.dta`; R adds `.rds`, Python adds `.pkl`). If your Stata code needs a remote source, it cannot route through `dw_api_fetch`; you must keep API fetching in R or Python and have Stata read the cached deposit with `dw_use`. Plan around that gap now rather than discovering it mid-onboarding.
+**Which languages?** R and Python are at near-parity. Stata covers the producer/reviewer IO and config contract (`dw_save`, `dw_use`, `dw_compare`, `dw_load_config`, `dw_mkdir`, `dw_require_no_api`, `dw_map_drive`, `dw_collaboration`) but has **no API wrapper** (`dw_api_fetch` and friends are R+Python only) and **no sync helper** (`cso_toolkit_check` / `_pull` are R+Python only), and Parquet output is R+Python-only (Stata writes `.dta`; R adds `.rds`, Python adds `.pkl`). If your Stata code needs a remote source, it cannot route through `dw_api_fetch`; you must keep API fetching in R or Python and have Stata read the cached deposit with `dw_use`. Plan around that gap now rather than discovering it mid-onboarding.
 
 ## Step 1: Vendor the helpers
 
@@ -52,21 +52,20 @@ for (f in list.files("00_functions", pattern = "\\.R$", full.names = TRUE)) {
 
 #### Python {.unnumbered .unlisted}
 
-The Python implementation lives under `python/src/`. For the vendoring model, copy the modules alongside your pipeline code:
+The Python implementation lives under `python/src/` and is one package (its modules import each other), so copy the whole folder into `00_functions/cso_toolkit/`:
 
 ```bash
-mkdir -p 00_functions
-cp /path/to/cso-toolkit/python/src/dw_io.py            00_functions/
-cp /path/to/cso-toolkit/python/src/dw_api.py           00_functions/
-cp /path/to/cso-toolkit/python/src/cso_toolkit_sync.py 00_functions/
+mkdir -p 00_functions/cso_toolkit
+cp -r /path/to/cso-toolkit/python/src/* 00_functions/cso_toolkit/
 ```
 
 ```python
 import sys
-sys.path.insert(0, "00_functions")
-from dw_io import dw_save, dw_use, dw_compare
-from dw_api import dw_api_fetch, dw_api_inventory
+sys.path.insert(0, "00_functions")           # makes `cso_toolkit` importable
+from cso_toolkit import dw_save, dw_use, dw_compare, dw_api_fetch, dw_api_inventory
 ```
+
+The sync helpers still expect vendored files flat, next to the manifest, so syncing a Python package copy is not yet supported (issue #230).
 
 #### Stata {.unnumbered .unlisted}
 
@@ -111,18 +110,20 @@ The fields, from the template's own header:
 |---|---|
 | `source` | GitHub `owner/repo` of the upstream toolkit. |
 | `pulled_version` | The tag at the time of the most recent pull (e.g. `v0.5.0`). Use `inrepo` if you edited the helpers locally and do not want sync warnings. |
+| `pulled_commit` | Optional: the 40-hex commit `pulled_version` points to, so a moved tag can be noticed; the scaffolders and `cso_toolkit_pull()` write it. |
 | `pulled_date` | ISO-8601 date of the pull. Free-form; the helper does not parse it. |
 | `pulled_by` | Human breadcrumb for who ran the pull. |
 | `vendored` | List of files copied from the toolkit into your `00_functions/`. Trim to what you use. |
 | `local_edits` | Files in `vendored:` that you have diverged locally; `cso_toolkit_pull()` skips these on update. Empty by default. |
+| `target_version` | Optional: the version this repo must run on; `cso_toolkit_check()` warns, offline and in both modes, when `pulled_version` is behind it. |
 
 Commit the manifest in version control alongside the vendored helpers, and update it every time you re-pull. Keep `vendored:` honest: list a file only if it is actually present in `00_functions/`.
 
 ::: {.callout-warning}
-`pulled_version` must be a real tag once the upstream repo has releases. The Database Manager (DBM) pre-deposit checklist (the submission template referenced in the roles chapter) gates a deposit on the manifest being on a tagged version — no `inrepo` or `unreleased` suffixes. Use `inrepo` only during local development of the helpers themselves, never for a deposit run. Note that `cso_toolkit_check()` still queries upstream when `pulled_version` contains `inrepo` but forces `updates_available` to `FALSE`, so a stray `inrepo` silently suppresses drift warnings.
+`pulled_version` must be a real tag once the upstream repo has releases. The Database Manager (DBM) pre-deposit checklist (the submission template referenced in the roles chapter) gates a deposit on the manifest being on a tagged version — no `inrepo` or `unreleased` suffixes. Use `inrepo` only during local development of the helpers themselves, never for a deposit run. Note that `cso_toolkit_check()` still queries upstream when `pulled_version` is `inrepo`, but cannot compare it, so `updates_available` is `FALSE` and a stray `inrepo` silently suppresses drift warnings.
 :::
 
-You can confirm at any point that the helper sees your manifest by running the sync check. In producer mode it queries the GitHub API for the latest upstream tag and warns if you are behind; in reviewer mode it quietly returns `NULL` because the mode contract forbids network calls.
+You can confirm at any point that the helper sees your manifest by running the sync check. In producer mode it looks up the latest upstream tag (gh CLI, GitHub API, then `git ls-remote`) and, with `quiet = FALSE`, prints a notice if a newer release exists; in either mode it warns if the copy is behind the manifest's `target_version`. In reviewer mode with no target it returns `NULL`, because the mode contract forbids the network lookup.
 
 ::: {.panel-tabset}
 #### R {.unnumbered .unlisted}
@@ -316,7 +317,7 @@ wb = dw_api_fetch(
 ```
 :::
 
-The supported `api` values are `uis`, `sdmx`, `sdmx_codelist`, `wb`, `wb_indicators`, `ilo`, `unsd_sdg`, `github_raw`, `http`, and `json_get`; the API-specific arguments (`indicator`, `flowRef`, `series_codes`, and so on) pass straight through to the per-API fetcher.
+The supported `api` values are `uis`, `sdmx`, `sdmx_codelist`, `wb`, `wb_indicators`, `ilo`, `unsd_sdg`, `github_raw`, `http`, `json_get`, and `csv`; the API-specific arguments (`indicator`, `flowRef`, `series_codes`, and so on) pass straight through to the per-API fetcher.
 
 If you run this in reviewer mode and the cache is missing, `dw_api_fetch` does not fall back to the network — it raises through the `dw_require_no_api` guard, telling you the input must be pre-deposited and to escalate to the sector DBM rather than calling the API. That is the contract working as designed.
 
@@ -450,47 +451,25 @@ This reviewer re-run plus the compare report is what it means, operationally, fo
 
 ## Step 6: Add the contract auditor to CI
 
-The final step makes the guarantees enforceable on every push rather than dependent on the operator remembering to run them. The toolkit's own CI is a useful reference: `r-check.yml` runs `R CMD check` across a Linux/macOS/Windows matrix, and because the helper tests live in `tests/testthat`, the check runs them automatically — no separate test step. The workflow deliberately does not set `dw_mode` at the job level; the mode is a session-level concept that each test sets explicitly, so a test never leaks producer-mode behaviour into another.
+The final step makes the guarantees enforceable on every push rather than dependent on the operator remembering to run them. The toolkit's own CI is a useful reference: `r-check.yml` runs `R CMD check` across a Linux/macOS/Windows matrix, and because the helper tests live in `r/tests/testthat`, the check runs them automatically — no separate test step. The workflow deliberately does not set `dw_mode` at the job level; the mode is a session-level concept that each test sets explicitly, so a test never leaks producer-mode behaviour into another.
 
-For your consumer repo, add a workflow that (a) runs your pipeline's unit tests under both modes and (b) runs the contract auditor — the scaffolding check that verifies no script bypasses the contract (see the scaffolding and contract-auditor chapter for what the auditor inspects). The auditor's job mirrors the verification checklist from the mode-contract integration doc:
+For your consumer repo, use the checks the scaffolders write ([Starting a new repository](40-new-repository.qmd)): `tools/check.R` runs the contract auditor over `AUDIT_PATHS` with the vendored `test_scripts()` (`AUDIT_MODE = "blocking"` fails on any violation) and the `vintage` check; `sh tools/check --record` records a passing run, which the pre-push hook and `check-record.yml` require. To run the audit on GitHub as well, copy `templates/workflows/ci-contract-audit.yml` to `.github/workflows/`; it runs `Rscript --no-init-file tools/check.R --only contract-audit,vintage` on manual runs and pull requests into `main`.
+
+```bash
+Rscript --no-init-file tools/check.R    # every check, locally
+sh tools/check --record                 # run, then record; needed before each push
+cp /path/to/cso-toolkit/templates/workflows/ci-contract-audit.yml .github/workflows/   # optional
+```
+
+The auditor covers the no-bypass item of the verification checklist in the mode-contract integration doc; keep verifying the others too:
 
 - Sourcing the profile with `dw_mode: "reviewer"` produces the green banner.
 - The conductor writes `finaldir` and shadows the path globals before any other script is sourced.
 - No script inside the sector calls a remote without going through `dw_api_fetch` (grep for `httr::GET`, `httr::POST`, `RETRY`, `read.csv("http`, and the like).
 - A reviewer-mode run leaves the canonical deposit's `mtime` unchanged.
 
-A minimal addition to `.github/workflows/`:
-
-```yaml
-name: contract-audit
-
-on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main, develop]
-
-jobs:
-  audit:
-    runs-on: ubuntu-latest
-    env:
-      # Mode is set per-test inside the suite; do not set it job-wide.
-      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: r-lib/actions/setup-r@v2
-        with:
-          use-public-rspm: true
-      - uses: r-lib/actions/setup-r-dependencies@v2
-        with:
-          working-directory: ./00_functions
-          extra-packages: any::testthat
-      - name: Run pipeline tests + contract auditor
-        run: Rscript -e 'testthat::test_dir("tests/testthat")'
-```
-
 ::: {.callout-warning}
-CI cannot fetch from the corporate-net-only upstream APIs, and it must never run in producer mode against a real deposit. Audit the *contract* — banner, shadow, no-bypass, deposit-mtime-unchanged — using the cached fixtures and reviewer mode. Live API fetching belongs in a producer-mode session on a machine with network access, not in CI. This is the same reason `cso_toolkit_check` is a producer-mode-only operation: reviewers, and CI by extension, run against whatever vintage the producer has pinned.
+CI cannot fetch from the corporate-net-only upstream APIs, and it must never run in producer mode against a real deposit. Audit the *contract* — banner, shadow, no-bypass, deposit-mtime-unchanged — using the cached fixtures and reviewer mode. Live API fetching belongs in a producer-mode session on a machine with network access, not in CI. This is the same reason `cso_toolkit_check` looks up upstream releases only in producer mode: reviewers, and CI by extension, run against whatever vintage the producer has pinned.
 :::
 
 ## Recap: the adoption checklist
@@ -508,6 +487,6 @@ A repo has fully adopted the contract when all of the following hold. These map 
 | 7 | Reviewer run is deposit-safe | every artifact under `sandboxRoot`; canonical `mtime` unchanged |
 | 8 | Compare report exists | `dw_compare` summary written under the sandbox temp dir |
 | 9 | No script bypasses the API contract | grep for raw `httr` / `read.csv("http` returns nothing |
-| 10 | CI audits the contract on every push | `contract-audit` workflow green |
+| 10 | Checks gate every push | `sh tools/check --record` passes; the pull request's `check-record` status is green |
 
 Steps 7, 8, and the underlying reviewer run are the operational test that the contract is real and not merely declared. Once they pass and CI enforces them, the repo joins DW-Production as a deposit-bearing consumer of the same contract. To keep it in sync as the toolkit releases new vintages, see the vendoring and versioning chapters in Part IV.
