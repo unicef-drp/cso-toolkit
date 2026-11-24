@@ -37,6 +37,12 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
   and show language coverage with the generated line under each
   function. Parts I and II go from 25,007 to 18,936 words. Faults found
   in the code are filed in #240.
+- **Handbook Part IV, "Maintaining the Toolkit", completed.** Appendix G
+  becomes the chapter "How the three languages stay in step"; a new
+  "Contributing" chapter covers branches, worktrees, stacked pull
+  requests, tests per language, the handbook rules and CI; "Versioning
+  and releases" keeps the maintainer's procedure, now as a numbered
+  release sequence. The old appendix URL redirects.
 
 ## v0.12.0 (2026-11-24)
 
