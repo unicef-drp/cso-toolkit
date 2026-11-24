@@ -12,7 +12,7 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
   available, `sh tools/certify` runs every `stata/tests/test_*.do` in its
   own batch Stata. A wrapper runs each suite under `capture` and writes its
   return code to a result file, because batch Stata always exits 0 and its
-  log repeats the suite's "PASS" line even when the suite stopped early; a
+  log echoes source lines, so a "PASS" string in the log proves nothing; a
   missing result file is a failure. `stata/tests` joins the certified paths,
   so a certificate now also proves the Stata suites passed on that tree
   (schema `cso_toolkit.parity/2`, with `stata_suites` and `suites_summary`).

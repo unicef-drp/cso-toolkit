@@ -162,9 +162,10 @@ def run_drivers(repo: Path, cases: list, out: Path, langs: list) -> dict:
 # Stata's own test suites (stata/tests/test_*.do)
 # --------------------------------------------------------------------------
 #
-# Batch Stata always exits 0, and its log echoes the source, so a suite's
-# "PASS:" line appears in the log even when the suite stopped before reaching
-# it. The verdict therefore comes from a file only execution can create: a
+# Batch Stata always exits 0, and its log echoes every line it reads, so a
+# "PASS" string can reach the log from a comment or from an -if- branch that
+# did not run, while the suite failed. The verdict therefore comes from a file
+# only execution can create: a
 # wrapper runs the suite under -capture- and then writes its return code to
 # <suite>.result. A missing result file is a failure, not a skip: it means
 # Stata stopped or timed out before the wrapper's last lines.
