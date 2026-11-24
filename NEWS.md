@@ -50,6 +50,14 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
   function without a description). The glossary keeps every term as a
   short definition linking to the chapter or appendix that owns it.
   Together they go from 7,760 to 3,057 words.
+- **Code, templates and the Claude plugin cite handbook chapters by
+  title.** The last step of the handbook restructure: comments, messages
+  and generated-profile text no longer name chapters by number or by
+  retired titles, the plugin skills link the new pages, and the stale
+  Python and Stata package READMEs are corrected. Across the
+  restructure the handbook went from 22 chapters to 19 and from 7
+  appendices to 6, every function's language coverage is generated from
+  the code, and old chapter URLs redirect.
 
 ## v0.12.0 (2026-11-24)
 
