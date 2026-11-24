@@ -55,3 +55,17 @@ test_that("test_scripts errors with the envelope on missing path", {
   expect_s3_class(err, "error")
   expect_envelope(err, function_name = "test_scripts")
 })
+
+test_that("api-fromjson-url fires on a URL string, not on other fromJSON calls (#237)", {
+  tdir <- local_tempdir()
+  writeLines(c(
+    "x <- jsonlite::fromJSON('https://example.org/a.json')",
+    "y <- fromJSON(\"http://example.org/b.json\")",
+    "z <- jsonlite::fromJSON(txt)",
+    "w <- fromJSON('{\"a\": 1}')",
+    "v <- fromJSON('https://example.org/c.json')  # cso-allow: api-fromjson-url"
+  ), file.path(tdir, "s.R"))
+  out <- test_scripts(tdir, verbose = FALSE)
+  hits <- out$line[out$rule == "api-fromjson-url"]
+  expect_identical(sort(hits), c(1L, 2L))
+})

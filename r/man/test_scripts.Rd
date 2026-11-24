@@ -46,8 +46,10 @@ must call the wrapped commands).}
 `"renv"`, `"packrat"`, `".git"`).}
 
 \item{custom_rules}{Optional list of additional rules -- each element a
-list with `id`, `pattern`, `family`, `message`, `suggest`. Merged with
-the built-in registry.}
+list with `id`, `pattern`, `family`, `message`, `suggest`, and
+optionally `raw = TRUE` to match the pattern against the line before
+string literals are blanked (for a rule that looks inside a string, such
+as a URL). Merged with the built-in registry.}
 
 \item{error_on_violation}{Logical. If `TRUE`, `stop()` after reporting
 when any `family == "io"` or `"api"` violation is found (useful in CI).
