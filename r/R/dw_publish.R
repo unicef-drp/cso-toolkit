@@ -251,15 +251,15 @@ dw_publish <- function(path,
 		))
 	}
 
-	# Live submission -- not yet implemented.  v0.5.0 will fill this in.
+	# Live submission -- not yet implemented (#15).
 	stop(
 		"[cso_toolkit.dw_publish] Live submission not yet implemented ",
 		"(endpoint = '", endpoint, "').\n",
 		"  Why: the Helix endpoint contract is still being negotiated ",
-		"with sector leads (see issue #15).  v0.4.0 ships dw_publish ",
-		"as a dry-run-only stub so call sites can be wired today and ",
-		"the live branch lights up automatically when v0.5.0 lands.\n",
-		"  Fix: pass dry_run = TRUE (the v0.4.0 default) to validate ",
+		"with sector leads (see issue #15).  dw_publish is a dry-run ",
+		"stub until then, so call sites can be wired today and the live ",
+		"branch lights up when #15 lands.\n",
+		"  Fix: pass dry_run = TRUE (the default) to validate ",
 		"the payload now.  Track live-submission progress at ",
 		"https://github.com/unicef-drp/cso-toolkit/issues/15.",
 		call. = FALSE

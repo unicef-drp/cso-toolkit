@@ -113,14 +113,17 @@ def dw_nestweight(
     if weight is None:
         w_orig = pd.Series(np.ones(len(df)), index=df.index)
     else:
-        w_orig = pd.to_numeric(df[weight], errors="coerce")
-        if not np.issubdtype(w_orig.dtype, np.number):
+        # Check the type before coercing: to_numeric(errors="coerce") always
+        # returns a number type, so a check after it could never fire (#240).
+        # R stops on a non-numeric weight column the same way.
+        if not pd.api.types.is_numeric_dtype(df[weight]):
             raise TypeError(
                 f"[cso_toolkit.dw_nestweight] Weight column {weight!r} "
-                "could not be coerced to numeric.\n"
+                "is not numeric.\n"
                 "  Fix: clean the weight column upstream (drop non-numeric "
                 "rows or cast to numeric) before calling."
             )
+        w_orig = pd.to_numeric(df[weight], errors="coerce")
 
     stratum = df[by]
     if stratum.isna().any():

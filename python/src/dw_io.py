@@ -903,10 +903,10 @@ def dw_save(
         Format-specific arguments passed through to the underlying writer.
 
         .. note::
-           The legacy ``mirror_to_z`` keyword (v0.3.0 and earlier) is no
-           longer accepted — Z: mirror is now automatic and paired with
-           the Teams mirror.  Passing it emits a deprecation warning and
-           is otherwise ignored.
+           The legacy ``mirror_to_z`` keyword (v0.3.0 and earlier) has
+           no effect — the Z: mirror is automatic and paired with the
+           Teams mirror.  Passing it emits a deprecation warning and is
+           otherwise ignored; drop it from the call.
 
     Returns
     -------
