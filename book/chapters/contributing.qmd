@@ -58,15 +58,17 @@ A bug counts as fixed only when a test reproduces it: the test must **fail on th
 
 Show the failure in the pull request: quote the failing assertion and its message, or commit the test before the fix, so the history holds a commit where it fails. A parity case counts as such a test when the failure is in one language's output.
 
-The reason is that a regression test nobody has seen fail proves nothing. It may never reach the faulty line, or assert something the bug does not change. Both have happened:
-- Python's `io-open-write` auditor rule matched nothing at all until v0.12.0.
-- R's `api-fromjson-url` rule never fired until v0.12.1 (#237): lines are matched with their string literals blanked, and the URL it looked for is a string.
+The reason is that a regression test nobody has seen fail proves nothing. It may never reach the faulty line, or assert something the bug does not change. In the Stata `yaml` package, from which this rule is borrowed, a test that checked only return codes passed for two major versions while the option it covered wrote nothing at all.
+
+Code with no test at all fares no better, and the toolkit has shipped two such cases. Each would have been caught by a test written first and seen to fail:
+- Python's `io-open-write` auditor rule matched nothing until v0.12.0, the release that added its first test.
+- R's `api-fromjson-url` rule never fired until v0.12.1 (#237). Lines are matched with their string literals blanked, and the URL it looked for is a string.
 
 A fix that cannot be tested this way, such as a message's wording, says so in the pull request.
 
 ## Before you push: `sh tools/check`
 
-One command runs the checks CI would run, in seconds, with nothing but Python's standard library:
+One command runs, in seconds and with nothing but Python's standard library, the quick checks CI's `Conformance` workflow makes, plus the certificate check that CI makes only on pull requests into `main`:
 
 ```bash
 sh tools/check             # version stamps, parity case files, handbook tables, certificate
@@ -82,7 +84,9 @@ The fast checks are:
 
 A missing certificate is only a warning while you work, because the certificate is recorded after the code is committed. It must be there before the pull request merges, if the branch touches the certified paths. `--full` needs a `CSO_PYTHON` with pytest and the toolkit's dependencies, and an Rscript with devtools.
 
-**The pre-push hook** runs `sh tools/check` before every push, and adds `--release` for a push to `main` or of a `v*` tag. Turn it on once per clone:
+The first three checks read the working tree; `tools/check` notes it when you have uncommitted changes. The certificate check reads git: it checks `HEAD`, or each commit given with `--rev <commit>`.
+
+**The pre-push hook** runs `sh tools/check` before every push and checks the certificate of each commit being pushed, not of what is checked out. It adds `--release` for a push to `main` or of a `v*` tag, and checks nothing for a deletion. Turn it on once per clone:
 
 ```bash
 git config core.hooksPath .githooks
@@ -92,7 +96,7 @@ git config core.hooksPath .githooks
 
 ## Tests
 
-Run the tests of every language your change touches before you push; CI repeats the R and Python ones. `sh tools/check --full` runs the R and Python suites in one go.
+Run the tests of every language your change touches before you push. CI repeats the R suite, inside `R CMD check`; the Python suite runs only on your machine. `sh tools/check --full` runs both in one go.
 
 ::: {.panel-tabset}
 #### R {.unnumbered .unlisted}

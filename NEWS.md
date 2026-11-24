@@ -29,9 +29,10 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
 - **One local check before pushing: `sh tools/check`.** It runs the version,
   case-file, handbook-table and certificate checks in seconds
   (`--full` adds the R and Python suites; `--release` makes a missing
-  certificate fail). `.githooks/pre-push` runs it before every push, with
-  `--release` for `main` and `v*` tags; enable it with
-  `git config core.hooksPath .githooks`.
+  certificate fail; `--rev <commit>` checks another commit's certificate).
+  `.githooks/pre-push` runs it before every push and checks the certificate
+  of each commit being pushed, with `--release` for `main` and `v*` tags;
+  enable it with `git config core.hooksPath .githooks`.
 - **CI skips changes that cannot affect it.** `R CMD check` no longer runs
   for changes only in `docs/`, `book/`, `.parity/`, `conformance/`,
   `NEWS.md` or `README.md`, and `Conformance` for changes only in `docs/` or
