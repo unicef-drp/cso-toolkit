@@ -1,6 +1,6 @@
 # Glossary
 
-This glossary defines the terms the handbook uses with a precise meaning, as of `cso-toolkit` **v0.12.0** (2026-11-24). Some carry contractual weight: a *canonical deposit*, for instance, is a status that depends on which role is acting, not just a place on disk. Entries are alphabetical; each links to the chapter or appendix that owns the detail. Which languages implement what is in the [coverage matrix](a-coverage-matrix.qmd).
+This glossary defines the terms the handbook uses with a precise meaning, as of `cso-toolkit` **v0.12.1** (2026-11-24). Some carry contractual weight: a *canonical deposit*, for instance, is a status that depends on which role is acting, not just a place on disk. Entries are alphabetical; each links to the chapter or appendix that owns the detail. Which languages implement what is in the [coverage matrix](a-coverage-matrix.qmd).
 
 ------------------------------------------------------------------------
 
