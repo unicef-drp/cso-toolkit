@@ -32,8 +32,11 @@ result file, and a missing file is a failure. `stata/tests` is a certified path.
 
 **Ids are permanent.** Certificates and the gap register name cases by id. A
 removed case's id goes in `retired_ids.txt` (with the date and the reason) and
-is never used again; `sh tools/certify --lint`, which every run and the
-`Conformance` workflow make, fails when a case uses one.
+is never used again. `sh tools/certify --lint`, which every run makes and
+the `Conformance` workflow runs on pull requests into `develop` and `main`,
+fails when a case uses one, or when a case a committed certificate records
+has gone without its id being retired. It also checks that every Stata suite
+ends with `global cert_suite_done 1`.
 
 `tests/test_certify.py` checks the harness, and that every case is well formed. The handbook chapter "How the three languages stay in step" has the full protocol.
 
