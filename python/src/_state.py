@@ -60,6 +60,12 @@ dw_mode: Optional[str] = None
 #: from ``dw_mode == "producer"``.
 dw_apis_allowed: bool = False
 
+#: Reviewer mode only: when ``True``, :func:`cso_toolkit.dw_use` stages
+#: every local input into the sandbox with :func:`cso_toolkit.dw_stage`
+#: unless a call passes ``stage=False``.  Mirrors the R profile's
+#: ``dw_autostage``.  Off by default.
+dw_autostage: Optional[bool] = None
+
 # ---------------------------------------------------------------------------
 # Z: drive mirror
 # ---------------------------------------------------------------------------
@@ -134,7 +140,7 @@ _PUBLIC_KEYS = (
     "teamsWrkData", "teamsRawData", "dwMetaData",
     "teamsFolder", "teamsFolderCanonical",
     "teamsWrkDataCanonical", "teamsRawDataCanonical",
-    "dw_mode", "dw_apis_allowed",
+    "dw_mode", "dw_apis_allowed", "dw_autostage",
     "dwZDrive", "dw_z_available",
     "dwFunct",
     "dw_url_allowlist", "dw_frozen_root", "githubFolder",

@@ -328,7 +328,7 @@ This is an R helper. The richer structured resolver, `dw_resolve_path(name=, sec
 
 ### `dw_stage` — reviewer-mode sandbox staging
 
-`dw_stage` (R only) is an opt-in reviewer helper that copies a canonical input from Z: (preferred) or Teams into the local sandbox the first time a script needs it, verifies the copy's hash against the source, and archives that hash in a `<path>.staged.json` sidecar. On every later run it re-checks the sandbox copy against the archived hash before letting the read proceed. It is a no-op outside reviewer mode.
+`dw_stage` (R and Python) is an opt-in reviewer helper that copies a canonical input from Z: (preferred) or Teams into the local sandbox the first time a script needs it, verifies the copy's hash against the source, and archives that hash in a `<path>.staged.json` sidecar. On every later run it re-checks the sandbox copy against the archived hash before letting the read proceed. It is a no-op outside reviewer mode.
 
 The lifecycle has five states:
 
@@ -353,17 +353,20 @@ df <- dw_use(name = "dw_nut.csv", sector = "nt", kind = "wrk", stage = TRUE)
 ```
 #### Python {.unnumbered .unlisted}
 ```python
-# Not available — dw_stage is an R-only helper.
-df = dw_use(name="dw_nut.csv", sector="nt", kind="wrk")
+# Per-call opt-in: stage the canonical input into the sandbox, then read it
+df = dw_use(name="dw_nut.csv", sector="nt", kind="wrk", stage=True)
+
+# Or for the session:
+#   _state.configure(dw_autostage=True)
 ```
 #### Stata {.unnumbered .unlisted}
 ```stata
-* Not available — dw_stage is an R-only helper.
+* Not available — Stata has no dw_stage; a Stata reviewer reads in place.
 dw_use , filename("dw_nut.dta") path("$teamsWrkData/nt")
 ```
 :::
 
-`dw_stage` and `dw_use`'s `stage =` integration are R-only. The `.staged.json` sidecar is deliberately distinct from `dw_save`'s `.provenance.json`, so a file that is both written by `dw_save` and staged by `dw_stage` carries both metadata blocks side by side; each reader refuses to misread the other's schema by checking a `type` discriminator.
+`dw_stage` and `dw_use`'s `stage =` integration ship in R and Python; Stata has neither. Both languages write the same sidecar, so a file staged in R verifies in Python and the other way round. The `.staged.json` sidecar is deliberately distinct from `dw_save`'s `.provenance.json`, so a file that is both written by `dw_save` and staged by `dw_stage` carries both metadata blocks side by side; each reader refuses to misread the other's schema by checking a `type` discriminator.
 
 ### `dw_fetch_inputs` and `dw_check_deposit` — inputs kept out of Git
 
