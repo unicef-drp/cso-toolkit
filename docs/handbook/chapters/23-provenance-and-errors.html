@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>5&nbsp; Provenance sidecars and the error envelope – The CSO Handbook</title>
+<title>4&nbsp; Provenance sidecars and the error envelope – The CSO Handbook</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -25,41 +25,6 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
-}
-/* CSS for syntax highlighting */
-html { -webkit-text-size-adjust: 100%; }
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -124,7 +89,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="Breadcrumbs"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/11-why.html">Part I — The Contract</a></li><li class="breadcrumb-item"><a href="../chapters/23-provenance-and-errors.html"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Provenance sidecars and the error envelope</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="Breadcrumbs"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/why-and-architecture.html">Part I — The Contract</a></li><li class="breadcrumb-item"><a href="../chapters/23-provenance-and-errors.html"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Provenance sidecars and the error envelope</span></a></li></ol></nav>
         <a class="flex-grow-1" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -207,26 +172,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <ul id="quarto-sidebar-section-1" aria-labelledby="quarto-sidebar-section-1-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../chapters/11-why.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Why a toolkit</span></span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../chapters/12-architecture.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Architecture: one contract, three languages, many consumers</span></span></a>
+  <a href="../chapters/why-and-architecture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Why a toolkit, and how it fits together</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/21-roles-and-modes.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Roles and the mode contract</span></span></a>
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Roles and the mode contract</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/23-provenance-and-errors.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Provenance sidecars and the error envelope</span></span></a>
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Provenance sidecars and the error envelope</span></span></a>
   </div>
 </li>
       </ul>
@@ -240,19 +199,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/31-io.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">The IO contract</span></span></a>
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">The IO contract</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/32-external-api.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">The external-API contract</span></span></a>
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">The external-API contract</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/33-aggregation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Aggregation</span></span></a>
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Aggregation</span></span></a>
   </div>
 </li>
       </ul>
@@ -266,31 +225,31 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/40-new-repository.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Starting a repository</span></span></a>
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Starting a repository</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/profiles-and-modes.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Profiles and the mode switch</span></span></a>
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Profiles and the mode switch</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/vendoring-and-updates.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Vendoring and updates</span></span></a>
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Vendoring and updates</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/checks-and-ci.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Checks and CI</span></span></a>
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Checks and CI</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/46-ai-agents.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Working with AI coding agents</span></span></a>
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Working with AI coding agents</span></span></a>
   </div>
 </li>
       </ul>
@@ -304,7 +263,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/44-versioning-release.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Versioning and releases</span></span></a>
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Versioning and releases</span></span></a>
   </div>
 </li>
       </ul>
@@ -318,19 +277,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/51-microdata-archive.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">The microdata archive: archive, catalogue, tool</span></span></a>
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">The microdata archive: archive, catalogue, tool</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/52-ihsn-grammar.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">The IHSN convention and the folder grammar</span></span></a>
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">The IHSN convention and the folder grammar</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/53-datalib-api-conformance.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">The <code>datalib_*</code> API and its conformance suite</span></span></a>
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">The <code>datalib_*</code> API and its conformance suite</span></span></a>
   </div>
 </li>
       </ul>
@@ -344,13 +303,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/61-ecosystem.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">The UNICEF analytics ecosystem: three tiers</span></span></a>
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">The UNICEF analytics ecosystem: three tiers</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../chapters/62-unicefdata.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">unicefData: public child statistics in three languages</span></span></a>
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">unicefData: public child statistics in three languages</span></span></a>
   </div>
 </li>
       </ul>
@@ -415,34 +374,29 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#the-provenance-sidecar" id="toc-the-provenance-sidecar" class="nav-link active" data-scroll-target="#the-provenance-sidecar"><span class="header-section-number">5.1</span> The provenance sidecar</a>
+  <li><a href="#the-provenance-sidecar" id="toc-the-provenance-sidecar" class="nav-link active" data-scroll-target="#the-provenance-sidecar"><span class="header-section-number">4.1</span> The provenance sidecar</a>
   <ul class="collapse">
-  <li><a href="#why-a-sidecar-at-all" id="toc-why-a-sidecar-at-all" class="nav-link" data-scroll-target="#why-a-sidecar-at-all"><span class="header-section-number">5.1.1</span> Why a sidecar at all</a></li>
-  <li><a href="#what-the-sidecar-contains" id="toc-what-the-sidecar-contains" class="nav-link" data-scroll-target="#what-the-sidecar-contains"><span class="header-section-number">5.1.2</span> What the sidecar contains</a></li>
-  <li><a href="#how-and-when-it-is-written" id="toc-how-and-when-it-is-written" class="nav-link" data-scroll-target="#how-and-when-it-is-written"><span class="header-section-number">5.1.3</span> How and when it is written</a></li>
-  <li><a href="#verifying-the-hash" id="toc-verifying-the-hash" class="nav-link" data-scroll-target="#verifying-the-hash"><span class="header-section-number">5.1.4</span> Verifying the hash</a></li>
-  <li><a href="#comparing-two-runs" id="toc-comparing-two-runs" class="nav-link" data-scroll-target="#comparing-two-runs"><span class="header-section-number">5.1.5</span> Comparing two runs</a></li>
-  <li><a href="#a-second-sidecar-shape-frozen-remote-files" id="toc-a-second-sidecar-shape-frozen-remote-files" class="nav-link" data-scroll-target="#a-second-sidecar-shape-frozen-remote-files"><span class="header-section-number">5.1.6</span> A second sidecar shape: frozen remote files</a></li>
-  <li><a href="#cross-language-parity-and-the-honest-gaps" id="toc-cross-language-parity-and-the-honest-gaps" class="nav-link" data-scroll-target="#cross-language-parity-and-the-honest-gaps"><span class="header-section-number">5.1.7</span> Cross-language parity — and the honest gaps</a></li>
+  <li><a href="#why-a-sidecar-at-all" id="toc-why-a-sidecar-at-all" class="nav-link" data-scroll-target="#why-a-sidecar-at-all"><span class="header-section-number">4.1.1</span> Why a sidecar at all</a></li>
+  <li><a href="#what-it-guarantees" id="toc-what-it-guarantees" class="nav-link" data-scroll-target="#what-it-guarantees"><span class="header-section-number">4.1.2</span> What it guarantees</a></li>
+  <li><a href="#two-shapes-one-intent" id="toc-two-shapes-one-intent" class="nav-link" data-scroll-target="#two-shapes-one-intent"><span class="header-section-number">4.1.3</span> Two shapes, one intent</a></li>
   </ul></li>
-  <li><a href="#the-error-envelope" id="toc-the-error-envelope" class="nav-link" data-scroll-target="#the-error-envelope"><span class="header-section-number">5.2</span> The error envelope</a>
+  <li><a href="#the-error-envelope" id="toc-the-error-envelope" class="nav-link" data-scroll-target="#the-error-envelope"><span class="header-section-number">4.2</span> The error envelope</a>
   <ul class="collapse">
-  <li><a href="#why-a-fixed-shape" id="toc-why-a-fixed-shape" class="nav-link" data-scroll-target="#why-a-fixed-shape"><span class="header-section-number">5.2.1</span> Why a fixed shape</a></li>
-  <li><a href="#a-worked-example" id="toc-a-worked-example" class="nav-link" data-scroll-target="#a-worked-example"><span class="header-section-number">5.2.2</span> A worked example</a></li>
-  <li><a href="#asserting-the-shape-in-tests" id="toc-asserting-the-shape-in-tests" class="nav-link" data-scroll-target="#asserting-the-shape-in-tests"><span class="header-section-number">5.2.3</span> Asserting the shape in tests</a></li>
-  <li><a href="#warnings-wear-the-envelope-too" id="toc-warnings-wear-the-envelope-too" class="nav-link" data-scroll-target="#warnings-wear-the-envelope-too"><span class="header-section-number">5.2.4</span> Warnings wear the envelope too</a></li>
-  <li><a href="#cross-language-parity-for-the-envelope" id="toc-cross-language-parity-for-the-envelope" class="nav-link" data-scroll-target="#cross-language-parity-for-the-envelope"><span class="header-section-number">5.2.5</span> Cross-language parity for the envelope</a></li>
+  <li><a href="#why-one-shape" id="toc-why-one-shape" class="nav-link" data-scroll-target="#why-one-shape"><span class="header-section-number">4.2.1</span> Why one shape</a></li>
+  <li><a href="#reading-one" id="toc-reading-one" class="nav-link" data-scroll-target="#reading-one"><span class="header-section-number">4.2.2</span> Reading one</a></li>
+  <li><a href="#warnings-wear-it-too" id="toc-warnings-wear-it-too" class="nav-link" data-scroll-target="#warnings-wear-it-too"><span class="header-section-number">4.2.3</span> Warnings wear it too</a></li>
+  <li><a href="#a-tested-invariant" id="toc-a-tested-invariant" class="nav-link" data-scroll-target="#a-tested-invariant"><span class="header-section-number">4.2.4</span> A tested invariant</a></li>
   </ul></li>
-  <li><a href="#how-the-two-conventions-reinforce-each-other" id="toc-how-the-two-conventions-reinforce-each-other" class="nav-link" data-scroll-target="#how-the-two-conventions-reinforce-each-other"><span class="header-section-number">5.3</span> How the two conventions reinforce each other</a></li>
+  <li><a href="#how-the-two-conventions-reinforce-each-other" id="toc-how-the-two-conventions-reinforce-each-other" class="nav-link" data-scroll-target="#how-the-two-conventions-reinforce-each-other"><span class="header-section-number">4.3</span> How the two conventions reinforce each other</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/unicef-drp/cso-toolkit/edit/main/book/chapters/23-provenance-and-errors.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/unicef-drp/cso-toolkit/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content" tabindex="-1">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="Breadcrumbs"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/11-why.html">Part I — The Contract</a></li><li class="breadcrumb-item"><a href="../chapters/23-provenance-and-errors.html"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Provenance sidecars and the error envelope</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="Breadcrumbs"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/why-and-architecture.html">Part I — The Contract</a></li><li class="breadcrumb-item"><a href="../chapters/23-provenance-and-errors.html"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Provenance sidecars and the error envelope</span></a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Provenance sidecars and the error envelope</span></h1>
+<h1 class="title"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Provenance sidecars and the error envelope</span></h1>
 </div>
 
 
@@ -459,307 +413,70 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>Two small conventions make <code>cso-toolkit</code> outputs trustworthy and its failures readable. The first is the <strong>provenance sidecar</strong>: a tiny JSON file written next to every data artefact, recording who wrote it, when, in what mode, and with what content hash. The second is the <strong>error envelope</strong>: a fixed three-part shape that every deliberate error and warning in the toolkit follows, so that library failures read like instructions rather than stack traces. Both conventions are reproduced across the R, Python, and Stata siblings. This chapter documents what each contains, why it exists, and where the cross-language parity is honest versus aspirational.</p>
-<section id="the-provenance-sidecar" class="level2" data-number="5.1">
-<h2 data-number="5.1" class="anchored" data-anchor-id="the-provenance-sidecar"><span class="header-section-number">5.1</span> The provenance sidecar</h2>
-<p>Whenever you write a data file through the IO contract — the toolkit’s single sanctioned read/write path (see the IO contract chapter) — the toolkit emits a companion file named <code>&lt;path&gt;.provenance.json</code> in the same directory. If you write <code>dw_ed_edu.csv</code>, you also get <code>dw_ed_edu.csv.provenance.json</code>. The sidecar is not the data; it is a record <em>about</em> the data — a small, human-readable, machine-parseable receipt that travels with the artefact through the canonical Teams folder and the Z: drive mirror.</p>
-<section id="why-a-sidecar-at-all" class="level3" data-number="5.1.1">
-<h3 data-number="5.1.1" class="anchored" data-anchor-id="why-a-sidecar-at-all"><span class="header-section-number">5.1.1</span> Why a sidecar at all</h3>
-<p>The toolkit exists to make analytics reproducible by someone other than the original author (see the “Why a toolkit” chapter). Reproducibility is not only about being able to <em>re-run</em> a pipeline; it is also about being able to <em>trust</em> a frozen artefact two years after it was deposited. A reviewer who opens <code>dw_ed_edu.csv</code> from the canonical deposit needs to answer questions the file itself cannot: Who produced this? Under which session mode — the toolkit runs as either a <em>producer</em>, who writes authoritative data, or a <em>reviewer</em>, who works read-only (see the roles and mode-contract chapter), and a deposit means something different in each. Has the file been altered since it was written? What were its dimensions, and what upstream sources fed it? The sidecar answers exactly these questions, and it does so without changing the data file’s own schema.</p>
-<p>The toolkit uses a sidecar rather than embedding metadata inside the file (the way Stata’s native <code>char _dta[]</code> mechanism or a Parquet key-value footer would). A sidecar wins on three counts. It is format-agnostic — the same scheme works for CSV, Parquet, DTA, XLSX, JSON, and YAML; it never changes the bytes of the artefact, so a content hash of the data file stays stable regardless of how rich the metadata grows; and it is easy to diff in review and easy to drop when unwanted.</p>
-</section>
-<section id="what-the-sidecar-contains" class="level3" data-number="5.1.2">
-<h3 data-number="5.1.2" class="anchored" data-anchor-id="what-the-sidecar-contains"><span class="header-section-number">5.1.2</span> What the sidecar contains</h3>
-<p>The R and Python siblings write an identical schema. For a data frame written through <code>dw_save</code>, the sidecar carries:</p>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 50%">
-<col style="width: 50%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>Field</th>
-<th>Meaning</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><code>path</code></td>
-<td>Absolute path of the primary file the sidecar describes.</td>
-</tr>
-<tr class="even">
-<td><code>format</code></td>
-<td>The dispatched format (e.g.&nbsp;<code>csv</code>, <code>parquet</code>, <code>dta</code>).</td>
-</tr>
-<tr class="odd">
-<td><code>written_at</code></td>
-<td>UTC timestamp in ISO-8601 form (<code>%Y-%m-%dT%H:%M:%S%z</code>).</td>
-</tr>
-<tr class="even">
-<td><code>user</code></td>
-<td>OS username (<code>USERNAME</code> env var, with a <code>getpass</code> fallback in Python).</td>
-</tr>
-<tr class="odd">
-<td><code>dw_mode</code></td>
-<td>The session mode at write time — <code>producer</code>, <code>reviewer</code>, or unset.</td>
-</tr>
-<tr class="even">
-<td><code>vintage</code></td>
-<td>Optional release tag passed by the caller (e.g.&nbsp;<code>2026-05</code>).</td>
-</tr>
-<tr class="odd">
-<td><code>sha256</code></td>
-<td>SHA-256 hash of the <em>written file’s</em> bytes — the integrity anchor.</td>
-</tr>
-<tr class="even">
-<td><code>isid</code></td>
-<td>The columns asserted to uniquely identify each row at write time, if any (the “is-ID” check).</td>
-</tr>
-<tr class="odd">
-<td><code>schema</code></td>
-<td>For data frames: <code>{ rows, cols, columns }</code>.</td>
-</tr>
-<tr class="even">
-<td><code>metadata</code></td>
-<td>Optional caller-supplied block, present only when supplied.</td>
-</tr>
-</tbody>
-</table>
-<p>The <code>metadata</code> block is free-form and is where domain context lives — title, producer script, upstream sources, a contact handle, the data vintage. The toolkit does not prescribe its keys; it merges whatever the caller passes.</p>
-<p>Here is how you populate the sidecar at the call site. You write the <code>metadata</code> argument by hand; the toolkit captures every other field automatically.</p>
-<div class="tabset-margin-container"></div><div class="panel-tabset">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="" aria-current="page">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">Python</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-3" role="tab" aria-controls="tabset-1-3" aria-selected="false" href="">Stata</a></li></ul>
-<div class="tab-content">
-<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dw_save</span>(df, <span class="at">name =</span> <span class="st">"dw_ed_edu.csv"</span>, <span class="at">sector =</span> <span class="st">"ed"</span>, <span class="at">kind =</span> <span class="st">"wrk"</span>,</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>        <span class="at">isid =</span> <span class="fu">c</span>(<span class="st">"REF_AREA"</span>, <span class="st">"INDICATOR"</span>, <span class="st">"TIME_PERIOD"</span>),</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>        <span class="at">vintage =</span> <span class="st">"2026-05"</span>,</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>        <span class="at">metadata =</span> <span class="fu">list</span>(</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>          <span class="at">title    =</span> <span class="st">"Education indicators — UNICEF DW format"</span>,</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>          <span class="at">producer =</span> <span class="st">"01_dw_prep/012_codes/ed/02_aggregate_uis_sdg.R"</span>,</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>          <span class="at">sources  =</span> <span class="fu">c</span>(<span class="st">"UIS bulk SDG_092025"</span>, <span class="st">"WPP 2024"</span>),</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>          <span class="at">contact  =</span> <span class="st">"@karavan88"</span>,</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>          <span class="at">vintage  =</span> <span class="st">"2026-05"</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>        ))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>dw_save(df, name<span class="op">=</span><span class="st">"dw_ed_edu.csv"</span>, sector<span class="op">=</span><span class="st">"ed"</span>, kind<span class="op">=</span><span class="st">"wrk"</span>,</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>        isid<span class="op">=</span>[<span class="st">"REF_AREA"</span>, <span class="st">"INDICATOR"</span>, <span class="st">"TIME_PERIOD"</span>],</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>        vintage<span class="op">=</span><span class="st">"2026-05"</span>,</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>        metadata<span class="op">=</span>{</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>            <span class="st">"title"</span>:    <span class="st">"Education indicators — UNICEF DW format"</span>,</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>            <span class="st">"producer"</span>: <span class="st">"01_dw_prep/012_codes/ed/02_aggregate_uis_sdg.py"</span>,</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>            <span class="st">"sources"</span>:  [<span class="st">"UIS bulk SDG_092025"</span>, <span class="st">"WPP 2024"</span>],</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>            <span class="st">"contact"</span>:  <span class="st">"@karavan88"</span>,</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>            <span class="st">"vintage"</span>:  <span class="st">"2026-05"</span>,</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>        })</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<div id="tabset-1-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-3-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>dw_save, filename(<span class="st">"dw_ed_edu.dta"</span>)                     <span class="co">///</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    path(<span class="st">"$teamsWrkData/ed"</span>)                           <span class="co">///</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    idvars(REF_AREA INDICATOR TIME_PERIOD)             <span class="co">///</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="bn">title</span>(<span class="st">"Education indicators — UNICEF DW format"</span>)   <span class="co">///</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    producer(<span class="st">"01_dw_prep/.../02_aggregate_uis_sdg.do"</span>) <span class="co">///</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    sources(<span class="st">"UIS bulk SDG_092025; WPP 2024"</span>)           <span class="co">///</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    contact(<span class="st">"@karavan88"</span>)                              <span class="co">///</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    vintage(<span class="st">"2026-05"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-</div>
-</div>
-<p>A producer-mode write of a CSV produces a sidecar of roughly this shape:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"path"</span><span class="fu">:</span> <span class="st">"C:/.../060.DW-MASTER/013_wrkdata/ed/dw_ed_edu.csv"</span><span class="fu">,</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"format"</span><span class="fu">:</span> <span class="st">"csv"</span><span class="fu">,</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"written_at"</span><span class="fu">:</span> <span class="st">"2026-05-30T14:22:07+0000"</span><span class="fu">,</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"user"</span><span class="fu">:</span> <span class="st">"jpazevedo"</span><span class="fu">,</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"dw_mode"</span><span class="fu">:</span> <span class="st">"producer"</span><span class="fu">,</span></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"vintage"</span><span class="fu">:</span> <span class="st">"2026-05"</span><span class="fu">,</span></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"sha256"</span><span class="fu">:</span> <span class="st">"9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"</span><span class="fu">,</span></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"isid"</span><span class="fu">:</span> <span class="ot">[</span><span class="st">"REF_AREA"</span><span class="ot">,</span> <span class="st">"INDICATOR"</span><span class="ot">,</span> <span class="st">"TIME_PERIOD"</span><span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"schema"</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">"rows"</span><span class="fu">:</span> <span class="dv">1840</span><span class="fu">,</span> <span class="dt">"cols"</span><span class="fu">:</span> <span class="dv">7</span><span class="fu">,</span></span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>              <span class="dt">"columns"</span><span class="fu">:</span> <span class="ot">[</span><span class="st">"DATAFLOW"</span><span class="ot">,</span> <span class="st">"REF_AREA"</span><span class="ot">,</span> <span class="st">"INDICATOR"</span><span class="ot">,</span></span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>                          <span class="st">"SEX"</span><span class="ot">,</span> <span class="st">"WEALTH_QUINTILE"</span><span class="ot">,</span> <span class="st">"TIME_PERIOD"</span><span class="ot">,</span></span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>                          <span class="st">"OBS_VALUE"</span><span class="ot">]</span> <span class="fu">},</span></span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"metadata"</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"title"</span><span class="fu">:</span> <span class="st">"Education indicators — UNICEF DW format"</span><span class="fu">,</span></span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"producer"</span><span class="fu">:</span> <span class="st">"01_dw_prep/012_codes/ed/02_aggregate_uis_sdg.R"</span><span class="fu">,</span></span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"sources"</span><span class="fu">:</span> <span class="ot">[</span><span class="st">"UIS bulk SDG_092025"</span><span class="ot">,</span> <span class="st">"WPP 2024"</span><span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"contact"</span><span class="fu">:</span> <span class="st">"@karavan88"</span><span class="fu">,</span></span>
-<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"vintage"</span><span class="fu">:</span> <span class="st">"2026-05"</span></span>
-<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
-<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The exhaustive field-by-field schema, including the optional and language-specific keys, is tabulated in the provenance sidecar schema appendix.</p>
-</section>
-<section id="how-and-when-it-is-written" class="level3" data-number="5.1.3">
-<h3 data-number="5.1.3" class="anchored" data-anchor-id="how-and-when-it-is-written"><span class="header-section-number">5.1.3</span> How and when it is written</h3>
-<p>The sidecar is written <em>after</em> the primary file lands, by an internal helper (<code>.write_provenance</code> in R, <code>_write_provenance</code> in Python) invoked by <code>dw_save</code>. The SHA-256 is computed by reading back the file that was just written, so the hash describes the bytes actually on disk, not the in-memory object. Two switches govern whether a sidecar appears at all:</p>
+<p>Two small conventions make <code>cso-toolkit</code> outputs trustworthy and its failures readable. The <strong>provenance sidecar</strong> is a small JSON file written next to every data artefact, recording who wrote it, when, in what mode and with what content hash. The <strong>error envelope</strong> is a fixed three-part shape that every deliberate error and warning in the toolkit follows, so a failure reads like an instruction rather than a stack trace. Both hold in R, Python and Stata. This chapter explains why each exists and what it guarantees. The fields of the sidecar are listed in <a href="../appendices/b-provenance-schema.html">Appendix B</a>, and the messages the toolkit raises are catalogued in <a href="../appendices/c-error-taxonomy.html">Appendix C</a>.</p>
+<section id="the-provenance-sidecar" class="level2" data-number="4.1">
+<h2 data-number="4.1" class="anchored" data-anchor-id="the-provenance-sidecar"><span class="header-section-number">4.1</span> The provenance sidecar</h2>
+<p>Whenever you write a data file through <code>dw_save</code> (<a href="../chapters/31-io.html">The IO contract</a>), the toolkit also writes <code>&lt;path&gt;.provenance.json</code> beside it: write <code>dw_ed_edu.csv</code> and you also get <code>dw_ed_edu.csv.provenance.json</code>. The sidecar is a receipt <em>about</em> the data, readable by a person and by a program, that travels with the artefact into the canonical Teams folder and its Z: mirror.</p>
+<section id="why-a-sidecar-at-all" class="level3" data-number="4.1.1">
+<h3 data-number="4.1.1" class="anchored" data-anchor-id="why-a-sidecar-at-all"><span class="header-section-number">4.1.1</span> Why a sidecar at all</h3>
+<p>The toolkit exists so that someone other than the author can reproduce an analysis (<a href="../chapters/why-and-architecture.html">Why a toolkit, and how it fits together</a>). Reproducibility is not only being able to <em>re-run</em> a pipeline; it is also being able to <em>trust</em> a frozen artefact two years after it was deposited. A reviewer who opens <code>dw_ed_edu.csv</code> from the deposit needs answers the file itself cannot give. Who produced it? In which session mode, producer or reviewer (<a href="../chapters/21-roles-and-modes.html">Roles and the mode contract</a>)? Has it been altered since it was written? What shape was it, and which inputs fed it? The sidecar answers these without touching the data file’s own schema.</p>
+<p>The toolkit keeps this record beside the file rather than inside it (as Stata’s <code>char _dta[]</code> or a Parquet key-value footer would). A sidecar wins on three counts:</p>
 <ul>
-<li><strong><code>provenance = FALSE</code></strong> opts out entirely for a single call.</li>
-<li><strong><code>.RData</code> / <code>.rda</code> writes skip the sidecar unconditionally</strong>, because those formats can carry arbitrary R objects rather than a single tabular artefact, and a row/column schema would be meaningless.</li>
+<li><strong>It works for every format.</strong> The same scheme serves CSV, Parquet, DTA, XLSX, JSON and YAML.</li>
+<li><strong>It never changes the artefact’s bytes.</strong> A content hash of the data file stays stable however rich the metadata grows.</li>
+<li><strong>It is easy to review.</strong> A sidecar diffs cleanly in a pull request and can be dropped when unwanted.</li>
 </ul>
-<p>The redundant-mirror logic in producer mode copies the sidecar alongside the primary file to both the Teams canonical equivalent and the Z: drive equivalent, so each copy of the artefact carries its own receipt (see the IO contract chapter for the mirroring rules).</p>
-<div class="callout callout-style-simple callout-note">
-<div class="callout-body d-flex">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-body-container">
-<p>The sidecar write is <strong>non-blocking</strong>. If the metadata contains a value that cannot be serialised to JSON — an R <code>Date</code> object, a NumPy scalar, a custom class — the write is wrapped so that it emits an envelope-shaped warning and continues, rather than rolling back the primary file. The reasoning is deliberate: the sidecar is metadata; the asset is what matters. You never lose a successfully written data file because its receipt could not be serialised. This behaviour was backported from a DW-Production hardening (the “B3” alignment item).</p>
-</div>
-</div>
-</div>
 </section>
-<section id="verifying-the-hash" class="level3" data-number="5.1.4">
-<h3 data-number="5.1.4" class="anchored" data-anchor-id="verifying-the-hash"><span class="header-section-number">5.1.4</span> Verifying the hash</h3>
-<p>The <code>sha256</code> field is not just a label; it is the verb behind the sidecar’s central promise. To check whether a canonical artefact has drifted from its mirror, <code>dw_use</code> runs a non-blocking Z: integrity check on every canonical read, and the dedicated <code>dw_verify_z</code> function performs the same comparison on demand. With <code>compare = "size"</code> (the default) it does a cheap size check; with <code>compare = "sha256"</code> it re-hashes both the Teams copy and the Z: copy and compares the digests, returning a status such as <code>"match_sha256"</code> or <code>"sha256_mismatch"</code>. To detect tampering against the recorded provenance, re-hash the file and compare the result with the sidecar’s <code>sha256</code>; this is exactly what the staging path inside <code>dw_use</code> does when it re-reads a frozen artefact (see the IO contract and external-API contract chapters). The sidecar records the anchor; <code>dw_verify_z</code> is the tool that checks it.</p>
+<section id="what-it-guarantees" class="level3" data-number="4.1.2">
+<h3 data-number="4.1.2" class="anchored" data-anchor-id="what-it-guarantees"><span class="header-section-number">4.1.2</span> What it guarantees</h3>
+<p><strong>The hash describes the bytes on disk.</strong> The sidecar is written <em>after</em> the primary file lands, and its <code>sha256</code> is computed by reading that file back, not from the object in memory. That makes the hash an integrity anchor. Re-hash the file later and compare: a match means the bytes are the ones that were written; a mismatch means someone changed the file outside the toolkit. The toolkit uses this anchor itself. <code>dw_use</code> compares the Teams copy of a canonical file with its Z: mirror on every read, and <code>dw_verify_z</code> does the same on demand (<a href="../chapters/31-io.html">The IO contract</a>). In a multi-producer project, <code>dw_save</code> refuses to replace a file whose bytes no longer match its sidecar (<a href="../chapters/21-roles-and-modes.html#collaboration-model-single--and-multi-producer-projects">Roles and the mode contract</a>).</p>
+<p><strong>Each copy carries its own receipt.</strong> When a producer write fans out to the Teams and Z: mirrors, the sidecar is copied with it, so every copy of the artefact can be checked on its own.</p>
+<p><strong>Two runs can be compared without reading the data.</strong> If the caller records the inputs in the sidecar’s metadata (one record per input file with its SHA-256, which is what <code>dw_fetch_inputs</code> returns), then two sidecars of the same output show whether a new run reproduced the old one: same inputs and the same output hash, or which inputs changed, or (the case that warns) the same inputs but a different output, which only the code or the environment can explain. <code>dw_read_provenance</code> and <code>dw_provenance_diff</code> do this (<a href="../chapters/31-io.html">The IO contract</a>).</p>
+<p><strong>The record lives in git while the data stay out.</strong> Data live in the deposit; the sidecars that say which bytes each result came from are committed. A reviewer can then tell from the repository alone what produced a result (<a href="../chapters/checks-and-ci.html">Checks and CI</a>).</p>
+<p><strong>A sidecar never costs you the data.</strong> If the metadata hold a value that cannot be written as JSON (an R <code>Date</code>, a NumPy scalar), the sidecar write emits a warning and the primary file stays. The sidecar is metadata about the asset; the asset is what matters. You can also turn the sidecar off for one call (<code>provenance = FALSE</code>; <code>nosidecar</code> in Stata).</p>
 </section>
-<section id="comparing-two-runs" class="level3" data-number="5.1.5">
-<h3 data-number="5.1.5" class="anchored" data-anchor-id="comparing-two-runs"><span class="header-section-number">5.1.5</span> Comparing two runs</h3>
-<p>The same sidecar answers a second question: did a new run of a pipeline reproduce the previous one? If the caller records the inputs in the <code>metadata</code> block — one row per input file with its SHA-256, which is exactly the manifest <code>dw_fetch_inputs</code> returns — then two sidecars of the same output carry everything needed. <code>dw_read_provenance</code> reads a sidecar (read the previous one before the new run overwrites the output) and <code>dw_provenance_diff</code> compares two of them: <code>reproduced</code> means the same inputs and a byte-identical output; <code>inputs_changed</code> lists the input files added, removed, or changed; <code>output_changed</code> — the same inputs but a different output — warns, because only the code or the environment can explain it. The comparison is run-level and needs no data read; <code>dw_compare</code> then shows which records moved. Both functions are in R and Python; Stata routes through either (#152).</p>
-</section>
-<section id="a-second-sidecar-shape-frozen-remote-files" class="level3" data-number="5.1.6">
-<h3 data-number="5.1.6" class="anchored" data-anchor-id="a-second-sidecar-shape-frozen-remote-files"><span class="header-section-number">5.1.6</span> A second sidecar shape: frozen remote files</h3>
-<p>When <code>dw_use</code> downloads an HTTPS URL and freezes it to the local cache (a producer-only operation; see the external-API contract chapter), it writes a sidecar with a <em>different</em> schema, tuned to a downloaded resource rather than a saved data frame:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"url"</span><span class="fu">:</span> <span class="st">"https://raw.githubusercontent.com/.../regions.csv"</span><span class="fu">,</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"sha256"</span><span class="fu">:</span> <span class="st">"…"</span><span class="fu">,</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"bytes"</span><span class="fu">:</span> <span class="dv">48213</span><span class="fu">,</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"fetched_at"</span><span class="fu">:</span> <span class="st">"2026-05-30T14:25:11Z"</span><span class="fu">,</span></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"fetched_by"</span><span class="fu">:</span> <span class="st">"jpazevedo"</span><span class="fu">,</span></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"dw_mode"</span><span class="fu">:</span> <span class="st">"producer"</span></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>This is intentionally distinct: <code>url</code>/<code>fetched_at</code>/<code>fetched_by</code>/<code>bytes</code> describe a fetch event, whereas the <code>dw_save</code> sidecar describes a write event with a tabular schema. A reviewer reading a frozen remote file is reading a provenance record of <em>where the bytes came from</em>, not of a local computation.</p>
-<div class="callout callout-style-simple callout-note">
-<div class="callout-body d-flex">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-body-container">
-<p>The two sidecar shapes spell the UTC timestamp slightly differently, and a careful reader will notice. The <code>dw_save</code> sidecar emits the numeric offset (<code>+0000</code>) in both R and Python. The freeze path is not fully aligned: R’s <code>.write_remote_provenance</code> emits the <code>Z</code> suffix (<code>…14:25:11Z</code>), while Python’s reuses the shared <code>+0000</code> formatter. Both denote UTC; only the spelling differs. This is a minor parity wrinkle rather than a contract, and is noted here so it is not mistaken for a bug.</p>
-</div>
-</div>
-</div>
-</section>
-<section id="cross-language-parity-and-the-honest-gaps" class="level3" data-number="5.1.7">
-<h3 data-number="5.1.7" class="anchored" data-anchor-id="cross-language-parity-and-the-honest-gaps"><span class="header-section-number">5.1.7</span> Cross-language parity — and the honest gaps</h3>
-<p>R and Python produce equivalent sidecars: same field names, same ISO-8601 UTC timestamp, same SHA-256 file hash, same <code>{rows, cols, columns}</code> schema, same optional metadata merge. Stata reaches the same goal but cannot match every detail, and the differences are worth stating plainly:</p>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 25%">
-<col style="width: 25%">
-<col style="width: 25%">
-<col style="width: 25%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>Field</th>
-<th>R</th>
-<th>Python</th>
-<th>Stata</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><code>format</code> tag</td>
-<td>dispatched format</td>
-<td>dispatched format</td>
-<td>literal string <code>"dw_save.provenance/1"</code></td>
-</tr>
-<tr class="even">
-<td><code>written_at</code></td>
-<td>ISO-8601 UTC (<code>+0000</code>)</td>
-<td>ISO-8601 UTC (<code>+0000</code>)</td>
-<td>ISO-8601 UTC (<code>+0000</code>) with Stata’s Python integration (Stata 16+); otherwise the local <code>c(current_date) c(current_time)</code> string</td>
-</tr>
-<tr class="odd">
-<td>content hash</td>
-<td><code>sha256</code> (file bytes)</td>
-<td><code>sha256</code> (file bytes)</td>
-<td><code>sha256</code> (file bytes) with Stata’s Python integration, always plus <code>datasignature</code> (SHA-1 of the values); <code>datasignature</code> only without Python</td>
-</tr>
-<tr class="even">
-<td><code>schema.columns</code></td>
-<td>column names</td>
-<td>column names</td>
-<td><strong>absent</strong> — only <code>{rows, cols}</code></td>
-</tr>
-<tr class="odd">
-<td><code>isid</code> / <code>idvars</code></td>
-<td><code>isid</code> array</td>
-<td><code>isid</code> array</td>
-<td><code>idvars</code> string</td>
-</tr>
-<tr class="even">
-<td>metadata</td>
-<td>nested list</td>
-<td>nested dict</td>
-<td>nested block built from named options</td>
-</tr>
-</tbody>
-</table>
-<p>Two gaps matter. First, <strong>without Stata’s Python integration a Stata sidecar records only a <code>datasignature</code></strong>, a checksum of the data values (SHA-1) rather than of the file, so it cannot be checked against an R/Python <code>sha256</code>; with Python (Stata 16+) it also records the file’s <code>sha256</code>, and R and Python can verify and compare Stata outputs. The <code>datasignature</code>, written either way, has its own use: two artefacts with identical data but different on-disk bytes — say, different compression — still match on it. Second, <strong>Stata omits the <code>columns</code> list</strong>, recording only row and column counts.</p>
-<p>Stata’s sidecar also carries an explicit version tag, <code>"format": "dw_save.provenance/1"</code>, and an <code>_end</code> sentinel in its metadata block, reflecting that the JSON is hand-assembled by a <code>.ado</code> file rather than emitted by a JSON library. The <code>.ado</code> escapes every user-supplied value before writing it — backslashes first, then double-quotes, then control characters — so Windows paths and quotes or newlines in metadata do not produce malformed JSON that an R reader would later reject.</p>
+<section id="two-shapes-one-intent" class="level3" data-number="4.1.3">
+<h3 data-number="4.1.3" class="anchored" data-anchor-id="two-shapes-one-intent"><span class="header-section-number">4.1.3</span> Two shapes, one intent</h3>
+<p>The sidecar <code>dw_save</code> writes describes a <em>write event</em>: the file, its format, its schema, its writer and its hash. When <code>dw_use</code> downloads an allowlisted URL and freezes it for reviewers (a producer-only step; see <a href="../chapters/32-external-api.html">The external-API contract</a>), it writes a sidecar of a different shape that describes a <em>fetch event</em>: the URL, the hash, the size, and who fetched it and when. Both use the <code>.provenance.json</code> extension and the same hashing, but their keys differ, so do not read one with a parser written for the other.</p>
+<p>Stata writes the same sidecar with the same intent, but one difference matters. Stata records the file’s <code>sha256</code> only through its Python integration (Stata 16+). It always records its native <code>datasignature</code> as well, and without Python that is the only hash. A <code>datasignature</code> is a checksum of the dataset’s values, not of the file’s bytes, so it can never be compared with an R or Python <code>sha256</code>. <a href="../appendices/b-provenance-schema.html">Appendix B</a> sets out this and the smaller Stata differences field by field.</p>
 </section>
 </section>
-<section id="the-error-envelope" class="level2" data-number="5.2">
-<h2 data-number="5.2" class="anchored" data-anchor-id="the-error-envelope"><span class="header-section-number">5.2</span> The error envelope</h2>
-<p>The toolkit’s second convention governs failure. Every deliberate <code>stop()</code> in R, every <code>raise</code> in Python, and every error or advisory message in Stata follows the same three-part shape:</p>
+<section id="the-error-envelope" class="level2" data-number="4.2">
+<h2 data-number="4.2" class="anchored" data-anchor-id="the-error-envelope"><span class="header-section-number">4.2</span> The error envelope</h2>
+<p>The toolkit’s second convention governs failure. Every deliberate <code>stop()</code> in R, every <code>raise</code> in Python and every error message in Stata follows one shape:</p>
 <pre class="text"><code>[cso_toolkit.&lt;fn&gt;] WHAT happened
   Why it happened / why the rule exists.
   Fix:
     1. The first concrete remedy, OR
     2. An alternative remedy / escape hatch.</code></pre>
-<p>The leading bracketed prefix names the function that raised — <code>[cso_toolkit.dw_save]</code>, <code>[cso_toolkit.dw_use]</code>, <code>[cso_toolkit.dw_api_fetch]</code>. The body explains <em>why</em> the rule exists rather than merely restating the symptom. The <code>Fix:</code> block lists the actionable next steps, often including the deliberate escape hatch for the case where the user genuinely means to do the forbidden thing.</p>
-<section id="why-a-fixed-shape" class="level3" data-number="5.2.1">
-<h3 data-number="5.2.1" class="anchored" data-anchor-id="why-a-fixed-shape"><span class="header-section-number">5.2.1</span> Why a fixed shape</h3>
-<p>One shape on every error buys three things:</p>
+<p>The bracketed prefix names the function that raised: <code>[cso_toolkit.dw_save]</code>, <code>[cso_toolkit.dw_use]</code>, <code>[cso_toolkit.dw_api]</code>. The body says <em>why</em> the rule exists rather than restating the symptom. The <code>Fix:</code> block lists what to do next, often ending with the deliberate escape hatch for when you really do mean to do the forbidden thing.</p>
+<section id="why-one-shape" class="level3" data-number="4.2.1">
+<h3 data-number="4.2.1" class="anchored" data-anchor-id="why-one-shape"><span class="header-section-number">4.2.1</span> Why one shape</h3>
+<p>One shape on every error buys three things.</p>
 <ol type="1">
-<li><strong>Searchability.</strong> The <code>[cso_toolkit.&lt;fn&gt;]</code> prefix is a stable, greppable token. To find every site in a consumer project that could trip the reviewer-mode write guard, you grep for <code>[cso_toolkit.dw_save] Reviewer mode forbids</code>. Library errors become an index.</li>
-<li><strong>Actionability.</strong> Because the <code>Fix:</code> block is mandatory, an error never leaves the user staring at <em>what</em> broke without <em>how to proceed</em>. The escape hatch — <code>allow_canonical_write = TRUE</code>, <code>overwrite = TRUE</code>, switching <code>dw_mode</code> — is surfaced at the point of failure, not buried in documentation.</li>
-<li><strong>Distinguishing toolkit errors from upstream noise.</strong> A failure prefixed <code>[cso_toolkit.*]</code> is a contract decision the toolkit made on purpose; an unprefixed error is something leaking from <code>arrow</code>, <code>haven</code>, <code>pandas</code>, or the OS. The prefix lets a reader triage at a glance.</li>
+<li><strong>Searchability.</strong> The prefix is a stable token you can grep. To find every place in a consumer project that can trip the reviewer-mode write guard, search for <code>[cso_toolkit.dw_save] Reviewer mode forbids</code>. The library’s errors become an index.</li>
+<li><strong>Actionability.</strong> Because <code>Fix:</code> is mandatory, an error never leaves you knowing <em>what</em> broke without knowing <em>how to proceed</em>. The escape hatch (<code>allow_canonical_write = TRUE</code>, <code>overwrite = TRUE</code>, <code>takeover = TRUE</code>, switching <code>dw_mode</code>) appears at the point of failure, not in a manual.</li>
+<li><strong>Triage.</strong> A failure prefixed <code>[cso_toolkit.*]</code> is a decision the toolkit made on purpose, usually the contract doing its job rather than a bug. An unprefixed error is something leaking from <code>arrow</code>, <code>haven</code>, <code>pandas</code> or the operating system.</li>
 </ol>
 </section>
-<section id="a-worked-example" class="level3" data-number="5.2.2">
-<h3 data-number="5.2.2" class="anchored" data-anchor-id="a-worked-example"><span class="header-section-number">5.2.2</span> A worked example</h3>
-<p>The canonical example is the reviewer-mode write guard. A reviewer session is physically prevented from writing under the canonical Teams deposit or the Z: drive root, to preserve vintage permanence (see the roles and mode-contract chapter). The error it raises is the envelope in its fullest form:</p>
-<pre class="text"><code>[cso_toolkit.dw_save] Reviewer mode forbids writes to canonical (Teams) deposit: /path/to/file.csv
-  Reviewer sessions must keep canonical / Z: deposits read-only to preserve
-  vintage permanence; writes go to the local repo sandbox.
-  Fix:
-    1. Resolve a sandbox path instead (the profile's `teamsWrkData` should
-       point there in reviewer mode), OR
-    2. If this is a deliberate Database Manager bootstrap, pass
-       `allow_canonical_write = TRUE`.</code></pre>
-<p>Every clause of the envelope is doing work. The prefix identifies <code>dw_save</code>. The WHAT names both the rule and the offending path. The Why explains <em>vintage permanence</em> — the reason the rule exists. The Fix gives the ordinary remedy first and the deliberate-override escape hatch second.</p>
-<p>The same shape recurs across unrelated failure classes — a missing dependency, an unsupported extension, a refused overwrite, an unknown <code>kind</code>:</p>
-<pre class="text"><code>[cso_toolkit.dw_save] Producer-mode write requires at least one of Teams
-(preferred) or Z: drive to be mounted and writable; currently neither is
-available on this machine.
-  Primary path: /path/to/file.csv
-  Fix: map at least one -- preferably both. See the profile's path block.</code></pre>
-<p>The complete catalogue of error classes, grouped by the rule each enforces, lives in the error taxonomy appendix.</p>
+<section id="reading-one" class="level3" data-number="4.2.2">
+<h3 data-number="4.2.2" class="anchored" data-anchor-id="reading-one"><span class="header-section-number">4.2.2</span> Reading one</h3>
+<p>The reviewer-mode write refusal, shown in full in <a href="../chapters/21-roles-and-modes.html">Roles and the mode contract</a>, is the envelope at its fullest, and every clause does work. The prefix names <code>dw_save</code>. The WHAT line names the rule and the offending path. The Why line gives the reason the rule exists, <em>vintage permanence</em>: a deposited vintage must never change under the people who rely on it. The Fix block gives the ordinary remedy first (write to your sandbox) and the deliberate override second (<code>allow_canonical_write = TRUE</code>, for a Database Manager’s bootstrap). The numbered options are ranked the same way everywhere: option 1 is the expected remedy, and a later option is usually the escape hatch.</p>
 </section>
-<section id="asserting-the-shape-in-tests" class="level3" data-number="5.2.3">
-<h3 data-number="5.2.3" class="anchored" data-anchor-id="asserting-the-shape-in-tests"><span class="header-section-number">5.2.3</span> Asserting the shape in tests</h3>
-<p>The envelope is not merely a style guideline — it is a tested invariant. The R <code>testthat</code> suite ships an <code>expect_envelope()</code> helper that asserts the <code>[cso_toolkit.&lt;fn&gt;]</code> prefix, a <code>Fix:</code> block, and (optionally) the specific raising function on every checked raise, and the Python siblings carry a dedicated error-envelope test covering roughly thirty raise paths. A new <code>stop()</code> or <code>raise</code> that omits the prefix or the <code>Fix:</code> block fails the suite. This is what keeps parity from rotting: the contract is enforced by the build, not by manual code review (see <a href="../chapters/checks-and-ci.html">Checks and CI</a>).</p>
+<section id="warnings-wear-it-too" class="level3" data-number="4.2.3">
+<h3 data-number="4.2.3" class="anchored" data-anchor-id="warnings-wear-it-too"><span class="header-section-number">4.2.3</span> Warnings wear it too</h3>
+<p>The shape is not kept for fatal errors. Non-fatal warnings use it too, including the ones the sidecar machinery emits. A sidecar that cannot be written warns with <code>[cso_toolkit.dw_save] Provenance sidecar write failed for &lt;path&gt;</code>, says the primary file is unaffected, and tells you how to make the metadata serialisable. A reviewer whose canonical and Z: locations are unreachable, and who falls back to a repository-local copy, gets a <code>[cso_toolkit.dw_use]</code> warning that the fallback breaks provenance and that Teams or Z: should be re-mounted before the output is relied on. The envelope makes even a soft degradation legible.</p>
 </section>
-<section id="warnings-wear-the-envelope-too" class="level3" data-number="5.2.4">
-<h3 data-number="5.2.4" class="anchored" data-anchor-id="warnings-wear-the-envelope-too"><span class="header-section-number">5.2.4</span> Warnings wear the envelope too</h3>
-<p>The convention is not limited to fatal errors. The same shape decorates <em>non-fatal</em> warnings — most importantly the ones the sidecar machinery itself emits. When a sidecar write fails because of non-serialisable metadata, the warning is:</p>
-<pre class="text"><code>[cso_toolkit.dw_save] Provenance sidecar write failed for &lt;path&gt;: &lt;reason&gt;
-  Primary file unaffected; metadata may contain non-serialisable objects.
-  Fix: ensure all metadata values are JSON-serialisable (atomic types,
-  lists of atomics, or named lists thereof).</code></pre>
-<p>The same shape covers another soft failure: when a reviewer falls back to a repo-local copy because the canonical and Z: locations are unreachable, the provenance-gap warning carries the <code>[cso_toolkit.dw_use]</code> prefix and explains that the fallback <em>breaks provenance</em> and that Teams/Z: should be re-mounted before the output is relied upon. The envelope makes even a soft degradation legible.</p>
-</section>
-<section id="cross-language-parity-for-the-envelope" class="level3" data-number="5.2.5">
-<h3 data-number="5.2.5" class="anchored" data-anchor-id="cross-language-parity-for-the-envelope"><span class="header-section-number">5.2.5</span> Cross-language parity for the envelope</h3>
-<p>The envelope is the most fully realised piece of cross-language parity in the toolkit, but the realisation is uneven and worth stating exactly. R and Python use the identical prefix-and-<code>Fix</code> shape, asserted in both test suites. Stata carries the same <code>[cso_toolkit.&lt;fn&gt;]</code> prefix throughout, but the <em>fullness</em> of the body varies by command: <code>dw_require_no_api</code> renders the complete three-part <code>WHAT / Why / Fix</code> envelope (across separate <code>{phang}</code> lines), whereas the <code>dw_save</code> reviewer-mode refusal compresses to a single line that names the rule and the <code>-allow_canonical_write-</code> override without a separate Why/Fix block. The shape and the diagnostic intent are the same across all three siblings; the test harness that polices it is not. The automated <code>expect_envelope</code>-style assertion exists for R and Python, while Stata’s adherence is maintained by convention and review rather than by a packaged matcher.</p>
+<section id="a-tested-invariant" class="level3" data-number="4.2.4">
+<h3 data-number="4.2.4" class="anchored" data-anchor-id="a-tested-invariant"><span class="header-section-number">4.2.4</span> A tested invariant</h3>
+<p>The envelope is not only a style guide. The R test suite asserts it with an <code>expect_envelope()</code> helper, which checks for the <code>[cso_toolkit.&lt;fn&gt;]</code> prefix and a <code>Fix:</code> block on each raise the tests trigger; a raise that loses either fails the suite. Python has a script that checks the same on its raise paths, run by hand. Stata keeps the prefix everywhere, but the body is fuller in some commands than others: <code>dw_require_no_api</code> prints the full WHAT / Why / Fix, while the <code>dw_save</code> reviewer-mode refusal fits on one line that names the rule and the <code>-allow_canonical_write-</code> override. Stata’s adherence is kept by convention and review. Consumer repositories assert their own errors the same way (<a href="../chapters/checks-and-ci.html">Checks and CI</a>); the details of each test are in <a href="../appendices/c-error-taxonomy.html">Appendix C</a>.</p>
 </section>
 </section>
-<section id="how-the-two-conventions-reinforce-each-other" class="level2" data-number="5.3">
-<h2 data-number="5.3" class="anchored" data-anchor-id="how-the-two-conventions-reinforce-each-other"><span class="header-section-number">5.3</span> How the two conventions reinforce each other</h2>
-<p>The sidecar and the envelope are two halves of the same reproducibility contract. The sidecar makes a <em>successful</em> write self-describing and verifiable after the fact: who, when, what mode, what hash, what schema. The envelope makes an <em>unsuccessful</em> operation self-explaining at the moment it happens: which function, which rule, why, and how to proceed. Together they ensure that a <code>cso-toolkit</code> artefact is never a bare file of unknown origin, and a <code>cso-toolkit</code> failure is never a bare exception of unknown cause. Both travel with the toolkit wherever it is vendored, in whichever of the three languages a consumer repo uses, with the gaps above stated openly.</p>
+<section id="how-the-two-conventions-reinforce-each-other" class="level2" data-number="4.3">
+<h2 data-number="4.3" class="anchored" data-anchor-id="how-the-two-conventions-reinforce-each-other"><span class="header-section-number">4.3</span> How the two conventions reinforce each other</h2>
+<p>The sidecar and the envelope are two halves of one reproducibility contract. The sidecar makes a <em>successful</em> write describe itself and be checkable afterwards: who, when, in which mode, with what hash and what shape. The envelope makes an <em>unsuccessful</em> operation explain itself at the moment it happens: which function, which rule, why, and how to proceed.</p>
+<p>They also lean on each other. Several of the toolkit’s stops are decisions taken by reading a sidecar: the multi-producer guards in <code>dw_save</code>, which compare a file’s bytes with its recorded <code>sha256</code> and its writer with the current session; the <code>dw_stage</code> stop when a reviewer’s staged copy no longer matches the hash archived beside it; and the warning from <code>dw_provenance_diff</code> when the same inputs gave a different output. Each of those reaches you as an envelope whose Fix points back at the record (check the sidecar’s user and <code>written_at</code>, re-run, or override and have the override recorded in the new sidecar). The sidecar supplies the evidence; the envelope turns it into a decision you can act on.</p>
+<p>Together they ensure that a <code>cso-toolkit</code> artefact is never a bare file of unknown origin and a <code>cso-toolkit</code> failure is never a bare exception of unknown cause, in whichever of the three languages a consumer repository uses.</p>
 
 
 </section>
@@ -1244,12 +961,12 @@ available on this machine.
 <nav class="page-navigation" aria-label="Page">
   <div class="nav-page nav-page-previous">
       <a href="../chapters/21-roles-and-modes.html" class="pagination-link" aria-label="Roles and the mode contract">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Roles and the mode contract</span></span>
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Roles and the mode contract</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
       <a href="../chapters/31-io.html" class="pagination-link" aria-label="The IO contract">
-        <span class="nav-page-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">The IO contract</span></span> <i class="bi bi-arrow-right-short"></i>
+        <span class="nav-page-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">The IO contract</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
