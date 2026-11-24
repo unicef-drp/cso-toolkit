@@ -1,0 +1,105 @@
+# Contributing {#sec-contributing}
+
+This chapter is for anyone who changes the toolkit itself: a fix, a new function, a port to another language, or a correction to this book. It sets out how a change travels from a branch to a release, and what it must carry on the way. The release itself is in [Versioning and releases](44-versioning-release.qmd); how the three languages are kept in agreement is in [How the three languages stay in step](parity.qmd).
+
+A change is complete when it carries everything a reader of the next release needs:
+
+- the code, in every language it touches, with **R as the reference**: a behaviour is defined by the R implementation, and Python and Stata match it;
+- tests in each of those languages;
+- the handbook chapter that owns the behaviour, updated, and the generated tables regenerated;
+- a line in `NEWS.md` under `## Unreleased`;
+- a fresh parity certificate, if the change touches the certified paths.
+
+## Branches and pull requests
+
+The repository has two protected trunks and short-lived task branches.
+
+| Branch | Role | How changes arrive |
+|---|---|---|
+| `main` | Published trunk; release tags live here | Only a release pull request from `develop`. The protection applies to administrators too. |
+| `develop` | Integration trunk and default branch | A pull request from a task branch. No approval is required, so a solo author can merge their own, but the pull request is mandatory: it is where CI runs. |
+| `feat/<topic>`, `fix/<topic>`, `docs/<topic>` | One task each, branched from `develop` | Pushed freely; deleted after merging. |
+
+Neither trunk accepts force pushes or deletion. Merge pull requests with a **merge commit**, not a squash, so the history shows where each branch joined. The full rules, the administrator's hotfix path and how to recover from a commit on the wrong branch are in `docs/git_workflow.md`.
+
+**Work in a worktree.** Keep your main clone on whatever it is checked out to, and give each task its own working folder:
+
+```bash
+git fetch origin
+git worktree add -b feat/short-topic ../cso-toolkit-wt-topic origin/develop
+cd ../cso-toolkit-wt-topic
+# ... work, test, commit ...
+git push -u origin feat/short-topic
+gh pr create --base develop --head feat/short-topic --title "feat(area): what it does"
+```
+
+After the pull request merges, remove the worktree (`git worktree remove ../cso-toolkit-wt-topic`) and the branch. Several worktrees can be open at once, which is how parallel tasks, or parallel coding agents, avoid stepping on each other.
+
+**Stacked pull requests.** When one change builds on another that is not merged yet, branch the second from the first and open its pull request against the first branch. Merge them in order. After the first merges, retarget the next one to `develop` and bring `develop` into it with GitHub's *Update branch*, a merge rather than a rebase; retargeting alone does not start CI against `develop`. Delete a merged branch only after the pull request built on it has been retargeted, or GitHub closes the dependent pull request.
+
+**Commits.** Make each commit one logical change, and stage it by path, so the history reads as a list of decisions: the code, its tests, its documentation and the regenerated tables can be separate commits in one pull request. Start the subject with the area, in the style `feat(python): ...`, `fix(stata): ...`, `docs(book): ...`, `test(conformance): ...`. To delete files across several commits, remove them with `rm` and stage each commit with `git add -A -- <paths>`; a `git rm` stages the deletion at once, and the next `git commit` without paths takes it whatever the commit was meant to hold.
+
+## A change, start to finish
+
+1. **Open or find an issue** describing the problem, with file and line references and, for a bug, the steps that show it.
+2. **Branch** from an up-to-date `develop`, in a worktree.
+3. **Change R first.** R is the reference implementation. Port the change to Python, and to Stata where Stata has the function; where it does not, record why in `book/_data/coverage.json`.
+4. **Test each language** you touched (next section), and add a parity case if the change is about behaviour the languages must share.
+5. **Update the handbook chapter that owns the behaviour,** and only that chapter: other chapters link to it. If a function was added, removed or ported, run `sh tools/docs-tables` and commit `book/_generated/`.
+6. **Add a `NEWS.md` entry** under `## Unreleased`, written for someone deciding whether to update (see [Versioning and releases](44-versioning-release.qmd)).
+7. **Record a parity certificate** if the change touches `r/R`, `python/src`, `stata/src` or the conformance harness: commit your change, then run `sh tools/certify --record`, which commits the certificate itself.
+8. **Open the pull request** into `develop`, saying what changed, why, and how it was checked.
+9. **Merge when CI is green,** with a merge commit. A merge into `develop` that touches `book/` triggers the handbook build, which opens and merges its own pull request to refresh the published site.
+
+## Tests
+
+Run the tests of every language your change touches before you push; CI repeats the R and Python ones.
+
+::: {.panel-tabset}
+#### R {.unnumbered .unlisted}
+```r
+# From the repository root. Use --no-init-file, never --vanilla: --vanilla
+# also drops the site library settings that find your packages.
+#   Rscript --no-init-file -e 'devtools::test("r")'
+devtools::test("r")
+```
+The suite is in `r/tests/testthat/`. CI also runs `R CMD check` on Ubuntu (R release and devel), macOS and Windows (`r-check.yml`). Help pages are generated by roxygen2; `r/DESCRIPTION` pins `RoxygenNote: 7.3.3`, so if your roxygen2 is newer, keep only the `.Rd` pages your change actually alters.
+#### Python {.unnumbered .unlisted}
+```bash
+python -m pytest python/tests conformance/tests book/_scripts
+```
+`python/tests/` is the package's suite, `conformance/tests/` tests the parity harness, and `book/_scripts/` tests the handbook table generator. Two scripts under `python/tests/manual/` (a smoke test and the error-envelope check) are run by hand.
+#### Stata {.unnumbered .unlisted}
+```stata
+* In batch from the repository root (Windows: StataMP-64.exe /e do ...):
+do stata/tests/test_config_user_block.do
+```
+`stata/tests/` holds a do-file per area, plus `test_dw_stata_helpers.py`, run with pytest, for the Python helpers that Stata's `dw_save` and `dw_collaboration` call. GitHub's runners have no Stata licence (#133), so Stata is tested locally and through the parity certificate.
+:::
+
+Behaviour the three languages must share belongs in a parity case as well as in each language's suite: see "Adding a case" in [How the three languages stay in step](parity.qmd).
+
+## The handbook
+
+Each fact in this book has one home; other chapters link to it by title. When you change behaviour, change the chapter that owns it and nothing else. A few rules keep the book from drifting again:
+
+- **Never describe language coverage in prose.** Which languages have a function comes from the code: the coverage matrix and the one-line notes under each function are generated by `sh tools/docs-tables` from `r/NAMESPACE`, Python's `__all__` and `stata/src/*.ado`, with the notes in `book/_data/coverage.json`. The `Conformance` workflow runs `sh tools/docs-tables --check`, which fails when a function has no row or a note contradicts the code.
+- **Refer to chapters by title, not number.** Numbers change whenever the book is reorganised.
+- **Keep old addresses working.** When you move, merge or rename a page, list the old file names under `aliases:` in the new page's front matter; Quarto writes a redirect page at each old address and keeps any `#section` part. Code, templates and the Claude plugin cite handbook URLs.
+- **Render before you push:** `quarto render book --to html` should finish without warnings.
+
+## What CI runs
+
+| Workflow | When | What it checks |
+|---|---|---|
+| `R CMD check` (`r-check.yml`) | Push and pull request to `main` or `develop` | The R package on four platform and version combinations. |
+| `Conformance` (`conformance.yml`) | Push and pull request to `main` or `develop` | R and Python round-trip the shared fixture and must agree; the handbook's generated tables must be current. |
+| `Handbook (Quarto book)` (`publish-book.yml`) | Changes under `book/` | Pull requests: the book renders. Pushes to `develop`: renders and refreshes `docs/handbook/` through a pull request that merges itself. |
+| `Parity certificate` (`parity-certificate.yml`) | Pull requests into `main`, or by hand | A passing certificate exists for the commit (runs no language). |
+| `dashboard` (`dashboard.yml`) | Nightly, and after a handbook refresh | Publishes `docs/` to GitHub Pages. |
+
+Actions minutes are limited, so the checks are designed to run locally first: run the tests, the table check and, for code changes, the certificate before you push, and treat CI as confirmation rather than discovery.
+
+## Filing issues
+
+An issue is most useful when someone else can act on it without asking. Say what happens and what should happen, point to the code (`file:line`), give the smallest example that shows it, and propose a fix if you have one. Use the `bug`, `enhancement` or `documentation` label. A finding in one language that is likely to exist in the others is worth checking there before you file, and saying so.

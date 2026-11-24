@@ -88,7 +88,7 @@ dw_load_config, project(my-project)
 ```
 :::
 
-The parity certificate's `config_user_block` case runs six configurations (the user block, a project override, another project's override, a flat file, a top-level map, and a file with no mode) through a generated R profile, a generated Python profile and `dw_load_config`, and checks that all three resolve them alike ([Cross-language parity](../appendices/g-parity-certificate.qmd)).
+The parity certificate's `config_user_block` case runs six configurations (the user block, a project override, another project's override, a flat file, a top-level map, and a file with no mode) through a generated R profile, a generated Python profile and `dw_load_config`, and checks that all three resolve them alike ([How the three languages stay in step](parity.qmd)).
 
 When a producer session runs inside Claude Code (which sets `CLAUDE_CODE_CHILD_SESSION=1`), the generated profiles print a notice that an agent is working as producer. Nothing is blocked; [Working with AI coding agents](46-ai-agents.qmd) explains the rule behind it.
 
