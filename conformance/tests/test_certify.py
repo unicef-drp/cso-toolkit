@@ -110,17 +110,181 @@ def test_a_language_that_did_not_run(tmp_path):
 
 
 def test_every_shipped_case_is_well_formed():
-    ids = set()
-    for p in sorted((HERE / "cases").glob("*.json")):
-        c = json.loads(p.read_text(encoding="utf-8"))
-        assert c["id"] == p.stem and c["id"] not in ids
-        ids.add(c["id"])
-        assert c["kind"] in ("values", "json")
-        for lang in certify.LANGS:
-            assert (lang in c["languages"]) != (lang in c.get("gaps", {})), (p.name, lang)
-        for f in c["fixtures"]:
-            assert (HERE / "fixtures" / f).exists(), (p.name, f)
-        if c["kind"] == "values":
-            assert set(c["keys"]) <= set(c["columns"])
-        else:
-            assert isinstance(c["expect"], dict) and c["expect"]
+    assert list((HERE / "cases").glob("*.json"))
+    assert certify.lint_cases(HERE.parent) == []
+
+
+def lint_repo(tmp: Path, cases: dict, retired: str = "", mkdirs: bool = True) -> list:
+    (tmp / "conformance" / "cases").mkdir(parents=True, exist_ok=not mkdirs)
+    (tmp / "conformance" / "fixtures").mkdir(exist_ok=not mkdirs)
+    for name, c in cases.items():
+        (tmp / "conformance" / "cases" / f"{name}.json").write_text(json.dumps(c), encoding="utf-8")
+    if retired:
+        (tmp / "conformance" / "retired_ids.txt").write_text(retired, encoding="utf-8")
+    return certify.lint_cases(tmp)
+
+
+def test_lint_names_a_wrong_id_a_retired_id_and_a_bad_register(tmp_path):
+    errs = lint_repo(tmp_path, {
+        "good": case(id="good"),
+        "renamed": case(id="old_name"),
+        "gone": case(id="gone"),
+        "both": case(id="both", gaps={"stata": {"issue": "#1", "reason": "r"}}),
+    }, retired="# comment\ngone 2026-11-24 merged into good\n")
+    assert len(errs) == 3
+    assert any(e.startswith("renamed.json: id 'old_name' is not the file name") for e in errs)
+    assert any(e.startswith("gone.json: id 'gone' is retired") for e in errs)
+    assert any(e.startswith("both.json: stata must be in") for e in errs)
+
+
+def test_lint_checks_fixtures_and_kinds(tmp_path):
+    errs = lint_repo(tmp_path, {
+        "v": case(id="v", kind="values", fixtures=["absent.csv"], columns=["a"], keys=["b"]),
+        "j": case(id="j", expect={}),
+    })
+    assert sorted(e.split(":")[0] for e in errs) == ["j.json", "v.json", "v.json"]
+
+
+def test_lint_needs_the_required_fields_and_an_object(tmp_path):
+    bare = {"id": "v", "title": "t", "kind": "values", "fixtures": [], "languages": ["r"]}
+    (tmp_path / "conformance" / "cases").mkdir(parents=True)
+    (tmp_path / "conformance" / "fixtures").mkdir()
+    (tmp_path / "conformance" / "cases" / "v.json").write_text(json.dumps(bare), encoding="utf-8")
+    (tmp_path / "conformance" / "cases" / "l.json").write_text("[1, 2]", encoding="utf-8")
+    errs = certify.lint_cases(tmp_path)
+    assert "v.json: missing columns, keys" in errs
+    assert any(e.startswith("l.json: a case is a JSON object") for e in errs)
+
+
+def git_commit_all(root: Path) -> None:
+    import subprocess
+    for args in (["init", "-q"], ["add", "-A"],
+                 ["-c", "user.name=t", "-c", "user.email=t@example.invalid", "commit", "-q",
+                  "-m", "c"]):
+        subprocess.run(["git", "-C", str(root), *args], check=True, capture_output=True)
+
+
+def test_a_certified_case_cannot_vanish_without_retiring_its_id(tmp_path):
+    (tmp_path / ".parity").mkdir()
+    (tmp_path / ".parity" / "old.json").write_text(
+        json.dumps({"cases": {"good": {}, "dropped": {}, "retired_one": {}, "broken": {}}}),
+        encoding="utf-8")
+    (tmp_path / ".parity" / "bad.json").write_text('{"cases": null}', encoding="utf-8")
+    (tmp_path / "conformance" / "cases").mkdir(parents=True)
+    (tmp_path / "conformance" / "cases" / "broken.json").write_text("{not json", encoding="utf-8")
+    git_commit_all(tmp_path)
+    (tmp_path / ".parity" / "untracked.json").write_text(
+        json.dumps({"cases": {"only_on_disk": {}}}), encoding="utf-8")
+    (tmp_path / "conformance" / "cases" / "broken.json").unlink()
+    (tmp_path / "conformance" / "cases" / "broken.json").write_text("{not json", encoding="utf-8")
+    errs = lint_repo(tmp_path, {"good": case(id="good")},
+                     retired="retired_one 2026-11-24 merged into good\n", mkdirs=False)
+    assert any(e.startswith("broken.json: not JSON") for e in errs)
+    assert any(e.startswith(".parity/bad.json: a committed certificate that cannot") for e in errs)
+    gone = [e for e in errs if "is in a committed certificate" in e]
+    assert len(gone) == 1 and gone[0].startswith("dropped.json: id 'dropped'")   # not broken, not untracked
+    assert len(errs) == 3
+
+
+def test_lint_checks_the_register_tolerance_and_reference(tmp_path):
+    errs = lint_repo(tmp_path, {
+        "a": case(id="a", languages=["r", "python"], gaps={"stata": {"reason": "r"}}),
+        "b": case(id="b", languages=["r", "python"], gaps={"stata": "coverage matrix"}),
+        "c": case(id="c", divergences=["stata"]),
+        "d": case(id="d", kind="values", columns=["k"], keys=["k"], tolerance="tight"),
+        "e": case(id="e", kind="values", columns=["k"], keys=["k"], reference="fixture"),
+        "f": case(id="f", languages="r,python,stata"),
+    })
+    by = {e.split(":")[0]: e for e in errs}
+    assert sorted(by) == ["a.json", "b.json", "c.json", "d.json", "e.json", "f.json"]
+    assert "gaps.stata` needs string `issue` and `reason`" in by["a.json"]
+    assert "gaps.stata` needs string" in by["b.json"]
+    assert "`divergences` must be an object" in by["c.json"]
+    assert "`tolerance` must be a non-negative number" in by["d.json"]
+    assert "needs a fixture" in by["e.json"]
+    assert "must be lists" in by["f.json"]
+
+
+# Stata's own suites ---------------------------------------------------------
+
+def test_the_certificate_covers_the_stata_suites():
+    assert "stata/tests" in certify.CERT_PATHS
+    assert [s.name for s in certify.stata_suites(HERE.parent)] == sorted(
+        p.name for p in (HERE.parent / "stata" / "tests").glob("test_*.do"))
+    assert certify.lint_suites(HERE.parent) == []
+
+
+def test_lint_needs_the_completion_line_last(tmp_path):
+    t = tmp_path / "stata" / "tests"
+    t.mkdir(parents=True)
+    (t / "test_ok.do").write_text(f"assert 1\n{certify.DONE_LINE}\n* a trailing comment\n\n",
+                                  encoding="utf-8")
+    (t / "test_early.do").write_text(f"{certify.DONE_LINE}\nassert 1\n", encoding="utf-8")
+    (t / "test_none.do").write_text("assert 1\n", encoding="utf-8")
+    (t / "test_block.do").write_text(f"assert 1\n/*\n{certify.DONE_LINE}\n*/\n", encoding="utf-8")
+    (t / "test_cont.do").write_text(f"assert 1\n* a note ///\n{certify.DONE_LINE}\n",
+                                    encoding="utf-8")
+    (t / "test_inline.do").write_text(f"assert 1\n{certify.DONE_LINE}  // done\n", encoding="utf-8")
+    (t / "test_exit.do").write_text(f"{certify.DONE_LINE}\nexit\n", encoding="utf-8")
+    errs = certify.lint_suites(tmp_path)
+    assert sorted(e.split(":")[0] for e in errs) == [
+        "stata/tests/test_block.do", "stata/tests/test_cont.do", "stata/tests/test_early.do",
+        "stata/tests/test_exit.do", "stata/tests/test_none.do"]
+
+
+def test_the_wrapper_captures_the_suite_and_writes_its_return_code(tmp_path):
+    w = certify.suite_wrapper(tmp_path, tmp_path / "stata/tests/test_x.do", tmp_path / "x.result")
+    lines = w.splitlines()
+    assert lines[0] == "global cert_suite_done"
+    assert lines[1] == f'cd "{tmp_path.as_posix()}"'
+    assert lines[2].startswith("capture noisily do ") and "test_x.do" in lines[2]
+    assert "local cert_rc = _rc" in lines and 'local cert_done "$cert_suite_done"' in lines
+    assert f'"{(tmp_path / "x.result").as_posix()}"' in w
+    assert "\"rc `cert_rc' done `cert_done'\"" in w
+
+
+def test_suites_pass_fail_exit_missing_and_not_run(tmp_path):
+    (tmp_path / "ok.result").write_text("rc 0 done 1\n", encoding="utf-8")
+    (tmp_path / "bad.result").write_text("rc 9 done\n", encoding="utf-8")
+    (tmp_path / "exited.result").write_text("rc 0 done\n", encoding="utf-8")
+    res = certify.judge_suites(["ok", "bad", "exited", "died"], tmp_path, None)
+    assert {k: v["status"] for k, v in res.items()} == {"ok": "pass", "bad": "fail",
+                                                         "exited": "fail", "died": "missing"}
+    assert res["bad"]["note"].startswith("r(9)")
+    assert "before its last line" in res["exited"]["note"]
+    assert "no result file" in res["died"]["note"]
+    res = certify.judge_suites(["ok"], tmp_path, "Stata not found (set STATA_EXE)")
+    assert res["ok"] == {"status": "not_run", "note": "Stata not found (set STATA_EXE)"}
+
+
+def test_verify_reads_the_certificate_from_the_commit(tmp_path, capsys):
+    import subprocess
+    g = lambda *a: subprocess.run(["git", "-C", str(tmp_path), *a], check=True,
+                                  capture_output=True, text=True).stdout.strip()
+    g("init", "-q")
+    for p in certify.CERT_PATHS:
+        f = tmp_path / p / "x" if "." not in Path(p).name else tmp_path / p
+        f.parent.mkdir(parents=True, exist_ok=True)
+        f.write_text("x\n", encoding="utf-8")
+    g("add", "-A")
+    g("-c", "user.name=t", "-c", "user.email=t@example.invalid", "commit", "-q", "-m", "a")
+    first = g("rev-parse", "HEAD")
+    h, _ = certify.content_hash(tmp_path)
+    (tmp_path / ".parity").mkdir()
+    (tmp_path / ".parity" / f"{h}.json").write_text(
+        json.dumps({"result": "pass", "content_hash": h}), encoding="utf-8")
+    assert certify.verify(tmp_path) == 1          # on disk but not committed: not enough
+    g("add", "-A")
+    g("-c", "user.name=t", "-c", "user.email=t@example.invalid", "commit", "-q", "-m", "cert")
+    assert certify.verify(tmp_path) == 0
+    assert certify.verify(tmp_path, first) == 1   # the earlier commit does not carry it
+    (tmp_path / "r" / "R" / "x").write_text("changed\n", encoding="utf-8")
+    g("-c", "user.name=t", "-c", "user.email=t@example.invalid", "commit", "-q", "-am", "code")
+    assert certify.verify(tmp_path) == 1
+    assert certify.verify(tmp_path, "HEAD~1") == 0
+    h2, _ = certify.content_hash(tmp_path)
+    (tmp_path / ".parity" / f"{h2}.json").write_text("{not json", encoding="utf-8")
+    g("add", "-A")
+    g("-c", "user.name=t", "-c", "user.email=t@example.invalid", "commit", "-q", "-m", "bad")
+    assert certify.verify(tmp_path) == 1          # a FAIL line, not a traceback
+    assert "is not a valid certificate" in capsys.readouterr().out

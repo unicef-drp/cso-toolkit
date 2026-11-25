@@ -1,0 +1,11 @@
+# Retired parity case ids: never reuse one.
+#
+# Certificates (.parity/*.json) and the gap and divergence register name cases
+# by id, so an id keeps one meaning for ever. When a case is removed, or its
+# meaning changes enough that old results no longer describe it, add its id
+# here and give any replacement a new id. `sh tools/certify --lint` fails when
+# a case file uses an id listed here.
+#
+# Format: <id> <YYYY-MM-DD> <reason>, one per line.
+#
+# No case has been retired yet.

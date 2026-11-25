@@ -6,6 +6,10 @@
                                   commit .parity/<content-hash>.json
     sh tools/certify --verify     no R, Python or Stata: is there a passing
                                   certificate for this tree?
+    sh tools/certify --lint       no language: are the case files well formed?
+
+With Stata, a full run also runs Stata's own test suites, stata/tests/test_*.do,
+each in its own batch Stata, and records them in the certificate.
 
 Standard library only, so any Python 3.8+ runs it. The Python *driver* needs
 the toolkit's dependencies (pandas, PyYAML, ...): it runs under CSO_PYTHON when
@@ -24,6 +28,7 @@ import json
 import math
 import os
 import platform
+import re
 import shutil
 import subprocess
 import sys
@@ -34,11 +39,16 @@ LANGS = ("r", "python", "stata")
 REFERENCE = "r"
 # What a certificate is about: the three implementations and the harness.
 # Docs (README, handbook) are left out, so editing them keeps the certificate.
-CERT_PATHS = ("r/R", "python/src", "stata/src", "conformance/certify.py",
+CERT_PATHS = ("r/R", "python/src", "stata/src", "stata/tests", "conformance/certify.py",
               "conformance/cases", "conformance/drivers", "conformance/fixtures")
 CERT_DIR = ".parity"
-SCHEMA = "cso_toolkit.parity/1"
+SCHEMA = "cso_toolkit.parity/2"
 BAD = {"fail", "error", "missing", "unexpected"}
+# Case ids are permanent: certificates and the gap register name cases by id,
+# so an id once used is never given to a different case. A removed case's id
+# goes here, with the date and the reason, and can never come back.
+RETIRED = "conformance/retired_ids.txt"
+SUITE_TIMEOUT = 900
 
 
 # --------------------------------------------------------------------------
@@ -52,9 +62,9 @@ def git(repo: Path, *args: str, check: bool = True) -> str:
     return res.stdout.strip()
 
 
-def content_hash(repo: Path) -> tuple:
-    """SHA-256 over the git trees of CERT_PATHS at HEAD (doc-only changes keep it)."""
-    trees = {p: git(repo, "rev-parse", f"HEAD:{p}") for p in CERT_PATHS}
+def content_hash(repo: Path, rev: str = "HEAD") -> tuple:
+    """SHA-256 over the git trees of CERT_PATHS at rev (doc-only changes keep it)."""
+    trees = {p: git(repo, "rev-parse", f"{rev}:{p}") for p in CERT_PATHS}
     text = "".join(f"{p} {t}\n" for p, t in trees.items())
     return hashlib.sha256(text.encode("utf-8")).hexdigest(), trees
 
@@ -147,6 +157,230 @@ def run_drivers(repo: Path, cases: list, out: Path, langs: list) -> dict:
         if rc != 0 and any((d / f"{i}.{e}").exists() for i in ids for e in ("csv", "json")):
             status[lang] = None          # partial run: judge the outputs it wrote
     return status
+
+
+# --------------------------------------------------------------------------
+# Stata's own test suites (stata/tests/test_*.do)
+# --------------------------------------------------------------------------
+#
+# Batch Stata always exits 0, and its log echoes every line it reads, so a
+# "PASS" string can reach the log from a comment or from an -if- branch that
+# did not run, while the suite failed. The verdict therefore comes from a file
+# only execution can create: a wrapper runs the suite under -capture- and then
+# writes its return code to <suite>.result. A missing result file is a failure,
+# not a skip: it means Stata stopped or timed out before the wrapper's last
+# lines. A plain -exit- also returns 0, so rc 0 alone is not enough: each suite
+# ends with DONE_LINE, and the wrapper records whether that line ran.
+
+DONE_LINE = "global cert_suite_done 1"
+
+
+def stata_suites(repo: Path) -> list:
+    return sorted((repo / "stata" / "tests").glob("test_*.do"))
+
+
+def suite_wrapper(repo: Path, suite: Path, result: Path) -> str:
+    return "\n".join([
+        "global cert_suite_done",
+        f'cd "{repo.as_posix()}"',
+        f'capture noisily do "{suite.as_posix()}"',
+        "local cert_rc = _rc",
+        'local cert_done "$cert_suite_done"',
+        "tempname cert_fh",
+        f'file open `cert_fh\' using "{result.as_posix()}", write text replace',
+        "file write `cert_fh' \"rc `cert_rc' done `cert_done'\" _n",
+        "file close `cert_fh'",
+        ""])
+
+
+def stata_code_lines(text: str) -> list:
+    """The lines Stata would execute: /* */ blocks, * and // comment lines (with the
+    lines a /// continues them onto) and trailing // comments removed."""
+    text = re.sub(r"/\*.*?\*/", " ", text, flags=re.S)
+    joined, buf = [], ""
+    for ln in text.splitlines():
+        if re.search(r"\s///\s*$", " " + ln):
+            buf += re.sub(r"\s*///\s*$", " ", ln)
+            continue
+        joined.append(buf + ln)
+        buf = ""
+    if buf:
+        joined.append(buf)
+    code = []
+    for ln in joined:
+        s = ln.strip()
+        if not s or s.startswith(("*", "//")):
+            continue
+        code.append(re.sub(r"\s+//.*$", "", s).strip())
+    return code
+
+
+def lint_suites(repo: Path) -> list:
+    """Every suite must end with DONE_LINE, its last line of code."""
+    errs = []
+    for s in stata_suites(repo):
+        code = stata_code_lines(s.read_text(encoding="utf-8", errors="replace"))
+        if not code or code[-1] != DONE_LINE:
+            errs.append(f"stata/tests/{s.name}: the last line must be `{DONE_LINE}`, so the "
+                        "certificate can tell a suite that ran to the end from one that exited")
+    return errs
+
+
+def run_suites(repo: Path, out: Path, stata: str, env: dict) -> None:
+    """Run every suite in its own batch Stata; each leaves <out>/stata_suites/<name>.result."""
+    d = out / "stata_suites"
+    d.mkdir(parents=True, exist_ok=True)
+    flag = "/e" if os.name == "nt" else "-b"
+    for suite in stata_suites(repo):
+        result = d / f"{suite.stem}.result"
+        if result.exists():
+            result.unlink()
+        wrap = d / f"{suite.stem}.do"
+        wrap.write_text(suite_wrapper(repo, suite, result), encoding="utf-8")
+        print(f"[certify] Stata suite {suite.name} ...", flush=True)
+        run([stata, flag, "do", str(wrap)], d, env, d / f"{suite.stem}.console.log",
+            timeout=SUITE_TIMEOUT)
+
+
+def judge_suites(names: list, d: Path, why_not: str | None) -> dict:
+    """{suite: {status, note}} from the .result files in d."""
+    res = {}
+    for name in names:
+        if why_not:
+            res[name] = {"status": "not_run", "note": why_not}
+            continue
+        p = d / f"{name}.result"
+        log = (d / f"{name}.log").as_posix()
+        if not p.exists():
+            res[name] = {"status": "missing", "note": "no result file: Stata stopped or timed "
+                         f"out before the suite returned (see {log})"}
+            continue
+        words = p.read_text(encoding="utf-8", errors="replace").split()
+        rc = words[1] if len(words) > 1 and words[0] == "rc" else "?"
+        done = len(words) > 3 and words[2] == "done" and words[3] == "1"
+        if rc != "0":
+            res[name] = {"status": "fail", "note": f"r({rc}) (see {log})"}
+        elif not done:
+            res[name] = {"status": "fail", "note": "returned without error before its last line "
+                         f"(`{DONE_LINE}`): an -exit- part way? (see {log})"}
+        else:
+            res[name] = {"status": "pass", "note": ""}
+    return res
+
+
+# --------------------------------------------------------------------------
+# the case files
+# --------------------------------------------------------------------------
+
+def retired_ids(repo: Path) -> set:
+    p = repo / RETIRED
+    if not p.exists():
+        return set()
+    lines = p.read_text(encoding="utf-8").splitlines()
+    return {ln.split()[0] for ln in lines if ln.strip() and not ln.lstrip().startswith("#")}
+
+
+REQUIRED = {"all": ("id", "title", "kind", "fixtures", "languages"),
+            "values": ("columns", "keys"), "json": ("expect",)}
+
+
+def certified_ids(repo: Path) -> tuple:
+    """(ids, errors): every case id the certificates committed at HEAD record, and a
+    message for each committed certificate that cannot be read."""
+    ids, errs = set(), []
+    listed = git(repo, "ls-tree", "--name-only", "HEAD", f"{CERT_DIR}/", check=False)
+    for rel in (ln for ln in listed.splitlines() if ln.endswith(".json")):
+        res = subprocess.run(["git", "-C", str(repo), "show", f"HEAD:{rel}"],
+                             capture_output=True, text=True, encoding="utf-8")
+        try:
+            cases = json.loads(res.stdout).get("cases")
+            if not isinstance(cases, dict):
+                raise ValueError("no `cases` object")
+        except (ValueError, AttributeError) as e:
+            errs.append(f"{rel}: a committed certificate that cannot be read ({e})")
+            continue
+        ids |= set(cases)
+    return ids, errs
+
+
+def register_errors(name: str, c: dict) -> list:
+    """`gaps` and `divergences` map a language to {issue, reason}, both strings."""
+    errs = []
+    for field in ("gaps", "divergences"):
+        reg = c.get(field, {})
+        if not isinstance(reg, dict):
+            errs.append(f"{name}: `{field}` must be an object keyed by language")
+            continue
+        for lang, entry in reg.items():
+            if lang not in LANGS:
+                errs.append(f"{name}: `{field}` names {lang!r}, not one of {', '.join(LANGS)}")
+            if not (isinstance(entry, dict) and isinstance(entry.get("issue"), str)
+                    and isinstance(entry.get("reason"), str)):
+                errs.append(f"{name}: `{field}.{lang}` needs string `issue` and `reason`")
+    return errs
+
+
+def lint_cases(repo: Path) -> list:
+    """Every problem with conformance/cases/*.json, as 'file: message'; empty when well formed."""
+    errs, retired = [], retired_ids(repo)
+    present = set()
+    for p in sorted((repo / "conformance" / "cases").glob("*.json")):
+        try:
+            c = json.loads(p.read_text(encoding="utf-8"))
+        except ValueError as e:
+            errs.append(f"{p.name}: not JSON: {e}")
+            present.add(p.stem)          # reported here; not also as a lost id
+            continue
+        if not isinstance(c, dict):
+            errs.append(f"{p.name}: a case is a JSON object, not a {type(c).__name__}")
+            present.add(p.stem)
+            continue
+        cid = c.get("id")
+        present |= {p.stem, cid}
+        need = REQUIRED["all"] + REQUIRED.get(c.get("kind"), ())
+        missing = [k for k in need if k not in c]
+        if missing:
+            errs.append(f"{p.name}: missing {', '.join(missing)}")
+            continue
+        shapes = [("languages", list), ("fixtures", list)] + (
+            [("columns", list), ("keys", list)] if c["kind"] == "values" else [])
+        bad = [k for k, t in shapes if not isinstance(c[k], t)]
+        if bad:
+            errs.append(f"{p.name}: {', '.join(bad)} must be lists")
+            continue
+        errs += register_errors(p.name, c)
+        tol = c.get("tolerance", 1e-9)
+        if isinstance(tol, bool) or not isinstance(tol, (int, float)) or tol < 0:
+            errs.append(f"{p.name}: `tolerance` must be a non-negative number")
+        if c.get("reference") == "fixture" and not c["fixtures"]:
+            errs.append(f"{p.name}: `reference: fixture` needs a fixture to compare with")
+        if cid != p.stem:
+            errs.append(f"{p.name}: id {cid!r} is not the file name")
+        if cid in retired:
+            errs.append(f"{p.name}: id {cid!r} is retired ({RETIRED}); give the case a new id")
+        kind = c.get("kind")
+        if kind not in ("values", "json"):
+            errs.append(f"{p.name}: kind {kind!r} is neither 'values' nor 'json'")
+        gaps = c.get("gaps", {}) if isinstance(c.get("gaps", {}), dict) else {}
+        for lang in LANGS:
+            if (lang in c["languages"]) == (lang in gaps):
+                errs.append(f"{p.name}: {lang} must be in `languages` or in `gaps`, not both "
+                            "or neither")
+        for f in c.get("fixtures", []):
+            if not (repo / "conformance" / "fixtures" / f).exists():
+                errs.append(f"{p.name}: fixture {f} does not exist")
+        if kind == "values" and not set(c.get("keys", [])) <= set(c.get("columns", [])):
+            errs.append(f"{p.name}: every key must be one of the columns")
+        if kind == "json" and not (isinstance(c.get("expect"), dict) and c["expect"]):
+            errs.append(f"{p.name}: a json case needs a non-empty `expect`")
+    # A case a certificate records may not vanish quietly: removing or renaming
+    # one means retiring its id, so the id is never given to a different case.
+    ids, cert_errs = certified_ids(repo)
+    errs += cert_errs
+    gone = sorted(ids - present - retired)
+    errs += [f"{cid}.json: id {cid!r} is in a committed certificate but no case file has it; "
+             f"restore the case or list the id in {RETIRED}" for cid in gone]
+    return errs
 
 
 # --------------------------------------------------------------------------
@@ -344,35 +578,75 @@ def report(results: dict) -> dict:
     return counts
 
 
-def verify(repo: Path) -> int:
-    h, _ = content_hash(repo)
-    p = repo / CERT_DIR / f"{h}.json"
-    if not p.exists():
-        print(f"[certify] FAIL no certificate for this tree ({CERT_DIR}/{h}.json).\n"
+def report_suites(suites: dict) -> dict:
+    counts: dict = {}
+    if suites:
+        print("\nStata suites (stata/tests)")
+    for name, r in suites.items():
+        counts[r["status"]] = counts.get(r["status"], 0) + 1
+        print(f"  {name:<28}{LABEL[r['status']]:<10}{r['note']}")
+    return counts
+
+
+def verify(repo: Path, rev: str = "HEAD") -> int:
+    """Does commit `rev` carry a passing certificate for its own tree? Reads git, not the disk."""
+    h, _ = content_hash(repo, rev)
+    rel = f"{CERT_DIR}/{h}.json"
+    where = "this tree" if rev == "HEAD" else rev
+    res = subprocess.run(["git", "-C", str(repo), "show", f"{rev}:{rel}"],
+                         capture_output=True, text=True, encoding="utf-8")
+    if res.returncode != 0:
+        print(f"[certify] FAIL no certificate for {where} ({rel}).\n"
               "  Fix: run `sh tools/certify --record` with R, Python and Stata available, "
               "then push the commit it makes.")
         return 1
-    cert = json.loads(p.read_text(encoding="utf-8"))
-    if cert.get("result") != "pass" or cert.get("content_hash") != h:
-        print(f"[certify] FAIL {p.name} does not record a pass for this tree.")
+    try:
+        cert = json.loads(res.stdout)
+    except ValueError as e:
+        cert = e
+    if not isinstance(cert, dict):
+        print(f"[certify] FAIL {rel} is not a valid certificate ({cert}).")
         return 1
+    if cert.get("result") != "pass" or cert.get("content_hash") != h:
+        print(f"[certify] FAIL {h}.json does not record a pass for {where}.")
+        return 1
+    suites = cert.get("suites_summary")
     print(f"[certify] PASS certificate {h[:12]} ({cert.get('created_at')}, "
-          f"{cert.get('summary')})")
+          f"{cert.get('summary')}" + (f", Stata suites {suites}" if suites else "") + ")")
     return 0
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--record", action="store_true", help="write and commit the certificate")
-    ap.add_argument("--verify", action="store_true", help="check a certificate exists; run nothing")
+    mode = ap.add_mutually_exclusive_group()
+    mode.add_argument("--record", action="store_true", help="write and commit the certificate")
+    mode.add_argument("--verify", action="store_true", help="check a certificate exists; run nothing")
+    mode.add_argument("--lint", action="store_true",
+                      help="check the case files and the Stata suites' last lines; run nothing")
+    ap.add_argument("--rev", default="HEAD", help="with --verify: the commit to check (default HEAD)")
     ap.add_argument("--languages", default=",".join(LANGS), help="subset, e.g. r,python")
-    ap.add_argument("--cases", default="", help="only these case ids (comma separated)")
+    ap.add_argument("--cases", default="", help="only these case ids (comma separated); "
+                    "skips the Stata suites")
     ap.add_argument("--out", default="", help="output folder (default: a new temporary one)")
     a = ap.parse_args()
+    if a.rev != "HEAD" and not a.verify:
+        ap.error("--rev goes with --verify")
 
     repo = Path(git(Path.cwd(), "rev-parse", "--show-toplevel"))
     if a.verify:
-        return verify(repo)
+        return verify(repo, a.rev)
+    errs = [e if e.startswith(f"{CERT_DIR}/") else f"conformance/cases/{e}"
+            for e in lint_cases(repo)] + lint_suites(repo)
+    if errs:
+        print("[certify] FAIL: the case files or the Stata suites are not well formed")
+        for e in errs:
+            print(f"  {e}")
+        return 1
+    if a.lint:
+        print(f"[certify] PASS: {len(list((repo / 'conformance' / 'cases').glob('*.json')))} "
+              f"case files well formed, no case id lost or reused; {len(stata_suites(repo))} "
+              "Stata suites end with the completion line")
+        return 0
 
     langs = [x for x in a.languages.split(",") if x]
     bad = [x for x in langs if x not in LANGS]
@@ -380,6 +654,8 @@ def main() -> int:
         sys.exit(f"[certify] unknown language(s) {bad}; choose from {LANGS}")
     if a.record and set(langs) != set(LANGS):
         sys.exit("[certify] --record needs all three languages.")
+    if a.record and a.cases:
+        sys.exit("[certify] --record runs every case: drop --cases.")
     if a.record and dirty(repo):
         sys.exit("[certify] --record needs a clean tree under " + ", ".join(CERT_PATHS) +
                  ": commit first.\n" + "\n".join(dirty(repo)))
@@ -394,18 +670,30 @@ def main() -> int:
     print(f"[certify] {len(cases)} case(s), languages {', '.join(langs)}; outputs in {out}\n")
 
     ran = run_drivers(repo, cases, out, langs)
+    names = [s.stem for s in stata_suites(repo)]
+    stata = find_stata()
+    why_not = ("Stata not requested (--languages)" if "stata" not in langs else
+               "only some cases requested (--cases)" if a.cases else
+               None if stata else "Stata not found (set STATA_EXE)")
+    if why_not is None:
+        run_suites(repo, out, stata, dict(os.environ, PYTHONUTF8="1"))
+    suites = judge_suites(names, out / "stata_suites", why_not)
     results = judge(cases, out, ran)
     counts = report(results)
-    failed = sum(counts.get(s, 0) for s in BAD)
-    complete = all(ran.get(lang, "x") is None for lang in LANGS)
+    scounts = report_suites(suites)
+    failed = sum(counts.get(s, 0) for s in BAD) + sum(scounts.get(s, 0) for s in BAD)
+    complete = all(ran.get(lang, "x") is None for lang in LANGS) and why_not is None
     result = "pass" if failed == 0 and complete else ("fail" if failed else "incomplete")
     print(f"\n[certify] {result.upper()}: " + ", ".join(f"{v} {LABEL[k].lower()}"
-                                                     for k, v in sorted(counts.items())))
+                                                     for k, v in sorted(counts.items()))
+          + ("; Stata suites: " + ", ".join(f"{v} {LABEL[k].lower()}"
+                                            for k, v in sorted(scounts.items()))
+             if scounts else ""))
     if not a.record:
         return 0 if failed == 0 else 1
     if result != "pass":
         print("[certify] no certificate written: every case must pass (or be a listed gap or "
-              "divergence) in all three languages.")
+              "divergence) in all three languages, and every Stata suite must pass.")
         return 1
 
     h, trees = content_hash(repo)
@@ -428,7 +716,9 @@ def main() -> int:
         "versions": versions,
         "result": result,
         "summary": {k: v for k, v in sorted(counts.items())},
+        "suites_summary": {k: v for k, v in sorted(scounts.items())},
         "cases": results,
+        "stata_suites": suites,
     }
     d = repo / CERT_DIR
     d.mkdir(exist_ok=True)
