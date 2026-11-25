@@ -5,8 +5,8 @@
 # The row order and notes live in book/_data/coverage.json. Standard-library Python only.
 cd "$(git rev-parse --show-toplevel)" || exit 1
 for p in "$CSO_PYTHON" python3 python; do
-  [ -n "$p" ] && command -v "$p" >/dev/null 2>&1 && exec "$p" book/_scripts/gen_tables.py "$@"
+  [ -n "$p" ] && "$p" -c "import sys" >/dev/null 2>&1 && exec "$p" book/_scripts/gen_tables.py "$@"
 done
-if command -v py >/dev/null 2>&1; then exec py -3 book/_scripts/gen_tables.py "$@"; fi
+if py -3 -c "import sys" >/dev/null 2>&1; then exec py -3 book/_scripts/gen_tables.py "$@"; fi
 echo "tools/docs-tables: no Python found; set CSO_PYTHON." >&2
 exit 1

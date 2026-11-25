@@ -34,6 +34,31 @@ is cut, this header is renamed `## vX.Y.Z (YYYY-MM-DD)` and a fresh
   reuses an id listed in `conformance/retired_ids.txt`, or when a case a
   committed certificate records has gone without its id being retired. The
   `Conformance` workflow runs it.
+- **One local check before pushing: `sh tools/check`.** It runs the version,
+  case-file, handbook-table and certificate checks in seconds
+  (`--full` adds the R and Python suites; `--release` makes a missing
+  certificate, or a dirty tree, fail; `--rev <commit>` and
+  `--release-rev <commit>` check other commits' certificates).
+  `.githooks/pre-push` runs it before every push and checks the certificate
+  of each commit being pushed: a commit pushed to `main` or as a `v*` tag
+  must have one and be the clean checkout, other commits only warn. Enable
+  it with `git config core.hooksPath .githooks`.
+- **CI skips changes that cannot affect it.** `R CMD check` no longer runs
+  for changes only in `docs/`, `book/`, `.parity/`, `conformance/`,
+  `NEWS.md` or `README.md`, and `Conformance` for changes only in `docs/` or
+  `.parity/`, so the handbook bot's pull requests run neither (their runs
+  had been ending as "workflow file issue" failures). A newer
+  push cancels a running `Parity certificate` check.
+- **`tools/certify` and `tools/docs-tables` find a Python that runs.** They
+  had taken Windows' Microsoft Store placeholder for `python3`, which exits
+  with "Python was not found", unless `CSO_PYTHON` was set.
+
+### Process
+
+- **A bug is fixed when its test has failed.** The test for a bug fix must
+  fail on the code before the fix and pass after it, and the pull request
+  shows the failure (handbook chapter "Contributing"). A pull request
+  template lists what the body should cover.
 
 ## v0.12.1 (2026-11-24)
 

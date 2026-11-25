@@ -1,0 +1,21 @@
+#!/bin/sh
+# Runs sh tools/check before every push of this repository, checking the
+# parity certificate of each commit being pushed (not of what is checked out).
+# A commit pushed to main, or as a v* tag, is a release: its certificate must
+# exist, and it must be the clean checkout, since the version and table checks
+# read the working tree. Other pushed commits only warn. Deleting a ref checks
+# nothing.
+# Enable once per clone:   git config core.hooksPath .githooks
+# The hook runs only when git runs inside this working tree: not with GIT_DIR
+# pointing here from elsewhere, and not on a commit older than the hook.
+# Skip once (say why in the pull request):   git push --no-verify
+args=""
+while read -r local_ref local_sha remote_ref remote_sha; do
+  case "$local_sha" in *[!0]*) ;; *) continue ;; esac   # a deletion: nothing to check
+  case "$remote_ref" in
+    refs/heads/main|refs/tags/v*) args="$args --release-rev $local_sha" ;;
+    *) args="$args --rev $local_sha" ;;
+  esac
+done
+[ -n "$args" ] || exit 0
+exec sh tools/check $args

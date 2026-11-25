@@ -44,16 +44,65 @@ After the pull request merges, remove the worktree (`git worktree remove ../cso-
 1. **Open or find an issue** describing the problem, with file and line references and, for a bug, the steps that show it.
 2. **Branch** from an up-to-date `develop`, in a worktree.
 3. **Change R first.** R is the reference implementation. Port the change to Python, and to Stata where Stata has the function; where it does not, record why in `book/_data/coverage.json`.
-4. **Test each language** you touched (next section), and add a parity case if the change is about behaviour the languages must share.
+4. **Test each language** you touched (next section), and add a parity case if the change is about behaviour the languages must share. For a bug, write the test first and watch it fail (below).
 5. **Update the handbook chapter that owns the behaviour,** and only that chapter: other chapters link to it. If a function was added, removed or ported, run `sh tools/docs-tables` and commit `book/_generated/`.
 6. **Add a `NEWS.md` entry** under `## Unreleased`, written for someone deciding whether to update (see [Versioning and releases](44-versioning-release.qmd)).
 7. **Record a parity certificate** if the change touches `r/R`, `python/src`, `stata/src`, `stata/tests` or the conformance harness: commit your change, then run `sh tools/certify --record`, which commits the certificate itself.
-8. **Open the pull request** into `develop`, saying what changed, why, and how it was checked.
-9. **Merge when CI is green,** with a merge commit. A merge into `develop` that touches `book/` triggers the handbook build, which opens and merges its own pull request to refresh the published site.
+8. **Run `sh tools/check`** (next sections), or let the pre-push hook run it.
+9. **Open the pull request** into `develop`, saying what changed, why, and how it was checked. The pull request template lists what the body should cover.
+10. **Merge when CI is green,** with a merge commit. A merge into `develop` that touches `book/` triggers the handbook build, which opens and merges its own pull request to refresh the published site.
+
+## A bug is fixed when its test has failed
+
+A bug counts as fixed only when a test reproduces it: the test must **fail on the code before the fix and pass after it**. Write the test first and run it against the unfixed code. Then make the fix, and run it again.
+
+Show the failure in the pull request: quote the failing assertion and its message, or commit the test before the fix, so the history holds a commit where it fails. A parity case counts as such a test when the failure is in one language's output.
+
+The reason is that a regression test nobody has seen fail proves nothing. It may never reach the faulty line, or assert something the bug does not change. In the Stata `yaml` package, from which this rule is borrowed, a test that checked only return codes passed for two major versions while the option it covered wrote nothing at all.
+
+Code with no test at all fares no better, and the toolkit has shipped two such cases. Each would have been caught by a test written first and seen to fail:
+- Python's `io-open-write` auditor rule matched nothing until v0.12.0, the release that added its first test.
+- R's `api-fromjson-url` rule never fired until v0.12.1 (#237). Lines are matched with their string literals blanked, and the URL it looked for is a string.
+
+A fix that cannot be tested this way, such as a message's wording, says so in the pull request.
+
+## Before you push: `sh tools/check`
+
+One command runs, in seconds and with nothing but Python's standard library, the quick checks CI's `Conformance` workflow makes, plus the certificate check that CI makes only on pull requests into `main`:
+
+```bash
+sh tools/check             # version stamps, parity case files, handbook tables, certificate
+sh tools/check --full      # also the Python and R test suites (minutes)
+sh tools/check --release   # HEAD is a release: a missing certificate, or a dirty tree, fails
+sh tools/check --rev <c> --release-rev <r>   # check these commits' certificates (see below)
+```
+
+The fast checks are:
+- `tools/check_versions.py`: every version stamp names the same release;
+- `conformance/certify.py --lint`: the parity case files are well formed;
+- `book/_scripts/gen_tables.py --check`: the handbook's generated tables match the code;
+- `conformance/certify.py --verify`: this tree has a parity certificate.
+
+A missing certificate is only a warning while you work, because the certificate is recorded after the code is committed. It must be there before the pull request merges, if the branch touches the certified paths. `--full` needs a `CSO_PYTHON` with pytest and the toolkit's dependencies, and an Rscript with devtools.
+
+The first three checks read the working tree; `tools/check` notes it when you have uncommitted changes. The certificate check reads git: it checks `HEAD`, or each commit given with `--rev <commit>` (a missing certificate warns) or `--release-rev <commit>` (it fails). A release commit must also be the clean checkout, since the file checks cannot see any other commit: release from `git switch --detach <commit>`.
+
+**The pre-push hook** runs `sh tools/check` before every push. It passes each commit being pushed, not what is checked out:
+- a commit pushed to `main` or as a `v*` tag is a release (`--release-rev`);
+- any other commit only warns (`--rev`), even in the same push;
+- a deletion checks nothing.
+
+Turn it on once per clone:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+The hook runs only when git runs inside this working tree. It does not run when `GIT_DIR` points here from elsewhere, or when the checked-out commit predates the hook. `git push --no-verify` skips it once; say why in the pull request.
 
 ## Tests
 
-Run the tests of every language your change touches before you push; CI repeats the R and Python ones.
+Run the tests of every language your change touches before you push. CI repeats the R suite, inside `R CMD check`; the Python suite runs only on your machine. `sh tools/check --full` runs both in one go.
 
 ::: {.panel-tabset}
 #### R {.unnumbered .unlisted}
@@ -92,13 +141,13 @@ Each fact in this book has one home; other chapters link to it by title. When yo
 
 | Workflow | When | What it checks |
 |---|---|---|
-| `R CMD check` (`r-check.yml`) | Push and pull request to `main` or `develop` | The R package on four platform and version combinations. |
-| `Conformance` (`conformance.yml`) | Push and pull request to `main` or `develop` | R and Python round-trip the shared fixture and must agree; the handbook's generated tables must be current; every version stamp must name the same release (`tools/check_versions.py`); the parity case files must be well formed (`certify.py --lint`). |
+| `R CMD check` (`r-check.yml`) | Push and pull request to `main` or `develop`, unless the change is only in `docs/`, `book/`, `.parity/`, `conformance/`, `NEWS.md` or `README.md` | The R package on four platform and version combinations. |
+| `Conformance` (`conformance.yml`) | Push and pull request to `main` or `develop`, unless the change is only in `docs/` or `.parity/` | R and Python round-trip the shared fixture and must agree; the handbook's generated tables must be current; every version stamp must name the same release (`tools/check_versions.py`); the parity case files must be well formed (`certify.py --lint`). |
 | `Handbook (Quarto book)` (`publish-book.yml`) | Changes under `book/` | Pull requests: the book renders. Pushes to `develop`: renders and refreshes `docs/handbook/` through a pull request that merges itself. |
 | `Parity certificate` (`parity-certificate.yml`) | Pull requests into `main`, or by hand | A passing certificate exists for the commit (runs no language). |
 | `dashboard` (`dashboard.yml`) | Nightly, and after a handbook refresh | Publishes `docs/` to GitHub Pages. |
 
-Actions minutes are limited, so the checks are designed to run locally first: run the tests, the table check and, for code changes, the certificate before you push, and treat CI as confirmation rather than discovery.
+Actions minutes are limited, so the checks are designed to run locally first: run `sh tools/check` and, for code changes, the certificate before you push, and treat CI as confirmation rather than discovery. For the same reason the two heavy workflows skip changes that cannot affect them: the handbook bot's pull requests, which touch only `docs/handbook/`, run neither. Branch protection requires no check, so a skipped workflow blocks nothing.
 
 ## Filing issues
 
