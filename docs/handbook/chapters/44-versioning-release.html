@@ -610,14 +610,15 @@ r/tests/testthat/test-dw_io-mode-contract.R, test-dw_publish.R   pinned stamp</c
 <li>stamp the version in every place listed above, including the tests that pin it;</li>
 <li>rename <code>## Unreleased</code> to <code>## vX.Y.Z (YYYY-MM-DD)</code>, add a short summary paragraph, and open a fresh <code>## Unreleased</code>;</li>
 <li>add the README version-table row and update the handbook’s “as of” lines;</li>
-<li>run <code>python3 tools/check_versions.py</code>, <code>sh tools/docs-tables</code> and the test suites;</li>
+<li>run <code>sh tools/docs-tables</code>, then <code>sh tools/check --full</code>, which checks the stamps and the tables and runs the R and Python suites;</li>
 <li>commit, then run <code>sh tools/certify --record</code> with R, Python and Stata available, which commits the certificate.</li>
 </ul></li>
 <li><p><strong>Merge the preparation pull request into <code>develop</code></strong> when CI is green. The handbook build then opens and merges its own pull request to refresh <code>docs/handbook/</code>; let it merge before the next step, so the release pull request’s checks are not held back by a later push.</p></li>
 <li><p><strong>Open the release pull request from <code>develop</code> into <code>main</code>.</strong> Its body is the release notes: what changed, what consumers get, and the checks behind it. The <code>Parity certificate</code> check must pass along with the others. Merge with a merge commit.</p></li>
-<li><p><strong>Tag the merge commit on <code>main</code></strong> with an annotated tag naming the certificate, after confirming <code>sh tools/certify --verify</code> passes there:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> tag <span class="at">-a</span> vX.Y.Z <span class="op">&lt;</span>merge-commit<span class="op">&gt;</span> -m <span class="st">"cso-toolkit vX.Y.Z: &lt;headline&gt; (parity certificate &lt;hash&gt;)"</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> push origin vX.Y.Z</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+<li><p><strong>Tag the merge commit on <code>main</code></strong> with an annotated tag naming the certificate, from a clean checkout of that commit. The pre-push hook requires the clean checkout, and runs <code>sh tools/check</code> on it, including <code>sh tools/certify --verify</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> switch <span class="at">--detach</span> <span class="op">&lt;</span>merge-commit<span class="op">&gt;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> tag <span class="at">-a</span> vX.Y.Z <span class="at">-m</span> <span class="st">"cso-toolkit vX.Y.Z: &lt;headline&gt; (parity certificate &lt;hash&gt;)"</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> push origin vX.Y.Z</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
 <li><p><strong>Publish the GitHub release</strong> from the tag, marked latest, with the release notes and a link to the certificate file at the tag.</p></li>
 <li><p><strong>Check that CI passes on <code>main</code></strong> after the merge.</p></li>
 <li><p><strong>Update the consumers</strong> with <code>cso_toolkit_sync(target_version = "vX.Y.Z")</code>, one pull request per consumer repository, and record which files changed.</p></li>

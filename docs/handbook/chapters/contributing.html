@@ -417,10 +417,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#branches-and-pull-requests" id="toc-branches-and-pull-requests" class="nav-link active" data-scroll-target="#branches-and-pull-requests"><span class="header-section-number">15.1</span> Branches and pull requests</a></li>
   <li><a href="#a-change-start-to-finish" id="toc-a-change-start-to-finish" class="nav-link" data-scroll-target="#a-change-start-to-finish"><span class="header-section-number">15.2</span> A change, start to finish</a></li>
-  <li><a href="#tests" id="toc-tests" class="nav-link" data-scroll-target="#tests"><span class="header-section-number">15.3</span> Tests</a></li>
-  <li><a href="#the-handbook" id="toc-the-handbook" class="nav-link" data-scroll-target="#the-handbook"><span class="header-section-number">15.4</span> The handbook</a></li>
-  <li><a href="#what-ci-runs" id="toc-what-ci-runs" class="nav-link" data-scroll-target="#what-ci-runs"><span class="header-section-number">15.5</span> What CI runs</a></li>
-  <li><a href="#filing-issues" id="toc-filing-issues" class="nav-link" data-scroll-target="#filing-issues"><span class="header-section-number">15.6</span> Filing issues</a></li>
+  <li><a href="#a-bug-is-fixed-when-its-test-has-failed" id="toc-a-bug-is-fixed-when-its-test-has-failed" class="nav-link" data-scroll-target="#a-bug-is-fixed-when-its-test-has-failed"><span class="header-section-number">15.3</span> A bug is fixed when its test has failed</a></li>
+  <li><a href="#before-you-push-sh-toolscheck" id="toc-before-you-push-sh-toolscheck" class="nav-link" data-scroll-target="#before-you-push-sh-toolscheck"><span class="header-section-number">15.4</span> Before you push: <code>sh tools/check</code></a></li>
+  <li><a href="#tests" id="toc-tests" class="nav-link" data-scroll-target="#tests"><span class="header-section-number">15.5</span> Tests</a></li>
+  <li><a href="#the-handbook" id="toc-the-handbook" class="nav-link" data-scroll-target="#the-handbook"><span class="header-section-number">15.6</span> The handbook</a></li>
+  <li><a href="#what-ci-runs" id="toc-what-ci-runs" class="nav-link" data-scroll-target="#what-ci-runs"><span class="header-section-number">15.7</span> What CI runs</a></li>
+  <li><a href="#filing-issues" id="toc-filing-issues" class="nav-link" data-scroll-target="#filing-issues"><span class="header-section-number">15.8</span> Filing issues</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/unicef-drp/cso-toolkit/edit/main/book/chapters/contributing.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/unicef-drp/cso-toolkit/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
@@ -507,38 +509,62 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>Open or find an issue</strong> describing the problem, with file and line references and, for a bug, the steps that show it.</li>
 <li><strong>Branch</strong> from an up-to-date <code>develop</code>, in a worktree.</li>
 <li><strong>Change R first.</strong> R is the reference implementation. Port the change to Python, and to Stata where Stata has the function; where it does not, record why in <code>book/_data/coverage.json</code>.</li>
-<li><strong>Test each language</strong> you touched (next section), and add a parity case if the change is about behaviour the languages must share.</li>
+<li><strong>Test each language</strong> you touched (next section), and add a parity case if the change is about behaviour the languages must share. For a bug, write the test first and watch it fail (below).</li>
 <li><strong>Update the handbook chapter that owns the behaviour,</strong> and only that chapter: other chapters link to it. If a function was added, removed or ported, run <code>sh tools/docs-tables</code> and commit <code>book/_generated/</code>.</li>
 <li><strong>Add a <code>NEWS.md</code> entry</strong> under <code>## Unreleased</code>, written for someone deciding whether to update (see <a href="../chapters/44-versioning-release.html">Versioning and releases</a>).</li>
 <li><strong>Record a parity certificate</strong> if the change touches <code>r/R</code>, <code>python/src</code>, <code>stata/src</code>, <code>stata/tests</code> or the conformance harness: commit your change, then run <code>sh tools/certify --record</code>, which commits the certificate itself.</li>
-<li><strong>Open the pull request</strong> into <code>develop</code>, saying what changed, why, and how it was checked.</li>
+<li><strong>Run <code>sh tools/check</code></strong> (next sections), or let the pre-push hook run it.</li>
+<li><strong>Open the pull request</strong> into <code>develop</code>, saying what changed, why, and how it was checked. The pull request template lists what the body should cover.</li>
 <li><strong>Merge when CI is green,</strong> with a merge commit. A merge into <code>develop</code> that touches <code>book/</code> triggers the handbook build, which opens and merges its own pull request to refresh the published site.</li>
 </ol>
 </section>
-<section id="tests" class="level2" data-number="15.3">
-<h2 data-number="15.3" class="anchored" data-anchor-id="tests"><span class="header-section-number">15.3</span> Tests</h2>
-<p>Run the tests of every language your change touches before you push; CI repeats the R and Python ones.</p>
+<section id="a-bug-is-fixed-when-its-test-has-failed" class="level2" data-number="15.3">
+<h2 data-number="15.3" class="anchored" data-anchor-id="a-bug-is-fixed-when-its-test-has-failed"><span class="header-section-number">15.3</span> A bug is fixed when its test has failed</h2>
+<p>A bug counts as fixed only when a test reproduces it: the test must <strong>fail on the code before the fix and pass after it</strong>. Write the test first and run it against the unfixed code. Then make the fix, and run it again.</p>
+<p>Show the failure in the pull request: quote the failing assertion and its message, or commit the test before the fix, so the history holds a commit where it fails. A parity case counts as such a test when the failure is in one language’s output.</p>
+<p>The reason is that a regression test nobody has seen fail proves nothing. It may never reach the faulty line, or assert something the bug does not change. In the Stata <code>yaml</code> package, from which this rule is borrowed, a test that checked only return codes passed for two major versions while the option it covered wrote nothing at all.</p>
+<p>Code with no test at all fares no better, and the toolkit has shipped two such cases. Each would have been caught by a test written first and seen to fail: - Python’s <code>io-open-write</code> auditor rule matched nothing until v0.12.0, the release that added its first test. - R’s <code>api-fromjson-url</code> rule never fired until v0.12.1 (#237). Lines are matched with their string literals blanked, and the URL it looked for is a string.</p>
+<p>A fix that cannot be tested this way, such as a message’s wording, says so in the pull request.</p>
+</section>
+<section id="before-you-push-sh-toolscheck" class="level2" data-number="15.4">
+<h2 data-number="15.4" class="anchored" data-anchor-id="before-you-push-sh-toolscheck"><span class="header-section-number">15.4</span> Before you push: <code>sh tools/check</code></h2>
+<p>One command runs, in seconds and with nothing but Python’s standard library, the quick checks CI’s <code>Conformance</code> workflow makes, plus the certificate check that CI makes only on pull requests into <code>main</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sh</span> tools/check             <span class="co"># version stamps, parity case files, handbook tables, certificate</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sh</span> tools/check <span class="at">--full</span>      <span class="co"># also the Python and R test suites (minutes)</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sh</span> tools/check <span class="at">--release</span>   <span class="co"># HEAD is a release: a missing certificate, or a dirty tree, fails</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sh</span> tools/check <span class="at">--rev</span> <span class="op">&lt;</span>c<span class="op">&gt;</span> --release-rev <span class="op">&lt;</span>r<span class="op">&gt;</span>   <span class="co"># check these commits' certificates (see below)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The fast checks are: - <code>tools/check_versions.py</code>: every version stamp names the same release; - <code>conformance/certify.py --lint</code>: the parity case files are well formed; - <code>book/_scripts/gen_tables.py --check</code>: the handbook’s generated tables match the code; - <code>conformance/certify.py --verify</code>: this tree has a parity certificate.</p>
+<p>A missing certificate is only a warning while you work, because the certificate is recorded after the code is committed. It must be there before the pull request merges, if the branch touches the certified paths. <code>--full</code> needs a <code>CSO_PYTHON</code> with pytest and the toolkit’s dependencies, and an Rscript with devtools.</p>
+<p>The first three checks read the working tree; <code>tools/check</code> notes it when you have uncommitted changes. The certificate check reads git: it checks <code>HEAD</code>, or each commit given with <code>--rev &lt;commit&gt;</code> (a missing certificate warns) or <code>--release-rev &lt;commit&gt;</code> (it fails). A release commit must also be the clean checkout, since the file checks cannot see any other commit: release from <code>git switch --detach &lt;commit&gt;</code>.</p>
+<p><strong>The pre-push hook</strong> runs <code>sh tools/check</code> before every push. It passes each commit being pushed, not what is checked out: - a commit pushed to <code>main</code> or as a <code>v*</code> tag is a release (<code>--release-rev</code>); - any other commit only warns (<code>--rev</code>), even in the same push; - a deletion checks nothing.</p>
+<p>Turn it on once per clone:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> config core.hooksPath .githooks</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The hook runs only when git runs inside this working tree. It does not run when <code>GIT_DIR</code> points here from elsewhere, or when the checked-out commit predates the hook. <code>git push --no-verify</code> skips it once; say why in the pull request.</p>
+</section>
+<section id="tests" class="level2" data-number="15.5">
+<h2 data-number="15.5" class="anchored" data-anchor-id="tests"><span class="header-section-number">15.5</span> Tests</h2>
+<p>Run the tests of every language your change touches before you push. CI repeats the R suite, inside <code>R CMD check</code>; the Python suite runs only on your machine. <code>sh tools/check --full</code> runs both in one go.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="" aria-current="page">R</a></li></ul>
 <div class="tab-content">
 <div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># From the repository root. Use --no-init-file, never --vanilla: --vanilla</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># also drops the site library settings that find your packages.</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">#   Rscript --no-init-file -e 'devtools::test("r")'</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>devtools<span class="sc">::</span><span class="fu">test</span>(<span class="st">"r"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># From the repository root. Use --no-init-file, never --vanilla: --vanilla</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"># also drops the site library settings that find your packages.</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co">#   Rscript --no-init-file -e 'devtools::test("r")'</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>devtools<span class="sc">::</span><span class="fu">test</span>(<span class="st">"r"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>The suite is in <code>r/tests/testthat/</code>. CI also runs <code>R CMD check</code> on Ubuntu (R release and devel), macOS and Windows (<code>r-check.yml</code>). Help pages are generated by roxygen2; <code>r/DESCRIPTION</code> pins <code>RoxygenNote: 7.3.3</code>, so if your roxygen2 is newer, keep only the <code>.Rd</code> pages your change actually alters. #### Python {.unnumbered .unlisted}</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> <span class="at">-m</span> pytest python/tests conformance/tests book/_scripts tools</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> <span class="at">-m</span> pytest python/tests conformance/tests book/_scripts tools</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><code>python/tests/</code> is the package’s suite, <code>conformance/tests/</code> tests the parity harness, <code>book/_scripts/</code> tests the handbook table generator, and <code>tools/</code> tests the version-stamp check. Two scripts under <code>python/tests/manual/</code> (a smoke test and the error-envelope check) are run by hand. #### Stata {.unnumbered .unlisted}</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>* In batch from the repository root (Windows: StataMP-64.exe /<span class="fu">e</span> <span class="kw">do</span> ...):</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">do</span> stata/tests/test_config_user_block.<span class="kw">do</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>* In batch from the repository root (Windows: StataMP-64.exe /<span class="fu">e</span> <span class="kw">do</span> ...):</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">do</span> stata/tests/test_config_user_block.<span class="kw">do</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><code>stata/tests/</code> holds a do-file per area, plus <code>test_dw_stata_helpers.py</code>, run with pytest, for the Python helpers that Stata’s <code>dw_save</code> and <code>dw_collaboration</code> call. GitHub’s runners have no Stata licence (#133), so Stata is tested locally: <code>sh tools/certify</code> runs every <code>stata/tests/test_*.do</code> in its own batch Stata and reads each verdict from a result file, not the log (see “Stata’s own suites” in <a href="../chapters/parity.html">How the three languages stay in step</a>). A new suite needs the file name <code>test_&lt;area&gt;.do</code>, to run from the repository root, to stop on its first failed <code>assert</code>, and to end with the line <code>global cert_suite_done 1</code>, which tells the certificate it ran to the end.</p>
 </div>
 </div>
 </div>
 <p>Behaviour the three languages must share belongs in a parity case as well as in each language’s suite: see “Adding a case” in <a href="../chapters/parity.html">How the three languages stay in step</a>.</p>
 </section>
-<section id="the-handbook" class="level2" data-number="15.4">
-<h2 data-number="15.4" class="anchored" data-anchor-id="the-handbook"><span class="header-section-number">15.4</span> The handbook</h2>
+<section id="the-handbook" class="level2" data-number="15.6">
+<h2 data-number="15.6" class="anchored" data-anchor-id="the-handbook"><span class="header-section-number">15.6</span> The handbook</h2>
 <p>Each fact in this book has one home; other chapters link to it by title. When you change behaviour, change the chapter that owns it and nothing else. A few rules keep the book from drifting again:</p>
 <ul>
 <li><strong>Never describe language coverage in prose.</strong> Which languages have a function comes from the code: the coverage matrix and the one-line notes under each function are generated by <code>sh tools/docs-tables</code> from <code>r/NAMESPACE</code>, Python’s <code>__all__</code> and <code>stata/src/*.ado</code>, with the notes in <code>book/_data/coverage.json</code>. The <code>Conformance</code> workflow runs <code>sh tools/docs-tables --check</code>, which fails when a function has no row or a note contradicts the code.</li>
@@ -547,8 +573,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>Render before you push:</strong> <code>quarto render book --to html</code> should finish without warnings.</li>
 </ul>
 </section>
-<section id="what-ci-runs" class="level2" data-number="15.5">
-<h2 data-number="15.5" class="anchored" data-anchor-id="what-ci-runs"><span class="header-section-number">15.5</span> What CI runs</h2>
+<section id="what-ci-runs" class="level2" data-number="15.7">
+<h2 data-number="15.7" class="anchored" data-anchor-id="what-ci-runs"><span class="header-section-number">15.7</span> What CI runs</h2>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 33%">
@@ -565,12 +591,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td><code>R CMD check</code> (<code>r-check.yml</code>)</td>
-<td>Push and pull request to <code>main</code> or <code>develop</code></td>
+<td>Push and pull request to <code>main</code> or <code>develop</code>, unless the change is only in <code>docs/</code>, <code>book/</code>, <code>.parity/</code>, <code>conformance/</code>, <code>NEWS.md</code> or <code>README.md</code></td>
 <td>The R package on four platform and version combinations.</td>
 </tr>
 <tr class="even">
 <td><code>Conformance</code> (<code>conformance.yml</code>)</td>
-<td>Push and pull request to <code>main</code> or <code>develop</code></td>
+<td>Push and pull request to <code>main</code> or <code>develop</code>, unless the change is only in <code>docs/</code> or <code>.parity/</code></td>
 <td>R and Python round-trip the shared fixture and must agree; the handbook’s generated tables must be current; every version stamp must name the same release (<code>tools/check_versions.py</code>); the parity case files must be well formed (<code>certify.py --lint</code>).</td>
 </tr>
 <tr class="odd">
@@ -590,10 +616,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
-<p>Actions minutes are limited, so the checks are designed to run locally first: run the tests, the table check and, for code changes, the certificate before you push, and treat CI as confirmation rather than discovery.</p>
+<p>Actions minutes are limited, so the checks are designed to run locally first: run <code>sh tools/check</code> and, for code changes, the certificate before you push, and treat CI as confirmation rather than discovery. For the same reason the two heavy workflows skip changes that cannot affect them: the handbook bot’s pull requests, which touch only <code>docs/handbook/</code>, run neither. Branch protection requires no check, so a skipped workflow blocks nothing.</p>
 </section>
-<section id="filing-issues" class="level2" data-number="15.6">
-<h2 data-number="15.6" class="anchored" data-anchor-id="filing-issues"><span class="header-section-number">15.6</span> Filing issues</h2>
+<section id="filing-issues" class="level2" data-number="15.8">
+<h2 data-number="15.8" class="anchored" data-anchor-id="filing-issues"><span class="header-section-number">15.8</span> Filing issues</h2>
 <p>An issue is most useful when someone else can act on it without asking. Say what happens and what should happen, point to the code (<code>file:line</code>), give the smallest example that shows it, and propose a fix if you have one. Use the <code>bug</code>, <code>enhancement</code> or <code>documentation</code> label. A finding in one language that is likely to exist in the others is worth checking there before you file, and saying so.</p>
 
 
