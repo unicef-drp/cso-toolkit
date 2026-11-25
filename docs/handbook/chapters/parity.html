@@ -416,7 +416,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
    
   <ul>
   <li><a href="#two-layers-of-checking" id="toc-two-layers-of-checking" class="nav-link active" data-scroll-target="#two-layers-of-checking"><span class="header-section-number">14.1</span> Two layers of checking</a></li>
-  <li><a href="#how-a-run-works" id="toc-how-a-run-works" class="nav-link" data-scroll-target="#how-a-run-works"><span class="header-section-number">14.2</span> How a run works</a></li>
+  <li><a href="#how-a-run-works" id="toc-how-a-run-works" class="nav-link" data-scroll-target="#how-a-run-works"><span class="header-section-number">14.2</span> How a run works</a>
+  <ul class="collapse">
+  <li><a href="#statas-own-suites" id="toc-statas-own-suites" class="nav-link" data-scroll-target="#statas-own-suites"><span class="header-section-number">14.2.1</span> Stata’s own suites</a></li>
+  </ul></li>
   <li><a href="#what-a-case-checks" id="toc-what-a-case-checks" class="nav-link" data-scroll-target="#what-a-case-checks"><span class="header-section-number">14.3</span> What a case checks</a></li>
   <li><a href="#statuses" id="toc-statuses" class="nav-link" data-scroll-target="#statuses"><span class="header-section-number">14.4</span> Statuses</a></li>
   <li><a href="#the-cases" id="toc-the-cases" class="nav-link" data-scroll-target="#the-cases"><span class="header-section-number">14.5</span> The cases</a></li>
@@ -475,7 +478,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td>What it runs</td>
 <td>one fixture through <code>dw_use</code> and <code>dw_save</code></td>
-<td>every case in <code>conformance/cases/</code> (17 at v0.12.0)</td>
+<td>every case in <code>conformance/cases/</code> (17 at v0.12.0), and Stata’s own suites in <code>stata/tests/</code></td>
 </tr>
 <tr class="odd">
 <td>Where</td>
@@ -509,10 +512,56 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 Each driver gets up to 30 minutes. A case that crashes writes <code>&lt;id&gt;.error.txt</code>; a driver that stops part way is judged on the outputs it did write.</li>
 <li><strong>Each driver writes one output per case:</strong> <code>&lt;id&gt;.csv</code> for a values case, <code>&lt;id&gt;.json</code> for a json case. It also writes <code>_versions.json</code>, recording its language version and, for R and Python, the toolkit version it loaded; Stata’s ado files carry no version stamp, so Stata records its own version and edition.</li>
-<li><strong><code>certify.py</code> judges every case in every language</strong> (next sections) and prints a table of statuses.</li>
+<li><strong>It runs Stata’s own test suites</strong>, every <code>stata/tests/test_*.do</code>, when Stata is found and no <code>--cases</code> subset was asked for (below).</li>
+<li><strong><code>certify.py</code> judges every case in every language</strong> (next sections), and every suite, and prints a table of statuses.</li>
 <li><strong>With <code>--record</code></strong>, if everything passed, it writes the certificate and commits it.</li>
 </ol>
-<p>Outputs and logs (<code>r.log</code>, <code>python.log</code>, <code>stata.log</code>) stay in a temporary folder, or the one given with <code>--out</code>, and the run prints where.</p>
+<p>Outputs and logs (<code>r.log</code>, <code>python.log</code>, <code>stata.log</code>, and <code>stata_suites/&lt;suite&gt;.log</code>) stay in a temporary folder, or the one given with <code>--out</code>, and the run prints where.</p>
+<section id="statas-own-suites" class="level3" data-number="14.2.1">
+<h3 data-number="14.2.1" class="anchored" data-anchor-id="statas-own-suites"><span class="header-section-number">14.2.1</span> Stata’s own suites</h3>
+<p>The cases check what the three languages share. Stata also has behaviour of its own to test, such as how <code>dw_load_config</code> reads the user block or how <code>dw_save</code> guards a multi-producer project, and those tests live in <code>stata/tests/</code>, one do-file per area. GitHub’s runners have no Stata licence, so the certificate is where they run.</p>
+<p>Each suite runs in its own batch Stata, so one suite’s programs and globals cannot leak into the next. The verdict comes from a file, not from the log or the exit code: - <strong>Batch Stata always exits 0</strong>, whatever happened inside. - <strong>The log repeats the source.</strong> Stata echoes every line it reads, so a “PASS” string can reach the log from a comment, or from an <code>if</code> branch that did not run, while the suite failed. Finding “PASS” in a log proves nothing; unicefData’s QA suite once scored a failing suite green this way.</p>
+<p>So <code>certify.py</code> writes a small wrapper per suite. It changes to the repository root, runs the suite under <code>capture noisily do</code>, and writes the return code to <code>&lt;suite&gt;.result</code>. A suite stops at its first failed <code>assert</code> with a non-zero code.</p>
+<p>A plain <code>exit</code> part way also returns 0, so a zero code alone does not show the suite ran to the end. Every suite therefore ends with the line <code>global cert_suite_done 1</code>, and the wrapper records whether that line ran. <code>--lint</code> checks that it is the last line of every <code>stata/tests/test_*.do</code>.</p>
+<p>Only execution creates the result file, so a missing one means Stata stopped or timed out (15 minutes per suite), and counts as a failure.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Suite status</th>
+<th>Meaning</th>
+<th>Blocks a certificate?</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>PASS</code></td>
+<td>the suite ran to its last line without an error</td>
+<td>no</td>
+</tr>
+<tr class="even">
+<td><code>FAIL</code></td>
+<td>the suite stopped with an error, <code>r(&lt;rc&gt;)</code>, or returned before its last line</td>
+<td><strong>yes</strong></td>
+</tr>
+<tr class="odd">
+<td><code>MISSING</code></td>
+<td>no result file: Stata stopped or timed out</td>
+<td><strong>yes</strong></td>
+</tr>
+<tr class="even">
+<td><code>not run</code></td>
+<td>Stata not requested or not found, or <code>--cases</code> given</td>
+<td>no, but <code>--record</code> refuses</td>
+</tr>
+</tbody>
+</table>
+<p><code>stata/tests/test_dw_stata_helpers.py</code> tests the Python helpers that Stata calls; it runs with pytest, not here.</p>
+</section>
 </section>
 <section id="what-a-case-checks" class="level2" data-number="14.3">
 <h2 data-number="14.3" class="anchored" data-anchor-id="what-a-case-checks"><span class="header-section-number">14.3</span> What a case checks</h2>
@@ -759,22 +808,26 @@ Each driver gets up to 30 minutes. A case that crashes writes <code>&lt;id&gt;.e
 </section>
 <section id="the-certificate" class="level2" data-number="14.6">
 <h2 data-number="14.6" class="anchored" data-anchor-id="the-certificate"><span class="header-section-number">14.6</span> The certificate</h2>
-<p><code>sh tools/certify --record</code> writes a certificate only when: - all three languages ran; - every case is <code>PASS</code>, <code>gap</code> or <code>DIVERGES</code> in every language; - the certified paths have no uncommitted change.</p>
+<p><code>sh tools/certify --record</code> writes a certificate only when: - all three languages ran, and every case was run (no <code>--cases</code>); - every case is <code>PASS</code>, <code>gap</code> or <code>DIVERGES</code> in every language; - every Stata suite is <code>PASS</code>; - the certified paths have no uncommitted change.</p>
 <p>It then commits the file on its own, with the message <code>Parity certificate &lt;hash&gt;</code>.</p>
-<p><strong>The name is a content hash:</strong> SHA-256 over the git trees, at <code>HEAD</code>, of the seven certified paths: - <code>r/R</code>, <code>python/src</code> and <code>stata/src</code>, the three implementations; - <code>conformance/certify.py</code>, <code>conformance/cases</code>, <code>conformance/drivers</code> and <code>conformance/fixtures</code>, the harness.</p>
-<p>Any change to an implementation, a case, a driver or a fixture needs a new certificate. Changes elsewhere keep the old one: the handbook, READMEs, NEWS, templates, CI.</p>
-<p><strong>The file</strong>, <code>.parity/&lt;content-hash&gt;.json</code> with schema <code>cso_toolkit.parity/1</code>, records: - <code>content_hash</code> and <code>trees</code>: the hash and the tree id of each certified path; - <code>commit</code>, <code>created_at</code> (UTC), <code>created_by</code> and <code>platform</code>; - <code>versions</code>: per language, what its driver reported (for example <code>R version 4.6.1</code>, Python <code>3.11.9</code>, Stata <code>17</code> <code>MP</code>); - <code>result</code> (<code>pass</code>) and <code>summary</code>: the count per status; - <code>cases</code>: per case and language, the status, a note, and the SHA-256 of the output file.</p>
+<p><strong>The name is a content hash:</strong> SHA-256 over the git trees, at <code>HEAD</code>, of the eight certified paths: - <code>r/R</code>, <code>python/src</code> and <code>stata/src</code>, the three implementations; - <code>stata/tests</code>, Stata’s own suites; - <code>conformance/certify.py</code>, <code>conformance/cases</code>, <code>conformance/drivers</code> and <code>conformance/fixtures</code>, the harness.</p>
+<p>Any change to an implementation, a Stata suite, a case, a driver or a fixture needs a new certificate. Changes elsewhere keep the old one: the handbook, READMEs, NEWS, templates, CI.</p>
+<p><strong>The file</strong>, <code>.parity/&lt;content-hash&gt;.json</code> with schema <code>cso_toolkit.parity/2</code>, records: - <code>content_hash</code> and <code>trees</code>: the hash and the tree id of each certified path; - <code>commit</code>, <code>created_at</code> (UTC), <code>created_by</code> and <code>platform</code>; - <code>versions</code>: per language, what its driver reported (for example <code>R version 4.6.1</code>, Python <code>3.11.9</code>, Stata <code>17</code> <code>MP</code>); - <code>result</code> (<code>pass</code>), <code>summary</code> (the count per case status) and <code>suites_summary</code> (the count per suite status); - <code>cases</code>: per case and language, the status, a note, and the SHA-256 of the output file; - <code>stata_suites</code>: per suite, the status and a note.</p>
+<p>Certificates up to v0.12.1 have schema <code>cso_toolkit.parity/1</code>: seven certified paths, and no suites. Their hash leaves out <code>stata/tests</code>, so check an older tag with the <code>certify.py</code> of that tag.</p>
 <p>The output hashes let anyone check, later, that a re-run produced byte-identical outputs.</p>
-<p><strong><code>sh tools/certify --verify</code></strong> runs no language. It recomputes the content hash and checks that <code>.parity/&lt;hash&gt;.json</code> exists and records a pass for that hash. The <code>Parity certificate</code> workflow (<code>.github/workflows/parity-certificate.yml</code>) runs exactly this on pull requests into <code>main</code>, and on demand. It takes a few seconds and needs only Python and git.</p>
+<p><strong><code>sh tools/certify --verify</code></strong> runs no language. It recomputes the content hash and checks that <code>.parity/&lt;hash&gt;.json</code> is committed and records a pass for that hash. It reads both from git, not from the working tree, so an uncommitted certificate does not count. <code>--verify --rev &lt;commit&gt;</code> checks another commit, such as a tag about to be pushed. The <code>Parity certificate</code> workflow (<code>.github/workflows/parity-certificate.yml</code>) runs exactly this on pull requests into <code>main</code>, and on demand. It takes a few seconds and needs only Python and git.</p>
 </section>
 <section id="running-it" class="level2" data-number="14.7">
 <h2 data-number="14.7" class="anchored" data-anchor-id="running-it"><span class="header-section-number">14.7</span> Running it</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sh</span> tools/certify                              <span class="co"># all cases, all three languages; exit 1 on any failure</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sh</span> tools/certify <span class="at">--languages</span> r,python         <span class="co"># a subset while developing</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sh</span> tools/certify <span class="at">--cases</span> stage_lifecycle      <span class="co"># one or more cases (comma separated)</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sh</span> tools/certify <span class="at">--cases</span> stage_lifecycle      <span class="co"># one or more cases (comma separated); no Stata suites</span></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sh</span> tools/certify <span class="at">--out</span> /tmp/parity            <span class="co"># keep outputs in a chosen folder</span></span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sh</span> tools/certify <span class="at">--record</span>                     <span class="co"># all three languages; write and commit the certificate</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">sh</span> tools/certify <span class="at">--verify</span>                     <span class="co"># is there a passing certificate for this tree?</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">sh</span> tools/certify <span class="at">--verify</span>                     <span class="co"># is there a passing certificate for this tree?</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">sh</span> tools/certify <span class="at">--lint</span>                       <span class="co"># are the case files well formed? (runs no language)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Every run first checks what <code>--lint</code> checks, and stops if anything is wrong: - each case file is a JSON object with the fields its kind needs (<code>id</code>, <code>title</code>, <code>kind</code>, <code>fixtures</code> and <code>languages</code>; <code>columns</code> and <code>keys</code> for a values case; a non-empty <code>expect</code> for a json case), each <code>gaps</code> and <code>divergences</code> entry has a string <code>issue</code> and <code>reason</code>, any <code>tolerance</code> is a non-negative number, and <code>"reference": "fixture"</code> comes with a fixture; - each id matches its file name, and no id is retired; - every case a committed certificate records still has a case file, or is retired; - each Stata suite ends with <code>global cert_suite_done 1</code>.</p>
+<p>The <code>Conformance</code> workflow runs <code>--lint</code> on pull requests into <code>develop</code> and <code>main</code>, in its <code>compare</code> job (which runs once the R and Python jobs pass). <code>--record</code>, <code>--verify</code> and <code>--lint</code> are separate modes; give one.</p>
 <p>Environment variables: - <code>CSO_PYTHON</code>: a Python with the toolkit’s dependencies, for the Python driver; - <code>CSO_RSCRIPT</code>: Rscript, if it is not on the PATH; - <code>STATA_EXE</code>: the Stata executable, if it is not in a usual folder.</p>
 <p>On Windows, a typical call from Git Bash is:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="va">CSO_PYTHON</span><span class="op">=</span>/path/to/venv/Scripts/python.exe <span class="dt">\</span></span>
@@ -785,17 +838,18 @@ Each driver gets up to 30 minutes. A case that crashes writes <code>&lt;id&gt;.e
 <section id="adding-a-case" class="level2" data-number="14.8">
 <h2 data-number="14.8" class="anchored" data-anchor-id="adding-a-case"><span class="header-section-number">14.8</span> Adding a case</h2>
 <ol type="1">
-<li>Write <code>conformance/cases/&lt;id&gt;.json</code>, copying a case of the same kind. List every language either in <code>languages</code> or in <code>gaps</code>, with the issue (or “coverage matrix”) and a one-line reason.</li>
-<li>Add any input file to <code>conformance/fixtures/</code>. Prefer a small, purpose-built file that exercises the edge you care about: missing values, an all-missing group, a duplicate key.</li>
-<li>Add a function named after the id to each driver that implements it:
+<li><p>Write <code>conformance/cases/&lt;id&gt;.json</code>, copying a case of the same kind; the <code>id</code> is the file name. List every language either in <code>languages</code> or in <code>gaps</code>, with the issue (or “coverage matrix”) and a one-line reason.</p>
+<p><strong>An id is permanent.</strong> Certificates and the gap register name cases by id, so an id keeps one meaning for ever. When a case is removed, or changes so much that its old results no longer describe it, add its id to <code>conformance/retired_ids.txt</code> with the date and the reason, and give any replacement a new id. <code>--lint</code> fails when a case uses a retired id, and when a case some committed certificate records has disappeared without its id being retired.</p></li>
+<li><p>Add any input file to <code>conformance/fixtures/</code>. Prefer a small, purpose-built file that exercises the edge you care about: missing values, an all-missing group, a duplicate key.</p></li>
+<li><p>Add a function named after the id to each driver that implements it:</p>
 <ul>
 <li><code>driver_r.R</code>: an entry in the <code>cases</code> list;</li>
 <li><code>driver_python.py</code>: a function plus an entry in <code>CASES</code>;</li>
 <li><code>driver_stata.do</code>: a program named <code>case_&lt;id&gt;</code>.</li>
 </ul>
-A driver that does not know an id skips it silently, so a missing driver entry shows up as <code>MISSING</code>.</li>
-<li>Reset any session state the case sets. The R and Python drivers’ <code>plain()</code> returns to a plain local session; leaking reviewer mode or a canonical root into the next case makes failures hard to read.</li>
-<li>Run <code>sh tools/certify --cases &lt;id&gt;</code>, then the full run, then <code>--record</code> once the code is committed.</li>
+<p>A driver that does not know an id skips it silently, so a missing driver entry shows up as <code>MISSING</code>.</p></li>
+<li><p>Reset any session state the case sets. The R and Python drivers’ <code>plain()</code> returns to a plain local session; leaking reviewer mode or a canonical root into the next case makes failures hard to read.</p></li>
+<li><p>Run <code>sh tools/certify --cases &lt;id&gt;</code>, then the full run, then <code>--record</code> once the code is committed.</p></li>
 </ol>
 <p>For a json case, prefer facts that would differ if the behaviour broke: whether a file exists, whether its hash changed, which error text appeared. “No error” alone is a weak check. For example, <code>stage_lifecycle</code> records whether a second call re-copied the file, and the test suite separately checks that a re-copy would change the file’s modification time.</p>
 </section>
