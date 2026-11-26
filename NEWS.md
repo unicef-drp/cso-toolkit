@@ -1039,6 +1039,8 @@ deriving mirrors + sidecar. Sandbox-rooted inputs pass through unchanged
 now stage correctly. Found by the 2026-06-02 DW-Production reviewer-mode
 sector reproduction (nt).
 
+## v0.4.9 (2026-06-01)
+
 Headline feature: `dw_stage()` — reviewer-mode auto-stage with hash-
 guard. Reviewer pipelines that read canonical inputs which live on
 Teams or Z: but not yet in the reviewer's local sandbox can now opt
